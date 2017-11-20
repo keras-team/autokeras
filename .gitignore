@@ -2,3 +2,6 @@ build
 .cache
 .idea
 *.pyc
+
+MANIFEST
+dist
