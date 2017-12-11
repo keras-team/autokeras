@@ -1,10 +1,14 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.neural_network.multilayer_perceptron import BaseMultilayerPerceptron
 
 from autokeras.generator import ClassifierGenerator
 from autokeras.preprocessor import OneHotEncoder
 
 MAX_MODEL_NUM = 100
+MAX_ITER_NUM = 100000
+MIN_LOSS_DEC = 1e-4
+MAX_NO_IMPROVEMENT_NUM = 10
 
 
 class ClassifierBase:
@@ -12,9 +16,9 @@ class ClassifierBase:
         self.y_encoder = OneHotEncoder()
         self.model = None
         self.verbose = verbose
-        self.n_epochs = 10000
         self.generator = None
         self.history = []
+        self.training_losses = []
 
     def _validate(self, x_train, y_train):
         try:
@@ -51,10 +55,8 @@ class ClassifierBase:
             if self.verbose:
                 model.summary()
 
-            model.fit(x_train, y_train,
-                      batch_size=x_train.shape[0],
-                      epochs=self.n_epochs,
-                      verbose=self.verbose)
+            self._train_model(model, x_train, y_train, x_test, y_test)
+            # The same auto batch size_train, y_train strategy as sklearn
             loss, accuracy = self.model.evaluate(x_test, y_test)
             self.history.append({'model': self.model, 'loss': loss, 'accuracy': accuracy})
         self.history.sort(key=lambda x: x['accuracy'])
@@ -68,6 +70,31 @@ class ClassifierBase:
 
     def _get_generator(self, n_classes, input_shape):
         return None
+
+    def _converged(self, loss):
+        self.training_losses.append(loss)
+
+        if loss > (self.minimum_loss - MIN_LOSS_DEC):
+            self._no_improvement_count += 1
+        else:
+            self._no_improvement_count = 0
+
+        if loss < self.minimum_loss:
+            self.minimum_loss = loss
+
+        return self._no_improvement_count > MAX_NO_IMPROVEMENT_NUM
+
+    def _train_model(self, model, x_train, y_train, x_test, y_test):
+        self.training_losses = []
+        self.minimum_loss = float('inf')
+        for _ in range(MAX_ITER_NUM):
+            model.fit(x_train, y_train,
+                      batch_size=min(x_train.shape[0], 200),
+                      verbose=self.verbose)
+            loss, _ = model.evaluate(x_test, y_test)
+            if self._converged(loss):
+                break
+        pass
 
 
 class Classifier(ClassifierBase):
