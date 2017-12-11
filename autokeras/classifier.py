@@ -1,88 +1,86 @@
 import numpy as np
-from keras.layers import Dense, Dropout
-from keras.models import Sequential
-from keras.optimizers import Adam
+from sklearn.model_selection import train_test_split
+
+from autokeras.generator import ClassifierGenerator
+from autokeras.preprocessor import OneHotEncoder
+
+MAX_MODEL_NUM = 100
 
 
-class AutoKerasClassifier:
+class ClassifierBase:
     def __init__(self, verbose=False):
         self.y_encoder = OneHotEncoder()
         self.model = None
-        self.train_dim = 0
-        self.n_classes = 0
         self.verbose = verbose
         self.n_epochs = 10000
+        self.generator = None
+        self.history = []
 
-    def fit(self, x_train, y_train):
-        x_train = np.array(x_train)
-        y_train = np.array(y_train).flatten()
-
+    def _validate(self, x_train, y_train):
         try:
             x_train = x_train.astype('float64')
         except ValueError:
             raise ValueError('x_train should only contain numerical data.')
 
         if len(x_train.shape) < 2:
-            raise ValueError('x_train should be a 2d array.')
+            raise ValueError('x_train should at least has 2 dimensions.')
 
         if x_train.shape[0] != y_train.shape[0]:
             raise ValueError('x_train and y_train should have the same number of instances.')
 
+    def fit(self, x_train, y_train):
+        x_train = np.array(x_train)
+        y_train = np.array(y_train).flatten()
+
+        self._validate(x_train, y_train)
+
+        input_shape = x_train.shape[1:]
+        n_classes = len(set(y_train.flatten()))
+        self.generator = self._get_generator(n_classes, input_shape)
+
+        # Transform y_train.
         self.y_encoder.fit(y_train)
-        encoded_y_train = self.y_encoder.transform(y_train)
+        y_train = self.y_encoder.transform(y_train)
 
-        self.train_dim = x_train.shape[1]
-        self.n_classes = len(set(y_train.flatten()))
+        # Divide training data into training and testing data.
+        x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.33, random_state=42)
 
-        self._build_model()
+        for i in range(MAX_MODEL_NUM):
+            model = self.generator.generate()
 
-        if self.verbose:
-            self.summary()
+            if self.verbose:
+                model.summary()
 
-        self.model.fit(x_train, encoded_y_train,
-                       batch_size=x_train.shape[0],
-                       epochs=self.n_epochs,
-                       verbose=self.verbose)
+            model.fit(x_train, y_train,
+                      batch_size=x_train.shape[0],
+                      epochs=self.n_epochs,
+                      verbose=self.verbose)
+            loss, accuracy = self.model.evaluate(x_test, y_test)
+            self.history.append({'model': self.model, 'loss': loss, 'accuracy': accuracy})
+        self.history.sort(key=lambda x: x['accuracy'])
+        self.model = self.history[-1]['model']
 
     def predict(self, x_test):
         return self.y_encoder.inverse_transform(self.model.predict(x_test, verbose=self.verbose))
 
-    def _build_model(self):
-        self.model = Sequential()
-        self.model.add(Dense(512, activation='relu', input_shape=(self.train_dim,)))
-        self.model.add(Dropout(0.2))
-        self.model.add(Dense(512, activation='relu'))
-        self.model.add(Dropout(0.2))
-        self.model.add(Dense(self.n_classes, activation='softmax'))
-        self.model.compile(loss='categorical_crossentropy',
-                           optimizer=Adam(),
-                           metrics=['accuracy'])
-
     def summary(self):
         self.model.summary()
 
+    def _get_generator(self, n_classes, input_shape):
+        return None
 
-class OneHotEncoder:
+
+class Classifier(ClassifierBase):
     def __init__(self):
-        self.data = None
-        self.n_classes = 0
-        self.labels = None
-        self.label_to_vec = {}
-        self.int_to_label = {}
+        super().__init__()
 
-    def fit(self, data):
-        data = np.array(data).flatten()
-        self.labels = set(data)
-        self.n_classes = len(self.labels)
-        for index, label in enumerate(self.labels):
-            vec = np.array([0] * self.n_classes)
-            vec[index] = 1
-            self.label_to_vec[label] = vec
-            self.int_to_label[index] = label
+    def _validate(self, x_train, y_train):
+        super()._validate(x_train, y_train)
 
-    def transform(self, data):
-        data = np.array(data)
-        return np.array(list(map(lambda x: self.label_to_vec[x], data)))
+    def _get_generator(self, n_classes, input_shape):
+        return ClassifierGenerator(n_classes, input_shape)
 
-    def inverse_transform(self, data):
-        return np.array(list(map(lambda x: self.int_to_label[x], np.argmax(np.array(data), axis=1))))
+
+class ImageClassifier(ClassifierBase):
+    def __init__(self):
+        super().__init__()

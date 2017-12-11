@@ -1,1 +1,1 @@
-from autokeras.classifier import AutoKerasClassifier
+from autokeras.classifier import Classifier

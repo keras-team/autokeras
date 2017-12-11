@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='autokeras',
     packages=['autokeras'],  # this must be the same as the name above
-    requires=['pytest', 'numpy'],
+    requires=['pytest', 'numpy', 'keras', 'scikit-learn'],
     version='0.0.1',
     description='Automated Machine Learning with Keras',
     author='Haifeng Jin',
