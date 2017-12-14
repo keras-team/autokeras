@@ -166,6 +166,7 @@ def cnn():
     model.compile(loss=losses.categorical_crossentropy,
                   optimizer=optimizers.Adadelta(),
                   metrics=['accuracy'])
+    print(model.summary())
 
     model.fit(x_train, y_train,
               batch_size=batch_size,
@@ -173,7 +174,6 @@ def cnn():
               verbose=1,
               validation_data=(x_test, y_test))
     score = model.evaluate(x_test, y_test, verbose=0)
-    print(model.summary())
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
 
@@ -204,4 +204,4 @@ def cnn2():
 
 
 if __name__ == '__main__':
-    cnn2()
+    cnn()
