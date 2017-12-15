@@ -17,7 +17,7 @@ class ClassifierGenerator:
         pass
 
 
-class RandomCovClassifierGenerator(ClassifierGenerator):
+class RandomConvClassifierGenerator(ClassifierGenerator):
     def __init__(self, n_classes, input_shape):
         super().__init__(n_classes, input_shape)
 
