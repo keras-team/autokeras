@@ -1,9 +1,11 @@
 from random import randint, random
 
 from keras import Input
-from keras.layers import Dense, Dropout, Conv1D, Conv2D, Conv3D, MaxPooling1D, MaxPooling2D, MaxPooling3D, Flatten
+from keras.layers import Dense, Dropout, MaxPooling1D, MaxPooling2D, MaxPooling3D, Flatten
 from keras.models import Sequential
 from keras.optimizers import Adam
+
+from autokeras.utils import get_conv_layer_func
 
 
 class ClassifierGenerator:
@@ -18,15 +20,6 @@ class ClassifierGenerator:
 class RandomCovClassifierGenerator(ClassifierGenerator):
     def __init__(self, n_classes, input_shape):
         super().__init__(n_classes, input_shape)
-
-    def _get_conv_layer_func(self):
-        if len(self.input_shape) == 1:
-            return Conv1D
-        elif len(self.input_shape) == 2:
-            return Conv2D
-        elif len(self.input_shape) == 3:
-            return Conv3D
-        raise ValueError('The input dimension is too high.')
 
     def _get_pool_layer_func(self):
         if len(self.input_shape) == 1:
@@ -50,9 +43,9 @@ class RandomCovClassifierGenerator(ClassifierGenerator):
         conv_num = randint(1, 10)
         dense_num = randint(1, 10)
         dropout_rate = random()
-        filter_size = randint(3, 5)
+        filter_size = randint(1, 2) * 2 + 1
         pool_size = randint(2, 3)
-        conv = self._get_conv_layer_func()
+        conv = get_conv_layer_func(len(self.input_shape))
         filter_shape = self._get_shape(filter_size)
         pool_shape = self._get_shape(pool_size)
         pool = self._get_pool_layer_func()
