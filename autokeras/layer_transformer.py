@@ -11,15 +11,18 @@ def conv_to_deeper_layer(conv_layer):
     filter_shape = conv_layer.kernel_size
     n_filters = conv_layer.filters
     weight = np.zeros(filter_shape + (n_filters, n_filters))
-    center = ((filter_shape[0] - 1) / 2, (filter_shape[1] - 1) / 2)
+    center = (int((filter_shape[0] - 1) / 2), int((filter_shape[1] - 1) / 2))
     for i in range(n_filters):
         filter_weight = np.zeros(filter_shape + (n_filters,))
         filter_weight[center[0], center[1], i] = 1
         weight[:, :, :, i] = filter_weight
     bias = np.zeros(n_filters)
     conv_func = get_conv_layer_func(len(filter_shape))
-    new_conv_layer = conv_func(n_filters, kernel_size=filter_shape, activation='relu')
-    new_conv_layer.build((None,) * len(filter_shape) + (n_filters,))
+    new_conv_layer = conv_func(n_filters,
+                               kernel_size=filter_shape,
+                               activation='relu',
+                               padding='same')
+    new_conv_layer.build((None,) * (len(filter_shape) + 1) + (n_filters,))
     new_conv_layer.set_weights((weight, bias))
     return new_conv_layer
 
@@ -43,9 +46,9 @@ def to_deeper_layer(layer):
 
 
 def dense_to_wider_layer(pre_layer, next_layer, n_add_units):
-    n_units1 = pre_layer.get_weights().shape[0]
-    n_units2 = pre_layer.get_weights().shape[1]
-    n_units3 = next_layer.get_weights().shape[1]
+    n_units1 = pre_layer.get_weights()[0].shape[0]
+    n_units2 = pre_layer.units
+    n_units3 = next_layer.units
 
     teacher_w1 = pre_layer.get_weights()[0]
     teacher_b1 = pre_layer.get_weights()[1]
@@ -74,11 +77,11 @@ def dense_to_wider_layer(pre_layer, next_layer, n_add_units):
         student_w2 = np.concatenate((student_w2, new_weight), axis=0)
         student_w2[teacher_index, :] = new_weight
 
-    new_pre_layer = Dense(n_units2)
+    new_pre_layer = Dense(n_units2 + n_add_units, input_shape=(n_units1,), activation='relu')
     new_pre_layer.build((None, n_units1))
     new_pre_layer.set_weights((student_w1, student_b1))
-    new_next_layer = Dense(n_units3)
-    new_next_layer.build((None, n_units2))
+    new_next_layer = Dense(n_units3, activation='relu')
+    new_next_layer.build((None, n_units2 + n_add_units))
     new_next_layer.set_weights((student_w2, teacher_b2))
 
     return new_pre_layer, new_next_layer
@@ -116,11 +119,16 @@ def conv_to_wider_layer(pre_layer, next_layer, n_add_filters):
         student_w2 = np.concatenate((student_w2, new_weight_re), axis=2)
         student_w2[:, :, teacher_index, :] = new_weight
 
-    new_pre_layer = conv_func(n_pre_filters, kernel_size=pre_filter_shape, activation='relu')
-    new_pre_layer.build((None,) * len(pre_filter_shape) + (pre_filter_shape[-1],))
+    print(pre_layer.input_shape)
+    new_pre_layer = conv_func(n_pre_filters + n_add_filters,
+                              kernel_size=pre_filter_shape,
+                              activation='relu',
+                              padding='same',
+                              input_shape=pre_layer.input_shape[1:])
+    new_pre_layer.build((None,) * (len(pre_filter_shape) + 1) + (pre_layer.input_shape[-1],))
     new_pre_layer.set_weights((student_w1, student_b1))
-    new_next_layer = conv_func(n_next_filters, kernel_size=next_filter_shape, activation='relu')
-    new_next_layer.build((None,) * len(next_filter_shape) + (next_filter_shape[-1],))
+    new_next_layer = conv_func(n_next_filters, kernel_size=next_filter_shape, activation='relu', padding='same')
+    new_next_layer.build((None,) * (len(next_filter_shape) + 1) + (n_pre_filters + n_add_filters,))
     new_next_layer.set_weights((student_w2, teacher_b2))
     return new_pre_layer, new_next_layer
 
@@ -129,12 +137,12 @@ def conv_dense_to_wider_layer(pre_layer, next_layer, n_add_filters):
     pre_filter_shape = pre_layer.kernel_size
     conv_func = get_conv_layer_func(len(pre_filter_shape))
     n_pre_filters = pre_layer.filters
-    n_units = next_layer.get_weights().shape[1]
+    n_units = next_layer.units
 
     teacher_w1 = pre_layer.get_weights()[0]
     teacher_w2 = next_layer.get_weights()[0]
-    n_total_weights = reduce(mul, teacher_w2.shape)
-    teacher_w2 = teacher_w2.reshape(n_total_weights / n_pre_filters / n_units, n_pre_filters, n_units)
+    n_total_weights = int(reduce(mul, teacher_w2.shape))
+    teacher_w2 = teacher_w2.reshape(int(n_total_weights / n_pre_filters / n_units), n_pre_filters, n_units)
     teacher_b1 = pre_layer.get_weights()[1]
     teacher_b2 = next_layer.get_weights()[1]
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
@@ -158,12 +166,18 @@ def conv_dense_to_wider_layer(pre_layer, next_layer, n_add_filters):
         student_w2 = np.concatenate((student_w2, new_weight_re), axis=1)
         student_w2[:, teacher_index, :] = new_weight
 
-    new_pre_layer = conv_func(n_pre_filters, kernel_size=pre_filter_shape, activation='relu')
-    new_pre_layer.build((None,) * len(pre_filter_shape) + (pre_filter_shape[-1],))
+    new_pre_layer = conv_func(n_pre_filters + n_add_filters,
+                              kernel_size=pre_filter_shape,
+                              activation='relu',
+                              padding='same',
+                              input_shape=pre_layer.input_shape[1:])
+    new_pre_layer.build((None,) * (len(pre_filter_shape) + 1) + (pre_layer.input_shape[-1],))
     new_pre_layer.set_weights((student_w1, student_b1))
-    new_next_layer = Dense(n_units)
-    new_next_layer.build((None, n_units))
-    new_next_layer.set_weights((student_w2.flatten(), teacher_b2))
+    new_next_layer = Dense(n_units, activation='relu')
+    n_new_total_weights = int(reduce(mul, student_w2.shape))
+    input_dim = int(n_new_total_weights / n_units)
+    new_next_layer.build((None, input_dim))
+    new_next_layer.set_weights((student_w2.reshape(input_dim, n_units), teacher_b2))
     return new_pre_layer, new_next_layer
 
 

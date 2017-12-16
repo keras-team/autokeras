@@ -38,10 +38,10 @@ class RandomConvClassifierGenerator(ClassifierGenerator):
         dropout_rate = random()
         filter_size = randint(1, 2) * 2 + 1
         pool_size = randint(2, 3)
-        conv = get_conv_layer_func(len(self.input_shape))
         filter_shape = self._get_shape(filter_size)
         pool_shape = self._get_shape(pool_size)
         pool = self._get_pool_layer_func()
+        conv = get_conv_layer_func(len(filter_shape))
 
         model = Sequential()
         for i in range(conv_num):
