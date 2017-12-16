@@ -1,15 +1,10 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.neural_network.multilayer_perceptron import BaseMultilayerPerceptron
 
+from autokeras.constant import MAX_MODEL_NUM
 from autokeras.generator import ClassifierGenerator
 from autokeras.preprocessor import OneHotEncoder
 from autokeras.utils import ModelTrainer
-
-MAX_MODEL_NUM = 100
-MAX_ITER_NUM = 100000
-MIN_LOSS_DEC = 1e-4
-MAX_NO_IMPROVEMENT_NUM = 10
 
 
 class ClassifierBase:

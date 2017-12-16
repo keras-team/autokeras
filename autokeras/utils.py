@@ -1,7 +1,5 @@
 from keras.layers import Conv1D, Conv2D, Conv3D
-from autokeras.classifier import MIN_LOSS_DEC
-from autokeras.classifier import MAX_NO_IMPROVEMENT_NUM
-from autokeras.classifier import MAX_ITER_NUM
+from autokeras.constant import MAX_ITER_NUM, MIN_LOSS_DEC, MAX_NO_IMPROVEMENT_NUM
 
 
 def get_conv_layer_func(n_dim):

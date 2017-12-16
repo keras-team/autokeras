@@ -31,6 +31,11 @@ def get_next_dense_conv(start,layers):
     return new_next_wider_layer
 
 
+
+def to_deeper_model(model,level):
+    new_deeper_model = Sequential()
+    new_deeper_layer = copy_layer(model.layers[level])
+
 def net_transfromer(model):
     models = []
     layers = model.layers

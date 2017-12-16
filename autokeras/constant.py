@@ -1,3 +1,7 @@
 from keras.layers import Conv3D, Conv2D, Conv1D
 
 CONV_FUNC_LIST = [Conv1D, Conv2D, Conv3D]
+MAX_MODEL_NUM = 100
+MAX_ITER_NUM = 100000
+MIN_LOSS_DEC = 1e-4
+MAX_NO_IMPROVEMENT_NUM = 10
