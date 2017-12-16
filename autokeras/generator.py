@@ -1,6 +1,5 @@
 from random import randint, random
 
-from keras import Input
 from keras.layers import Dense, Dropout, MaxPooling1D, MaxPooling2D, MaxPooling3D, Flatten
 from keras.models import Sequential
 from keras.optimizers import Adam
@@ -20,24 +19,18 @@ class ClassifierGenerator:
 class RandomConvClassifierGenerator(ClassifierGenerator):
     def __init__(self, n_classes, input_shape):
         super().__init__(n_classes, input_shape)
+        if len(self.input_shape) > 4:
+            raise ValueError('The input dimension is too high.')
+        if len(self.input_shape) < 2:
+            raise ValueError('The input dimension is too low.')
 
     def _get_pool_layer_func(self):
-        if len(self.input_shape) == 1:
-            return MaxPooling1D
-        elif len(self.input_shape) == 2:
-            return MaxPooling2D
-        elif len(self.input_shape) == 3:
-            return MaxPooling3D
-        raise ValueError('The input dimension is too high.')
+        pool_funcs = [MaxPooling1D, MaxPooling2D, MaxPooling3D]
+        return pool_funcs[len(self.input_shape) - 2]
 
     def _get_shape(self, dim_size):
-        if len(self.input_shape) == 1:
-            return dim_size,
-        elif len(self.input_shape) == 2:
-            return dim_size, dim_size
-        elif len(self.input_shape) == 3:
-            return dim_size, dim_size, dim_size
-        raise ValueError('The input dimension is too high.')
+        temp_list = [(dim_size,), (dim_size, dim_size), (dim_size, dim_size, dim_size)]
+        return temp_list[len(self.input_shape) - 2]
 
     def generate(self):
         conv_num = randint(1, 10)
@@ -51,17 +44,26 @@ class RandomConvClassifierGenerator(ClassifierGenerator):
         pool = self._get_pool_layer_func()
 
         model = Sequential()
-        model.add(Input(shape=self.input_shape))
         for i in range(conv_num):
             kernel_num = randint(10, 30)
-            model.add(conv(kernel_num, kernel_size=filter_shape, activation='relu'))
+            if i == 0:
+                model.add(conv(kernel_num,
+                               input_shape=self.input_shape,
+                               kernel_size=filter_shape,
+                               activation='relu',
+                               padding='same'))
+            else:
+                model.add(conv(kernel_num,
+                               kernel_size=filter_shape,
+                               activation='relu',
+                               padding='same'))
             if random() > 0.5:
-                model.add(pool(pool_size=pool_shape))
+                model.add(pool(pool_size=pool_shape, padding='same'))
             if random() > 0.5:
                 model.add(Dropout(dropout_rate))
         model.add(Flatten())
         for i in range(dense_num):
-            node_num = random(128, 1024)
+            node_num = randint(128, 1024)
             model.add(Dense(node_num, activation='relu'))
             if random() > 0.5:
                 model.add(Dropout(dropout_rate))
