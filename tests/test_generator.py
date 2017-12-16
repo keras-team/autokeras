@@ -1,5 +1,5 @@
 from autokeras.generator import *
-
+from unittest.mock import *
 
 def test_random_classifier_generator():
     generator = RandomConvClassifierGenerator(3, (28, 28, 1))

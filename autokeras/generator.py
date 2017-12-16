@@ -5,7 +5,9 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 
 from autokeras.utils import get_conv_layer_func
-
+from autokeras.net_transformer import net_transfromer
+from autokeras.comparator import compare_network
+from autokeras.utils import ModelTrainer
 
 class ClassifierGenerator:
     def __init__(self, n_classes, input_shape):
@@ -72,3 +74,48 @@ class RandomConvClassifierGenerator(ClassifierGenerator):
                       optimizer=Adam(),
                       metrics=['accuracy'])
         return model
+
+class HillClimbingClassifierGenerator(ClassifierGenerator):
+    def __init__(self, n_classes, input_shape, x_train, y_train, x_test, y_test, verbose):
+        super().__init__(n_classes, input_shape)
+        self.x_train = x_train
+        self.y_train = y_train
+        self.x_test = x_test
+        self.y_test = y_test
+        self.verbose = verbose
+
+    def _remove_duplicate(self,models):
+        ans = []
+        for model_a in models:
+            if len(ans) == 0:
+                ans.append(model_a)
+            else:
+                same = False
+                for model_b in ans:
+                    if compare_network(model_a,model_b):
+                        same = True
+                        break
+                if not same:
+                    ans.append(model_a)
+        return ans
+
+    def generate(self):
+        model = RandomConvClassifierGenerator(self.n_classes,self.input_shape).generate()
+        optimal_index = None
+        optimal_accuracy = None
+        while True:
+            ModelTrainer(model, self.x_train, self.y_train, self.x_test, self.y_test, self.verbose).train_model()
+            _, optimal_accuracy = model.evaluate(self.x_test,self.y_test,self.verbose)
+            models = self._remove_duplicate(net_transfromer(model))
+            for index in range(0,len(models)):
+                ModelTrainer(models[index], self.x_train, self.y_train, self.x_test, self.y_test, self.verbose).train_model()
+                _, accuracy = model[index].evaluate(self.x_test, self.y_test, self.verbose)
+                if accuracy > optimal_accuracy:
+                    optimal_accuracy = accuracy
+                    optimal_index = index
+                    model = models[index]
+            if optimal_index == None:
+                break
+        return model
+
+

@@ -4,6 +4,7 @@ from sklearn.neural_network.multilayer_perceptron import BaseMultilayerPerceptro
 
 from autokeras.generator import ClassifierGenerator
 from autokeras.preprocessor import OneHotEncoder
+from autokeras.utils import ModelTrainer
 
 MAX_MODEL_NUM = 100
 MAX_ITER_NUM = 100000
@@ -54,8 +55,7 @@ class ClassifierBase:
 
             if self.verbose:
                 model.summary()
-
-            self._train_model(model, x_train, y_train, x_test, y_test)
+            ModelTrainer(model, x_train, y_train, x_test, y_test,self.verbose).train_model()
             # The same auto batch size_train, y_train strategy as sklearn
             loss, accuracy = self.model.evaluate(x_test, y_test)
             self.history.append({'model': self.model, 'loss': loss, 'accuracy': accuracy})
@@ -71,30 +71,6 @@ class ClassifierBase:
     def _get_generator(self, n_classes, input_shape):
         return None
 
-    def _converged(self, loss):
-        self.training_losses.append(loss)
-
-        if loss > (self.minimum_loss - MIN_LOSS_DEC):
-            self._no_improvement_count += 1
-        else:
-            self._no_improvement_count = 0
-
-        if loss < self.minimum_loss:
-            self.minimum_loss = loss
-
-        return self._no_improvement_count > MAX_NO_IMPROVEMENT_NUM
-
-    def _train_model(self, model, x_train, y_train, x_test, y_test):
-        self.training_losses = []
-        self.minimum_loss = float('inf')
-        for _ in range(MAX_ITER_NUM):
-            model.fit(x_train, y_train,
-                      batch_size=min(x_train.shape[0], 200),
-                      verbose=self.verbose)
-            loss, _ = model.evaluate(x_test, y_test)
-            if self._converged(loss):
-                break
-        pass
 
 
 class Classifier(ClassifierBase):
