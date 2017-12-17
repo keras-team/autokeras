@@ -80,7 +80,7 @@ def dense_to_wider_layer(pre_layer, next_layer, n_add_units):
     new_pre_layer = Dense(n_units2 + n_add_units, input_shape=(n_units1,), activation='relu')
     new_pre_layer.build((None, n_units1))
     new_pre_layer.set_weights((student_w1, student_b1))
-    new_next_layer = Dense(n_units3, activation='relu')
+    new_next_layer = Dense(n_units3, activation=next_layer.get_config()['activation'])
     new_next_layer.build((None, n_units2 + n_add_units))
     new_next_layer.set_weights((student_w2, teacher_b2))
 
@@ -173,7 +173,7 @@ def conv_dense_to_wider_layer(pre_layer, next_layer, n_add_filters):
                               input_shape=pre_layer.input_shape[1:])
     new_pre_layer.build((None,) * (len(pre_filter_shape) + 1) + (pre_layer.input_shape[-1],))
     new_pre_layer.set_weights((student_w1, student_b1))
-    new_next_layer = Dense(n_units, activation='relu')
+    new_next_layer = Dense(n_units, activation=next_layer.get_config()['activation'])
     n_new_total_weights = int(reduce(mul, student_w2.shape))
     input_dim = int(n_new_total_weights / n_units)
     new_next_layer.build((None, input_dim))
