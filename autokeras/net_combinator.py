@@ -3,7 +3,7 @@ from keras.layers import Dense
 from keras.models import Sequential
 
 from autokeras.constant import CONV_FUNC_LIST, WEIGHTED_LAYER_FUNC_LIST
-from autokeras.net_transformer import copy_layer
+from autokeras.net_transformer import copy_layer, to_deeper_model
 from autokeras.utils import is_conv_layer
 
 
@@ -12,16 +12,30 @@ def layer_num(model, type_list):
 
 
 def add_dense(net, n_add):
-    return None
+    level = None
+    for index, layer in enumerate(net.layers):
+        if isinstance(layer, Dense):
+            level = index
+            break
+    for i in range(n_add):
+        net = to_deeper_model(net, level, net.layers[0].input_shape)
+    return net
 
 
 def add_conv(net, n_add):
-    return None
+    level = None
+    for index, layer in enumerate(net.layers):
+        if is_conv_layer(layer):
+            level = index
+            break
+    for i in range(n_add):
+        net = to_deeper_model(net, level, net.layers[0].input_shape)
+    return net
 
 
 def pad_filter(weight, old_size, new_size):
     return np.pad(weight,
-                  map(lambda x: (x, x), (new_size - old_size) / 2),
+                  map(lambda x: (x, x), tuple(np.subtract(np.array(new_size), np.array(old_size)) / 2)),
                   'constant',
                   constant_values=0)
 
