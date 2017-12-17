@@ -1,5 +1,9 @@
 from keras.layers import Conv1D, Conv2D, Conv3D
-from autokeras.constant import MAX_ITER_NUM, MIN_LOSS_DEC, MAX_NO_IMPROVEMENT_NUM
+from autokeras.constant import MAX_ITER_NUM, MIN_LOSS_DEC, MAX_NO_IMPROVEMENT_NUM, CONV_FUNC_LIST
+
+
+def is_conv_layer(layer):
+    return isinstance(layer, CONV_FUNC_LIST)
 
 
 def get_conv_layer_func(n_dim):
@@ -9,6 +13,7 @@ def get_conv_layer_func(n_dim):
     if n_dim < 1:
         raise ValueError('The input dimension is too low.')
     return conv_layer_functions[n_dim - 1]
+
 
 class ModelTrainer():
     def __init__(self, model, x_train, y_train, x_test, y_test, verbose):
@@ -40,8 +45,8 @@ class ModelTrainer():
         self.minimum_loss = float('inf')
         for _ in range(MAX_ITER_NUM):
             self.model.fit(self.x_train, self.y_train,
-                      batch_size=min(self.x_train.shape[0], 200),
-                      verbose=self.verbose)
+                           batch_size=min(self.x_train.shape[0], 200),
+                           verbose=self.verbose)
             loss, _ = self.model.evaluate(self.x_test, self.y_test)
             if self._converged(loss):
                 break
