@@ -1,3 +1,4 @@
+import numpy as np
 from random import randint, random
 
 from keras.layers import Dense, Dropout, MaxPooling1D, MaxPooling2D, MaxPooling3D, Flatten
@@ -6,9 +7,10 @@ from keras.models import Sequential
 from keras.optimizers import Adam, Adadelta
 
 from autokeras.utils import get_conv_layer_func
-from autokeras.net_transformer import net_transfromer
+from autokeras.net_transformer import net_transformer
 from autokeras.comparator import compare_network
 from autokeras.utils import ModelTrainer
+
 
 class ClassifierGenerator:
     def __init__(self, n_classes, input_shape):
@@ -76,6 +78,7 @@ class RandomConvClassifierGenerator(ClassifierGenerator):
                       metrics=['accuracy'])
         return model
 
+
 class HillClimbingClassifierGenerator(ClassifierGenerator):
     def __init__(self, n_classes, input_shape, x_train, y_train, x_test, y_test, verbose):
         super().__init__(n_classes, input_shape)
@@ -85,42 +88,47 @@ class HillClimbingClassifierGenerator(ClassifierGenerator):
         self.y_test = y_test
         self.verbose = verbose
         self.model = None
+        self.history_models = []
 
-    def _remove_duplicate(self,models):
+    def _remove_duplicate(self, models):
+        """
+        Remove the duplicate in the history_models
+        :param models:
+        :return:
+        """
         ans = []
         for model_a in models:
-            if len(ans) == 0:
-                ans.append(model_a)
-            else:
-                same = False
-                for model_b in ans:
-                    if compare_network(model_a,model_b):
-                        same = True
-                        break
-                if not same:
+            for model_b in self.history_models:
+                if compare_network(model_a, model_b):
                     ans.append(model_a)
+                    break
         return ans
 
     def generate(self):
-        if self.model == None:
+        if self.model is None:
             self.model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
+            self.history_models.append(self.model)
             return self.model
-        else:
-            optimal_accuracy = None
-            optimal_index = None
-            ModelTrainer(self.model, self.x_train, self.y_train, self.x_test, self.y_test, self.verbose).train_model()
-            _, optimal_accuracy = self.model.evaluate(self.x_test,self.y_test,verbose=self.verbose)
-            models = self._remove_duplicate(net_transfromer(self.model))
-            for index in range(0,len(models)):
-                models[index].compile(loss=categorical_crossentropy,
-                  optimizer=Adadelta(),
-                  metrics=['accuracy'])
-                ModelTrainer(models[index], self.x_train, self.y_train, self.x_test, self.y_test, self.verbose).train_model()
-                _, accuracy = models[index].evaluate(self.x_test, self.y_test, self.verbose)
-                if accuracy > optimal_accuracy:
-                    optimal_accuracy = accuracy
-                    optimal_index = index
-                    self.model = models[index]
-        return self.model if self.optimal_index is not None else None
 
+        ModelTrainer(self.model, self.x_train, self.y_train, self.x_test, self.y_test, self.verbose).train_model()
+        _, optimal_accuracy = self.model.evaluate(self.x_test, self.y_test, verbose=self.verbose)
+        new_models = self._remove_duplicate(net_transformer(self.model))
+        self.history_models += new_models
 
+        accuracy_list = []
+        for model in new_models:
+            model.compile(loss=categorical_crossentropy,
+                          optimizer=Adadelta(),
+                          metrics=['accuracy'])
+            ModelTrainer(model, self.x_train, self.y_train, self.x_test, self.y_test,
+                         self.verbose).train_model()
+            _, accuracy = model.evaluate(self.x_test, self.y_test, self.verbose)
+            accuracy_list.append(accuracy)
+
+        max_index = np.argmax(np.array(accuracy_list))[0]
+        max_accuracy = accuracy_list[max_index]
+
+        if max_accuracy > optimal_accuracy:
+            return new_models[max_index]
+
+        return None
