@@ -4,7 +4,7 @@ from autokeras import constant
 
 
 def is_conv_layer(layer):
-    return isinstance(layer, CONV_FUNC_LIST)
+    return isinstance(layer, tuple(CONV_FUNC_LIST))
 
 
 def get_conv_layer_func(n_dim):

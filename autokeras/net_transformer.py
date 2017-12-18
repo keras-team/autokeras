@@ -49,14 +49,19 @@ def replace_layers(model, level_list, layer_list):
         if index not in level_list:
             layer.set_weights(model.layers[index].get_weights())
 
+    return new_model
+
 
 def insert_layer(model, level, new_layer):
     new_model = Sequential()
+
     for index, layer in enumerate(model.layers):
         new_model.add(copy_layer(layer))
         new_model.layers[-1].set_weights(layer.get_weights())
         if index == level:
             new_model.add(new_layer)
+
+    return new_model
 
 
 def to_deeper_model(model, level):
@@ -74,7 +79,7 @@ def net_transformer(model):
     models = []
     layers = model.layers
     for index in range(len(layers) - 1):
-        if isinstance(layers[index], WEIGHTED_LAYER_FUNC_LIST):
+        if isinstance(layers[index], tuple(WEIGHTED_LAYER_FUNC_LIST)):
             models.append(to_deeper_model(model, index))
             models.append(to_wider_model(model, index))
     return models
