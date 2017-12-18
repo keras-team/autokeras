@@ -1,8 +1,9 @@
 from random import randint, random
 
 from keras.layers import Dense, Dropout, MaxPooling1D, MaxPooling2D, MaxPooling3D, Flatten
+from keras.losses import categorical_crossentropy
 from keras.models import Sequential
-from keras.optimizers import Adam
+from keras.optimizers import Adam, Adadelta
 
 from autokeras.utils import get_conv_layer_func
 from autokeras.net_transformer import net_transfromer
@@ -83,6 +84,7 @@ class HillClimbingClassifierGenerator(ClassifierGenerator):
         self.x_test = x_test
         self.y_test = y_test
         self.verbose = verbose
+        self.model = None
 
     def _remove_duplicate(self,models):
         ans = []
@@ -100,22 +102,25 @@ class HillClimbingClassifierGenerator(ClassifierGenerator):
         return ans
 
     def generate(self):
-        model = RandomConvClassifierGenerator(self.n_classes,self.input_shape).generate()
-        optimal_index = None
-        optimal_accuracy = None
-        while True:
-            ModelTrainer(model, self.x_train, self.y_train, self.x_test, self.y_test, self.verbose).train_model()
-            _, optimal_accuracy = model.evaluate(self.x_test,self.y_test,self.verbose)
-            models = self._remove_duplicate(net_transfromer(model))
+        if self.model == None:
+            self.model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
+            return self.model
+        else:
+            optimal_accuracy = None
+            optimal_index = None
+            ModelTrainer(self.model, self.x_train, self.y_train, self.x_test, self.y_test, self.verbose).train_model()
+            _, optimal_accuracy = self.model.evaluate(self.x_test,self.y_test,verbose=self.verbose)
+            models = self._remove_duplicate(net_transfromer(self.model))
             for index in range(0,len(models)):
+                models[index].compile(loss=categorical_crossentropy,
+                  optimizer=Adadelta(),
+                  metrics=['accuracy'])
                 ModelTrainer(models[index], self.x_train, self.y_train, self.x_test, self.y_test, self.verbose).train_model()
-                _, accuracy = model[index].evaluate(self.x_test, self.y_test, self.verbose)
+                _, accuracy = models[index].evaluate(self.x_test, self.y_test, self.verbose)
                 if accuracy > optimal_accuracy:
                     optimal_accuracy = accuracy
                     optimal_index = index
-                    model = models[index]
-            if optimal_index == None:
-                break
-        return model
+                    self.model = models[index]
+        return self.model if self.optimal_index is not None else None
 
 

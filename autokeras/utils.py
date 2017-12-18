@@ -1,5 +1,6 @@
 from keras.layers import Conv1D, Conv2D, Conv3D
-from autokeras.constant import MAX_ITER_NUM, MIN_LOSS_DEC, MAX_NO_IMPROVEMENT_NUM, CONV_FUNC_LIST
+from autokeras.constant import CONV_FUNC_LIST
+from autokeras import constant
 
 
 def is_conv_layer(layer):
@@ -29,7 +30,7 @@ class ModelTrainer():
 
     def _converged(self, loss):
         self.training_losses.append(loss)
-        if loss > (self.minimum_loss - MIN_LOSS_DEC):
+        if loss > (self.minimum_loss - constant.MIN_LOSS_DEC):
             self._no_improvement_count += 1
         else:
             self._no_improvement_count = 0
@@ -37,13 +38,15 @@ class ModelTrainer():
         if loss < self.minimum_loss:
             self.minimum_loss = loss
 
-        return self._no_improvement_count > MAX_NO_IMPROVEMENT_NUM
+        return self._no_improvement_count > constant.MAX_NO_IMPROVEMENT_NUM
 
     def train_model(self):
         self.training_losses = []
         self._no_improvement_count = 0
         self.minimum_loss = float('inf')
-        for _ in range(MAX_ITER_NUM):
+        print(self.model.summary())
+        print(constant.MAX_ITER_NUM)
+        for _ in range(constant.MAX_ITER_NUM):
             self.model.fit(self.x_train, self.y_train,
                            batch_size=min(self.x_train.shape[0], 200),
                            verbose=self.verbose)
