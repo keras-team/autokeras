@@ -5,23 +5,23 @@ from autokeras.classifier import *
 
 def test_train_x_array_exception():
     clf = Classifier()
-    with pytest.raises(Exception) as einfo:
+    with pytest.raises(Exception) as info:
         clf.fit(15, [])
-    assert str(einfo.value) == 'x_train should be a 2d array.'
+    assert str(info.value) == 'x_train should be a 2d array.'
 
 
 def test_xy_dim_exception():
     clf = Classifier()
-    with pytest.raises(Exception) as einfo:
+    with pytest.raises(Exception) as info:
         clf.fit([[1, 2], [3, 4]], [6, 7, 8])
-    assert str(einfo.value) == 'x_train and y_train should have the same number of instances.'
+    assert str(info.value) == 'x_train and y_train should have the same number of instances.'
 
 
 def test_x_float_exception():
     clf = Classifier()
-    with pytest.raises(Exception) as einfo:
+    with pytest.raises(Exception) as info:
         clf.fit([[1, 'abc'], [3, 4]], [7, 8])
-    assert str(einfo.value) == 'x_train should only contain numerical data.'
+    assert str(info.value) == 'x_train should only contain numerical data.'
 
 
 def test_fit_predict():

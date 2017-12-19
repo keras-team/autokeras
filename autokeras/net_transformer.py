@@ -4,12 +4,7 @@ from autokeras.layer_transformer import to_deeper_layer, to_wider_layer
 from keras.models import Sequential
 from keras.layers import Dense, Conv1D, Conv2D, Conv3D
 
-
-def copy_layer(layer):
-    new_layer = layer.__class__.from_config(layer.get_config())
-    if new_layer is None:
-        raise ValueError("There must be a Dense or Convolution Layer")
-    return new_layer
+from autokeras.utils import copy_layer
 
 
 def get_next_dense_conv(start, layers):

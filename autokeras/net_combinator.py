@@ -3,8 +3,8 @@ from keras.layers import Dense
 from keras.models import Sequential
 
 from autokeras.constant import CONV_FUNC_LIST, WEIGHTED_LAYER_FUNC_LIST
-from autokeras.net_transformer import copy_layer, to_deeper_model
-from autokeras.utils import is_conv_layer
+from autokeras.net_transformer import to_deeper_model
+from autokeras.utils import is_conv_layer, copy_layer
 
 
 def layer_num(model, type_list):
@@ -61,6 +61,22 @@ def combine_conv_weights(layer1, layer2, filter_size, n_input_channel):
                                   pad_weight2),
                                  axis=-2)
     return np.concatenate((pad_weight1, pad_weight2), axis=-1), np.concatenate((bias1, bias2))
+
+
+def combine_last_layer(layer1, layer2):
+    pre_units1 = layer1.get_weights()[0].shape[0]
+    pre_units2 = layer2.get_weights()[0].shape[0]
+
+    weight1, bias1 = layer1.get_weights()
+    weight2, bias2 = layer2.get_weights()
+
+    new_layer = copy_layer(layer1)
+    new_layer.build((None, pre_units1 + pre_units2))
+    new_weights = np.concatenate((weight1, weight2), axis=0)
+    new_bias = np.mean((bias1, bias2), axis=0)
+    new_layer.set_weights((new_weights, new_bias))
+
+    return new_layer
 
 
 class NetCombinator:
@@ -121,6 +137,7 @@ class NetCombinator:
         n_dense1 = layer_num(net1, [Dense])
         n_dense2 = layer_num(net2, [Dense])
 
+        # Transform the two networks into same number of weighted layers.
         if n_conv1 > n_conv2:
             net2 = add_conv(net2, n_conv1 - n_conv2)
         elif n_conv2 > n_conv1:
@@ -131,12 +148,13 @@ class NetCombinator:
         elif n_dense2 > n_dense1:
             net1 = add_dense(net2, n_dense2 - n_dense1)
 
+        # Combine the corresponding layers.
         p1 = 0
         p2 = 0
         layers1 = net1.layers
         layers2 = net2.layers
         new_layer_list = []
-        while p1 < len(layers1) and p2 < len(layers2):
+        while p1 < len(layers1) - 1 and p2 < len(layers2) - 1:
             layer1 = layers1[p1]
             layer2 = layers2[p2]
             if type(layer1) == type(layer2):
@@ -149,13 +167,21 @@ class NetCombinator:
             elif isinstance(layer2, tuple(WEIGHTED_LAYER_FUNC_LIST)):
                 new_layer_list.append(copy_layer(layer1))
                 p1 += 1
+            else:
+                print(layer1, layer2)
 
+        # Add the first layer with input_shape.
         new_model = Sequential()
         first_layer_config = new_layer_list[0].get_config()
         first_layer_config['input_shape'] = self.input_shape[1:]
-        new_model.add(new_layer_list[0].__class__.from_config(first_layer_config))
+        new_first_layer = new_layer_list[0].__class__.from_config(first_layer_config)
+        new_model.add(new_first_layer)
+        new_first_layer.set_weights(new_layer_list[0].get_weights())
+
         for layer in new_layer_list[1:]:
             new_model.add(layer)
+
+        new_model.add(combine_last_layer(layers1[-1], layers2[-1]))
 
         return new_model
 

@@ -54,3 +54,10 @@ class ModelTrainer():
             if self._converged(loss):
                 break
         return self.minimum_loss
+
+
+def copy_layer(layer):
+    new_layer = layer.__class__.from_config(layer.get_config())
+    if new_layer is None:
+        raise ValueError("There must be a Dense or Convolution Layer")
+    return new_layer
