@@ -2,3 +2,4 @@ pytest
 numpy
 keras
 scikit-learn
+tensorflow
