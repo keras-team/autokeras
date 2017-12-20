@@ -55,11 +55,13 @@ def test_save_continue():
     train_x = np.random.rand(100, 25, 1)
     test_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf = ImageClassifier(path='resources/temp')
+    clf = ImageClassifier(path='tests/resources/temp')
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
 
     constant.MAX_MODEL_NUM = 4
-    clf = load_from_path(path='resources/temp')
+    clf = load_from_path(path='tests/resources/temp')
+    clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
+    assert len(clf.history) == 4

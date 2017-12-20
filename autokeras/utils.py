@@ -1,3 +1,4 @@
+import os
 from keras.layers import Conv1D, Conv2D, Conv3D
 from autokeras.constant import CONV_FUNC_LIST, LAYER_ATTR
 from autokeras import constant
@@ -72,3 +73,12 @@ def extract_config(network):
             important_attr[attr] = layer_config[attr]
         config['config'].append(important_attr)
     return config
+
+
+def ensure_dir(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+
+def ensure_file_dir(path):
+    ensure_dir(os.path.dirname(path))

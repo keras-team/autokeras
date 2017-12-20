@@ -7,11 +7,12 @@ from sklearn.model_selection import train_test_split
 from autokeras import constant
 from autokeras.generator import RandomConvClassifierGenerator
 from autokeras.preprocessor import OneHotEncoder
-from autokeras.utils import ModelTrainer, clear_path
+from autokeras.utils import ModelTrainer, ensure_dir
 
 
 def load_from_path(path=constant.DEFAULT_SAVE_PATH):
-    classifier = pickle.load(os.path.join(path, 'config'))
+    classifier = pickle.load(open(os.path.join(path, 'config'), 'rb'))
+    classifier.path = path
     return classifier
 
 
@@ -25,7 +26,8 @@ class ClassifierBase:
         self.history = []
         self.training_losses = []
         self.path = path
-        self.current_iteration = 0
+        self.current_iteration = -1
+        ensure_dir(path)
 
     def _validate(self, x_train, y_train):
         try:
@@ -60,21 +62,21 @@ class ClassifierBase:
         # Divide training data into training and testing data.
         x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.33, random_state=42)
 
-        for i in range(self.current_iteration, constant.MAX_MODEL_NUM):
+        for i in range(self.current_iteration + 1, constant.MAX_MODEL_NUM):
             model = self.generator.generate()
 
             if self.verbose:
                 model.summary()
 
             ModelTrainer(model, x_train, y_train, x_test, y_test, self.verbose).train_model()
-            model.save(str(i) + '.h5')
+            model.save(os.path.join(self.path, str(i) + '.h5'))
             loss, accuracy = model.evaluate(x_test, y_test)
             self.history.append({'model_id': i, 'loss': loss, 'accuracy': accuracy})
             self.current_iteration = i
-            pickle.dump(self, os.path.join(self.path, 'config'))
+            pickle.dump(self, open(os.path.join(self.path, 'config'), 'wb'))
 
         self.history.sort(key=lambda x: x['accuracy'])
-        self.model = load_model(self.history[-1]['model_id'] + '.h5')
+        self.model = load_model(os.path.join(self.path, str(self.history[-1]['model_id']) + '.h5'))
 
     def predict(self, x_test):
         return self.y_encoder.inverse_transform(self.model.predict(x_test, verbose=self.verbose))
