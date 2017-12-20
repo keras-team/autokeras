@@ -1,18 +1,19 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-from autokeras.constant import MAX_MODEL_NUM
-from autokeras.generator import ClassifierGenerator
+from autokeras import constant
+from autokeras.generator import RandomConvClassifierGenerator
 from autokeras.preprocessor import OneHotEncoder
 from autokeras.utils import ModelTrainer
 
 
 class ClassifierBase:
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, generator_type=None):
         self.y_encoder = OneHotEncoder()
         self.model = None
         self.verbose = verbose
         self.generator = None
+        self.generator_type = generator_type
         self.history = []
         self.training_losses = []
 
@@ -45,15 +46,16 @@ class ClassifierBase:
         # Divide training data into training and testing data.
         x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.33, random_state=42)
 
-        for i in range(MAX_MODEL_NUM):
+        for i in range(constant.MAX_MODEL_NUM):
             model = self.generator.generate()
 
             if self.verbose:
                 model.summary()
-            ModelTrainer(model, x_train, y_train, x_test, y_test,self.verbose).train_model()
-            # The same auto batch size_train, y_train strategy as sklearn
-            loss, accuracy = self.model.evaluate(x_test, y_test)
-            self.history.append({'model': self.model, 'loss': loss, 'accuracy': accuracy})
+
+            ModelTrainer(model, x_train, y_train, x_test, y_test, self.verbose).train_model()
+            loss, accuracy = model.evaluate(x_test, y_test)
+            self.history.append({'model': model, 'loss': loss, 'accuracy': accuracy})
+
         self.history.sort(key=lambda x: x['accuracy'])
         self.model = self.history[-1]['model']
 
@@ -67,7 +69,6 @@ class ClassifierBase:
         return None
 
 
-
 class Classifier(ClassifierBase):
     def __init__(self):
         super().__init__()
@@ -75,10 +76,12 @@ class Classifier(ClassifierBase):
     def _validate(self, x_train, y_train):
         super()._validate(x_train, y_train)
 
-    def _get_generator(self, n_classes, input_shape):
-        return ClassifierGenerator(n_classes, input_shape)
-
 
 class ImageClassifier(ClassifierBase):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, verbose=True, generator_type='random'):
+        super().__init__(verbose, generator_type)
+
+    def _get_generator(self, n_classes, input_shape):
+        if self.generator_type == 'random':
+            return RandomConvClassifierGenerator(n_classes, input_shape)
+        return None

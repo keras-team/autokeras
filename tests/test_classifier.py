@@ -1,13 +1,14 @@
 import pytest
 
 from autokeras.classifier import *
+from autokeras import constant
 
 
 def test_train_x_array_exception():
     clf = Classifier()
     with pytest.raises(Exception) as info:
         clf.fit(15, [])
-    assert str(info.value) == 'x_train should be a 2d array.'
+    assert str(info.value) == 'x_train should at least has 2 dimensions.'
 
 
 def test_xy_dim_exception():
@@ -25,18 +26,23 @@ def test_x_float_exception():
 
 
 def test_fit_predict():
-    clf = Classifier()
+    constant.MAX_ITER_NUM = 2
+    constant.MAX_MODEL_NUM = 2
+    clf = ImageClassifier()
     clf.n_epochs = 100
-    clf.fit([[1, 2], [3, 4]], ['a', 'b'])
-    results = clf.predict([[1, 2], [3, 4]])
-    assert np.array_equal(results, np.array(['a', 'b']))
+    clf.fit([[[1], [2]], [[3], [4]]], ['a', 'b'])
+    results = clf.predict([[[1], [2]], [[3], [4]]])
+    print(results)
+    assert all(map(lambda result: result in np.array(['a', 'b']), results))
 
 
 def test_fit_predict2():
-    train_x = np.random.rand(100, 25)
-    test_x = np.random.rand(100, 25)
+    constant.MAX_ITER_NUM = 2
+    constant.MAX_MODEL_NUM = 2
+    train_x = np.random.rand(100, 25, 1)
+    test_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf = Classifier()
+    clf = ImageClassifier()
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)

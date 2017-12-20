@@ -16,7 +16,7 @@ def get_conv_layer_func(n_dim):
     return conv_layer_functions[n_dim - 1]
 
 
-class ModelTrainer():
+class ModelTrainer:
     def __init__(self, model, x_train, y_train, x_test, y_test, verbose):
         self.model = model
         self.x_train = x_train
@@ -44,8 +44,6 @@ class ModelTrainer():
         self.training_losses = []
         self._no_improvement_count = 0
         self.minimum_loss = float('inf')
-        print(self.model.summary())
-        print(constant.MAX_ITER_NUM)
         for _ in range(constant.MAX_ITER_NUM):
             self.model.fit(self.x_train, self.y_train,
                            batch_size=min(self.x_train.shape[0], 200),
