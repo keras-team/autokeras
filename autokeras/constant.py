@@ -6,6 +6,8 @@ MAX_MODEL_NUM = 100
 MAX_ITER_NUM = 100000
 MIN_LOSS_DEC = 1e-4
 MAX_NO_IMPROVEMENT_NUM = 10
+DEFAULT_SAVE_PATH = '/tmp/autokeras/'
+
 LAYER_ATTR = {'Dense': ['units', 'activation'],
               'Dropout': ['rate'],
               'MaxPooling1D': ['pool_size'],

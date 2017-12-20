@@ -1,5 +1,9 @@
 .idea
 
+# resource temp folder
+tests/resources/temp/*
+!tests/resources/temp/.gitkeep
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
