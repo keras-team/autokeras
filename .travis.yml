@@ -1,6 +1,5 @@
 language: python
 python:
   - "3.6"
-  - "nightly"
 script:
   - python -m pytest tests
