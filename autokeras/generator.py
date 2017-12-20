@@ -7,7 +7,7 @@ from keras.models import Sequential
 from keras.optimizers import Adam, Adadelta
 
 from autokeras.utils import get_conv_layer_func
-from autokeras.net_transformer import net_transformer
+from autokeras.net_transformer import transform
 from autokeras.comparator import compare_network
 from autokeras.utils import ModelTrainer
 
@@ -112,7 +112,7 @@ class HillClimbingClassifierGenerator(ClassifierGenerator):
 
         ModelTrainer(self.model, self.x_train, self.y_train, self.x_test, self.y_test, self.verbose).train_model()
         _, optimal_accuracy = self.model.evaluate(self.x_test, self.y_test, verbose=self.verbose)
-        new_models = self._remove_duplicate(net_transformer(self.model))
+        new_models = self._remove_duplicate(transform(self.model))
         self.history_models += new_models
 
         accuracy_list = []

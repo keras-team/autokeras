@@ -70,7 +70,8 @@ def to_wider_model(model, level):
     return replace_layers(model, [level, ind], [new_wider_layer, new_next_wider_layer])
 
 
-def net_transformer(model):
+def transform(model):
+    print('Function called.')
     models = []
     layers = model.layers
     for index in range(len(layers) - 1):

@@ -26,7 +26,7 @@ def test_net_transformer():
                   metrics=['accuracy'])
     random_input = np.random.rand(1, 28, 28, 1)  # one picture, 28,28, 1 chanel
     output1 = model.predict_on_batch(random_input)
-    models = net_transformer(model)
+    models = transform(model)
     print(models)
     for new_model in models:
         output2 = new_model.predict_on_batch(random_input)

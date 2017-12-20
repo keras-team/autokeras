@@ -1,5 +1,6 @@
+from unittest.mock import patch
+
 from autokeras.generator import *
-from unittest.mock import *
 from autokeras import constant
 import numpy as np
 
@@ -11,7 +12,13 @@ def test_random_classifier_generator():
         model.predict_on_batch(np.random.rand(2, 28, 28, 1))
 
 
-def test_hill_climbing_classifier_generator():
+def simple_transform(_):
+    generator = RandomConvClassifierGenerator(input_shape=(28, 28, 1), n_classes=3)
+    return [generator.generate(), generator.generate()]
+
+
+@patch('autokeras.generator.net_transformer', side_effect=simple_transform)
+def test_hill_climbing_classifier_generator(_):
     x_train = np.random.rand(2, 28, 28, 1)
     y_train = np.random.rand(2, 3)
     x_test = np.random.rand(1, 28, 28, 1)
@@ -22,10 +29,10 @@ def test_hill_climbing_classifier_generator():
     generator = HillClimbingClassifierGenerator(3, (28, 28, 1), x_train=x_train, y_train=y_train, x_test=x_test,
                                                 y_test=y_test, verbose=False)
     model = None
-    generate_model = generator.generate()
     times = 1
-    while generate_model is not None and times <= constant.MAX_MODEL_NUM:
-        model = generate_model
-        generate_model = generator.generate()
+    while times <= constant.MAX_MODEL_NUM:
+        model = generator.generate()
+        if not model:
+            break
         times += 1
     print(model.summary())
