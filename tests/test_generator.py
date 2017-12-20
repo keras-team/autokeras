@@ -17,7 +17,7 @@ def simple_transform(_):
     return [generator.generate(), generator.generate()]
 
 
-@patch('autokeras.generator.net_transformer', side_effect=simple_transform)
+@patch('autokeras.generator.transform', side_effect=simple_transform)
 def test_hill_climbing_classifier_generator(_):
     x_train = np.random.rand(2, 28, 28, 1)
     y_train = np.random.rand(2, 3)

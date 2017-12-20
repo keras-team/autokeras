@@ -1,5 +1,5 @@
 from keras.layers import Conv1D, Conv2D, Conv3D
-from autokeras.constant import CONV_FUNC_LIST
+from autokeras.constant import CONV_FUNC_LIST, LAYER_ATTR
 from autokeras import constant
 
 
@@ -59,3 +59,16 @@ def copy_layer(layer):
     if new_layer is None:
         raise ValueError("There must be a Dense or Convolution Layer")
     return new_layer
+
+
+def extract_config(network):
+    config = {'type': [], 'config': []}
+    for layer in network.layers:
+        name = type(layer).__name__
+        config['type'].append(name)
+        layer_config = layer.get_config()
+        important_attr = {}
+        for attr in LAYER_ATTR[name]:
+            important_attr[attr] = layer_config[attr]
+        config['config'].append(important_attr)
+    return config

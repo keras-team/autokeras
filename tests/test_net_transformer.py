@@ -8,23 +8,22 @@ from keras.optimizers import Adadelta
 
 def test_net_transformer():
     model = Sequential()
-    img_rows, img_cols = 28, 28
+    img_rows, img_cols = 5, 5
     input_shape = (img_rows, img_cols, 1)
-    model.add(Conv2D(32, kernel_size=(3, 3),
+    model.add(Conv2D(3, kernel_size=(3, 3),
                      activation='relu',
                      padding='same',
                      input_shape=input_shape))
-    model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
     model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
+    model.add(Dense(2, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(10, activation='softmax'))
     model.compile(loss=categorical_crossentropy,
                   optimizer=Adadelta(),
                   metrics=['accuracy'])
-    random_input = np.random.rand(1, 28, 28, 1)  # one picture, 28,28, 1 chanel
+    random_input = np.random.rand(1, 5, 5, 1)
     output1 = model.predict_on_batch(random_input)
     models = transform(model)
     print(models)

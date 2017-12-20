@@ -6,9 +6,8 @@ from keras.losses import categorical_crossentropy
 from keras.models import Sequential
 from keras.optimizers import Adam, Adadelta
 
-from autokeras.utils import get_conv_layer_func
+from autokeras.utils import get_conv_layer_func, extract_config
 from autokeras.net_transformer import transform
-from autokeras.comparator import compare_network
 from autokeras.utils import ModelTrainer
 
 
@@ -88,7 +87,7 @@ class HillClimbingClassifierGenerator(ClassifierGenerator):
         self.y_test = y_test
         self.verbose = verbose
         self.model = None
-        self.history_models = []
+        self.history_configs = []
 
     def _remove_duplicate(self, models):
         """
@@ -98,22 +97,22 @@ class HillClimbingClassifierGenerator(ClassifierGenerator):
         """
         ans = []
         for model_a in models:
-            for model_b in self.history_models:
-                if compare_network(model_a, model_b):
-                    ans.append(model_a)
-                    break
+            model_a_config = extract_config(model_a)
+            if model_a_config not in self.history_configs:
+                ans.append(model_a)
         return ans
 
     def generate(self):
         if self.model is None:
             self.model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
-            self.history_models.append(self.model)
+            self.history_configs.append(extract_config(self.model))
             return self.model
 
         ModelTrainer(self.model, self.x_train, self.y_train, self.x_test, self.y_test, self.verbose).train_model()
         _, optimal_accuracy = self.model.evaluate(self.x_test, self.y_test, verbose=self.verbose)
         new_models = self._remove_duplicate(transform(self.model))
-        self.history_models += new_models
+        for model in new_models:
+            self.history_configs.append(extract_config(model))
 
         accuracy_list = []
         for model in new_models:

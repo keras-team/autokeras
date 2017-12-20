@@ -6,3 +6,13 @@ MAX_MODEL_NUM = 100
 MAX_ITER_NUM = 100000
 MIN_LOSS_DEC = 1e-4
 MAX_NO_IMPROVEMENT_NUM = 10
+LAYER_ATTR = {'Dense': ['units', 'activation'],
+              'Dropout': ['rate'],
+              'MaxPooling1D': ['pool_size'],
+              'MaxPooling2D': ['pool_size'],
+              'MaxPooling3D': ['pool_size'],
+              'Conv1D': ['filters', 'activation', 'kernel_size'],
+              'Conv2D': ['filters', 'activation', 'kernel_size'],
+              'Conv3D': ['filters', 'activation', 'kernel_size'],
+              'Flatten': []
+              }
