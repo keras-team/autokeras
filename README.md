@@ -1,4 +1,7 @@
 # Auto-Keras
+
+[![Build Status](https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master)](https://travis-ci.org/jhfjhfj1/autokeras)
+
 This is a automated machine learning (AutoML) package based on Keras. 
 It aims at automatically search for the architecture and hyperparameters for deep learning models.
 The ultimate goal for this project is for domain experts in fields other than computer science or machine learning
