@@ -3,3 +3,4 @@ numpy
 keras
 scikit-learn
 tensorflow
+h5py
