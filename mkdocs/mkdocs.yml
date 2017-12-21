@@ -1,0 +1,5 @@
+site_name: Auto-Keras
+pages:
+    - Home: index.md
+    - About: about.md
+theme: readthedocs

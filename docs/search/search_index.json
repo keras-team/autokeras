@@ -1,0 +1,24 @@
+{
+    "docs": [
+        {
+            "location": "/",
+            "text": "Welcome to Auto-Keras\n\n\n\n\nThis is a automated machine learning (AutoML) package based on Keras. \nIt aims at automatically search for the architecture and hyperparameters for deep learning models.\nThe ultimate goal for this project is for domain experts in fields other than computer science or machine learning\nto use deep learning models conveniently.\n\n\nHere is a short example for using the package.\n\n\nimport autokeras as ak\n\ntrain_x = np.random.rand(100, 25)\ntest_x = np.random.rand(100, 25)\ntrain_y = np.random.randint(0, 5, 100)\n\nclf = ak.AutoKerasClassifier()\nclf.fit(train_x, train_y)\nresults = clf.predict(test_x)\n\n\n\nFor the repository on GitHub visit \nAuto-Keras on GitHub\n.",
+            "title": "Home"
+        },
+        {
+            "location": "/#welcome-to-auto-keras",
+            "text": "This is a automated machine learning (AutoML) package based on Keras. \nIt aims at automatically search for the architecture and hyperparameters for deep learning models.\nThe ultimate goal for this project is for domain experts in fields other than computer science or machine learning\nto use deep learning models conveniently.  Here is a short example for using the package.  import autokeras as ak\n\ntrain_x = np.random.rand(100, 25)\ntest_x = np.random.rand(100, 25)\ntrain_y = np.random.randint(0, 5, 100)\n\nclf = ak.AutoKerasClassifier()\nclf.fit(train_x, train_y)\nresults = clf.predict(test_x)  For the repository on GitHub visit  Auto-Keras on GitHub .",
+            "title": "Welcome to Auto-Keras"
+        },
+        {
+            "location": "/about/",
+            "text": "About\n\n\nThis package is developed by \nDATA LAB\n at Texas A&M University.",
+            "title": "About"
+        },
+        {
+            "location": "/about/#about",
+            "text": "This package is developed by  DATA LAB  at Texas A&M University.",
+            "title": "About"
+        }
+    ]
+}

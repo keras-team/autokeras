@@ -1,4 +1,4 @@
-# Auto-Keras
+# Welcome to Auto-Keras
 
 [![Build Status](https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master)](https://travis-ci.org/jhfjhfj1/autokeras)
 
@@ -19,3 +19,6 @@ Here is a short example for using the package.
     clf = ak.AutoKerasClassifier()
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
+
+For the repository on GitHub visit [Auto-Keras on GitHub](https://github.com/jhfjhfj1/autokeras).
+
