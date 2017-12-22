@@ -46,6 +46,11 @@ class ModelTrainer:
         self._no_improvement_count = 0
         self.minimum_loss = float('inf')
         for _ in range(constant.MAX_ITER_NUM):
+            print(self.x_train.shape)
+            print(self.y_train.shape)
+            print(self.x_test.shape)
+            print(self.y_test.shape)
+            self.model.summary()
             self.model.fit(self.x_train, self.y_train,
                            batch_size=min(self.x_train.shape[0], 200),
                            verbose=self.verbose)

@@ -1,28 +1,22 @@
-import numpy as np
+import os
+import pickle
 from random import randint, random
 
 from keras.layers import Dense, Dropout, MaxPooling1D, MaxPooling2D, MaxPooling3D, Flatten
 from keras.losses import categorical_crossentropy
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.optimizers import Adam, Adadelta
 
+from autokeras import constant
 from autokeras.utils import get_conv_layer_func, extract_config
 from autokeras.net_transformer import transform
 from autokeras.utils import ModelTrainer
 
 
-class ClassifierGenerator:
+class RandomConvClassifierGenerator:
     def __init__(self, n_classes, input_shape):
         self.n_classes = n_classes
         self.input_shape = input_shape
-
-    def generate(self):
-        pass
-
-
-class RandomConvClassifierGenerator(ClassifierGenerator):
-    def __init__(self, n_classes, input_shape):
-        super().__init__(n_classes, input_shape)
         if len(self.input_shape) > 4:
             raise ValueError('The input dimension is too high.')
         if len(self.input_shape) < 2:
@@ -78,16 +72,15 @@ class RandomConvClassifierGenerator(ClassifierGenerator):
         return model
 
 
-class HillClimbingClassifierGenerator(ClassifierGenerator):
-    def __init__(self, n_classes, input_shape, x_train, y_train, x_test, y_test, verbose):
-        super().__init__(n_classes, input_shape)
-        self.x_train = x_train
-        self.y_train = y_train
-        self.x_test = x_test
-        self.y_test = y_test
+class HillClimbingSearcher:
+    def __init__(self, n_classes, input_shape, path, verbose):
+        self.n_classes = n_classes
+        self.input_shape = input_shape
         self.verbose = verbose
-        self.model = None
         self.history_configs = []
+        self.history = []
+        self.path = path
+        self.model_count = 0
 
     def _remove_duplicate(self, models):
         """
@@ -102,32 +95,43 @@ class HillClimbingClassifierGenerator(ClassifierGenerator):
                 ans.append(model_a)
         return ans
 
-    def generate(self):
-        if self.model is None:
-            self.model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
-            self.history_configs.append(extract_config(self.model))
-            return self.model
+    def generate(self, x_train, y_train, x_test, y_test):
+        if not self.history:
+            # First model is randomly generated.
+            model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
+            self.add_model(model, x_train, y_train, x_test, y_test)
 
-        ModelTrainer(self.model, self.x_train, self.y_train, self.x_test, self.y_test, self.verbose).train_model()
-        _, optimal_accuracy = self.model.evaluate(self.x_test, self.y_test, verbose=self.verbose)
-        new_models = self._remove_duplicate(transform(self.model))
-        for model in new_models:
-            self.history_configs.append(extract_config(model))
+        optimal_accuracy = 0.0
+        while self.model_count < constant.MAX_MODEL_NUM:
+            model = self.load_best_model()
+            new_models = self._remove_duplicate(transform(model))
+            for model in new_models:
+                self.history_configs.append(extract_config(model))
 
-        accuracy_list = []
-        for model in new_models:
-            model.compile(loss=categorical_crossentropy,
-                          optimizer=Adadelta(),
-                          metrics=['accuracy'])
-            ModelTrainer(model, self.x_train, self.y_train, self.x_test, self.y_test,
-                         self.verbose).train_model()
-            _, accuracy = model.evaluate(self.x_test, self.y_test, self.verbose)
-            accuracy_list.append(accuracy)
+            for model in new_models:
+                if self.model_count < constant.MAX_MODEL_NUM:
+                    self.add_model(model, x_train, y_train, x_test, y_test)
 
-        max_index = np.argmax(np.array(accuracy_list))[0]
-        max_accuracy = accuracy_list[max_index]
+            max_accuracy = max(self.history, key=lambda x: x['accuracy'])['accuracy']
+            if max_accuracy <= optimal_accuracy:
+                break
+            optimal_accuracy = max_accuracy
 
-        if max_accuracy > optimal_accuracy:
-            return new_models[max_index]
+        return self.load_best_model()
 
-        return None
+    def add_model(self, model, x_train, y_train, x_test, y_test):
+        model.compile(loss=categorical_crossentropy,
+                      optimizer=Adadelta(),
+                      metrics=['accuracy'])
+        model.summary()
+        ModelTrainer(model, x_train, y_train, x_test, y_test, self.verbose).train_model()
+        loss, accuracy = model.evaluate(x_test, y_test)
+        model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
+        self.history.append({'model_id': self.model_count, 'loss': loss, 'accuracy': accuracy})
+        self.history_configs.append(extract_config(model))
+        self.model_count += 1
+        pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
+
+    def load_best_model(self):
+        model_id = max(self.history, key=lambda x: x['accuracy'])['model_id']
+        return load_model(os.path.join(self.path, str(model_id) + '.h5'))

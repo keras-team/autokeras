@@ -11,11 +11,12 @@ def conv_to_deeper_layer(conv_layer):
     filter_shape = conv_layer.kernel_size
     n_filters = conv_layer.filters
     weight = np.zeros(filter_shape + (n_filters, n_filters))
-    center = (int((filter_shape[0] - 1) / 2), int((filter_shape[1] - 1) / 2))
+    center = tuple(map(lambda x: int((x - 1) / 2), filter_shape))
     for i in range(n_filters):
         filter_weight = np.zeros(filter_shape + (n_filters,))
-        filter_weight[center[0], center[1], i] = 1
-        weight[:, :, :, i] = filter_weight
+        index = center + (i,)
+        filter_weight[index] = 1
+        weight[..., i] = filter_weight
     bias = np.zeros(n_filters)
     conv_func = get_conv_layer_func(len(filter_shape))
     new_conv_layer = conv_func(n_filters,
@@ -98,6 +99,7 @@ def conv_to_wider_layer(pre_layer, next_layer, n_add_filters):
     teacher_w2 = next_layer.get_weights()[0]
     teacher_b1 = pre_layer.get_weights()[1]
     teacher_b2 = next_layer.get_weights()[1]
+
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
     replication_factor = np.bincount(rand)
     student_w1 = teacher_w1.copy()
@@ -106,18 +108,18 @@ def conv_to_wider_layer(pre_layer, next_layer, n_add_filters):
     # target layer update (i)
     for i in range(len(rand)):
         teacher_index = rand[i]
-        new_weight = teacher_w1[:, :, :, teacher_index]
-        new_weight = new_weight[:, :, :, np.newaxis]
-        student_w1 = np.concatenate((student_w1, new_weight), axis=3)
+        new_weight = teacher_w1[..., teacher_index]
+        new_weight = new_weight[..., np.newaxis]
+        student_w1 = np.concatenate((student_w1, new_weight), axis=-1)
         student_b1 = np.append(student_b1, teacher_b1[teacher_index])
     # next layer update (i+1)
     for i in range(len(rand)):
         teacher_index = rand[i]
         factor = replication_factor[teacher_index] + 1
-        new_weight = teacher_w2[:, :, teacher_index, :] * (1. / factor)
-        new_weight_re = new_weight[:, :, np.newaxis, :]
-        student_w2 = np.concatenate((student_w2, new_weight_re), axis=2)
-        student_w2[:, :, teacher_index, :] = new_weight
+        new_weight = teacher_w2[..., teacher_index, :] * (1. / factor)
+        new_weight_re = new_weight[..., np.newaxis, :]
+        student_w2 = np.concatenate((student_w2, new_weight_re), axis=-2)
+        student_w2[..., teacher_index, :] = new_weight
 
     print(pre_layer.input_shape)
     new_pre_layer = conv_func(n_pre_filters + n_add_filters,
@@ -153,9 +155,9 @@ def conv_dense_to_wider_layer(pre_layer, next_layer, n_add_filters):
     # target layer update (i)
     for i in range(len(rand)):
         teacher_index = rand[i]
-        new_weight = teacher_w1[:, :, :, teacher_index]
-        new_weight = new_weight[:, :, :, np.newaxis]
-        student_w1 = np.concatenate((student_w1, new_weight), axis=3)
+        new_weight = teacher_w1[..., teacher_index]
+        new_weight = new_weight[..., np.newaxis]
+        student_w1 = np.concatenate((student_w1, new_weight), axis=-1)
         student_b1 = np.append(student_b1, teacher_b1[teacher_index])
     # next layer update (i+1)
     for i in range(len(rand)):

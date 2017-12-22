@@ -1,5 +1,5 @@
 from autokeras.utils import *
-from autokeras.generator import *
+from autokeras.search import *
 import numpy as np
 
 

@@ -1,32 +1,30 @@
 import numpy as np
 import pickle
 import os
-from keras.models import load_model
 from sklearn.model_selection import train_test_split
 
 from autokeras import constant
-from autokeras.generator import RandomConvClassifierGenerator
+from autokeras.search import HillClimbingSearcher
 from autokeras.preprocessor import OneHotEncoder
-from autokeras.utils import ModelTrainer, ensure_dir
+from autokeras.utils import ensure_dir
 
 
 def load_from_path(path=constant.DEFAULT_SAVE_PATH):
-    classifier = pickle.load(open(os.path.join(path, 'config'), 'rb'))
+    classifier = pickle.load(open(os.path.join(path, 'classifier'), 'rb'))
     classifier.path = path
+    classifier.searcher = pickle.load(open(os.path.join(path, 'searcher'), 'rb'))
     return classifier
 
 
 class ClassifierBase:
-    def __init__(self, verbose=False, generator_type=None, path=constant.DEFAULT_SAVE_PATH):
+    def __init__(self, verbose=False, searcher_type=None, path=constant.DEFAULT_SAVE_PATH):
         self.y_encoder = None
-        self.model = None
         self.verbose = verbose
-        self.generator = None
-        self.generator_type = generator_type
-        self.history = []
-        self.training_losses = []
+        self.searcher = None
+        self.searcher_type = searcher_type
+        # self.history = []
         self.path = path
-        self.current_iteration = -1
+        self.model_id = None
         ensure_dir(path)
 
     def _validate(self, x_train, y_train):
@@ -47,45 +45,39 @@ class ClassifierBase:
 
         self._validate(x_train, y_train)
 
-        input_shape = x_train.shape[1:]
-        n_classes = len(set(y_train.flatten()))
-
-        if self.generator is None:
-            self.generator = self._get_generator(n_classes, input_shape)
-
         # Transform y_train.
         if self.y_encoder is None:
             self.y_encoder = OneHotEncoder()
             self.y_encoder.fit(y_train)
+
         y_train = self.y_encoder.transform(y_train)
+
+        if self.searcher is None:
+            input_shape = x_train.shape[1:]
+            n_classes = self.y_encoder.n_classes
+            self.searcher = self._get_searcher_class()(n_classes, input_shape, self.path, self.verbose)
 
         # Divide training data into training and testing data.
         x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.33, random_state=42)
 
-        for i in range(self.current_iteration + 1, constant.MAX_MODEL_NUM):
-            model = self.generator.generate()
-
-            if self.verbose:
-                model.summary()
-
-            ModelTrainer(model, x_train, y_train, x_test, y_test, self.verbose).train_model()
-            model.save(os.path.join(self.path, str(i) + '.h5'))
-            loss, accuracy = model.evaluate(x_test, y_test)
-            self.history.append({'model_id': i, 'loss': loss, 'accuracy': accuracy})
-            self.current_iteration = i
-            pickle.dump(self, open(os.path.join(self.path, 'config'), 'wb'))
-
-        self.history.sort(key=lambda x: x['accuracy'])
-        self.model = load_model(os.path.join(self.path, str(self.history[-1]['model_id']) + '.h5'))
+        pickle.dump(self, open(os.path.join(self.path, 'classifier'), 'wb'))
+        self.model_id = self.searcher.generate(x_train, y_train, x_test, y_test)
 
     def predict(self, x_test):
-        return self.y_encoder.inverse_transform(self.model.predict(x_test, verbose=self.verbose))
+        model = self.searcher.load_best_model()
+        return self.y_encoder.inverse_transform(model.predict(x_test, verbose=self.verbose))
 
     def summary(self):
-        self.model.summary()
+        model = self.searcher.load_best_model()
+        model.summary()
 
-    def _get_generator(self, n_classes, input_shape):
+    def _get_searcher_class(self):
+        if self.searcher_type == 'climb':
+            return HillClimbingSearcher
         return None
+
+    def evaluate(self, x_test, y_test):
+        pass
 
 
 class Classifier(ClassifierBase):
@@ -97,10 +89,5 @@ class Classifier(ClassifierBase):
 
 
 class ImageClassifier(ClassifierBase):
-    def __init__(self, verbose=True, generator_type='random', path=constant.DEFAULT_SAVE_PATH):
-        super().__init__(verbose, generator_type, path)
-
-    def _get_generator(self, n_classes, input_shape):
-        if self.generator_type == 'random':
-            return RandomConvClassifierGenerator(n_classes, input_shape)
-        return None
+    def __init__(self, verbose=True, searcher_type='climb', path=constant.DEFAULT_SAVE_PATH):
+        super().__init__(verbose, searcher_type, path)

@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from autokeras.generator import *
+from autokeras.search import *
 from autokeras import constant
 import numpy as np
 
@@ -17,7 +17,7 @@ def simple_transform(_):
     return [generator.generate(), generator.generate()]
 
 
-@patch('autokeras.generator.transform', side_effect=simple_transform)
+@patch('autokeras.search.transform', side_effect=simple_transform)
 def test_hill_climbing_classifier_generator(_):
     x_train = np.random.rand(2, 28, 28, 1)
     y_train = np.random.rand(2, 3)
@@ -26,13 +26,5 @@ def test_hill_climbing_classifier_generator(_):
 
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
-    generator = HillClimbingClassifierGenerator(3, (28, 28, 1), x_train=x_train, y_train=y_train, x_test=x_test,
-                                                y_test=y_test, verbose=False)
-    model = None
-    times = 1
-    while times <= constant.MAX_MODEL_NUM:
-        model = generator.generate()
-        if not model:
-            break
-        times += 1
-    print(model.summary())
+    generator = HillClimbingSearcher(3, (28, 28, 1), verbose=False, path=constant.DEFAULT_SAVE_PATH)
+    generator.generate(x_train, y_train, x_test, y_test)
