@@ -1,10 +1,12 @@
 import numpy as np
 import pickle
 import os
+
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
 from autokeras import constant
-from autokeras.search import HillClimbingSearcher
+from autokeras.search import HillClimbingSearcher, RandomSearcher
 from autokeras.preprocessor import OneHotEncoder
 from autokeras.utils import ensure_dir
 
@@ -74,10 +76,13 @@ class ClassifierBase:
     def _get_searcher_class(self):
         if self.searcher_type == 'climb':
             return HillClimbingSearcher
+        elif self.searcher_type == 'random':
+            return RandomSearcher
         return None
 
     def evaluate(self, x_test, y_test):
-        pass
+        y_predict = self.predict(x_test)
+        return accuracy_score(y_test, y_predict)
 
 
 class Classifier(ClassifierBase):

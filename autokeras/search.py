@@ -1,75 +1,15 @@
 import os
 import pickle
-from random import randint, random
 
-from keras.layers import Dense, Dropout, MaxPooling1D, MaxPooling2D, MaxPooling3D, Flatten
 from keras.losses import categorical_crossentropy
-from keras.models import Sequential, load_model
-from keras.optimizers import Adam, Adadelta
+from keras.models import load_model
+from keras.optimizers import Adadelta
 
 from autokeras import constant
-from autokeras.utils import get_conv_layer_func, extract_config
+from autokeras.generator import RandomConvClassifierGenerator, DefaultClassifierGenerator
+from autokeras.utils import extract_config
 from autokeras.net_transformer import transform
 from autokeras.utils import ModelTrainer
-
-
-class RandomConvClassifierGenerator:
-    def __init__(self, n_classes, input_shape):
-        self.n_classes = n_classes
-        self.input_shape = input_shape
-        if len(self.input_shape) > 4:
-            raise ValueError('The input dimension is too high.')
-        if len(self.input_shape) < 2:
-            raise ValueError('The input dimension is too low.')
-
-    def _get_pool_layer_func(self):
-        pool_funcs = [MaxPooling1D, MaxPooling2D, MaxPooling3D]
-        return pool_funcs[len(self.input_shape) - 2]
-
-    def _get_shape(self, dim_size):
-        temp_list = [(dim_size,), (dim_size, dim_size), (dim_size, dim_size, dim_size)]
-        return temp_list[len(self.input_shape) - 2]
-
-    def generate(self):
-        conv_num = randint(1, 10)
-        dense_num = randint(1, 10)
-        dropout_rate = random()
-        filter_size = randint(1, 2) * 2 + 1
-        pool_size = randint(2, 3)
-        filter_shape = self._get_shape(filter_size)
-        pool_shape = self._get_shape(pool_size)
-        pool = self._get_pool_layer_func()
-        conv = get_conv_layer_func(len(filter_shape))
-
-        model = Sequential()
-        for i in range(conv_num):
-            kernel_num = randint(10, 30)
-            if i == 0:
-                model.add(conv(kernel_num,
-                               input_shape=self.input_shape,
-                               kernel_size=filter_shape,
-                               activation='relu',
-                               padding='same'))
-            else:
-                model.add(conv(kernel_num,
-                               kernel_size=filter_shape,
-                               activation='relu',
-                               padding='same'))
-            if random() > 0.5:
-                model.add(pool(pool_size=pool_shape, padding='same'))
-            if random() > 0.5:
-                model.add(Dropout(dropout_rate))
-        model.add(Flatten())
-        for i in range(dense_num):
-            node_num = randint(128, 1024)
-            model.add(Dense(node_num, activation='relu'))
-            if random() > 0.5:
-                model.add(Dropout(dropout_rate))
-        model.add(Dense(self.n_classes, activation='softmax'))
-        model.compile(loss='categorical_crossentropy',
-                      optimizer=Adam(),
-                      metrics=['accuracy'])
-        return model
 
 
 class Searcher:
@@ -135,7 +75,7 @@ class HillClimbingSearcher(Searcher):
     def search(self, x_train, y_train, x_test, y_test):
         # First model is randomly generated.
         if not self.history:
-            model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
+            model = DefaultClassifierGenerator(self.n_classes, self.input_shape).generate()
             self.add_model(model, x_train, y_train, x_test, y_test)
 
         optimal_accuracy = 0.0

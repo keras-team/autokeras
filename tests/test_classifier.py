@@ -4,7 +4,7 @@ import pytest
 
 from autokeras.classifier import *
 from autokeras import constant
-from autokeras.search import RandomConvClassifierGenerator
+from autokeras.generator import RandomConvClassifierGenerator
 
 
 def test_train_x_array_exception():
