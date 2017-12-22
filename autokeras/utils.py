@@ -47,13 +47,11 @@ class ModelTrainer:
         self._no_improvement_count = 0
         self.minimum_loss = float('inf')
         for _ in range(constant.MAX_ITER_NUM):
-            print(constant.EPOCHS_EACH)
-            self.model.summary()
             self.model.fit(self.x_train, self.y_train,
                            batch_size=min(self.x_train.shape[0], 200),
                            epochs=constant.EPOCHS_EACH,
                            verbose=self.verbose)
-            loss, _ = self.model.evaluate(self.x_test, self.y_test)
+            loss, _ = self.model.evaluate(self.x_test, self.y_test, verbose=self.verbose)
             if self._converged(loss):
                 break
         return self.minimum_loss

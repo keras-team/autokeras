@@ -13,11 +13,13 @@ if __name__ == '__main__':
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     X = np.concatenate((x_train, x_test))
     Y = np.concatenate((y_train, y_test))
-    clf = ImageClassifier(searcher_type=sys.argv[1])
+    clf = ImageClassifier(searcher_type=sys.argv[1], path=sys.argv[2], verbose=False)
     clf.fit(x_train, y_train)
     y = clf.evaluate(x_test, y_test)
     # MLP for Pima Indians Dataset with 10-fold cross validation
-    mean_score, std_dev = clf.cross_validate(X, Y, 2)
+    scores = clf.cross_validate(X, Y, 2)
+    print(np.mean(scores))
+    print(np.std(scores))
 
     # split into input (X) and output (Y) variables
     # define 10-fold cross validation test harness

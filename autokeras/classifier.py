@@ -92,11 +92,9 @@ class ClassifierBase:
         for train, test in k_fold.split(x_all, y_raw_all):
             model = self.searcher.load_best_model()
             reset_weights(model)
-            ModelTrainer(model, x_all[train], y_all[train], x_all[test], y_all[test], True).train_model()
-            scores = model.evaluate(x_all[test], y_all[test], verbose=0)
-            print("%s: %.2f%%" % (model.metrics_names[1], scores[1] * 100))
+            ModelTrainer(model, x_all[train], y_all[train], x_all[test], y_all[test], self.verbose).train_model()
+            scores = model.evaluate(x_all[test], y_all[test], verbose=self.verbose)
             scores.append(scores[1] * 100)
-        print("%.2f%% (+/- %.2f%%)" % (float(np.mean(scores)), float(np.std(scores))))
         return np.array(scores)
 
 

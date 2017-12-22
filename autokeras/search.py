@@ -33,9 +33,10 @@ class Searcher:
         model.compile(loss=categorical_crossentropy,
                       optimizer=Adadelta(),
                       metrics=['accuracy'])
-        model.summary()
+        if self.verbose:
+            model.summary()
         ModelTrainer(model, x_train, y_train, x_test, y_test, self.verbose).train_model()
-        loss, accuracy = model.evaluate(x_test, y_test)
+        loss, accuracy = model.evaluate(x_test, y_test, verbose=self.verbose)
         model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
         self.history.append({'model_id': self.model_count, 'loss': loss, 'accuracy': accuracy})
         self.history_configs.append(extract_config(model))
