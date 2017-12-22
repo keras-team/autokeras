@@ -1,3 +1,6 @@
+from keras.layers import MaxPooling2D, Dropout, Flatten, Dense
+from keras.models import Sequential
+
 from autokeras.utils import *
 from autokeras.search import *
 import numpy as np
