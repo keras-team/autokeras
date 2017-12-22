@@ -26,7 +26,8 @@ class Searcher:
         pass
 
     def load_best_model(self):
-        pass
+        model_id = max(self.history, key=lambda x: x['accuracy'])['model_id']
+        return load_model(os.path.join(self.path, str(model_id) + '.h5'))
 
     def add_model(self, model, x_train, y_train, x_test, y_test):
         model.compile(loss=categorical_crossentropy,
@@ -95,7 +96,3 @@ class HillClimbingSearcher(Searcher):
             optimal_accuracy = max_accuracy
 
         return self.load_best_model()
-
-    def load_best_model(self):
-        model_id = max(self.history, key=lambda x: x['accuracy'])['model_id']
-        return load_model(os.path.join(self.path, str(model_id) + '.h5'))
