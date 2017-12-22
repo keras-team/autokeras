@@ -72,7 +72,7 @@ class RandomConvClassifierGenerator:
         return model
 
 
-class HillClimbingSearcher:
+class Searcher:
     def __init__(self, n_classes, input_shape, path, verbose):
         self.n_classes = n_classes
         self.input_shape = input_shape
@@ -81,6 +81,43 @@ class HillClimbingSearcher:
         self.history = []
         self.path = path
         self.model_count = 0
+
+    def search(self, x_train, y_train, x_test, y_test):
+        pass
+
+    def load_best_model(self):
+        pass
+
+    def add_model(self, model, x_train, y_train, x_test, y_test):
+        model.compile(loss=categorical_crossentropy,
+                      optimizer=Adadelta(),
+                      metrics=['accuracy'])
+        model.summary()
+        ModelTrainer(model, x_train, y_train, x_test, y_test, self.verbose).train_model()
+        loss, accuracy = model.evaluate(x_test, y_test)
+        model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
+        self.history.append({'model_id': self.model_count, 'loss': loss, 'accuracy': accuracy})
+        self.history_configs.append(extract_config(model))
+        self.model_count += 1
+        pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
+
+
+class RandomSearcher(Searcher):
+    def __init__(self, n_classes, input_shape, path, verbose):
+        super().__init__(n_classes, input_shape, path, verbose)
+
+    def search(self, x_train, y_train, x_test, y_test):
+        # First model is randomly generated.
+        while self.model_count < constant.MAX_MODEL_NUM:
+            model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
+            self.add_model(model, x_train, y_train, x_test, y_test)
+
+        return self.load_best_model()
+
+
+class HillClimbingSearcher(Searcher):
+    def __init__(self, n_classes, input_shape, path, verbose):
+        super().__init__(n_classes, input_shape, path, verbose)
 
     def _remove_duplicate(self, models):
         """
@@ -95,9 +132,9 @@ class HillClimbingSearcher:
                 ans.append(model_a)
         return ans
 
-    def generate(self, x_train, y_train, x_test, y_test):
+    def search(self, x_train, y_train, x_test, y_test):
+        # First model is randomly generated.
         if not self.history:
-            # First model is randomly generated.
             model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
             self.add_model(model, x_train, y_train, x_test, y_test)
 
@@ -118,19 +155,6 @@ class HillClimbingSearcher:
             optimal_accuracy = max_accuracy
 
         return self.load_best_model()
-
-    def add_model(self, model, x_train, y_train, x_test, y_test):
-        model.compile(loss=categorical_crossentropy,
-                      optimizer=Adadelta(),
-                      metrics=['accuracy'])
-        model.summary()
-        ModelTrainer(model, x_train, y_train, x_test, y_test, self.verbose).train_model()
-        loss, accuracy = model.evaluate(x_test, y_test)
-        model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
-        self.history.append({'model_id': self.model_count, 'loss': loss, 'accuracy': accuracy})
-        self.history_configs.append(extract_config(model))
-        self.model_count += 1
-        pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
 
     def load_best_model(self):
         model_id = max(self.history, key=lambda x: x['accuracy'])['model_id']
