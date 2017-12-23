@@ -84,8 +84,6 @@ class HillClimbingSearcher(Searcher):
         while self.model_count < constant.MAX_MODEL_NUM:
             model = self.load_best_model()
             new_models = self._remove_duplicate(transform(model))
-            for model in new_models:
-                self.history_configs.append(extract_config(model))
 
             for model in new_models:
                 if self.model_count < constant.MAX_MODEL_NUM:

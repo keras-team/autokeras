@@ -18,11 +18,10 @@ def test_hill_climbing_classifier_searcher(_, _1):
     x_test = np.random.rand(1, 28, 28, 1)
     y_test = np.random.rand(1, 3)
 
-    constant.MAX_ITER_NUM = 1
-    constant.MAX_MODEL_NUM = 1
-    constant.EPOCHS_EACH = 1
+    constant.MAX_MODEL_NUM = 10
     generator = HillClimbingSearcher(3, (28, 28, 1), verbose=False, path=constant.DEFAULT_SAVE_PATH)
     generator.search(x_train, y_train, x_test, y_test)
+    assert len(generator.history) == len(generator.history_configs)
 
 
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
@@ -32,9 +31,8 @@ def test_random_searcher(_):
     x_test = np.random.rand(1, 28, 28, 1)
     y_test = np.random.rand(1, 3)
 
-    constant.MAX_ITER_NUM = 1
-    constant.MAX_MODEL_NUM = 1
-    constant.EPOCHS_EACH = 1
+    constant.MAX_MODEL_NUM = 3
     generator = RandomSearcher(3, (28, 28, 1), verbose=False, path=constant.DEFAULT_SAVE_PATH)
     generator.search(x_train, y_train, x_test, y_test)
+    assert len(generator.history) == len(generator.history_configs)
 

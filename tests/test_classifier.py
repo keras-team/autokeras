@@ -39,7 +39,7 @@ def test_fit_predict(_, _1):
     constant.MAX_ITER_NUM = 2
     constant.MAX_MODEL_NUM = 2
     constant.EPOCHS_EACH = 1
-    clf = ImageClassifier()
+    clf = ImageClassifier(verbose=False)
     clf.fit([[[1], [2]], [[3], [4]]], ['a', 'b'])
     results = clf.predict([[[1], [2]], [[3], [4]]])
     assert all(map(lambda result: result in np.array(['a', 'b']), results))
@@ -59,7 +59,7 @@ def test_fit_predict2(_, _1):
     train_x = np.random.rand(100, 25, 1)
     test_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf = ImageClassifier()
+    clf = ImageClassifier(verbose=False)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
@@ -74,7 +74,7 @@ def test_save_continue(_, _1):
     train_x = np.random.rand(100, 25, 1)
     test_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf = ImageClassifier(path='tests/resources/temp')
+    clf = ImageClassifier(path='tests/resources/temp', verbose=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
     assert len(clf.searcher.history) == 1
