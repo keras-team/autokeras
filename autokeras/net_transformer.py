@@ -73,7 +73,6 @@ def to_wider_model(model, level):
 
 
 def transform(model):
-    print('Function called.')
     models = []
     layers = model.layers
     for index in range(len(layers) - 1):

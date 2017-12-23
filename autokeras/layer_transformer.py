@@ -121,7 +121,6 @@ def conv_to_wider_layer(pre_layer, next_layer, n_add_filters):
         student_w2 = np.concatenate((student_w2, new_weight_re), axis=-2)
         student_w2[..., teacher_index, :] = new_weight
 
-    print(pre_layer.input_shape)
     new_pre_layer = conv_func(n_pre_filters + n_add_filters,
                               kernel_size=pre_filter_shape,
                               activation='relu',
