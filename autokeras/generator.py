@@ -51,6 +51,7 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         model.compile(loss=categorical_crossentropy,
                       optimizer=Adadelta(),
                       metrics=['accuracy'])
+        return model
 
 
 class RandomConvClassifierGenerator(ClassifierGenerator):

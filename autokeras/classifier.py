@@ -3,12 +3,12 @@ import pickle
 import os
 
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 
 from autokeras import constant
 from autokeras.search import HillClimbingSearcher, RandomSearcher
 from autokeras.preprocessor import OneHotEncoder
-from autokeras.utils import ensure_dir
+from autokeras.utils import ensure_dir, reset_weights, ModelTrainer
 
 
 def load_from_path(path=constant.DEFAULT_SAVE_PATH):
@@ -83,6 +83,19 @@ class ClassifierBase:
     def evaluate(self, x_test, y_test):
         y_predict = self.predict(x_test)
         return accuracy_score(y_test, y_predict)
+
+    def cross_validate(self, x_all, y_all, n_splits):
+        k_fold = StratifiedKFold(n_splits=n_splits, shuffle=False, random_state=7)
+        scores = []
+        y_raw_all = y_all
+        y_all = self.y_encoder.transform(y_all)
+        for train, test in k_fold.split(x_all, y_raw_all):
+            model = self.searcher.load_best_model()
+            reset_weights(model)
+            ModelTrainer(model, x_all[train], y_all[train], x_all[test], y_all[test], self.verbose).train_model()
+            scores = model.evaluate(x_all[test], y_all[test], verbose=self.verbose)
+            scores.append(scores[1] * 100)
+        return np.array(scores)
 
 
 class Classifier(ClassifierBase):

@@ -8,8 +8,10 @@ from autokeras.utils import copy_layer
 
 
 def get_next_dense_conv(start, layers):
-    """
-    Start to search next dense or conv.
+    """Start to search next dense or conv.
+
+    long description.
+
     :param start:
     :param layers:
     :return:
@@ -71,7 +73,6 @@ def to_wider_model(model, level):
 
 
 def transform(model):
-    print('Function called.')
     models = []
     layers = model.layers
     for index in range(len(layers) - 1):

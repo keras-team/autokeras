@@ -26,15 +26,17 @@ class Searcher:
         pass
 
     def load_best_model(self):
-        pass
+        model_id = max(self.history, key=lambda x: x['accuracy'])['model_id']
+        return load_model(os.path.join(self.path, str(model_id) + '.h5'))
 
     def add_model(self, model, x_train, y_train, x_test, y_test):
         model.compile(loss=categorical_crossentropy,
                       optimizer=Adadelta(),
                       metrics=['accuracy'])
-        model.summary()
+        if self.verbose:
+            model.summary()
         ModelTrainer(model, x_train, y_train, x_test, y_test, self.verbose).train_model()
-        loss, accuracy = model.evaluate(x_test, y_test)
+        loss, accuracy = model.evaluate(x_test, y_test, verbose=self.verbose)
         model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
         self.history.append({'model_id': self.model_count, 'loss': loss, 'accuracy': accuracy})
         self.history_configs.append(extract_config(model))
@@ -82,8 +84,6 @@ class HillClimbingSearcher(Searcher):
         while self.model_count < constant.MAX_MODEL_NUM:
             model = self.load_best_model()
             new_models = self._remove_duplicate(transform(model))
-            for model in new_models:
-                self.history_configs.append(extract_config(model))
 
             for model in new_models:
                 if self.model_count < constant.MAX_MODEL_NUM:
@@ -95,7 +95,3 @@ class HillClimbingSearcher(Searcher):
             optimal_accuracy = max_accuracy
 
         return self.load_best_model()
-
-    def load_best_model(self):
-        model_id = max(self.history, key=lambda x: x['accuracy'])['model_id']
-        return load_model(os.path.join(self.path, str(model_id) + '.h5'))

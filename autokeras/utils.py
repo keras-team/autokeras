@@ -2,6 +2,7 @@ import os
 from keras.layers import Conv1D, Conv2D, Conv3D
 from autokeras.constant import CONV_FUNC_LIST, LAYER_ATTR
 from autokeras import constant
+from keras import backend
 
 
 def is_conv_layer(layer):
@@ -46,15 +47,11 @@ class ModelTrainer:
         self._no_improvement_count = 0
         self.minimum_loss = float('inf')
         for _ in range(constant.MAX_ITER_NUM):
-            print(self.x_train.shape)
-            print(self.y_train.shape)
-            print(self.x_test.shape)
-            print(self.y_test.shape)
-            self.model.summary()
             self.model.fit(self.x_train, self.y_train,
                            batch_size=min(self.x_train.shape[0], 200),
+                           epochs=constant.EPOCHS_EACH,
                            verbose=self.verbose)
-            loss, _ = self.model.evaluate(self.x_test, self.y_test)
+            loss, _ = self.model.evaluate(self.x_test, self.y_test, verbose=self.verbose)
             if self._converged(loss):
                 break
         return self.minimum_loss
@@ -87,3 +84,10 @@ def ensure_dir(directory):
 
 def ensure_file_dir(path):
     ensure_dir(os.path.dirname(path))
+
+
+def reset_weights(model):
+    session = backend.get_session()
+    for layer in model.layers:
+        if hasattr(layer, 'kernel_initializer'):
+            layer.kernel.initializer.run(session=session)

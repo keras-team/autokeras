@@ -26,7 +26,6 @@ def test_net_transformer():
     random_input = np.random.rand(1, 5, 5, 1)
     output1 = model.predict_on_batch(random_input)
     models = transform(model)
-    print(models)
     for new_model in models:
         output2 = new_model.predict_on_batch(random_input)
         assert np.sum(output1.flatten() - output2.flatten()) < 1e-4
@@ -52,7 +51,6 @@ def test_net_transformer2():
     random_input = np.random.rand(1, 5, 1)
     output1 = model.predict_on_batch(random_input)
     models = transform(model)
-    print(models)
     for new_model in models:
         output2 = new_model.predict_on_batch(random_input)
         assert np.sum(output1.flatten() - output2.flatten()) < 1e-4
