@@ -179,12 +179,12 @@ Hello world.
 #         likes_spam: A boolean indicating if we like SPAM or not.
 #         eggs: An integer count of the eggs we have laid.
 #     """
-d = parse_func_string(comment)
-parts = ['short_description','long_description','Args','Attributes','Returns','Raises']
-for part in parts:
-    print(part)
-    print('-------')
-    print(d[part])
-    print('------------')
-    print('------------')
-    print('------------')
+# d = parse_func_string(comment)
+# parts = ['short_description','long_description','Args','Attributes','Returns','Raises']
+# for part in parts:
+#     print(part)
+#     print('-------')
+#     print(d[part])
+#     print('------------')
+#     print('------------')
+#     print('------------')
