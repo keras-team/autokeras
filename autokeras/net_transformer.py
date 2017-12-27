@@ -1,10 +1,12 @@
+from random import randint
+
 from autokeras.constant import WEIGHTED_LAYER_FUNC_LIST
 from autokeras.layer_transformer import to_deeper_layer, to_wider_layer
 
 from keras.models import Sequential
 from keras.layers import Dense, Conv1D, Conv2D, Conv3D
 
-from autokeras.utils import copy_layer
+from autokeras.utils import copy_layer, get_layer_size
 
 
 def get_next_dense_conv(start, layers):
@@ -68,7 +70,9 @@ def to_deeper_model(model, level):
 
 def to_wider_model(model, level):
     next_wider_layer, ind = get_next_dense_conv(level, model.layers)
-    new_wider_layer, new_next_wider_layer = to_wider_layer(model.layers[level], next_wider_layer, 1)
+    n_size = get_layer_size(model.layers[level])
+    n_add = randint(1, 4 * n_size)
+    new_wider_layer, new_next_wider_layer = to_wider_layer(model.layers[level], next_wider_layer, n_add)
     return replace_layers(model, [level, ind], [new_wider_layer, new_next_wider_layer])
 
 

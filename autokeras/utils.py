@@ -91,3 +91,9 @@ def reset_weights(model):
     for layer in model.layers:
         if hasattr(layer, 'kernel_initializer'):
             layer.kernel.initializer.run(session=session)
+
+
+def get_layer_size(layer):
+    if is_conv_layer(layer):
+        return layer.filters
+    return layer.units
