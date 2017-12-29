@@ -1,5 +1,7 @@
 import os
 from keras.layers import Conv1D, Conv2D, Conv3D
+from tensorflow import Dimension
+
 from autokeras.constant import CONV_FUNC_LIST, LAYER_ATTR
 from autokeras import constant
 from keras import backend
@@ -58,9 +60,10 @@ class ModelTrainer:
 
 
 def copy_layer(layer):
+    print(layer.get_config)
     new_layer = layer.__class__.from_config(layer.get_config())
-    if new_layer is None:
-        raise ValueError("There must be a Dense or Convolution Layer")
+    new_layer.build(layer.input_shape)
+    new_layer.set_weights(layer.get_weights())
     return new_layer
 
 
@@ -97,3 +100,14 @@ def get_layer_size(layer):
     if is_conv_layer(layer):
         return layer.filters
     return layer.units
+
+
+def get_model_input_shape(model):
+    temp_shape = model.inputs[0].shape[1:]
+    input_shape = []
+    for i in temp_shape:
+        if isinstance(i, Dimension):
+            input_shape.append(i.value)
+        else:
+            input_shape.append(i)
+    return input_shape

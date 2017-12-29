@@ -3,7 +3,7 @@ from keras.layers import Dense
 from keras.models import Sequential
 
 from autokeras.constant import CONV_FUNC_LIST, WEIGHTED_LAYER_FUNC_LIST
-from autokeras.net_transformer import to_deeper_model
+from autokeras.net_transformer import to_deeper_dense_model
 from autokeras.utils import is_conv_layer, copy_layer
 
 
@@ -18,7 +18,7 @@ def add_dense(net, n_add):
             level = index
             break
     for i in range(n_add):
-        net = to_deeper_model(net, level)
+        net = to_deeper_dense_model(net, level)
     return net
 
 
@@ -29,7 +29,7 @@ def add_conv(net, n_add):
             level = index
             break
     for i in range(n_add):
-        net = to_deeper_model(net, level)
+        net = to_deeper_dense_model(net, level)
     return net
 
 
