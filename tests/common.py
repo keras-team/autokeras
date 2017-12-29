@@ -9,6 +9,9 @@ def get_conv_model():
     output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(input_tensor)
     output_tensor = BatchNormalization()(output_tensor)
     output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
     return Model(inputs=input_tensor, outputs=output_tensor)
 
 

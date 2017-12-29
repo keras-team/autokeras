@@ -59,10 +59,11 @@ class ModelTrainer:
         return self.minimum_loss
 
 
-def copy_layer(layer):
-    print(layer.get_config)
+def copy_layer(layer, input_shape=None):
+    if input_shape is None:
+        input_shape = layer.input_shape
     new_layer = layer.__class__.from_config(layer.get_config())
-    new_layer.build(layer.input_shape)
+    new_layer.build(input_shape)
     new_layer.set_weights(layer.get_weights())
     return new_layer
 
@@ -102,8 +103,7 @@ def get_layer_size(layer):
     return layer.units
 
 
-def get_model_input_shape(model):
-    temp_shape = model.inputs[0].shape[1:]
+def get_int_tuple(temp_shape):
     input_shape = []
     for i in temp_shape:
         if isinstance(i, Dimension):

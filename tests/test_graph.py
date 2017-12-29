@@ -18,3 +18,15 @@ def test_deeper():
     output2 = new_model.predict_on_batch(input_data).flatten()
 
     assert np.sum(output1 - output2) < 0.2
+
+
+def test_wider():
+    model = get_conv_model()
+    graph = Graph(model)
+    new_model = graph.to_wider_model(model.layers[1], 3)
+    input_data = get_conv_data()
+
+    output1 = model.predict_on_batch(input_data).flatten()
+    output2 = new_model.predict_on_batch(input_data).flatten()
+
+    assert np.sum(output1 - output2) < 0.2
