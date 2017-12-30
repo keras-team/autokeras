@@ -2,9 +2,9 @@ from queue import Queue
 
 from keras import Input
 from keras.engine import Model
-from keras.layers import BatchNormalization
+from keras.layers import BatchNormalization, Dense
 
-from autokeras.layer_transformer import deeper_conv_block, conv_to_wider_layer
+from autokeras.layer_transformer import deeper_conv_block, conv_to_wider_layer, dense_to_wider_layer
 from autokeras.utils import copy_layer, is_conv_layer, get_int_tuple
 
 
@@ -56,7 +56,7 @@ class Graph:
         if old:
             self.old_edge_ids[current_id] = True
 
-    def to_deeper_model(self, target, kernel_size):
+    def to_conv_deeper_model(self, target, kernel_size):
         new_layers = deeper_conv_block(target, kernel_size)
         output_id = self.node_to_id[target.output]
         output_id = self.adj_list[output_id][0][0]
@@ -95,36 +95,34 @@ class Graph:
                 q.put(v)
         return Model(input_tensor, id_to_tensor[output_id])
 
-    def to_wider_model(self, pre_layer, n_add):
+    def to_conv_wider_model(self, pre_layer, n_add):
         output_id = self.node_to_id[pre_layer.output]
-        next_conv_layer_list, next_bn_layer_list = self._search_following_conv(output_id)
-        new_pre_layer, new_next_layer_list, new_bn_layer_list = conv_to_wider_layer(pre_layer,
-                                                                                    next_conv_layer_list,
-                                                                                    next_bn_layer_list,
-                                                                                    n_add)
-        for old_layer, new_layer in zip(next_conv_layer_list, new_next_layer_list):
-            self._replace_edge(old_layer, new_layer)
-        for old_layer, new_layer in zip(next_bn_layer_list, new_bn_layer_list):
+        next_layer_list = self._search_following_conv(output_id)
+        new_pre_layer, new_next_layer_list = conv_to_wider_layer(pre_layer,
+                                                                 next_layer_list,
+                                                                 n_add)
+        for old_layer, new_layer in zip(next_layer_list, new_next_layer_list):
             self._replace_edge(old_layer, new_layer)
         self._replace_edge(pre_layer, new_pre_layer)
         return self.produce_model()
 
     def _search_following_conv(self, node_id):
         stack = [node_id]
-        conv_list = []
-        bn_list = []
+        ret_list = []
         while stack:
             u = stack.pop()
             for v, edge_id in self.adj_list[u]:
                 layer = self.edge_list[edge_id]
                 if is_conv_layer(layer):
-                    conv_list.append(layer)
+                    ret_list.append(layer)
                 elif isinstance(layer, BatchNormalization):
-                    bn_list.append(layer)
+                    ret_list.append(layer)
                     stack.append(v)
+                elif isinstance(layer, Dense):
+                    ret_list.append(layer)
                 else:
                     stack.append(v)
-        return conv_list, bn_list
+        return ret_list
 
     def _replace_edge(self, old_layer, new_layer):
         edge_id = self.edge_to_id[old_layer]
@@ -132,3 +130,17 @@ class Graph:
         self.edge_to_id[new_layer] = edge_id
         self.edge_to_id.pop(old_layer)
         self.old_edge_ids.pop(edge_id)
+
+    def to_dense_deeper_model(self, target, param):
+        pass
+
+    def to_dense_wider_model(self, pre_layer, n_add):
+        output_id = self.node_to_id[pre_layer.output]
+        next_layer_list = self._search_following_conv(output_id)
+        new_pre_layer, new_next_layer_list = dense_to_wider_layer(pre_layer,
+                                                                  next_layer_list,
+                                                                  n_add)
+        for old_layer, new_layer in zip(next_layer_list, new_next_layer_list):
+            self._replace_edge(old_layer, new_layer)
+        self._replace_edge(pre_layer, new_pre_layer)
+        return self.produce_model()

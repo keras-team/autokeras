@@ -11,7 +11,7 @@ def test_graph():
 def test_deeper():
     model = get_conv_model()
     graph = Graph(model)
-    new_model = graph.to_deeper_model(model.layers[1], 3)
+    new_model = graph.to_conv_deeper_model(model.layers[1], 3)
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
@@ -23,7 +23,7 @@ def test_deeper():
 def test_wider():
     model = get_conv_model()
     graph = Graph(model)
-    new_model = graph.to_wider_model(model.layers[1], 3)
+    new_model = graph.to_conv_wider_model(model.layers[1], 3)
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()

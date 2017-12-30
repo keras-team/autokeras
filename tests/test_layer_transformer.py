@@ -1,13 +1,13 @@
 from keras import Input
 from keras.engine import Model
-from keras.layers import Flatten, Conv2D
+from keras.layers import Flatten
 from keras.losses import categorical_crossentropy
 from keras.models import Sequential
 from keras.optimizers import Adadelta
 
 from autokeras.layer_transformer import *
 from autokeras.utils import get_int_tuple, copy_layer
-from tests.common import get_conv_model, get_conv_data
+from tests.common import get_conv_model, get_conv_data, get_conv_dense_model
 
 
 def test_deeper_conv_block():
@@ -64,7 +64,7 @@ def test_conv_to_wider_layer():
     conv1 = model.layers[1]
     conv2 = model.layers[4]
     bn1 = model.layers[2]
-    new_conv1, [new_conv2], [new_bn1] = conv_to_wider_layer(conv1, [conv2], [bn1], 3)
+    new_conv1, [new_conv2, new_bn1] = conv_to_wider_layer(conv1, [conv2, bn1], 3)
 
     new_input = Input(shape=get_int_tuple(model.inputs[0].shape[1:]))
     temp_tensor = new_conv1(new_input)
@@ -81,22 +81,23 @@ def test_conv_to_wider_layer():
     assert np.sum(output1.flatten() - output2.flatten()) < 1e-4
 
 
-def test_conv_dense_to_wider_layer():
-    a = Conv2D(20, kernel_size=(1, 1),
-               activation='relu',
-               input_shape=(28, 28, 1),
-               padding='same')
-    b = Dense(5, activation='relu')
-    model = Sequential([a, Flatten(), b])
-    model.compile(loss=categorical_crossentropy,
-                  optimizer=Adadelta(),
-                  metrics=['accuracy'])
-    a2, b2 = conv_dense_to_wider_layer(a, b, 5)
-    model2 = Sequential([a2, Flatten(), b2])
-    model2.compile(loss=categorical_crossentropy,
-                   optimizer=Adadelta(),
-                   metrics=['accuracy'])
-    random_input = np.random.rand(1, 28, 28, 1)
+def test_conv_to_wider_layer2():
+    model = get_conv_dense_model()
+    conv1 = model.layers[1]
+    dense1 = model.layers[5]
+    bn1 = model.layers[2]
+    new_conv1, [new_dense1, new_bn1] = conv_to_wider_layer(conv1, [dense1, bn1], 3)
+
+    new_input = Input(shape=get_int_tuple(model.inputs[0].shape[1:]))
+    temp_tensor = new_conv1(new_input)
+    temp_tensor = new_bn1(temp_tensor)
+    temp_tensor = Activation('relu')(temp_tensor)
+    temp_tensor = Flatten()(temp_tensor)
+    temp_tensor = new_dense1(temp_tensor)
+    temp_tensor = copy_layer(model.layers[6])(temp_tensor)
+    model2 = Model(inputs=new_input, outputs=temp_tensor)
+
+    random_input = get_conv_data()
     output1 = model.predict_on_batch(random_input)
     output2 = model2.predict_on_batch(random_input)
     assert np.sum(output1.flatten() - output2.flatten()) < 1e-4
