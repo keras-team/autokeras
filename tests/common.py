@@ -3,6 +3,26 @@ from keras import Input
 from keras.engine import Model
 from keras.layers import Conv2D, BatchNormalization, Activation, Flatten, Dense
 
+from autokeras.layers import WeightedAdd
+
+
+def get_add_skip_model():
+    input_tensor = Input(shape=(5, 5, 3))
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(input_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    add_input = output_tensor
+
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+
+    output_tensor = WeightedAdd()([output_tensor, add_input])
+    output_tensor = Flatten()(output_tensor)
+    output_tensor = Dense(5, activation='relu')(output_tensor)
+    output_tensor = Dense(5, activation='softmax')(output_tensor)
+    return Model(inputs=input_tensor, outputs=output_tensor)
+
 
 def get_conv_model():
     input_tensor = Input(shape=(5, 5, 3))

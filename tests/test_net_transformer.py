@@ -1,11 +1,11 @@
 import numpy as np
 from autokeras.net_transformer import *
-from keras.layers import MaxPooling2D, Dropout, Flatten, MaxPooling1D
+from keras.layers import MaxPooling2D, Dropout, Flatten, MaxPooling1D, Conv2D
 from keras.losses import categorical_crossentropy
 from keras.models import Sequential
 from keras.optimizers import Adadelta
 
-from tests.common import get_conv_model, get_conv_data
+from tests.common import get_conv_model, get_conv_data, get_add_skip_model
 
 
 def test_net_transformer():
@@ -34,7 +34,7 @@ def test_net_transformer():
 
 
 def test_copy_conv_model():
-    model = get_conv_model()
+    model = get_add_skip_model()
     new_model = copy_conv_model(model)
     input_data = get_conv_data()
 
