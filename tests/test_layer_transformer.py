@@ -44,7 +44,8 @@ def test_dense_to_wider_layer():
     model.compile(loss=categorical_crossentropy,
                   optimizer=Adadelta(),
                   metrics=['accuracy'])
-    a2, b2 = dense_to_wider_layer(a, b, 5)
+    a2 = wider_pre_dense(a, 5)
+    b2 = wider_next_dense(b, 20, 20, 5)
     assert a2.units == 25
     model2 = Sequential([a2, b2])
     model2.compile(loss=categorical_crossentropy,

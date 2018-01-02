@@ -25,7 +25,7 @@ def to_deeper_conv_model(model, target):
 def to_wider_conv_model(model, target):
     graph = Graph(model)
     n_add = randint(1, 4 * target.filters)
-    return graph.to_conv_wider_model(target, n_add)
+    return graph.to_wider_model(target, n_add)
 
 
 def copy_conv_model(model):

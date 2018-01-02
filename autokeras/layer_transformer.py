@@ -34,57 +34,40 @@ def dense_to_deeper_layer(dense_layer):
     new_dense_layer = Dense(units, activation='relu')
     new_dense_layer.build((None, units))
     new_dense_layer.set_weights((weight, bias))
-    return [new_dense_layer]
+    return new_dense_layer
 
 
-def dense_to_wider_layer(pre_layer, next_layer, n_add_units):
-    n_units1 = pre_layer.get_weights()[0].shape[0]
-    n_units2 = pre_layer.units
-    n_units3 = next_layer.units
 
-    teacher_w1 = pre_layer.get_weights()[0]
-    teacher_b1 = pre_layer.get_weights()[1]
-    teacher_w2 = next_layer.get_weights()[0]
-    teacher_b2 = next_layer.get_weights()[1]
-    rand = np.random.randint(n_units2, size=n_add_units)
-    replication_factor = np.bincount(rand)
-    student_w1 = teacher_w1.copy()
-    student_w2 = teacher_w2.copy()
-    student_b1 = teacher_b1.copy()
+def wider_pre_dense(layer, n_add):
+    n_units1 = layer.get_weights()[0].shape[0]
+    n_units2 = layer.units
+
+    teacher_w, teacher_b = layer.get_weights()
+    rand = np.random.randint(n_units2, size=n_add)
+    student_w = teacher_w.copy()
+    student_b = teacher_b.copy()
 
     # target layer update (i)
-    for i in range(n_add_units):
+    for i in range(n_add):
         teacher_index = rand[i]
-        new_weight = teacher_w1[:, teacher_index]
+        new_weight = teacher_w[:, teacher_index]
         new_weight = new_weight[:, np.newaxis]
-        student_w1 = np.concatenate((student_w1, new_weight), axis=1)
-        student_b1 = np.append(student_b1, teacher_b1[teacher_index])
+        student_w = np.concatenate((student_w, new_weight), axis=1)
+        student_b = np.append(student_b, teacher_b[teacher_index])
 
-    # next layer update (i+1)
-    for i in range(n_add_units):
-        teacher_index = rand[i]
-        n_copies = replication_factor[teacher_index] + 1
-        new_weight = teacher_w2[teacher_index, :] * (1. / n_copies)
-        new_weight = new_weight[np.newaxis, :]
-        student_w2 = np.concatenate((student_w2, new_weight), axis=0)
-        student_w2[teacher_index, :] = new_weight
-
-    new_pre_layer = Dense(n_units2 + n_add_units, input_shape=(n_units1,), activation='relu')
+    new_pre_layer = Dense(n_units2 + n_add, input_shape=(n_units1,), activation='relu')
     new_pre_layer.build((None, n_units1))
-    new_pre_layer.set_weights((student_w1, student_b1))
-    new_next_layer = Dense(n_units3, activation=next_layer.get_config()['activation'])
-    new_next_layer.build((None, n_units2 + n_add_units))
-    new_next_layer.set_weights((student_w2, teacher_b2))
+    new_pre_layer.set_weights((student_w, student_b))
 
-    return new_pre_layer, new_next_layer
+    return new_pre_layer
 
 
-def wider_pre_conv(pre_layer, n_add_filters):
-    pre_filter_shape = pre_layer.kernel_size
-    n_pre_filters = pre_layer.filters
+def wider_pre_conv(layer, n_add_filters):
+    pre_filter_shape = layer.kernel_size
+    n_pre_filters = layer.filters
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
     conv_func = get_conv_layer_func(len(pre_filter_shape))
-    teacher_w, teacher_b = pre_layer.get_weights()
+    teacher_w, teacher_b = layer.get_weights()
     student_w = teacher_w.copy()
     student_b = teacher_b.copy()
     # target layer update (i)

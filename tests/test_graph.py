@@ -1,14 +1,13 @@
-import numpy as np
 from autokeras.graph import *
-from tests.common import get_conv_model, get_conv_data, get_add_skip_model
+from tests.common import get_conv_model, get_conv_data, get_add_skip_model, get_conv_dense_model
 
 
 def test_graph():
     graph = Graph(get_conv_model())
-    assert graph.n_nodes == 4
+    assert graph.n_nodes == 7
 
 
-def test_deeper():
+def test_conv_deeper():
     model = get_conv_model()
     graph = Graph(model)
     new_model = graph.to_conv_deeper_model(model.layers[4], 3)
@@ -20,10 +19,34 @@ def test_deeper():
     assert np.sum(output1 - output2) < 0.2
 
 
-def test_wider():
+def test_dense_deeper():
+    model = get_conv_dense_model()
+    graph = Graph(model)
+    new_model = graph.to_dense_deeper_model(model.layers[5])
+    input_data = get_conv_data()
+
+    output1 = model.predict_on_batch(input_data).flatten()
+    output2 = new_model.predict_on_batch(input_data).flatten()
+
+    assert np.sum(output1 - output2) == 0
+
+
+def test_conv_wider():
     model = get_add_skip_model()
     graph = Graph(model)
-    new_model = graph.to_conv_wider_model(model.layers[7], 3)
+    new_model = graph.to_wider_model(model.layers[7], 3)
+    input_data = get_conv_data()
+
+    output1 = model.predict_on_batch(input_data).flatten()
+    output2 = new_model.predict_on_batch(input_data).flatten()
+
+    assert np.sum(output1 - output2) < 1e-4
+
+
+def test_dense_wider():
+    model = get_add_skip_model()
+    graph = Graph(model)
+    new_model = graph.to_wider_model(model.layers[-2], 3)
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
@@ -42,3 +65,15 @@ def test_skip_add():
     output2 = new_model.predict_on_batch(input_data).flatten()
 
     assert np.array_equal(output1, output2)
+
+
+def test_skip_concatenate():
+    model = get_add_skip_model()
+    graph = Graph(model)
+    new_model = graph.to_concat_skip_model(model.layers[4], model.layers[4])
+    input_data = get_conv_data()
+
+    output1 = model.predict_on_batch(input_data).flatten()
+    output2 = new_model.predict_on_batch(input_data).flatten()
+
+    assert np.sum(output1 - output2) < 1e-4
