@@ -73,4 +73,3 @@ def test_wider_next_dense():
     layer = get_conv_dense_model().layers[5]
     new_layer = wider_next_dense(layer, 3, 3, 3)
     assert new_layer.get_weights()[0].shape == (150, 5)
-

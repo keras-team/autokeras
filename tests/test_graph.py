@@ -77,3 +77,14 @@ def test_skip_concatenate():
     output2 = new_model.predict_on_batch(input_data).flatten()
 
     assert np.sum(output1 - output2) < 1e-4
+
+
+def test_copy_model():
+    model = get_add_skip_model()
+    new_model = Graph(model).produce_model()
+    input_data = get_conv_data()
+
+    output1 = model.predict_on_batch(input_data).flatten()
+    output2 = new_model.predict_on_batch(input_data).flatten()
+
+    assert np.sum(output1 - output2) == 0
