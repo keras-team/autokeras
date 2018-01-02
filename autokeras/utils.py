@@ -1,10 +1,11 @@
 import os
+
+from keras import backend
 from keras.layers import Conv1D, Conv2D, Conv3D
 from tensorflow import Dimension
 
-from autokeras.constant import CONV_FUNC_LIST, LAYER_ATTR
 from autokeras import constant
-from keras import backend
+from autokeras.constant import CONV_FUNC_LIST, LAYER_ATTR
 
 
 def is_conv_layer(layer):
@@ -110,4 +111,4 @@ def get_int_tuple(temp_shape):
             input_shape.append(i.value)
         else:
             input_shape.append(i)
-    return input_shape
+    return tuple(input_shape)

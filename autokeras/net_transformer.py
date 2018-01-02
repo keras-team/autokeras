@@ -1,6 +1,7 @@
 from random import randint
 
 from keras.layers import Dense
+
 from autokeras.graph import Graph
 from autokeras.utils import is_conv_layer
 

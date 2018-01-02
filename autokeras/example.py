@@ -1,10 +1,9 @@
+import numpy as np
 from keras import Input
 from keras.engine import Model
 from keras.layers import Dense
 from keras.losses import mean_squared_error
 from keras.models import Sequential
-
-import numpy as np
 
 from autokeras.layers import WeightedAdd
 
@@ -47,4 +46,3 @@ def test_my_layer():
 # graph_model()
 
 test_my_layer()
-

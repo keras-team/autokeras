@@ -1,13 +1,10 @@
-from keras import Input
 from keras.engine import Model
-from keras.layers import Flatten
 from keras.losses import categorical_crossentropy
 from keras.models import Sequential
 from keras.optimizers import Adadelta
 
 from autokeras.layer_transformer import *
-from autokeras.utils import get_int_tuple, copy_layer
-from tests.common import get_conv_model, get_conv_data, get_conv_dense_model
+from tests.common import get_conv_model, get_conv_data, get_add_skip_model, get_conv_dense_model
 
 
 def test_deeper_conv_block():
@@ -59,45 +56,20 @@ def test_dense_to_wider_layer():
     assert np.sum(output1.flatten() - output2.flatten()) < 1e-4
 
 
-def test_conv_to_wider_layer():
-    model = get_conv_model()
-    conv1 = model.layers[1]
-    conv2 = model.layers[4]
-    bn1 = model.layers[2]
-    new_conv1, [new_conv2, new_bn1] = conv_to_wider_layer(conv1, [conv2, bn1], 3)
-
-    new_input = Input(shape=get_int_tuple(model.inputs[0].shape[1:]))
-    temp_tensor = new_conv1(new_input)
-    temp_tensor = new_bn1(temp_tensor)
-    temp_tensor = Activation('relu')(temp_tensor)
-    temp_tensor = new_conv2(temp_tensor)
-    temp_tensor = copy_layer(model.layers[5])(temp_tensor)
-    temp_tensor = Activation('relu')(temp_tensor)
-    model2 = Model(inputs=new_input, outputs=temp_tensor)
-
-    random_input = get_conv_data()
-    output1 = model.predict_on_batch(random_input)
-    output2 = model2.predict_on_batch(random_input)
-    assert np.sum(output1.flatten() - output2.flatten()) < 1e-4
+def test_wider_bn():
+    bn_layer = get_conv_model().layers[2]
+    new_bn_layer = wider_bn(bn_layer, 1, 3, 4)
+    assert new_bn_layer.get_weights()[0].shape[0] == 7
 
 
-def test_conv_to_wider_layer2():
-    model = get_conv_dense_model()
-    conv1 = model.layers[1]
-    dense1 = model.layers[5]
-    bn1 = model.layers[2]
-    new_conv1, [new_dense1, new_bn1] = conv_to_wider_layer(conv1, [dense1, bn1], 3)
+def test_wider_weighted_add():
+    layer = get_add_skip_model().layers[10]
+    new_layer = wider_weighted_add(layer, 4)
+    assert isinstance(new_layer, WeightedAdd)
 
-    new_input = Input(shape=get_int_tuple(model.inputs[0].shape[1:]))
-    temp_tensor = new_conv1(new_input)
-    temp_tensor = new_bn1(temp_tensor)
-    temp_tensor = Activation('relu')(temp_tensor)
-    temp_tensor = Flatten()(temp_tensor)
-    temp_tensor = new_dense1(temp_tensor)
-    temp_tensor = copy_layer(model.layers[6])(temp_tensor)
-    model2 = Model(inputs=new_input, outputs=temp_tensor)
 
-    random_input = get_conv_data()
-    output1 = model.predict_on_batch(random_input)
-    output2 = model2.predict_on_batch(random_input)
-    assert np.sum(output1.flatten() - output2.flatten()) < 1e-4
+def test_wider_next_dense():
+    layer = get_conv_dense_model().layers[5]
+    new_layer = wider_next_dense(layer, 3, 3, 3)
+    assert new_layer.get_weights()[0].shape == (150, 5)
+

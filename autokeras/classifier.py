@@ -1,13 +1,13 @@
-import numpy as np
-import pickle
 import os
+import pickle
 
+import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split, StratifiedKFold
 
 from autokeras import constant
-from autokeras.search import HillClimbingSearcher, RandomSearcher
 from autokeras.preprocessor import OneHotEncoder
+from autokeras.search import HillClimbingSearcher, RandomSearcher
 from autokeras.utils import ensure_dir, reset_weights, ModelTrainer
 
 

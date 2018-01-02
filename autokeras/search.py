@@ -7,9 +7,9 @@ from keras.optimizers import Adadelta
 
 from autokeras import constant
 from autokeras.generator import RandomConvClassifierGenerator, DefaultClassifierGenerator
-from autokeras.utils import extract_config
 from autokeras.net_transformer import transform
 from autokeras.utils import ModelTrainer
+from autokeras.utils import extract_config
 
 
 class Searcher:
