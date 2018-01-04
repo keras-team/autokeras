@@ -9,6 +9,7 @@ from autokeras.layers import WeightedAdd
 
 
 def graph_model():
+    """test an graph model"""
     a = Input(shape=(32,))
     original_input = a
     b = Dense(32)(a)
@@ -33,6 +34,7 @@ def graph_model():
 
 
 def test_my_layer():
+    """test one specify layer"""
     a = Input(shape=(3, 3, 2))
     b = WeightedAdd()(a)
     model = Model(inputs=a, outputs=b)

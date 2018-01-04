@@ -6,6 +6,15 @@ from autokeras.utils import get_conv_layer_func, get_int_tuple
 
 
 def deeper_conv_block(conv_layer, kernel_size):
+    """Get deeper layer for convolution layer
+
+    Args:
+        conv_layer: the convolution layer from which we get deeper layer
+        kernel_size: the size of kernel
+
+    Returns:
+        The deeper convolution layer
+    """
     filter_shape = (kernel_size,) * (len(conv_layer.kernel_size))
     n_filters = conv_layer.filters
     weight = np.zeros(filter_shape + (n_filters, n_filters))
@@ -28,6 +37,14 @@ def deeper_conv_block(conv_layer, kernel_size):
 
 
 def dense_to_deeper_layer(dense_layer):
+    """Get deeper layer for dense layer
+
+    Args:
+        dense_layer: the dense layer from which we get deeper layer
+
+    Returns:
+        The deeper dense layer
+    """
     units = dense_layer.units
     weight = np.eye(units)
     bias = np.zeros(units)
@@ -39,6 +56,15 @@ def dense_to_deeper_layer(dense_layer):
 
 
 def wider_pre_dense(layer, n_add):
+    """Get previous dense layer for current layer
+
+   Args:
+       layer: the layer from which we get wide previous dense layer
+       n_add: output shape
+
+   Returns:
+       The previous dense layer
+   """
     n_units1 = layer.get_weights()[0].shape[0]
     n_units2 = layer.units
 
@@ -63,6 +89,15 @@ def wider_pre_dense(layer, n_add):
 
 
 def wider_pre_conv(layer, n_add_filters):
+    """Get previous convolution layer for current layer
+
+   Args:
+       layer: layer from which we get wider previous convolution layer
+       n_add_filters: the filters size of convolution layer
+
+   Returns:
+       The previous convolution layer
+   """
     pre_filter_shape = layer.kernel_size
     n_pre_filters = layer.filters
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
@@ -86,6 +121,17 @@ def wider_pre_conv(layer, n_add_filters):
 
 
 def wider_next_conv(layer, start_dim, total_dim, n_add):
+    """Get next wider convolution layer for current layer
+
+   Args:
+       layer: the layer from which we get wider next convolution layer
+       start_dim: the started dimension
+       total_dim: the total dimension
+       n_add: the filters size of convolution layer
+
+   Returns:
+       The next wider convolution layer
+   """
     filter_shape = layer.kernel_size
     conv_func = get_conv_layer_func(len(filter_shape))
     n_filters = layer.filters
@@ -106,6 +152,17 @@ def wider_next_conv(layer, start_dim, total_dim, n_add):
 
 
 def wider_bn(layer, start_dim, total_dim, n_add):
+    """Get new layer with wider batch normalization for current layer
+
+   Args:
+       layer: the layer from which we get new layer with wider batch normalization
+       start_dim: the started dimension
+       total_dim: the total dimension
+       n_add: the output shape
+
+   Returns:
+       The new layer with wider batch normalization
+   """
     weights = layer.get_weights()
 
     input_shape = list((None,) * layer.input_spec.ndim)
@@ -130,6 +187,17 @@ def wider_bn(layer, start_dim, total_dim, n_add):
 
 
 def wider_next_dense(layer, start_dim, total_dim, n_add):
+    """Get next dense layer for current layer
+
+   Args:
+       layer: the dense layer from which we search next dense layer
+       n_add: output shape
+       start_dim: the started dimension
+       total_dim: the total dimension
+
+   Returns:
+       The next dense layer
+   """
     n_units = layer.units
     teacher_w, teacher_b = layer.get_weights()
     student_w = teacher_w.copy()
@@ -147,6 +215,15 @@ def wider_next_dense(layer, start_dim, total_dim, n_add):
 
 
 def wider_weighted_add(layer, n_add):
+    """Return wider weighted add layer
+
+    Args:
+        layer: the layer from which we get wider weighted add layer
+        n_add: output shape
+
+    Returns:
+        The wider weighted add layer
+    """
     input_shape, _ = get_int_tuple(layer.input_shape)
     input_shape = list(input_shape)
     input_shape[-1] += n_add

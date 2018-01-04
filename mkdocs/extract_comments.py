@@ -32,5 +32,5 @@ def extract_comments(directory):
                 get_comments_str(os.path.join(parent,file_name))
 
 
-extract_comments('/Users/tao/PycharmProjects/autokeras/tests/google_python_style')
+extract_comments('/Users/tao/PycharmProjects/autokeras/autokeras')
 

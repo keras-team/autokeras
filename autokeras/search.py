@@ -10,26 +10,55 @@ from autokeras.generator import RandomConvClassifierGenerator, DefaultClassifier
 from autokeras.net_transformer import transform
 from autokeras.utils import ModelTrainer
 from autokeras.utils import extract_config
+from autokeras.utils import has_file
 
 
 class Searcher:
+    """Base class of all searcher class
+
+    This class is the base class of all searcher class,
+    every searcher class can override its search function
+    to implements its strategy
+
+    Attributes:
+        n_classes: number of classification
+        input_shape: Arbitrary, although all dimensions in the input shaped must be fixed.
+                   Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
+                   when using this layer as the first layer in a model.
+        verbose: verbosity mode
+        history_configs: a list that stores all historical configuration
+        history: a list that stores the performance of model
+        path: place that store searcher
+        model_count: the id of model
+    """
     def __init__(self, n_classes, input_shape, path, verbose):
-        self.n_classes = n_classes
-        self.input_shape = input_shape
-        self.verbose = verbose
-        self.history_configs = []
-        self.history = []
-        self.path = path
-        self.model_count = 0
+        """Inits Searcher class with n_classes, input_shape, path, verbose
+
+        The Searcher will be loaded from file if it has been saved before.
+        """
+        if has_file(os.path.join(path,"searcher")):
+            searcher = pickle.load(open(os.path.join(path, 'searcher'), 'rb'))
+            self.__dict__ = searcher.__dict__
+        else:
+            self.n_classes = n_classes
+            self.input_shape = input_shape
+            self.verbose = verbose
+            self.history_configs = []
+            self.history = []
+            self.path = path
+            self.model_count = 0
 
     def search(self, x_train, y_train, x_test, y_test):
+        """an search strategy that will be overridden by children classes"""
         pass
 
     def load_best_model(self):
+        """return model with best accuracy"""
         model_id = max(self.history, key=lambda x: x['accuracy'])['model_id']
         return load_model(os.path.join(self.path, str(model_id) + '.h5'))
 
     def add_model(self, model, x_train, y_train, x_test, y_test):
+        """add one model while will be trained to history list"""
         model.compile(loss=categorical_crossentropy,
                       optimizer=Adadelta(),
                       metrics=['accuracy'])
@@ -45,11 +74,16 @@ class Searcher:
 
 
 class RandomSearcher(Searcher):
+    """Random Searcher class inherited from ClassifierBase class
+
+    RandomSearcher implements its search function with random strategy
+    """
     def __init__(self, n_classes, input_shape, path, verbose):
+        """Inits RandomSearcher with n_classes, input_shape, path, verbose"""
         super().__init__(n_classes, input_shape, path, verbose)
 
     def search(self, x_train, y_train, x_test, y_test):
-        # First model is randomly generated.
+        """Override parent's search function. First model is randomly generated"""
         while self.model_count < constant.MAX_MODEL_NUM:
             model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
             self.add_model(model, x_train, y_train, x_test, y_test)
@@ -58,15 +92,16 @@ class RandomSearcher(Searcher):
 
 
 class HillClimbingSearcher(Searcher):
+    """HillClimbing Searcher class inherited from ClassifierBase class
+
+    HillClimbing Searcher implements its search function with hill climbing strategy
+    """
     def __init__(self, n_classes, input_shape, path, verbose):
+        """Inits HillClimbing Searcher with n_classes, input_shape, path, verbose"""
         super().__init__(n_classes, input_shape, path, verbose)
 
     def _remove_duplicate(self, models):
-        """
-        Remove the duplicate in the history_models
-        :param models:
-        :return:
-        """
+        """Remove the duplicate in the history_models"""
         ans = []
         for model_a in models:
             model_a_config = extract_config(model_a)
@@ -75,7 +110,7 @@ class HillClimbingSearcher(Searcher):
         return ans
 
     def search(self, x_train, y_train, x_test, y_test):
-        # First model is randomly generated.
+        """Override parent's search function. First model is randomly generated"""
         if not self.history:
             model = DefaultClassifierGenerator(self.n_classes, self.input_shape).generate()
             self.add_model(model, x_train, y_train, x_test, y_test)

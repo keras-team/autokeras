@@ -7,6 +7,14 @@ from autokeras.utils import is_conv_layer
 
 
 def to_wider_model(model):
+    """Return wider model
+
+    Args:
+        model: the model from which we get wider model
+
+    Returns:
+        The wider model
+    """
     graph = Graph(model)
     weighted_layers = list(filter(lambda x: isinstance(x, tuple(WEIGHTED_LAYER_FUNC_LIST)), model.layers))[:-1]
     target = weighted_layers[randint(0, len(weighted_layers) - 1)]
@@ -18,11 +26,27 @@ def to_wider_model(model):
 
 
 def copy_conv_model(model):
+    """Return copied convolution model
+
+    Args:
+        model: the model we want to copy
+
+    Returns:
+        The copied model
+    """
     graph = Graph(model)
     return graph.produce_model()
 
 
 def to_skip_connection_model(model):
+    """Return skip_connected model
+
+    Args:
+        model: the model from which we get skip_connected model
+
+    Returns:
+        The skip_connected model
+    """
     graph = Graph(model)
     weighted_layers = list(filter(lambda x: is_conv_layer(x), model.layers))
     index_a = randint(0, len(weighted_layers) - 1)
@@ -40,6 +64,14 @@ def to_skip_connection_model(model):
 
 
 def to_deeper_model(model):
+    """Return deeper model
+
+    Args:
+        model: the model from which we get deeper model
+
+    Returns:
+        The deeper model
+    """
     graph = Graph(model)
     weighted_layers = list(filter(lambda x: isinstance(x, tuple(WEIGHTED_LAYER_FUNC_LIST)), model.layers))[:-1]
     target = weighted_layers[randint(0, len(weighted_layers) - 1)]
@@ -49,6 +81,14 @@ def to_deeper_model(model):
 
 
 def transform(model):
+    """Return new model after operations
+
+    Args:
+        model: the model from which we get new model
+
+    Returns:
+        The new model
+    """
     models = []
     for i in range(constant.N_NEIGHBORS):
         operation = randint(0, 2)
