@@ -9,10 +9,12 @@ from autokeras.constant import CONV_FUNC_LIST, LAYER_ATTR
 
 
 def is_conv_layer(layer):
+    """Return whether the layer is convolution layer"""
     return isinstance(layer, tuple(CONV_FUNC_LIST))
 
 
 def get_conv_layer_func(n_dim):
+    """Return convolution function based on the dimension"""
     conv_layer_functions = [Conv1D, Conv2D, Conv3D]
     if n_dim > 3:
         raise ValueError('The input dimension is too high.')
@@ -22,7 +24,23 @@ def get_conv_layer_func(n_dim):
 
 
 class ModelTrainer:
+    """A class that is used to train model
+
+    This class can train a model with dataset and will not stop until getting minimum loss
+
+    Attributes:
+        model: the model that will be trained
+        x_train: the input train data
+        y_train: the input train data labels
+        x_test: the input test data
+        y_test: the input test data labels
+        verbose: verbosity mode
+        training_losses: a list to store all losses during training
+        minimum_loss: the minimum loss during training
+        _no_improvement_count: the number of iterations that don't improve the result
+    """
     def __init__(self, model, x_train, y_train, x_test, y_test, verbose):
+        """Inits ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
         self.model = model
         self.x_train = x_train
         self.y_train = y_train
@@ -34,6 +52,7 @@ class ModelTrainer:
         self._no_improvement_count = 0
 
     def _converged(self, loss):
+        """Return whether the training is converged"""
         self.training_losses.append(loss)
         if loss > (self.minimum_loss - constant.MIN_LOSS_DEC):
             self._no_improvement_count += 1
@@ -46,6 +65,7 @@ class ModelTrainer:
         return self._no_improvement_count > constant.MAX_NO_IMPROVEMENT_NUM
 
     def train_model(self):
+        """Train the model with dataset and return the minimum_loss"""
         self.training_losses = []
         self._no_improvement_count = 0
         self.minimum_loss = float('inf')
@@ -61,6 +81,7 @@ class ModelTrainer:
 
 
 def copy_layer(layer, input_shape=None):
+    """Return a copied layer"""
     if input_shape is None:
         input_shape = layer.input_shape
     layer_config = layer.get_config()
@@ -72,6 +93,7 @@ def copy_layer(layer, input_shape=None):
 
 
 def extract_config(network):
+    """Return configuration of one model"""
     config = {'type': [], 'config': []}
     for layer in network.layers:
         name = type(layer).__name__
@@ -85,15 +107,23 @@ def extract_config(network):
 
 
 def ensure_dir(directory):
+    """Create directory if it does not exist"""
     if not os.path.exists(directory):
         os.makedirs(directory)
 
 
 def ensure_file_dir(path):
+    """Create path if it does not exist"""
     ensure_dir(os.path.dirname(path))
 
 
+def has_file(path):
+    """Return whether the path has a file"""
+    return os.path.exists(path)
+
+
 def reset_weights(model):
+    """Reset weights with a new model"""
     session = backend.get_session()
     for layer in model.layers:
         if hasattr(layer, 'kernel_initializer'):
@@ -101,12 +131,14 @@ def reset_weights(model):
 
 
 def get_layer_size(layer):
+    """Return the size of layer"""
     if is_conv_layer(layer):
         return layer.filters
     return layer.units
 
 
 def get_int_tuple(temp_shape):
+    """Return the input shape of temp_shape in the form of tuple"""
     input_shape = []
     for i in temp_shape:
         if isinstance(i, Dimension):
