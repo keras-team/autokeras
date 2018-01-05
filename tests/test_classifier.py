@@ -36,6 +36,8 @@ def simple_transform(_):
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
 def test_fit_predict(_, _1):
+    os.remove(os.path.join(constant.DEFAULT_SAVE_PATH, 'classifier'))
+    os.remove(os.path.join(constant.DEFAULT_SAVE_PATH, 'searcher'))
     constant.MAX_ITER_NUM = 2
     constant.MAX_MODEL_NUM = 2
     constant.EPOCHS_EACH = 1
@@ -53,6 +55,8 @@ def simple_transform2(_):
 @patch('autokeras.search.transform', side_effect=simple_transform2)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
 def test_fit_predict2(_, _1):
+    os.remove(os.path.join(constant.DEFAULT_SAVE_PATH, 'classifier'))
+    os.remove(os.path.join(constant.DEFAULT_SAVE_PATH, 'searcher'))
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
     constant.EPOCHS_EACH = 1
