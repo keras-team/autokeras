@@ -15,7 +15,6 @@ class Graph:
     A more universal model, Sequential model is a special case of Graph model
 
     Attributes:
-        layers: all layers except first layer in the Graph model
         model: current model
         node_list: a list to store nodes
         layer_list: a list to store layers
