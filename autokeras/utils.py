@@ -5,7 +5,7 @@ from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, Max
 from tensorflow import Dimension
 
 from autokeras import constant
-from autokeras.constant import CONV_FUNC_LIST, LAYER_ATTR
+from autokeras.constant import CONV_FUNC_LIST
 
 
 def is_conv_layer(layer):
@@ -94,16 +94,7 @@ def copy_layer(layer, input_shape=None):
 
 def extract_config(network):
     """Return configuration of one model"""
-    config = {'type': [], 'config': []}
-    for layer in network.layers:
-        name = type(layer).__name__
-        config['type'].append(name)
-        layer_config = layer.get_config()
-        important_attr = {}
-        for attr in LAYER_ATTR[name]:
-            important_attr[attr] = layer_config[attr]
-        config['config'].append(important_attr)
-    return config
+    return network.get_config()
 
 
 def ensure_dir(directory):

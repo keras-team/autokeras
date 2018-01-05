@@ -1,6 +1,8 @@
 from random import randint, random
 
-from keras.layers import MaxPooling1D, MaxPooling2D, MaxPooling3D, Dropout, Flatten, Dense
+from keras import Input, Model
+from keras.layers import MaxPooling1D, MaxPooling2D, MaxPooling3D, Dropout, Flatten, Dense, BatchNormalization, \
+    Activation
 from keras.losses import categorical_crossentropy
 from keras.models import Sequential
 from keras.optimizers import Adadelta, Adam
@@ -20,6 +22,7 @@ class ClassifierGenerator:
                    Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
                    when using this layer as the first layer in a model.
     """
+
     def __init__(self, n_classes, input_shape):
         """Inits ClassifierBase with n_classes, input_shape"""
         self.n_classes = n_classes
@@ -42,29 +45,35 @@ class ClassifierGenerator:
 
 class DefaultClassifierGenerator(ClassifierGenerator):
     """Default classifierGenerator class inherited from ClassifierGenerator class"""
+
     def __init__(self, n_classes, input_shape):
         """Inits DefaultClassifierGenerator with n_classes, input_shape"""
         super().__init__(n_classes, input_shape)
 
     def generate(self):
         """return one Sequential model that has been compiled"""
-        model = Sequential()
         pool = self._get_pool_layer_func()
         conv = get_conv_layer_func(len(self._get_shape(3)))
-        model.add(conv(32, kernel_size=self._get_shape(3),
-                       activation='relu',
-                       padding='same',
-                       input_shape=self.input_shape))
-        model.add(conv(64, self._get_shape(3),
-                       padding='same',
-                       activation='relu'))
-        model.add(pool(pool_size=self._get_shape(2)))
-        model.add(Dropout(0.25))
-        model.add(Flatten())
-        model.add(Dense(128, activation='relu'))
-        model.add(Dropout(0.5))
-        model.add(Dense(self.n_classes, activation='softmax'))
 
+        input_tensor = Input(shape=self.input_shape)
+        output_tensor = conv(32, kernel_size=self._get_shape(3),
+                             padding='same')(input_tensor)
+        output_tensor = BatchNormalization()(output_tensor)
+        output_tensor = Activation('relu')(output_tensor)
+
+        output_tensor = conv(64, self._get_shape(3),
+                             padding='same')(output_tensor)
+        output_tensor = BatchNormalization()(output_tensor)
+        output_tensor = Activation('relu')(output_tensor)
+
+        output_tensor = pool(pool_size=self._get_shape(2), padding='same')(output_tensor)
+        output_tensor = Dropout(0.25)(output_tensor)
+        output_tensor = Flatten()(output_tensor)
+        output_tensor = Dense(128, activation='relu')(output_tensor)
+        output_tensor = Dropout(0.5)(output_tensor)
+        output_tensor = Dense(self.n_classes, activation='softmax')(output_tensor)
+
+        model = Model(input_tensor, output_tensor)
         model.compile(loss=categorical_crossentropy,
                       optimizer=Adadelta(),
                       metrics=['accuracy'])
@@ -73,6 +82,7 @@ class DefaultClassifierGenerator(ClassifierGenerator):
 
 class RandomConvClassifierGenerator(ClassifierGenerator):
     """Random Convolution ClassifierGenerator based on the ClassifierGenerator"""
+
     def __init__(self, n_classes, input_shape):
         """Inits RandomConvClassifierGenerator with n_classes, input_shape"""
         super().__init__(n_classes, input_shape)
@@ -89,31 +99,26 @@ class RandomConvClassifierGenerator(ClassifierGenerator):
         pool = self._get_pool_layer_func()
         conv = get_conv_layer_func(len(filter_shape))
 
-        model = Sequential()
+        input_tensor = Input(shape=self.input_shape)
+        output_tensor = input_tensor
         for i in range(conv_num):
             kernel_num = randint(10, 30)
-            if i == 0:
-                model.add(conv(kernel_num,
-                               input_shape=self.input_shape,
-                               kernel_size=filter_shape,
-                               activation='relu',
-                               padding='same'))
-            else:
-                model.add(conv(kernel_num,
-                               kernel_size=filter_shape,
-                               activation='relu',
-                               padding='same'))
+            output_tensor = conv(kernel_num, filter_shape,
+                                 padding='same')(output_tensor)
+            output_tensor = BatchNormalization()(output_tensor)
+            output_tensor = Activation('relu')(output_tensor)
             if random() > 0.5:
-                model.add(pool(pool_size=pool_shape, padding='same'))
+                output_tensor = pool(pool_size=pool_shape, padding='same')(output_tensor)
             if random() > 0.5:
-                model.add(Dropout(dropout_rate))
-        model.add(Flatten())
+                output_tensor = Dropout(dropout_rate)(output_tensor)
+        output_tensor = Flatten()(output_tensor)
         for i in range(dense_num):
             node_num = randint(128, 1024)
-            model.add(Dense(node_num, activation='relu'))
+            output_tensor = Dense(node_num, activation='relu')(output_tensor)
             if random() > 0.5:
-                model.add(Dropout(dropout_rate))
-        model.add(Dense(self.n_classes, activation='softmax'))
+                output_tensor = Dropout(dropout_rate)(output_tensor)
+        output_tensor = Dense(self.n_classes, activation='softmax')(output_tensor)
+        model = Model(input_tensor, output_tensor)
         model.compile(loss='categorical_crossentropy',
                       optimizer=Adam(),
                       metrics=['accuracy'])

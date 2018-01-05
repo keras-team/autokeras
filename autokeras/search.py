@@ -32,11 +32,11 @@ class Searcher:
         model_count: the id of model
     """
     def __init__(self, n_classes, input_shape, path, verbose):
-        """Inits Searcher class with n_classes, input_shape, path, verbose
+        """Init Searcher class with n_classes, input_shape, path, verbose
 
         The Searcher will be loaded from file if it has been saved before.
         """
-        if has_file(os.path.join(path,"searcher")):
+        if has_file(os.path.join(path, "searcher")):
             searcher = pickle.load(open(os.path.join(path, 'searcher'), 'rb'))
             self.__dict__ = searcher.__dict__
         else:
@@ -79,7 +79,7 @@ class RandomSearcher(Searcher):
     RandomSearcher implements its search function with random strategy
     """
     def __init__(self, n_classes, input_shape, path, verbose):
-        """Inits RandomSearcher with n_classes, input_shape, path, verbose"""
+        """Init RandomSearcher with n_classes, input_shape, path, verbose"""
         super().__init__(n_classes, input_shape, path, verbose)
 
     def search(self, x_train, y_train, x_test, y_test):

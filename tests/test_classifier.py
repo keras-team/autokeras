@@ -36,22 +36,23 @@ def simple_transform(_):
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
 def test_fit_predict(_, _1):
-    clear_dir()
     constant.MAX_ITER_NUM = 2
     constant.MAX_MODEL_NUM = 2
     constant.EPOCHS_EACH = 1
-    clf = ImageClassifier(verbose=False)
+    path = 'tests/resources/temp'
+    clear_dir(path)
+    clf = ImageClassifier(path=path, verbose=False)
     clf.fit([[[1], [2]], [[3], [4]]], ['a', 'b'])
     results = clf.predict([[[1], [2]], [[3], [4]]])
     assert all(map(lambda result: result in np.array(['a', 'b']), results))
 
 
-def clear_dir():
-    ensure_dir(constant.DEFAULT_SAVE_PATH)
-    directory = os.path.join(constant.DEFAULT_SAVE_PATH, 'classifier')
+def clear_dir(path=constant.DEFAULT_SAVE_PATH):
+    ensure_dir(path)
+    directory = os.path.join(path, 'classifier')
     if os.path.exists(directory):
         os.remove(directory)
-    directory = os.path.join(constant.DEFAULT_SAVE_PATH, 'searcher')
+    directory = os.path.join(path, 'searcher')
     if os.path.exists(directory):
         os.remove(directory)
 
@@ -64,14 +65,15 @@ def simple_transform2(_):
 @patch('autokeras.search.transform', side_effect=simple_transform2)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
 def test_fit_predict2(_, _1):
-    clear_dir()
+    path = 'tests/resources/temp'
+    clear_dir(path)
+    clf = ImageClassifier(path=path, verbose=False)
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
     constant.EPOCHS_EACH = 1
     train_x = np.random.rand(100, 25, 1)
     test_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf = ImageClassifier(verbose=False)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
@@ -86,13 +88,15 @@ def test_save_continue(_, _1):
     train_x = np.random.rand(100, 25, 1)
     test_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf = ImageClassifier(path='tests/resources/temp', verbose=False)
+    path = 'tests/resources/temp'
+    clear_dir(path)
+    clf = ImageClassifier(path=path, verbose=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
     assert len(clf.searcher.history) == 1
 
     constant.MAX_MODEL_NUM = 2
-    clf = load_from_path(path='tests/resources/temp')
+    clf = ImageClassifier(verbose=False)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
