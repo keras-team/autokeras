@@ -36,8 +36,7 @@ def simple_transform(_):
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
 def test_fit_predict(_, _1):
-    os.remove(os.path.join(constant.DEFAULT_SAVE_PATH, 'classifier'))
-    os.remove(os.path.join(constant.DEFAULT_SAVE_PATH, 'searcher'))
+    clear_dir()
     constant.MAX_ITER_NUM = 2
     constant.MAX_MODEL_NUM = 2
     constant.EPOCHS_EACH = 1
@@ -45,6 +44,16 @@ def test_fit_predict(_, _1):
     clf.fit([[[1], [2]], [[3], [4]]], ['a', 'b'])
     results = clf.predict([[[1], [2]], [[3], [4]]])
     assert all(map(lambda result: result in np.array(['a', 'b']), results))
+
+
+def clear_dir():
+    ensure_dir(constant.DEFAULT_SAVE_PATH)
+    directory = os.path.join(constant.DEFAULT_SAVE_PATH, 'classifier')
+    if os.path.exists(directory):
+        os.remove(directory)
+    directory = os.path.join(constant.DEFAULT_SAVE_PATH, 'searcher')
+    if os.path.exists(directory):
+        os.remove(directory)
 
 
 def simple_transform2(_):
@@ -55,8 +64,7 @@ def simple_transform2(_):
 @patch('autokeras.search.transform', side_effect=simple_transform2)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
 def test_fit_predict2(_, _1):
-    os.remove(os.path.join(constant.DEFAULT_SAVE_PATH, 'classifier'))
-    os.remove(os.path.join(constant.DEFAULT_SAVE_PATH, 'searcher'))
+    clear_dir()
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
     constant.EPOCHS_EACH = 1
