@@ -1,4 +1,6 @@
+from keras import Input
 from keras.engine import Model
+from keras.layers import Conv2D
 from keras.losses import categorical_crossentropy
 from keras.models import Sequential
 from keras.optimizers import Adadelta
@@ -54,7 +56,7 @@ def test_dense_to_wider_layer():
     random_input = np.random.rand(1, 10)
     output1 = model.predict_on_batch(random_input)
     output2 = model2.predict_on_batch(random_input)
-    assert np.sum(output1.flatten() - output2.flatten()) < 1e-4
+    assert np.array_equal(output1.flatten(), output2.flatten())
 
 
 def test_wider_bn():
@@ -73,3 +75,25 @@ def test_wider_next_dense():
     layer = get_conv_dense_model().layers[5]
     new_layer = wider_next_dense(layer, 3, 3, 3)
     assert new_layer.get_weights()[0].shape == (150, 5)
+
+
+def test_wider_conv():
+    model = get_conv_model()
+
+    layer1 = wider_pre_conv(model.layers[1], 3)
+    layer2 = wider_bn(model.layers[2], 3, 3, 3)
+    layer3 = wider_next_conv(model.layers[4], 3, 3, 3)
+
+    input_tensor = Input(shape=(5, 5, 3))
+    output_tensor = layer1(input_tensor)
+    output_tensor = layer2(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = layer3(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    model2 = Model(inputs=input_tensor, outputs=output_tensor)
+
+    random_input = get_conv_data()
+    output1 = model.predict_on_batch(random_input)
+    output2 = model2.predict_on_batch(random_input)
+    assert np.sum(output1.flatten() - output2.flatten()) < 1e-4

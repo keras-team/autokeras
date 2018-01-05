@@ -2,11 +2,11 @@ from queue import Queue
 
 from keras import Input
 from keras.engine import Model
-from keras.layers import BatchNormalization, Dense, Concatenate
+from keras.layers import Concatenate
 
 from autokeras.layer_transformer import *
 from autokeras.layers import WeightedAdd
-from autokeras.utils import copy_layer, is_conv_layer, get_int_tuple
+from autokeras.utils import copy_layer, is_conv_layer, get_int_tuple, is_pooling_layer
 
 
 class Graph:
@@ -98,30 +98,6 @@ class Graph:
                 break
 
         self._add_edge(self.layer_list[layer_id], u_id, new_v_id)
-
-    def to_concat_skip_model(self, start, end):
-        input_id = self.node_to_id[start.input]
-        output_id = self.node_to_id[end.output]
-        output_id = self.adj_list[output_id][0][0]
-
-        self._add_node(0)
-        new_node_id = self.node_to_id[0]
-        old_node_id = self.adj_list[output_id][0][0]
-        layer = Concatenate()
-        layer.build([get_int_tuple(end.output_shape), get_int_tuple(start.output_shape)])
-        self._add_edge(layer, new_node_id, old_node_id, False)
-        self._add_edge(layer, input_id, old_node_id, False)
-        self._redirect_edge(output_id, old_node_id, new_node_id)
-
-        self.next_vis = [False] * self.n_nodes
-        self.pre_vis = [False] * self.n_nodes
-        self.middle_layer_vis = [False] * len(self.layer_list)
-
-        self.pre_vis[old_node_id] = True
-        dim = get_int_tuple(end.output_shape)[-1]
-        n_add = get_int_tuple(start.output_shape)[-1]
-        self._search_next(old_node_id, dim, dim, n_add)
-        return self.produce_model()
 
     def _search_next(self, u, start_dim, total_dim, n_add):
         if self.next_vis[u]:
@@ -237,19 +213,69 @@ class Graph:
         return order_list
 
     def to_add_skip_model(self, start, end):
-        input_id = self.node_to_id[start.input]
-        output_id = self.node_to_id[end.output]
-        output_id = self.adj_list[output_id][0][0]
+        conv_input_id = self.node_to_id[start.input]
+        relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
 
-        self._add_node(0)
-        new_node_id = self.node_to_id[0]
+        # Add the pooling layer chain.
+        pooling_layer_list = self.get_pooling_layers(conv_input_id, relu_input_id)
+        skip_output_id = conv_input_id
+        for index, layer_id in enumerate(pooling_layer_list):
+            layer = self.layer_list[layer_id]
+            self._add_node(index)
+            new_node_id = self.node_to_id[index]
+            self._add_edge(copy_layer(layer), skip_output_id, new_node_id, False)
+            skip_output_id = new_node_id
+
+        # Add the weighted add layer.
+        self._add_node('a')
+        new_node_id = self.node_to_id['a']
         layer = WeightedAdd()
         single_input_shape = get_int_tuple(start.output_shape)
         layer.build([single_input_shape, single_input_shape])
-        self._add_edge(layer, new_node_id, self.adj_list[output_id][0][0], False)
-        self._add_edge(layer, input_id, self.adj_list[output_id][0][0], False)
 
-        self._redirect_edge(output_id, self.adj_list[output_id][0][0], new_node_id)
+        relu_output_id = self.adj_list[relu_input_id][0][0]
+        self._redirect_edge(relu_input_id, relu_output_id, new_node_id)
+        self._add_edge(layer, new_node_id, relu_output_id, False)
+        self._add_edge(layer, skip_output_id, relu_output_id, False)
+
+        return self.produce_model()
+
+    def to_concat_skip_model(self, start, end):
+        conv_input_id = self.node_to_id[start.input]
+        relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
+
+        # Add the pooling layer chain.
+        pooling_layer_list = self.get_pooling_layers(conv_input_id, relu_input_id)
+        skip_output_id = conv_input_id
+        for index, layer_id in enumerate(pooling_layer_list):
+            layer = self.layer_list[layer_id]
+            self._add_node(index)
+            new_node_id = self.node_to_id[index]
+            self._add_edge(copy_layer(layer), skip_output_id, new_node_id, False)
+            skip_output_id = new_node_id
+
+        # Add the weighted add layer.
+        self._add_node('a')
+        new_node_id = self.node_to_id['a']
+        layer = Concatenate()
+        left_input_shape = get_int_tuple(end.output_shape)
+        right_input_shape = np.concatenate((left_input_shape[:-1], get_int_tuple(start.output_shape[-1:])))
+        layer.build([left_input_shape, right_input_shape])
+
+        relu_output_id = self.adj_list[relu_input_id][0][0]
+        self._redirect_edge(relu_input_id, relu_output_id, new_node_id)
+        self._add_edge(layer, new_node_id, relu_output_id, False)
+        self._add_edge(layer, skip_output_id, relu_output_id, False)
+
+        # Widen the related layers.
+        self.next_vis = [False] * self.n_nodes
+        self.pre_vis = [False] * self.n_nodes
+        self.middle_layer_vis = [False] * len(self.layer_list)
+
+        self.pre_vis[relu_output_id] = True
+        dim = get_int_tuple(end.output_shape)[-1]
+        n_add = get_int_tuple(start.output_shape)[-1]
+        self._search_next(relu_output_id, dim, dim, n_add)
         return self.produce_model()
 
     def to_conv_deeper_model(self, target, kernel_size):
@@ -310,3 +336,24 @@ class Graph:
                 temp_tensor = new_layer(edge_input_tensor)
                 id_to_tensor[v] = temp_tensor
         return Model(input_tensor, id_to_tensor[output_id])
+
+    def get_pooling_layers(self, start_node_id, end_node_id):
+        layer_list = []
+        node_list = [start_node_id]
+        self._depth_first_search(end_node_id, layer_list, node_list)
+        return filter(lambda layer_id: is_pooling_layer(self.layer_list[layer_id]), layer_list)
+
+    def _depth_first_search(self, target_id, layer_list, node_list):
+        u = node_list[-1]
+        if u == target_id:
+            return True
+
+        for v, layer_id in self.adj_list[u]:
+            layer_list.append(layer_id)
+            node_list.append(v)
+            if self._depth_first_search(target_id, layer_list, node_list):
+                return True
+            layer_list.pop()
+            node_list.pop()
+
+        return False

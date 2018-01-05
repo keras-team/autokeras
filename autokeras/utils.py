@@ -1,7 +1,7 @@
 import os
 
 from keras import backend
-from keras.layers import Conv1D, Conv2D, Conv3D
+from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D
 from tensorflow import Dimension
 
 from autokeras import constant
@@ -63,7 +63,9 @@ class ModelTrainer:
 def copy_layer(layer, input_shape=None):
     if input_shape is None:
         input_shape = layer.input_shape
-    new_layer = layer.__class__.from_config(layer.get_config())
+    layer_config = layer.get_config()
+    layer_config.pop('name', None)
+    new_layer = layer.__class__.from_config(layer_config)
     new_layer.build(input_shape)
     new_layer.set_weights(layer.get_weights())
     return new_layer
@@ -112,3 +114,7 @@ def get_int_tuple(temp_shape):
         else:
             input_shape.append(i)
     return tuple(input_shape)
+
+
+def is_pooling_layer(layer):
+    return isinstance(layer, (MaxPooling1D, MaxPooling2D, MaxPooling3D))

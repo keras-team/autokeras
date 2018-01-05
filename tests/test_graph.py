@@ -1,5 +1,5 @@
 from autokeras.graph import *
-from tests.common import get_conv_model, get_conv_data, get_add_skip_model, get_conv_dense_model
+from tests.common import get_conv_model, get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model
 
 
 def test_graph():
@@ -16,7 +16,7 @@ def test_conv_deeper():
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
 
-    assert np.sum(output1 - output2) < 0.2
+    assert abs(np.sum(output1 - output2)) < 0.2
 
 
 def test_dense_deeper():
@@ -40,7 +40,7 @@ def test_conv_wider():
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
 
-    assert np.sum(output1 - output2) < 1e-4
+    assert abs(np.sum(output1 - output2)) < 1e-4
 
 
 def test_dense_wider():
@@ -52,13 +52,25 @@ def test_dense_wider():
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
 
-    assert np.sum(output1 - output2) < 1e-4
+    assert abs(np.sum(output1 - output2)) < 1e-4
 
 
 def test_skip_add():
     model = get_conv_model()
     graph = Graph(model)
     new_model = graph.to_add_skip_model(model.layers[1], model.layers[4])
+    input_data = get_conv_data()
+
+    output1 = model.predict_on_batch(input_data).flatten()
+    output2 = new_model.predict_on_batch(input_data).flatten()
+
+    assert np.array_equal(output1, output2)
+
+
+def test_skip_add_over_pooling():
+    model = get_pooling_model()
+    graph = Graph(model)
+    new_model = graph.to_add_skip_model(model.layers[4], model.layers[11])
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
@@ -76,7 +88,19 @@ def test_skip_concatenate():
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
 
-    assert np.sum(output1 - output2) < 1e-4
+    assert abs(np.sum(output1 - output2)) < 1e-4
+
+
+def test_skip_concat_over_pooling():
+    model = get_pooling_model()
+    graph = Graph(model)
+    new_model = graph.to_concat_skip_model(model.layers[4], model.layers[11])
+    input_data = get_conv_data()
+
+    output1 = model.predict_on_batch(input_data).flatten()
+    output2 = new_model.predict_on_batch(input_data).flatten()
+
+    assert abs(np.sum(output1 - output2)) < 1e-4
 
 
 def test_copy_model():

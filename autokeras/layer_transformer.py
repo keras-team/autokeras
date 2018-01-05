@@ -37,7 +37,6 @@ def dense_to_deeper_layer(dense_layer):
     return new_dense_layer
 
 
-
 def wider_pre_dense(layer, n_add):
     n_units1 = layer.get_weights()[0].shape[0]
     n_units2 = layer.units
