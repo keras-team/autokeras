@@ -97,7 +97,7 @@ class HillClimbingSearcher(Searcher):
     HillClimbing Searcher implements its search function with hill climbing strategy
     """
     def __init__(self, n_classes, input_shape, path, verbose):
-        """Inits HillClimbing Searcher with n_classes, input_shape, path, verbose"""
+        """Init HillClimbing Searcher with n_classes, input_shape, path, verbose"""
         super().__init__(n_classes, input_shape, path, verbose)
 
     def _remove_duplicate(self, models):

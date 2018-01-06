@@ -4,7 +4,6 @@ from keras import Input, Model
 from keras.layers import MaxPooling1D, MaxPooling2D, MaxPooling3D, Dropout, Flatten, Dense, BatchNormalization, \
     Activation
 from keras.losses import categorical_crossentropy
-from keras.models import Sequential
 from keras.optimizers import Adadelta, Adam
 
 from autokeras.utils import get_conv_layer_func
@@ -24,7 +23,7 @@ class ClassifierGenerator:
     """
 
     def __init__(self, n_classes, input_shape):
-        """Inits ClassifierBase with n_classes, input_shape"""
+        """Init ClassifierBase with n_classes, input_shape"""
         self.n_classes = n_classes
         self.input_shape = input_shape
         if len(self.input_shape) > 4:
@@ -47,7 +46,7 @@ class DefaultClassifierGenerator(ClassifierGenerator):
     """Default classifierGenerator class inherited from ClassifierGenerator class"""
 
     def __init__(self, n_classes, input_shape):
-        """Inits DefaultClassifierGenerator with n_classes, input_shape"""
+        """Init DefaultClassifierGenerator with n_classes, input_shape"""
         super().__init__(n_classes, input_shape)
 
     def generate(self):
@@ -84,7 +83,7 @@ class RandomConvClassifierGenerator(ClassifierGenerator):
     """Random Convolution ClassifierGenerator based on the ClassifierGenerator"""
 
     def __init__(self, n_classes, input_shape):
-        """Inits RandomConvClassifierGenerator with n_classes, input_shape"""
+        """Init RandomConvClassifierGenerator with n_classes, input_shape"""
         super().__init__(n_classes, input_shape)
 
     def generate(self):

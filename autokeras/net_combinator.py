@@ -1,6 +1,3 @@
-# import numpy as np
-# from keras.layers import Dense
-# from keras.models import Sequential
 #
 # from autokeras.constant import CONV_FUNC_LIST, WEIGHTED_LAYER_FUNC_LIST
 # from autokeras.net_transformer import to_deeper_dense_model

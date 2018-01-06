@@ -44,7 +44,7 @@ class ClassifierBase:
         model_id: identifier of one model
     """
     def __init__(self, verbose=False, searcher_type=None, path=constant.DEFAULT_SAVE_PATH):
-        """Inits ClassifierBase with verbose, searcher_type, path
+        """Init ClassifierBase with verbose, searcher_type, path
 
         The classifier will be loaded from file if it has been saved before.
         """
@@ -145,7 +145,7 @@ class ClassifierBase:
 class Classifier(ClassifierBase):
     """Normal classifier class inherited from ClassifierBase class"""
     def __init__(self):
-        """Inits Classifier"""
+        """Init Classifier"""
         super().__init__()
 
     def _validate(self, x_train, y_train):
@@ -159,5 +159,5 @@ class ImageClassifier(ClassifierBase):
     It's used to do image classification
     """
     def __init__(self, verbose=True, searcher_type='climb', path=constant.DEFAULT_SAVE_PATH):
-        """Inits ImageClassifier with verbose, searcher_type, path"""
+        """Init ImageClassifier with verbose, searcher_type, path"""
         super().__init__(verbose, searcher_type, path)

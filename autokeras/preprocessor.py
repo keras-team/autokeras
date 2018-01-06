@@ -14,7 +14,7 @@ class OneHotEncoder:
           int_to_label: mapping from int to label
     """
     def __init__(self):
-        """Inits OneHotEncoder"""
+        """Init OneHotEncoder"""
         self.data = None
         self.n_classes = 0
         self.labels = None

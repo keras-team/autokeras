@@ -40,7 +40,7 @@ class ModelTrainer:
         _no_improvement_count: the number of iterations that don't improve the result
     """
     def __init__(self, model, x_train, y_train, x_test, y_test, verbose):
-        """Inits ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
+        """Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
         self.model = model
         self.x_train = x_train
         self.y_train = y_train
