@@ -10,21 +10,32 @@ from autokeras.utils import copy_layer, is_conv_layer, get_int_tuple, is_pooling
 
 
 class Graph:
-    """Another model class like Sequential
+    """A class represent the neural architecture graph of a Keras model.
 
-    A more universal model, Sequential model is a special case of Graph model
+    Graph extracts the neural architecture graph from a Keras model. Each node in the graph
+    is a intermediate tensor between layers. Each layer is an edge in the graph.
+
+    Notably, multiple edges may refer to the same layer. (e.g. WeightedAdd layer is adding
+    two tensor into one tensor. So it is related to two edges.)
 
     Attributes:
-        model: current model
-        node_list: a list to store nodes
-        layer_list: a list to store layers
-        node_to_id: store the mapping from node to id
-        layer_to_id: store the mapping from id to node
-        layer_id_to_input_node_ids: store the mapping from layer id to input node ids
-        old_layer_ids: store the mapping from layer to ids
+        model: The Keras model, from which to extract the graph.
+        node_list: A list of tensors, the indices of the list are the identifiers.
+        layer_list: A list of Keras layers, the indices of the list are the identifiers.
+        node_to_id: A dict instance mapping from tensors to their identifiers.
+        layer_to_id: A dict instance mapping from Keras layers to their identifiers.
+        layer_id_to_input_node_ids: A dict instance mapping from layer identifiers
+            to their input nodes identifiers.
+        old_layer_ids: A dict instance stores the identifiers of the not updated layers.
+        adj_list: A two dimensional list. The adjacency list of the graph. The first dimension is
+            identified by tensor identifiers. In each edge list, the elements are two-element tuples
+            of (tensor identifier, layer identifier).
+        reverse_adj_list: A reverse adjacent list in the same format as adj_list.
+        next_vis: A boolean list marking whether a node has been visited or not.
+        pre_vis: A boolean list marking whether a node has been visited or not.
+        middle_layer_vis: A boolean list marking whether a node has been visited or not.
     """
     def __init__(self, model):
-        """Init Graph class"""
         layers = model.layers[1:]
         self.model = model
         self.node_list = []
@@ -56,16 +67,16 @@ class Graph:
 
     @property
     def n_nodes(self):
-        """Return the number of nodes in the model"""
+        """Return the number of nodes in the model."""
         return len(self.node_list)
 
     @property
     def n_layers(self):
-        """Return the number of layers in the model"""
+        """Return the number of layers in the model."""
         return len(self.layer_list)
 
     def _add_node(self, node):
-        """Add node to node list if it not in node list"""
+        """Add node to node list if it not in node list."""
         if node not in self.node_list:
             node_id = len(self.node_list)
             self.node_to_id[node] = node_id
@@ -74,7 +85,7 @@ class Graph:
             self.reverse_adj_list[node_id] = []
 
     def _add_edge(self, layer, input_id=None, output_id=None, old=True):
-        """Add edge to the layer"""
+        """Add edge to the graph."""
         if input_id is None:
             if isinstance(layer.input, list):
                 for temp_input in layer.input:
@@ -102,7 +113,10 @@ class Graph:
             self.old_layer_ids[layer_id] = True
 
     def _redirect_edge(self, u_id, v_id, new_v_id):
-        """Redirect the edge"""
+        """Redirect the edge to a new node.
+        Change the edge originally from u_id to v_id into an edge from u_id to new_v_id
+        while keeping all other property of the edge the same.
+        """
         layer_id = None
         for index, edge_tuple in enumerate(self.adj_list[u_id]):
             if edge_tuple[0] == v_id:
@@ -119,7 +133,14 @@ class Graph:
         self._add_edge(self.layer_list[layer_id], u_id, new_v_id)
 
     def _search_next(self, u, start_dim, total_dim, n_add):
-        """Search next node"""
+        """Search downward the graph for widening the layers.
+
+        Args:
+            u: The starting node identifier.
+            start_dim: The dimension to insert the additional dimensions.
+            total_dim: The total number of dimensions the layer has before widening.
+            n_add: The number of dimensions to add.
+        """
         if self.next_vis[u]:
             return
         self.next_vis[u] = True
@@ -161,7 +182,14 @@ class Graph:
                 self._search_next(v, start_dim, total_dim, n_add)
 
     def _search_pre(self, u, start_dim, total_dim, n_add):
-        """Search next node"""
+        """Search upward the graph for widening the layers.
+
+        Args:
+            u: The starting node identifier.
+            start_dim: The dimension to insert the additional dimensions.
+            total_dim: The total number of dimensions the layer has before widening.
+            n_add: The number of dimensions to add.
+        """
         if self.pre_vis[u]:
             return
         self.pre_vis[u] = True
@@ -185,28 +213,8 @@ class Graph:
             else:
                 self._search_pre(v, start_dim, total_dim, n_add)
 
-    def _search_following_conv(self, node_id):
-        """Search following convolution"""
-        stack = [node_id]
-        ret_list = []
-        while stack:
-            u = stack.pop()
-            for v, layer_id in self.adj_list[u]:
-                layer = self.layer_list[layer_id]
-                if is_conv_layer(layer):
-                    ret_list.append(layer)
-                elif isinstance(layer, BatchNormalization):
-                    ret_list.append(layer)
-                    stack.append(v)
-                elif isinstance(layer, Dense):
-                    ret_list.append(layer)
-                else:
-                    stack.append(v)
-        return ret_list
-
     def _replace_layer(self, layer_id, new_layer):
-        """Replace the layer with new layer"""
-        # layer_id = self.layer_to_id[old_layer]
+        """Replace the layer with a new layer."""
         old_layer = self.layer_list[layer_id]
         self.layer_list[layer_id] = new_layer
         self.layer_to_id[new_layer] = layer_id
@@ -214,7 +222,7 @@ class Graph:
         self.old_layer_ids.pop(layer_id, None)
 
     def _topological_order(self):
-        """do the topological sort"""
+        """Return the topological order of the nodes."""
         q = Queue()
         in_degree = {}
         for i in range(self.n_nodes):
@@ -237,7 +245,11 @@ class Graph:
         return order_list
 
     def to_add_skip_model(self, start, end):
-        """Add skip model from start to end"""
+        """Add a weighted add skip connection from start node to end node.
+
+        Returns:
+            A new Keras model with the added connection.
+        """
         conv_input_id = self.node_to_id[start.input]
         relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
 
@@ -266,7 +278,11 @@ class Graph:
         return self.produce_model()
 
     def to_concat_skip_model(self, start, end):
-        """Concat skip model from start to end"""
+        """Add a weighted add concatenate connection from start node to end node.
+
+        Returns:
+            A new Keras model with the added connection.
+        """
         conv_input_id = self.node_to_id[start.input]
         relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
 
@@ -305,7 +321,16 @@ class Graph:
         return self.produce_model()
 
     def to_conv_deeper_model(self, target, kernel_size):
-        """return new convolution deeper model"""
+        """Insert a convolution, batch-normalization, relu block after the target block.
+
+        Args:
+            target: A convolutional layer. The new block should be inserted after the relu layer
+                in its conv-batch-relu block.
+            kernel_size: An integer. The kernel size of the new convolutional layer.
+
+        Returns:
+            A new Keras model with the inserted block.
+        """
         new_layers = deeper_conv_block(target, kernel_size)
         output_id = self.node_to_id[target.output]
         output_id = self.adj_list[output_id][0][0]
@@ -321,7 +346,15 @@ class Graph:
         return self.produce_model()
 
     def to_wider_model(self, pre_layer, n_add):
-        """return new wider model"""
+        """Widen the last dimension of the output of the pre_layer.
+
+        Args:
+            pre_layer: A convolutional layer or dense layer.
+            n_add: The number of dimensions to add.
+
+        Returns:
+            A new Keras model with the widened layers.
+        """
         output_id = self.node_to_id[pre_layer.output]
         self.next_vis = [False] * self.n_nodes
         self.pre_vis = [False] * self.n_nodes
@@ -331,7 +364,14 @@ class Graph:
         return self.produce_model()
 
     def to_dense_deeper_model(self, target):
-        """return deeper dense model"""
+        """Insert a dense layer after the target layer.
+
+        Args:
+            target: A dense layer.
+
+        Returns:
+            A new Keras model with an inserted dense layer.
+        """
         new_layers = dense_to_deeper_layer(target)
         old_input_id = self.node_to_id[target.input]
         old_output_id = self.node_to_id[target.output]
@@ -343,7 +383,7 @@ class Graph:
         return self.produce_model()
 
     def produce_model(self):
-        """return new model"""
+        """Build a new Keras model based on the current graph."""
         input_tensor = Input(shape=get_int_tuple(self.model.inputs[0].shape[1:]))
         input_id = self.node_to_id[self.model.inputs[0]]
         output_id = self.node_to_id[self.model.outputs[0]]

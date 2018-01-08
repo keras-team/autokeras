@@ -89,6 +89,7 @@ def skip_space_line(parts, ind):
     return ind
 
 
+# check if comment is None or len(comment) == 0 return {}
 def parse_func_string(comment):
     comments = {}
     paras = ('Args','Attributes','Returns','Raises')

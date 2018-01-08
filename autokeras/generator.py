@@ -10,20 +10,19 @@ from autokeras.utils import get_conv_layer_func
 
 
 class ClassifierGenerator:
-    """Base class of ClassifierGenerator
+    """The base class of classifier generators.
 
-    ClassifierGenerator is the base class of all ClassifierGenerator classes, classifier_generator is used
-    to generate model
+    ClassifierGenerator is the base class of all classifier generator classes.
+    It is used for generating classifier models.
 
     Attributes:
-        n_classes: number of class in the input data
-        input_shape: Arbitrary, although all dimensions in the input shaped must be fixed.
-                   Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
-                   when using this layer as the first layer in a model.
+        n_classes: Number of classes in the input data.
+        input_shape: A tuple of integers containing the size of each dimension of the input data,
+            excluding the dimension of number of training examples. The length of the tuple should
+            between two and four inclusively.
     """
 
     def __init__(self, n_classes, input_shape):
-        """Init ClassifierBase with n_classes, input_shape"""
         self.n_classes = n_classes
         self.input_shape = input_shape
         if len(self.input_shape) > 4:
@@ -32,25 +31,24 @@ class ClassifierGenerator:
             raise ValueError('The input dimension is too low.')
 
     def _get_pool_layer_func(self):
-        """Return MaxPooling function based on the dimension of input shape"""
+        """Return MaxPooling function based on the dimension of input shape."""
         pool_funcs = [MaxPooling1D, MaxPooling2D, MaxPooling3D]
         return pool_funcs[len(self.input_shape) - 2]
 
     def _get_shape(self, dim_size):
-        """Return shape tuple based on the dimension of input shape"""
+        """Return filter shape tuple based on the dimension of input shape."""
         temp_list = [(dim_size,), (dim_size, dim_size), (dim_size, dim_size, dim_size)]
         return temp_list[len(self.input_shape) - 2]
 
 
 class DefaultClassifierGenerator(ClassifierGenerator):
-    """Default classifierGenerator class inherited from ClassifierGenerator class"""
+    """A classifier generator always generates models with the same default architecture and configuration."""
 
     def __init__(self, n_classes, input_shape):
-        """Init DefaultClassifierGenerator with n_classes, input_shape"""
         super().__init__(n_classes, input_shape)
 
     def generate(self):
-        """return one Sequential model that has been compiled"""
+        """Return the default classifier model that has been compiled."""
         pool = self._get_pool_layer_func()
         conv = get_conv_layer_func(len(self._get_shape(3)))
 
@@ -80,14 +78,13 @@ class DefaultClassifierGenerator(ClassifierGenerator):
 
 
 class RandomConvClassifierGenerator(ClassifierGenerator):
-    """Random Convolution ClassifierGenerator based on the ClassifierGenerator"""
+    """A classifier generator that generates random convolutional neural networks."""
 
     def __init__(self, n_classes, input_shape):
-        """Init RandomConvClassifierGenerator with n_classes, input_shape"""
         super().__init__(n_classes, input_shape)
 
     def generate(self):
-        """return one Sequential model that has been compiled"""
+        """Return the random generated CNN model."""
         conv_num = randint(1, 10)
         dense_num = randint(1, 10)
         dropout_rate = random()

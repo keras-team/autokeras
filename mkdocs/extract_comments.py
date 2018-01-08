@@ -30,6 +30,7 @@ def extract_comments(directory):
     for parent, dir_names, file_names in os.walk(directory):
         for file_name in file_names:
             if os.path.splitext(file_name)[1] == '.py':
+                # with open
                 get_comments_str(os.path.join(parent, file_name))
 
 
