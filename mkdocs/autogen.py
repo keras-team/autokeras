@@ -1,42 +1,7 @@
-from numpydoc.docscrape import NumpyDocString
+import ast
+import os
 import re
 
-
-class Photo():
-    """
-    Array with associated photographic information.
-
-
-    Parameters
-    ----------
-    x : type
-        Description of parameter `x`.
-    y
-        Description of parameter `y` (with type not specified)
-
-    Attributes
-    ----------
-    exposure : float
-        Exposure in seconds.
-
-    Methods
-    -------
-    colorspace(c='rgb')
-        Represent the photo in the given colorspace.
-    gamma(n=1.0)
-        Change the photo's gamma exposure.
-
-    """
-
-    def __init__(x, y):
-        print("Snap!")
-
-
-# doc = NumpyDocString(Photo.__doc__)
-# print(doc["Summary"])
-# print(doc["Parameters"])
-# print(doc["Attributes"])
-# print(doc["Methods"])
 
 def delete_space(parts, start, end):
     if start > end or end >= len(parts):
@@ -82,7 +47,7 @@ def remove_next_line(comments):
 
 def skip_space_line(parts, ind):
     while ind < len(parts):
-        if re.match(r'^\s*$',parts[ind]):
+        if re.match(r'^\s*$', parts[ind]):
             ind += 1
         else:
             break
@@ -91,8 +56,10 @@ def skip_space_line(parts, ind):
 
 # check if comment is None or len(comment) == 0 return {}
 def parse_func_string(comment):
+    if comment is None or len(comment) == 0:
+        return {}
     comments = {}
-    paras = ('Args','Attributes','Returns','Raises')
+    paras = ('Args', 'Attributes', 'Returns', 'Raises')
     comment_parts = ['short_description', 'long_description', 'Args', 'Attributes', 'Returns', 'Raises']
     for x in comment_parts:
         comments[x] = None
@@ -100,12 +67,13 @@ def parse_func_string(comment):
     parts = re.split(r'\n', comment)
     ind = 1
     while ind < len(parts):
-        if re.match(r'^\s*$',parts[ind]):
+        if re.match(r'^\s*$', parts[ind]):
             break
         else:
             ind += 1
 
-    comments['short_description'] ='\n'.join(['\n'.join(re.split('\n\s+', x.strip())) for x in parts[0:ind]]).strip(':\n\t ')
+    comments['short_description'] = '\n'.join(['\n'.join(re.split('\n\s+', x.strip())) for x in parts[0:ind]]).strip(
+        ':\n\t ')
     ind = skip_space_line(parts, ind)
 
     start = ind
@@ -128,7 +96,7 @@ def parse_func_string(comment):
                     break
                 else:
                     ind += 1
-            part = delete_space(parts, start+1, ind - 1)
+            part = delete_space(parts, start + 1, ind - 1)
             if start_with.startswith(paras[0]):
                 comments[paras[0]] = change_args_to_dict(part)
             elif start_with.startswith(paras[1]):
@@ -144,7 +112,8 @@ def parse_func_string(comment):
     remove_next_line(comments)
     return comments
 
-comment = """Fetches rows from a Bigtable.
+
+sample_comment = """Fetches rows from a Bigtable.
 Hello world.
 
     Retrieves rows pertaining to the given keys from the Table instance
@@ -171,21 +140,41 @@ Hello world.
 
     """
 
-# comment = """Summary of class here.
-#
-#     Longer class information....
-#     Longer class information....
-#
-#     Attributes:
-#         likes_spam: A boolean indicating if we like SPAM or not.
-#         eggs: An integer count of the eggs we have laid.
-#     """
-# d = parse_func_string(comment)
-# parts = ['short_description','long_description','Args','Attributes','Returns','Raises']
-# for part in parts:
-#     print(part)
-#     print('-------')
-#     print(d[part])
-#     print('------------')
-#     print('------------')
-#     print('------------')
+
+def get_func_comments(function_definitions):
+    doc = ''
+    for f in function_definitions:
+        doc += '***********function**************'
+        doc += f.name + " : "
+        doc += str(parse_func_string(ast.get_docstring(f)))
+    return doc
+
+
+def get_comments_str(file_name):
+    with open(file_name) as fd:
+        file_contents = fd.read()
+    module = ast.parse(file_contents)
+    function_definitions = [node for node in module.body if isinstance(node, ast.FunctionDef)]
+    get_func_comments(function_definitions)
+
+    class_definitions = [node for node in module.body if isinstance(node, ast.ClassDef)]
+    doc = ''
+    for class_def in class_definitions:
+        doc += '-----------class----------------'
+        doc += class_def.name + " : "
+        doc += str(parse_func_string(ast.get_docstring(class_def)))
+        method_definitions = [node for node in class_def.body if isinstance(node, ast.FunctionDef)]
+        doc += get_func_comments(method_definitions)
+    return doc
+
+
+def extract_comments(directory):
+    for parent, dir_names, file_names in os.walk(directory):
+        for file_name in file_names:
+            if os.path.splitext(file_name)[1] == '.py':
+                # with open
+                doc = get_comments_str(os.path.join(parent, file_name))
+                print(file_name[:-3])
+
+
+extract_comments('autokeras')

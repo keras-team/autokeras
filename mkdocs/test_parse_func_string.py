@@ -1,5 +1,6 @@
 from mkdocs.autogen import parse_func_string
 
+
 def test_parse_func_string():
     comment = """Fetches rows from a Bigtable.
 Hello world.

@@ -1,1 +1,1 @@
-from autokeras.classifier import Classifier
+from autokeras.classifier import ImageClassifier
