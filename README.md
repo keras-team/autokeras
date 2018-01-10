@@ -20,6 +20,6 @@ Here is a short example for using the package.
 For the repository on GitHub visit [Auto-Keras on GitHub](https://github.com/jhfjhfj1/autokeras).
 
 
-###About
+### About
 
 This package is developed by [DATA LAB](http://faculty.cs.tamu.edu/xiahu/) at Texas A&M University.
