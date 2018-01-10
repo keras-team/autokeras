@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>graph - Auto-Keras</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "graph";
+    var mkdocs_page_input_path = "graph.md";
+    var mkdocs_page_url = "/graph/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Auto-Keras</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Documentation</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../classifier/">classifier</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../search/">search</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">graph</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#graph">Graph</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#attributes">Attributes</a></li>
+        
+            <li><a class="toctree-l4" href="#init">init</a></li>
+        
+            <li><a class="toctree-l4" href="#n_nodes">n_nodes</a></li>
+        
+            <li><a class="toctree-l4" href="#n_layers">n_layers</a></li>
+        
+            <li><a class="toctree-l4" href="#_add_node">_add_node</a></li>
+        
+            <li><a class="toctree-l4" href="#_add_edge">_add_edge</a></li>
+        
+            <li><a class="toctree-l4" href="#_redirect_edge">_redirect_edge</a></li>
+        
+            <li><a class="toctree-l4" href="#_search_next">_search_next</a></li>
+        
+            <li><a class="toctree-l4" href="#_search_pre">_search_pre</a></li>
+        
+            <li><a class="toctree-l4" href="#_replace_layer">_replace_layer</a></li>
+        
+            <li><a class="toctree-l4" href="#_topological_order">_topological_order</a></li>
+        
+            <li><a class="toctree-l4" href="#to_add_skip_model">to_add_skip_model</a></li>
+        
+            <li><a class="toctree-l4" href="#to_concat_skip_model">to_concat_skip_model</a></li>
+        
+            <li><a class="toctree-l4" href="#to_conv_deeper_model">to_conv_deeper_model</a></li>
+        
+            <li><a class="toctree-l4" href="#to_wider_model">to_wider_model</a></li>
+        
+            <li><a class="toctree-l4" href="#to_dense_deeper_model">to_dense_deeper_model</a></li>
+        
+            <li><a class="toctree-l4" href="#produce_model">produce_model</a></li>
+        
+            <li><a class="toctree-l4" href="#get_pooling_layers">get_pooling_layers</a></li>
+        
+            <li><a class="toctree-l4" href="#_depth_first_search">_depth_first_search</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../net_transformer/">net_transformer</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../preprocessor/">preprocessor</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../utils/">utils</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../generator/">generator</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../about/">About</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Auto-Keras</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Documentation &raquo;</li>
+        
+      
+    
+    <li>graph</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h2 id="graph">Graph</h2>
+<p>A class represent the neural architecture graph of a Keras model.
+Graph extracts the neural architecture graph from a Keras model. Each node in the graph is a intermediate tensor between layers. Each layer is an edge in the graph.  Notably, multiple edges may refer to the same layer. (e.g. WeightedAdd layer is adding two tensor into one tensor. So it is related to two edges.)</p>
+<h4 id="attributes">Attributes</h4>
+<p><strong>model</strong>: The Keras model, from which to extract the graph.</p>
+<p><strong>node_list</strong>: A list of tensors, the indices of the list are the identifiers.</p>
+<p><strong>layer_list</strong>: A list of Keras layers, the indices of the list are the identifiers.</p>
+<p><strong>node_to_id</strong>: A dict instance mapping from tensors to their identifiers.</p>
+<p><strong>layer_to_id</strong>: A dict instance mapping from Keras layers to their identifiers.</p>
+<p><strong>layer_id_to_input_node_ids</strong>: A dict instance mapping from layer identifiers
+    to their input nodes identifiers.</p>
+<p><strong>old_layer_ids</strong>: A dict instance stores the identifiers of the not updated layers.</p>
+<p><strong>adj_list</strong>: A two dimensional list. The adjacency list of the graph. The first dimension is
+    identified by tensor identifiers. In each edge list, the elements are two-element tuples
+    of (tensor identifier, layer identifier).</p>
+<p><strong>reverse_adj_list</strong>: A reverse adjacent list in the same format as adj_list.</p>
+<p><strong>next_vis</strong>: A boolean list marking whether a node has been visited or not.</p>
+<p><strong>pre_vis</strong>: A boolean list marking whether a node has been visited or not.</p>
+<p><strong>middle_layer_vis</strong>: A boolean list marking whether a node has been visited or not.</p>
+<h3 id="init"><strong>init</strong></h3>
+<h3 id="n_nodes">n_nodes</h3>
+<p>Return the number of nodes in the model.</p>
+<h3 id="n_layers">n_layers</h3>
+<p>Return the number of layers in the model.</p>
+<h3 id="_add_node">_add_node</h3>
+<p>Add node to node list if it not in node list.</p>
+<h3 id="_add_edge">_add_edge</h3>
+<p>Add edge to the graph.</p>
+<h3 id="_redirect_edge">_redirect_edge</h3>
+<p>Redirect the edge to a new node. Change the edge originally from u_id to v_id into an edge from u_id to new_v_id while keeping all other property of the edge the same.</p>
+<h3 id="_search_next">_search_next</h3>
+<p>Search downward the graph for widening the layers.</p>
+<h4 id="args">Args</h4>
+<p><strong>u</strong>: The starting node identifier.</p>
+<p><strong>start_dim</strong>: The dimension to insert the additional dimensions.</p>
+<p><strong>total_dim</strong>: The total number of dimensions the layer has before widening.</p>
+<p><strong>n_add</strong>: The number of dimensions to add.</p>
+<h3 id="_search_pre">_search_pre</h3>
+<p>Search upward the graph for widening the layers.</p>
+<h4 id="args_1">Args</h4>
+<p><strong>u</strong>: The starting node identifier.</p>
+<p><strong>start_dim</strong>: The dimension to insert the additional dimensions.</p>
+<p><strong>total_dim</strong>: The total number of dimensions the layer has before widening.</p>
+<p><strong>n_add</strong>: The number of dimensions to add.</p>
+<h3 id="_replace_layer">_replace_layer</h3>
+<p>Replace the layer with a new layer.</p>
+<h3 id="_topological_order">_topological_order</h3>
+<p>Return the topological order of the nodes.</p>
+<h3 id="to_add_skip_model">to_add_skip_model</h3>
+<p>Add a weighted add skip connection from start node to end node.</p>
+<h4 id="returns">Returns</h4>
+<p>A new Keras model with the added connection.</p>
+<h3 id="to_concat_skip_model">to_concat_skip_model</h3>
+<p>Add a weighted add concatenate connection from start node to end node.</p>
+<h4 id="returns_1">Returns</h4>
+<p>A new Keras model with the added connection.</p>
+<h3 id="to_conv_deeper_model">to_conv_deeper_model</h3>
+<p>Insert a convolution, batch-normalization, relu block after the target block.</p>
+<h4 id="args_2">Args</h4>
+<p><strong>target</strong>: A convolutional layer. The new block should be inserted after the relu layer
+    in its conv-batch-relu block.</p>
+<p><strong>kernel_size</strong>: An integer. The kernel size of the new convolutional layer.</p>
+<h4 id="returns_2">Returns</h4>
+<p>A new Keras model with the inserted block.</p>
+<h3 id="to_wider_model">to_wider_model</h3>
+<p>Widen the last dimension of the output of the pre_layer.</p>
+<h4 id="args_3">Args</h4>
+<p><strong>pre_layer</strong>: A convolutional layer or dense layer.</p>
+<p><strong>n_add</strong>: The number of dimensions to add.</p>
+<h4 id="returns_3">Returns</h4>
+<p>A new Keras model with the widened layers.</p>
+<h3 id="to_dense_deeper_model">to_dense_deeper_model</h3>
+<p>Insert a dense layer after the target layer.</p>
+<h4 id="args_4">Args</h4>
+<p><strong>target</strong>: A dense layer.</p>
+<h4 id="returns_4">Returns</h4>
+<p>A new Keras model with an inserted dense layer.</p>
+<h3 id="produce_model">produce_model</h3>
+<p>Build a new Keras model based on the current graph.</p>
+<h3 id="get_pooling_layers">get_pooling_layers</h3>
+<h3 id="_depth_first_search">_depth_first_search</h3>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../net_transformer/" class="btn btn-neutral float-right" title="net_transformer">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../search/" class="btn btn-neutral" title="search"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../search/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../net_transformer/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/require.js"></script>
+      <script src="../search/search.js"></script>
+
+</body>
+</html>

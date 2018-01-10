@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>About - Auto-Keras</title>
+  <title>generator - Auto-Keras</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,9 +17,9 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "About";
-    var mkdocs_page_input_path = "about.md";
-    var mkdocs_page_url = "/about/";
+    var mkdocs_page_name = "generator";
+    var mkdocs_page_input_path = "generator.md";
+    var mkdocs_page_url = "/generator/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -80,22 +80,56 @@
                     
     <a class="" href="../utils/">utils</a>
                 </li>
-                <li class="">
+                <li class=" current">
                     
-    <a class="" href="../generator/">generator</a>
+    <a class="current" href="./">generator</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#classifiergenerator">ClassifierGenerator</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#attributes">Attributes</a></li>
+        
+            <li><a class="toctree-l4" href="#init">init</a></li>
+        
+            <li><a class="toctree-l4" href="#_get_pool_layer_func">_get_pool_layer_func</a></li>
+        
+            <li><a class="toctree-l4" href="#_get_shape">_get_shape</a></li>
+        
+        </ul>
+    
+
+    <li class="toctree-l3"><a href="#defaultclassifiergenerator">DefaultClassifierGenerator</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#init_1">init</a></li>
+        
+            <li><a class="toctree-l4" href="#generate">generate</a></li>
+        
+        </ul>
+    
+
+    <li class="toctree-l3"><a href="#randomconvclassifiergenerator">RandomConvClassifierGenerator</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#init_2">init</a></li>
+        
+            <li><a class="toctree-l4" href="#generate_1">generate</a></li>
+        
+        </ul>
+    
+
+    </ul>
                 </li>
     </ul>
 	    </li>
           
-            <li class="toctree-l1 current">
+            <li class="toctree-l1">
 		
-    <a class="current" href="./">About</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l2"><a href="#about">About</a></li>
-    
-
-    </ul>
+    <a class="" href="../about/">About</a>
 	    </li>
           
         </ul>
@@ -119,8 +153,12 @@
     <li><a href="..">Docs</a> &raquo;</li>
     
       
+        
+          <li>Documentation &raquo;</li>
+        
+      
     
-    <li>About</li>
+    <li>generator</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -130,8 +168,29 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="about">About</h1>
-<p>This package is developed by <a href="http://faculty.cs.tamu.edu/xiahu/">DATA LAB</a> at Texas A&amp;M University.</p>
+                <h2 id="classifiergenerator">ClassifierGenerator</h2>
+<p>The base class of classifier generators.
+ClassifierGenerator is the base class of all classifier generator classes. It is used for generating classifier models.</p>
+<h4 id="attributes">Attributes</h4>
+<p><strong>n_classes</strong>: Number of classes in the input data.</p>
+<p><strong>input_shape</strong>: A tuple of integers containing the size of each dimension of the input data,
+    excluding the dimension of number of training examples. The length of the tuple should
+    between two and four inclusively.</p>
+<h3 id="init"><strong>init</strong></h3>
+<h3 id="_get_pool_layer_func">_get_pool_layer_func</h3>
+<p>Return MaxPooling function based on the dimension of input shape.</p>
+<h3 id="_get_shape">_get_shape</h3>
+<p>Return filter shape tuple based on the dimension of input shape.</p>
+<h2 id="defaultclassifiergenerator">DefaultClassifierGenerator</h2>
+<p>A classifier generator always generates models with the same default architecture and configuration.</p>
+<h3 id="init_1"><strong>init</strong></h3>
+<h3 id="generate">generate</h3>
+<p>Return the default classifier model that has been compiled.</p>
+<h2 id="randomconvclassifiergenerator">RandomConvClassifierGenerator</h2>
+<p>A classifier generator that generates random convolutional neural networks.</p>
+<h3 id="init_2"><strong>init</strong></h3>
+<h3 id="generate_1">generate</h3>
+<p>Return the random generated CNN model.</p>
               
             </div>
           </div>
@@ -139,8 +198,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="../about/" class="btn btn-neutral float-right" title="About">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-        <a href="../generator/" class="btn btn-neutral" title="generator"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+        <a href="../utils/" class="btn btn-neutral" title="utils"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -166,8 +227,10 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../generator/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../utils/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
+      
+        <span style="margin-left: 15px"><a href="../about/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

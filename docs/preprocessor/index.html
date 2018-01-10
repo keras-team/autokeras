@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>About - Auto-Keras</title>
+  <title>preprocessor - Auto-Keras</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,9 +17,9 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "About";
-    var mkdocs_page_input_path = "about.md";
-    var mkdocs_page_url = "/about/";
+    var mkdocs_page_name = "preprocessor";
+    var mkdocs_page_input_path = "preprocessor.md";
+    var mkdocs_page_url = "/preprocessor/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -72,9 +72,29 @@
                     
     <a class="" href="../net_transformer/">net_transformer</a>
                 </li>
-                <li class="">
+                <li class=" current">
                     
-    <a class="" href="../preprocessor/">preprocessor</a>
+    <a class="current" href="./">preprocessor</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#onehotencoder">OneHotEncoder</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#attributes">Attributes</a></li>
+        
+            <li><a class="toctree-l4" href="#init">init</a></li>
+        
+            <li><a class="toctree-l4" href="#fit">fit</a></li>
+        
+            <li><a class="toctree-l4" href="#transform">transform</a></li>
+        
+            <li><a class="toctree-l4" href="#inverse_transform">inverse_transform</a></li>
+        
+        </ul>
+    
+
+    </ul>
                 </li>
                 <li class="">
                     
@@ -87,15 +107,9 @@
     </ul>
 	    </li>
           
-            <li class="toctree-l1 current">
+            <li class="toctree-l1">
 		
-    <a class="current" href="./">About</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l2"><a href="#about">About</a></li>
-    
-
-    </ul>
+    <a class="" href="../about/">About</a>
 	    </li>
           
         </ul>
@@ -119,8 +133,12 @@
     <li><a href="..">Docs</a> &raquo;</li>
     
       
+        
+          <li>Documentation &raquo;</li>
+        
+      
     
-    <li>About</li>
+    <li>preprocessor</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -130,8 +148,23 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="about">About</h1>
-<p>This package is developed by <a href="http://faculty.cs.tamu.edu/xiahu/">DATA LAB</a> at Texas A&amp;M University.</p>
+                <h2 id="onehotencoder">OneHotEncoder</h2>
+<p>A class that can format data
+This class provide ways to transform data's classification into vector</p>
+<h4 id="attributes">Attributes</h4>
+<p><strong>data</strong>: the input data</p>
+<p><strong>n_classes</strong>: the number of classification</p>
+<p><strong>labels</strong>: the number of label</p>
+<p><strong>label_to_vec</strong>: mapping from label to vector</p>
+<p><strong>int_to_label</strong>: mapping from int to label</p>
+<h3 id="init"><strong>init</strong></h3>
+<p>Init OneHotEncoder</p>
+<h3 id="fit">fit</h3>
+<p>Create mapping from label to vector, and vector to label</p>
+<h3 id="transform">transform</h3>
+<p>Get vector for every element in the data array</p>
+<h3 id="inverse_transform">inverse_transform</h3>
+<p>Get label for every element in data</p>
               
             </div>
           </div>
@@ -139,8 +172,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="../utils/" class="btn btn-neutral float-right" title="utils">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-        <a href="../generator/" class="btn btn-neutral" title="generator"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+        <a href="../net_transformer/" class="btn btn-neutral" title="net_transformer"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -166,8 +201,10 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../generator/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../net_transformer/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
+      
+        <span style="margin-left: 15px"><a href="../utils/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

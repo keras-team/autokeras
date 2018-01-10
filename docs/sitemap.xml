@@ -4,15 +4,61 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2017-12-20</lastmod>
+     <lastmod>2018-01-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
 
     
+        
+    <url>
+     <loc>/classifier/</loc>
+     <lastmod>2018-01-09</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/search/</loc>
+     <lastmod>2018-01-09</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/graph/</loc>
+     <lastmod>2018-01-09</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/net_transformer/</loc>
+     <lastmod>2018-01-09</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/preprocessor/</loc>
+     <lastmod>2018-01-09</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/utils/</loc>
+     <lastmod>2018-01-09</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/generator/</loc>
+     <lastmod>2018-01-09</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
     <url>
      <loc>/about/</loc>
-     <lastmod>2017-12-20</lastmod>
+     <lastmod>2018-01-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     

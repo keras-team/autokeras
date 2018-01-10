@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>classifier - Auto-Keras</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "classifier";
+    var mkdocs_page_input_path = "classifier.md";
+    var mkdocs_page_url = "/classifier/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Auto-Keras</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Documentation</span>
+    <ul class="subnav">
+                <li class=" current">
+                    
+    <a class="current" href="./">classifier</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#classifierbase">ClassifierBase</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#attributes">Attributes</a></li>
+        
+            <li><a class="toctree-l4" href="#init">init</a></li>
+        
+            <li><a class="toctree-l4" href="#_validate">_validate</a></li>
+        
+            <li><a class="toctree-l4" href="#fit">fit</a></li>
+        
+            <li><a class="toctree-l4" href="#predict">predict</a></li>
+        
+            <li><a class="toctree-l4" href="#summary">summary</a></li>
+        
+            <li><a class="toctree-l4" href="#_get_searcher_class">_get_searcher_class</a></li>
+        
+            <li><a class="toctree-l4" href="#evaluate">evaluate</a></li>
+        
+            <li><a class="toctree-l4" href="#cross_validate">cross_validate</a></li>
+        
+        </ul>
+    
+
+    <li class="toctree-l3"><a href="#imageclassifier">ImageClassifier</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#init_1">init</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../search/">search</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../graph/">graph</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../net_transformer/">net_transformer</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../preprocessor/">preprocessor</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../utils/">utils</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../generator/">generator</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../about/">About</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Auto-Keras</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Documentation &raquo;</li>
+        
+      
+    
+    <li>classifier</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h2 id="classifierbase">ClassifierBase</h2>
+<p>Base class of Classifier.
+ClassifierBase is the base class of all classifier classes, classifier is used to train and predict data.</p>
+<h4 id="attributes">Attributes</h4>
+<p><strong>y_encoder</strong>: An instance of OneHotEncoder for y_train (array of categorical labels).</p>
+<p><strong>verbose</strong>: A boolean value indicating the verbosity mode.</p>
+<p><strong>searcher</strong>: An instance of one of the subclasses of Searcher. It search different
+    neural architecture to find the best model.</p>
+<p><strong>searcher_type</strong>: The type of searcher to use. It must be 'climb' or 'random'.</p>
+<p><strong>path</strong>: A path to the directory to save the classifier.</p>
+<p><strong>model_id</strong>: Identifier for the best model.</p>
+<h3 id="init"><strong>init</strong></h3>
+<p>Initialize the instance.
+The classifier will be loaded from file if the directory in 'path' has a saved classifier. Otherwise it would create a new one.</p>
+<h3 id="_validate">_validate</h3>
+<p>Check x_train's type and the shape of x_train, y_train.</p>
+<h3 id="fit">fit</h3>
+<p>Find the best model.
+Format the input, and split the dataset into training and testing set, save the classifier and find the best model.</p>
+<h4 id="args">Args</h4>
+<p><strong>x_train</strong>: An numpy.ndarray instance contains the training data.</p>
+<p><strong>y_train</strong>: An numpy.ndarray instance contains the label of the training data.</p>
+<h3 id="predict">predict</h3>
+<p>Return predict result for the testing data.</p>
+<h4 id="args_1">Args</h4>
+<p><strong>x_test</strong>: An instance of numpy.ndarray contains the testing data.</p>
+<h3 id="summary">summary</h3>
+<p>Print the summary of the best model.</p>
+<h3 id="_get_searcher_class">_get_searcher_class</h3>
+<p>Return searcher class based on the 'searcher_type'.</p>
+<h3 id="evaluate">evaluate</h3>
+<p>Return the accuracy score between predict value and test_y.</p>
+<h3 id="cross_validate">cross_validate</h3>
+<p>Do the n_splits cross-validation for the input.</p>
+<h2 id="imageclassifier">ImageClassifier</h2>
+<p>Image classifier class inherited from ClassifierBase class.
+It is used for image classification. It searches convolutional neural network architectures for the best configuration for the dataset.</p>
+<h3 id="init_1"><strong>init</strong></h3>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../search/" class="btn btn-neutral float-right" title="search">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../search/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/require.js"></script>
+      <script src="../search/search.js"></script>
+
+</body>
+</html>
