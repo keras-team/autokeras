@@ -1,5 +1,13 @@
 site_name: Auto-Keras
 pages:
     - Home: index.md
+    - Documentation:
+      - classifier: classifier.md
+      - search: search.md
+      - graph: graph.md
+      - net_transformer: net_transformer.md
+      - preprocessor: preprocessor.md
+      - utils: utils.md
+      - generator: generator.md
     - About: about.md
 theme: readthedocs

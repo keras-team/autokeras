@@ -141,12 +141,40 @@ Hello world.
     """
 
 
+def to_md(comment_dict):
+    doc = ''
+    if 'short_description' in comment_dict:
+        doc += comment_dict['short_description']
+        doc += '\n'
+
+    if 'long_description' in comment_dict:
+        doc += comment_dict['long_description']
+        doc += '\n'
+
+    if 'Args' in comment_dict and comment_dict['Args'] is not None:
+        doc += '####Args\n'
+        for arg, des in comment_dict['Args'].items():
+            doc += '**' + arg + '**: ' + des + '\n\n'
+
+    if 'Attributes' in comment_dict and comment_dict['Attributes'] is not None:
+        doc += '####Attributes\n'
+        for arg, des in comment_dict['Attributes'].items():
+            doc += '**' + arg + '**: ' + des + '\n\n'
+
+    if 'Returns' in comment_dict and comment_dict['Returns'] is not None:
+        doc += '####Returns\n'
+        doc += comment_dict['Returns']
+        doc += '\n'
+    return doc
+
+
 def get_func_comments(function_definitions):
     doc = ''
     for f in function_definitions:
-        doc += '***********function**************'
-        doc += f.name + " : "
-        doc += str(parse_func_string(ast.get_docstring(f)))
+        doc += '###' + f.name
+        doc += '\n'
+        doc += to_md(parse_func_string(ast.get_docstring(f)))
+
     return doc
 
 
@@ -160,9 +188,9 @@ def get_comments_str(file_name):
     class_definitions = [node for node in module.body if isinstance(node, ast.ClassDef)]
     doc = ''
     for class_def in class_definitions:
-        doc += '-----------class----------------'
-        doc += class_def.name + " : "
-        doc += str(parse_func_string(ast.get_docstring(class_def)))
+        doc += '##' + class_def.name
+        doc += '\n'
+        doc += to_md(parse_func_string(ast.get_docstring(class_def)))
         method_definitions = [node for node in class_def.body if isinstance(node, ast.FunctionDef)]
         doc += get_func_comments(method_definitions)
     return doc
@@ -171,10 +199,12 @@ def get_comments_str(file_name):
 def extract_comments(directory):
     for parent, dir_names, file_names in os.walk(directory):
         for file_name in file_names:
-            if os.path.splitext(file_name)[1] == '.py':
+            if os.path.splitext(file_name)[1] == '.py' and file_name != '__init__.py':
                 # with open
                 doc = get_comments_str(os.path.join(parent, file_name))
-                print(file_name[:-3])
+                output_file = open(os.path.join('mkdocs/docs', file_name[:-3] + '.md'), 'w')
+                output_file.write(doc)
+                output_file.close()
 
 
 extract_comments('autokeras')

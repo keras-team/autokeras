@@ -12,13 +12,10 @@ Here is a short example for using the package.
     
     import autokeras as ak
     
-    train_x = np.random.rand(100, 25)
-    test_x = np.random.rand(100, 25)
-    train_y = np.random.randint(0, 5, 100)
-    
-    clf = ak.AutoKerasClassifier()
-    clf.fit(train_x, train_y)
-    results = clf.predict(test_x)
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    clf = ak.ImageClassifier()
+    clf.fit(x_train, y_train)
+    results = clf.predict(y_test)
 
 For the repository on GitHub visit [Auto-Keras on GitHub](https://github.com/jhfjhfj1/autokeras).
 
