@@ -76,8 +76,8 @@ def to_deeper_model(model):
     weighted_layers = list(filter(lambda x: isinstance(x, tuple(WEIGHTED_LAYER_FUNC_LIST)), model.layers))[:-1]
     target = weighted_layers[randint(0, len(weighted_layers) - 1)]
     if is_conv_layer(target):
-        return graph.to_dense_deeper_model(target)
-    return graph.to_conv_deeper_model(target, randint(1, 2) * 2 + 1)
+        return graph.to_conv_deeper_model(target, randint(1, 2) * 2 + 1)
+    return graph.to_dense_deeper_model(target)
 
 
 def transform(model):
