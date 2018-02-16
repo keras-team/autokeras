@@ -3,11 +3,11 @@ from keras.layers import Conv3D, Conv2D, Conv1D, Dense
 CONV_FUNC_LIST = [Conv1D, Conv2D, Conv3D]
 WEIGHTED_LAYER_FUNC_LIST = CONV_FUNC_LIST + [Dense]
 MAX_MODEL_NUM = 1000
-MAX_ITER_NUM = 100
+MAX_ITER_NUM = 200
 MIN_LOSS_DEC = 1e-4
 MAX_NO_IMPROVEMENT_NUM = 10
 DEFAULT_SAVE_PATH = '/tmp/autokeras/'
-EPOCHS_EACH = 10
+EPOCHS_EACH = 1
 N_NEIGHBORS = 8
 
 LAYER_ATTR = {'Dense': ['units', 'activation'],
