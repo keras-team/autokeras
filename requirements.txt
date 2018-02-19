@@ -3,5 +3,4 @@ numpy
 scikit-learn
 h5py
 tensorflow==1.4.1
-tensorflow-tensorboard==0.4.0rc3
-keras==2.1.2
+keras
