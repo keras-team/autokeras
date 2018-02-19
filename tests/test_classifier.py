@@ -5,6 +5,7 @@ import pytest
 from autokeras.classifier import *
 from autokeras import constant
 from autokeras.generator import RandomConvClassifierGenerator
+from tests.common import clean_dir
 
 
 def test_train_x_array_exception():
@@ -40,21 +41,13 @@ def test_fit_predict(_, _1):
     constant.MAX_MODEL_NUM = 2
     constant.EPOCHS_EACH = 1
     path = 'tests/resources/temp'
-    clear_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
-    clf.fit([[[1], [2]], [[3], [4]]], ['a', 'b'])
-    results = clf.predict([[[1], [2]], [[3], [4]]])
+    train_x = np.array([[[1], [2]], [[3], [4]]])
+    train_y = np.array(['a', 'b'])
+    clf.fit(train_x, train_y)
+    results = clf.predict(train_x)
     assert all(map(lambda result: result in np.array(['a', 'b']), results))
-
-
-def clear_dir(path=constant.DEFAULT_SAVE_PATH):
-    ensure_dir(path)
-    directory = os.path.join(path, 'classifier')
-    if os.path.exists(directory):
-        os.remove(directory)
-    directory = os.path.join(path, 'searcher')
-    if os.path.exists(directory):
-        os.remove(directory)
+    clean_dir(path)
 
 
 def simple_transform2(_):
@@ -66,7 +59,6 @@ def simple_transform2(_):
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
 def test_fit_predict2(_, _1):
     path = 'tests/resources/temp'
-    clear_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
@@ -77,6 +69,7 @@ def test_fit_predict2(_, _1):
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
+    clean_dir(path)
 
 
 @patch('autokeras.search.transform', side_effect=simple_transform2)
@@ -89,7 +82,6 @@ def test_save_continue(_, _1):
     test_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     path = 'tests/resources/temp'
-    clear_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
@@ -101,3 +93,4 @@ def test_save_continue(_, _1):
     results = clf.predict(test_x)
     assert len(results) == 100
     assert len(clf.searcher.history) == 2
+    clean_dir(path)

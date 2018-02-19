@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from keras import Input
 from keras.engine import Model
@@ -84,3 +85,9 @@ def get_pooling_model():
     output_tensor = Dense(5, activation='relu')(output_tensor)
     output_tensor = Dense(5, activation='softmax')(output_tensor)
     return Model(inputs=input_tensor, outputs=output_tensor)
+
+
+def clean_dir(path):
+    for f in os.listdir(path):
+        if f != '.gitkeep':
+            os.remove(os.path.join(path, f))
