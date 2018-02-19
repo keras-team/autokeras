@@ -96,7 +96,7 @@ def test_save_continue(_, _1):
     assert len(clf.searcher.history) == 1
 
     constant.MAX_MODEL_NUM = 2
-    clf = ImageClassifier(verbose=False)
+    clf = ImageClassifier(verbose=False, path=path)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
