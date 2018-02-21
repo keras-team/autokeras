@@ -3,3 +3,5 @@ python:
   - "3.6"
 script:
   - pytest tests
+
+sudo: required
