@@ -1,4 +1,5 @@
 pytest
+pytest-cov
 numpy
 scikit-learn
 h5py
