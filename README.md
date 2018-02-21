@@ -1,6 +1,7 @@
 # Welcome to Auto-Keras
 
 [![Build Status](https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master)](https://travis-ci.org/jhfjhfj1/autokeras)
+[![Coverage Status](https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg?branch=master)](https://coveralls.io/github/jhfjhfj1/autokeras?branch=master)
 
 This is a automated machine learning (AutoML) package based on Keras. 
 It aims at automatically search for the architecture and hyperparameters for deep learning models.
