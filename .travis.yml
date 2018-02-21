@@ -2,4 +2,6 @@ language: python
 python:
   - "3.6"
 script:
+  - pytest tests --cov=autokeras
+after_success:
   - pip install python-coveralls && coveralls
