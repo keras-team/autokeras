@@ -2,7 +2,7 @@
     "docs": [
         {
             "location": "/",
-            "text": "Welcome to Auto-Keras\n\n\n\n\nThis is a automated machine learning (AutoML) package based on Keras. \nIt aims at automatically search for the architecture and hyperparameters for deep learning models.\nThe ultimate goal for this project is for domain experts in fields other than computer science or machine learning\nto use deep learning models conveniently.\n\n\nHere is a short example for using the package.\n\n\nimport autokeras as ak\n\n(x_train, y_train), (x_test, y_test) = mnist.load_data()\nclf = ak.ImageClassifier()\nclf.fit(x_train, y_train)\nresults = clf.predict(y_test)\n\n\n\nFor the repository on GitHub visit \nAuto-Keras on GitHub\n.",
+            "text": "Welcome to Auto-Keras\n\n\n\n\n\n\nThis is a automated machine learning (AutoML) package based on Keras. \nIt aims at automatically search for the architecture and hyperparameters for deep learning models.\nThe ultimate goal for this project is for domain experts in fields other than computer science or machine learning\nto use deep learning models conveniently.\n\n\nHere is a short example for using the package.\n\n\nimport autokeras as ak\n\n(x_train, y_train), (x_test, y_test) = mnist.load_data()\nclf = ak.ImageClassifier()\nclf.fit(x_train, y_train)\nresults = clf.predict(y_test)\n\n\n\nFor the repository on GitHub visit \nAuto-Keras on GitHub\n.",
             "title": "Home"
         },
         {
