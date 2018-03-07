@@ -1,12 +1,70 @@
+import numpy as np
 from queue import Queue
 
 from keras import Input
 from keras.engine import Model
-from keras.layers import Concatenate
+from keras.layers import Concatenate, Dense, BatchNormalization
 
-from autokeras.layer_transformer import *
+from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_weighted_add, \
+    wider_pre_dense, wider_pre_conv, deeper_conv_block, dense_to_deeper_layer
 from autokeras.layers import WeightedAdd
 from autokeras.utils import copy_layer, is_conv_layer, get_int_tuple, is_pooling_layer
+
+
+class NetworkDescriptor:
+    CONCAT_CONNECT = 'concat'
+    ADD_CONNECT = 'add'
+
+    def __init__(self):
+        self.skip_connections = []
+        self.conv_widths = []
+        self.dense_widths = []
+
+    @property
+    def n_dense(self):
+        return len(self.dense_widths)
+
+    @property
+    def n_conv(self):
+        return len(self.conv_widths)
+
+    def add_conv_width(self, width):
+        self.conv_widths.append(width)
+
+    def add_dense_width(self, width):
+        self.dense_widths.append(width)
+
+    def add_skip_connection(self, u, v, connection_type):
+        if connection_type not in [self.CONCAT_CONNECT, self.ADD_CONNECT]:
+            raise ValueError('connection_type should be NetworkDescriptor.CONCAT_CONNECT '
+                             'or NetworkDescriptor.ADD_CONNECT.')
+        self.skip_connections.append((u, v, connection_type))
+
+
+class StubBatchNormalization:
+    pass
+
+
+class StubDense:
+    def __init__(self, units):
+        self.units = units
+
+
+class StubConv:
+    def __init__(self, filters):
+        self.filters = filters
+
+
+class StubWeightedAdd:
+    pass
+
+
+class StubConcatenate:
+    pass
+
+
+class StubActivation:
+    pass
 
 
 class Graph:
@@ -132,87 +190,6 @@ class Graph:
 
         self._add_edge(self.layer_list[layer_id], u_id, new_v_id)
 
-    def _search_next(self, u, start_dim, total_dim, n_add):
-        """Search downward the graph for widening the layers.
-
-        Args:
-            u: The starting node identifier.
-            start_dim: The dimension to insert the additional dimensions.
-            total_dim: The total number of dimensions the layer has before widening.
-            n_add: The number of dimensions to add.
-        """
-        if self.next_vis[u]:
-            return
-        self.next_vis[u] = True
-        self._search_pre(u, start_dim, total_dim, n_add)
-        for v, layer_id in self.adj_list[u]:
-            layer = self.layer_list[layer_id]
-
-            if is_conv_layer(layer):
-                new_layer = wider_next_conv(layer, start_dim, total_dim, n_add)
-                self._replace_layer(layer_id, new_layer)
-
-            elif isinstance(layer, Dense):
-                new_layer = wider_next_dense(layer, start_dim, total_dim, n_add)
-                self._replace_layer(layer_id, new_layer)
-
-            elif isinstance(layer, BatchNormalization):
-                if not self.middle_layer_vis[layer_id]:
-                    self.middle_layer_vis[layer_id] = True
-                    new_layer = wider_bn(layer, start_dim, total_dim, n_add)
-                    self._replace_layer(layer_id, new_layer)
-                self._search_next(v, start_dim, total_dim, n_add)
-
-            elif isinstance(layer, WeightedAdd):
-                if not self.middle_layer_vis[layer_id]:
-                    self.middle_layer_vis[layer_id] = True
-                    new_layer = wider_weighted_add(layer, n_add)
-                    self._replace_layer(layer_id, new_layer)
-                self._search_next(v, start_dim, total_dim, n_add)
-
-            elif isinstance(layer, Concatenate):
-                next_start_dim = start_dim
-                next_total_dim = layer.output_shape[-1]
-                if self.node_list[u] is layer.input[1]:
-                    # u is on the right of the concat
-                    next_start_dim += next_total_dim - total_dim
-                self._search_next(v, next_start_dim, next_total_dim, n_add)
-
-            else:
-                self._search_next(v, start_dim, total_dim, n_add)
-
-    def _search_pre(self, u, start_dim, total_dim, n_add):
-        """Search upward the graph for widening the layers.
-
-        Args:
-            u: The starting node identifier.
-            start_dim: The dimension to insert the additional dimensions.
-            total_dim: The total number of dimensions the layer has before widening.
-            n_add: The number of dimensions to add.
-        """
-        if self.pre_vis[u]:
-            return
-        self.pre_vis[u] = True
-        self._search_next(u, start_dim, total_dim, n_add)
-        for v, layer_id in self.reverse_adj_list[u]:
-            layer = self.layer_list[layer_id]
-            if is_conv_layer(layer):
-                new_layer = wider_pre_conv(layer, n_add)
-                self._replace_layer(layer_id, new_layer)
-            elif isinstance(layer, Dense):
-                new_layer = wider_pre_dense(layer, n_add)
-                self._replace_layer(layer_id, new_layer)
-            elif isinstance(layer, BatchNormalization):
-                self._search_pre(v, start_dim, total_dim, n_add)
-            elif isinstance(layer, Concatenate):
-                if self.node_list[v] is layer.input[1]:
-                    # v is on the right
-                    pre_total_dim = layer.input_shape[1][-1]
-                    pre_start_dim = start_dim - (total_dim - pre_total_dim)
-                    self._search_pre(v, pre_start_dim, pre_total_dim, n_add)
-            else:
-                self._search_pre(v, start_dim, total_dim, n_add)
-
     def _replace_layer(self, layer_id, new_layer):
         """Replace the layer with a new layer."""
         old_layer = self.layer_list[layer_id]
@@ -244,81 +221,110 @@ class Graph:
                     q.put(v)
         return order_list
 
-    def to_add_skip_model(self, start, end):
-        """Add a weighted add skip connection from start node to end node.
+    def _get_pooling_layers(self, start_node_id, end_node_id):
+        layer_list = []
+        node_list = [start_node_id]
+        self._depth_first_search(end_node_id, layer_list, node_list)
+        return filter(lambda layer_id: is_pooling_layer(self.layer_list[layer_id]), layer_list)
 
-        Returns:
-            A new Keras model with the added connection.
+    def _depth_first_search(self, target_id, layer_id_list, node_list):
+        u = node_list[-1]
+        if u == target_id:
+            return True
+
+        for v, layer_id in self.adj_list[u]:
+            layer_id_list.append(layer_id)
+            node_list.append(v)
+            if self._depth_first_search(target_id, layer_id_list, node_list):
+                return True
+            layer_id_list.pop()
+            node_list.pop()
+
+        return False
+
+    def _search_next(self, u, start_dim, total_dim, n_add):
+        """Search downward the graph for widening the layers.
+
+        Args:
+            u: The starting node identifier.
+            start_dim: The dimension to insert the additional dimensions.
+            total_dim: The total number of dimensions the layer has before widening.
+            n_add: The number of dimensions to add.
         """
-        conv_input_id = self.node_to_id[start.input]
-        relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
-
-        # Add the pooling layer chain.
-        pooling_layer_list = self.get_pooling_layers(conv_input_id, relu_input_id)
-        skip_output_id = conv_input_id
-        for index, layer_id in enumerate(pooling_layer_list):
+        if self.next_vis[u]:
+            return
+        self.next_vis[u] = True
+        self._search_pre(u, start_dim, total_dim, n_add)
+        for v, layer_id in self.adj_list[u]:
             layer = self.layer_list[layer_id]
-            self._add_node(index)
-            new_node_id = self.node_to_id[index]
-            self._add_edge(copy_layer(layer), skip_output_id, new_node_id, False)
-            skip_output_id = new_node_id
 
-        # Add the weighted add layer.
-        self._add_node('a')
-        new_node_id = self.node_to_id['a']
-        layer = WeightedAdd()
-        single_input_shape = get_int_tuple(start.output_shape)
-        layer.build([single_input_shape, single_input_shape])
+            if self._is_layer(layer, 'Conv'):
+                new_layer = self._wider_next_conv(layer, start_dim, total_dim, n_add)
+                self._replace_layer(layer_id, new_layer)
 
-        relu_output_id = self.adj_list[relu_input_id][0][0]
-        self._redirect_edge(relu_input_id, relu_output_id, new_node_id)
-        self._add_edge(layer, new_node_id, relu_output_id, False)
-        self._add_edge(layer, skip_output_id, relu_output_id, False)
+            elif self._is_layer(layer, 'Dense'):
+                new_layer = self._wider_next_dense(layer, start_dim, total_dim, n_add)
+                self._replace_layer(layer_id, new_layer)
 
-        return self.produce_model()
+            elif self._is_layer(layer, 'BatchNormalization'):
+                if not self.middle_layer_vis[layer_id]:
+                    self.middle_layer_vis[layer_id] = True
+                    new_layer = self._wider_bn(layer, start_dim, total_dim, n_add)
+                    self._replace_layer(layer_id, new_layer)
+                self._search_next(v, start_dim, total_dim, n_add)
 
-    def to_concat_skip_model(self, start, end):
-        """Add a weighted add concatenate connection from start node to end node.
+            elif self._is_layer(layer, 'WeightedAdd'):
+                if not self.middle_layer_vis[layer_id]:
+                    self.middle_layer_vis[layer_id] = True
+                    new_layer = self._wider_weighted_add(layer, n_add)
+                    self._replace_layer(layer_id, new_layer)
+                self._search_next(v, start_dim, total_dim, n_add)
 
-        Returns:
-            A new Keras model with the added connection.
+            elif self._is_layer(layer, 'Concatenate'):
+                next_start_dim = start_dim
+                next_total_dim = layer.output_shape[-1]
+                if self.node_list[u] is layer.input[1]:
+                    # u is on the right of the concat
+                    next_start_dim += next_total_dim - total_dim
+                self._search_next(v, next_start_dim, next_total_dim, n_add)
+
+            else:
+                self._search_next(v, start_dim, total_dim, n_add)
+
+    def _search_pre(self, u, start_dim, total_dim, n_add):
+        """Search upward the graph for widening the layers.
+
+        Args:
+            u: The starting node identifier.
+            start_dim: The dimension to insert the additional dimensions.
+            total_dim: The total number of dimensions the layer has before widening.
+            n_add: The number of dimensions to add.
         """
-        conv_input_id = self.node_to_id[start.input]
-        relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
-
-        # Add the pooling layer chain.
-        pooling_layer_list = self.get_pooling_layers(conv_input_id, relu_input_id)
-        skip_output_id = conv_input_id
-        for index, layer_id in enumerate(pooling_layer_list):
+        if self.pre_vis[u]:
+            return
+        self.pre_vis[u] = True
+        self._search_next(u, start_dim, total_dim, n_add)
+        for v, layer_id in self.reverse_adj_list[u]:
             layer = self.layer_list[layer_id]
-            self._add_node(index)
-            new_node_id = self.node_to_id[index]
-            self._add_edge(copy_layer(layer), skip_output_id, new_node_id, False)
-            skip_output_id = new_node_id
+            if self._is_layer(layer, 'Conv'):
+                new_layer = self._wider_pre_conv(layer, n_add)
+                self._replace_layer(layer_id, new_layer)
+            elif self._is_layer(layer, 'Dense'):
+                new_layer = self._wider_pre_dense(layer, n_add)
+                self._replace_layer(layer_id, new_layer)
+            elif self._is_layer(layer, 'BatchNormalization'):
+                self._search_pre(v, start_dim, total_dim, n_add)
+            elif self._is_layer(layer, 'Concatenate'):
+                if self.node_list[v] is layer.input[1]:
+                    # v is on the right
+                    pre_total_dim = layer.input_shape[1][-1]
+                    pre_start_dim = start_dim - (total_dim - pre_total_dim)
+                    self._search_pre(v, pre_start_dim, pre_total_dim, n_add)
+            else:
+                self._search_pre(v, start_dim, total_dim, n_add)
 
-        # Add the weighted add layer.
-        self._add_node('a')
-        new_node_id = self.node_to_id['a']
-        layer = Concatenate()
-        left_input_shape = get_int_tuple(end.output_shape)
-        right_input_shape = np.concatenate((left_input_shape[:-1], get_int_tuple(start.output_shape[-1:])))
-        layer.build([left_input_shape, right_input_shape])
-
-        relu_output_id = self.adj_list[relu_input_id][0][0]
-        self._redirect_edge(relu_input_id, relu_output_id, new_node_id)
-        self._add_edge(layer, new_node_id, relu_output_id, False)
-        self._add_edge(layer, skip_output_id, relu_output_id, False)
-
-        # Widen the related layers.
-        self.next_vis = [False] * self.n_nodes
-        self.pre_vis = [False] * self.n_nodes
-        self.middle_layer_vis = [False] * len(self.layer_list)
-
-        self.pre_vis[relu_output_id] = True
-        dim = get_int_tuple(end.output_shape)[-1]
-        n_add = get_int_tuple(start.output_shape)[-1]
-        self._search_next(relu_output_id, dim, dim, n_add)
-        return self.produce_model()
+    def produce_model(self):
+        return None
 
     def to_conv_deeper_model(self, target, kernel_size):
         """Insert a convolution, batch-normalization, relu block after the target block.
@@ -331,7 +337,7 @@ class Graph:
         Returns:
             A new Keras model with the inserted block.
         """
-        new_layers = deeper_conv_block(target, kernel_size)
+        new_layers = self._deeper_conv_block(target, kernel_size)
         output_id = self.node_to_id[target.output]
         output_id = self.adj_list[output_id][0][0]
 
@@ -372,7 +378,7 @@ class Graph:
         Returns:
             A new Keras model with an inserted dense layer.
         """
-        new_layers = dense_to_deeper_layer(target)
+        new_layers = self._dense_to_deeper_layer(target)
         old_input_id = self.node_to_id[target.input]
         old_output_id = self.node_to_id[target.output]
 
@@ -381,6 +387,196 @@ class Graph:
         self._add_edge(new_layers, new_node_id, old_output_id, False)
         self._redirect_edge(old_input_id, old_output_id, new_node_id)
         return self.produce_model()
+
+    def to_add_skip_model(self, start, end):
+        """Add a weighted add skip connection from start node to end node.
+
+        Returns:
+            A new Keras model with the added connection.
+        """
+        conv_input_id = self.node_to_id[start.input]
+        relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
+
+        # Add the pooling layer chain.
+        pooling_layer_list = self._get_pooling_layers(conv_input_id, relu_input_id)
+        skip_output_id = conv_input_id
+        for index, layer_id in enumerate(pooling_layer_list):
+            layer = self.layer_list[layer_id]
+            self._add_node(index)
+            new_node_id = self.node_to_id[index]
+            self._add_edge(copy_layer(layer), skip_output_id, new_node_id, False)
+            skip_output_id = new_node_id
+
+        # Add the weighted add layer.
+        self._add_node('a')
+        new_node_id = self.node_to_id['a']
+        layer = WeightedAdd()
+        single_input_shape = get_int_tuple(start.output_shape)
+        layer.build([single_input_shape, single_input_shape])
+
+        relu_output_id = self.adj_list[relu_input_id][0][0]
+        self._redirect_edge(relu_input_id, relu_output_id, new_node_id)
+        self._add_edge(layer, new_node_id, relu_output_id, False)
+        self._add_edge(layer, skip_output_id, relu_output_id, False)
+
+        return self.produce_model()
+
+    def to_concat_skip_model(self, start, end):
+        """Add a weighted add concatenate connection from start node to end node.
+
+        Returns:
+            A new Keras model with the added connection.
+        """
+        conv_input_id = self.node_to_id[start.input]
+        relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
+
+        # Add the pooling layer chain.
+        pooling_layer_list = self._get_pooling_layers(conv_input_id, relu_input_id)
+        skip_output_id = conv_input_id
+        for index, layer_id in enumerate(pooling_layer_list):
+            layer = self.layer_list[layer_id]
+            self._add_node(index)
+            new_node_id = self.node_to_id[index]
+            self._add_edge(copy_layer(layer), skip_output_id, new_node_id, False)
+            skip_output_id = new_node_id
+
+        # Add the weighted add layer.
+        self._add_node('a')
+        new_node_id = self.node_to_id['a']
+        layer = Concatenate()
+        left_input_shape = get_int_tuple(end.output_shape)
+        right_input_shape = np.concatenate((left_input_shape[:-1], get_int_tuple(start.output_shape[-1:])))
+        layer.build([left_input_shape, right_input_shape])
+
+        relu_output_id = self.adj_list[relu_input_id][0][0]
+        self._redirect_edge(relu_input_id, relu_output_id, new_node_id)
+        self._add_edge(layer, new_node_id, relu_output_id, False)
+        self._add_edge(layer, skip_output_id, relu_output_id, False)
+
+        # Widen the related layers.
+        self.next_vis = [False] * self.n_nodes
+        self.pre_vis = [False] * self.n_nodes
+        self.middle_layer_vis = [False] * len(self.layer_list)
+
+        self.pre_vis[relu_output_id] = True
+        dim = get_int_tuple(end.output_shape)[-1]
+        n_add = get_int_tuple(start.output_shape)[-1]
+        self._search_next(relu_output_id, dim, dim, n_add)
+        return self.produce_model()
+
+    def extract_descriptor(self):
+        ret = NetworkDescriptor()
+        topological_node_list = self._topological_order()
+        for u in topological_node_list:
+            for v, layer_id in self.adj_list[u]:
+                layer = self.layer_list[layer_id]
+                if self._is_layer(layer, 'Conv'):
+                    ret.add_conv_width(self._layer_width(layer))
+                if self._is_layer(layer, 'Dense'):
+                    ret.add_dense_width(self._layer_width(layer))
+
+        layer_count = 0
+        # The position of each node, how many Conv and Dense layers before it.
+        pos = [0] * len(topological_node_list)
+        for u in topological_node_list:
+            pos[u] = layer_count
+            for v, layer_id in self.adj_list[u]:
+                layer = self.layer_list[layer_id]
+                if self._is_layer(layer, 'Conv') or self._is_layer(layer, 'Dense'):
+                    layer_count += 1
+
+        for u in topological_node_list:
+            for v, layer_id in self.adj_list[u]:
+                if pos[u] == pos[v]:
+                    continue
+                layer = self.layer_list[layer_id]
+                if self._is_layer(layer, 'Concatenate'):
+                    ret.add_skip_connection(pos[u], pos[v], NetworkDescriptor.CONCAT_CONNECT)
+                if self._is_layer(layer, 'WeightedAdd'):
+                    ret.add_skip_connection(pos[u], pos[v], NetworkDescriptor.ADD_CONNECT)
+
+        return ret
+
+    def _wider_bn(self, layer, start_dim, total_dim, n_add):
+        return StubBatchNormalization()
+
+    def _wider_next_conv(self, layer, start_dim, total_dim, n_add):
+        return StubConv(self._layer_width(layer))
+
+    def _wider_next_dense(self, layer, start_dim, total_dim, n_add):
+        return StubDense(self._layer_width(layer))
+
+    def _wider_weighted_add(self, layer, n_add):
+        return StubWeightedAdd()
+
+    def _wider_pre_conv(self, layer, n_add):
+        return StubConv(self._layer_width(layer) + n_add)
+
+    def _wider_pre_dense(self, layer, n_add):
+        return StubDense(self._layer_width(layer) + n_add)
+
+    def _deeper_conv_block(self, target, kernel_size):
+        return [StubConv(self._layer_width(target)), StubBatchNormalization(), StubActivation()]
+
+    def _dense_to_deeper_layer(self, target):
+        return StubDense(self._layer_width(target))
+
+    def _is_layer(self, layer, layer_type):
+        if layer_type == 'Conv':
+            return isinstance(layer, StubConv) or is_conv_layer(layer)
+        if layer_type == 'Dense':
+            return isinstance(layer, StubDense) or isinstance(layer, Dense)
+        if layer_type == 'BatchNormalization':
+            return isinstance(layer, StubBatchNormalization) or isinstance(layer, BatchNormalization)
+        if layer_type == 'Concatenate':
+            return isinstance(layer, StubConcatenate) or isinstance(layer, Concatenate)
+        if layer_type == 'WeightedAdd':
+            return isinstance(layer, StubWeightedAdd) or isinstance(layer, WeightedAdd)
+
+    def _layer_width(self, layer):
+        if self._is_layer(layer, 'Dense'):
+            return layer.units
+        if self._is_layer(layer, 'Conv'):
+            return layer.filters
+        raise TypeError('The layer should be either Dense or Conv layer.')
+
+
+class NetworkMorphismGraph(Graph):
+    def _is_layer(self, layer, layer_type):
+        if layer_type == 'Conv':
+            return is_conv_layer(layer)
+        if layer_type == 'Dense':
+            return isinstance(layer, Dense)
+        if layer_type == 'BatchNormalization':
+            return isinstance(layer, BatchNormalization)
+        if layer_type == 'Concatenate':
+            return isinstance(layer, Concatenate)
+        if layer_type == 'WeightedAdd':
+            return isinstance(layer, WeightedAdd)
+
+    def _wider_bn(self, layer, start_dim, total_dim, n_add):
+        return wider_bn(layer, start_dim, total_dim, n_add)
+
+    def _wider_next_conv(self, layer, start_dim, total_dim, n_add):
+        return wider_next_conv(layer, start_dim, total_dim, n_add)
+
+    def _wider_next_dense(self, layer, start_dim, total_dim, n_add):
+        return wider_next_dense(layer, start_dim, total_dim, n_add)
+
+    def _wider_weighted_add(self, layer, n_add):
+        return wider_weighted_add(layer, n_add)
+
+    def _wider_pre_conv(self, layer, n_add):
+        return wider_pre_conv(layer, n_add)
+
+    def _wider_pre_dense(self, layer, n_add):
+        return wider_pre_dense(layer, n_add)
+
+    def _deeper_conv_block(self, target, kernel_size):
+        return deeper_conv_block(target, kernel_size)
+
+    def _dense_to_deeper_layer(self, target):
+        return dense_to_deeper_layer(target)
 
     def produce_model(self):
         """Build a new Keras model based on the current graph."""
@@ -406,24 +602,3 @@ class Graph:
                 temp_tensor = new_layer(edge_input_tensor)
                 id_to_tensor[v] = temp_tensor
         return Model(input_tensor, id_to_tensor[output_id])
-
-    def get_pooling_layers(self, start_node_id, end_node_id):
-        layer_list = []
-        node_list = [start_node_id]
-        self._depth_first_search(end_node_id, layer_list, node_list)
-        return filter(lambda layer_id: is_pooling_layer(self.layer_list[layer_id]), layer_list)
-
-    def _depth_first_search(self, target_id, layer_list, node_list):
-        u = node_list[-1]
-        if u == target_id:
-            return True
-
-        for v, layer_id in self.adj_list[u]:
-            layer_list.append(layer_id)
-            node_list.append(v)
-            if self._depth_first_search(target_id, layer_list, node_list):
-                return True
-            layer_list.pop()
-            node_list.pop()
-
-        return False

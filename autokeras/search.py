@@ -58,7 +58,11 @@ class Searcher:
         return load_model(os.path.join(self.path, str(model_id) + '.h5'))
 
     def add_model(self, model, x_train, y_train, x_test, y_test):
-        """add one model while will be trained to history list"""
+        """add one model while will be trained to history list
+
+        Returns:
+            model ID.
+        """
         model.compile(loss=categorical_crossentropy,
                       optimizer=Adadelta(),
                       metrics=['accuracy'])
@@ -71,6 +75,7 @@ class Searcher:
         self.history_configs.append(extract_config(model))
         self.model_count += 1
         pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
+        return self.model_count - 1
 
 
 class RandomSearcher(Searcher):
@@ -130,3 +135,49 @@ class HillClimbingSearcher(Searcher):
             optimal_accuracy = max_accuracy
 
         return self.load_best_model()
+
+
+class BayesianSearcher(HillClimbingSearcher):
+
+    def __init__(self, n_classes, input_shape, path, verbose):
+        super().__init__(n_classes, input_shape, path, verbose)
+        self.search_tree = SearchTree()
+
+    def search(self, x_train, y_train, x_test, y_test):
+        if not self.history:
+            model = DefaultClassifierGenerator(self.n_classes, self.input_shape).generate()
+            model_id = self.add_model(model, x_train, y_train, x_test, y_test)
+            self.search_tree.add_child(-1, model_id)
+
+        optimal_accuracy = 0.0
+        while self.model_count < constant.MAX_MODEL_NUM:
+            model_ids = self.search_tree.get_leaves()
+            new_model, father_id = self.maximize_acq(model_ids)
+
+            if self.model_count < constant.MAX_MODEL_NUM:
+                new_model_id = self.add_model(new_model, x_train, y_train, x_test, y_test)
+                self.search_tree.add_child(father_id, new_model_id)
+
+            max_accuracy = max(self.history, key=lambda x: x['accuracy'])['accuracy']
+            if max_accuracy <= optimal_accuracy:
+                break
+            optimal_accuracy = max_accuracy
+
+        return self.load_best_model()
+
+    def maximize_acq(self, model_ids):
+        # TODO: implement it
+        print(model_ids)
+        return self.load_best_model()
+
+
+class SearchTree:
+    # TODO: implement search tree
+    def __init__(self):
+        self.nodes = None
+
+    def add_child(self, u, v):
+        pass
+
+    def get_leaves(self):
+        return self.nodes
