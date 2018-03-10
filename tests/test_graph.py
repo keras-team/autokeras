@@ -91,7 +91,7 @@ def test_skip_concatenate():
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
 
-    assert np.sum(np.abs(output1 - output2)) < 1e-1
+    assert np.sum(np.abs(output1 - output2)) < 3e-1
 
 
 def test_skip_concat_over_pooling():
