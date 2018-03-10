@@ -1,6 +1,5 @@
 from keras import Input
 from keras.engine import Model
-from keras.layers import Conv2D
 from keras.losses import categorical_crossentropy
 from keras.models import Sequential
 from keras.optimizers import Adadelta

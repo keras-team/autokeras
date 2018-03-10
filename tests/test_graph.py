@@ -17,7 +17,7 @@ def test_conv_deeper():
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
 
-    assert abs(np.sum(output1 - output2)) < 0.2
+    assert np.sum(np.abs(output1 - output2)) < 1e-1
 
 
 def test_dense_deeper():
@@ -29,7 +29,7 @@ def test_dense_deeper():
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
 
-    assert np.sum(output1 - output2) == 0
+    assert np.sum(np.abs(output1 - output2)) < 1e-4
 
 
 def test_conv_wider():
@@ -41,7 +41,7 @@ def test_conv_wider():
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
 
-    assert abs(np.sum(output1 - output2)) < 1e-4
+    assert np.sum(np.abs(output1 - output2)) < 1e-1
 
 
 def test_dense_wider():
@@ -52,8 +52,10 @@ def test_dense_wider():
 
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
+    print(output1, output2)
+    print(np.sum(np.abs(output1 - output2)))
 
-    assert abs(np.sum(output1 - output2)) < 1e-4
+    assert np.sum(np.abs(output1 - output2)) < 1e-4
 
 
 def test_skip_add():
@@ -89,7 +91,7 @@ def test_skip_concatenate():
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
 
-    assert abs(np.sum(output1 - output2)) < 1e-4
+    assert np.sum(np.abs(output1 - output2)) < 1e-1
 
 
 def test_skip_concat_over_pooling():
@@ -101,7 +103,7 @@ def test_skip_concat_over_pooling():
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
 
-    assert abs(np.sum(output1 - output2)) < 1e-4
+    assert np.sum(np.abs(output1 - output2)) < 1e-1
 
 
 def test_copy_model():

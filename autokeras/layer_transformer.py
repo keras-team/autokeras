@@ -4,6 +4,8 @@ from keras.layers import Dense, BatchNormalization, Activation
 from autokeras.layers import WeightedAdd
 from autokeras.utils import get_conv_layer_func, get_int_tuple
 
+NOISE_RATIO = 1e-4
+
 
 def deeper_conv_block(conv_layer, kernel_size):
     """Get deeper layer for convolution layer
@@ -30,7 +32,7 @@ def deeper_conv_block(conv_layer, kernel_size):
                                kernel_size=filter_shape,
                                padding='same')
     new_conv_layer.build((None,) * (len(filter_shape) + 1) + (n_filters,))
-    new_conv_layer.set_weights((weight, bias))
+    new_conv_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
     return [new_conv_layer,
             BatchNormalization(),
             Activation('relu')]
@@ -50,7 +52,7 @@ def dense_to_deeper_layer(dense_layer):
     bias = np.zeros(units)
     new_dense_layer = Dense(units, activation='relu')
     new_dense_layer.build((None, units))
-    new_dense_layer.set_weights((weight, bias))
+    new_dense_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
     return new_dense_layer
 
 
@@ -77,8 +79,8 @@ def wider_pre_dense(layer, n_add):
         teacher_index = rand[i]
         new_weight = teacher_w[:, teacher_index]
         new_weight = new_weight[:, np.newaxis]
-        student_w = np.concatenate((student_w, new_weight), axis=1)
-        student_b = np.append(student_b, teacher_b[teacher_index])
+        student_w = np.concatenate((student_w, add_noise(new_weight, student_w)), axis=1)
+        student_b = np.append(student_b, add_noise(teacher_b[teacher_index], student_b))
 
     new_pre_layer = Dense(n_units2 + n_add, input_shape=(n_units1,), activation='relu')
     new_pre_layer.build((None, n_units1))
@@ -115,7 +117,7 @@ def wider_pre_conv(layer, n_add_filters):
                               kernel_size=pre_filter_shape,
                               padding='same')
     new_pre_layer.build((None,) * (len(pre_filter_shape) + 1) + (student_w.shape[-2],))
-    new_pre_layer.set_weights((student_w, student_b))
+    new_pre_layer.set_weights((add_noise(student_w, teacher_w), add_noise(student_b, teacher_b)))
     return new_pre_layer
 
 
@@ -141,7 +143,7 @@ def wider_next_conv(layer, start_dim, total_dim, n_add):
     new_weight = np.zeros(tuple(new_weight_shape))
 
     student_w = np.concatenate((teacher_w[..., :start_dim, :].copy(),
-                                new_weight,
+                                add_noise(new_weight, teacher_w),
                                 teacher_w[..., start_dim:total_dim, :].copy()), axis=-2)
     new_layer = conv_func(n_filters, kernel_size=filter_shape, padding='same')
     input_shape = list((None,) * (len(filter_shape) + 1) + (student_w.shape[-2],))
@@ -204,7 +206,7 @@ def wider_next_dense(layer, start_dim, total_dim, n_add):
 
     new_weight = np.zeros((n_add * n_units_each_channel, teacher_w.shape[1]))
     student_w = np.concatenate((student_w[:start_dim * n_units_each_channel],
-                                new_weight,
+                                add_noise(new_weight, student_w),
                                 student_w[start_dim * n_units_each_channel:total_dim * n_units_each_channel]))
 
     new_layer = Dense(n_units, activation=layer.get_config()['activation'])
@@ -230,3 +232,10 @@ def wider_weighted_add(layer, n_add):
     # new_layer.build([input_shape, input_shape])
     new_layer.set_weights(layer.get_weights())
     return new_layer
+
+
+def add_noise(weights, other_weights):
+    w_range = np.ptp(other_weights.flatten())
+    noise_range = NOISE_RATIO * w_range
+    noise = np.random.uniform(-noise_range / 2.0, noise_range / 2.0, weights.shape)
+    return np.add(noise, weights)
