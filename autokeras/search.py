@@ -52,10 +52,12 @@ class Searcher:
         """an search strategy that will be overridden by children classes"""
         pass
 
+    def load_model_by_id(self, model_id):
+        return load_model(os.path.join(self.path, str(model_id) + '.h5'))
+
     def load_best_model(self):
         """return model with best accuracy"""
-        model_id = max(self.history, key=lambda x: x['accuracy'])['model_id']
-        return load_model(os.path.join(self.path, str(model_id) + '.h5'))
+        return self.load_model_by_id(max(self.history, key=lambda x: x['accuracy'])['model_id'])
 
     def add_model(self, model, x_train, y_train, x_test, y_test):
         """add one model while will be trained to history list
@@ -168,6 +170,10 @@ class BayesianSearcher(HillClimbingSearcher):
     def maximize_acq(self, model_ids):
         # TODO: implement it
         print(model_ids)
+        # exploration
+        for model_id in model_ids:
+            self.load_model_by_id(model_id)
+        # exploitation
         return self.load_best_model()
 
 
