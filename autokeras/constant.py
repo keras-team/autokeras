@@ -9,6 +9,7 @@ MAX_NO_IMPROVEMENT_NUM = 10
 DEFAULT_SAVE_PATH = '/tmp/autokeras/'
 EPOCHS_EACH = 1
 N_NEIGHBORS = 8
+ACQ_EXPLOITATION_DEPTH = 4
 
 LAYER_ATTR = {'Dense': ['units', 'activation'],
               'Dropout': ['rate'],
@@ -20,3 +21,5 @@ LAYER_ATTR = {'Dense': ['units', 'activation'],
               'Conv3D': ['filters', 'activation', 'kernel_size'],
               'Flatten': []
               }
+
+

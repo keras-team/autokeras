@@ -8,6 +8,7 @@ from keras.layers import Concatenate, Dense, BatchNormalization
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_weighted_add, \
     wider_pre_dense, wider_pre_conv, deeper_conv_block, dense_to_deeper_layer
 from autokeras.layers import WeightedAdd
+from autokeras.stub import StubBatchNormalization, StubDense, StubConv, StubWeightedAdd, StubConcatenate, StubActivation
 from autokeras.utils import copy_layer, is_conv_layer, get_int_tuple, is_pooling_layer
 
 
@@ -39,32 +40,6 @@ class NetworkDescriptor:
             raise ValueError('connection_type should be NetworkDescriptor.CONCAT_CONNECT '
                              'or NetworkDescriptor.ADD_CONNECT.')
         self.skip_connections.append((u, v, connection_type))
-
-
-class StubBatchNormalization:
-    pass
-
-
-class StubDense:
-    def __init__(self, units):
-        self.units = units
-
-
-class StubConv:
-    def __init__(self, filters):
-        self.filters = filters
-
-
-class StubWeightedAdd:
-    pass
-
-
-class StubConcatenate:
-    pass
-
-
-class StubActivation:
-    pass
 
 
 class Graph:
@@ -105,6 +80,7 @@ class Graph:
         self.old_layer_ids = {}
         self.adj_list = {}
         self.reverse_adj_list = {}
+        self.operation_history = []
 
         self.next_vis = None
         self.pre_vis = None
@@ -122,6 +98,9 @@ class Graph:
         # Add all edges
         for layer in layers:
             self._add_edge(layer)
+
+    def clear_operation_history(self):
+        self.operation_history = []
 
     @property
     def n_nodes(self):
@@ -323,20 +302,19 @@ class Graph:
             else:
                 self._search_pre(v, start_dim, total_dim, n_add)
 
-    def produce_model(self):
-        return None
-
-    def to_conv_deeper_model(self, target, kernel_size):
+    def to_conv_deeper_model(self, target_id, kernel_size):
         """Insert a convolution, batch-normalization, relu block after the target block.
 
         Args:
-            target: A convolutional layer. The new block should be inserted after the relu layer
+            target_id: A convolutional layer ID. The new block should be inserted after the relu layer
                 in its conv-batch-relu block.
             kernel_size: An integer. The kernel size of the new convolutional layer.
 
         Returns:
             A new Keras model with the inserted block.
         """
+        self.operation_history.append(('to_conv_deeper_model', target_id, kernel_size))
+        target = self.layer_list[target_id]
         new_layers = self._deeper_conv_block(target, kernel_size)
         output_id = self.node_to_id[target.output]
         output_id = self.adj_list[output_id][0][0]
@@ -349,35 +327,36 @@ class Graph:
         self._add_edge(new_layers[2], self.node_to_id[2], self.adj_list[output_id][0][0], False)
         self._redirect_edge(output_id, self.adj_list[output_id][0][0], self.node_to_id[0])
 
-        return self.produce_model()
-
-    def to_wider_model(self, pre_layer, n_add):
+    def to_wider_model(self, pre_layer_id, n_add):
         """Widen the last dimension of the output of the pre_layer.
 
         Args:
-            pre_layer: A convolutional layer or dense layer.
+            pre_layer_id: A convolutional layer or dense layer.
             n_add: The number of dimensions to add.
 
         Returns:
             A new Keras model with the widened layers.
         """
+        self.operation_history.append(('to_wider_model', pre_layer_id, n_add))
+        pre_layer = self.layer_list[pre_layer_id]
         output_id = self.node_to_id[pre_layer.output]
         self.next_vis = [False] * self.n_nodes
         self.pre_vis = [False] * self.n_nodes
         self.middle_layer_vis = [False] * len(self.layer_list)
         dim = get_int_tuple(pre_layer.output_shape)[-1]
         self._search_next(output_id, dim, dim, n_add)
-        return self.produce_model()
 
-    def to_dense_deeper_model(self, target):
+    def to_dense_deeper_model(self, target_id):
         """Insert a dense layer after the target layer.
 
         Args:
-            target: A dense layer.
+            target_id: A dense layer.
 
         Returns:
             A new Keras model with an inserted dense layer.
         """
+        self.operation_history.append(('to_dense_deeper_model', target_id))
+        target = self.layer_list[target_id]
         new_layers = self._dense_to_deeper_layer(target)
         old_input_id = self.node_to_id[target.input]
         old_output_id = self.node_to_id[target.output]
@@ -386,14 +365,16 @@ class Graph:
         new_node_id = self.node_to_id[0]
         self._add_edge(new_layers, new_node_id, old_output_id, False)
         self._redirect_edge(old_input_id, old_output_id, new_node_id)
-        return self.produce_model()
 
-    def to_add_skip_model(self, start, end):
+    def to_add_skip_model(self, start_id, end_id):
         """Add a weighted add skip connection from start node to end node.
 
         Returns:
             A new Keras model with the added connection.
         """
+        self.operation_history.append(('to_add_skip_model', start_id, end_id))
+        start = self.layer_list[start_id]
+        end = self.layer_list[end_id]
         conv_input_id = self.node_to_id[start.input]
         relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
 
@@ -419,14 +400,15 @@ class Graph:
         self._add_edge(layer, new_node_id, relu_output_id, False)
         self._add_edge(layer, skip_output_id, relu_output_id, False)
 
-        return self.produce_model()
-
-    def to_concat_skip_model(self, start, end):
+    def to_concat_skip_model(self, start_id, end_id):
         """Add a weighted add concatenate connection from start node to end node.
 
         Returns:
             A new Keras model with the added connection.
         """
+        self.operation_history.append(('to_concat_skip_model', start_id, end_id))
+        start = self.layer_list[start_id]
+        end = self.layer_list[end_id]
         conv_input_id = self.node_to_id[start.input]
         relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
 
@@ -462,7 +444,6 @@ class Graph:
         dim = get_int_tuple(end.output_shape)[-1]
         n_add = get_int_tuple(start.output_shape)[-1]
         self._search_next(relu_output_id, dim, dim, n_add)
-        return self.produce_model()
 
     def extract_descriptor(self):
         ret = NetworkDescriptor()

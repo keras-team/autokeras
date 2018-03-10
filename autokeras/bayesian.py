@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Kernel
 
 
@@ -40,3 +41,11 @@ class NetKernel(Kernel):
             for y_index, y in Y:
                 ret[x_index][y_index] = 1.0 / np.exp(edit_distance(x, y))
         return ret
+
+
+class IncrementalGaussianProcess(GaussianProcessRegressor):
+    def incremental_fit(self, train_x, train_y):
+        pass
+
+    def first_fit(self, train_x, train_y):
+        pass

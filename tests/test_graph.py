@@ -11,7 +11,8 @@ def test_graph():
 def test_conv_deeper():
     model = get_conv_model()
     graph = NetworkMorphismGraph(model)
-    new_model = graph.to_conv_deeper_model(model.layers[4], 3)
+    graph.to_conv_deeper_model(model.layers[4], 3)
+    new_model = graph.produce_model()
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
@@ -23,7 +24,8 @@ def test_conv_deeper():
 def test_dense_deeper():
     model = get_conv_dense_model()
     graph = NetworkMorphismGraph(model)
-    new_model = graph.to_dense_deeper_model(model.layers[5])
+    graph.to_dense_deeper_model(model.layers[5])
+    new_model = graph.produce_model()
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
@@ -35,7 +37,8 @@ def test_dense_deeper():
 def test_conv_wider():
     model = get_add_skip_model()
     graph = NetworkMorphismGraph(model)
-    new_model = graph.to_wider_model(model.layers[7], 3)
+    graph.to_wider_model(model.layers[7], 3)
+    new_model = graph.produce_model()
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
@@ -47,13 +50,12 @@ def test_conv_wider():
 def test_dense_wider():
     model = get_add_skip_model()
     graph = NetworkMorphismGraph(model)
-    new_model = graph.to_wider_model(model.layers[-2], 3)
+    graph.to_wider_model(model.layers[-2], 3)
+    new_model = graph.produce_model()
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
-    print(output1, output2)
-    print(np.sum(np.abs(output1 - output2)))
 
     assert np.sum(np.abs(output1 - output2)) < 1e-4
 
@@ -61,7 +63,8 @@ def test_dense_wider():
 def test_skip_add():
     model = get_conv_model()
     graph = NetworkMorphismGraph(model)
-    new_model = graph.to_add_skip_model(model.layers[1], model.layers[4])
+    graph.to_add_skip_model(model.layers[1], model.layers[4])
+    new_model = graph.produce_model()
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
@@ -73,7 +76,8 @@ def test_skip_add():
 def test_skip_add_over_pooling():
     model = get_pooling_model()
     graph = NetworkMorphismGraph(model)
-    new_model = graph.to_add_skip_model(model.layers[4], model.layers[11])
+    graph.to_add_skip_model(model.layers[4], model.layers[11])
+    new_model = graph.produce_model()
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
@@ -85,7 +89,8 @@ def test_skip_add_over_pooling():
 def test_skip_concatenate():
     model = get_add_skip_model()
     graph = NetworkMorphismGraph(model)
-    new_model = graph.to_concat_skip_model(model.layers[4], model.layers[4])
+    graph.to_concat_skip_model(model.layers[4], model.layers[4])
+    new_model = graph.produce_model()
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
@@ -97,7 +102,8 @@ def test_skip_concatenate():
 def test_skip_concat_over_pooling():
     model = get_pooling_model()
     graph = NetworkMorphismGraph(model)
-    new_model = graph.to_concat_skip_model(model.layers[4], model.layers[11])
+    graph.to_concat_skip_model(model.layers[4], model.layers[11])
+    new_model = graph.produce_model()
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
