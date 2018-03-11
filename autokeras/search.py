@@ -177,7 +177,6 @@ class BayesianSearcher(HillClimbingSearcher):
         return self.load_best_model()
 
     def maximize_acq(self, model_ids):
-        # TODO: implement it
         overall_max_acq_value = 0
         father_id = None
         target_graph = None
@@ -211,16 +210,29 @@ class BayesianSearcher(HillClimbingSearcher):
         return nm_graph.produce_model(), father_id
 
     def _acq(self, graph):
+        print(self)
+        print(graph)
         return 0
 
 
 class SearchTree:
-    # TODO: implement search tree
     def __init__(self):
-        self.nodes = None
+        self.root = None
+        self.adj_list = {}
 
     def add_child(self, u, v):
-        pass
+        if u == -1:
+            self.root = v
+            self.adj_list[v] = []
+            return
+        if v not in self.adj_list[u]:
+            self.adj_list[u].append(v)
+        if v not in self.adj_list:
+            self.adj_list[v] = []
 
     def get_leaves(self):
-        return self.nodes
+        ret = []
+        for key, value in self.adj_list.items():
+            if not value:
+                ret.append(key)
+        return ret

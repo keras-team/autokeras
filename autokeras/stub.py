@@ -1,49 +1,49 @@
-from keras.layers import Dense, Concatenate, BatchNormalization, Activation
+from keras.engine import InputLayer
+from keras.layers import Dense, Concatenate, BatchNormalization, Activation, Flatten
 
 from autokeras.layers import WeightedAdd
 from autokeras.utils import is_conv_layer
 
 
-class StubBatchNormalization:
+class StubLayer:
     def __init__(self, input_node=None, output_node=None):
         self.input = input_node
         self.output = output_node
 
 
-class StubDense:
+class StubBatchNormalization(StubLayer):
+    pass
+
+
+class StubDense(StubLayer):
     def __init__(self, units, input_node=None, output_node=None):
+        super().__init__(input_node, output_node)
         self.units = units
-        self.input = input_node
-        self.output = output_node
 
 
-class StubConv:
+class StubConv(StubLayer):
     def __init__(self, filters, input_node=None, output_node=None):
+        super().__init__(input_node, output_node)
         self.filters = filters
-        self.input = input_node
-        self.output = output_node
 
 
-class StubWeightedAdd:
+class StubAggregateLayer(StubLayer):
     def __init__(self, input_nodes=None, output_node=None):
         if input_nodes is None:
             input_nodes = []
-        self.input = input_nodes
-        self.output = output_node
+        super().__init__(input_nodes, output_node)
 
 
-class StubConcatenate:
-    def __init__(self, input_nodes=None, output_node=None):
-        if input_nodes is None:
-            input_nodes = []
-        self.input = input_nodes
-        self.output = output_node
+class StubConcatenate(StubAggregateLayer):
+    pass
 
 
-class StubActivation:
-    def __init__(self, input_node=None, output_node=None):
-        self.input = input_node
-        self.output = output_node
+class StubWeightedAdd(StubAggregateLayer):
+    pass
+
+
+class StubActivation(StubLayer):
+    pass
 
 
 class StubModel:
@@ -77,7 +77,6 @@ def to_stub_model(model):
             input_id = node_to_id[layer.input]
         output_id = node_to_id[layer.output]
 
-        temp_stub_layer = None
         if is_conv_layer(layer):
             temp_stub_layer = StubConv(layer.filters, input_id, output_id)
         elif isinstance(layer, Dense):
@@ -90,6 +89,12 @@ def to_stub_model(model):
             temp_stub_layer = StubBatchNormalization(input_id, output_id)
         elif isinstance(layer, Activation):
             temp_stub_layer = StubActivation(input_id, output_id)
+        elif isinstance(layer, InputLayer):
+            temp_stub_layer = StubLayer(input_id, output_id)
+        elif isinstance(layer, Flatten):
+            temp_stub_layer = StubLayer(input_id, output_id)
+        else:
+            raise TypeError("The layer {} is illegal.".format(layer))
         ret.add_layer(temp_stub_layer)
 
     return ret

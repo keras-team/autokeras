@@ -36,3 +36,12 @@ def test_random_searcher(_):
     generator.search(x_train, y_train, x_test, y_test)
     assert len(generator.history) == len(generator.history_configs)
 
+
+# TODO: Test Bayesian Search
+
+def test_search_tree():
+    tree = SearchTree()
+    tree.add_child(-1, 0)
+    tree.add_child(0, 1)
+    tree.add_child(0, 2)
+    assert len(tree.adj_list) == 3
