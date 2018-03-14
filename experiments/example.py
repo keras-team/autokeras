@@ -4,6 +4,7 @@ from keras.engine import Model
 from keras.layers import Dense
 from keras.losses import mean_squared_error
 from keras.models import Sequential
+from sklearn.gaussian_process import GaussianProcessRegressor
 
 from autokeras.layers import WeightedAdd
 
@@ -33,7 +34,7 @@ def graph_model():
     print(final_model.layers)
 
 
-def test_my_layer():
+def my_layer():
     """test one specify layer"""
     a = Input(shape=(3, 3, 2))
     b = WeightedAdd()(a)
@@ -45,6 +46,13 @@ def test_my_layer():
     print(model.predict_on_batch(data))
 
 
-# graph_model()
+def gpr():
+    gpr = GaussianProcessRegressor()
+    gpr.fit([[0, 1, 0, 1]], [1])
+    print(gpr.predict([[1, 0, 1, 0]]))
+    print(gpr.predict([[0, 1, 0, 1]]))
+    # Conclusion: GPR can work with single fit.
 
-test_my_layer()
+
+gpr()
+

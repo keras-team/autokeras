@@ -116,7 +116,7 @@ class ClassifierBase:
             x_test: An instance of numpy.ndarray contains the testing data.
         """
         model = self.searcher.load_best_model()
-        return self.y_encoder.inverse_transform(model.predict(x_test, verbose=self.verbose))
+        return self.y_encoder.inverse_transform(model.predict(x_test, ))
 
     def summary(self):
         """Print the summary of the best model."""

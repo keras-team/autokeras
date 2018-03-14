@@ -1,5 +1,6 @@
 import os
 import pickle
+import numpy as np
 
 from keras.losses import categorical_crossentropy
 from keras.models import load_model
@@ -210,9 +211,7 @@ class BayesianSearcher(HillClimbingSearcher):
         return nm_graph.produce_model(), father_id
 
     def _acq(self, graph):
-        print(self)
-        print(graph)
-        return 0
+        return self.gpr.predict(np.array([graph]), )[0]
 
 
 class SearchTree:
