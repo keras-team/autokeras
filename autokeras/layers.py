@@ -31,3 +31,53 @@ class WeightedAdd(Add):
     def compute_output_shape(self, input_shape):
         """Return output_shape"""
         return input_shape
+
+
+class StubLayer:
+    def __init__(self, input_node=None, output_node=None):
+        self.input = input_node
+        self.output = output_node
+
+    def build(self, shape):
+        pass
+
+
+class StubBatchNormalization(StubLayer):
+    pass
+
+
+class StubDense(StubLayer):
+    def __init__(self, units, input_node=None, output_node=None):
+        super().__init__(input_node, output_node)
+        self.units = units
+        self.output_shape = (None, units)
+
+
+class StubConv(StubLayer):
+    def __init__(self, filters, input_node=None, output_node=None):
+        super().__init__(input_node, output_node)
+        self.filters = filters
+        self.output_shape = (None, filters)
+
+
+class StubAggregateLayer(StubLayer):
+    def __init__(self, input_nodes=None, output_node=None):
+        if input_nodes is None:
+            input_nodes = []
+        super().__init__(input_nodes, output_node)
+
+
+class StubConcatenate(StubAggregateLayer):
+    pass
+
+
+class StubWeightedAdd(StubAggregateLayer):
+    pass
+
+
+class StubActivation(StubLayer):
+    pass
+
+
+class StubPooling(StubLayer):
+    pass

@@ -7,7 +7,7 @@ import numpy as np
 
 def simple_transform(_):
     generator = RandomConvClassifierGenerator(input_shape=(28, 28, 1), n_classes=3)
-    return [generator.generate(), generator.generate()]
+    return [Graph(generator.generate()), Graph(generator.generate())]
 
 
 @patch('autokeras.search.transform', side_effect=simple_transform)

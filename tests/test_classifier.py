@@ -5,6 +5,7 @@ import pytest
 from autokeras.classifier import *
 from autokeras import constant
 from autokeras.generator import RandomConvClassifierGenerator
+from autokeras.graph import Graph
 from tests.common import clean_dir
 
 
@@ -31,7 +32,7 @@ def test_x_float_exception():
 
 def simple_transform(_):
     generator = RandomConvClassifierGenerator(input_shape=(2, 1), n_classes=2)
-    return [generator.generate(), generator.generate()]
+    return [Graph(generator.generate()), Graph(generator.generate())]
 
 
 @patch('autokeras.search.transform', side_effect=simple_transform)
@@ -41,6 +42,7 @@ def test_fit_predict(_, _1):
     constant.MAX_MODEL_NUM = 2
     constant.EPOCHS_EACH = 1
     path = 'tests/resources/temp'
+    clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
     train_x = np.array([[[1], [2]], [[3], [4]]])
     train_y = np.array(['a', 'b'])
@@ -52,7 +54,7 @@ def test_fit_predict(_, _1):
 
 def simple_transform2(_):
     generator = RandomConvClassifierGenerator(input_shape=(25, 1), n_classes=5)
-    return [generator.generate(), generator.generate()]
+    return [Graph(generator.generate()), Graph(generator.generate())]
 
 
 @patch('autokeras.search.transform', side_effect=simple_transform2)
@@ -82,6 +84,7 @@ def test_save_continue(_, _1):
     test_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     path = 'tests/resources/temp'
+    clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)

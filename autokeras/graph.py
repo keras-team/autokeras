@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 from queue import Queue
 
@@ -7,8 +9,8 @@ from keras.layers import Concatenate, Dense, BatchNormalization
 
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_weighted_add, \
     wider_pre_dense, wider_pre_conv, deeper_conv_block, dense_to_deeper_layer
-from autokeras.layers import WeightedAdd
-from autokeras.stub import StubBatchNormalization, StubDense, StubConv, StubWeightedAdd, StubConcatenate, StubActivation
+from autokeras.layers import WeightedAdd, StubBatchNormalization, StubDense, StubConv, StubConcatenate, \
+    StubWeightedAdd, StubActivation, StubPooling
 from autokeras.utils import copy_layer, is_conv_layer, get_int_tuple, is_pooling_layer
 
 
@@ -204,7 +206,7 @@ class Graph:
         layer_list = []
         node_list = [start_node_id]
         self._depth_first_search(end_node_id, layer_list, node_list)
-        return filter(lambda layer_id: is_pooling_layer(self.layer_list[layer_id]), layer_list)
+        return filter(lambda layer_id: self._is_layer(self.layer_list[layer_id], 'Pooling'), layer_list)
 
     def _depth_first_search(self, target_id, layer_id_list, node_list):
         u = node_list[-1]
@@ -343,7 +345,7 @@ class Graph:
         self.next_vis = [False] * self.n_nodes
         self.pre_vis = [False] * self.n_nodes
         self.middle_layer_vis = [False] * len(self.layer_list)
-        dim = get_int_tuple(pre_layer.output_shape)[-1]
+        dim = self._layer_width(pre_layer)
         self._search_next(output_id, dim, dim, n_add)
 
     def to_dense_deeper_model(self, target_id):
@@ -385,7 +387,7 @@ class Graph:
             layer = self.layer_list[layer_id]
             self._add_node(index)
             new_node_id = self.node_to_id[index]
-            self._add_edge(copy_layer(layer), skip_output_id, new_node_id, False)
+            self._add_edge(self._copy_layer(layer), skip_output_id, new_node_id, False)
             skip_output_id = new_node_id
 
         # Add the weighted add layer.
@@ -419,7 +421,7 @@ class Graph:
             layer = self.layer_list[layer_id]
             self._add_node(index)
             new_node_id = self.node_to_id[index]
-            self._add_edge(copy_layer(layer), skip_output_id, new_node_id, False)
+            self._add_edge(self._copy_layer(layer), skip_output_id, new_node_id, False)
             skip_output_id = new_node_id
 
         # Add the weighted add layer.
@@ -513,6 +515,8 @@ class Graph:
             return isinstance(layer, StubConcatenate) or isinstance(layer, Concatenate)
         if layer_type == 'WeightedAdd':
             return isinstance(layer, StubWeightedAdd) or isinstance(layer, WeightedAdd)
+        if layer_type == 'Pooling':
+            return isinstance(layer, StubPooling)
 
     def _layer_width(self, layer):
         if self._is_layer(layer, 'Dense'):
@@ -520,6 +524,9 @@ class Graph:
         if self._is_layer(layer, 'Conv'):
             return layer.filters
         raise TypeError('The layer should be either Dense or Conv layer.')
+
+    def _copy_layer(self, layer):
+        return deepcopy(layer)
 
 
 class NetworkMorphismGraph(Graph):
@@ -534,6 +541,8 @@ class NetworkMorphismGraph(Graph):
             return isinstance(layer, Concatenate)
         if layer_type == 'WeightedAdd':
             return isinstance(layer, WeightedAdd)
+        if layer_type == 'Pooling':
+            return is_pooling_layer(layer)
 
     def _wider_bn(self, layer, start_dim, total_dim, n_add):
         return wider_bn(layer, start_dim, total_dim, n_add)
@@ -558,6 +567,9 @@ class NetworkMorphismGraph(Graph):
 
     def _dense_to_deeper_layer(self, target):
         return dense_to_deeper_layer(target)
+
+    def _copy_layer(self, layer):
+        return copy_layer(layer)
 
     def produce_model(self):
         """Build a new Keras model based on the current graph."""

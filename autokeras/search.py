@@ -82,7 +82,6 @@ class Searcher:
         self.history.append(ret)
         self.history_configs.append(extract_config(model))
         self.model_count += 1
-        pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
 
         return ret
 
@@ -101,6 +100,7 @@ class RandomSearcher(Searcher):
         while self.model_count < constant.MAX_MODEL_NUM:
             model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
             self.add_model(model, x_train, y_train, x_test, y_test)
+            pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
 
         return self.load_best_model()
 
@@ -128,16 +128,18 @@ class HillClimbingSearcher(Searcher):
         if not self.history:
             model = DefaultClassifierGenerator(self.n_classes, self.input_shape).generate()
             self.add_model(model, x_train, y_train, x_test, y_test)
+            pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
 
         optimal_accuracy = 0.0
         while self.model_count < constant.MAX_MODEL_NUM:
             model = self.load_best_model()
-            new_models = transform(NetworkMorphismGraph(model))
+            new_models = transform(NetworkMorphismGraph(model), NetworkMorphismGraph)
             new_models = self._remove_duplicate(list(map(lambda x: x.produce_model(), new_models)))
 
             for model in new_models:
                 if self.model_count < constant.MAX_MODEL_NUM:
                     self.add_model(model, x_train, y_train, x_test, y_test)
+                    pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
 
             max_accuracy = max(self.history, key=lambda x: x['accuracy'])['accuracy']
             if max_accuracy <= optimal_accuracy:
@@ -160,6 +162,7 @@ class BayesianSearcher(HillClimbingSearcher):
             history_item = self.add_model(model, x_train, y_train, x_test, y_test)
             self.search_tree.add_child(-1, history_item['model_id'])
             self.gpr.first_fit(Graph(model).extract_descriptor(), history_item['accuracy'])
+            pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
 
         optimal_accuracy = 0.0
         while self.model_count < constant.MAX_MODEL_NUM:
@@ -169,6 +172,7 @@ class BayesianSearcher(HillClimbingSearcher):
             history_item = self.add_model(new_model, x_train, y_train, x_test, y_test)
             self.search_tree.add_child(father_id, history_item['model_id'])
             self.gpr.incremental_fit(Graph(new_model).extract_descriptor(), history_item['accuracy'])
+            pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
 
             max_accuracy = max(self.history, key=lambda x: x['accuracy'])['accuracy']
             if max_accuracy <= optimal_accuracy:
@@ -178,7 +182,7 @@ class BayesianSearcher(HillClimbingSearcher):
         return self.load_best_model()
 
     def maximize_acq(self, model_ids):
-        overall_max_acq_value = 0
+        overall_max_acq_value = -1
         father_id = None
         target_graph = None
 
@@ -211,7 +215,7 @@ class BayesianSearcher(HillClimbingSearcher):
         return nm_graph.produce_model(), father_id
 
     def _acq(self, graph):
-        return self.gpr.predict(np.array([graph]), )[0]
+        return self.gpr.predict(np.array([graph.extract_descriptor()]), )[0]
 
 
 class SearchTree:
