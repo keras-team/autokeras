@@ -13,7 +13,7 @@ def test_to_stub_model():
 def test_to_stub_model2():
     model = get_concat_skip_model()
     stub_model = to_stub_model(model)
-    assert len(stub_model.layers) == 18
+    assert len(stub_model.layers) == 21
 
 
 def test_to_stub_model_exception():

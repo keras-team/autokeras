@@ -64,9 +64,9 @@ def test_conv_wider_stub():
 
 
 def test_conv_wider():
-    model = get_add_skip_model()
+    model = get_concat_skip_model()
     graph = NetworkMorphismGraph(model)
-    graph.to_wider_model(graph.layer_to_id[model.layers[7]], 3)
+    graph.to_wider_model(graph.layer_to_id[model.layers[4]], 3)
     new_model = graph.produce_model()
     input_data = get_conv_data()
 
@@ -190,7 +190,7 @@ def test_extract_descriptor_add():
 def test_extract_descriptor_concat():
     model = get_concat_skip_model()
     descriptor = Graph(model).extract_descriptor()
-    assert descriptor.n_conv == 4
+    assert descriptor.n_conv == 5
     assert descriptor.n_dense == 2
     assert descriptor.skip_connections == [(2, 3, NetworkDescriptor.CONCAT_CONNECT),
                                            (3, 4, NetworkDescriptor.CONCAT_CONNECT)]

@@ -1,7 +1,7 @@
 import os
 
 from keras import backend
-from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D
+from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D, Dense
 from tensorflow import Dimension
 
 from autokeras import constant
@@ -11,6 +11,10 @@ from autokeras.constant import CONV_FUNC_LIST
 def is_conv_layer(layer):
     """Return whether the layer is convolution layer"""
     return isinstance(layer, tuple(CONV_FUNC_LIST))
+
+
+def is_dense_layer(layer):
+    return isinstance(layer, Dense)
 
 
 def get_conv_layer_func(n_dim):

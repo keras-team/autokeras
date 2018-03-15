@@ -5,12 +5,12 @@ from tests.common import get_conv_dense_model, get_pooling_model
 
 
 def test_wider():
-    model = to_wider_graph(Graph(to_stub_model(get_conv_dense_model())))
+    model = to_wider_graph(Graph(to_stub_model(get_pooling_model())))
     assert isinstance(model, Graph)
 
 
 def test_wider_dense():
-    model = to_wider_graph(Graph(to_stub_model(get_conv_dense_model())))
+    model = to_wider_graph(Graph(to_stub_model(get_pooling_model())))
     assert isinstance(model, Graph)
 
 

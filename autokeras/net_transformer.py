@@ -3,7 +3,7 @@ from random import randint, random
 
 from autokeras import constant
 from autokeras.constant import WEIGHTED_LAYER_FUNC_LIST
-from autokeras.utils import is_conv_layer
+from autokeras.utils import is_conv_layer, is_dense_layer
 
 
 def to_wider_graph(graph):
@@ -15,12 +15,30 @@ def to_wider_graph(graph):
     Returns:
         The wider model
     """
-    weighted_layers = list(filter(lambda x: isinstance(x, tuple(WEIGHTED_LAYER_FUNC_LIST)), graph.layer_list))[:-1]
-    target = weighted_layers[randint(0, len(weighted_layers) - 1)]
+    conv_layers = list(filter(lambda x: is_conv_layer(x), graph.layer_list))[:-1]
+    dense_layers = list(filter(lambda x: is_dense_layer(x), graph.layer_list))[1:-1]
+
+    if len(dense_layers) == 0:
+        weighted_layers = conv_layers
+    elif randint(0, 1) == 0:
+        # The last conv layer cannot be widen since wider operator cannot be done over the two sides of flatten.
+        weighted_layers = conv_layers
+    else:
+        # The first layer cannot be widen since widen operator cannot be done over the two sides of flatten.
+        # The last layer is softmax, which also cannot be widen.
+        weighted_layers = dense_layers
+
+    print(weighted_layers)
+    if len(weighted_layers) <= 1:
+        target = weighted_layers[0]
+    else:
+        target = weighted_layers[randint(0, len(weighted_layers) - 1)]
+
     if is_conv_layer(target):
         n_add = randint(1, 4 * target.filters)
     else:
         n_add = randint(1, 4 * target.units)
+
     graph.to_wider_model(graph.layer_to_id[target], n_add)
     return graph
 
@@ -47,8 +65,8 @@ def to_skip_connection_graph(graph):
         The skip_connected model
     """
     weighted_layers = list(filter(lambda x: is_conv_layer(x), graph.layer_list))
-    index_a = randint(0, len(weighted_layers) - 1)
-    index_b = randint(0, len(weighted_layers) - 1)
+    index_a = randint(0, len(weighted_layers) - 2)
+    index_b = randint(0, len(weighted_layers) - 2)
     if index_a == index_b:
         if index_b == 0:
             index_a = index_b + 1
