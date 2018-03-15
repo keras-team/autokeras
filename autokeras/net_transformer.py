@@ -22,7 +22,7 @@ def to_wider_graph(graph):
     else:
         n_add = randint(1, 4 * target.units)
     graph.to_wider_model(graph.layer_to_id[target], n_add)
-    return deepcopy(graph)
+    return graph
 
 
 def copy_conv_graph(graph):
@@ -49,18 +49,24 @@ def to_skip_connection_graph(graph):
     weighted_layers = list(filter(lambda x: is_conv_layer(x), graph.layer_list))
     index_a = randint(0, len(weighted_layers) - 1)
     index_b = randint(0, len(weighted_layers) - 1)
+    if index_a == index_b:
+        if index_b == 0:
+            index_a = index_b + 1
+        else:
+            index_a = index_b - 1
     if index_a > index_b:
         index_a, index_b = index_b, index_a
-    a = graph.layer_to_id[weighted_layers[index_a]]
-    b = graph.layer_to_id[weighted_layers[index_b]]
-    # TODO: Graph doesn't contain the shape information, but we need it for whether can add skip.
-    if a.input.shape != b.output.shape:
-        graph.to_concat_skip_model(a, b)
+    a = weighted_layers[index_a]
+    b = weighted_layers[index_b]
+    a_id = graph.layer_to_id[a]
+    b_id = graph.layer_to_id[b]
+    if a.output_shape[-1] != b.output_shape[-1]:
+        graph.to_concat_skip_model(a_id, b_id)
     elif random() < 0.5:
-        graph.to_add_skip_model(a, b)
+        graph.to_add_skip_model(a_id, b_id)
     else:
-        graph.to_concat_skip_model(a, b)
-    return deepcopy(graph)
+        graph.to_concat_skip_model(a_id, b_id)
+    return graph
 
 
 def to_deeper_graph(graph):
@@ -78,7 +84,7 @@ def to_deeper_graph(graph):
         graph.to_conv_deeper_model(graph.layer_to_id[target], randint(1, 2) * 2 + 1)
     else:
         graph.to_dense_deeper_model(graph.layer_to_id[target])
-    return deepcopy(graph)
+    return graph
 
 
 def transform(graph):
@@ -96,12 +102,12 @@ def transform(graph):
 
         if operation == 0:
             # wider
-            graphs.append(to_wider_graph(graph))
+            graphs.append(to_wider_graph(deepcopy(graph)))
         elif operation == 1:
             # deeper
-            graphs.append(to_deeper_graph(graph))
+            graphs.append(to_deeper_graph(deepcopy(graph)))
         elif operation == 2:
             # skip
-            graphs.append(to_skip_connection_graph(graph))
+            graphs.append(to_skip_connection_graph(deepcopy(graph)))
 
     return graphs

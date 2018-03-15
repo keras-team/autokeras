@@ -1,3 +1,4 @@
+import numpy as np
 from autokeras.graph import *
 from autokeras.stub import to_stub_model
 from tests.common import get_conv_model, get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model, \

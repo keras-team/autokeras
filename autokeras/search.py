@@ -133,7 +133,13 @@ class HillClimbingSearcher(Searcher):
         optimal_accuracy = 0.0
         while self.model_count < constant.MAX_MODEL_NUM:
             model = self.load_best_model()
-            new_models = transform(NetworkMorphismGraph(model), NetworkMorphismGraph)
+            new_graphs = transform(Graph(to_stub_model(model)))
+            new_models = []
+            for graph in new_graphs:
+                nm_graph = NetworkMorphismGraph(model)
+                for args in graph.operation_history:
+                    getattr(nm_graph, args[0])(args[1:])
+                    new_models.append(nm_graph.produce_model())
             new_models = self._remove_duplicate(list(map(lambda x: x.produce_model(), new_models)))
 
             for model in new_models:
@@ -149,7 +155,7 @@ class HillClimbingSearcher(Searcher):
         return self.load_best_model()
 
 
-class BayesianSearcher(HillClimbingSearcher):
+class BayesianSearcher(Searcher):
 
     def __init__(self, n_classes, input_shape, path, verbose):
         super().__init__(n_classes, input_shape, path, verbose)

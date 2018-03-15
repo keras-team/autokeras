@@ -1,6 +1,5 @@
 from copy import deepcopy
 
-import numpy as np
 from queue import Queue
 
 from keras import Input
@@ -79,6 +78,7 @@ class Graph:
         self.node_to_id = {}
         self.layer_to_id = {}
         self.layer_id_to_input_node_ids = {}
+        self.layer_id_to_output_node_ids = {}
         self.old_layer_ids = {}
         self.adj_list = {}
         self.reverse_adj_list = {}
@@ -123,6 +123,11 @@ class Graph:
             self.adj_list[node_id] = []
             self.reverse_adj_list[node_id] = []
 
+    def _add_new_node(self):
+        node_value = len(self.node_list)
+        self._add_node(node_value)
+        return self.node_to_id[node_value]
+
     def _add_edge(self, layer, input_id=None, output_id=None, old=True):
         """Add edge to the graph."""
         if input_id is None:
@@ -139,11 +144,13 @@ class Graph:
         if layer in self.layer_to_id:
             layer_id = self.layer_to_id[layer]
             self.layer_id_to_input_node_ids[layer_id].append(input_id)
+            self.layer_id_to_output_node_ids[layer_id].append(output_id)
         else:
             layer_id = len(self.layer_list)
             self.layer_list.append(layer)
             self.layer_to_id[layer] = layer_id
             self.layer_id_to_input_node_ids[layer_id] = [input_id]
+            self.layer_id_to_output_node_ids[layer_id] = [output_id]
 
         self.adj_list[input_id].append((output_id, layer_id))
         self.reverse_adj_list[output_id].append((input_id, layer_id))
@@ -160,7 +167,7 @@ class Graph:
         for index, edge_tuple in enumerate(self.adj_list[u_id]):
             if edge_tuple[0] == v_id:
                 layer_id = edge_tuple[1]
-                self.adj_list[u_id].remove(edge_tuple)
+                self.adj_list[u_id][index] = (new_v_id, layer_id)
                 break
 
         for index, edge_tuple in enumerate(self.reverse_adj_list[v_id]):
@@ -168,8 +175,11 @@ class Graph:
                 layer_id = edge_tuple[1]
                 self.reverse_adj_list[v_id].remove(edge_tuple)
                 break
-
-        self._add_edge(self.layer_list[layer_id], u_id, new_v_id)
+        self.reverse_adj_list[new_v_id].append((u_id, layer_id))
+        for index, value in enumerate(self.layer_id_to_output_node_ids[layer_id]):
+            if value == v_id:
+                self.layer_id_to_output_node_ids[layer_id][index] = new_v_id
+                break
 
     def _replace_layer(self, layer_id, new_layer):
         """Replace the layer with a new layer."""
@@ -263,8 +273,8 @@ class Graph:
 
             elif self._is_layer(layer, 'Concatenate'):
                 next_start_dim = start_dim
-                next_total_dim = layer.output_shape[-1]
-                if self.node_list[u] is layer.input[1]:
+                next_total_dim = self._upper_layer_width(v)
+                if self.layer_id_to_input_node_ids[layer_id][1] == u:
                     # u is on the right of the concat
                     next_start_dim += next_total_dim - total_dim
                 self._search_next(v, next_start_dim, next_total_dim, n_add)
@@ -296,13 +306,25 @@ class Graph:
             elif self._is_layer(layer, 'BatchNormalization'):
                 self._search_pre(v, start_dim, total_dim, n_add)
             elif self._is_layer(layer, 'Concatenate'):
-                if self.node_list[v] is layer.input[1]:
+                if self.layer_id_to_input_node_ids[layer_id][1] == v:
                     # v is on the right
-                    pre_total_dim = layer.input_shape[1][-1]
+                    pre_total_dim = self._upper_layer_width(v)
                     pre_start_dim = start_dim - (total_dim - pre_total_dim)
                     self._search_pre(v, pre_start_dim, pre_total_dim, n_add)
             else:
                 self._search_pre(v, start_dim, total_dim, n_add)
+
+    def _upper_layer_width(self, u):
+        for v, layer_id in self.reverse_adj_list[u]:
+            layer = self.layer_list[layer_id]
+            if self._is_layer(layer, 'Conv') or self._is_layer(layer, 'Dense'):
+                return self._layer_width(layer)
+            elif self._is_layer(layer, 'Concatenate'):
+                a = self.layer_id_to_input_node_ids[layer_id][0]
+                b = self.layer_id_to_input_node_ids[layer_id][1]
+                return self._upper_layer_width(a) + self._upper_layer_width(b)
+            else:
+                return self._upper_layer_width(v)
 
     def to_conv_deeper_model(self, target_id, kernel_size):
         """Insert a convolution, batch-normalization, relu block after the target block.
@@ -318,16 +340,19 @@ class Graph:
         self.operation_history.append(('to_conv_deeper_model', target_id, kernel_size))
         target = self.layer_list[target_id]
         new_layers = self._deeper_conv_block(target, kernel_size)
-        output_id = self.node_to_id[target.output]
+        output_id = self.layer_id_to_output_node_ids[target_id][0]
         output_id = self.adj_list[output_id][0][0]
 
+        node_ids = []
         for i in range(3):
-            self._add_node(i)
+            node_ids.append(self._add_new_node())
 
-        self._add_edge(new_layers[0], self.node_to_id[0], self.node_to_id[1], False)
-        self._add_edge(new_layers[1], self.node_to_id[1], self.node_to_id[2], False)
-        self._add_edge(new_layers[2], self.node_to_id[2], self.adj_list[output_id][0][0], False)
-        self._redirect_edge(output_id, self.adj_list[output_id][0][0], self.node_to_id[0])
+        self._add_edge(new_layers[0], node_ids[0], node_ids[1], False)
+        self._add_edge(new_layers[1], node_ids[1], node_ids[2], False)
+        self._add_edge(new_layers[2], node_ids[2], self.adj_list[output_id][0][0], False)
+        self._redirect_edge(output_id, self.adj_list[output_id][0][0], node_ids[0])
+
+        self._refresh()
 
     def to_wider_model(self, pre_layer_id, n_add):
         """Widen the last dimension of the output of the pre_layer.
@@ -341,12 +366,14 @@ class Graph:
         """
         self.operation_history.append(('to_wider_model', pre_layer_id, n_add))
         pre_layer = self.layer_list[pre_layer_id]
-        output_id = self.node_to_id[pre_layer.output]
+        output_id = self.layer_id_to_output_node_ids[pre_layer_id][0]
         self.next_vis = [False] * self.n_nodes
         self.pre_vis = [False] * self.n_nodes
         self.middle_layer_vis = [False] * len(self.layer_list)
         dim = self._layer_width(pre_layer)
         self._search_next(output_id, dim, dim, n_add)
+
+        self._refresh()
 
     def to_dense_deeper_model(self, target_id):
         """Insert a dense layer after the target layer.
@@ -360,13 +387,14 @@ class Graph:
         self.operation_history.append(('to_dense_deeper_model', target_id))
         target = self.layer_list[target_id]
         new_layers = self._dense_to_deeper_layer(target)
-        old_input_id = self.node_to_id[target.input]
-        old_output_id = self.node_to_id[target.output]
+        old_input_id = self.layer_id_to_input_node_ids[target_id][0]
+        old_output_id = self.layer_id_to_output_node_ids[target_id][0]
 
-        self._add_node(0)
-        new_node_id = self.node_to_id[0]
+        new_node_id = self._add_new_node()
         self._add_edge(new_layers, new_node_id, old_output_id, False)
         self._redirect_edge(old_input_id, old_output_id, new_node_id)
+
+        self._refresh()
 
     def to_add_skip_model(self, start_id, end_id):
         """Add a weighted add skip connection from start node to end node.
@@ -375,32 +403,28 @@ class Graph:
             A new Keras model with the added connection.
         """
         self.operation_history.append(('to_add_skip_model', start_id, end_id))
-        start = self.layer_list[start_id]
-        end = self.layer_list[end_id]
-        conv_input_id = self.node_to_id[start.input]
-        relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
+        conv_input_id = self.layer_id_to_input_node_ids[start_id][0]
+        relu_input_id = self.adj_list[self.layer_id_to_output_node_ids[end_id][0]][0][0]
 
         # Add the pooling layer chain.
         pooling_layer_list = self._get_pooling_layers(conv_input_id, relu_input_id)
         skip_output_id = conv_input_id
         for index, layer_id in enumerate(pooling_layer_list):
             layer = self.layer_list[layer_id]
-            self._add_node(index)
-            new_node_id = self.node_to_id[index]
+            new_node_id = self._add_new_node()
             self._add_edge(self._copy_layer(layer), skip_output_id, new_node_id, False)
             skip_output_id = new_node_id
 
         # Add the weighted add layer.
-        self._add_node('a')
-        new_node_id = self.node_to_id['a']
-        layer = WeightedAdd()
-        single_input_shape = get_int_tuple(start.output_shape)
-        layer.build([single_input_shape, single_input_shape])
+        new_node_id = self._add_new_node()
+        layer = self._new_weighted_add_layer()
 
         relu_output_id = self.adj_list[relu_input_id][0][0]
         self._redirect_edge(relu_input_id, relu_output_id, new_node_id)
         self._add_edge(layer, new_node_id, relu_output_id, False)
         self._add_edge(layer, skip_output_id, relu_output_id, False)
+
+        self._refresh()
 
     def to_concat_skip_model(self, start_id, end_id):
         """Add a weighted add concatenate connection from start node to end node.
@@ -411,26 +435,21 @@ class Graph:
         self.operation_history.append(('to_concat_skip_model', start_id, end_id))
         start = self.layer_list[start_id]
         end = self.layer_list[end_id]
-        conv_input_id = self.node_to_id[start.input]
-        relu_input_id = self.adj_list[self.node_to_id[end.output]][0][0]
+        conv_input_id = self.layer_id_to_input_node_ids[start_id][0]
+        relu_input_id = self.adj_list[self.layer_id_to_output_node_ids[end_id][0]][0][0]
 
         # Add the pooling layer chain.
         pooling_layer_list = self._get_pooling_layers(conv_input_id, relu_input_id)
         skip_output_id = conv_input_id
         for index, layer_id in enumerate(pooling_layer_list):
             layer = self.layer_list[layer_id]
-            self._add_node(index)
-            new_node_id = self.node_to_id[index]
+            new_node_id = self._add_new_node()
             self._add_edge(self._copy_layer(layer), skip_output_id, new_node_id, False)
             skip_output_id = new_node_id
 
-        # Add the weighted add layer.
-        self._add_node('a')
-        new_node_id = self.node_to_id['a']
-        layer = Concatenate()
-        left_input_shape = get_int_tuple(end.output_shape)
-        right_input_shape = np.concatenate((left_input_shape[:-1], get_int_tuple(start.output_shape[-1:])))
-        layer.build([left_input_shape, right_input_shape])
+        # Add the concatenate layer.
+        new_node_id = self._add_new_node()
+        layer = self._new_concat_layer()
 
         relu_output_id = self.adj_list[relu_input_id][0][0]
         self._redirect_edge(relu_input_id, relu_output_id, new_node_id)
@@ -443,9 +462,11 @@ class Graph:
         self.middle_layer_vis = [False] * len(self.layer_list)
 
         self.pre_vis[relu_output_id] = True
-        dim = get_int_tuple(end.output_shape)[-1]
-        n_add = get_int_tuple(start.output_shape)[-1]
+        dim = self._layer_width(end)
+        n_add = self._layer_width(start)
         self._search_next(relu_output_id, dim, dim, n_add)
+
+        self._refresh()
 
     def extract_descriptor(self):
         ret = NetworkDescriptor()
@@ -528,6 +549,15 @@ class Graph:
     def _copy_layer(self, layer):
         return deepcopy(layer)
 
+    def _refresh(self):
+        pass
+
+    def _new_concat_layer(self):
+        return StubConcatenate()
+
+    def _new_weighted_add_layer(self):
+        return StubWeightedAdd()
+
 
 class NetworkMorphismGraph(Graph):
     def _is_layer(self, layer, layer_type):
@@ -571,21 +601,27 @@ class NetworkMorphismGraph(Graph):
     def _copy_layer(self, layer):
         return copy_layer(layer)
 
-    def produce_model(self):
-        """Build a new Keras model based on the current graph."""
+    def _new_concat_layer(self):
+        return Concatenate()
+
+    def _new_weighted_add_layer(self):
+        return WeightedAdd()
+
+    def _refresh(self):
         input_tensor = Input(shape=get_int_tuple(self.model.inputs[0].shape[1:]))
         input_id = self.node_to_id[self.model.inputs[0]]
         output_id = self.node_to_id[self.model.outputs[0]]
 
-        id_to_tensor = {input_id: input_tensor}
+        self.node_list[input_id] = input_tensor
         for v in self._topological_order():
             for u, layer_id in self.reverse_adj_list[v]:
                 layer = self.layer_list[layer_id]
 
                 if isinstance(layer, (WeightedAdd, Concatenate)):
-                    edge_input_tensor = list(map(lambda x: id_to_tensor[x], self.layer_id_to_input_node_ids[layer_id]))
+                    edge_input_tensor = list(map(lambda x: self.node_list[x],
+                                                 self.layer_id_to_input_node_ids[layer_id]))
                 else:
-                    edge_input_tensor = id_to_tensor[u]
+                    edge_input_tensor = self.node_list[u]
 
                 if layer_id in self.old_layer_ids:
                     new_layer = copy_layer(layer)
@@ -593,5 +629,9 @@ class NetworkMorphismGraph(Graph):
                     new_layer = layer
 
                 temp_tensor = new_layer(edge_input_tensor)
-                id_to_tensor[v] = temp_tensor
-        return Model(input_tensor, id_to_tensor[output_id])
+                self.node_list[v] = temp_tensor
+        self.model = Model(input_tensor, self.node_list[output_id])
+
+    def produce_model(self):
+        """Build a new Keras model based on the current graph."""
+        return self.model
