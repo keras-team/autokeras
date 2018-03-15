@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split, StratifiedKFold
 
 from autokeras import constant
 from autokeras.preprocessor import OneHotEncoder
-from autokeras.search import HillClimbingSearcher, RandomSearcher
+from autokeras.search import HillClimbingSearcher, RandomSearcher, BayesianSearcher
 from autokeras.utils import ensure_dir, reset_weights, ModelTrainer, has_file
 
 
@@ -116,7 +116,7 @@ class ClassifierBase:
             x_test: An instance of numpy.ndarray contains the testing data.
         """
         model = self.searcher.load_best_model()
-        return self.y_encoder.inverse_transform(model.predict(x_test, verbose=self.verbose))
+        return self.y_encoder.inverse_transform(model.predict(x_test, ))
 
     def summary(self):
         """Print the summary of the best model."""
@@ -129,6 +129,8 @@ class ClassifierBase:
             return HillClimbingSearcher
         elif self.searcher_type == 'random':
             return RandomSearcher
+        elif self.searcher_type == 'bayesian':
+            return BayesianSearcher
         return None
 
     def evaluate(self, x_test, y_test):
@@ -157,5 +159,5 @@ class ImageClassifier(ClassifierBase):
     It is used for image classification. It searches convolutional neural network architectures
     for the best configuration for the dataset.
     """
-    def __init__(self, verbose=True, searcher_type='climb', path=constant.DEFAULT_SAVE_PATH):
+    def __init__(self, verbose=True, searcher_type='bayesian', path=constant.DEFAULT_SAVE_PATH):
         super().__init__(verbose, searcher_type, path)

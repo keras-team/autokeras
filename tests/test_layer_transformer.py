@@ -1,6 +1,5 @@
 from keras import Input
 from keras.engine import Model
-from keras.layers import Conv2D
 from keras.losses import categorical_crossentropy
 from keras.models import Sequential
 from keras.optimizers import Adadelta
@@ -19,7 +18,7 @@ def test_deeper_conv_block():
     input_data = get_conv_data()
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
-    assert np.sum(output1 - output2) < 0.2
+    assert np.sum(np.abs(output1 - output2)) < 1e-1
 
 
 def test_dense_to_deeper_layer():
@@ -36,7 +35,7 @@ def test_dense_to_deeper_layer():
     random_input = np.random.rand(1, 15)
     output1 = model.predict_on_batch(random_input)
     output2 = model2.predict_on_batch(random_input)
-    assert np.array_equal(output1, output2)
+    assert np.sum(np.abs(output1 - output2)) < 1e-1
 
 
 def test_dense_to_wider_layer():
@@ -56,7 +55,7 @@ def test_dense_to_wider_layer():
     random_input = np.random.rand(1, 10)
     output1 = model.predict_on_batch(random_input)
     output2 = model2.predict_on_batch(random_input)
-    assert np.array_equal(output1.flatten(), output2.flatten())
+    assert np.sum(np.abs(output1 - output2)) < 1e-4
 
 
 def test_wider_bn():
@@ -96,4 +95,4 @@ def test_wider_conv():
     random_input = get_conv_data()
     output1 = model.predict_on_batch(random_input)
     output2 = model2.predict_on_batch(random_input)
-    assert np.sum(output1.flatten() - output2.flatten()) < 1e-4
+    assert np.sum(np.abs(output1.flatten() - output2.flatten())) < 1e-1

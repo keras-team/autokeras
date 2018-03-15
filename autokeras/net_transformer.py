@@ -1,106 +1,113 @@
+from copy import deepcopy
 from random import randint, random
 
 from autokeras import constant
 from autokeras.constant import WEIGHTED_LAYER_FUNC_LIST
-from autokeras.graph import Graph
 from autokeras.utils import is_conv_layer
 
 
-def to_wider_model(model):
+def to_wider_graph(graph):
     """Return wider model
 
     Args:
-        model: the model from which we get wider model
+        graph: the model from which we get wider model
 
     Returns:
         The wider model
     """
-    graph = Graph(model)
-    weighted_layers = list(filter(lambda x: isinstance(x, tuple(WEIGHTED_LAYER_FUNC_LIST)), model.layers))[:-1]
+    weighted_layers = list(filter(lambda x: isinstance(x, tuple(WEIGHTED_LAYER_FUNC_LIST)), graph.layer_list))[:-1]
     target = weighted_layers[randint(0, len(weighted_layers) - 1)]
     if is_conv_layer(target):
         n_add = randint(1, 4 * target.filters)
     else:
         n_add = randint(1, 4 * target.units)
-    return graph.to_wider_model(target, n_add)
+    graph.to_wider_model(graph.layer_to_id[target], n_add)
+    return graph
 
 
-def copy_conv_model(model):
+def copy_conv_graph(graph):
     """Return copied convolution model
 
     Args:
-        model: the model we want to copy
+        graph: the model we want to copy
 
     Returns:
         The copied model
     """
-    graph = Graph(model)
-    return graph.produce_model()
+    return deepcopy(graph)
 
 
-def to_skip_connection_model(model):
+def to_skip_connection_graph(graph):
     """Return skip_connected model
 
     Args:
-        model: the model from which we get skip_connected model
+        graph: the model from which we get skip_connected model
 
     Returns:
         The skip_connected model
     """
-    graph = Graph(model)
-    weighted_layers = list(filter(lambda x: is_conv_layer(x), model.layers))
+    weighted_layers = list(filter(lambda x: is_conv_layer(x), graph.layer_list))
     index_a = randint(0, len(weighted_layers) - 1)
     index_b = randint(0, len(weighted_layers) - 1)
+    if index_a == index_b:
+        if index_b == 0:
+            index_a = index_b + 1
+        else:
+            index_a = index_b - 1
     if index_a > index_b:
         index_a, index_b = index_b, index_a
     a = weighted_layers[index_a]
     b = weighted_layers[index_b]
-    if a.input.shape == b.output.shape:
-        return graph.to_add_skip_model(a, b)
+    a_id = graph.layer_to_id[a]
+    b_id = graph.layer_to_id[b]
+    if a.output_shape[-1] != b.output_shape[-1]:
+        graph.to_concat_skip_model(a_id, b_id)
     elif random() < 0.5:
-        return graph.to_add_skip_model(a, b)
+        graph.to_add_skip_model(a_id, b_id)
     else:
-        return graph.to_concat_skip_model(a, b)
+        graph.to_concat_skip_model(a_id, b_id)
+    return graph
 
 
-def to_deeper_model(model):
+def to_deeper_graph(graph):
     """Return deeper model
 
     Args:
-        model: the model from which we get deeper model
+        graph: the model from which we get deeper model
 
     Returns:
         The deeper model
     """
-    graph = Graph(model)
-    weighted_layers = list(filter(lambda x: isinstance(x, tuple(WEIGHTED_LAYER_FUNC_LIST)), model.layers))[:-1]
+    weighted_layers = list(filter(lambda x: isinstance(x, tuple(WEIGHTED_LAYER_FUNC_LIST)), graph.layer_list))[:-1]
     target = weighted_layers[randint(0, len(weighted_layers) - 1)]
     if is_conv_layer(target):
-        return graph.to_conv_deeper_model(target, randint(1, 2) * 2 + 1)
-    return graph.to_dense_deeper_model(target)
+        graph.to_conv_deeper_model(graph.layer_to_id[target], randint(1, 2) * 2 + 1)
+    else:
+        graph.to_dense_deeper_model(graph.layer_to_id[target])
+    return graph
 
 
-def transform(model):
+def transform(graph):
     """Return new model after operations
 
     Args:
-        model: the model from which we get new model
+        graph: the model from which we get new model
 
     Returns:
         The new model
     """
-    models = []
+    graphs = []
     for i in range(constant.N_NEIGHBORS):
         operation = randint(0, 2)
 
         if operation == 0:
             # wider
-            models.append(to_wider_model(model))
+            graphs.append(to_wider_graph(deepcopy(graph)))
         elif operation == 1:
             # deeper
-            models.append(to_deeper_model(model))
+            graphs.append(to_deeper_graph(deepcopy(graph)))
         elif operation == 2:
             # skip
-            models.append(to_skip_connection_model(model))
+            graphs.append(to_skip_connection_graph(deepcopy(graph)))
 
-    return models
+    return graphs

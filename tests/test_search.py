@@ -7,7 +7,7 @@ import numpy as np
 
 def simple_transform(_):
     generator = RandomConvClassifierGenerator(input_shape=(28, 28, 1), n_classes=3)
-    return [generator.generate(), generator.generate()]
+    return [Graph(generator.generate()), Graph(generator.generate())]
 
 
 @patch('autokeras.search.transform', side_effect=simple_transform)
@@ -36,3 +36,12 @@ def test_random_searcher(_):
     generator.search(x_train, y_train, x_test, y_test)
     assert len(generator.history) == len(generator.history_configs)
 
+
+# TODO: Test Bayesian Search
+
+def test_search_tree():
+    tree = SearchTree()
+    tree.add_child(-1, 0)
+    tree.add_child(0, 1)
+    tree.add_child(0, 2)
+    assert len(tree.adj_list) == 3
