@@ -87,6 +87,7 @@ class Graph:
         self.next_vis = None
         self.pre_vis = None
         self.middle_layer_vis = None
+        self.input_shape = model.input_shape
 
         # Add all nodes
         for layer in layers:
@@ -308,6 +309,11 @@ class Graph:
             elif self._is_layer(layer, 'Concatenate'):
                 if self.layer_id_to_input_node_ids[layer_id][1] == v:
                     # v is on the right
+                    other_branch_v = self.layer_id_to_input_node_ids[layer_id][0]
+                    if self.pre_vis[other_branch_v]:
+                        # The other branch is already been widen, which means the widen for upper part of this concat
+                        #  layer is done.
+                        continue
                     pre_total_dim = self._upper_layer_width(v)
                     pre_start_dim = start_dim - (total_dim - pre_total_dim)
                     self._search_pre(v, pre_start_dim, pre_total_dim, n_add)
@@ -325,6 +331,7 @@ class Graph:
                 return self._upper_layer_width(a) + self._upper_layer_width(b)
             else:
                 return self._upper_layer_width(v)
+        return self.input_shape[-1]
 
     def to_conv_deeper_model(self, target_id, kernel_size):
         """Insert a convolution, batch-normalization, relu block after the target block.
@@ -397,7 +404,7 @@ class Graph:
         self._refresh()
 
     def to_add_skip_model(self, start_id, end_id):
-        """Add a weighted add skip connection from start node to end node.
+        """Add a weighted add skip connection from before start node to end node.
 
         Returns:
             A new Keras model with the added connection.
@@ -427,7 +434,7 @@ class Graph:
         self._refresh()
 
     def to_concat_skip_model(self, start_id, end_id):
-        """Add a weighted add concatenate connection from start node to end node.
+        """Add a weighted add concatenate connection from before start node to end node.
 
         Returns:
             A new Keras model with the added connection.
@@ -463,7 +470,7 @@ class Graph:
 
         self.pre_vis[relu_output_id] = True
         dim = self._layer_width(end)
-        n_add = self._layer_width(start)
+        n_add = self._upper_layer_width(conv_input_id)
         self._search_next(relu_output_id, dim, dim, n_add)
 
         self._refresh()
@@ -613,6 +620,7 @@ class NetworkMorphismGraph(Graph):
         output_id = self.node_to_id[self.model.outputs[0]]
 
         self.node_list[input_id] = input_tensor
+        self.node_to_id[input_tensor] = input_id
         for v in self._topological_order():
             for u, layer_id in self.reverse_adj_list[v]:
                 layer = self.layer_list[layer_id]
@@ -627,11 +635,14 @@ class NetworkMorphismGraph(Graph):
                     new_layer = copy_layer(layer)
                 else:
                     new_layer = layer
+                    self.old_layer_ids[layer_id] = True
 
                 temp_tensor = new_layer(edge_input_tensor)
                 self.node_list[v] = temp_tensor
+                self.node_to_id[temp_tensor] = v
         self.model = Model(input_tensor, self.node_list[output_id])
 
     def produce_model(self):
         """Build a new Keras model based on the current graph."""
+        self._refresh()
         return self.model

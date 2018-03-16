@@ -58,16 +58,20 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
 
+        output_tensor = pool(pool_size=self._get_shape(2), padding='same')(output_tensor)
         output_tensor = conv(64, self._get_shape(3),
                              padding='same')(output_tensor)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
 
-        output_tensor = pool(pool_size=self._get_shape(2), padding='same')(output_tensor)
-        output_tensor = Dropout(0.25)(output_tensor)
+        output_tensor = conv(64, self._get_shape(3),
+                             padding='same')(output_tensor)
+        output_tensor = BatchNormalization()(output_tensor)
+        output_tensor = Activation('relu')(output_tensor)
+
         output_tensor = Flatten()(output_tensor)
         output_tensor = Dense(128, activation='relu')(output_tensor)
-        output_tensor = Dropout(0.5)(output_tensor)
+        output_tensor = Dense(128, activation='relu')(output_tensor)
         output_tensor = Dense(self.n_classes, activation='softmax')(output_tensor)
 
         model = Model(input_tensor, output_tensor)

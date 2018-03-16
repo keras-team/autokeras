@@ -158,7 +158,9 @@ def test_skip_concat_over_pooling_stub():
 def test_skip_concat_over_pooling():
     model = get_pooling_model()
     graph = NetworkMorphismGraph(model)
-    graph.to_concat_skip_model(graph.layer_to_id[model.layers[4]], graph.layer_to_id[model.layers[11]])
+    graph.to_concat_skip_model(graph.layer_to_id[model.layers[4]], graph.layer_to_id[model.layers[8]])
+    graph.to_concat_skip_model(graph.layer_to_id[model.layers[4]], graph.layer_to_id[model.layers[8]])
+    graph = NetworkMorphismGraph(graph.produce_model())
     new_model = graph.produce_model()
     input_data = get_conv_data()
 

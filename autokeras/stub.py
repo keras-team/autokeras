@@ -9,6 +9,7 @@ from autokeras.utils import is_conv_layer, is_pooling_layer
 class StubModel:
     def __init__(self):
         self.layers = []
+        self.input_shape = None
 
     def add_layer(self, layer):
         self.layers.append(layer)
@@ -18,6 +19,7 @@ def to_stub_model(model):
     node_count = 0
     node_to_id = {}
     ret = StubModel()
+    ret.input_shape = model.input_shape
     for layer in model.layers:
         if isinstance(layer.input, list):
             input_nodes = layer.input

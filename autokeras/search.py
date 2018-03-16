@@ -138,9 +138,9 @@ class HillClimbingSearcher(Searcher):
             for graph in new_graphs:
                 nm_graph = NetworkMorphismGraph(model)
                 for args in graph.operation_history:
-                    getattr(nm_graph, args[0])(args[1:])
+                    getattr(nm_graph, args[0])(*list(args[1:]))
                     new_models.append(nm_graph.produce_model())
-            new_models = self._remove_duplicate(list(map(lambda x: x.produce_model(), new_models)))
+            new_models = self._remove_duplicate(list(new_models))
 
             for model in new_models:
                 if self.model_count < constant.MAX_MODEL_NUM:
@@ -217,7 +217,7 @@ class BayesianSearcher(Searcher):
         model = self.load_model_by_id(father_id)
         nm_graph = NetworkMorphismGraph(model)
         for args in target_graph.operation_history:
-            getattr(nm_graph, args[0])(args[1:])
+            getattr(nm_graph, args[0])(*list(args[1:]))
         return nm_graph.produce_model(), father_id
 
     def _acq(self, graph):

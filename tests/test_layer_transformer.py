@@ -55,7 +55,7 @@ def test_dense_to_wider_layer():
     random_input = np.random.rand(1, 10)
     output1 = model.predict_on_batch(random_input)
     output2 = model2.predict_on_batch(random_input)
-    assert np.sum(np.abs(output1 - output2)) < 1e-4
+    assert np.sum(np.abs(output1 - output2)) < 1e-3
 
 
 def test_wider_bn():
