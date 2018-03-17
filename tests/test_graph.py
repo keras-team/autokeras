@@ -98,19 +98,6 @@ def test_dense_wider():
     assert np.sum(np.abs(output1 - output2)) < 1e-4
 
 
-def test_skip_add():
-    model = get_conv_model()
-    graph = NetworkMorphismGraph(model)
-    graph.to_add_skip_model(graph.layer_to_id[model.layers[1]], graph.layer_to_id[model.layers[4]])
-    new_model = graph.produce_model()
-    input_data = get_conv_data()
-
-    output1 = model.predict_on_batch(input_data).flatten()
-    output2 = new_model.predict_on_batch(input_data).flatten()
-
-    assert np.array_equal(output1, output2)
-
-
 def test_skip_add_over_pooling_stub():
     model = to_stub_model(get_pooling_model())
     graph = Graph(model)
@@ -131,19 +118,6 @@ def test_skip_add_over_pooling():
     output2 = new_model.predict_on_batch(input_data).flatten()
 
     assert np.array_equal(output1, output2)
-
-
-def test_skip_concatenate():
-    model = get_add_skip_model()
-    graph = NetworkMorphismGraph(model)
-    graph.to_concat_skip_model(graph.layer_to_id[model.layers[4]], graph.layer_to_id[model.layers[4]])
-    new_model = graph.produce_model()
-    input_data = get_conv_data()
-
-    output1 = model.predict_on_batch(input_data).flatten()
-    output2 = new_model.predict_on_batch(input_data).flatten()
-
-    assert np.sum(np.abs(output1 - output2)) < 3e-1
 
 
 def test_skip_concat_over_pooling_stub():
@@ -168,17 +142,6 @@ def test_skip_concat_over_pooling():
     output2 = new_model.predict_on_batch(input_data).flatten()
 
     assert np.sum(np.abs(output1 - output2)) < 4e-1
-
-
-def test_copy_model():
-    model = get_add_skip_model()
-    new_model = NetworkMorphismGraph(model).produce_model()
-    input_data = get_conv_data()
-
-    output1 = model.predict_on_batch(input_data).flatten()
-    output2 = new_model.predict_on_batch(input_data).flatten()
-
-    assert np.sum(output1 - output2) == 0
 
 
 def test_extract_descriptor_add():

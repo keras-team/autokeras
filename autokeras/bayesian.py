@@ -1,26 +1,49 @@
+import math
 import numpy as np
 from scipy.linalg import cholesky, cho_solve
+from scipy.optimize import linear_sum_assignment
+
+
+def layer_distance(a, b):
+    return abs(a - b) * 1.0 / max(a, b)
+
+
+def layers_distance(list_a, list_b):
+    len_a = len(list_a)
+    len_b = len(list_b)
+    f = np.zeros((len_a + 1, len_b + 1))
+    f[-1][-1] = 0
+    for i in range(-1, len_a):
+        f[i][-1] = i + 1
+    for j in range(-1, len_b):
+        f[-1][j] = j + 1
+    for i in range(len_a):
+        for j in range(len_b):
+            f[i][j] = min(f[i][j - 1] + 1, f[i - 1][j] + 1, f[i - 1][j - 1] + layer_distance(list_a[i], list_b[j]))
+    return f[len_a][len_b]
+
+
+def skip_connection_distance(a, b):
+    if a[2] != b[2]:
+        return 1.0
+    len_a = abs(a[1] - a[0])
+    len_b = abs(b[1] - b[0])
+    return abs(a[0] - b[0]) + abs(len_a - len_b)
+
+
+def skip_connections_distance(list_a, list_b):
+    distance_matrix = np.zeros((len(list_a), len(list_b)))
+    for i, a in enumerate(list_a):
+        for j, b in enumerate(list_b):
+            distance_matrix[i][j] = skip_connection_distance(a, b)
+    return distance_matrix[linear_sum_assignment(distance_matrix)].sum() + abs(len(list_a) - len(list_b))
 
 
 def edit_distance(x, y):
     ret = 0
-    ret += abs(x.n_conv - y.n_conv)
-    ret += abs(x.n_dense - y.n_dense)
-
-    for i in range(min(x.n_conv, y.n_conv)):
-        a = x.conv_widths[i]
-        b = y.conv_widths[i]
-        ret += abs(a - b) / max(a, b)
-
-    for i in range(min(x.n_dense, y.n_dense)):
-        a = x.dense_widths[i]
-        b = y.dense_widths[i]
-        ret += abs(a - b) / max(a, b)
-
-    for connection in x.skip_connections:
-        if connection not in y.skip_connections:
-            ret += 1
-
+    ret += layers_distance(x.conv_widths, y.conv_widths)
+    ret += layers_distance(x.dense_widths, y.dense_widths)
+    ret += skip_connections_distance(x.skip_connections, y.skip_connections)
     return ret
 
 
