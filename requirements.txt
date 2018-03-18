@@ -3,5 +3,5 @@ pytest-cov
 numpy
 scikit-learn
 h5py
-tensorflow==1.4.1
+tensorflow
 keras
