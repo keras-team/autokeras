@@ -60,7 +60,6 @@ class ClassifierBase:
             self.searcher = None
             self.searcher_type = searcher_type
             self.path = path
-            self.model_id = None
             ensure_dir(path)
 
     def _validate(self, x_train, y_train):
@@ -107,7 +106,7 @@ class ClassifierBase:
         x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.25, random_state=42)
 
         pickle.dump(self, open(os.path.join(self.path, 'classifier'), 'wb'))
-        self.model_id = self.searcher.search(x_train, y_train, x_test, y_test)
+        self.searcher.search(x_train, y_train, x_test, y_test)
 
     def predict(self, x_test):
         """Return predict result for the testing data.
