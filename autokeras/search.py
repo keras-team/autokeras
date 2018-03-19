@@ -175,7 +175,7 @@ class BayesianSearcher(Searcher):
             del model
             backend.clear_session()
 
-        while self.model_count < constant.MAX_MODEL_NUM:
+        else:
             model_ids = self.search_tree.get_leaves()
             new_model, father_id = self.maximize_acq(model_ids)
 
