@@ -28,7 +28,6 @@ def to_wider_graph(graph):
     else:
         weighted_layers = dense_layers
 
-    print(weighted_layers)
     if len(weighted_layers) <= 1:
         target = weighted_layers[0]
     else:

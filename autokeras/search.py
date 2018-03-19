@@ -170,7 +170,6 @@ class BayesianSearcher(Searcher):
             self.gpr.first_fit(Graph(model).extract_descriptor(), history_item['accuracy'])
             pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
 
-        optimal_accuracy = 0.0
         while self.model_count < constant.MAX_MODEL_NUM:
             model_ids = self.search_tree.get_leaves()
             new_model, father_id = self.maximize_acq(model_ids)
@@ -179,11 +178,6 @@ class BayesianSearcher(Searcher):
             self.search_tree.add_child(father_id, history_item['model_id'])
             self.gpr.incremental_fit(Graph(new_model).extract_descriptor(), history_item['accuracy'])
             pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
-
-            max_accuracy = max(self.history, key=lambda x: x['accuracy'])['accuracy']
-            if max_accuracy <= optimal_accuracy:
-                break
-            optimal_accuracy = max_accuracy
 
         return self.load_best_model()
 
