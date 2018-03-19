@@ -1,5 +1,6 @@
 .DS_Store
 .idea
+.pytest_cache
 
 # resource temp folder
 tests/resources/temp/*

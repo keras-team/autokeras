@@ -5,6 +5,7 @@ import numpy as np
 from keras.losses import categorical_crossentropy
 from keras.models import load_model
 from keras.optimizers import Adadelta
+from keras import backend
 
 from autokeras import constant
 from autokeras.bayesian import IncrementalGaussianProcess
@@ -101,6 +102,7 @@ class RandomSearcher(Searcher):
             model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
             self.add_model(model, x_train, y_train, x_test, y_test)
             pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
+            backend.clear_session()
 
         return self.load_best_model()
 
@@ -147,6 +149,7 @@ class HillClimbingSearcher(Searcher):
                     self.add_model(model, x_train, y_train, x_test, y_test)
                     pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
 
+            backend.clear_session()
             max_accuracy = max(self.history, key=lambda x: x['accuracy'])['accuracy']
             if max_accuracy <= optimal_accuracy:
                 break
@@ -178,6 +181,7 @@ class BayesianSearcher(Searcher):
             self.search_tree.add_child(father_id, history_item['model_id'])
             self.gpr.incremental_fit(Graph(new_model).extract_descriptor(), history_item['accuracy'])
             pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
+            backend.clear_session()
 
         return self.load_best_model()
 
