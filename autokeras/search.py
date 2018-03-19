@@ -186,8 +186,6 @@ class BayesianSearcher(Searcher):
             del new_model
             backend.clear_session()
 
-        return self.load_best_model()
-
     def maximize_acq(self, model_ids):
         overall_max_acq_value = -1
         father_id = None

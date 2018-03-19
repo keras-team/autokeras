@@ -30,17 +30,25 @@ def test_x_float_exception():
     assert str(info.value) == 'x_train should only contain numerical data.'
 
 
-def simple_transform(_):
-    generator = RandomConvClassifierGenerator(input_shape=(2, 1), n_classes=2)
-    return [Graph(generator.generate()), Graph(generator.generate())]
+class MockProcess(object):
+    def __init__(self, target, args):
+        self.target = target
+        self.args = args
+
+    def join(self):
+        pass
+
+    def start(self):
+        self.target(*self.args)
 
 
-@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('multiprocessing.Process', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
-def test_fit_predict(_, _1):
+def test_fit_predict(_):
     constant.MAX_ITER_NUM = 2
     constant.MAX_MODEL_NUM = 2
     constant.EPOCHS_EACH = 1
+    constant.N_NEIGHBORS = 1
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
@@ -52,19 +60,16 @@ def test_fit_predict(_, _1):
     clean_dir(path)
 
 
-def simple_transform2(_):
-    generator = RandomConvClassifierGenerator(input_shape=(25, 1), n_classes=5)
-    return [Graph(generator.generate()), Graph(generator.generate())]
-
-
-@patch('autokeras.search.transform', side_effect=simple_transform2)
+@patch('multiprocessing.Process', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
-def test_fit_predict2(_, _1):
+def test_fit_predict2(_):
     path = 'tests/resources/temp'
+    clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
     constant.EPOCHS_EACH = 1
+    constant.N_NEIGHBORS = 1
     train_x = np.random.rand(100, 25, 1)
     test_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
@@ -74,12 +79,13 @@ def test_fit_predict2(_, _1):
     clean_dir(path)
 
 
-@patch('autokeras.search.transform', side_effect=simple_transform2)
+@patch('multiprocessing.Process', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
-def test_save_continue(_, _1):
+def test_save_continue(_):
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
     constant.EPOCHS_EACH = 1
+    constant.N_NEIGHBORS = 1
     train_x = np.random.rand(100, 25, 1)
     test_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
@@ -88,12 +94,12 @@ def test_save_continue(_, _1):
     clf = ImageClassifier(path=path, verbose=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
-    assert len(clf.searcher.history) == 1
+    assert len(clf.load_searcher().history) == 1
 
     constant.MAX_MODEL_NUM = 2
     clf = ImageClassifier(verbose=False, path=path)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
-    assert len(clf.searcher.history) == 2
+    assert len(clf.load_searcher().history) == 2
     clean_dir(path)
