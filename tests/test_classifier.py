@@ -49,7 +49,7 @@ def test_fit_predict(_):
     constant.MAX_MODEL_NUM = 2
     constant.EPOCHS_EACH = 1
     constant.N_NEIGHBORS = 1
-    path = 'tests/resources/temp'
+    path = '/home/amraw/d3m/autokeras/tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
     train_x = np.array([[[1], [2]], [[3], [4]]])
@@ -63,7 +63,7 @@ def test_fit_predict(_):
 @patch('multiprocessing.Process', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
 def test_fit_predict2(_):
-    path = 'tests/resources/temp'
+    path = '/home/amraw/d3m/autokeras/tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
     constant.MAX_ITER_NUM = 1
@@ -89,7 +89,7 @@ def test_save_continue(_):
     train_x = np.random.rand(100, 25, 1)
     test_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    path = 'tests/resources/temp'
+    path = '/home/amraw/d3m/autokeras/tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
     clf.n_epochs = 100
@@ -103,3 +103,22 @@ def test_save_continue(_):
     assert len(results) == 100
     assert len(clf.load_searcher().history) == 2
     clean_dir(path)
+
+
+@patch('multiprocessing.Process', new=MockProcess)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
+def test_fit_cvs_file_1(_):
+    constant.MAX_ITER_NUM = 2
+    constant.MAX_MODEL_NUM = 2
+    constant.EPOCHS_EACH = 1
+    constant.N_NEIGHBORS = 1
+    path = '/home/amraw/d3m/autokeras/tests/resources'
+    clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"))
+    clf.fit(cvs_file_path=os.path.join(path, "images_test/images_name.csv"),
+            images_path=os.path.join(path, "images_test/same_image"))
+    img_file_name, y_train = clf.read_cvs_file(cvs_file_path="/home/amraw/d3m/autokeras/tests/resources/images_test/images_name.csv")
+    x_test = clf.read_images(img_file_name, images_dir_path="/home/amraw/Images/same_image")
+    results = clf.predict(x_test)
+    assert len(clf.load_searcher().history) == 2
+    assert len(results) == 15
+    clean_dir(os.path.join(path, "temp"))
