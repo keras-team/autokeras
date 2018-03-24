@@ -3,7 +3,7 @@ import os
 import pickle
 import csv
 import errno
-import scipy
+import scipy.ndimage as ndimage
 
 
 import numpy as np
@@ -86,7 +86,7 @@ class ClassifierBase:
             self.path = path
             ensure_dir(path)
 
-    def fit(self, x_train=[], y_train=[], cvs_file_path=None, images_path=None):
+    def fit(self, x_train=[], y_train=[], csv_file_path=None, images_path=None):
         """Find the best model.
 
         Format the input, and split the dataset into training and testing set,
@@ -95,12 +95,12 @@ class ClassifierBase:
         Args:
             x_train: An numpy.ndarray instance contains the training data.
             y_train: An numpy.ndarray instance contains the label of the training data.
-            cvs_file_path: CVS file path
-            images_path: Path where images file exist
+            csv_file_path: CVS file path
+            images_path: Path where images exist
         """
 
-        if not cvs_file_path is None:
-            img_file_name, y_train = self.read_cvs_file(cvs_file_path)
+        if not csv_file_path is None:
+            img_file_name, y_train = self.read_csv_file(csv_file_path)
             if not images_path is None:
                 x_train = self.read_images(img_file_name, images_path)
             else:
@@ -188,29 +188,29 @@ class ClassifierBase:
     def load_searcher(self):
         return pickle.load(open(os.path.join(self.path, 'searcher'), 'rb'))
 
-    def read_cvs_file(self, cvs_file_path):
+    def read_csv_file(self, csv_file_path):
         """
         Read the cvs file and returns two seperate list containing images name and their labels
-        :param cvs_file_path: Path to the CVS file.
-        :return: img_flie_names list containing images names and img_label list containing their respective labels
+        :param csv_file_path: Path to the CVS file.
+        :return: img_file_names list containing images names and img_label list containing their respective labels
         """
-        img_flie_names = []
-        img_label = []
+        img_file_names = []
+        img_labels = []
         try:
-            with open(cvs_file_path, 'r') as images_path:
+            with open(csv_file_path, 'r') as images_path:
                 path_list = csv.DictReader(images_path)
                 fieldnames = path_list.fieldnames
                 for path in path_list:
-                    img_flie_names.append(path[fieldnames[0]])
-                    img_label.append(path[fieldnames[1]])
+                    img_file_names.append(path[fieldnames[0]])
+                    img_labels.append(path[fieldnames[1]])
         except IOError as e:
             if e.errno == errno.EACCES:
                 raise IOError('File not accessible')
             elif e.errno == errno.ENOENT:
-                raise IOError('No such file or directory')
+                raise IOError('No such file or directory exist')
             else:
                 raise ValueError("Illegal file type")
-        return img_flie_names, img_label
+        return img_file_names, img_labels
 
     def read_images(self, img_file_names, images_dir_path):
         """
@@ -224,7 +224,10 @@ class ClassifierBase:
             for img_file in img_file_names:
                 img_path = os.path.join(images_dir_path, img_file)
                 if os.path.exists(img_path):
-                    x_train.append(scipy.ndimage.imread(fname=img_path))
+                    img = ndimage.imread(fname=img_path)
+                    if len(img.shape) < 3:
+                        img = img[..., np.newaxis]
+                    x_train.append(img)
                 else:
                     raise ValueError("%s image does not exist" % img_file)
         else:
