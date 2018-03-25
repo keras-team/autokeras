@@ -103,3 +103,33 @@ def test_save_continue(_):
     assert len(results) == 100
     assert len(clf.load_searcher().history) == 2
     clean_dir(path)
+
+
+@patch('multiprocessing.Process', new=MockProcess)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
+def test_fit_csv_file_1(_):
+    constant.MAX_ITER_NUM = 1
+    constant.MAX_MODEL_NUM = 1
+    constant.EPOCHS_EACH = 1
+    constant.N_NEIGHBORS = 1
+    path = 'tests/resources'
+    clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"))
+    clf.fit(csv_file_path=os.path.join(path, "images_test/images_name.csv"),
+            images_path=os.path.join(path, "images_test/Color_images"))
+    img_file_name, y_train = clf.read_csv_file(csv_file_path=os.path.join(path, "images_test/images_name.csv"))
+    x_test = clf.read_images(img_file_name, images_dir_path=os.path.join(path, "images_test/Color_images"))
+    results = clf.predict(x_test)
+    assert len(clf.load_searcher().history) == 1
+    assert len(results) == 5
+    clean_dir(os.path.join(path, "temp"))
+
+    clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"))
+    clf.fit(csv_file_path=os.path.join(path, "images_test/images_name.csv"),
+            images_path=os.path.join(path, "images_test/Black_white_images"))
+    img_file_name, y_train = clf.read_csv_file(csv_file_path=os.path.join(path, "images_test/images_name.csv"))
+    x_test = clf.read_images(img_file_name, images_dir_path=os.path.join(path, "images_test/Black_white_images"))
+    results = clf.predict(x_test)
+    assert len(clf.load_searcher().history) == 1
+    assert len(results) == 5
+    clean_dir(os.path.join(path, "temp"))
+
