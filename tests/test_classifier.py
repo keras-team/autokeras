@@ -4,8 +4,6 @@ import pytest
 
 from autokeras.classifier import *
 from autokeras import constant
-from autokeras.generator import RandomConvClassifierGenerator
-from autokeras.graph import Graph
 from tests.common import clean_dir
 
 
@@ -91,17 +89,31 @@ def test_save_continue(_):
     train_y = np.random.randint(0, 5, 100)
     path = 'tests/resources/temp'
     clean_dir(path)
-    clf = ImageClassifier(path=path, verbose=False)
+    clf = ImageClassifier(path=path, verbose=False, resume=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
     assert len(clf.load_searcher().history) == 1
 
     constant.MAX_MODEL_NUM = 2
-    clf = ImageClassifier(verbose=False, path=path)
+    clf = ImageClassifier(verbose=False, path=path, resume=True)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
     assert len(clf.load_searcher().history) == 2
+
+    constant.MAX_MODEL_NUM = 1
+    clf = ImageClassifier(verbose=False, path=path, resume=True)
+    clf.fit(train_x, train_y)
+    results = clf.predict(test_x)
+    assert len(results) == 100
+    assert len(clf.load_searcher().history) == 2
+
+    constant.MAX_MODEL_NUM = 1
+    clf = ImageClassifier(verbose=False, path=path, resume=False)
+    clf.fit(train_x, train_y)
+    results = clf.predict(test_x)
+    assert len(results) == 100
+    assert len(clf.load_searcher().history) == 1
     clean_dir(path)
 
 
@@ -113,23 +125,22 @@ def test_fit_csv_file_1(_):
     constant.EPOCHS_EACH = 1
     constant.N_NEIGHBORS = 1
     path = 'tests/resources'
-    clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"))
+    clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"), resume=False)
     clf.fit(csv_file_path=os.path.join(path, "images_test/images_name.csv"),
             images_path=os.path.join(path, "images_test/Color_images"))
-    img_file_name, y_train = clf.read_csv_file(csv_file_path=os.path.join(path, "images_test/images_name.csv"))
-    x_test = clf.read_images(img_file_name, images_dir_path=os.path.join(path, "images_test/Color_images"))
+    img_file_name, y_train = read_csv_file(csv_file_path=os.path.join(path, "images_test/images_name.csv"))
+    x_test = read_images(img_file_name, images_dir_path=os.path.join(path, "images_test/Color_images"))
     results = clf.predict(x_test)
     assert len(clf.load_searcher().history) == 1
     assert len(results) == 5
     clean_dir(os.path.join(path, "temp"))
 
-    clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"))
+    clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"), resume=True)
     clf.fit(csv_file_path=os.path.join(path, "images_test/images_name.csv"),
             images_path=os.path.join(path, "images_test/Black_white_images"))
-    img_file_name, y_train = clf.read_csv_file(csv_file_path=os.path.join(path, "images_test/images_name.csv"))
-    x_test = clf.read_images(img_file_name, images_dir_path=os.path.join(path, "images_test/Black_white_images"))
+    img_file_name, y_train = read_csv_file(csv_file_path=os.path.join(path, "images_test/images_name.csv"))
+    x_test = read_images(img_file_name, images_dir_path=os.path.join(path, "images_test/Black_white_images"))
     results = clf.predict(x_test)
     assert len(clf.load_searcher().history) == 1
     assert len(results) == 5
     clean_dir(os.path.join(path, "temp"))
-

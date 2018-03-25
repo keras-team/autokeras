@@ -5,7 +5,6 @@ import csv
 import errno
 import scipy.ndimage as ndimage
 
-
 import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split, StratifiedKFold
@@ -53,6 +52,54 @@ def run_searcher_once(x_train, y_train, x_test, y_test, path):
     searcher.search(x_train, y_train, x_test, y_test)
 
 
+def read_csv_file(csv_file_path):
+    """
+    Read the cvs file and returns two seperate list containing images name and their labels
+    :param csv_file_path: Path to the CVS file.
+    :return: img_file_names list containing images names and img_label list containing their respective labels
+    """
+    img_file_names = []
+    img_labels = []
+    try:
+        with open(csv_file_path, 'r') as images_path:
+            path_list = csv.DictReader(images_path)
+            fieldnames = path_list.fieldnames
+            for path in path_list:
+                img_file_names.append(path[fieldnames[0]])
+                img_labels.append(path[fieldnames[1]])
+    except IOError as e:
+        if e.errno == errno.EACCES:
+            raise IOError('File not accessible')
+        elif e.errno == errno.ENOENT:
+            raise IOError('No such file or directory exist')
+        else:
+            raise ValueError("Illegal file type")
+    return img_file_names, img_labels
+
+
+def read_images(img_file_names, images_dir_path):
+    """
+    Reads the images from the path and return there numpy.ndarray instance
+    :param img_file_names: List containing images names
+    :param images_dir_path: Path to directory containing images
+    :return: Returns a numpy.ndarray instance containing the training data.
+    """
+    x_train = []
+    if os.path.isdir(images_dir_path):
+        for img_file in img_file_names:
+            img_path = os.path.join(images_dir_path, img_file)
+            if os.path.exists(img_path):
+                img = ndimage.imread(fname=img_path)
+                if len(img.shape) < 3:
+                    img = img[..., np.newaxis]
+                x_train.append(img)
+            else:
+                raise ValueError("%s image does not exist" % img_file)
+    else:
+        raise ValueError("Directory containing images does not exist")
+    return np.asanyarray(x_train)
+
+
 class ClassifierBase:
     """Base class of Classifier.
 
@@ -66,17 +113,16 @@ class ClassifierBase:
             neural architecture to find the best model.
         searcher_type: The type of searcher to use. It must be 'climb' or 'random'.
         path: A path to the directory to save the classifier.
-        model_id: Identifier for the best model.
     """
-    def __init__(self, verbose=False, searcher_type=None, path=constant.DEFAULT_SAVE_PATH):
+
+    def __init__(self, verbose=False, searcher_type=None, path=constant.DEFAULT_SAVE_PATH, resume=False):
         """Initialize the instance.
 
         The classifier will be loaded from file if the directory in 'path' has a saved classifier.
         Otherwise it would create a new one.
         """
-        if has_file(os.path.join(path, 'classifier')):
+        if has_file(os.path.join(path, 'classifier')) and resume:
             classifier = pickle.load(open(os.path.join(path, 'classifier'), 'rb'))
-            classifier.searcher = pickle.load(open(os.path.join(path, 'searcher'), 'rb'))
             self.__dict__ = classifier.__dict__
         else:
             self.y_encoder = None
@@ -86,7 +132,7 @@ class ClassifierBase:
             self.path = path
             ensure_dir(path)
 
-    def fit(self, x_train=[], y_train=[], csv_file_path=None, images_path=None):
+    def fit(self, x_train=None, y_train=None, csv_file_path=None, images_path=None):
         """Find the best model.
 
         Format the input, and split the dataset into training and testing set,
@@ -99,10 +145,14 @@ class ClassifierBase:
             images_path: Path where images exist
         """
 
-        if not csv_file_path is None:
-            img_file_name, y_train = self.read_csv_file(csv_file_path)
-            if not images_path is None:
-                x_train = self.read_images(img_file_name, images_path)
+        if y_train is None:
+            y_train = []
+        if x_train is None:
+            x_train = []
+        if csv_file_path is not None:
+            img_file_name, y_train = read_csv_file(csv_file_path)
+            if images_path is not None:
+                x_train = read_images(img_file_name, images_path)
             else:
                 raise ValueError('Directory containing images is not provided')
 
@@ -188,52 +238,6 @@ class ClassifierBase:
     def load_searcher(self):
         return pickle.load(open(os.path.join(self.path, 'searcher'), 'rb'))
 
-    def read_csv_file(self, csv_file_path):
-        """
-        Read the cvs file and returns two seperate list containing images name and their labels
-        :param csv_file_path: Path to the CVS file.
-        :return: img_file_names list containing images names and img_label list containing their respective labels
-        """
-        img_file_names = []
-        img_labels = []
-        try:
-            with open(csv_file_path, 'r') as images_path:
-                path_list = csv.DictReader(images_path)
-                fieldnames = path_list.fieldnames
-                for path in path_list:
-                    img_file_names.append(path[fieldnames[0]])
-                    img_labels.append(path[fieldnames[1]])
-        except IOError as e:
-            if e.errno == errno.EACCES:
-                raise IOError('File not accessible')
-            elif e.errno == errno.ENOENT:
-                raise IOError('No such file or directory exist')
-            else:
-                raise ValueError("Illegal file type")
-        return img_file_names, img_labels
-
-    def read_images(self, img_file_names, images_dir_path):
-        """
-        Reads the images from the path and return there numpy.ndarray instance
-        :param img_file_names: List containing images names
-        :param images_dir_path: Path to directory containing images
-        :return: Returns a numpy.ndarray instance containing the training data.
-        """
-        x_train = []
-        if os.path.isdir(images_dir_path):
-            for img_file in img_file_names:
-                img_path = os.path.join(images_dir_path, img_file)
-                if os.path.exists(img_path):
-                    img = ndimage.imread(fname=img_path)
-                    if len(img.shape) < 3:
-                        img = img[..., np.newaxis]
-                    x_train.append(img)
-                else:
-                    raise ValueError("%s image does not exist" % img_file)
-        else:
-            raise ValueError("Directory containing images does not exist")
-        return np.asanyarray(x_train)
-
 
 class ImageClassifier(ClassifierBase):
     """Image classifier class inherited from ClassifierBase class.
@@ -241,5 +245,6 @@ class ImageClassifier(ClassifierBase):
     It is used for image classification. It searches convolutional neural network architectures
     for the best configuration for the dataset.
     """
-    def __init__(self, verbose=True, searcher_type='bayesian', path=constant.DEFAULT_SAVE_PATH):
-        super().__init__(verbose, searcher_type, path)
+
+    def __init__(self, verbose=True, searcher_type='bayesian', path=constant.DEFAULT_SAVE_PATH, resume=False):
+        super().__init__(verbose, searcher_type, path, resume=resume)

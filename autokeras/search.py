@@ -41,17 +41,13 @@ class Searcher:
 
         The Searcher will be loaded from file if it has been saved before.
         """
-        if has_file(os.path.join(path, "searcher")):
-            searcher = pickle.load(open(os.path.join(path, 'searcher'), 'rb'))
-            self.__dict__ = searcher.__dict__
-        else:
-            self.n_classes = n_classes
-            self.input_shape = input_shape
-            self.verbose = verbose
-            self.history_configs = []
-            self.history = []
-            self.path = path
-            self.model_count = 0
+        self.n_classes = n_classes
+        self.input_shape = input_shape
+        self.verbose = verbose
+        self.history_configs = []
+        self.history = []
+        self.path = path
+        self.model_count = 0
 
     def search(self, x_train, y_train, x_test, y_test):
         """an search strategy that will be overridden by children classes"""
