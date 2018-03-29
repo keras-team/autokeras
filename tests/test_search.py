@@ -29,6 +29,7 @@ def test_hill_climbing_searcher(_, _1):
     clean_dir(default_test_path)
     generator = HillClimbingSearcher(3, (28, 28, 1), verbose=False, path=default_test_path)
     generator.search(x_train, y_train, x_test, y_test)
+    generator.search(x_train, y_train, x_test, y_test)
     clean_dir(default_test_path)
     assert len(generator.history) == len(generator.history_configs)
 

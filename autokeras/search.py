@@ -15,7 +15,6 @@ from autokeras.net_transformer import transform
 from autokeras.stub import to_stub_model
 from autokeras.utils import ModelTrainer
 from autokeras.utils import extract_config
-from autokeras.utils import has_file
 
 
 class Searcher:
@@ -128,8 +127,7 @@ class HillClimbingSearcher(Searcher):
             self.add_model(model, x_train, y_train, x_test, y_test)
             pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
 
-        optimal_accuracy = 0.0
-        while self.model_count < constant.MAX_MODEL_NUM:
+        else:
             model = self.load_best_model()
             new_graphs = transform(Graph(to_stub_model(model)))
             new_models = []
@@ -146,10 +144,6 @@ class HillClimbingSearcher(Searcher):
                     pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
 
             backend.clear_session()
-            max_accuracy = max(self.history, key=lambda x: x['accuracy'])['accuracy']
-            if max_accuracy <= optimal_accuracy:
-                break
-            optimal_accuracy = max_accuracy
 
         return self.load_best_model()
 

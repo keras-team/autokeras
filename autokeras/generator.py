@@ -53,19 +53,25 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         conv = get_conv_layer_func(len(self._get_shape(3)))
 
         input_tensor = Input(shape=self.input_shape)
-        output_tensor = conv(32, kernel_size=self._get_shape(3),
-                             padding='same')(input_tensor)
+        output_tensor = conv(32, kernel_size=self._get_shape(3), padding='same', activation='linear')(input_tensor)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
 
-        output_tensor = pool(pool_size=self._get_shape(2), padding='same')(output_tensor)
-        output_tensor = conv(64, self._get_shape(3),
-                             padding='same')(output_tensor)
+        output_tensor = pool(padding='same')(output_tensor)
+
+        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
 
-        output_tensor = conv(64, self._get_shape(3),
-                             padding='same')(output_tensor)
+        output_tensor = pool(padding='same')(output_tensor)
+
+        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
+        output_tensor = BatchNormalization()(output_tensor)
+        output_tensor = Activation('relu')(output_tensor)
+
+        output_tensor = pool(padding='same')(output_tensor)
+
+        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
 
@@ -73,12 +79,7 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         output_tensor = Dense(128, activation='relu')(output_tensor)
         output_tensor = Dense(128, activation='relu')(output_tensor)
         output_tensor = Dense(self.n_classes, activation='softmax')(output_tensor)
-
-        model = Model(input_tensor, output_tensor)
-        model.compile(loss=categorical_crossentropy,
-                      optimizer=Adadelta(),
-                      metrics=['accuracy'])
-        return model
+        return Model(inputs=input_tensor, outputs=output_tensor)
 
 
 class RandomConvClassifierGenerator(ClassifierGenerator):
