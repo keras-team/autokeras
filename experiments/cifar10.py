@@ -1,5 +1,6 @@
+import signal
 import sys
-from keras.datasets import mnist
+from keras.datasets import cifar10
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
@@ -30,11 +31,22 @@ def select_gpu():
 
 if __name__ == '__main__':
     select_gpu()
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     X = np.concatenate((x_train, x_test))
     Y = np.concatenate((y_train, y_test))
     clf = ImageClassifier(searcher_type=sys.argv[1], path=sys.argv[2], verbose=False)
-    clf.fit(x_train, y_train)
+
+    def signal_handler(signum, frame):
+        raise Exception("Timed out!")
+
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(3)  # Ten seconds
+    try:
+        clf.fit(x_train, y_train)
+    except Exception as msg:
+        print(msg)
+        print("Timed is up!")
+    clf.final_fit(x_train, y_train)
     y = clf.evaluate(x_test, y_test)
     print(y)
     # MLP for Pima Indians Dataset with 10-fold cross validation

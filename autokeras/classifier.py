@@ -238,6 +238,12 @@ class ClassifierBase:
     def load_searcher(self):
         return pickle.load(open(os.path.join(self.path, 'searcher'), 'rb'))
 
+    def final_fit(self, x_train, y_train):
+        searcher = self.load_searcher()
+        model = searcher.load_best_model()
+        ModelTrainer(model, x_train, y_train, x_train, y_train, False).train_model()
+        searcher.replace_model(model, searcher.get_best_model_id())
+
 
 class ImageClassifier(ClassifierBase):
     """Image classifier class inherited from ClassifierBase class.

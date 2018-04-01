@@ -57,7 +57,13 @@ class Searcher:
 
     def load_best_model(self):
         """return model with best accuracy"""
-        return self.load_model_by_id(max(self.history, key=lambda x: x['accuracy'])['model_id'])
+        return self.load_model_by_id(self.get_best_model_id())
+
+    def get_best_model_id(self):
+        return max(self.history, key=lambda x: x['accuracy'])['model_id']
+
+    def replace_model(self, model, model_id):
+        model.save(os.path.join(self.path, str(model_id) + '.h5'))
 
     def add_model(self, model, x_train, y_train, x_test, y_test):
         """add one model while will be trained to history list

@@ -1,3 +1,4 @@
+import signal
 import numpy as np
 from keras import Input
 from keras.engine import Model
@@ -54,5 +55,23 @@ def gpr():
     # Conclusion: GPR can work with single fit.
 
 
-gpr()
+def long_function_call():
+    a = 1
+    for i in range(int(1e10)):
+        a += 1
 
+
+def time_limit():
+
+    def signal_handler(signum, frame):
+        raise Exception("Timed out!")
+
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(3)  # Ten seconds
+    try:
+        long_function_call()
+    except Exception as msg:
+        print(msg)
+        print("Timed is up!")
+
+time_limit()
