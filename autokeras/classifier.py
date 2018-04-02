@@ -239,6 +239,7 @@ class ClassifierBase:
         return pickle.load(open(os.path.join(self.path, 'searcher'), 'rb'))
 
     def final_fit(self, x_train, y_train):
+        y_train = self.y_encoder.transform(y_train)
         searcher = self.load_searcher()
         model = searcher.load_best_model()
         ModelTrainer(model, x_train, y_train, x_train, y_train, False).train_model()
