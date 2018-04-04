@@ -1,4 +1,5 @@
 import os
+import pickle
 
 from keras import backend
 from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D, Dense
@@ -145,3 +146,11 @@ def get_int_tuple(temp_shape):
 
 def is_pooling_layer(layer):
     return isinstance(layer, (MaxPooling1D, MaxPooling2D, MaxPooling3D))
+
+
+def pickle_from_file(path):
+    return pickle.load(open(path, 'rb'))
+
+
+def pickle_to_file(obj, path):
+    pickle.dump(obj, open(path, 'wb'))

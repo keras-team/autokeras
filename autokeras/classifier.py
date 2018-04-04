@@ -3,6 +3,8 @@ import os
 import pickle
 import csv
 import errno
+import signal
+
 import scipy.ndimage as ndimage
 
 import numpy as np
@@ -12,25 +14,7 @@ from sklearn.model_selection import train_test_split, StratifiedKFold
 from autokeras import constant
 from autokeras.preprocessor import OneHotEncoder
 from autokeras.search import HillClimbingSearcher, RandomSearcher, BayesianSearcher
-from autokeras.utils import ensure_dir, reset_weights, ModelTrainer, has_file
-
-
-def load_from_path(path=constant.DEFAULT_SAVE_PATH):
-    """Load classifier that has been saved before.
-
-    The Classifier will be saved after fitting, so you can load it later instead of training again,
-    which can save time.
-
-    Args:
-        path: The directory in which the classifier has been saved.
-
-    Returns:
-        The classifier loaded from the directory.
-    """
-    classifier = pickle.load(open(os.path.join(path, 'classifier'), 'rb'))
-    classifier.path = path
-    classifier.searcher = pickle.load(open(os.path.join(path, 'searcher'), 'rb'))
-    return classifier
+from autokeras.utils import ensure_dir, reset_weights, ModelTrainer, has_file, pickle_from_file, pickle_to_file
 
 
 def _validate(x_train, y_train):
@@ -48,7 +32,7 @@ def _validate(x_train, y_train):
 
 
 def run_searcher_once(x_train, y_train, x_test, y_test, path):
-    searcher = pickle.load(open(os.path.join(path, 'searcher'), 'rb'))
+    searcher = pickle_from_file(os.path.join(path, 'searcher'))
     searcher.search(x_train, y_train, x_test, y_test)
 
 
@@ -122,7 +106,7 @@ class ClassifierBase:
         Otherwise it would create a new one.
         """
         if has_file(os.path.join(path, 'classifier')) and resume:
-            classifier = pickle.load(open(os.path.join(path, 'classifier'), 'rb'))
+            classifier = pickle_from_file(os.path.join(path, 'classifier'))
             self.__dict__ = classifier.__dict__
         else:
             self.y_encoder = None
@@ -132,13 +116,14 @@ class ClassifierBase:
             self.path = path
             ensure_dir(path)
 
-    def fit(self, x_train=None, y_train=None, csv_file_path=None, images_path=None):
+    def fit(self, x_train=None, y_train=None, csv_file_path=None, images_path=None, time_limit=None):
         """Find the best model.
 
         Format the input, and split the dataset into training and testing set,
         save the classifier and find the best model.
 
         Args:
+            time_limit:
             x_train: An numpy.ndarray instance contains the training data.
             y_train: An numpy.ndarray instance contains the label of the training data.
             csv_file_path: CVS file path
@@ -180,14 +165,31 @@ class ClassifierBase:
         x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.25, random_state=42)
 
         pickle.dump(self, open(os.path.join(self.path, 'classifier'), 'wb'))
+        pickle_to_file(self, os.path.join(self.path, 'classifier'))
 
-        while True:
-            searcher = self.load_searcher()
-            if searcher.model_count >= constant.MAX_MODEL_NUM:
-                break
-            p = multiprocessing.Process(target=run_searcher_once, args=(x_train, y_train, x_test, y_test, self.path))
-            p.start()
-            p.join()
+        if time_limit is None:
+            while True:
+                searcher = self.load_searcher()
+                if searcher.model_count >= constant.MAX_MODEL_NUM:
+                    return
+                p = multiprocessing.Process(target=run_searcher_once, args=(x_train, y_train, x_test, y_test, self.path))
+                p.start()
+                p.join()
+
+        def signal_handler(_, _1):
+            raise TimeoutError("Timed out!")
+
+        signal.signal(signal.SIGALRM, signal_handler)
+        signal.alarm(time_limit)  # Ten seconds
+        try:
+            while True:
+                p = multiprocessing.Process(target=run_searcher_once, args=(x_train, y_train, x_test, y_test, self.path))
+                p.start()
+                p.join()
+        except TimeoutError:
+            if self.verbose:
+                print("Timed is up!")
+            return
 
     def predict(self, x_test):
         """Return predict result for the testing data.
@@ -221,7 +223,7 @@ class ClassifierBase:
     def cross_validate(self, x_all, y_all, n_splits):
         """Do the n_splits cross-validation for the input."""
         k_fold = StratifiedKFold(n_splits=n_splits, shuffle=False, random_state=7)
-        scores = []
+        ret = []
         y_raw_all = y_all
         y_all = self.y_encoder.transform(y_all)
         for train, test in k_fold.split(x_all, y_raw_all):
@@ -229,14 +231,14 @@ class ClassifierBase:
             reset_weights(model)
             ModelTrainer(model, x_all[train], y_all[train], x_all[test], y_all[test], self.verbose).train_model()
             scores = model.evaluate(x_all[test], y_all[test], verbose=self.verbose)
-            scores.append(scores[1] * 100)
-        return np.array(scores)
+            ret.append(scores[1] * 100)
+        return np.array(ret)
 
     def save_searcher(self, searcher):
         pickle.dump(searcher, open(os.path.join(self.path, 'searcher'), 'wb'))
 
     def load_searcher(self):
-        return pickle.load(open(os.path.join(self.path, 'searcher'), 'rb'))
+        return pickle_from_file(os.path.join(self.path, 'searcher'))
 
     def final_fit(self, x_train, y_train):
         y_train = self.y_encoder.transform(y_train)

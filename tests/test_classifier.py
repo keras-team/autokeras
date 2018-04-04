@@ -60,7 +60,7 @@ def test_fit_predict(_):
 
 @patch('multiprocessing.Process', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
-def test_fit_predict2(_):
+def test_timout(_):
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
@@ -71,14 +71,13 @@ def test_fit_predict2(_):
     train_x = np.random.rand(100, 25, 25, 1)
     test_x = np.random.rand(50, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf.fit(train_x, train_y)
+    clf.fit(train_x, train_y, time_limit=5)
     results = clf.predict(test_x)
     assert len(results) == 50
     clean_dir(path)
 
 
 @patch('multiprocessing.Process', new=MockProcess)
-# @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
 def test_final_fit():
     path = 'tests/resources/temp'
     clean_dir(path)
@@ -164,3 +163,21 @@ def test_fit_csv_file_1(_):
     assert len(clf.load_searcher().history) == 1
     assert len(results) == 5
     clean_dir(os.path.join(path, "temp"))
+
+
+@patch('multiprocessing.Process', new=MockProcess)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
+def test_cross_validate(_):
+    constant.MAX_ITER_NUM = 2
+    constant.MAX_MODEL_NUM = 2
+    constant.EPOCHS_EACH = 1
+    constant.N_NEIGHBORS = 1
+    path = 'tests/resources/temp'
+    clean_dir(path)
+    clf = ImageClassifier(path=path, verbose=False)
+    train_x = np.random.rand(100, 25, 1)
+    train_y = np.random.randint(0, 5, 100)
+    clf.fit(train_x, train_y)
+    results = clf.cross_validate(train_x, train_y, 2)
+    clean_dir(path)
+    assert len(results) == 2

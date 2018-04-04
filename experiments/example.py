@@ -1,10 +1,14 @@
 import signal
+
 import numpy as np
 from keras import Input
+from IPython.display import SVG
+from keras.utils.vis_utils import model_to_dot
 from keras.engine import Model
-from keras.layers import Dense
+from keras.layers import Dense, Activation
 from keras.losses import mean_squared_error
 from keras.models import Sequential
+from keras.utils import plot_model
 from sklearn.gaussian_process import GaussianProcessRegressor
 
 from autokeras.layers import WeightedAdd
@@ -71,7 +75,23 @@ def time_limit():
     try:
         long_function_call()
     except Exception as msg:
-        print(msg)
+        print(type(msg))
         print("Timed is up!")
+
+
+def visualize(model, path='/tmp/logs/model.png'):
+    svg = model_to_dot(model).create(prog='dot', format='svg')
+    print(str(svg))
+    plot_model(model, to_file=path, show_shapes=True)
+
+
+# model = Sequential()
+#
+# model.add(Dense(10, input_shape=(784,)))
+# model.add(Activation('softmax'))
+#
+# model.compile(optimizer='sgd', loss='categorical_crossentropy')
+#
+# visualize(model)
 
 time_limit()
