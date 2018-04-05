@@ -7,22 +7,22 @@ from tests.common import get_conv_model, get_conv_data, get_add_skip_model, get_
 
 def test_graph():
     graph = Graph(get_conv_model())
-    assert graph.n_nodes == 7
+    assert graph.n_nodes == 9
 
 
 def test_conv_deeper_stub():
     model = get_conv_model()
     graph = Graph(to_stub_model(model))
     layer_num = graph.n_layers
-    graph.to_conv_deeper_model(3, 3)
+    graph.to_conv_deeper_model(4, 4)
 
-    assert graph.n_layers == layer_num + 3
+    assert graph.n_layers == layer_num + 4
 
 
 def test_conv_deeper():
     model = get_conv_model()
     graph = NetworkMorphismGraph(model)
-    graph.to_conv_deeper_model(graph.layer_to_id[model.layers[4]], 3)
+    graph.to_conv_deeper_model(graph.layer_to_id[model.layers[5]], 3)
     new_model = graph.produce_model()
     input_data = get_conv_data()
 
@@ -36,15 +36,15 @@ def test_dense_deeper_stub():
     model = to_stub_model(get_conv_dense_model())
     graph = Graph(model)
     layer_num = graph.n_layers
-    graph.to_dense_deeper_model(graph.layer_to_id[model.layers[5]])
+    graph.to_dense_deeper_model(graph.layer_to_id[model.layers[6]])
 
-    assert graph.n_layers == layer_num + 1
+    assert graph.n_layers == layer_num + 2
 
 
 def test_dense_deeper():
     model = get_conv_dense_model()
     graph = NetworkMorphismGraph(model)
-    graph.to_dense_deeper_model(graph.layer_to_id[model.layers[5]])
+    graph.to_dense_deeper_model(graph.layer_to_id[model.layers[6]])
     new_model = graph.produce_model()
     input_data = get_conv_data()
 
@@ -58,7 +58,7 @@ def test_conv_wider_stub():
     model = to_stub_model(get_add_skip_model())
     graph = Graph(model)
     layer_num = graph.n_layers
-    graph.to_wider_model(graph.layer_to_id[model.layers[7]], 3)
+    graph.to_wider_model(graph.layer_to_id[model.layers[9]], 3)
 
     assert graph.n_layers == layer_num
 
@@ -66,7 +66,7 @@ def test_conv_wider_stub():
 def test_conv_wider():
     model = get_concat_skip_model()
     graph = NetworkMorphismGraph(model)
-    graph.to_wider_model(graph.layer_to_id[model.layers[4]], 3)
+    graph.to_wider_model(graph.layer_to_id[model.layers[5]], 3)
     new_model = graph.produce_model()
     input_data = get_conv_data()
 
@@ -80,7 +80,7 @@ def test_dense_wider_stub():
     model = to_stub_model(get_add_skip_model())
     graph = Graph(model)
     layer_num = graph.n_layers
-    graph.to_wider_model(graph.layer_to_id[model.layers[-2]], 3)
+    graph.to_wider_model(graph.layer_to_id[model.layers[-3]], 3)
 
     assert graph.n_layers == layer_num
 
@@ -88,7 +88,7 @@ def test_dense_wider_stub():
 def test_dense_wider():
     model = get_add_skip_model()
     graph = NetworkMorphismGraph(model)
-    graph.to_wider_model(graph.layer_to_id[model.layers[-2]], 3)
+    graph.to_wider_model(graph.layer_to_id[model.layers[-3]], 3)
     new_model = graph.produce_model()
     input_data = get_conv_data()
 
@@ -124,7 +124,7 @@ def test_skip_concat_over_pooling_stub():
     model = to_stub_model(get_pooling_model())
     graph = Graph(model)
     layer_num = graph.n_layers
-    graph.to_concat_skip_model(graph.layer_to_id[model.layers[4]], graph.layer_to_id[model.layers[11]])
+    graph.to_concat_skip_model(graph.layer_to_id[model.layers[5]], graph.layer_to_id[model.layers[14]])
 
     assert graph.n_layers == layer_num + 2
 
@@ -132,8 +132,8 @@ def test_skip_concat_over_pooling_stub():
 def test_skip_concat_over_pooling():
     model = get_pooling_model()
     graph = NetworkMorphismGraph(model)
-    graph.to_concat_skip_model(graph.layer_to_id[model.layers[4]], graph.layer_to_id[model.layers[8]])
-    graph.to_concat_skip_model(graph.layer_to_id[model.layers[4]], graph.layer_to_id[model.layers[8]])
+    graph.to_concat_skip_model(graph.layer_to_id[model.layers[5]], graph.layer_to_id[model.layers[10]])
+    graph.to_concat_skip_model(graph.layer_to_id[model.layers[5]], graph.layer_to_id[model.layers[10]])
     graph = NetworkMorphismGraph(graph.produce_model())
     new_model = graph.produce_model()
     input_data = get_conv_data()

@@ -11,7 +11,7 @@ default_test_path = 'tests/resources/temp'
 
 
 def simple_transform(graph):
-    graph.to_concat_skip_model(0, 4)
+    graph.to_concat_skip_model(0, 5)
     return [deepcopy(graph)]
 
 

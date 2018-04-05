@@ -6,10 +6,11 @@ from keras import Input
 from keras.engine import Model
 from keras.layers import Concatenate, Dense, BatchNormalization
 
+from autokeras import constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_weighted_add, \
-    wider_pre_dense, wider_pre_conv, deeper_conv_block, dense_to_deeper_layer
+    wider_pre_dense, wider_pre_conv, deeper_conv_block, dense_to_deeper_block
 from autokeras.layers import WeightedAdd, StubBatchNormalization, StubDense, StubConv, StubConcatenate, \
-    StubWeightedAdd, StubActivation, StubPooling
+    StubWeightedAdd, StubActivation, StubPooling, StubDropout
 from autokeras.utils import copy_layer, is_conv_layer, get_int_tuple, is_pooling_layer
 
 
@@ -347,17 +348,9 @@ class Graph:
         self.operation_history.append(('to_conv_deeper_model', target_id, kernel_size))
         target = self.layer_list[target_id]
         new_layers = self._deeper_conv_block(target, kernel_size)
-        output_id = self.layer_id_to_output_node_ids[target_id][0]
-        output_id = self.adj_list[output_id][0][0]
+        output_id = self._conv_block_end_node(target_id)
 
-        node_ids = []
-        for i in range(3):
-            node_ids.append(self._add_new_node())
-
-        self._add_edge(new_layers[0], node_ids[0], node_ids[1], False)
-        self._add_edge(new_layers[1], node_ids[1], node_ids[2], False)
-        self._add_edge(new_layers[2], node_ids[2], self.adj_list[output_id][0][0], False)
-        self._redirect_edge(output_id, self.adj_list[output_id][0][0], node_ids[0])
+        self._insert_new_layers(new_layers, output_id)
 
         self._refresh()
 
@@ -393,28 +386,60 @@ class Graph:
         """
         self.operation_history.append(('to_dense_deeper_model', target_id))
         target = self.layer_list[target_id]
-        new_layers = self._dense_to_deeper_layer(target)
-        old_input_id = self.layer_id_to_input_node_ids[target_id][0]
-        old_output_id = self.layer_id_to_output_node_ids[target_id][0]
+        new_layers = self._dense_to_deeper_block(target)
+        output_id = self._dense_block_end_node(target_id)
 
-        new_node_id = self._add_new_node()
-        self._add_edge(new_layers, new_node_id, old_output_id, False)
-        self._redirect_edge(old_input_id, old_output_id, new_node_id)
+        self._insert_new_layers(new_layers, output_id)
 
         self._refresh()
 
+    def _insert_new_layers(self, new_layers, output_id):
+        node_ids = []
+        n_new_layers = len(new_layers)
+        for i in range(n_new_layers):
+            node_ids.append(self._add_new_node())
+        for i in range(n_new_layers - 1):
+            self._add_edge(new_layers[i], node_ids[i], node_ids[i + 1], False)
+        self._add_edge(new_layers[n_new_layers - 1], node_ids[n_new_layers - 1], self.adj_list[output_id][0][0], False)
+        self._redirect_edge(output_id, self.adj_list[output_id][0][0], node_ids[0])
+
+    def _block_end_node(self, layer_id, block_size):
+        ret = self.layer_id_to_output_node_ids[layer_id][0]
+        for i in range(block_size - 2):
+            ret = self.adj_list[ret][0][0]
+        return ret
+
+    def _dense_block_end_node(self, layer_id):
+        return self._block_end_node(layer_id, constant.DENSE_BLOCK_SIZE)
+
+    def _conv_block_end_node(self, layer_id):
+        """
+
+        Args:
+            layer_id: the convolutional layer ID.
+
+        Returns:
+            The input node ID of the last layer in the convolutional block.
+
+        """
+        return self._block_end_node(layer_id, constant.CONV_BLOCK_SIZE)
+
     def to_add_skip_model(self, start_id, end_id):
         """Add a weighted add skip connection from before start node to end node.
+
+        Args:
+            start_id: The convolutional layer ID, before which to start the skip-connection.
+            end_id: The convolutional layer ID, after which to end the skip-connection.
 
         Returns:
             A new Keras model with the added connection.
         """
         self.operation_history.append(('to_add_skip_model', start_id, end_id))
         conv_input_id = self.layer_id_to_input_node_ids[start_id][0]
-        relu_input_id = self.adj_list[self.layer_id_to_output_node_ids[end_id][0]][0][0]
+        dropout_input_id = self._conv_block_end_node(end_id)
 
         # Add the pooling layer chain.
-        pooling_layer_list = self._get_pooling_layers(conv_input_id, relu_input_id)
+        pooling_layer_list = self._get_pooling_layers(conv_input_id, dropout_input_id)
         skip_output_id = conv_input_id
         for index, layer_id in enumerate(pooling_layer_list):
             layer = self.layer_list[layer_id]
@@ -426,10 +451,10 @@ class Graph:
         new_node_id = self._add_new_node()
         layer = self._new_weighted_add_layer()
 
-        relu_output_id = self.adj_list[relu_input_id][0][0]
-        self._redirect_edge(relu_input_id, relu_output_id, new_node_id)
-        self._add_edge(layer, new_node_id, relu_output_id, False)
-        self._add_edge(layer, skip_output_id, relu_output_id, False)
+        dropout_output_id = self.adj_list[dropout_input_id][0][0]
+        self._redirect_edge(dropout_input_id, dropout_output_id, new_node_id)
+        self._add_edge(layer, new_node_id, dropout_output_id, False)
+        self._add_edge(layer, skip_output_id, dropout_output_id, False)
 
         self._refresh()
 
@@ -440,13 +465,13 @@ class Graph:
             A new Keras model with the added connection.
         """
         self.operation_history.append(('to_concat_skip_model', start_id, end_id))
-        start = self.layer_list[start_id]
+        # start = self.layer_list[start_id]
         end = self.layer_list[end_id]
         conv_input_id = self.layer_id_to_input_node_ids[start_id][0]
-        relu_input_id = self.adj_list[self.layer_id_to_output_node_ids[end_id][0]][0][0]
+        dropout_input_id = self._conv_block_end_node(end_id)
 
         # Add the pooling layer chain.
-        pooling_layer_list = self._get_pooling_layers(conv_input_id, relu_input_id)
+        pooling_layer_list = self._get_pooling_layers(conv_input_id, dropout_input_id)
         skip_output_id = conv_input_id
         for index, layer_id in enumerate(pooling_layer_list):
             layer = self.layer_list[layer_id]
@@ -458,20 +483,20 @@ class Graph:
         new_node_id = self._add_new_node()
         layer = self._new_concat_layer()
 
-        relu_output_id = self.adj_list[relu_input_id][0][0]
-        self._redirect_edge(relu_input_id, relu_output_id, new_node_id)
-        self._add_edge(layer, new_node_id, relu_output_id, False)
-        self._add_edge(layer, skip_output_id, relu_output_id, False)
+        dropout_output_id = self.adj_list[dropout_input_id][0][0]
+        self._redirect_edge(dropout_input_id, dropout_output_id, new_node_id)
+        self._add_edge(layer, new_node_id, dropout_output_id, False)
+        self._add_edge(layer, skip_output_id, dropout_output_id, False)
 
         # Widen the related layers.
         self.next_vis = [False] * self.n_nodes
         self.pre_vis = [False] * self.n_nodes
         self.middle_layer_vis = [False] * len(self.layer_list)
 
-        self.pre_vis[relu_output_id] = True
+        self.pre_vis[dropout_output_id] = True
         dim = self._layer_width(end)
         n_add = self._upper_layer_width(conv_input_id)
-        self._search_next(relu_output_id, dim, dim, n_add)
+        self._search_next(dropout_output_id, dim, dim, n_add)
 
         self._refresh()
 
@@ -527,10 +552,10 @@ class Graph:
         return StubDense(self._layer_width(layer) + n_add)
 
     def _deeper_conv_block(self, target, kernel_size):
-        return [StubConv(self._layer_width(target)), StubBatchNormalization(), StubActivation()]
+        return [StubConv(self._layer_width(target)), StubBatchNormalization(), StubActivation(), StubDropout()]
 
-    def _dense_to_deeper_layer(self, target):
-        return StubDense(self._layer_width(target))
+    def _dense_to_deeper_block(self, target):
+        return [StubDense(self._layer_width(target)), StubDropout()]
 
     def _is_layer(self, layer, layer_type):
         if layer_type == 'Conv':
@@ -564,6 +589,7 @@ class Graph:
 
     def _new_weighted_add_layer(self):
         return StubWeightedAdd()
+
 
 
 class NetworkMorphismGraph(Graph):
@@ -602,8 +628,8 @@ class NetworkMorphismGraph(Graph):
     def _deeper_conv_block(self, target, kernel_size):
         return deeper_conv_block(target, kernel_size)
 
-    def _dense_to_deeper_layer(self, target):
-        return dense_to_deeper_layer(target)
+    def _dense_to_deeper_block(self, target):
+        return dense_to_deeper_block(target)
 
     def _copy_layer(self, layer):
         return copy_layer(layer)

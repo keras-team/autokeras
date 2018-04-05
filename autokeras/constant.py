@@ -13,6 +13,11 @@ EPOCHS_EACH = 1
 N_NEIGHBORS = 8
 ACQ_EXPLOITATION_DEPTH = 4
 
+DENSE_DROPOUT_RATE = 0.5
+CONV_DROPOUT_RATE = 0.25
+CONV_BLOCK_SIZE = 4
+DENSE_BLOCK_SIZE = 2
+
 LAYER_ATTR = {'Dense': ['units', 'activation'],
               'Dropout': ['rate'],
               'MaxPooling1D': ['pool_size'],
@@ -23,5 +28,3 @@ LAYER_ATTR = {'Dense': ['units', 'activation'],
               'Conv3D': ['filters', 'activation', 'kernel_size'],
               'Flatten': []
               }
-
-

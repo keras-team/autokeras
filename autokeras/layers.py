@@ -83,6 +83,10 @@ class StubPooling(StubLayer):
     pass
 
 
+class StubDropout(StubLayer):
+    pass
+
+
 class StubInput(StubLayer):
     def __init__(self, units, input_node=None, output_node=None):
         super().__init__(input_node, output_node)

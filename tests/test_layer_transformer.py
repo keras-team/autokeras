@@ -27,8 +27,8 @@ def test_dense_to_deeper_layer():
     model.compile(loss=categorical_crossentropy,
                   optimizer=Adadelta(),
                   metrics=['accuracy'])
-    a2 = dense_to_deeper_layer(a)
-    model2 = Sequential([a, a2])
+    a2 = dense_to_deeper_block(a)
+    model2 = Sequential([a] + a2)
     model2.compile(loss=categorical_crossentropy,
                    optimizer=Adadelta(),
                    metrics=['accuracy'])
@@ -65,13 +65,13 @@ def test_wider_bn():
 
 
 def test_wider_weighted_add():
-    layer = get_add_skip_model().layers[10]
+    layer = get_add_skip_model().layers[13]
     new_layer = wider_weighted_add(layer, 4)
     assert isinstance(new_layer, WeightedAdd)
 
 
 def test_wider_next_dense():
-    layer = get_conv_dense_model().layers[5]
+    layer = get_conv_dense_model().layers[6]
     new_layer = wider_next_dense(layer, 3, 3, 3)
     assert new_layer.get_weights()[0].shape == (150, 5)
 
@@ -81,7 +81,7 @@ def test_wider_conv():
 
     layer1 = wider_pre_conv(model.layers[1], 3)
     layer2 = wider_bn(model.layers[2], 3, 3, 3)
-    layer3 = wider_next_conv(model.layers[4], 3, 3, 3)
+    layer3 = wider_next_conv(model.layers[5], 3, 3, 3)
 
     input_tensor = Input(shape=(5, 5, 3))
     output_tensor = layer1(input_tensor)

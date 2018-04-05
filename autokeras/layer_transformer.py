@@ -1,6 +1,7 @@
 import numpy as np
-from keras.layers import Dense, BatchNormalization, Activation
+from keras.layers import Dense, BatchNormalization, Activation, Dropout
 
+from autokeras import constant
 from autokeras.layers import WeightedAdd
 from autokeras.utils import get_conv_layer_func, get_int_tuple
 
@@ -35,10 +36,11 @@ def deeper_conv_block(conv_layer, kernel_size):
     new_conv_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
     return [new_conv_layer,
             BatchNormalization(),
-            Activation('relu')]
+            Activation('relu'),
+            Dropout(constant.CONV_DROPOUT_RATE)]
 
 
-def dense_to_deeper_layer(dense_layer):
+def dense_to_deeper_block(dense_layer):
     """Get deeper layer for dense layer
 
     Args:
@@ -53,7 +55,7 @@ def dense_to_deeper_layer(dense_layer):
     new_dense_layer = Dense(units, activation='relu')
     new_dense_layer.build((None, units))
     new_dense_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
-    return new_dense_layer
+    return [new_dense_layer, Dropout(constant.DENSE_DROPOUT_RATE)]
 
 
 def wider_pre_dense(layer, n_add):

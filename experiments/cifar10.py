@@ -1,19 +1,10 @@
-import signal
 import sys
 from keras.datasets import cifar10
 import numpy as np
-import tensorflow as tf
-from keras import backend as K
-# Create first network with Keras
-from keras.models import Sequential
-from keras.layers import Dense
-import numpy as np
 
 import os
-# Import os to set the environment variable CUDA_VISIBLE_DEVICES
 import GPUtil
 
-from autokeras import constant
 from autokeras.classifier import ImageClassifier
 
 
@@ -36,16 +27,7 @@ if __name__ == '__main__':
     Y = np.concatenate((y_train, y_test))
     clf = ImageClassifier(searcher_type=sys.argv[1], path=sys.argv[2], verbose=False)
 
-    def signal_handler(signum, frame):
-        raise Exception("Timed out!")
-
-    signal.signal(signal.SIGALRM, signal_handler)
-    signal.alarm(3)  # Ten seconds
-    try:
-        clf.fit(x_train, y_train)
-    except Exception as msg:
-        print(msg)
-        print("Timed is up!")
+    clf.fit(x_train, y_train)
     clf.final_fit(x_train, y_train)
     y = clf.evaluate(x_test, y_test)
     print(y)

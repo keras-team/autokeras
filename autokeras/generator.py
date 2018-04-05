@@ -6,6 +6,7 @@ from keras.layers import MaxPooling1D, MaxPooling2D, MaxPooling3D, Dropout, Flat
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adadelta, Adam
 
+from autokeras import constant
 from autokeras.utils import get_conv_layer_func
 
 
@@ -53,27 +54,31 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         conv = get_conv_layer_func(len(self._get_shape(3)))
 
         input_tensor = Input(shape=self.input_shape)
-        output_tensor = conv(32, kernel_size=self._get_shape(3), padding='same', activation='linear')(input_tensor)
+        output_tensor = conv(32, kernel_size=self._get_shape(3), padding='same')(input_tensor)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
+        output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
         output_tensor = pool(padding='same')(output_tensor)
 
         output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
+        output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
         output_tensor = pool(padding='same')(output_tensor)
 
         output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
+        output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
         output_tensor = pool(padding='same')(output_tensor)
 
         output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
+        output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
         output_tensor = Flatten()(output_tensor)
         output_tensor = Dense(128, activation='relu')(output_tensor)
