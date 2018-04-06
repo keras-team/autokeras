@@ -2,11 +2,14 @@ import os
 import pickle
 
 from keras import backend
-from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D, Dense
+from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D, Dense, BatchNormalization, \
+    Concatenate, Dropout, Activation, Flatten
 from tensorflow import Dimension
 
 from autokeras import constant
 from autokeras.constant import CONV_FUNC_LIST
+from autokeras.layers import StubConv, StubDense, StubBatchNormalization, StubConcatenate, StubWeightedAdd, WeightedAdd, \
+    StubPooling, StubDropout, StubActivation, StubFlatten
 
 
 def is_conv_layer(layer):
@@ -154,3 +157,32 @@ def pickle_from_file(path):
 
 def pickle_to_file(obj, path):
     pickle.dump(obj, open(path, 'wb'))
+
+
+def is_layer(layer, layer_type):
+    if layer_type == 'Conv':
+        return isinstance(layer, StubConv) or is_conv_layer(layer)
+    if layer_type == 'Dense':
+        return isinstance(layer, (StubDense, Dense))
+    if layer_type == 'BatchNormalization':
+        return isinstance(layer, (StubBatchNormalization, BatchNormalization))
+    if layer_type == 'Concatenate':
+        return isinstance(layer, (StubConcatenate, Concatenate))
+    if layer_type == 'WeightedAdd':
+        return isinstance(layer, (StubWeightedAdd, WeightedAdd))
+    if layer_type == 'Pooling':
+        return isinstance(layer, StubPooling) or is_pooling_layer(layer)
+    if layer_type == 'Dropout':
+        return isinstance(layer, (StubDropout, Dropout))
+    if layer_type == 'Activation':
+        return isinstance(layer, (StubActivation, Activation))
+    if layer_type == 'Flatten':
+        return isinstance(layer, (StubFlatten, Flatten))
+
+
+def layer_width(layer):
+    if is_layer(layer, 'Dense'):
+        return layer.units
+    if is_layer(layer, 'Conv'):
+        return layer.filters
+    raise TypeError('The layer should be either Dense or Conv layer.')

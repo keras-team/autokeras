@@ -1,17 +1,17 @@
 import numpy as np
-from keras.layers import Dense, BatchNormalization, Activation, Dropout
 
 from autokeras import constant
-from autokeras.layers import WeightedAdd
-from autokeras.utils import get_conv_layer_func, get_int_tuple
+from autokeras.layers import StubConv, StubBatchNormalization, StubActivation, StubDropout, StubDense, \
+    StubWeightedAdd
 
 NOISE_RATIO = 1e-4
 
 
-def deeper_conv_block(conv_layer, kernel_size):
+def deeper_conv_block(conv_layer, kernel_size, weighted=True):
     """Get deeper layer for convolution layer
 
     Args:
+        weighted:
         conv_layer: the convolution layer from which we get deeper layer
         kernel_size: the size of kernel
 
@@ -28,22 +28,28 @@ def deeper_conv_block(conv_layer, kernel_size):
         filter_weight[index] = 1
         weight[..., i] = filter_weight
     bias = np.zeros(n_filters)
-    conv_func = get_conv_layer_func(len(filter_shape))
-    new_conv_layer = conv_func(n_filters,
-                               kernel_size=filter_shape,
-                               padding='same')
-    new_conv_layer.build((None,) * (len(filter_shape) + 1) + (n_filters,))
-    new_conv_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
+    new_conv_layer = StubConv(n_filters, kernel_size=filter_shape, func=conv_layer.func)
+    bn = StubBatchNormalization()
+
+    if weighted:
+        new_conv_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
+        new_weights = [np.ones(n_filters, dtype=np.float32),
+                       np.zeros(n_filters, dtype=np.float32),
+                       np.zeros(n_filters, dtype=np.float32),
+                       np.ones(n_filters, dtype=np.float32)]
+        bn.set_weights(new_weights)
+
     return [new_conv_layer,
-            BatchNormalization(),
-            Activation('relu'),
-            Dropout(constant.CONV_DROPOUT_RATE)]
+            bn,
+            StubActivation('relu'),
+            StubDropout(constant.CONV_DROPOUT_RATE)]
 
 
-def dense_to_deeper_block(dense_layer):
+def dense_to_deeper_block(dense_layer, weighted=True):
     """Get deeper layer for dense layer
 
     Args:
+        weighted:
         dense_layer: the dense layer from which we get deeper layer
 
     Returns:
@@ -52,23 +58,26 @@ def dense_to_deeper_block(dense_layer):
     units = dense_layer.units
     weight = np.eye(units)
     bias = np.zeros(units)
-    new_dense_layer = Dense(units, activation='relu')
-    new_dense_layer.build((None, units))
-    new_dense_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
-    return [new_dense_layer, Dropout(constant.DENSE_DROPOUT_RATE)]
+    new_dense_layer = StubDense(units, dense_layer.activation)
+    if weighted:
+        new_dense_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
+    return [new_dense_layer, StubDropout(constant.DENSE_DROPOUT_RATE)]
 
 
-def wider_pre_dense(layer, n_add):
+def wider_pre_dense(layer, n_add, weighted=True):
     """Get previous dense layer for current layer
 
    Args:
+       weighted:
        layer: the layer from which we get wide previous dense layer
        n_add: output shape
 
    Returns:
        The previous dense layer
    """
-    n_units1 = layer.get_weights()[0].shape[0]
+    if not weighted:
+        return StubDense(layer.units + n_add, layer.activation)
+
     n_units2 = layer.units
 
     teacher_w, teacher_b = layer.get_weights()
@@ -84,27 +93,29 @@ def wider_pre_dense(layer, n_add):
         student_w = np.concatenate((student_w, add_noise(new_weight, student_w)), axis=1)
         student_b = np.append(student_b, add_noise(teacher_b[teacher_index], student_b))
 
-    new_pre_layer = Dense(n_units2 + n_add, input_shape=(n_units1,), activation='relu')
-    new_pre_layer.build((None, n_units1))
+    new_pre_layer = StubDense(n_units2 + n_add, layer.activation)
     new_pre_layer.set_weights((student_w, student_b))
 
     return new_pre_layer
 
 
-def wider_pre_conv(layer, n_add_filters):
+def wider_pre_conv(layer, n_add_filters, weighted=True):
     """Get previous convolution layer for current layer
 
    Args:
+       weighted:
        layer: layer from which we get wider previous convolution layer
        n_add_filters: the filters size of convolution layer
 
    Returns:
        The previous convolution layer
    """
+    if not weighted:
+        return StubConv(layer.filters + n_add_filters, kernel_size=layer.kernel_size, func=layer.func)
+
     pre_filter_shape = layer.kernel_size
     n_pre_filters = layer.filters
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
-    conv_func = get_conv_layer_func(len(pre_filter_shape))
     teacher_w, teacher_b = layer.get_weights()
     student_w = teacher_w.copy()
     student_b = teacher_b.copy()
@@ -115,28 +126,27 @@ def wider_pre_conv(layer, n_add_filters):
         new_weight = new_weight[..., np.newaxis]
         student_w = np.concatenate((student_w, new_weight), axis=-1)
         student_b = np.append(student_b, teacher_b[teacher_index])
-    new_pre_layer = conv_func(n_pre_filters + n_add_filters,
-                              kernel_size=pre_filter_shape,
-                              padding='same')
-    new_pre_layer.build((None,) * (len(pre_filter_shape) + 1) + (student_w.shape[-2],))
+    new_pre_layer = StubConv(n_pre_filters + n_add_filters, kernel_size=pre_filter_shape, func=layer.func)
     new_pre_layer.set_weights((add_noise(student_w, teacher_w), add_noise(student_b, teacher_b)))
     return new_pre_layer
 
 
-def wider_next_conv(layer, start_dim, total_dim, n_add):
+def wider_next_conv(layer, start_dim, total_dim, n_add, weighted=True):
     """Get next wider convolution layer for current layer
 
-   Args:
+    Args:
+       weighted:
        layer: the layer from which we get wider next convolution layer
        start_dim: the started dimension
        total_dim: the total dimension
        n_add: the filters size of convolution layer
 
-   Returns:
+    Returns:
        The next wider convolution layer
-   """
+    """
+    if not weighted:
+        return StubConv(layer.filters, kernel_size=layer.kernel_size, func=layer.func)
     filter_shape = layer.kernel_size
-    conv_func = get_conv_layer_func(len(filter_shape))
     n_filters = layer.filters
     teacher_w, teacher_b = layer.get_weights()
 
@@ -147,17 +157,16 @@ def wider_next_conv(layer, start_dim, total_dim, n_add):
     student_w = np.concatenate((teacher_w[..., :start_dim, :].copy(),
                                 add_noise(new_weight, teacher_w),
                                 teacher_w[..., start_dim:total_dim, :].copy()), axis=-2)
-    new_layer = conv_func(n_filters, kernel_size=filter_shape, padding='same')
-    input_shape = list((None,) * (len(filter_shape) + 1) + (student_w.shape[-2],))
-    new_layer.build(tuple(input_shape))
+    new_layer = StubConv(n_filters, kernel_size=filter_shape, func=layer.func)
     new_layer.set_weights((student_w, teacher_b))
     return new_layer
 
 
-def wider_bn(layer, start_dim, total_dim, n_add):
+def wider_bn(layer, start_dim, total_dim, n_add, weighted=True):
     """Get new layer with wider batch normalization for current layer
 
    Args:
+       weighted:
        layer: the layer from which we get new layer with wider batch normalization
        start_dim: the started dimension
        total_dim: the total dimension
@@ -166,41 +175,41 @@ def wider_bn(layer, start_dim, total_dim, n_add):
    Returns:
        The new layer with wider batch normalization
    """
+    if not weighted:
+        return StubBatchNormalization()
+
     weights = layer.get_weights()
 
-    input_shape = list((None,) * layer.input_spec.ndim)
-    input_shape[-1] = get_int_tuple(layer.gamma.shape)[0]
-    input_shape[-1] += n_add
-
-    temp_layer = BatchNormalization()
-    add_input_shape = list(input_shape)
-    add_input_shape[-1] = n_add
-    temp_layer.build(tuple(add_input_shape))
-    new_weights = temp_layer.get_weights()
+    new_weights = [np.ones(n_add, dtype=np.float32),
+                   np.zeros(n_add, dtype=np.float32),
+                   np.zeros(n_add, dtype=np.float32),
+                   np.ones(n_add, dtype=np.float32)]
 
     student_w = tuple()
     for weight, new_weight in zip(weights, new_weights):
         temp_w = weight.copy()
         temp_w = np.concatenate((temp_w[:start_dim], new_weight, temp_w[start_dim:total_dim]))
         student_w += (temp_w,)
-    new_layer = BatchNormalization()
-    new_layer.build(input_shape)
+    new_layer = StubBatchNormalization()
     new_layer.set_weights(student_w)
     return new_layer
 
 
-def wider_next_dense(layer, start_dim, total_dim, n_add):
+def wider_next_dense(layer, start_dim, total_dim, n_add, weighted=True):
     """Get next dense layer for current layer
 
-   Args:
+    Args:
+       weighted:
        layer: the dense layer from which we search next dense layer
        n_add: output shape
        start_dim: the started dimension
        total_dim: the total dimension
 
-   Returns:
+    Returns:
        The next dense layer
-   """
+    """
+    if not weighted:
+        return StubDense(layer.units, layer.activation)
     n_units = layer.units
     teacher_w, teacher_b = layer.get_weights()
     student_w = teacher_w.copy()
@@ -211,27 +220,27 @@ def wider_next_dense(layer, start_dim, total_dim, n_add):
                                 add_noise(new_weight, student_w),
                                 student_w[start_dim * n_units_each_channel:total_dim * n_units_each_channel]))
 
-    new_layer = Dense(n_units, activation=layer.get_config()['activation'])
-    new_layer.build((None, student_w.shape[0]))
+    new_layer = StubDense(n_units, layer.activation)
     new_layer.set_weights((student_w, teacher_b))
     return new_layer
 
 
-def wider_weighted_add(layer, n_add):
+def wider_weighted_add(layer, n_add, weighted=True):
     """Return wider weighted add layer
 
     Args:
+        weighted:
         layer: the layer from which we get wider weighted add layer
         n_add: output shape
 
     Returns:
         The wider weighted add layer
     """
-    input_shape, _ = get_int_tuple(layer.input_shape)
-    input_shape = list(input_shape)
-    input_shape[-1] += n_add
-    new_layer = WeightedAdd()
-    # new_layer.build([input_shape, input_shape])
+    if not weighted:
+        return StubWeightedAdd()
+
+    n_add += 0
+    new_layer = StubWeightedAdd()
     new_layer.set_weights(layer.get_weights())
     return new_layer
 

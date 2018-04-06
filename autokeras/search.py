@@ -10,9 +10,8 @@ from keras import backend
 from autokeras import constant
 from autokeras.bayesian import IncrementalGaussianProcess
 from autokeras.generator import RandomConvClassifierGenerator, DefaultClassifierGenerator
-from autokeras.graph import Graph, NetworkMorphismGraph
+from autokeras.graph import Graph
 from autokeras.net_transformer import transform
-from autokeras.stub import to_stub_model
 from autokeras.utils import ModelTrainer
 from autokeras.utils import extract_config
 
@@ -135,10 +134,10 @@ class HillClimbingSearcher(Searcher):
 
         else:
             model = self.load_best_model()
-            new_graphs = transform(Graph(to_stub_model(model)))
+            new_graphs = transform(Graph(model, False))
             new_models = []
             for graph in new_graphs:
-                nm_graph = NetworkMorphismGraph(model)
+                nm_graph = Graph(model, True)
                 for args in graph.operation_history:
                     getattr(nm_graph, args[0])(*list(args[1:]))
                     new_models.append(nm_graph.produce_model())
@@ -190,7 +189,7 @@ class BayesianSearcher(Searcher):
         # exploration
         for model_id in model_ids:
             model = self.load_model_by_id(model_id)
-            graph = Graph(to_stub_model(model))
+            graph = Graph(model, False)
             graph.clear_operation_history()
             graphs = transform(graph)
             for temp_graph in graphs:
@@ -210,7 +209,7 @@ class BayesianSearcher(Searcher):
                     target_graph = temp_graph
 
         model = self.load_model_by_id(father_id)
-        nm_graph = NetworkMorphismGraph(model)
+        nm_graph = Graph(model, True)
         for args in target_graph.operation_history:
             getattr(nm_graph, args[0])(*list(args[1:]))
         return nm_graph.produce_model(), father_id

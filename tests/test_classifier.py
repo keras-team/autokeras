@@ -1,3 +1,4 @@
+from time import sleep
 from unittest.mock import patch
 
 import pytest
@@ -59,7 +60,7 @@ def test_fit_predict(_):
 
 
 @patch('multiprocessing.Process', new=MockProcess)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: sleep(6))
 def test_timout(_):
     path = 'tests/resources/temp'
     clean_dir(path)
@@ -69,11 +70,8 @@ def test_timout(_):
     constant.EPOCHS_EACH = 1
     constant.N_NEIGHBORS = 1
     train_x = np.random.rand(100, 25, 25, 1)
-    test_x = np.random.rand(50, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y, time_limit=5)
-    results = clf.predict(test_x)
-    assert len(results) == 50
     clean_dir(path)
 
 

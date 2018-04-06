@@ -1,5 +1,5 @@
 from keras import backend
-from keras.layers import Add
+from keras.layers import Add, Conv2D, Conv3D, Conv1D
 
 
 class WeightedAdd(Add):
@@ -37,9 +37,18 @@ class StubLayer:
     def __init__(self, input_node=None, output_node=None):
         self.input = input_node
         self.output = output_node
+        self.weights = None
+        self.input_shape = None
+        self.output_shape = None
 
     def build(self, shape):
         pass
+
+    def set_weights(self, weights):
+        self.weights = weights
+
+    def get_weights(self):
+        return self.weights
 
 
 class StubBatchNormalization(StubLayer):
@@ -47,17 +56,26 @@ class StubBatchNormalization(StubLayer):
 
 
 class StubDense(StubLayer):
-    def __init__(self, units, input_node=None, output_node=None):
+    def __init__(self, units, activation, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
         self.units = units
         self.output_shape = (None, units)
+        self.activation = activation
 
 
 class StubConv(StubLayer):
-    def __init__(self, filters, input_node=None, output_node=None):
+    def __init__(self, filters, kernel_size, func, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
         self.filters = filters
         self.output_shape = (None, filters)
+        self.kernel_size = kernel_size
+        self.func = func
+        if func is Conv1D:
+            self.n_dim = 1
+        if func is Conv2D:
+            self.n_dim = 2
+        if func is Conv3D:
+            self.n_dim = 3
 
 
 class StubAggregateLayer(StubLayer):
@@ -75,16 +93,26 @@ class StubWeightedAdd(StubAggregateLayer):
     pass
 
 
-class StubActivation(StubLayer):
+class StubFlatten(StubLayer):
     pass
+
+
+class StubActivation(StubLayer):
+    def __init__(self, func, input_node=None, output_node=None):
+        super().__init__(input_node, output_node)
+        self.func = func
 
 
 class StubPooling(StubLayer):
-    pass
+    def __init__(self, func, input_node=None, output_node=None):
+        super().__init__(input_node, output_node)
+        self.func = func
 
 
 class StubDropout(StubLayer):
-    pass
+    def __init__(self, rate, input_node=None, output_node=None):
+        super().__init__(input_node, output_node)
+        self.rate = rate
 
 
 class StubInput(StubLayer):
