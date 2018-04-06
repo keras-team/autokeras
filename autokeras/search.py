@@ -1,18 +1,18 @@
 import os
-import pickle
 import numpy as np
 
 from keras.losses import categorical_crossentropy
 from keras.models import load_model
 from keras.optimizers import Adadelta
 from keras import backend
+from keras.utils import plot_model
 
 from autokeras import constant
 from autokeras.bayesian import IncrementalGaussianProcess
 from autokeras.generator import RandomConvClassifierGenerator, DefaultClassifierGenerator
 from autokeras.graph import Graph
 from autokeras.net_transformer import transform
-from autokeras.utils import ModelTrainer
+from autokeras.utils import ModelTrainer, pickle_to_file
 from autokeras.utils import extract_config
 
 
@@ -78,6 +78,7 @@ class Searcher:
         ModelTrainer(model, x_train, y_train, x_test, y_test, self.verbose).train_model()
         loss, accuracy = model.evaluate(x_test, y_test, verbose=self.verbose)
         model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
+        plot_model(model, to_file=os.path.join(self.path, str(self.model_count) + '.png'), show_shapes=True)
 
         ret = {'model_id': self.model_count, 'loss': loss, 'accuracy': accuracy}
         self.history.append(ret)
@@ -101,7 +102,7 @@ class RandomSearcher(Searcher):
         while self.model_count < constant.MAX_MODEL_NUM:
             model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
             self.add_model(model, x_train, y_train, x_test, y_test)
-            pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
+            pickle_to_file(self, os.path.join(self.path, 'searcher'))
             backend.clear_session()
 
         return self.load_best_model()
@@ -130,7 +131,7 @@ class HillClimbingSearcher(Searcher):
         if not self.history:
             model = DefaultClassifierGenerator(self.n_classes, self.input_shape).generate()
             self.add_model(model, x_train, y_train, x_test, y_test)
-            pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
+            pickle_to_file(self, os.path.join(self.path, 'searcher'))
 
         else:
             model = self.load_best_model()
@@ -146,7 +147,7 @@ class HillClimbingSearcher(Searcher):
             for model in new_models:
                 if self.model_count < constant.MAX_MODEL_NUM:
                     self.add_model(model, x_train, y_train, x_test, y_test)
-                    pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
+                    pickle_to_file(self, os.path.join(self.path, 'searcher'))
 
             backend.clear_session()
 
@@ -166,7 +167,7 @@ class BayesianSearcher(Searcher):
             history_item = self.add_model(model, x_train, y_train, x_test, y_test)
             self.search_tree.add_child(-1, history_item['model_id'])
             self.gpr.first_fit(Graph(model).extract_descriptor(), history_item['accuracy'])
-            pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
+            pickle_to_file(self, os.path.join(self.path, 'searcher'))
             del model
             backend.clear_session()
 
@@ -177,7 +178,7 @@ class BayesianSearcher(Searcher):
             history_item = self.add_model(new_model, x_train, y_train, x_test, y_test)
             self.search_tree.add_child(father_id, history_item['model_id'])
             self.gpr.incremental_fit(Graph(new_model).extract_descriptor(), history_item['accuracy'])
-            pickle.dump(self, open(os.path.join(self.path, 'searcher'), 'wb'))
+            pickle_to_file(self, os.path.join(self.path, 'searcher'))
             del new_model
             backend.clear_session()
 
