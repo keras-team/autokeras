@@ -7,3 +7,4 @@ tensorflow
 keras
 Pillow
 scipy
+pydot
