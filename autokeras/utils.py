@@ -88,18 +88,6 @@ class ModelTrainer:
         return self.minimum_loss
 
 
-def copy_layer(layer, input_shape=None):
-    """Return a copied layer"""
-    if input_shape is None:
-        input_shape = layer.input_shape
-    layer_config = layer.get_config()
-    layer_config.pop('name', None)
-    new_layer = layer.__class__.from_config(layer_config)
-    new_layer.build(input_shape)
-    new_layer.set_weights(layer.get_weights())
-    return new_layer
-
-
 def extract_config(network):
     """Return configuration of one model"""
     return network.get_config()
@@ -127,13 +115,6 @@ def reset_weights(model):
     for layer in model.layers:
         if hasattr(layer, 'kernel_initializer'):
             layer.kernel.initializer.run(session=session)
-
-
-def get_layer_size(layer):
-    """Return the size of layer"""
-    if is_conv_layer(layer):
-        return layer.filters
-    return layer.units
 
 
 def get_int_tuple(temp_shape):

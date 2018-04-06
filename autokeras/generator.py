@@ -82,7 +82,9 @@ class DefaultClassifierGenerator(ClassifierGenerator):
 
         output_tensor = Flatten()(output_tensor)
         output_tensor = Dense(128, activation='relu')(output_tensor)
+        output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
         output_tensor = Dense(128, activation='relu')(output_tensor)
+        output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
         output_tensor = Dense(self.n_classes, activation='softmax')(output_tensor)
         return Model(inputs=input_tensor, outputs=output_tensor)
 
