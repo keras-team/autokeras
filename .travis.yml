@@ -1,6 +1,8 @@
 language: python
 python:
   - "3.6"
+before_install:
+  - sudo apt-get install graphviz
 script:
   - pytest tests --cov=autokeras
 after_success:
