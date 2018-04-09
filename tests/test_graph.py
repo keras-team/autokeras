@@ -101,7 +101,7 @@ def test_skip_add_over_pooling_stub():
     model = get_pooling_model()
     graph = Graph(model, False)
     layer_num = graph.n_layers
-    graph.to_add_skip_model(3, 10)
+    graph.to_add_skip_model(0, 10)
 
     assert graph.n_layers == layer_num + 2
 
@@ -109,7 +109,7 @@ def test_skip_add_over_pooling_stub():
 def test_skip_add_over_pooling():
     model = get_pooling_model()
     graph = Graph(model, True)
-    graph.to_add_skip_model(3, 10)
+    graph.to_add_skip_model(0, 10)
     new_model = graph.produce_model()
     input_data = get_conv_data()
 
@@ -123,7 +123,7 @@ def test_skip_concat_over_pooling_stub():
     model = get_pooling_model()
     graph = Graph(model, False)
     layer_num = graph.n_layers
-    graph.to_concat_skip_model(4, 13)
+    graph.to_concat_skip_model(0, 13)
 
     assert graph.n_layers == layer_num + 2
 

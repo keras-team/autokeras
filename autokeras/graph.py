@@ -439,14 +439,17 @@ class Graph:
         """Add a weighted add skip connection from before start node to end node.
 
         Args:
-            start_id: The convolutional layer ID, before which to start the skip-connection.
+            start_id: The convolutional layer ID, after which to start the skip-connection.
             end_id: The convolutional layer ID, after which to end the skip-connection.
 
         Returns:
             A new Keras model with the added connection.
         """
         self.operation_history.append(('to_add_skip_model', start_id, end_id))
+        conv_layer_ids = self._conv_layer_ids_in_order()
+        start_id = conv_layer_ids[conv_layer_ids.index(start_id) + 1]
         conv_input_id = self.layer_id_to_input_node_ids[start_id][0]
+
         dropout_input_id = self._conv_block_end_node(end_id)
 
         # Add the pooling layer chain.
@@ -477,8 +480,11 @@ class Graph:
         """
         self.operation_history.append(('to_concat_skip_model', start_id, end_id))
         # start = self.layer_list[start_id]
-        end = self.layer_list[end_id]
+        conv_layer_ids = self._conv_layer_ids_in_order()
+        start_id = conv_layer_ids[conv_layer_ids.index(start_id) + 1]
         conv_input_id = self.layer_id_to_input_node_ids[start_id][0]
+
+        end = self.layer_list[end_id]
         dropout_input_id = self._conv_block_end_node(end_id)
 
         # Add the pooling layer chain.

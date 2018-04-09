@@ -52,7 +52,7 @@ def to_skip_connection_graph(graph):
         index_a, index_b = index_b, index_a
     a_id = weighted_layer_ids[index_a]
     b_id = weighted_layer_ids[index_b]
-    if graph.layer_list[a_id].output_shape[-1] != graph.layer_list[b_id].output_shape[-1]:
+    if graph.layer_list[a_id].filters != graph.layer_list[b_id].filters:
         graph.to_concat_skip_model(a_id, b_id)
     elif random() < 0.5:
         graph.to_add_skip_model(a_id, b_id)
