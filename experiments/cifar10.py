@@ -27,7 +27,7 @@ if __name__ == '__main__':
     Y = np.concatenate((y_train, y_test))
     clf = ImageClassifier(searcher_type=sys.argv[1], path=sys.argv[2], verbose=False)
 
-    clf.fit(x_train, y_train)
+    clf.fit(x_train, y_train, time_limit=12*60*60)
     clf.final_fit(x_train, y_train)
     y = clf.evaluate(x_test, y_test)
     print(y)

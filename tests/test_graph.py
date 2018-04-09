@@ -158,3 +158,21 @@ def test_extract_descriptor_concat():
     assert descriptor.n_dense == 2
     assert descriptor.skip_connections == [(2, 3, NetworkDescriptor.CONCAT_CONNECT),
                                            (3, 4, NetworkDescriptor.CONCAT_CONNECT)]
+
+
+def test_deep_layer_ids():
+    model = get_conv_dense_model()
+    graph = Graph(model, True)
+    assert len(graph.deep_layer_ids()) == 2
+
+
+def test_wide_layer_ids():
+    model = get_conv_dense_model()
+    graph = Graph(model, True)
+    assert len(graph.wide_layer_ids()) == 1
+
+
+def test_skip_connection_layer_ids():
+    model = get_conv_dense_model()
+    graph = Graph(model, True)
+    assert len(graph.skip_connection_layer_ids()) == 0

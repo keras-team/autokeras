@@ -35,6 +35,8 @@ class OneHotEncoder:
     def transform(self, data):
         """Get vector for every element in the data array"""
         data = np.array(data)
+        if len(data.shape) > 1:
+            data = data.flatten()
         return np.array(list(map(lambda x: self.label_to_vec[x], data)))
 
     def inverse_transform(self, data):

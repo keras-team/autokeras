@@ -3,7 +3,7 @@ import os
 import pickle
 import csv
 import errno
-import signal
+import time
 
 import scipy.ndimage as ndimage
 
@@ -176,20 +176,20 @@ class ClassifierBase:
                 p.start()
                 p.join()
 
-        def signal_handler(_, _1):
-            raise TimeoutError("Timed out!")
-
-        signal.signal(signal.SIGALRM, signal_handler)
-        signal.alarm(time_limit)  # Ten seconds
-        try:
-            while True:
-                p = multiprocessing.Process(target=run_searcher_once, args=(x_train, y_train, x_test, y_test, self.path))
-                p.start()
+        start_time = time.time()
+        while time.time() - start_time <= time_limit:
+            p = multiprocessing.Process(target=run_searcher_once, args=(x_train, y_train, x_test, y_test, self.path))
+            p.start()
+            # Kill the process if necessary.
+            while time.time() - start_time <= time_limit:
+                if p.is_alive():
+                    time.sleep(1)
+                else:
+                    break
+            else:
+                # If break above the code in this else won't run
+                p.terminate()
                 p.join()
-        except TimeoutError:
-            if self.verbose:
-                print("Timed is up!")
-            return
 
     def predict(self, x_test):
         """Return predict result for the testing data.

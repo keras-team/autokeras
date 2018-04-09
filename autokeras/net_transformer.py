@@ -15,43 +15,19 @@ def to_wider_graph(graph):
     Returns:
         The wider model
     """
-    # The last conv layer cannot be widen since wider operator cannot be done over the two sides of flatten.
-    conv_layers = list(filter(lambda x: is_conv_layer(x), graph.layer_list))[:-1]
-    # The first layer cannot be widen since widen operator cannot be done over the two sides of flatten.
-    # The last layer is softmax, which also cannot be widen.
-    dense_layers = list(filter(lambda x: is_dense_layer(x), graph.layer_list))[1:-1]
-
-    if len(dense_layers) == 0:
-        weighted_layers = conv_layers
-    elif randint(0, 1) == 0:
-        weighted_layers = conv_layers
+    weighted_layer_ids = graph.wide_layer_ids()
+    if len(weighted_layer_ids) <= 1:
+        target_id = weighted_layer_ids[0]
     else:
-        weighted_layers = dense_layers
+        target_id = weighted_layer_ids[randint(0, len(weighted_layer_ids) - 1)]
 
-    if len(weighted_layers) <= 1:
-        target = weighted_layers[0]
+    if is_conv_layer(graph.layer_list[target_id]):
+        n_add = randint(1, 4 * graph.layer_list[target_id].filters)
     else:
-        target = weighted_layers[randint(0, len(weighted_layers) - 1)]
+        n_add = randint(1, 4 * graph.layer_list[target_id].units)
 
-    if is_conv_layer(target):
-        n_add = randint(1, 4 * target.filters)
-    else:
-        n_add = randint(1, 4 * target.units)
-
-    graph.to_wider_model(graph.layer_to_id[target], n_add)
+    graph.to_wider_model(target_id, n_add)
     return graph
-
-
-def copy_conv_graph(graph):
-    """Return copied convolution model
-
-    Args:
-        graph: the model we want to copy
-
-    Returns:
-        The copied model
-    """
-    return deepcopy(graph)
 
 
 def to_skip_connection_graph(graph):
@@ -64,9 +40,9 @@ def to_skip_connection_graph(graph):
         The skip_connected model
     """
     # The last conv layer cannot be widen since wider operator cannot be done over the two sides of flatten.
-    weighted_layers = list(filter(lambda x: is_conv_layer(x), graph.layer_list))[:-1]
-    index_a = randint(0, len(weighted_layers) - 1)
-    index_b = randint(0, len(weighted_layers) - 1)
+    weighted_layer_ids = graph.skip_connection_layer_ids()
+    index_a = randint(0, len(weighted_layer_ids) - 1)
+    index_b = randint(0, len(weighted_layer_ids) - 1)
     if index_a == index_b:
         if index_b == 0:
             index_a = index_b + 1
@@ -74,11 +50,9 @@ def to_skip_connection_graph(graph):
             index_a = index_b - 1
     if index_a > index_b:
         index_a, index_b = index_b, index_a
-    a = weighted_layers[index_a]
-    b = weighted_layers[index_b]
-    a_id = graph.layer_to_id[a]
-    b_id = graph.layer_to_id[b]
-    if a.output_shape[-1] != b.output_shape[-1]:
+    a_id = weighted_layer_ids[index_a]
+    b_id = weighted_layer_ids[index_b]
+    if graph.layer_list[a_id].output_shape[-1] != graph.layer_list[b_id].output_shape[-1]:
         graph.to_concat_skip_model(a_id, b_id)
     elif random() < 0.5:
         graph.to_add_skip_model(a_id, b_id)
@@ -96,12 +70,12 @@ def to_deeper_graph(graph):
     Returns:
         The deeper model
     """
-    weighted_layers = list(filter(lambda x: isinstance(x, tuple(WEIGHTED_LAYER_FUNC_LIST)), graph.layer_list))[:-1]
-    target = weighted_layers[randint(0, len(weighted_layers) - 1)]
-    if is_conv_layer(target):
-        graph.to_conv_deeper_model(graph.layer_to_id[target], randint(1, 2) * 2 + 1)
+    weighted_layer_ids = graph.deep_layer_ids()
+    target_id = weighted_layer_ids[randint(0, len(weighted_layer_ids) - 1)]
+    if is_conv_layer(graph.layer_list[target_id]):
+        graph.to_conv_deeper_model(target_id, randint(1, 2) * 2 + 1)
     else:
-        graph.to_dense_deeper_model(graph.layer_to_id[target])
+        graph.to_dense_deeper_model(target_id)
     return graph
 
 

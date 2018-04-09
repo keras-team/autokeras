@@ -209,7 +209,7 @@ class Graph:
         self.layer_to_id.pop(old_layer)
 
     def _topological_order(self):
-        """Return the topological order of the nodes."""
+        """Return the topological order of the node ids."""
         q = Queue()
         in_degree = {}
         for i in range(self.n_nodes):
@@ -573,3 +573,29 @@ class Graph:
                 old_layer = new_to_old_layer[layer]
                 layer.set_weights(old_layer.get_weights())
         return model
+
+    def _layer_ids_in_order(self, layer_ids):
+        node_id_to_order_index = {}
+        for index, node_id in enumerate(self._topological_order()):
+            node_id_to_order_index[node_id] = index
+        return sorted(layer_ids,
+                      key=lambda layer_id:
+                      node_id_to_order_index[self.layer_id_to_output_node_ids[layer_id][0]])
+
+    def _layer_ids_by_type(self, type_str):
+        return list(filter(lambda layer_id: is_layer(self.layer_list[layer_id], type_str), range(self.n_layers)))
+
+    def _conv_layer_ids_in_order(self):
+        return self._layer_ids_in_order(self._layer_ids_by_type('Conv'))
+
+    def _dense_layer_ids_in_order(self):
+        return self._layer_ids_in_order(self._layer_ids_by_type('Dense'))
+
+    def deep_layer_ids(self):
+        return self._conv_layer_ids_in_order() + self._dense_layer_ids_in_order()[:-1]
+
+    def wide_layer_ids(self):
+        return self._conv_layer_ids_in_order()[:-1] + self._dense_layer_ids_in_order()[:-1]
+
+    def skip_connection_layer_ids(self):
+        return self._conv_layer_ids_in_order()[1:]

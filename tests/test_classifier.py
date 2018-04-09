@@ -59,7 +59,6 @@ def test_fit_predict(_):
     clean_dir(path)
 
 
-@patch('multiprocessing.Process', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: sleep(6))
 def test_timout(_):
     path = 'tests/resources/temp'
