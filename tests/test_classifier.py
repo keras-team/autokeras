@@ -48,14 +48,15 @@ def test_fit_predict(_):
     constant.MAX_MODEL_NUM = 2
     constant.EPOCHS_EACH = 1
     constant.N_NEIGHBORS = 1
+    constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
-    train_x = np.array([[[1], [2]], [[3], [4]]])
-    train_y = np.array(['a', 'b'])
+    train_x = np.random.rand(100, 25, 25, 1)
+    train_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y)
     results = clf.predict(train_x)
-    assert all(map(lambda result: result in np.array(['a', 'b']), results))
+    assert all(map(lambda result: result in train_y, results))
     clean_dir(path)
 
 
@@ -83,9 +84,9 @@ def test_final_fit():
     constant.MAX_MODEL_NUM = 1
     constant.EPOCHS_EACH = 1
     constant.N_NEIGHBORS = 1
-    train_x = np.random.rand(100, 25, 1)
-    test_x = np.random.rand(100, 25, 1)
+    train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
+    test_x = np.random.rand(100, 25, 25, 1)
     clf.fit(train_x, train_y)
     clf.final_fit(train_x, train_y)
     results = clf.predict(test_x)
@@ -100,9 +101,9 @@ def test_save_continue(_):
     constant.MAX_MODEL_NUM = 1
     constant.EPOCHS_EACH = 1
     constant.N_NEIGHBORS = 1
-    train_x = np.random.rand(100, 25, 1)
-    test_x = np.random.rand(100, 25, 1)
+    train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
+    test_x = np.random.rand(100, 25, 25, 1)
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False, resume=False)

@@ -4,12 +4,13 @@ import pickle
 from keras import backend
 from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D, Dense, BatchNormalization, \
     Concatenate, Dropout, Activation, Flatten
+from keras.preprocessing.image import ImageDataGenerator
 from tensorflow import Dimension
 
 from autokeras import constant
 from autokeras.constant import CONV_FUNC_LIST
-from autokeras.layers import StubConv, StubDense, StubBatchNormalization, StubConcatenate, StubWeightedAdd, WeightedAdd, \
-    StubPooling, StubDropout, StubActivation, StubFlatten
+from autokeras.layers import StubConv, StubDense, StubBatchNormalization, StubConcatenate, StubWeightedAdd, \
+    WeightedAdd, StubPooling, StubDropout, StubActivation, StubFlatten
 
 
 def is_conv_layer(layer):
@@ -58,6 +59,31 @@ class ModelTrainer:
         self.training_losses = []
         self.minimum_loss = None
         self._no_improvement_count = 0
+        if constant.DATA_AUGMENTATION:
+            self.datagen = ImageDataGenerator(
+                # set input mean to 0 over the dataset
+                featurewise_center=False,
+                # set each sample mean to 0
+                samplewise_center=False,
+                # divide inputs by std of dataset
+                featurewise_std_normalization=False,
+                # divide each input by its std
+                samplewise_std_normalization=False,
+                # apply ZCA whitening
+                zca_whitening=False,
+                # randomly rotate images in the range (deg 0 to 180)
+                rotation_range=0,
+                # randomly shift images horizontally
+                width_shift_range=0.1,
+                # randomly shift images vertically
+                height_shift_range=0.1,
+                # randomly flip images
+                horizontal_flip=True,
+                # randomly flip images
+                vertical_flip=False)
+            self.datagen.fit(x_train)
+        else:
+            self.datagen = None
 
     def _converged(self, loss):
         """Return whether the training is converged"""
@@ -77,11 +103,19 @@ class ModelTrainer:
         self.training_losses = []
         self._no_improvement_count = 0
         self.minimum_loss = float('inf')
+        batch_size = min(self.x_train.shape[0], 200)
+        if constant.DATA_AUGMENTATION:
+            flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
+        else:
+            flow = None
         for _ in range(constant.MAX_ITER_NUM):
-            self.model.fit(self.x_train, self.y_train,
-                           batch_size=min(self.x_train.shape[0], 200),
-                           epochs=constant.EPOCHS_EACH,
-                           verbose=self.verbose)
+            if constant.DATA_AUGMENTATION:
+                self.model.fit_generator(flow, epochs=constant.EPOCHS_EACH)
+            else:
+                self.model.fit(self.x_train, self.y_train,
+                               batch_size=batch_size,
+                               epochs=constant.EPOCHS_EACH,
+                               verbose=self.verbose)
             loss, _ = self.model.evaluate(self.x_test, self.y_test, verbose=self.verbose)
             if self._converged(loss):
                 break
