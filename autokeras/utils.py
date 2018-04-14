@@ -92,8 +92,6 @@ class ModelTrainer:
             self._no_improvement_count += 1
         else:
             self._no_improvement_count = 0
-
-        if loss < self.minimum_loss:
             self.minimum_loss = loss
 
         return self._no_improvement_count > constant.MAX_NO_IMPROVEMENT_NUM
@@ -108,7 +106,7 @@ class ModelTrainer:
             flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
         else:
             flow = None
-        for _ in range(constant.MAX_ITER_NUM):
+        for index in range(constant.MAX_ITER_NUM):
             if constant.DATA_AUGMENTATION:
                 self.model.fit_generator(flow, epochs=constant.EPOCHS_EACH)
             else:
@@ -117,6 +115,8 @@ class ModelTrainer:
                                epochs=constant.EPOCHS_EACH,
                                verbose=self.verbose)
             loss, _ = self.model.evaluate(self.x_test, self.y_test, verbose=self.verbose)
+            if self.verbose:
+                print("validation_loss: {}\niteration_index: {}".format(loss, index))
             if self._converged(loss):
                 break
         return self.minimum_loss
