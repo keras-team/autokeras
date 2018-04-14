@@ -408,7 +408,7 @@ def run():
     #                         validation_data=(x_test, y_test),
     #                         epochs=epochs, verbose=1, workers=4,
     #                         callbacks=callbacks)
-    ModelTrainer(model, x_train, y_train, x_test, y_test, True).train_model()
+    ModelTrainer(model, x_train, y_train, x_test, y_test, False).train_model()
 
     # Score trained model.
     scores = model.evaluate(x_test, y_test, verbose=1)
