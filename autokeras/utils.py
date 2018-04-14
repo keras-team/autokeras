@@ -59,6 +59,8 @@ class ModelTrainer:
         self.training_losses = []
         self.minimum_loss = None
         self._no_improvement_count = 0
+        self._no_improvement_count = 0
+        self._done = False
         if constant.DATA_AUGMENTATION:
             self.datagen = ImageDataGenerator(
                 # set input mean to 0 over the dataset
@@ -88,18 +90,24 @@ class ModelTrainer:
     def _converged(self, loss):
         """Return whether the training is converged"""
         self.training_losses.append(loss)
+        if self._done and loss > (self.minimum_loss - constant.MIN_LOSS_DEC):
+            return True
+
         if loss > (self.minimum_loss - constant.MIN_LOSS_DEC):
             self._no_improvement_count += 1
         else:
             self._no_improvement_count = 0
             self.minimum_loss = loss
 
-        return self._no_improvement_count > constant.MAX_NO_IMPROVEMENT_NUM
+        if self._no_improvement_count > constant.MAX_NO_IMPROVEMENT_NUM:
+            self._done = True
+        return False
 
     def train_model(self):
         """Train the model with dataset and return the minimum_loss"""
         self.training_losses = []
         self._no_improvement_count = 0
+        self._done = False
         self.minimum_loss = float('inf')
         batch_size = min(self.x_train.shape[0], 200)
         if constant.DATA_AUGMENTATION:
