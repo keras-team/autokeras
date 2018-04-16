@@ -2,8 +2,10 @@ import os
 import pickle
 
 from keras import backend
+from keras.losses import categorical_crossentropy
 from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D, Dense, BatchNormalization, \
     Concatenate, Dropout, Activation, Flatten
+from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from tensorflow import Dimension
 
@@ -32,6 +34,31 @@ def get_conv_layer_func(n_dim):
     return conv_layer_functions[n_dim - 1]
 
 
+def lr_schedule(epoch):
+    """Learning Rate Schedule
+
+    Learning rate is scheduled to be reduced after 80, 120, 160, 180 epochs.
+    Called automatically every epoch as part of callbacks during training.
+
+    # Arguments
+        epoch (int): The number of epochs
+
+    # Returns
+        lr (float32): learning rate
+    """
+    lr = 1e-3
+    if epoch > 180:
+        lr *= 0.5e-3
+    elif epoch > 160:
+        lr *= 1e-3
+    elif epoch > 120:
+        lr *= 1e-2
+    elif epoch > 80:
+        lr *= 1e-1
+    print('Learning rate: ', lr)
+    return lr
+
+
 class ModelTrainer:
     """A class that is used to train model
 
@@ -50,6 +77,9 @@ class ModelTrainer:
     """
     def __init__(self, model, x_train, y_train, x_test, y_test, verbose):
         """Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
+        model.compile(loss=categorical_crossentropy,
+                      optimizer=Adam(lr=lr_schedule(0)),
+                      metrics=['accuracy'])
         self.model = model
         self.x_train = x_train
         self.y_train = y_train
@@ -109,7 +139,7 @@ class ModelTrainer:
         self._no_improvement_count = 0
         self._done = False
         self.minimum_loss = float('inf')
-        batch_size = min(self.x_train.shape[0], 200)
+        batch_size = min(self.x_train.shape[0], constant.MAX_BATCH_SIZE)
         if constant.DATA_AUGMENTATION:
             flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
         else:

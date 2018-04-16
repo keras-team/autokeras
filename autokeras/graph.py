@@ -48,7 +48,7 @@ def to_real_layer(layer):
     if is_layer(layer, 'Dense'):
         return Dense(layer.units, activation=layer.activation)
     if is_layer(layer, 'Conv'):
-        return layer.func(layer.filters, kernel_size=layer.kernel_size, padding='same')
+        return layer.func(layer.filters, kernel_size=layer.kernel_size, padding='same', kernel_initializer='he_normal')
     if is_layer(layer, 'Pooling'):
         return layer.func(padding='same')
     if is_layer(layer, 'BatchNormalization'):
