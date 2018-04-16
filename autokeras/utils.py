@@ -1,7 +1,9 @@
 import os
 import pickle
+import numpy as np
 
 from keras import backend
+from keras.callbacks import Callback, LearningRateScheduler, ReduceLROnPlateau
 from keras.losses import categorical_crossentropy
 from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D, Dense, BatchNormalization, \
     Concatenate, Dropout, Activation, Flatten
@@ -59,6 +61,41 @@ def lr_schedule(epoch):
     return lr
 
 
+class NoImprovementError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
+class NoImprovementTerminator(Callback):
+    def __init__(self):
+        super().__init__()
+        self.training_losses = []
+        self.minimum_loss = None
+        self._no_improvement_count = 0
+        self._done = False
+
+    def on_train_begin(self, logs=None):
+        self.training_losses = []
+        self._no_improvement_count = 0
+        self._done = False
+        self.minimum_loss = float('inf')
+
+    def on_epoch_end(self, batch, logs=None):
+        loss = logs.get('val_loss')
+        self.training_losses.append(loss)
+        if self._done and loss > (self.minimum_loss - constant.MIN_LOSS_DEC):
+            raise NoImprovementError('No improvement for {} epochs.'.format(constant.MAX_NO_IMPROVEMENT_NUM))
+
+        if loss > (self.minimum_loss - constant.MIN_LOSS_DEC):
+            self._no_improvement_count += 1
+        else:
+            self._no_improvement_count = 0
+            self.minimum_loss = loss
+
+        if self._no_improvement_count > constant.MAX_NO_IMPROVEMENT_NUM:
+            self._done = True
+
+
 class ModelTrainer:
     """A class that is used to train model
 
@@ -71,10 +108,8 @@ class ModelTrainer:
         x_test: the input test data
         y_test: the input test data labels
         verbose: verbosity mode
-        training_losses: a list to store all losses during training
-        minimum_loss: the minimum loss during training
-        _no_improvement_count: the number of iterations that don't improve the result
     """
+
     def __init__(self, model, x_train, y_train, x_test, y_test, verbose):
         """Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
         model.compile(loss=categorical_crossentropy,
@@ -86,11 +121,6 @@ class ModelTrainer:
         self.x_test = x_test
         self.y_test = y_test
         self.verbose = verbose
-        self.training_losses = []
-        self.minimum_loss = None
-        self._no_improvement_count = 0
-        self._no_improvement_count = 0
-        self._done = False
         if constant.DATA_AUGMENTATION:
             self.datagen = ImageDataGenerator(
                 # set input mean to 0 over the dataset
@@ -119,45 +149,38 @@ class ModelTrainer:
 
     def _converged(self, loss):
         """Return whether the training is converged"""
-        self.training_losses.append(loss)
-        if self._done and loss > (self.minimum_loss - constant.MIN_LOSS_DEC):
-            return True
-
-        if loss > (self.minimum_loss - constant.MIN_LOSS_DEC):
-            self._no_improvement_count += 1
-        else:
-            self._no_improvement_count = 0
-            self.minimum_loss = loss
-
-        if self._no_improvement_count > constant.MAX_NO_IMPROVEMENT_NUM:
-            self._done = True
-        return False
 
     def train_model(self):
         """Train the model with dataset and return the minimum_loss"""
-        self.training_losses = []
-        self._no_improvement_count = 0
-        self._done = False
-        self.minimum_loss = float('inf')
         batch_size = min(self.x_train.shape[0], constant.MAX_BATCH_SIZE)
-        if constant.DATA_AUGMENTATION:
-            flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
-        else:
-            flow = None
-        for index in range(constant.MAX_ITER_NUM):
+        terminator = NoImprovementTerminator()
+        lr_scheduler = LearningRateScheduler(lr_schedule)
+
+        lr_reducer = ReduceLROnPlateau(factor=np.sqrt(0.1),
+                                       cooldown=0,
+                                       patience=5,
+                                       min_lr=0.5e-6)
+
+        callbacks = [terminator, lr_scheduler, lr_reducer]
+        try:
             if constant.DATA_AUGMENTATION:
-                self.model.fit_generator(flow, epochs=constant.EPOCHS_EACH)
+                flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
+                self.model.fit_generator(flow,
+                                         epochs=constant.MAX_ITER_NUM,
+                                         validation_data=(self.x_test, self.y_test),
+                                         callbacks=callbacks,
+                                         verbose=self.verbose)
             else:
                 self.model.fit(self.x_train, self.y_train,
                                batch_size=batch_size,
-                               epochs=constant.EPOCHS_EACH,
+                               epochs=constant.MAX_ITER_NUM,
+                               validation_data=(self.x_test, self.y_test),
+                               callbacks=callbacks,
                                verbose=self.verbose)
-            loss, _ = self.model.evaluate(self.x_test, self.y_test, verbose=self.verbose)
+        except NoImprovementError as e:
             if self.verbose:
-                print("validation_loss: {}\niteration_index: {}".format(loss, index))
-            if self._converged(loss):
-                break
-        return self.minimum_loss
+                print('Training finished!')
+                print(e.message)
 
 
 def extract_config(network):
