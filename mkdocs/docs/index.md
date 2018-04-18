@@ -16,7 +16,7 @@ Here is a short example for using the package.
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     clf = ak.ImageClassifier()
     clf.fit(x_train, y_train)
-    results = clf.predict(y_test)
+    results = clf.predict(x_test)
 
 For the repository on GitHub visit [Auto-Keras on GitHub](https://github.com/jhfjhfj1/autokeras).
 
