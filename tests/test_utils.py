@@ -10,8 +10,7 @@ def test_model_trainer():
                  np.random.rand(1, 3), False).train_model()
 
 
-@patch('autokeras.utils.backend')
-def test_model_trainer_not_augmented(_):
+def test_model_trainer_not_augmented():
     constant.DATA_AUGMENTATION = False
     constant.LIMIT_MEMORY = True
     model = RandomConvClassifierGenerator(3, (28, 28, 1)).generate()
