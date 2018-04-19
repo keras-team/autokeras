@@ -26,4 +26,4 @@ def test_skip():
 
 def test_transform():
     models = transform(Graph(get_pooling_model(), False))
-    assert len(models) == constant.N_NEIGHBORS
+    assert len(models) == 12

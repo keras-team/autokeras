@@ -89,17 +89,32 @@ def transform(graph):
         The new model
     """
     graphs = []
-    for i in range(constant.N_NEIGHBORS):
-        operation = randint(0, 2)
+    for target_id in graph.wide_layer_ids():
+        temp_graph = deepcopy(graph)
+        if is_conv_layer(temp_graph.layer_list[target_id]):
+            n_add = temp_graph.layer_list[target_id].filters
+            temp_graph.to_wider_model(target_id, n_add)
+        else:
+            n_add = temp_graph.layer_list[target_id].units
+            temp_graph.to_wider_model(target_id, n_add)
+        graphs.append(temp_graph)
 
-        if operation == 0:
-            # wider
-            graphs.append(to_wider_graph(deepcopy(graph)))
-        elif operation == 1:
-            # deeper
-            graphs.append(to_deeper_graph(deepcopy(graph)))
-        elif operation == 2:
-            # skip
-            graphs.append(to_skip_connection_graph(deepcopy(graph)))
+    for target_id in graph.deep_layer_ids():
+        temp_graph = deepcopy(graph)
+        if is_conv_layer(temp_graph.layer_list[target_id]):
+            temp_graph.to_conv_deeper_model(target_id, randint(1, 2) * 2 + 1)
+        else:
+            temp_graph.to_dense_deeper_model(target_id)
+        graphs.append(temp_graph)
+
+    skip_ids = graph.skip_connection_layer_ids()
+    for index_a, a_id in enumerate(skip_ids):
+        temp_graph = deepcopy(graph)
+        for b_id in skip_ids[index_a + 1:]:
+            if temp_graph.layer_list[a_id].filters != temp_graph.layer_list[b_id].filters:
+                temp_graph.to_concat_skip_model(a_id, b_id)
+            else:
+                temp_graph.to_add_skip_model(a_id, b_id)
+            graphs.append(temp_graph)
 
     return graphs

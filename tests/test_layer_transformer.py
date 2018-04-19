@@ -27,7 +27,6 @@ def test_dense_to_wider_layer():
 def test_wider_bn():
     bn_layer = StubBatchNormalization()
     bn_layer.set_weights(get_conv_model().layers[2].get_weights())
-    print(bn_layer.get_weights())
     new_bn_layer = wider_bn(bn_layer, 1, 3, 4)
     assert new_bn_layer.get_weights()[0].shape[0] == 7
 
