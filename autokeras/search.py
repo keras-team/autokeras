@@ -1,9 +1,7 @@
 import os
 import numpy as np
 
-from keras.losses import categorical_crossentropy
 from keras.models import load_model
-from keras.optimizers import Adadelta
 from keras import backend
 from keras.utils import plot_model
 
@@ -70,9 +68,6 @@ class Searcher:
         Returns:
             History object.
         """
-        model.compile(loss=categorical_crossentropy,
-                      optimizer=Adadelta(),
-                      metrics=['accuracy'])
         if self.verbose:
             model.summary()
         ModelTrainer(model, x_train, y_train, x_test, y_test, self.verbose).train_model()

@@ -1,9 +1,14 @@
 import os
 import pickle
+import numpy as np
 
+import tensorflow as tf
 from keras import backend
+from keras.callbacks import Callback, LearningRateScheduler, ReduceLROnPlateau
+from keras.losses import categorical_crossentropy
 from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D, Dense, BatchNormalization, \
     Concatenate, Dropout, Activation, Flatten
+from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from tensorflow import Dimension
 
@@ -32,6 +37,67 @@ def get_conv_layer_func(n_dim):
     return conv_layer_functions[n_dim - 1]
 
 
+def lr_schedule(epoch):
+    """Learning Rate Schedule
+
+    Learning rate is scheduled to be reduced after 80, 120, 160, 180 epochs.
+    Called automatically every epoch as part of callbacks during training.
+
+    # Arguments
+        epoch (int): The number of epochs
+
+    # Returns
+        lr (float32): learning rate
+    """
+    lr = 1e-3
+    if epoch > 180:
+        lr *= 0.5e-3
+    elif epoch > 160:
+        lr *= 1e-3
+    elif epoch > 120:
+        lr *= 1e-2
+    elif epoch > 80:
+        lr *= 1e-1
+    return lr
+
+
+class NoImprovementError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
+class EarlyStop(Callback):
+    def __init__(self, max_no_improvement_num=constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=constant.MIN_LOSS_DEC):
+        super().__init__()
+        self.training_losses = []
+        self.minimum_loss = None
+        self._no_improvement_count = 0
+        self._max_no_improvement_num = max_no_improvement_num
+        self._done = False
+        self._min_loss_dec = min_loss_dec
+
+    def on_train_begin(self, logs=None):
+        self.training_losses = []
+        self._no_improvement_count = 0
+        self._done = False
+        self.minimum_loss = float('inf')
+
+    def on_epoch_end(self, batch, logs=None):
+        loss = logs.get('val_loss')
+        self.training_losses.append(loss)
+        if self._done and loss > (self.minimum_loss - self._min_loss_dec):
+            raise NoImprovementError('No improvement for {} epochs.'.format(self._max_no_improvement_num))
+
+        if loss > (self.minimum_loss - self._min_loss_dec):
+            self._no_improvement_count += 1
+        else:
+            self._no_improvement_count = 0
+            self.minimum_loss = loss
+
+        if self._no_improvement_count > self._max_no_improvement_num:
+            self._done = True
+
+
 class ModelTrainer:
     """A class that is used to train model
 
@@ -44,21 +110,19 @@ class ModelTrainer:
         x_test: the input test data
         y_test: the input test data labels
         verbose: verbosity mode
-        training_losses: a list to store all losses during training
-        minimum_loss: the minimum loss during training
-        _no_improvement_count: the number of iterations that don't improve the result
     """
+
     def __init__(self, model, x_train, y_train, x_test, y_test, verbose):
         """Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
+        model.compile(loss=categorical_crossentropy,
+                      optimizer=Adam(lr=lr_schedule(0)),
+                      metrics=['accuracy'])
         self.model = model
         self.x_train = x_train
         self.y_train = y_train
         self.x_test = x_test
         self.y_test = y_test
         self.verbose = verbose
-        self.training_losses = []
-        self.minimum_loss = None
-        self._no_improvement_count = 0
         if constant.DATA_AUGMENTATION:
             self.datagen = ImageDataGenerator(
                 # set input mean to 0 over the dataset
@@ -87,39 +151,43 @@ class ModelTrainer:
 
     def _converged(self, loss):
         """Return whether the training is converged"""
-        self.training_losses.append(loss)
-        if loss > (self.minimum_loss - constant.MIN_LOSS_DEC):
-            self._no_improvement_count += 1
-        else:
-            self._no_improvement_count = 0
-
-        if loss < self.minimum_loss:
-            self.minimum_loss = loss
-
-        return self._no_improvement_count > constant.MAX_NO_IMPROVEMENT_NUM
 
     def train_model(self):
         """Train the model with dataset and return the minimum_loss"""
-        self.training_losses = []
-        self._no_improvement_count = 0
-        self.minimum_loss = float('inf')
-        batch_size = min(self.x_train.shape[0], 200)
-        if constant.DATA_AUGMENTATION:
-            flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
-        else:
-            flow = None
-        for _ in range(constant.MAX_ITER_NUM):
+        batch_size = min(self.x_train.shape[0], constant.MAX_BATCH_SIZE)
+        terminator = EarlyStop()
+        lr_scheduler = LearningRateScheduler(lr_schedule)
+
+        lr_reducer = ReduceLROnPlateau(factor=np.sqrt(0.1),
+                                       cooldown=0,
+                                       patience=5,
+                                       min_lr=0.5e-6)
+
+        callbacks = [terminator, lr_scheduler, lr_reducer]
+        if constant.LIMIT_MEMORY:
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth = True
+            sess = tf.Session(config=config)
+            backend.set_session(sess)
+        try:
             if constant.DATA_AUGMENTATION:
-                self.model.fit_generator(flow, epochs=constant.EPOCHS_EACH)
+                flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
+                self.model.fit_generator(flow,
+                                         epochs=constant.MAX_ITER_NUM,
+                                         validation_data=(self.x_test, self.y_test),
+                                         callbacks=callbacks,
+                                         verbose=self.verbose)
             else:
                 self.model.fit(self.x_train, self.y_train,
                                batch_size=batch_size,
-                               epochs=constant.EPOCHS_EACH,
+                               epochs=constant.MAX_ITER_NUM,
+                               validation_data=(self.x_test, self.y_test),
+                               callbacks=callbacks,
                                verbose=self.verbose)
-            loss, _ = self.model.evaluate(self.x_test, self.y_test, verbose=self.verbose)
-            if self._converged(loss):
-                break
-        return self.minimum_loss
+        except NoImprovementError as e:
+            if self.verbose:
+                print('Training finished!')
+                print(e.message)
 
 
 def extract_config(network):
