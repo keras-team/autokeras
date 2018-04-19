@@ -2,6 +2,7 @@ import os
 import pickle
 import numpy as np
 
+import tensorflow as tf
 from keras import backend
 from keras.callbacks import Callback, LearningRateScheduler, ReduceLROnPlateau
 from keras.losses import categorical_crossentropy
@@ -57,7 +58,6 @@ def lr_schedule(epoch):
         lr *= 1e-2
     elif epoch > 80:
         lr *= 1e-1
-    print('Learning rate: ', lr)
     return lr
 
 
@@ -66,13 +66,15 @@ class NoImprovementError(Exception):
         self.message = message
 
 
-class NoImprovementTerminator(Callback):
-    def __init__(self):
+class EarlyStop(Callback):
+    def __init__(self, max_no_improvement_num=constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=constant.MIN_LOSS_DEC):
         super().__init__()
         self.training_losses = []
         self.minimum_loss = None
         self._no_improvement_count = 0
+        self._max_no_improvement_num = max_no_improvement_num
         self._done = False
+        self._min_loss_dec = min_loss_dec
 
     def on_train_begin(self, logs=None):
         self.training_losses = []
@@ -83,16 +85,16 @@ class NoImprovementTerminator(Callback):
     def on_epoch_end(self, batch, logs=None):
         loss = logs.get('val_loss')
         self.training_losses.append(loss)
-        if self._done and loss > (self.minimum_loss - constant.MIN_LOSS_DEC):
-            raise NoImprovementError('No improvement for {} epochs.'.format(constant.MAX_NO_IMPROVEMENT_NUM))
+        if self._done and loss > (self.minimum_loss - self._min_loss_dec):
+            raise NoImprovementError('No improvement for {} epochs.'.format(self._max_no_improvement_num))
 
-        if loss > (self.minimum_loss - constant.MIN_LOSS_DEC):
+        if loss > (self.minimum_loss - self._min_loss_dec):
             self._no_improvement_count += 1
         else:
             self._no_improvement_count = 0
             self.minimum_loss = loss
 
-        if self._no_improvement_count > constant.MAX_NO_IMPROVEMENT_NUM:
+        if self._no_improvement_count > self._max_no_improvement_num:
             self._done = True
 
 
@@ -153,7 +155,7 @@ class ModelTrainer:
     def train_model(self):
         """Train the model with dataset and return the minimum_loss"""
         batch_size = min(self.x_train.shape[0], constant.MAX_BATCH_SIZE)
-        terminator = NoImprovementTerminator()
+        terminator = EarlyStop()
         lr_scheduler = LearningRateScheduler(lr_schedule)
 
         lr_reducer = ReduceLROnPlateau(factor=np.sqrt(0.1),
@@ -162,6 +164,11 @@ class ModelTrainer:
                                        min_lr=0.5e-6)
 
         callbacks = [terminator, lr_scheduler, lr_reducer]
+        if constant.LIMIT_MEMORY:
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth = True
+            sess = tf.Session(config=config)
+            backend.set_session(sess)
         try:
             if constant.DATA_AUGMENTATION:
                 flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
