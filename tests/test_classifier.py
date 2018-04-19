@@ -77,6 +77,7 @@ def test_timout(_):
 
 @patch('multiprocessing.Process', new=MockProcess)
 def test_final_fit():
+    constant.LIMIT_MEMORY = True
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)

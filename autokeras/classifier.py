@@ -4,10 +4,12 @@ import pickle
 import csv
 import errno
 import time
+import tensorflow as tf
 
 import scipy.ndimage as ndimage
 
 import numpy as np
+from keras import backend
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split, StratifiedKFold
 
@@ -32,6 +34,13 @@ def _validate(x_train, y_train):
 
 
 def run_searcher_once(x_train, y_train, x_test, y_test, path):
+    if constant.LIMIT_MEMORY:
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        sess = tf.Session(config=config)
+        init = tf.global_variables_initializer()
+        sess.run(init)
+        backend.set_session(sess)
     searcher = pickle_from_file(os.path.join(path, 'searcher'))
     searcher.search(x_train, y_train, x_test, y_test)
 

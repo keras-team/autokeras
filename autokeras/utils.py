@@ -2,7 +2,6 @@ import os
 import pickle
 import numpy as np
 
-import tensorflow as tf
 from keras import backend
 from keras.callbacks import Callback, LearningRateScheduler, ReduceLROnPlateau
 from keras.losses import categorical_crossentropy
@@ -164,13 +163,6 @@ class ModelTrainer:
                                        min_lr=0.5e-6)
 
         callbacks = [terminator, lr_scheduler, lr_reducer]
-        if constant.LIMIT_MEMORY:
-            config = tf.ConfigProto()
-            config.gpu_options.allow_growth = True
-            sess = tf.Session(config=config)
-            init = tf.global_variables_initializer()
-            sess.run(init)
-            backend.set_session(sess)
         try:
             if constant.DATA_AUGMENTATION:
                 flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
