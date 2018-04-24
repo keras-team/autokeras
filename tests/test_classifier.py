@@ -84,8 +84,6 @@ def test_final_fit(_, _1):
     clf = ImageClassifier(path=path, verbose=False)
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
-    constant.EPOCHS_EACH = 1
-    constant.N_NEIGHBORS = 1
     constant.SEARCH_MAX_ITER = 1
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
@@ -103,8 +101,6 @@ def test_final_fit(_, _1):
 def test_save_continue(_, _1):
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
-    constant.EPOCHS_EACH = 1
-    constant.N_NEIGHBORS = 1
     constant.SEARCH_MAX_ITER = 1
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
@@ -145,8 +141,6 @@ def test_save_continue(_, _1):
 def test_fit_csv_file(_, _1):
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
-    constant.EPOCHS_EACH = 1
-    constant.N_NEIGHBORS = 1
     constant.SEARCH_MAX_ITER = 1
     path = 'tests/resources'
     clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"), resume=False)
@@ -166,8 +160,6 @@ def test_fit_csv_file(_, _1):
 def test_cross_validate(_, _1):
     constant.MAX_ITER_NUM = 2
     constant.MAX_MODEL_NUM = 2
-    constant.EPOCHS_EACH = 1
-    constant.N_NEIGHBORS = 1
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)

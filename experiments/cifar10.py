@@ -25,7 +25,7 @@ if __name__ == '__main__':
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     X = np.concatenate((x_train, x_test))
     Y = np.concatenate((y_train, y_test))
-    clf = ImageClassifier(searcher_type=sys.argv[1], path=sys.argv[2], verbose=False)
+    clf = ImageClassifier(searcher_type=sys.argv[1], path=sys.argv[2], verbose=True)
 
     clf.fit(x_train, y_train, time_limit=12*60*60)
     clf.final_fit(x_train, y_train)

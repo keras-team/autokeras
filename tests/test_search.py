@@ -25,7 +25,6 @@ def test_hill_climbing_searcher(_, _1):
     y_test = np.random.rand(1, 3)
 
     constant.MAX_MODEL_NUM = 3
-    constant.N_NEIGHBORS = 2
     clean_dir(default_test_path)
     generator = HillClimbingSearcher(3, (28, 28, 1), verbose=False, path=default_test_path)
     generator.search(x_train, y_train, x_test, y_test)

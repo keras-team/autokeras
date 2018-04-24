@@ -63,7 +63,7 @@ class Searcher:
     def replace_model(self, model, model_id):
         model.save(os.path.join(self.path, str(model_id) + '.h5'))
 
-    def add_model(self, model, x_train, y_train, x_test, y_test, max_iter=constant.MAX_ITER_NUM):
+    def add_model(self, model, x_train, y_train, x_test, y_test, max_no_improve=constant.MAX_ITER_NUM):
         """add one model while will be trained to history list
 
         Returns:
@@ -76,7 +76,7 @@ class Searcher:
                      y_train,
                      x_test,
                      y_test,
-                     self.verbose).train_model(max_iter_num=max_iter)
+                     self.verbose).train_model(max_no_improvement_num=max_no_improve)
         loss, accuracy = model.evaluate(x_test, y_test, verbose=self.verbose)
         model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
         plot_model(model, to_file=os.path.join(self.path, str(self.model_count) + '.png'), show_shapes=True)
