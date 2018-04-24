@@ -82,8 +82,12 @@ class IncrementalGaussianProcess:
 
         return self
 
+    @property
+    def first_fitted(self):
+        return self._first_fitted
+
     def first_fit(self, train_x, train_y):
-        train_x, train_y = np.array([train_x]), np.array([train_y])
+        train_x, train_y = np.array(train_x), np.array(train_y)
 
         self._x = np.copy(train_x)
         self._y = np.copy(train_y)

@@ -555,25 +555,30 @@ class Graph:
         output_id = self.node_to_id[self.output]
 
         new_to_old_layer = {}
-        self.node_list[input_id] = input_tensor
-        self.node_to_id[input_tensor] = input_id
+
+        node_list = deepcopy(self.node_list)
+        node_list[input_id] = input_tensor
+
+        node_to_id = deepcopy(self.node_to_id)
+        node_to_id[input_tensor] = input_id
+
         for v in self._topological_order():
             for u, layer_id in self.reverse_adj_list[v]:
                 layer = self.layer_list[layer_id]
 
                 if isinstance(layer, (StubWeightedAdd, StubConcatenate)):
-                    edge_input_tensor = list(map(lambda x: self.node_list[x],
+                    edge_input_tensor = list(map(lambda x: node_list[x],
                                                  self.layer_id_to_input_node_ids[layer_id]))
                 else:
-                    edge_input_tensor = self.node_list[u]
+                    edge_input_tensor = node_list[u]
 
                 new_layer = to_real_layer(layer)
                 new_to_old_layer[new_layer] = layer
 
                 temp_tensor = new_layer(edge_input_tensor)
-                self.node_list[v] = temp_tensor
-                self.node_to_id[temp_tensor] = v
-        model = Model(input_tensor, self.node_list[output_id])
+                node_list[v] = temp_tensor
+                node_to_id[temp_tensor] = v
+        model = Model(input_tensor, node_list[output_id])
         for layer in model.layers[1:]:
             if not isinstance(layer, (Activation, Dropout, Concatenate)):
                 old_layer = new_to_old_layer[layer]

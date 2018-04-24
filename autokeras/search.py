@@ -32,6 +32,7 @@ class Searcher:
         path: place that store searcher
         model_count: the id of model
     """
+
     def __init__(self, n_classes, input_shape, path, verbose):
         """Init Searcher class with n_classes, input_shape, path, verbose
 
@@ -62,7 +63,7 @@ class Searcher:
     def replace_model(self, model, model_id):
         model.save(os.path.join(self.path, str(model_id) + '.h5'))
 
-    def add_model(self, model, x_train, y_train, x_test, y_test):
+    def add_model(self, model, x_train, y_train, x_test, y_test, max_iter=constant.MAX_ITER_NUM):
         """add one model while will be trained to history list
 
         Returns:
@@ -70,7 +71,12 @@ class Searcher:
         """
         if self.verbose:
             model.summary()
-        ModelTrainer(model, x_train, y_train, x_test, y_test, self.verbose).train_model()
+        ModelTrainer(model,
+                     x_train,
+                     y_train,
+                     x_test,
+                     y_test,
+                     self.verbose).train_model(max_iter_num=max_iter)
         loss, accuracy = model.evaluate(x_test, y_test, verbose=self.verbose)
         model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
         plot_model(model, to_file=os.path.join(self.path, str(self.model_count) + '.png'), show_shapes=True)
@@ -88,6 +94,7 @@ class RandomSearcher(Searcher):
 
     RandomSearcher implements its search function with random strategy
     """
+
     def __init__(self, n_classes, input_shape, path, verbose):
         """Init RandomSearcher with n_classes, input_shape, path, verbose"""
         super().__init__(n_classes, input_shape, path, verbose)
@@ -108,6 +115,7 @@ class HillClimbingSearcher(Searcher):
 
     HillClimbing Searcher implements its search function with hill climbing strategy
     """
+
     def __init__(self, n_classes, input_shape, path, verbose):
         """Init HillClimbing Searcher with n_classes, input_shape, path, verbose"""
         super().__init__(n_classes, input_shape, path, verbose)
@@ -155,27 +163,42 @@ class BayesianSearcher(Searcher):
         super().__init__(n_classes, input_shape, path, verbose)
         self.gpr = IncrementalGaussianProcess()
         self.search_tree = SearchTree()
+        self.init_search_queue = None
+        self.init_gpr_x = []
+        self.init_gpr_y = []
 
     def search(self, x_train, y_train, x_test, y_test):
         if not self.history:
             model = DefaultClassifierGenerator(self.n_classes, self.input_shape).generate()
             history_item = self.add_model(model, x_train, y_train, x_test, y_test)
             self.search_tree.add_child(-1, history_item['model_id'])
-            self.gpr.first_fit(Graph(model).extract_descriptor(), history_item['accuracy'])
-            pickle_to_file(self, os.path.join(self.path, 'searcher'))
-            del model
-            backend.clear_session()
 
-        else:
-            model_ids = self.search_tree.get_leaves()
-            new_model, father_id = self.maximize_acq(model_ids)
-
-            history_item = self.add_model(new_model, x_train, y_train, x_test, y_test)
-            self.search_tree.add_child(father_id, history_item['model_id'])
-            self.gpr.incremental_fit(Graph(new_model).extract_descriptor(), history_item['accuracy'])
+            graph = Graph(model)
+            self.init_search_queue = transform(graph)
+            self.init_gpr_x.append(graph.extract_descriptor())
+            self.init_gpr_y.append(history_item['accuracy'])
             pickle_to_file(self, os.path.join(self.path, 'searcher'))
-            del new_model
-            backend.clear_session()
+            return
+
+        if self.init_search_queue:
+            graph = self.init_search_queue.pop()
+            model = graph.produce_model()
+            history_item = self.add_model(model, x_train, y_train, x_test, y_test, constant.SEARCH_MAX_ITER)
+            self.init_gpr_x.append(graph.extract_descriptor())
+            self.init_gpr_y.append(history_item['accuracy'])
+            pickle_to_file(self, os.path.join(self.path, 'searcher'))
+            return
+
+        if not self.init_search_queue and not self.gpr.first_fitted:
+            self.gpr.first_fit(self.init_gpr_x, self.init_gpr_y)
+
+        model_ids = self.search_tree.get_leaves()
+        new_model, father_id = self.maximize_acq(model_ids)
+
+        history_item = self.add_model(new_model, x_train, y_train, x_test, y_test, constant.SEARCH_MAX_ITER)
+        self.search_tree.add_child(father_id, history_item['model_id'])
+        self.gpr.incremental_fit(Graph(new_model).extract_descriptor(), history_item['accuracy'])
+        pickle_to_file(self, os.path.join(self.path, 'searcher'))
 
     def maximize_acq(self, model_ids):
         overall_max_acq_value = -1

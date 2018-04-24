@@ -16,7 +16,7 @@ def simple_transform(graph):
 
 
 @patch('autokeras.search.transform', side_effect=simple_transform)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
+@patch('autokeras.search.ModelTrainer.train_model')
 def test_hill_climbing_searcher(_, _1):
     # def test_hill_climbing_searcher(_):
     x_train = np.random.rand(2, 28, 28, 1)
@@ -34,7 +34,7 @@ def test_hill_climbing_searcher(_, _1):
     assert len(generator.history) == len(generator.history_configs)
 
 
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
+@patch('autokeras.search.ModelTrainer.train_model')
 def test_random_searcher(_):
     x_train = np.random.rand(2, 28, 28, 1)
     y_train = np.random.rand(2, 3)
@@ -50,7 +50,7 @@ def test_random_searcher(_):
 
 
 @patch('autokeras.search.transform', side_effect=simple_transform)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
+@patch('autokeras.search.ModelTrainer.train_model')
 def test_bayesian_searcher(_, _1):
     x_train = np.random.rand(2, 28, 28, 1)
     y_train = np.random.rand(2, 3)

@@ -53,20 +53,12 @@ def read_csv_file(csv_file_path):
     """
     img_file_names = []
     img_labels = []
-    try:
-        with open(csv_file_path, 'r') as images_path:
-            path_list = csv.DictReader(images_path)
-            fieldnames = path_list.fieldnames
-            for path in path_list:
-                img_file_names.append(path[fieldnames[0]])
-                img_labels.append(path[fieldnames[1]])
-    except IOError as e:
-        if e.errno == errno.EACCES:
-            raise IOError('File not accessible')
-        elif e.errno == errno.ENOENT:
-            raise IOError('No such file or directory exist')
-        else:
-            raise ValueError("Illegal file type")
+    with open(csv_file_path, 'r') as images_path:
+        path_list = csv.DictReader(images_path)
+        fieldnames = path_list.fieldnames
+        for path in path_list:
+            img_file_names.append(path[fieldnames[0]])
+            img_labels.append(path[fieldnames[1]])
     return img_file_names, img_labels
 
 

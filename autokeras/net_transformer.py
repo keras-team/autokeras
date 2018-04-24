@@ -86,7 +86,7 @@ def transform(graph):
         graph: the model from which we get new model
 
     Returns:
-        The new model
+        A list of graphs.
     """
     graphs = []
     for target_id in graph.wide_layer_ids():
