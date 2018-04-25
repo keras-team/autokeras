@@ -9,6 +9,7 @@ from autokeras import constant
 from autokeras.bayesian import IncrementalGaussianProcess
 from autokeras.generator import RandomConvClassifierGenerator, DefaultClassifierGenerator
 from autokeras.graph import Graph
+from autokeras.layers import WeightedAdd
 from autokeras.net_transformer import transform
 from autokeras.utils import ModelTrainer, pickle_to_file
 from autokeras.utils import extract_config
@@ -51,7 +52,7 @@ class Searcher:
         pass
 
     def load_model_by_id(self, model_id):
-        return load_model(os.path.join(self.path, str(model_id) + '.h5'))
+        return load_model(os.path.join(self.path, str(model_id) + '.h5'), {'WeightedAdd': WeightedAdd})
 
     def load_best_model(self):
         """return model with best accuracy"""
