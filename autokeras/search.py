@@ -4,6 +4,7 @@ import numpy as np
 from keras.models import load_model
 from keras import backend
 from keras.utils import plot_model
+from scipy.stats import norm
 
 from autokeras import constant
 from autokeras.bayesian import IncrementalGaussianProcess
@@ -213,7 +214,7 @@ class BayesianSearcher(Searcher):
             graph.clear_operation_history()
             graphs = transform(graph)
             for temp_graph in graphs:
-                temp_acq_value = self._acq(temp_graph)
+                temp_acq_value = self.acq(temp_graph)
                 if temp_acq_value > overall_max_acq_value:
                     overall_max_acq_value = temp_acq_value
                     father_id = model_id
@@ -223,7 +224,7 @@ class BayesianSearcher(Searcher):
         for i in range(constant.ACQ_EXPLOITATION_DEPTH):
             graphs = transform(target_graph)
             for temp_graph in graphs:
-                temp_acq_value = self._acq(temp_graph)
+                temp_acq_value = self.acq(temp_graph)
                 if temp_acq_value > overall_max_acq_value:
                     overall_max_acq_value = temp_acq_value
                     target_graph = temp_graph
@@ -234,8 +235,9 @@ class BayesianSearcher(Searcher):
             getattr(nm_graph, args[0])(*list(args[1:]))
         return nm_graph.produce_model(), father_id
 
-    def _acq(self, graph):
-        return self.gpr.predict(np.array([graph.extract_descriptor()]), )[0]
+    def acq(self, graph):
+        mean, std = self.gpr.predict(np.array([graph.extract_descriptor()]), )
+        return mean + 2.576 * std
 
 
 class SearchTree:

@@ -56,11 +56,10 @@ def test_bayesian_searcher(_, _1):
     x_test = np.random.rand(1, 28, 28, 1)
     y_test = np.random.rand(1, 3)
 
-    constant.MAX_MODEL_NUM = 3
-    constant.ACQ_EXPLOITATION_DEPTH = 1
     clean_dir(default_test_path)
     generator = BayesianSearcher(3, (28, 28, 1), verbose=False, path=default_test_path)
-    generator.search(x_train, y_train, x_test, y_test)
+    for _ in range(4):
+        generator.search(x_train, y_train, x_test, y_test)
     clean_dir(default_test_path)
     assert len(generator.history) == len(generator.history_configs)
 
