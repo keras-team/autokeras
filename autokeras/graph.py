@@ -5,6 +5,7 @@ from queue import Queue
 from keras import Input
 from keras.engine import Model
 from keras.layers import Concatenate, Dense, BatchNormalization, Dropout, Activation, Flatten
+from keras.regularizers import l2
 
 from autokeras import constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_weighted_add, \
@@ -48,7 +49,11 @@ def to_real_layer(layer):
     if is_layer(layer, 'Dense'):
         return Dense(layer.units, activation=layer.activation)
     if is_layer(layer, 'Conv'):
-        return layer.func(layer.filters, kernel_size=layer.kernel_size, padding='same', kernel_initializer='he_normal')
+        return layer.func(layer.filters,
+                          kernel_size=layer.kernel_size,
+                          padding='same',
+                          kernel_initializer='he_normal',
+                          kernel_regularizer=l2(1e-4))
     if is_layer(layer, 'Pooling'):
         return layer.func(padding='same')
     if is_layer(layer, 'BatchNormalization'):
@@ -90,6 +95,7 @@ class Graph:
         pre_vis: A boolean list marking whether a node has been visited or not.
         middle_layer_vis: A boolean list marking whether a node has been visited or not.
     """
+
     def __init__(self, model, weighted=True):
         model = to_stub_model(model, weighted)
         layers = model.layers[1:]

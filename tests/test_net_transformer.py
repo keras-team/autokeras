@@ -27,3 +27,11 @@ def test_skip():
 def test_transform():
     models = transform(Graph(get_pooling_model(), False))
     assert len(models) == 12
+
+
+def test_legal_graph():
+    graph = Graph(get_pooling_model(), False)
+    graph.to_add_skip_model(0, 4)
+    assert legal_graph(graph)
+    graph.to_add_skip_model(0, 4)
+    assert not legal_graph(graph)

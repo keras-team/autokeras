@@ -79,6 +79,11 @@ def to_deeper_graph(graph):
     return graph
 
 
+def legal_graph(graph):
+    skips = graph.extract_descriptor().skip_connections
+    return len(skips) == len(set(skips))
+
+
 def transform(graph):
     """Return new model after operations
 
@@ -116,5 +121,7 @@ def transform(graph):
             else:
                 temp_graph.to_add_skip_model(a_id, b_id)
             graphs.append(temp_graph)
+
+    graphs = list(filter(legal_graph, graphs))
 
     return graphs

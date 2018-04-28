@@ -10,7 +10,6 @@ DEFAULT_SAVE_PATH = '/tmp/autokeras/'
 # Searcher
 
 MAX_MODEL_NUM = 1000
-ACQ_EXPLOITATION_DEPTH = 2
 
 # Model Defaults
 
