@@ -5,6 +5,7 @@ import numpy as np
 import os
 import GPUtil
 
+from autokeras import constant
 from autokeras.classifier import ImageClassifier
 
 
@@ -22,6 +23,7 @@ def select_gpu():
 
 if __name__ == '__main__':
     select_gpu()
+    constant.LIMIT_MEMORY = True
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train = x_train.reshape(x_train.shape + (1,))
     x_test = x_test.reshape(x_test.shape + (1,))
