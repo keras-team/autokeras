@@ -25,8 +25,6 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = str(0)
     constant.LIMIT_MEMORY = True
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-    x_train = x_train.reshape(x_train.shape + (1,))
-    x_test = x_test.reshape(x_test.shape + (1,))
     print(x_test.shape)
     X = np.concatenate((x_train, x_test))
     Y = np.concatenate((y_train, y_test))
