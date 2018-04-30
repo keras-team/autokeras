@@ -15,7 +15,7 @@ def select_gpu():
         DEVICE_ID = DEVICE_ID_LIST[0] # grab first element from list
 
         # Set CUDA_VISIBLE_DEVICES to mask out all other GPUs than the first available device id
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(DEVICE_ID)
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(2)
     except FileNotFoundError:
         print("GPU not found")
 
