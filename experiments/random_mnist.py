@@ -16,13 +16,13 @@ def select_gpu():
         DEVICE_ID = DEVICE_ID_LIST[0] # grab first element from list
 
         # Set CUDA_VISIBLE_DEVICES to mask out all other GPUs than the first available device id
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(2)
     except FileNotFoundError:
         print("GPU not found")
 
 
 if __name__ == '__main__':
-    select_gpu()
+    # select_gpu()
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(2)
     constant.LIMIT_MEMORY = True
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train = x_train.reshape(x_train.shape + (1,))
