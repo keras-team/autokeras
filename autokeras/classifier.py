@@ -198,6 +198,13 @@ class ClassifierBase:
         Args:
             x_test: An instance of numpy.ndarray contains the testing data.
         """
+        if constant.LIMIT_MEMORY:
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth = True
+            sess = tf.Session(config=config)
+            init = tf.global_variables_initializer()
+            sess.run(init)
+            backend.set_session(sess)
         model = self.load_searcher().load_best_model()
         return self.y_encoder.inverse_transform(model.predict(x_test, ))
 
@@ -223,12 +230,19 @@ class ClassifierBase:
 
     def cross_validate(self, x_all, y_all, n_splits):
         """Do the n_splits cross-validation for the input."""
+        if constant.LIMIT_MEMORY:
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth = True
+            sess = tf.Session(config=config)
+            init = tf.global_variables_initializer()
+            sess.run(init)
+            backend.set_session(sess)
         k_fold = StratifiedKFold(n_splits=n_splits, shuffle=False, random_state=7)
         ret = []
         y_raw_all = y_all
         y_all = self.y_encoder.transform(y_all)
+        model = self.load_searcher().load_best_model()
         for train, test in k_fold.split(x_all, y_raw_all):
-            model = self.load_searcher().load_best_model()
             reset_weights(model)
             ModelTrainer(model, x_all[train], y_all[train], x_all[test], y_all[test], self.verbose).train_model()
             scores = model.evaluate(x_all[test], y_all[test], verbose=self.verbose)
