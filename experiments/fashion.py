@@ -1,5 +1,5 @@
 import sys
-from keras.datasets import cifar10, fashion_mnist, mnist
+from keras.datasets import cifar10, fashion_mnist
 import numpy as np
 
 import os
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     # select_gpu()
     os.environ["CUDA_VISIBLE_DEVICES"] = str(3)
     constant.LIMIT_MEMORY = True
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    (x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
     x_train = x_train.reshape(x_train.shape + (1,))
     x_test = x_test.reshape(x_test.shape + (1,))
     X = np.concatenate((x_train, x_test))

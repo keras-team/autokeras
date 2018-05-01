@@ -5,6 +5,7 @@ import numpy as np
 import os
 import GPUtil
 
+from autokeras import constant
 from autokeras.classifier import ImageClassifier
 
 
@@ -21,20 +22,23 @@ def select_gpu():
 
 
 if __name__ == '__main__':
-    select_gpu()
+    # select_gpu()
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(3)
+    constant.LIMIT_MEMORY = True
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     X = np.concatenate((x_train, x_test))
     Y = np.concatenate((y_train, y_test))
-    clf = ImageClassifier(searcher_type=sys.argv[1], path=sys.argv[2], verbose=True)
+    clf = ImageClassifier(searcher_type='bayesian', path='~/temp_models', verbose=True)
 
     clf.fit(x_train, y_train, time_limit=12*60*60)
     # clf.final_fit(x_train, y_train)
     y = clf.evaluate(x_test, y_test)
     print(y)
     # MLP for Pima Indians Dataset with 10-fold cross validation
-    # scores = clf.cross_validate(X, Y, 2)
-    # print(np.mean(scores))
-    # print(np.std(scores))
+    scores = clf.cross_validate(X, Y, 10)
+    print(scores)
+    print(np.mean(scores))
+    print(np.std(scores))
 
     # split into input (X) and output (Y) variables
     # define 10-fold cross validation test harness
