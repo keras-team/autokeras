@@ -37,7 +37,7 @@ if __name__ == '__main__':
     y = clf.evaluate(x_test, y_test)
     print(y)
     # MLP for Pima Indians Dataset with 10-fold cross validation
-    scores = clf.cross_validate(X, Y, 2)
+    scores = clf.cross_validate(X, Y, 10)
     print(scores)
     print(np.mean(scores))
     print(np.std(scores))
