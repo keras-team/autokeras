@@ -188,16 +188,19 @@ class BayesianSearcher(Searcher):
             self.search_tree.add_child(-1, history_item['model_id'])
 
             graph = Graph(model)
-            self.init_search_queue = transform(graph)
+            self.init_search_queue = []
+            for child_graph in transform(graph):
+                self.init_search_queue.append((child_graph, history_item['model_id']))
             self.init_gpr_x.append(graph.extract_descriptor())
             self.init_gpr_y.append(history_item['accuracy'])
             pickle_to_file(self, os.path.join(self.path, 'searcher'))
             return
 
         if self.init_search_queue:
-            graph = self.init_search_queue.pop()
+            graph, father_id = self.init_search_queue.pop()
             model = graph.produce_model()
             history_item = self.add_model(model, x_train, y_train, x_test, y_test, constant.SEARCH_MAX_ITER)
+            self.search_tree.add_child(father_id, history_item['model_id'])
             self.init_gpr_x.append(graph.extract_descriptor())
             self.init_gpr_y.append(history_item['accuracy'])
             pickle_to_file(self, os.path.join(self.path, 'searcher'))
