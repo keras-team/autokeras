@@ -5,6 +5,7 @@ from queue import Queue
 from keras import Input
 from keras.engine import Model
 from keras.layers import Concatenate, Dense, BatchNormalization, Dropout, Activation, Flatten
+from keras.regularizers import l2
 
 from autokeras import constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_weighted_add, \
@@ -48,7 +49,11 @@ def to_real_layer(layer):
     if is_layer(layer, 'Dense'):
         return Dense(layer.units, activation=layer.activation)
     if is_layer(layer, 'Conv'):
-        return layer.func(layer.filters, kernel_size=layer.kernel_size, padding='same', kernel_initializer='he_normal')
+        return layer.func(layer.filters,
+                          kernel_size=layer.kernel_size,
+                          padding='same',
+                          kernel_initializer='he_normal',
+                          kernel_regularizer=l2(1e-4))
     if is_layer(layer, 'Pooling'):
         return layer.func(padding='same')
     if is_layer(layer, 'BatchNormalization'):
@@ -90,6 +95,7 @@ class Graph:
         pre_vis: A boolean list marking whether a node has been visited or not.
         middle_layer_vis: A boolean list marking whether a node has been visited or not.
     """
+
     def __init__(self, model, weighted=True):
         model = to_stub_model(model, weighted)
         layers = model.layers[1:]
@@ -555,25 +561,30 @@ class Graph:
         output_id = self.node_to_id[self.output]
 
         new_to_old_layer = {}
-        self.node_list[input_id] = input_tensor
-        self.node_to_id[input_tensor] = input_id
+
+        node_list = deepcopy(self.node_list)
+        node_list[input_id] = input_tensor
+
+        node_to_id = deepcopy(self.node_to_id)
+        node_to_id[input_tensor] = input_id
+
         for v in self._topological_order():
             for u, layer_id in self.reverse_adj_list[v]:
                 layer = self.layer_list[layer_id]
 
                 if isinstance(layer, (StubWeightedAdd, StubConcatenate)):
-                    edge_input_tensor = list(map(lambda x: self.node_list[x],
+                    edge_input_tensor = list(map(lambda x: node_list[x],
                                                  self.layer_id_to_input_node_ids[layer_id]))
                 else:
-                    edge_input_tensor = self.node_list[u]
+                    edge_input_tensor = node_list[u]
 
                 new_layer = to_real_layer(layer)
                 new_to_old_layer[new_layer] = layer
 
                 temp_tensor = new_layer(edge_input_tensor)
-                self.node_list[v] = temp_tensor
-                self.node_to_id[temp_tensor] = v
-        model = Model(input_tensor, self.node_list[output_id])
+                node_list[v] = temp_tensor
+                node_to_id[temp_tensor] = v
+        model = Model(input_tensor, node_list[output_id])
         for layer in model.layers[1:]:
             if not isinstance(layer, (Activation, Dropout, Concatenate)):
                 old_layer = new_to_old_layer[layer]

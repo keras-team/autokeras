@@ -148,13 +148,10 @@ class ModelTrainer:
         else:
             self.datagen = None
 
-    def _converged(self, loss):
-        """Return whether the training is converged"""
-
-    def train_model(self):
+    def train_model(self, max_iter_num=constant.MAX_ITER_NUM, max_no_improvement_num=constant.MAX_NO_IMPROVEMENT_NUM):
         """Train the model with dataset and return the minimum_loss"""
         batch_size = min(self.x_train.shape[0], constant.MAX_BATCH_SIZE)
-        terminator = EarlyStop()
+        terminator = EarlyStop(max_no_improvement_num=max_no_improvement_num)
         lr_scheduler = LearningRateScheduler(lr_schedule)
 
         lr_reducer = ReduceLROnPlateau(factor=np.sqrt(0.1),
@@ -167,14 +164,14 @@ class ModelTrainer:
             if constant.DATA_AUGMENTATION:
                 flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
                 self.model.fit_generator(flow,
-                                         epochs=constant.MAX_ITER_NUM,
+                                         epochs=max_iter_num,
                                          validation_data=(self.x_test, self.y_test),
                                          callbacks=callbacks,
                                          verbose=self.verbose)
             else:
                 self.model.fit(self.x_train, self.y_train,
                                batch_size=batch_size,
-                               epochs=constant.MAX_ITER_NUM,
+                               epochs=max_iter_num,
                                validation_data=(self.x_test, self.y_test),
                                callbacks=callbacks,
                                verbose=self.verbose)

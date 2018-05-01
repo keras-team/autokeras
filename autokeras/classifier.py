@@ -53,20 +53,12 @@ def read_csv_file(csv_file_path):
     """
     img_file_names = []
     img_labels = []
-    try:
-        with open(csv_file_path, 'r') as images_path:
-            path_list = csv.DictReader(images_path)
-            fieldnames = path_list.fieldnames
-            for path in path_list:
-                img_file_names.append(path[fieldnames[0]])
-                img_labels.append(path[fieldnames[1]])
-    except IOError as e:
-        if e.errno == errno.EACCES:
-            raise IOError('File not accessible')
-        elif e.errno == errno.ENOENT:
-            raise IOError('No such file or directory exist')
-        else:
-            raise ValueError("Illegal file type")
+    with open(csv_file_path, 'r') as images_path:
+        path_list = csv.DictReader(images_path)
+        fieldnames = path_list.fieldnames
+        for path in path_list:
+            img_file_names.append(path[fieldnames[0]])
+            img_labels.append(path[fieldnames[1]])
     return img_file_names, img_labels
 
 
@@ -206,6 +198,13 @@ class ClassifierBase:
         Args:
             x_test: An instance of numpy.ndarray contains the testing data.
         """
+        if constant.LIMIT_MEMORY:
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth = True
+            sess = tf.Session(config=config)
+            init = tf.global_variables_initializer()
+            sess.run(init)
+            backend.set_session(sess)
         model = self.load_searcher().load_best_model()
         return self.y_encoder.inverse_transform(model.predict(x_test, ))
 
@@ -231,12 +230,19 @@ class ClassifierBase:
 
     def cross_validate(self, x_all, y_all, n_splits):
         """Do the n_splits cross-validation for the input."""
+        if constant.LIMIT_MEMORY:
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth = True
+            sess = tf.Session(config=config)
+            init = tf.global_variables_initializer()
+            sess.run(init)
+            backend.set_session(sess)
         k_fold = StratifiedKFold(n_splits=n_splits, shuffle=False, random_state=7)
         ret = []
         y_raw_all = y_all
         y_all = self.y_encoder.transform(y_all)
+        model = self.load_searcher().load_best_model()
         for train, test in k_fold.split(x_all, y_raw_all):
-            model = self.load_searcher().load_best_model()
             reset_weights(model)
             ModelTrainer(model, x_all[train], y_all[train], x_all[test], y_all[test], self.verbose).train_model()
             scores = model.evaluate(x_all[test], y_all[test], verbose=self.verbose)

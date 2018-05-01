@@ -1,6 +1,7 @@
-import math
+import warnings
+
 import numpy as np
-from scipy.linalg import cholesky, cho_solve
+from scipy.linalg import cholesky, cho_solve, solve_triangular
 from scipy.optimize import linear_sum_assignment
 
 
@@ -82,8 +83,12 @@ class IncrementalGaussianProcess:
 
         return self
 
+    @property
+    def first_fitted(self):
+        return self._first_fitted
+
     def first_fit(self, train_x, train_y):
-        train_x, train_y = np.array([train_x]), np.array([train_y])
+        train_x, train_y = np.array(train_x), np.array(train_y)
 
         self._x = np.copy(train_x)
         self._y = np.copy(train_y)
@@ -101,14 +106,30 @@ class IncrementalGaussianProcess:
     def predict(self, train_x):
         k_trans = self.kernel(train_x, self._x)
         y_mean = k_trans.dot(self._alpha_vector)  # Line 4 (y_mean = f_star)
-        return y_mean
+
+        # compute inverse K_inv of K based on its Cholesky
+        # decomposition L and its inverse L_inv
+        l_inv = solve_triangular(self._l_matrix.T, np.eye(self._l_matrix.shape[0]))
+        k_inv = l_inv.dot(l_inv.T)
+        # Compute variance of predictive distribution
+        y_var = np.ones(len(train_x), dtype=np.float)
+        y_var -= np.einsum("ij,ij->i", np.dot(k_trans, k_inv), k_trans)
+
+        # Check if any of the variances is negative because of
+        # numerical issues. If yes: set the variance to 0.
+        y_var_negative = y_var < 0
+        if np.any(y_var_negative):
+            warnings.warn("Predicted variances smaller than 0. "
+                          "Setting those variances to 0.")
+            y_var[y_var_negative] = 0.0
+        return y_mean, np.sqrt(y_var)
 
 
-def kernel(X, Y=None):
-    if Y is None:
-        ret = np.zeros((X.shape[0], X.shape[0]))
-        for x_index, x in enumerate(X):
-            for y_index, y in enumerate(X):
+def kernel(train_x, train_y=None):
+    if train_y is None:
+        ret = np.zeros((train_x.shape[0], train_x.shape[0]))
+        for x_index, x in enumerate(train_x):
+            for y_index, y in enumerate(train_x):
                 if x_index == y_index:
                     ret[x_index][y_index] = 1.0
                 elif x_index < y_index:
@@ -116,8 +137,8 @@ def kernel(X, Y=None):
                 else:
                     ret[x_index][y_index] = ret[y_index][x_index]
         return ret
-    ret = np.zeros((X.shape[0], Y.shape[0]))
-    for x_index, x in enumerate(X):
-        for y_index, y in enumerate(Y):
+    ret = np.zeros((train_x.shape[0], train_y.shape[0]))
+    for x_index, x in enumerate(train_x):
+        for y_index, y in enumerate(train_y):
             ret[x_index][y_index] = 1.0 / np.exp(edit_distance(x, y))
     return ret

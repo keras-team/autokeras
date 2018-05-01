@@ -11,6 +11,8 @@ def test_edit_distance():
 
 def test_gpr():
     gpr = IncrementalGaussianProcess()
-    gpr.first_fit(Graph(get_add_skip_model()).extract_descriptor(), 0.5)
+    gpr.first_fit([Graph(get_add_skip_model()).extract_descriptor()], [0.5])
+    assert gpr.first_fitted
+
     gpr.incremental_fit(Graph(get_concat_skip_model()).extract_descriptor(), 0.6)
     assert abs(gpr.predict(np.array([Graph(get_concat_skip_model()).extract_descriptor()]))[0] - 0.6) < 1e-4

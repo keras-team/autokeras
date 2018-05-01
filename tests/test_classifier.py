@@ -1,4 +1,4 @@
-from time import sleep
+from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
@@ -41,13 +41,17 @@ class MockProcess(object):
         self.target(*self.args)
 
 
+def simple_transform(graph):
+    return [deepcopy(graph), deepcopy(graph)]
+
+
 @patch('multiprocessing.Process', new=MockProcess)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
-def test_fit_predict(_):
-    constant.MAX_ITER_NUM = 2
-    constant.MAX_MODEL_NUM = 2
-    constant.EPOCHS_EACH = 1
-    constant.N_NEIGHBORS = 1
+@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.search.ModelTrainer.train_model')
+def test_fit_predict(_, _1):
+    constant.MAX_ITER_NUM = 1
+    constant.MAX_MODEL_NUM = 4
+    constant.SEARCH_MAX_ITER = 1
     constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
     clean_dir(path)
@@ -60,31 +64,27 @@ def test_fit_predict(_):
     clean_dir(path)
 
 
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: sleep(6))
-def test_timout(_):
+def test_timout():
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
-    constant.MAX_ITER_NUM = 1
-    constant.MAX_MODEL_NUM = 1
-    constant.EPOCHS_EACH = 1
-    constant.N_NEIGHBORS = 1
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf.fit(train_x, train_y, time_limit=5)
+    clf.fit(train_x, train_y, time_limit=1)
     clean_dir(path)
 
 
 @patch('multiprocessing.Process', new=MockProcess)
-def test_final_fit():
+@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.search.ModelTrainer.train_model')
+def test_final_fit(_, _1):
     constant.LIMIT_MEMORY = True
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
-    constant.EPOCHS_EACH = 1
-    constant.N_NEIGHBORS = 1
+    constant.SEARCH_MAX_ITER = 1
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
@@ -96,12 +96,12 @@ def test_final_fit():
 
 
 @patch('multiprocessing.Process', new=MockProcess)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
-def test_save_continue(_):
+@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.search.ModelTrainer.train_model')
+def test_save_continue(_, _1):
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
-    constant.EPOCHS_EACH = 1
-    constant.N_NEIGHBORS = 1
+    constant.SEARCH_MAX_ITER = 1
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
@@ -136,12 +136,12 @@ def test_save_continue(_):
 
 
 @patch('multiprocessing.Process', new=MockProcess)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
-def test_fit_csv_file_1(_):
+@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.search.ModelTrainer.train_model')
+def test_fit_csv_file(_, _1):
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
-    constant.EPOCHS_EACH = 1
-    constant.N_NEIGHBORS = 1
+    constant.SEARCH_MAX_ITER = 1
     path = 'tests/resources'
     clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"), resume=False)
     clf.fit(csv_file_path=os.path.join(path, "images_test/images_name.csv"),
@@ -153,24 +153,13 @@ def test_fit_csv_file_1(_):
     assert len(results) == 5
     clean_dir(os.path.join(path, "temp"))
 
-    clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"), resume=True)
-    clf.fit(csv_file_path=os.path.join(path, "images_test/images_name.csv"),
-            images_path=os.path.join(path, "images_test/Black_white_images"))
-    img_file_name, y_train = read_csv_file(csv_file_path=os.path.join(path, "images_test/images_name.csv"))
-    x_test = read_images(img_file_name, images_dir_path=os.path.join(path, "images_test/Black_white_images"))
-    results = clf.predict(x_test)
-    assert len(clf.load_searcher().history) == 1
-    assert len(results) == 5
-    clean_dir(os.path.join(path, "temp"))
-
 
 @patch('multiprocessing.Process', new=MockProcess)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=lambda: None)
-def test_cross_validate(_):
+@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.search.ModelTrainer.train_model')
+def test_cross_validate(_, _1):
     constant.MAX_ITER_NUM = 2
     constant.MAX_MODEL_NUM = 2
-    constant.EPOCHS_EACH = 1
-    constant.N_NEIGHBORS = 1
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
