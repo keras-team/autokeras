@@ -1,5 +1,6 @@
 import os
 import random
+import pickle
 from functools import total_ordering
 from queue import PriorityQueue
 
@@ -94,12 +95,18 @@ class Searcher:
         model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
         plot_model(model, to_file=os.path.join(self.path, str(self.model_count) + '.png'), show_shapes=True)
 
-        ret = {'model_id': self.model_count, 'loss': loss, 'accuracy': accuracy}
+        model_id = self.model_count
+        ret = {'model_id': model_id, 'loss': loss, 'accuracy': accuracy}
         self.history.append(ret)
         self.history_configs.append(extract_config(model))
         self.model_count += 1
         self.descriptors[Graph(model, False).extract_descriptor()] = True
 
+        # Update best_model text file
+        if model_id == self.get_best_model_id():
+            file = open(os.path.join(self.path, 'best_model.txt'), 'w')
+            file.write('best model: ' + str(model_id))
+            file.close()
         return ret
 
 

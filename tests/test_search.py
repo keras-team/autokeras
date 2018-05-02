@@ -1,4 +1,5 @@
 from copy import deepcopy
+from pathlib import Path
 from unittest.mock import patch
 
 from autokeras.search import *
@@ -44,6 +45,7 @@ def test_random_searcher(_):
     clean_dir(default_test_path)
     generator = RandomSearcher(3, (28, 28, 1), verbose=False, path=default_test_path)
     generator.search(x_train, y_train, x_test, y_test)
+    assert Path(os.path.join(default_test_path, 'best_model.txt')).is_file()
     clean_dir(default_test_path)
     assert len(generator.history) == len(generator.history_configs)
 
