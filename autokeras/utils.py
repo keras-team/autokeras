@@ -6,7 +6,7 @@ from keras import backend
 from keras.callbacks import Callback, LearningRateScheduler, ReduceLROnPlateau
 from keras.losses import categorical_crossentropy
 from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D, Dense, BatchNormalization, \
-    Concatenate, Dropout, Activation, Flatten
+    Concatenate, Dropout, Activation, Flatten, GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from tensorflow import Dimension
@@ -14,7 +14,7 @@ from tensorflow import Dimension
 from autokeras import constant
 from autokeras.constant import CONV_FUNC_LIST
 from autokeras.layers import StubConv, StubDense, StubBatchNormalization, StubConcatenate, StubWeightedAdd, \
-    WeightedAdd, StubPooling, StubDropout, StubActivation, StubFlatten
+    WeightedAdd, StubPooling, StubDropout, StubActivation, StubFlatten, StubGlobalPooling
 
 
 def is_conv_layer(layer):
@@ -29,6 +29,16 @@ def is_dense_layer(layer):
 def get_conv_layer_func(n_dim):
     """Return convolution function based on the dimension"""
     conv_layer_functions = [Conv1D, Conv2D, Conv3D]
+    if n_dim > 3:
+        raise ValueError('The input dimension is too high.')
+    if n_dim < 1:
+        raise ValueError('The input dimension is too low.')
+    return conv_layer_functions[n_dim - 1]
+
+
+def get_ave_layer_func(n_dim):
+    """Return convolution function based on the dimension"""
+    conv_layer_functions = [GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D]
     if n_dim > 3:
         raise ValueError('The input dimension is too high.')
     if n_dim < 1:
@@ -225,6 +235,10 @@ def is_pooling_layer(layer):
     return isinstance(layer, (MaxPooling1D, MaxPooling2D, MaxPooling3D))
 
 
+def is_global_pooling_layer(layer):
+    return isinstance(layer, (GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D))
+
+
 def pickle_from_file(path):
     return pickle.load(open(path, 'rb'))
 
@@ -252,6 +266,8 @@ def is_layer(layer, layer_type):
         return isinstance(layer, (StubActivation, Activation))
     if layer_type == 'Flatten':
         return isinstance(layer, (StubFlatten, Flatten))
+    if layer_type == 'GlobalAveragePooling':
+        return isinstance(layer, StubGlobalPooling) or is_global_pooling_layer(layer)
 
 
 def layer_width(layer):

@@ -2,7 +2,8 @@ import os
 import numpy as np
 from keras import Input
 from keras.engine import Model
-from keras.layers import Conv2D, BatchNormalization, Activation, Flatten, Dense, MaxPooling2D, Concatenate, Dropout
+from keras.layers import Conv2D, BatchNormalization, Activation, Flatten, Dense, MaxPooling2D, Concatenate, Dropout, \
+    GlobalAveragePooling2D
 
 from autokeras import constant
 from autokeras.layers import WeightedAdd
@@ -102,7 +103,7 @@ def get_conv_dense_model():
     output_tensor = BatchNormalization()(output_tensor)
     output_tensor = Activation('relu')(output_tensor)
     output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
-    output_tensor = Flatten()(output_tensor)
+    output_tensor = GlobalAveragePooling2D()(output_tensor)
     output_tensor = Dense(5, activation='relu')(output_tensor)
     output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
     output_tensor = Dense(5, activation='softmax')(output_tensor)

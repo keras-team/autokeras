@@ -2,12 +2,12 @@ from random import randint, random
 
 from keras import Input, Model
 from keras.layers import MaxPooling1D, MaxPooling2D, MaxPooling3D, Dropout, Flatten, Dense, BatchNormalization, \
-    Activation
+    Activation, GlobalAveragePooling2D
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adadelta, Adam
 
 from autokeras import constant
-from autokeras.utils import get_conv_layer_func
+from autokeras.utils import get_conv_layer_func, get_ave_layer_func
 
 
 class ClassifierGenerator:
@@ -52,6 +52,7 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         """Return the default classifier model that has been compiled."""
         pool = self._get_pool_layer_func()
         conv = get_conv_layer_func(len(self._get_shape(3)))
+        ave = get_ave_layer_func(len(self._get_shape(3)))
 
         input_tensor = Input(shape=self.input_shape)
         output_tensor = conv(32, kernel_size=self._get_shape(3), padding='same')(input_tensor)
@@ -80,11 +81,7 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         output_tensor = Activation('relu')(output_tensor)
         output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
-        output_tensor = Flatten()(output_tensor)
-        output_tensor = Dense(128, activation='relu')(output_tensor)
-        output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
-        output_tensor = Dense(128, activation='relu')(output_tensor)
-        output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
+        output_tensor = ave()(output_tensor)
         output_tensor = Dense(self.n_classes, activation='softmax')(output_tensor)
         return Model(inputs=input_tensor, outputs=output_tensor)
 

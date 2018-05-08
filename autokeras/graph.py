@@ -68,6 +68,8 @@ def to_real_layer(layer):
         return Activation(layer.func)
     if is_layer(layer, 'Flatten'):
         return Flatten()
+    if is_layer(layer, 'GlobalAveragePooling'):
+        return layer.func()
 
 
 class Graph:

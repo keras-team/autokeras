@@ -109,6 +109,12 @@ class StubPooling(StubLayer):
         self.func = func
 
 
+class StubGlobalPooling(StubLayer):
+    def __init__(self, func, input_node=None, output_node=None):
+        super().__init__(input_node, output_node)
+        self.func = func
+
+
 class StubDropout(StubLayer):
     def __init__(self, rate, input_node=None, output_node=None):
         super().__init__(input_node, output_node)

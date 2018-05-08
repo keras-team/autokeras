@@ -2,8 +2,8 @@ from keras.engine import InputLayer
 from keras.layers import Dense, Concatenate, BatchNormalization, Activation, Flatten, Dropout
 
 from autokeras.layers import WeightedAdd, StubLayer, StubBatchNormalization, StubDense, StubConv, StubConcatenate, \
-    StubWeightedAdd, StubActivation, StubPooling, StubDropout, StubFlatten
-from autokeras.utils import is_conv_layer, is_pooling_layer, get_int_tuple
+    StubWeightedAdd, StubActivation, StubPooling, StubDropout, StubFlatten, StubGlobalPooling
+from autokeras.utils import is_conv_layer, is_pooling_layer, get_int_tuple, is_global_pooling_layer
 
 
 class StubModel:
@@ -61,6 +61,8 @@ def to_stub_model(model, weighted=False):
             temp_stub_layer = StubDropout(layer.rate, input_id, output_id)
         elif is_pooling_layer(layer):
             temp_stub_layer = StubPooling(layer.__class__, input_id, output_id)
+        elif is_global_pooling_layer(layer):
+            temp_stub_layer = StubGlobalPooling(layer.__class__, input_id, output_id)
         else:
             raise TypeError("The layer {} is illegal.".format(layer))
         if weighted:
