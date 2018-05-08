@@ -31,7 +31,7 @@ def test_transform():
 
 def test_legal_graph():
     graph = Graph(get_pooling_model(), False)
-    graph.to_add_skip_model(0, 4)
+    graph.to_add_skip_model(2, 6)
     assert legal_graph(graph)
-    graph.to_add_skip_model(0, 4)
+    graph.to_add_skip_model(2, 6)
     assert not legal_graph(graph)

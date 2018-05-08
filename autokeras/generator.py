@@ -54,31 +54,31 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         conv = get_conv_layer_func(len(self._get_shape(3)))
         ave = get_ave_layer_func(len(self._get_shape(3)))
 
-        input_tensor = Input(shape=self.input_shape)
-        output_tensor = conv(32, kernel_size=self._get_shape(3), padding='same')(input_tensor)
+        output_tensor = input_tensor = Input(shape=self.input_shape)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
+        output_tensor = conv(32, kernel_size=self._get_shape(3), padding='same')(output_tensor)
         output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
         output_tensor = pool(padding='same')(output_tensor)
 
-        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
+        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
         output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
         output_tensor = pool(padding='same')(output_tensor)
 
-        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
+        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
         output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
         output_tensor = pool(padding='same')(output_tensor)
 
-        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
         output_tensor = BatchNormalization()(output_tensor)
         output_tensor = Activation('relu')(output_tensor)
+        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
         output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
         output_tensor = ave()(output_tensor)

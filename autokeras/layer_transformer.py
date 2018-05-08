@@ -39,9 +39,9 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
                        np.ones(n_filters, dtype=np.float32)]
         bn.set_weights(new_weights)
 
-    return [new_conv_layer,
-            bn,
+    return [bn,
             StubActivation('relu'),
+            new_conv_layer,
             StubDropout(constant.CONV_DROPOUT_RATE)]
 
 

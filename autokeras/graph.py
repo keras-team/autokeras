@@ -429,7 +429,7 @@ class Graph:
         return ret
 
     def _dense_block_end_node(self, layer_id):
-        return self._block_end_node(layer_id, constant.DENSE_BLOCK_SIZE)
+        return self._block_end_node(layer_id, constant.DENSE_BLOCK_DISTANCE)
 
     def _conv_block_end_node(self, layer_id):
         """
@@ -441,7 +441,7 @@ class Graph:
             The input node ID of the last layer in the convolutional block.
 
         """
-        return self._block_end_node(layer_id, constant.CONV_BLOCK_SIZE)
+        return self._block_end_node(layer_id, constant.CONV_BLOCK_DISTANCE)
 
     def to_add_skip_model(self, start_id, end_id):
         """Add a weighted add skip connection from before start node to end node.
@@ -456,13 +456,15 @@ class Graph:
         self.operation_history.append(('to_add_skip_model', start_id, end_id))
         conv_layer_ids = self._conv_layer_ids_in_order()
         start_id = conv_layer_ids[conv_layer_ids.index(start_id) + 1]
-        conv_input_id = self.layer_id_to_input_node_ids[start_id][0]
+        conv_block_input_id = self.layer_id_to_input_node_ids[start_id][0]
+        conv_block_input_id = self.reverse_adj_list[conv_block_input_id][0][0]
+        conv_block_input_id = self.reverse_adj_list[conv_block_input_id][0][0]
 
         dropout_input_id = self._conv_block_end_node(end_id)
 
         # Add the pooling layer chain.
-        pooling_layer_list = self._get_pooling_layers(conv_input_id, dropout_input_id)
-        skip_output_id = conv_input_id
+        pooling_layer_list = self._get_pooling_layers(conv_block_input_id, dropout_input_id)
+        skip_output_id = conv_block_input_id
         for index, layer_id in enumerate(pooling_layer_list):
             layer = self.layer_list[layer_id]
             new_node_id = self._add_new_node()
@@ -490,14 +492,16 @@ class Graph:
         # start = self.layer_list[start_id]
         conv_layer_ids = self._conv_layer_ids_in_order()
         start_id = conv_layer_ids[conv_layer_ids.index(start_id) + 1]
-        conv_input_id = self.layer_id_to_input_node_ids[start_id][0]
+        conv_block_input_id = self.layer_id_to_input_node_ids[start_id][0]
+        conv_block_input_id = self.reverse_adj_list[conv_block_input_id][0][0]
+        conv_block_input_id = self.reverse_adj_list[conv_block_input_id][0][0]
 
         end = self.layer_list[end_id]
         dropout_input_id = self._conv_block_end_node(end_id)
 
         # Add the pooling layer chain.
-        pooling_layer_list = self._get_pooling_layers(conv_input_id, dropout_input_id)
-        skip_output_id = conv_input_id
+        pooling_layer_list = self._get_pooling_layers(conv_block_input_id, dropout_input_id)
+        skip_output_id = conv_block_input_id
         for index, layer_id in enumerate(pooling_layer_list):
             layer = self.layer_list[layer_id]
             new_node_id = self._add_new_node()
@@ -520,7 +524,7 @@ class Graph:
 
         self.pre_vis[dropout_output_id] = True
         dim = layer_width(end)
-        n_add = self._upper_layer_width(conv_input_id)
+        n_add = self._upper_layer_width(conv_block_input_id)
         self._search_next(dropout_output_id, dim, dim, n_add)
 
     def extract_descriptor(self):
