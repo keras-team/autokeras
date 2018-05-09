@@ -22,15 +22,15 @@ def select_gpu():
 
 
 if __name__ == '__main__':
-    # select_gpu()
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(3)
-    constant.LIMIT_MEMORY = True
+    select_gpu()
+    # os.environ["CUDA_VISIBLE_DEVICES"] = str(3)
+    # constant.LIMIT_MEMORY = True
     (x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
     x_train = x_train.reshape(x_train.shape + (1,))
     x_test = x_test.reshape(x_test.shape + (1,))
     X = np.concatenate((x_train, x_test))
     Y = np.concatenate((y_train, y_test))
-    clf = ImageClassifier(searcher_type='bayesian', path='~/temp_models', verbose=True)
+    clf = ImageClassifier(searcher_type='bayesian', path='/haifeng/home/fashion', verbose=False)
 
     clf.fit(x_train, y_train, time_limit=12*60*60)
     # clf.final_fit(x_train, y_train)

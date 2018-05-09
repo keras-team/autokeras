@@ -22,13 +22,12 @@ def select_gpu():
 
 
 if __name__ == '__main__':
-    # select_gpu()
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(3)
-    constant.LIMIT_MEMORY = True
+    select_gpu()
+    # constant.LIMIT_MEMORY = True
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     X = np.concatenate((x_train, x_test))
     Y = np.concatenate((y_train, y_test))
-    clf = ImageClassifier(searcher_type='bayesian', path='~/temp_models', verbose=True)
+    clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/cifar10', verbose=False)
 
     clf.fit(x_train, y_train, time_limit=12*60*60)
     # clf.final_fit(x_train, y_train)

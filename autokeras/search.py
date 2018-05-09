@@ -40,7 +40,7 @@ class Searcher:
         model_count: the id of model
     """
 
-    def __init__(self, n_classes, input_shape, path, verbose):
+    def __init__(self, n_classes, input_shape, path, verbose, augment=True):
         """Init Searcher class with n_classes, input_shape, path, verbose
 
         The Searcher will be loaded from file if it has been saved before.
@@ -53,6 +53,7 @@ class Searcher:
         self.path = path
         self.model_count = 0
         self.descriptors = {}
+        self.augment = augment
 
     def search(self, x_train, y_train, x_test, y_test):
         """an search strategy that will be overridden by children classes"""
@@ -77,7 +78,7 @@ class Searcher:
     def replace_model(self, model, model_id):
         model.save(os.path.join(self.path, str(model_id) + '.h5'))
 
-    def add_model(self, model, x_train, y_train, x_test, y_test, max_no_improve=constant.MAX_ITER_NUM):
+    def add_model(self, model, x_train, y_train, x_test, y_test, max_iter_num=constant.MAX_ITER_NUM):
         """add one model while will be trained to history list
 
         Returns:
@@ -90,7 +91,8 @@ class Searcher:
                      y_train,
                      x_test,
                      y_test,
-                     self.verbose).train_model(max_no_improvement_num=max_no_improve)
+                     self.verbose,
+                     augment=self.augment).train_model(max_iter_num=max_iter_num)
         loss, accuracy = model.evaluate(x_test, y_test, verbose=self.verbose)
         model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
         plot_model(model, to_file=os.path.join(self.path, str(self.model_count) + '.png'), show_shapes=True)
@@ -180,8 +182,8 @@ class HillClimbingSearcher(Searcher):
 
 class BayesianSearcher(Searcher):
 
-    def __init__(self, n_classes, input_shape, path, verbose):
-        super().__init__(n_classes, input_shape, path, verbose)
+    def __init__(self, n_classes, input_shape, path, verbose, augment=True):
+        super().__init__(n_classes, input_shape, path, verbose, augment)
         self.gpr = IncrementalGaussianProcess()
         self.search_tree = SearchTree()
         self.init_search_queue = None
@@ -191,7 +193,7 @@ class BayesianSearcher(Searcher):
     def search(self, x_train, y_train, x_test, y_test):
         if not self.history:
             model = DefaultClassifierGenerator(self.n_classes, self.input_shape).generate()
-            history_item = self.add_model(model, x_train, y_train, x_test, y_test)
+            history_item = self.add_model(model, x_train, y_train, x_test, y_test, constant.SEARCH_MAX_ITER)
             self.search_tree.add_child(-1, history_item['model_id'])
 
             graph = Graph(model)

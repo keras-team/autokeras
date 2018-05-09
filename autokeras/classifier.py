@@ -159,7 +159,7 @@ class ClassifierBase:
         if not self.searcher:
             input_shape = x_train.shape[1:]
             n_classes = self.y_encoder.n_classes
-            searcher = self._get_searcher_class()(n_classes, input_shape, self.path, self.verbose)
+            searcher = self._get_searcher_class()(n_classes, input_shape, self.path, self.verbose, self.augment)
             self.save_searcher(searcher)
             self.searcher = True
 
@@ -273,5 +273,7 @@ class ImageClassifier(ClassifierBase):
     for the best configuration for the dataset.
     """
 
-    def __init__(self, verbose=True, searcher_type='bayesian', path=constant.DEFAULT_SAVE_PATH, resume=False):
+    def __init__(self, verbose=True, searcher_type='bayesian', path=constant.DEFAULT_SAVE_PATH, resume=False,
+                 augment=True):
         super().__init__(verbose, searcher_type, path, resume=resume)
+        self.augment = augment

@@ -29,7 +29,7 @@ def skip_connection_distance(a, b):
         return 1.0
     len_a = abs(a[1] - a[0])
     len_b = abs(b[1] - b[0])
-    return abs(a[0] - b[0]) + abs(len_a - len_b)
+    return (abs(a[0] - b[0]) + abs(len_a - len_b)) / (max(a[0], b[0]) + max(len_a, len_b))
 
 
 def skip_connections_distance(list_a, list_b):
