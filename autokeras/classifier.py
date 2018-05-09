@@ -14,9 +14,10 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split, StratifiedKFold
 
 from autokeras import constant
+from autokeras.graph import Graph
 from autokeras.preprocessor import OneHotEncoder
 from autokeras.search import HillClimbingSearcher, RandomSearcher, BayesianSearcher
-from autokeras.utils import ensure_dir, reset_weights, ModelTrainer, has_file, pickle_from_file, pickle_to_file
+from autokeras.utils import ensure_dir, ModelTrainer, has_file, pickle_from_file, pickle_to_file
 
 
 def _validate(x_train, y_train):
@@ -243,7 +244,9 @@ class ClassifierBase:
         y_all = self.y_encoder.transform(y_all)
         model = self.load_searcher().load_best_model()
         for train, test in k_fold.split(x_all, y_raw_all):
-            reset_weights(model)
+            graph = Graph(model, False)
+            backend.clear_session()
+            model = graph.produce_model()
             ModelTrainer(model, x_all[train], y_all[train], x_all[test], y_all[test], self.verbose).train_model()
             scores = model.evaluate(x_all[test], y_all[test], verbose=self.verbose)
             ret.append(scores[1] * 100)

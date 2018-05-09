@@ -2,7 +2,6 @@ import os
 import pickle
 import numpy as np
 
-from keras import backend
 from keras.callbacks import Callback, LearningRateScheduler, ReduceLROnPlateau
 from keras.losses import categorical_crossentropy
 from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D, Dense, BatchNormalization, \
@@ -121,7 +120,7 @@ class ModelTrainer:
         verbose: verbosity mode
     """
 
-    def __init__(self, model, x_train, y_train, x_test, y_test, verbose):
+    def __init__(self, model, x_train, y_train, x_test, y_test, verbose, augment=constant.DATA_AUGMENTATION):
         """Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
         model.compile(loss=categorical_crossentropy,
                       optimizer=Adam(lr=lr_schedule(0)),
@@ -132,7 +131,8 @@ class ModelTrainer:
         self.x_test = x_test
         self.y_test = y_test
         self.verbose = verbose
-        if constant.DATA_AUGMENTATION:
+        self.augment = augment
+        if self.augment:
             self.datagen = ImageDataGenerator(
                 # set input mean to 0 over the dataset
                 featurewise_center=False,
@@ -171,7 +171,7 @@ class ModelTrainer:
 
         callbacks = [terminator, lr_scheduler, lr_reducer]
         try:
-            if constant.DATA_AUGMENTATION:
+            if self.augment:
                 flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
                 self.model.fit_generator(flow,
                                          epochs=max_iter_num,
@@ -210,14 +210,6 @@ def ensure_file_dir(path):
 def has_file(path):
     """Return whether the path has a file"""
     return os.path.exists(path)
-
-
-def reset_weights(model):
-    """Reset weights with a new model"""
-    session = backend.get_session()
-    for layer in model.layers:
-        if hasattr(layer, 'kernel_initializer'):
-            layer.kernel.initializer.run(session=session)
 
 
 def get_int_tuple(temp_shape):

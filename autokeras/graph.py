@@ -594,7 +594,8 @@ class Graph:
         for layer in model.layers[1:]:
             if not isinstance(layer, (Activation, Dropout, Concatenate)):
                 old_layer = new_to_old_layer[layer]
-                layer.set_weights(old_layer.get_weights())
+                if self.weighted:
+                    layer.set_weights(old_layer.get_weights())
         return model
 
     def _layer_ids_in_order(self, layer_ids):
