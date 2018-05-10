@@ -27,17 +27,18 @@ if __name__ == '__main__':
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     X = np.concatenate((x_train, x_test))
     Y = np.concatenate((y_train, y_test))
-    clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/cifar102', verbose=True)
+    trainer_args = {'max_iter_num': 0}
+    clf = ImageClassifier(searcher_type='bayesian', path='/Users/haifeng/cifar102', verbose=True, trainer_args=trainer_args)
 
     clf.fit(x_train, y_train, time_limit=12*60*60)
     # clf.final_fit(x_train, y_train)
     y = clf.evaluate(x_test, y_test)
     print(y)
     # MLP for Pima Indians Dataset with 10-fold cross validation
-    scores = clf.cross_validate(X, Y, 10)
-    print(scores)
-    print(np.mean(scores))
-    print(np.std(scores))
+    # scores = clf.cross_validate(X, Y, 10)
+    # print(scores)
+    # print(np.mean(scores))
+    # print(np.std(scores))
 
     # split into input (X) and output (Y) variables
     # define 10-fold cross validation test harness

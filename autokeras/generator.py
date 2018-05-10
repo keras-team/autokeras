@@ -48,38 +48,20 @@ class DefaultClassifierGenerator(ClassifierGenerator):
     def __init__(self, n_classes, input_shape):
         super().__init__(n_classes, input_shape)
 
-    def generate(self):
+    def generate(self, model_len=constant.MODEL_LEN):
         """Return the default classifier model that has been compiled."""
         pool = self._get_pool_layer_func()
         conv = get_conv_layer_func(len(self._get_shape(3)))
         ave = get_ave_layer_func(len(self._get_shape(3)))
 
         output_tensor = input_tensor = Input(shape=self.input_shape)
-        output_tensor = BatchNormalization()(output_tensor)
-        output_tensor = Activation('relu')(output_tensor)
-        output_tensor = conv(32, kernel_size=self._get_shape(3), padding='same')(output_tensor)
-        output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
-
-        output_tensor = pool(padding='same')(output_tensor)
-
-        output_tensor = BatchNormalization()(output_tensor)
-        output_tensor = Activation('relu')(output_tensor)
-        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
-        output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
-
-        output_tensor = pool(padding='same')(output_tensor)
-
-        output_tensor = BatchNormalization()(output_tensor)
-        output_tensor = Activation('relu')(output_tensor)
-        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
-        output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
-
-        output_tensor = pool(padding='same')(output_tensor)
-
-        output_tensor = BatchNormalization()(output_tensor)
-        output_tensor = Activation('relu')(output_tensor)
-        output_tensor = conv(64, kernel_size=self._get_shape(3), padding='same', activation='linear')(output_tensor)
-        output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+        for i in range(model_len):
+            output_tensor = BatchNormalization()(output_tensor)
+            output_tensor = Activation('relu')(output_tensor)
+            output_tensor = conv(32, kernel_size=self._get_shape(3), padding='same')(output_tensor)
+            output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+            if i != model_len - 1:
+                output_tensor = pool(padding='same')(output_tensor)
 
         output_tensor = ave()(output_tensor)
         output_tensor = Dense(self.n_classes, activation='softmax')(output_tensor)

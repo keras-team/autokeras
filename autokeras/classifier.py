@@ -2,7 +2,6 @@ import multiprocessing
 import os
 import pickle
 import csv
-import errno
 import time
 import tensorflow as tf
 
@@ -101,12 +100,16 @@ class ClassifierBase:
         path: A path to the directory to save the classifier.
     """
 
-    def __init__(self, verbose=False, searcher_type=None, path=constant.DEFAULT_SAVE_PATH, resume=False):
+    def __init__(self, verbose=False, searcher_type=None, path=constant.DEFAULT_SAVE_PATH, resume=False,
+                 trainer_args=None, default_model_len=constant.MODEL_LEN):
         """Initialize the instance.
 
         The classifier will be loaded from file if the directory in 'path' has a saved classifier.
         Otherwise it would create a new one.
         """
+        if trainer_args is None:
+            trainer_args = {}
+
         if has_file(os.path.join(path, 'classifier')) and resume:
             classifier = pickle_from_file(os.path.join(path, 'classifier'))
             self.__dict__ = classifier.__dict__
@@ -116,6 +119,8 @@ class ClassifierBase:
             self.searcher = False
             self.searcher_type = searcher_type
             self.path = path
+            self.trainer_args = trainer_args
+            self.default_model_len = default_model_len
             ensure_dir(path)
 
     def fit(self, x_train=None, y_train=None, csv_file_path=None, images_path=None, time_limit=None):
@@ -159,7 +164,8 @@ class ClassifierBase:
         if not self.searcher:
             input_shape = x_train.shape[1:]
             n_classes = self.y_encoder.n_classes
-            searcher = self._get_searcher_class()(n_classes, input_shape, self.path, self.verbose, self.augment)
+            searcher = self._get_searcher_class()(n_classes, input_shape, self.path, self.verbose,
+                                                  self.trainer_args, self.default_model_len)
             self.save_searcher(searcher)
             self.searcher = True
 
@@ -229,7 +235,7 @@ class ClassifierBase:
         y_predict = self.predict(x_test)
         return accuracy_score(y_test, y_predict)
 
-    def cross_validate(self, x_all, y_all, n_splits):
+    def cross_validate(self, x_all, y_all, n_splits, trainer_args=None):
         """Do the n_splits cross-validation for the input."""
         if constant.LIMIT_MEMORY:
             config = tf.ConfigProto()
@@ -247,8 +253,21 @@ class ClassifierBase:
             graph = Graph(model, False)
             backend.clear_session()
             model = graph.produce_model()
-            ModelTrainer(model, x_all[train], y_all[train], x_all[test], y_all[test], self.verbose).train_model()
+            if trainer_args is None:
+                ModelTrainer(model,
+                             x_all[train],
+                             y_all[train],
+                             x_all[test],
+                             y_all[test], False).train_model()
+            else:
+                ModelTrainer(model,
+                             x_all[train],
+                             y_all[train],
+                             x_all[test],
+                             y_all[test], False).train_model(**trainer_args)
             scores = model.evaluate(x_all[test], y_all[test], verbose=self.verbose)
+            if self.verbose:
+                print('Score:', scores[1])
             ret.append(scores[1] * 100)
         return np.array(ret)
 
@@ -274,6 +293,6 @@ class ImageClassifier(ClassifierBase):
     """
 
     def __init__(self, verbose=True, searcher_type='bayesian', path=constant.DEFAULT_SAVE_PATH, resume=False,
-                 augment=True):
-        super().__init__(verbose, searcher_type, path, resume=resume)
-        self.augment = augment
+                 trainer_args=None, default_model_len=constant.MODEL_LEN):
+        super().__init__(verbose, searcher_type, path, resume=resume, trainer_args=trainer_args,
+                         default_model_len=default_model_len)

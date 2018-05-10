@@ -1,6 +1,5 @@
 import os
 import random
-import pickle
 from functools import total_ordering
 from queue import PriorityQueue
 
@@ -40,11 +39,13 @@ class Searcher:
         model_count: the id of model
     """
 
-    def __init__(self, n_classes, input_shape, path, verbose, augment=True):
+    def __init__(self, n_classes, input_shape, path, verbose, trainer_args=None, default_model_len=constant.MODEL_LEN):
         """Init Searcher class with n_classes, input_shape, path, verbose
 
         The Searcher will be loaded from file if it has been saved before.
         """
+        if trainer_args is None:
+            trainer_args = {}
         self.n_classes = n_classes
         self.input_shape = input_shape
         self.verbose = verbose
@@ -53,7 +54,10 @@ class Searcher:
         self.path = path
         self.model_count = 0
         self.descriptors = {}
-        self.augment = augment
+        self.trainer_args = trainer_args
+        self.default_model_len = default_model_len
+        if 'max_iter_num' not in self.trainer_args:
+            self.trainer_args['max_iter_num'] = constant.MAX_ITER_NUM
 
     def search(self, x_train, y_train, x_test, y_test):
         """an search strategy that will be overridden by children classes"""
@@ -78,22 +82,18 @@ class Searcher:
     def replace_model(self, model, model_id):
         model.save(os.path.join(self.path, str(model_id) + '.h5'))
 
-    def add_model(self, model, x_train, y_train, x_test, y_test, max_iter_num=constant.MAX_ITER_NUM):
+    def add_model(self, model, x_train, y_train, x_test, y_test):
         """add one model while will be trained to history list
 
         Returns:
             History object.
         """
-        if self.verbose:
-            model.summary()
-        ModelTrainer(model,
-                     x_train,
-                     y_train,
-                     x_test,
-                     y_test,
-                     self.verbose,
-                     augment=self.augment).train_model(max_iter_num=max_iter_num)
-        loss, accuracy = model.evaluate(x_test, y_test, verbose=self.verbose)
+        loss, accuracy = ModelTrainer(model,
+                                      x_train,
+                                      y_train,
+                                      x_test,
+                                      y_test,
+                                      False).train_model(**self.trainer_args)
         model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
         plot_model(model, to_file=os.path.join(self.path, str(self.model_count) + '.png'), show_shapes=True)
 
@@ -109,6 +109,11 @@ class Searcher:
             file = open(os.path.join(self.path, 'best_model.txt'), 'w')
             file.write('best model: ' + str(model_id))
             file.close()
+
+        if self.verbose:
+            print('Model ID:', model_id)
+            print('Loss:', loss)
+            print('Accuracy', accuracy)
         return ret
 
 
@@ -182,8 +187,8 @@ class HillClimbingSearcher(Searcher):
 
 class BayesianSearcher(Searcher):
 
-    def __init__(self, n_classes, input_shape, path, verbose, augment=True):
-        super().__init__(n_classes, input_shape, path, verbose, augment)
+    def __init__(self, n_classes, input_shape, path, verbose, trainer_args=None, default_model_len=constant.MODEL_LEN):
+        super().__init__(n_classes, input_shape, path, verbose, trainer_args, default_model_len)
         self.gpr = IncrementalGaussianProcess()
         self.search_tree = SearchTree()
         self.init_search_queue = None
@@ -192,8 +197,8 @@ class BayesianSearcher(Searcher):
 
     def search(self, x_train, y_train, x_test, y_test):
         if not self.history:
-            model = DefaultClassifierGenerator(self.n_classes, self.input_shape).generate()
-            history_item = self.add_model(model, x_train, y_train, x_test, y_test, constant.SEARCH_MAX_ITER)
+            model = DefaultClassifierGenerator(self.n_classes, self.input_shape).generate(self.default_model_len)
+            history_item = self.add_model(model, x_train, y_train, x_test, y_test)
             self.search_tree.add_child(-1, history_item['model_id'])
 
             graph = Graph(model)
@@ -208,7 +213,7 @@ class BayesianSearcher(Searcher):
         if self.init_search_queue:
             graph, father_id = self.init_search_queue.pop()
             model = graph.produce_model()
-            history_item = self.add_model(model, x_train, y_train, x_test, y_test, constant.SEARCH_MAX_ITER)
+            history_item = self.add_model(model, x_train, y_train, x_test, y_test)
             self.search_tree.add_child(father_id, history_item['model_id'])
             self.init_gpr_x.append(graph.extract_descriptor())
             self.init_gpr_y.append(history_item['accuracy'])
@@ -220,7 +225,7 @@ class BayesianSearcher(Searcher):
 
         new_model, father_id = self.maximize_acq()
 
-        history_item = self.add_model(new_model, x_train, y_train, x_test, y_test, constant.SEARCH_MAX_ITER)
+        history_item = self.add_model(new_model, x_train, y_train, x_test, y_test)
         self.search_tree.add_child(father_id, history_item['model_id'])
         self.gpr.incremental_fit(Graph(new_model).extract_descriptor(), history_item['accuracy'])
         pickle_to_file(self, os.path.join(self.path, 'searcher'))
@@ -248,6 +253,8 @@ class BayesianSearcher(Searcher):
             if ap > random.uniform(0, 1):
                 graphs = transform(elem.graph)
                 graphs = list(filter(lambda x: x.extract_descriptor() not in descriptors, graphs))
+                if not graphs:
+                    continue
                 for temp_graph in graphs:
                     temp_acq_value = self.acq(temp_graph)
                     pq.put(Elem(temp_acq_value, elem.father_id, temp_graph))
@@ -260,6 +267,9 @@ class BayesianSearcher(Searcher):
 
         model = self.load_model_by_id(father_id)
         nm_graph = Graph(model, True)
+        if self.verbose:
+            print('Father ID: ', father_id)
+            print(target_graph.operation_history)
         for args in target_graph.operation_history:
             getattr(nm_graph, args[0])(*list(args[1:]))
         return nm_graph.produce_model(), father_id

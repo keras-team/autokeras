@@ -83,6 +83,7 @@ class EarlyStop(Callback):
         self._max_no_improvement_num = max_no_improvement_num
         self._done = False
         self._min_loss_dec = min_loss_dec
+        self.max_accuracy = 0
 
     def on_train_begin(self, logs=None):
         self.training_losses = []
@@ -91,6 +92,7 @@ class EarlyStop(Callback):
         self.minimum_loss = float('inf')
 
     def on_epoch_end(self, batch, logs=None):
+        self.max_accuracy = max(self.max_accuracy, logs.get('val_acc'))
         loss = logs.get('val_loss')
         self.training_losses.append(loss)
         if self._done and loss > (self.minimum_loss - self._min_loss_dec):
@@ -120,20 +122,23 @@ class ModelTrainer:
         verbose: verbosity mode
     """
 
-    def __init__(self, model, x_train, y_train, x_test, y_test, verbose, augment=constant.DATA_AUGMENTATION):
+    def __init__(self, model, x_train, y_train, x_test, y_test, verbose):
         """Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
-        model.compile(loss=categorical_crossentropy,
-                      optimizer=Adam(lr=lr_schedule(0)),
-                      metrics=['accuracy'])
         self.model = model
         self.x_train = x_train
         self.y_train = y_train
         self.x_test = x_test
         self.y_test = y_test
         self.verbose = verbose
-        self.augment = augment
-        if self.augment:
-            self.datagen = ImageDataGenerator(
+
+    def train_model(self,
+                    max_iter_num=constant.MAX_ITER_NUM,
+                    max_no_improvement_num=constant.MAX_NO_IMPROVEMENT_NUM,
+                    batch_size=constant.MAX_BATCH_SIZE,
+                    optimizer=None,
+                    augment=constant.DATA_AUGMENTATION):
+        if augment:
+            datagen = ImageDataGenerator(
                 # set input mean to 0 over the dataset
                 featurewise_center=False,
                 # set each sample mean to 0
@@ -154,13 +159,19 @@ class ModelTrainer:
                 horizontal_flip=True,
                 # randomly flip images
                 vertical_flip=False)
-            self.datagen.fit(x_train)
+            datagen.fit(self.x_train)
         else:
-            self.datagen = None
-
-    def train_model(self, max_iter_num=constant.MAX_ITER_NUM, max_no_improvement_num=constant.MAX_NO_IMPROVEMENT_NUM):
+            datagen = None
+        if optimizer is None:
+            self.model.compile(loss=categorical_crossentropy,
+                               optimizer=Adam(lr=lr_schedule(0)),
+                               metrics=['accuracy'])
+        else:
+            self.model.compile(loss=categorical_crossentropy,
+                               optimizer=optimizer(),
+                               metrics=['accuracy'])
         """Train the model with dataset and return the minimum_loss"""
-        batch_size = min(self.x_train.shape[0], constant.MAX_BATCH_SIZE)
+        batch_size = min(self.x_train.shape[0], batch_size)
         terminator = EarlyStop(max_no_improvement_num=max_no_improvement_num)
         lr_scheduler = LearningRateScheduler(lr_schedule)
 
@@ -171,8 +182,8 @@ class ModelTrainer:
 
         callbacks = [terminator, lr_scheduler, lr_reducer]
         try:
-            if self.augment:
-                flow = self.datagen.flow(self.x_train, self.y_train, batch_size)
+            if augment:
+                flow = datagen.flow(self.x_train, self.y_train, batch_size)
                 self.model.fit_generator(flow,
                                          epochs=max_iter_num,
                                          validation_data=(self.x_test, self.y_test),
@@ -189,6 +200,8 @@ class ModelTrainer:
             if self.verbose:
                 print('Training finished!')
                 print(e.message)
+            return terminator.minimum_loss, terminator.max_accuracy
+        return terminator.minimum_loss, terminator.max_accuracy
 
 
 def extract_config(network):

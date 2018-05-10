@@ -8,6 +8,10 @@ from autokeras import constant
 from tests.common import clean_dir
 
 
+def mock_train(**kwargs):
+    return 1, 0
+
+
 def test_train_x_array_exception():
     clf = ImageClassifier()
     with pytest.raises(Exception) as info:
@@ -47,7 +51,7 @@ def simple_transform(graph):
 
 @patch('multiprocessing.Process', new=MockProcess)
 @patch('autokeras.search.transform', side_effect=simple_transform)
-@patch('autokeras.search.ModelTrainer.train_model')
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_predict(_, _1):
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 4
@@ -76,7 +80,7 @@ def test_timout():
 
 @patch('multiprocessing.Process', new=MockProcess)
 @patch('autokeras.search.transform', side_effect=simple_transform)
-@patch('autokeras.search.ModelTrainer.train_model')
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_final_fit(_, _1):
     constant.LIMIT_MEMORY = True
     path = 'tests/resources/temp'
@@ -97,7 +101,7 @@ def test_final_fit(_, _1):
 
 @patch('multiprocessing.Process', new=MockProcess)
 @patch('autokeras.search.transform', side_effect=simple_transform)
-@patch('autokeras.search.ModelTrainer.train_model')
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_save_continue(_, _1):
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
@@ -137,7 +141,7 @@ def test_save_continue(_, _1):
 
 @patch('multiprocessing.Process', new=MockProcess)
 @patch('autokeras.search.transform', side_effect=simple_transform)
-@patch('autokeras.search.ModelTrainer.train_model')
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_csv_file(_, _1):
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
@@ -156,9 +160,8 @@ def test_fit_csv_file(_, _1):
 
 @patch('multiprocessing.Process', new=MockProcess)
 @patch('autokeras.search.transform', side_effect=simple_transform)
-@patch('autokeras.search.ModelTrainer.train_model')
-def test_cross_validate(_, _1):
-    constant.MAX_ITER_NUM = 2
+def test_cross_validate(_):
+    constant.MAX_ITER_NUM = 0
     constant.MAX_MODEL_NUM = 2
     path = 'tests/resources/temp'
     clean_dir(path)

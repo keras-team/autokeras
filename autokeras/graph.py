@@ -622,4 +622,4 @@ class Graph:
         return self._conv_layer_ids_in_order()[:-1] + self._dense_layer_ids_in_order()[:-1]
 
     def skip_connection_layer_ids(self):
-        return self._conv_layer_ids_in_order()[1:]
+        return self._conv_layer_ids_in_order()[:-1]

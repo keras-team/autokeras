@@ -80,8 +80,16 @@ def to_deeper_graph(graph):
 
 
 def legal_graph(graph):
-    skips = graph.extract_descriptor().skip_connections
-    return len(skips) == len(set(skips))
+    descriptor = graph.extract_descriptor()
+    skips = descriptor.skip_connections
+    if len(skips) != len(set(skips)):
+        return False
+    if descriptor.n_conv > 12:
+        return False
+    for width in descriptor.conv_widths:
+        if width > 512:
+            return False
+    return True
 
 
 def transform(graph):
@@ -114,12 +122,13 @@ def transform(graph):
 
     skip_ids = graph.skip_connection_layer_ids()
     for index_a, a_id in enumerate(skip_ids):
-        temp_graph = deepcopy(graph)
         for b_id in skip_ids[index_a + 1:]:
-            if temp_graph.layer_list[a_id].filters != temp_graph.layer_list[b_id].filters:
-                temp_graph.to_concat_skip_model(a_id, b_id)
-            else:
-                temp_graph.to_add_skip_model(a_id, b_id)
+            temp_graph = deepcopy(graph)
+            temp_graph.to_concat_skip_model(a_id, b_id)
+            # if temp_graph.layer_list[a_id].filters != temp_graph.layer_list[b_id].filters:
+            #     temp_graph.to_concat_skip_model(a_id, b_id)
+            # else:
+            #     temp_graph.to_add_skip_model(a_id, b_id)
             graphs.append(temp_graph)
 
     graphs = list(filter(legal_graph, graphs))
