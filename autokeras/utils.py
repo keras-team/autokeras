@@ -92,7 +92,8 @@ class EarlyStop(Callback):
         self.minimum_loss = float('inf')
 
     def on_epoch_end(self, batch, logs=None):
-        self.max_accuracy = max(self.max_accuracy, logs.get('val_acc'))
+        # self.max_accuracy = max(self.max_accuracy, logs.get('val_acc'))
+        self.max_accuracy = logs.get('val_acc')
         loss = logs.get('val_loss')
         self.training_losses.append(loss)
         if self._done and loss > (self.minimum_loss - self._min_loss_dec):
