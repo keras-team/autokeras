@@ -174,8 +174,10 @@ class Graph:
 
         if layer in self.layer_to_id:
             layer_id = self.layer_to_id[layer]
-            self.layer_id_to_input_node_ids[layer_id].append(input_id)
-            self.layer_id_to_output_node_ids[layer_id].append(output_id)
+            if input_id not in self.layer_id_to_input_node_ids[layer_id]:
+                self.layer_id_to_input_node_ids[layer_id].append(input_id)
+            if output_id not in self.layer_id_to_output_node_ids[layer_id]:
+                self.layer_id_to_output_node_ids[layer_id].append(output_id)
         else:
             layer_id = len(self.layer_list)
             self.layer_list.append(layer)
@@ -269,10 +271,6 @@ class Graph:
             total_dim: The total number of dimensions the layer has before widening.
             n_add: The number of dimensions to add.
         """
-        if self.next_vis[u]:
-            return
-        self.next_vis[u] = True
-        self._search_pre(u, start_dim, total_dim, n_add)
         for v, layer_id in self.adj_list[u]:
             layer = self.layer_list[layer_id]
 
@@ -285,25 +283,25 @@ class Graph:
                 self._replace_layer(layer_id, new_layer)
 
             elif is_layer(layer, 'BatchNormalization'):
-                if not self.middle_layer_vis[layer_id]:
-                    self.middle_layer_vis[layer_id] = True
-                    new_layer = wider_bn(layer, start_dim, total_dim, n_add, self.weighted)
-                    self._replace_layer(layer_id, new_layer)
+                new_layer = wider_bn(layer, start_dim, total_dim, n_add, self.weighted)
+                self._replace_layer(layer_id, new_layer)
                 self._search_next(v, start_dim, total_dim, n_add)
 
             elif is_layer(layer, 'WeightedAdd'):
-                if not self.middle_layer_vis[layer_id]:
-                    self.middle_layer_vis[layer_id] = True
-                    new_layer = wider_weighted_add(layer, n_add, self.weighted)
-                    self._replace_layer(layer_id, new_layer)
+                new_layer = wider_weighted_add(layer, n_add, self.weighted)
+                self._replace_layer(layer_id, new_layer)
                 self._search_next(v, start_dim, total_dim, n_add)
 
             elif is_layer(layer, 'Concatenate'):
-                next_start_dim = start_dim
-                next_total_dim = self._upper_layer_width(v)
                 if self.layer_id_to_input_node_ids[layer_id][1] == u:
                     # u is on the right of the concat
-                    next_start_dim += next_total_dim - total_dim
+                    # next_start_dim += next_total_dim - total_dim
+                    left_dim = self._upper_layer_width(self.layer_id_to_input_node_ids[layer_id][0])
+                    next_start_dim = start_dim + left_dim
+                    next_total_dim = total_dim + left_dim
+                else:
+                    next_start_dim = start_dim
+                    next_total_dim = total_dim + self._upper_layer_width(self.layer_id_to_input_node_ids[layer_id][1])
                 self._search_next(v, next_start_dim, next_total_dim, n_add)
 
             else:
@@ -390,10 +388,13 @@ class Graph:
         self.operation_history.append(('to_wider_model', pre_layer_id, n_add))
         pre_layer = self.layer_list[pre_layer_id]
         output_id = self.layer_id_to_output_node_ids[pre_layer_id][0]
-        self.next_vis = [False] * self.n_nodes
-        self.pre_vis = [False] * self.n_nodes
-        self.middle_layer_vis = [False] * len(self.layer_list)
         dim = layer_width(pre_layer)
+        if is_layer(pre_layer, 'Conv'):
+            new_layer = wider_pre_conv(pre_layer, n_add, self.weighted)
+            self._replace_layer(pre_layer_id, new_layer)
+        else:
+            new_layer = wider_pre_dense(pre_layer, n_add, self.weighted)
+            self._replace_layer(pre_layer_id, new_layer)
         self._search_next(output_id, dim, dim, n_add)
 
     def to_dense_deeper_model(self, target_id):
@@ -518,11 +519,6 @@ class Graph:
         self._add_edge(layer, skip_output_id, dropout_output_id)
 
         # Widen the related layers.
-        self.next_vis = [False] * self.n_nodes
-        self.pre_vis = [False] * self.n_nodes
-        self.middle_layer_vis = [False] * len(self.layer_list)
-
-        self.pre_vis[dropout_output_id] = True
         dim = layer_width(end)
         n_add = self._upper_layer_width(conv_block_input_id)
         self._search_next(dropout_output_id, dim, dim, n_add)

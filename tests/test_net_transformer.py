@@ -35,3 +35,11 @@ def test_legal_graph():
     assert legal_graph(graph)
     graph.to_add_skip_model(2, 6)
     assert not legal_graph(graph)
+
+
+def test_legal_graph2():
+    graph = Graph(get_pooling_model(), False)
+    graph.to_concat_skip_model(2, 6)
+    assert legal_graph(graph)
+    graph.to_concat_skip_model(2, 6)
+    assert not legal_graph(graph)

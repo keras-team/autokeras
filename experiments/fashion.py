@@ -30,17 +30,17 @@ if __name__ == '__main__':
     x_test = x_test.reshape(x_test.shape + (1,))
     X = np.concatenate((x_train, x_test))
     Y = np.concatenate((y_train, y_test))
-    clf = ImageClassifier(searcher_type='bayesian', path='/haifeng/home/fashion', verbose=False)
+    clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/fashion', verbose=False)
 
     clf.fit(x_train, y_train, time_limit=12*60*60)
-    # clf.final_fit(x_train, y_train)
+    clf.final_fit(x_train, y_train, x_test, y_test)
     y = clf.evaluate(x_test, y_test)
     print(y)
     # MLP for Pima Indians Dataset with 10-fold cross validation
-    scores = clf.cross_validate(X, Y, 10)
-    print(scores)
-    print(np.mean(scores))
-    print(np.std(scores))
+    # scores = clf.cross_validate(X, Y, 10)
+    # print(scores)
+    # print(np.mean(scores))
+    # print(np.std(scores))
 
     # split into input (X) and output (Y) variables
     # define 10-fold cross validation test harness

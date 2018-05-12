@@ -1,5 +1,9 @@
 import numpy as np
+from keras.utils import plot_model
+
+from autokeras.generator import DefaultClassifierGenerator
 from autokeras.graph import *
+from autokeras.net_transformer import legal_graph
 from tests.common import get_conv_model, get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model, \
     get_concat_skip_model
 
@@ -176,3 +180,20 @@ def test_skip_connection_layer_ids():
     model = get_conv_dense_model()
     graph = Graph(model, True)
     assert len(graph.skip_connection_layer_ids()) == 0
+
+
+def test_long_transform():
+    graph = Graph(DefaultClassifierGenerator(10, (32, 32, 2)).generate(), True)
+    graph.to_concat_skip_model(2, 12)
+    graph = Graph(graph.produce_model(), True)
+    operations = [('to_concat_skip_model', 2, 7), ('to_concat_skip_model', 7, 12), ('to_wider_model', 7, 32),
+                  ('to_conv_deeper_model', 19, 5), ('to_concat_skip_model', 12, 19), ('to_concat_skip_model', 7, 19),
+                  ('to_conv_deeper_model', 12, 3), ('to_concat_skip_model', 12, 19), ('to_concat_skip_model', 12, 34),
+                  ('to_concat_skip_model', 2, 12)]
+
+    for args in operations[:-1]:
+        getattr(graph, args[0])(*list(args[1:]))
+        print(args)
+    graph.to_concat_skip_model(2, 12)
+    graph.produce_model()
+

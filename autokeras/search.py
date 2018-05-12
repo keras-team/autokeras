@@ -57,7 +57,7 @@ class Searcher:
         self.trainer_args = trainer_args
         self.default_model_len = default_model_len
         if 'max_iter_num' not in self.trainer_args:
-            self.trainer_args['max_iter_num'] = constant.MAX_ITER_NUM
+            self.trainer_args['max_iter_num'] = constant.SEARCH_MAX_ITER
 
     def search(self, x_train, y_train, x_test, y_test):
         """an search strategy that will be overridden by children classes"""

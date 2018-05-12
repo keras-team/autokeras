@@ -277,11 +277,16 @@ class ClassifierBase:
     def load_searcher(self):
         return pickle_from_file(os.path.join(self.path, 'searcher'))
 
-    def final_fit(self, x_train, y_train):
+    def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
+        if trainer_args is None:
+            trainer_args = {}
         y_train = self.y_encoder.transform(y_train)
+        y_test = self.y_encoder.transform(y_test)
         searcher = self.load_searcher()
         model = searcher.load_best_model()
-        ModelTrainer(model, x_train, y_train, x_train, y_train, False).train_model()
+        if retrain:
+            model = Graph(model, False).produce_model()
+        ModelTrainer(model, x_train, y_train, x_test, y_test, True).train_model(**trainer_args)
         searcher.replace_model(model, searcher.get_best_model_id())
 
 

@@ -41,19 +41,19 @@ if __name__ == '__main__':
                     'batch_size': 128,
                     'optimizer': Adam,
                     'augment': False}
-    clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/mnist3', verbose=True)
+    clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/mnist', verbose=True, trainer_args=trainer_args)
 
     clf.fit(x_train, y_train, time_limit=12*60*60)
-    # clf.final_fit(x_train, y_train)
-    # y = clf.evaluate(x_test, y_test)
-    # print(y)
+    clf.final_fit(x_train, y_train, x_test, y_test, trainer_args, retrain=True)
+    y = clf.evaluate(x_test, y_test)
+    print(y)
     # MLP for Pima Indians Dataset with 10-fold cross validation
     # model = clf.load_searcher().load_best_model()
     clf.verbose = True
-    scores = clf.cross_validate(X, Y, 10)
-    print(scores)
-    print(np.mean(scores))
-    print(np.std(scores))
+    # scores = clf.cross_validate(X, Y, 10)
+    # print(scores)
+    # print(np.mean(scores))
+    # print(np.std(scores))
 
     # split into input (X) and output (Y) variables
     # define 10-fold cross validation test harness
