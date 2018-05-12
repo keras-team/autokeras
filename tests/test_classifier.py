@@ -92,8 +92,9 @@ def test_final_fit(_, _1):
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
+    test_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y)
-    clf.final_fit(train_x, train_y)
+    clf.final_fit(train_x, train_y, test_x, test_y)
     results = clf.predict(test_x)
     assert len(results) == 100
     clean_dir(path)
