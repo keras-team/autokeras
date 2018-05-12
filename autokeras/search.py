@@ -95,7 +95,7 @@ class Searcher:
                                       y_test,
                                       False).train_model(**self.trainer_args)
 
-        accuracy += 0.5 * len(Graph(model, False).extract_descriptor().skip_connections)
+        accuracy += 0.005 * len(Graph(model, False).extract_descriptor().skip_connections)
         accuracy = min(accuracy, 1)
 
         model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
