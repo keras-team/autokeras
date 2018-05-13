@@ -58,7 +58,7 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         for i in range(model_len):
             output_tensor = BatchNormalization()(output_tensor)
             output_tensor = Activation('relu')(output_tensor)
-            output_tensor = conv(32, kernel_size=self._get_shape(3), padding='same')(output_tensor)
+            output_tensor = conv(256, kernel_size=self._get_shape(3), padding='same')(output_tensor)
             output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
             if i != model_len - 1:
                 output_tensor = pool(padding='same')(output_tensor)

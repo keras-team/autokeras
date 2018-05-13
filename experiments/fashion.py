@@ -33,7 +33,7 @@ if __name__ == '__main__':
     clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/fashion', verbose=False)
 
     clf.fit(x_train, y_train, time_limit=12*60*60)
-    clf.final_fit(x_train, y_train, x_test, y_test)
+    clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
     y = clf.evaluate(x_test, y_test)
     print(y)
     # MLP for Pima Indians Dataset with 10-fold cross validation
