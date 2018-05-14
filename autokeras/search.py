@@ -219,8 +219,8 @@ class BayesianSearcher(Searcher):
 
             graph = Graph(model)
             self.init_search_queue = []
-            for child_graph in transform(graph):
-                self.init_search_queue.append((child_graph, history_item['model_id']))
+            # for child_graph in transform(graph):
+            #     self.init_search_queue.append((child_graph, history_item['model_id']))
             self.init_gpr_x.append(graph.extract_descriptor())
             self.init_gpr_y.append(history_item['accuracy'])
             pickle_to_file(self, os.path.join(self.path, 'searcher'))
