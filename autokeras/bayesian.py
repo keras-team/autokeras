@@ -40,16 +40,16 @@ def skip_connections_distance(list_a, list_b):
     return distance_matrix[linear_sum_assignment(distance_matrix)].sum() + abs(len(list_a) - len(list_b))
 
 
-def edit_distance(x, y):
+def edit_distance(x, y, kernel_lambda):
     ret = 0
     ret += layers_distance(x.conv_widths, y.conv_widths)
     ret += layers_distance(x.dense_widths, y.dense_widths)
-    ret += skip_connections_distance(x.skip_connections, y.skip_connections)
+    ret += kernel_lambda * skip_connections_distance(x.skip_connections, y.skip_connections)
     return ret
 
 
 class IncrementalGaussianProcess:
-    def __init__(self):
+    def __init__(self, kernel_lambda):
         self.alpha = 1e-10
         self._k_matrix = None
         self._x = None
@@ -58,6 +58,7 @@ class IncrementalGaussianProcess:
         self._l_matrix = None
         self._alpha_vector = None
         self.kernel = kernel
+        self.kernel_lambda = kernel_lambda
 
     def incremental_fit(self, train_x, train_y):
         if not self._first_fitted:
@@ -66,9 +67,9 @@ class IncrementalGaussianProcess:
         train_x, train_y = np.array([train_x]), np.array([train_y])
 
         # Incrementally compute K
-        up_right_k = self.kernel(self._x, train_x)  # Shape (len(X_train_), len(train_x))
+        up_right_k = self.kernel(self.kernel_lambda, self._x, train_x)  # Shape (len(X_train_), len(train_x))
         down_left_k = np.transpose(up_right_k)
-        down_right_k = self.kernel(train_x)
+        down_right_k = self.kernel(self.kernel_lambda, train_x)
         down_right_k[np.diag_indices_from(down_right_k)] += self.alpha
         up_k = np.concatenate((self._k_matrix, up_right_k), axis=1)
         down_k = np.concatenate((down_left_k, down_right_k), axis=1)
@@ -93,7 +94,7 @@ class IncrementalGaussianProcess:
         self._x = np.copy(train_x)
         self._y = np.copy(train_y)
 
-        self._k_matrix = self.kernel(self._x)
+        self._k_matrix = self.kernel(self.kernel_lambda, self._x)
         self._k_matrix[np.diag_indices_from(self._k_matrix)] += self.alpha
 
         self._l_matrix = cholesky(self._k_matrix, lower=True)  # Line 2
@@ -104,7 +105,7 @@ class IncrementalGaussianProcess:
         return self
 
     def predict(self, train_x):
-        k_trans = self.kernel(train_x, self._x)
+        k_trans = self.kernel(self.kernel_lambda, train_x, self._x)
         y_mean = k_trans.dot(self._alpha_vector)  # Line 4 (y_mean = f_star)
 
         # compute inverse K_inv of K based on its Cholesky
@@ -125,7 +126,7 @@ class IncrementalGaussianProcess:
         return y_mean, np.sqrt(y_var)
 
 
-def kernel(train_x, train_y=None):
+def kernel(kernel_lambda, train_x, train_y=None):
     if train_y is None:
         ret = np.zeros((train_x.shape[0], train_x.shape[0]))
         for x_index, x in enumerate(train_x):
@@ -133,12 +134,12 @@ def kernel(train_x, train_y=None):
                 if x_index == y_index:
                     ret[x_index][y_index] = 1.0
                 elif x_index < y_index:
-                    ret[x_index][y_index] = 1.0 / np.exp(edit_distance(x, y))
+                    ret[x_index][y_index] = 1.0 / np.exp(edit_distance(x, y, kernel_lambda))
                 else:
                     ret[x_index][y_index] = ret[y_index][x_index]
         return ret
     ret = np.zeros((train_x.shape[0], train_y.shape[0]))
     for x_index, x in enumerate(train_x):
         for y_index, y in enumerate(train_y):
-            ret[x_index][y_index] = 1.0 / np.exp(edit_distance(x, y))
+            ret[x_index][y_index] = 1.0 / np.exp(edit_distance(x, y, kernel_lambda))
     return ret

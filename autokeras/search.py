@@ -39,7 +39,10 @@ class Searcher:
         model_count: the id of model
     """
 
-    def __init__(self, n_classes, input_shape, path, verbose, trainer_args=None, default_model_len=constant.MODEL_LEN):
+    def __init__(self, n_classes, input_shape, path, verbose,
+                 trainer_args=None,
+                 default_model_len=constant.MODEL_LEN,
+                 default_model_width=constant.MODEL_WIDTH):
         """Init Searcher class with n_classes, input_shape, path, verbose
 
         The Searcher will be loaded from file if it has been saved before.
@@ -56,6 +59,7 @@ class Searcher:
         self.descriptors = {}
         self.trainer_args = trainer_args
         self.default_model_len = default_model_len
+        self.default_model_width = default_model_width
         if 'max_iter_num' not in self.trainer_args:
             self.trainer_args['max_iter_num'] = constant.SEARCH_MAX_ITER
 
@@ -191,17 +195,25 @@ class HillClimbingSearcher(Searcher):
 
 class BayesianSearcher(Searcher):
 
-    def __init__(self, n_classes, input_shape, path, verbose, trainer_args=None, default_model_len=constant.MODEL_LEN):
-        super().__init__(n_classes, input_shape, path, verbose, trainer_args, default_model_len)
-        self.gpr = IncrementalGaussianProcess()
+    def __init__(self, n_classes, input_shape, path, verbose,
+                 trainer_args=None,
+                 default_model_len=constant.MODEL_LEN,
+                 default_model_width=constant.MODEL_WIDTH,
+                 beta=constant.BETA,
+                 kernel_lambda=constant.KERNEL_LAMBDA):
+        super().__init__(n_classes, input_shape, path, verbose, trainer_args, default_model_len, default_model_width)
+        self.gpr = IncrementalGaussianProcess(kernel_lambda)
         self.search_tree = SearchTree()
         self.init_search_queue = None
         self.init_gpr_x = []
         self.init_gpr_y = []
+        self.beta = beta
 
     def search(self, x_train, y_train, x_test, y_test):
         if not self.history:
-            model = DefaultClassifierGenerator(self.n_classes, self.input_shape).generate(self.default_model_len)
+            model = DefaultClassifierGenerator(self.n_classes,
+                                               self.input_shape).generate(self.default_model_len,
+                                                                          self.default_model_width)
             history_item = self.add_model(model, x_train, y_train, x_test, y_test)
             self.search_tree.add_child(-1, history_item['model_id'])
 
@@ -280,7 +292,7 @@ class BayesianSearcher(Searcher):
 
     def acq(self, graph):
         mean, std = self.gpr.predict(np.array([graph.extract_descriptor()]))
-        return mean + 2.576 * std
+        return mean + self.beta * std
 
 
 class SearchTree:

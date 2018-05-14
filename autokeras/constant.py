@@ -10,6 +10,8 @@ DEFAULT_SAVE_PATH = '/tmp/autokeras/'
 # Searcher
 
 MAX_MODEL_NUM = 1000
+BETA = 2.576
+KERNEL_LAMBDA = 1.0
 
 # Model Defaults
 
@@ -18,6 +20,7 @@ CONV_DROPOUT_RATE = 0.25
 CONV_BLOCK_DISTANCE = 2
 DENSE_BLOCK_DISTANCE = 2
 MODEL_LEN = 4
+MODEL_WIDTH = 256
 
 # ModelTrainer
 
