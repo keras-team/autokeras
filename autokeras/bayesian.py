@@ -60,6 +60,10 @@ class IncrementalGaussianProcess:
         self.kernel = kernel
         self.kernel_lambda = kernel_lambda
 
+    @property
+    def kernel_matrix(self):
+        return self._k_matrix
+
     def incremental_fit(self, train_x, train_y):
         if not self._first_fitted:
             raise ValueError("The first_fit function needs to be called first.")

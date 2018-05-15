@@ -113,6 +113,7 @@ class ClassifierBase:
         if has_file(os.path.join(path, 'classifier')) and resume:
             classifier = pickle_from_file(os.path.join(path, 'classifier'))
             self.__dict__ = classifier.__dict__
+            self.path = path
         else:
             self.y_encoder = None
             self.verbose = verbose

@@ -29,13 +29,13 @@ if __name__ == '__main__':
     Y = np.concatenate((y_train, y_test))
     beta = 0.01
     for i in range(4):
-        clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/beta', verbose=True,
-                              searcher_args={'trainer_args': {'max_iter_num': 10},
+        clf = ImageClassifier(searcher_type='bayesian', path='/Users/haifeng/beta', verbose=True,
+                              searcher_args={'trainer_args': {'max_iter_num': 0},
                                              'default_model_len': 10,
                                              'beta': beta
                                              })
 
-        clf.fit(x_train, y_train, time_limit=3*60*60)
+        clf.fit(x_train, y_train, time_limit=30)
         # clf.final_fit(x_train, y_train, x_test, y_test)
         y = clf.evaluate(x_test, y_test)
         print(beta, y)
