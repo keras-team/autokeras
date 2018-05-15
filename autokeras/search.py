@@ -200,7 +200,8 @@ class BayesianSearcher(Searcher):
                  default_model_len=constant.MODEL_LEN,
                  default_model_width=constant.MODEL_WIDTH,
                  beta=constant.BETA,
-                 kernel_lambda=constant.KERNEL_LAMBDA):
+                 kernel_lambda=constant.KERNEL_LAMBDA,
+                 t_min=constant.T_MIN):
         super().__init__(n_classes, input_shape, path, verbose, trainer_args, default_model_len, default_model_width)
         self.gpr = IncrementalGaussianProcess(kernel_lambda)
         self.search_tree = SearchTree()
@@ -208,6 +209,7 @@ class BayesianSearcher(Searcher):
         self.init_gpr_x = []
         self.init_gpr_y = []
         self.beta = beta
+        self.t_min = t_min
 
     def search(self, x_train, y_train, x_test, y_test):
         if not self.history:
@@ -253,14 +255,20 @@ class BayesianSearcher(Searcher):
         descriptors = self.descriptors
 
         pq = PriorityQueue()
+        temp_list = []
         for model_id in model_ids:
             accuracy = self.get_accuracy_by_id(model_id)
+            temp_list.append((accuracy, model_id))
+        temp_list = sorted(temp_list)
+        if len(temp_list) > 5:
+            temp_list = temp_list[:-5]
+        for accuracy, model_id in temp_list:
             model = self.load_model_by_id(model_id)
             graph = Graph(model, False)
             pq.put(Elem(accuracy, model_id, graph))
 
         t = 1.0
-        t_min = 0.000000001
+        t_min = self.t_min
         alpha = 0.9
         max_acq = -1
         while not pq.empty() and t > t_min:

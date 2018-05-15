@@ -12,6 +12,7 @@ DEFAULT_SAVE_PATH = '/tmp/autokeras/'
 MAX_MODEL_NUM = 1000
 BETA = 2.576
 KERNEL_LAMBDA = 1.0
+T_MIN = 0.0001
 
 # Model Defaults
 
