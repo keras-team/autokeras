@@ -29,7 +29,7 @@ if __name__ == '__main__':
     Y = np.concatenate((y_train, y_test))
     kernel_lambda = 0.01
     for i in range(4):
-        clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/beta', verbose=True,
+        clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/lambda', verbose=True,
                               searcher_args={'trainer_args': {'max_iter_num': 10},
                                              'default_model_len': 10,
                                              'kernel_lambda': kernel_lambda

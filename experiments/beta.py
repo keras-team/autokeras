@@ -30,7 +30,7 @@ if __name__ == '__main__':
     beta = 0.01
     for i in range(4):
         clf = ImageClassifier(searcher_type='bayesian', path='/Users/haifeng/beta', verbose=True,
-                              searcher_args={'trainer_args': {'max_iter_num': 0},
+                              searcher_args={'trainer_args': {'max_iter_num': 10},
                                              'default_model_len': 10,
                                              'beta': beta
                                              })
