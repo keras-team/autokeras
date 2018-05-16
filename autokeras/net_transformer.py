@@ -84,11 +84,6 @@ def legal_graph(graph):
     skips = descriptor.skip_connections
     if len(skips) != len(set(skips)):
         return False
-    if descriptor.n_conv > 12:
-        return False
-    for width in descriptor.conv_widths:
-        if width > 512:
-            return False
     return True
 
 

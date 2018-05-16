@@ -54,13 +54,14 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         conv = get_conv_layer_func(len(self._get_shape(3)))
         ave = get_ave_layer_func(len(self._get_shape(3)))
 
+        pooling_len = int(model_len / 4)
         output_tensor = input_tensor = Input(shape=self.input_shape)
         for i in range(model_len):
             output_tensor = BatchNormalization()(output_tensor)
             output_tensor = Activation('relu')(output_tensor)
             output_tensor = conv(model_width, kernel_size=self._get_shape(3), padding='same')(output_tensor)
             output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
-            if i != model_len - 1:
+            if (i + 1) % pooling_len == 0 and i != model_len - 1:
                 output_tensor = pool(padding='same')(output_tensor)
 
         output_tensor = ave()(output_tensor)
