@@ -1,5 +1,5 @@
 from copy import deepcopy
-from random import randint, random
+from random import randint, random, shuffle
 
 from autokeras import constant
 from autokeras.constant import WEIGHTED_LAYER_FUNC_LIST
@@ -127,5 +127,6 @@ def transform(graph):
             graphs.append(temp_graph)
 
     graphs = list(filter(legal_graph, graphs))
+    shuffle(graphs)
+    return graphs[:8]
 
-    return graphs
