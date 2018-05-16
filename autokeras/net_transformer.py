@@ -1,5 +1,5 @@
 from copy import deepcopy
-from random import randint, random, shuffle
+from random import randint, random, shuffle, randrange
 
 from autokeras import constant
 from autokeras.constant import WEIGHTED_LAYER_FUNC_LIST
@@ -22,9 +22,9 @@ def to_wider_graph(graph):
         target_id = weighted_layer_ids[randint(0, len(weighted_layer_ids) - 1)]
 
     if is_conv_layer(graph.layer_list[target_id]):
-        n_add = randint(1, 4 * graph.layer_list[target_id].filters)
+        n_add = randint(1, 2 * graph.layer_list[target_id].filters)
     else:
-        n_add = randint(1, 4 * graph.layer_list[target_id].units)
+        n_add = randint(1, 2 * graph.layer_list[target_id].units)
 
     graph.to_wider_model(target_id, n_add)
     return graph
@@ -52,12 +52,7 @@ def to_skip_connection_graph(graph):
         index_a, index_b = index_b, index_a
     a_id = weighted_layer_ids[index_a]
     b_id = weighted_layer_ids[index_b]
-    if graph.layer_list[a_id].filters != graph.layer_list[b_id].filters:
-        graph.to_concat_skip_model(a_id, b_id)
-    elif random() < 0.5:
-        graph.to_add_skip_model(a_id, b_id)
-    else:
-        graph.to_concat_skip_model(a_id, b_id)
+    graph.to_concat_skip_model(a_id, b_id)
     return graph
 
 
@@ -97,36 +92,13 @@ def transform(graph):
         A list of graphs.
     """
     graphs = []
-    for target_id in graph.wide_layer_ids():
-        temp_graph = deepcopy(graph)
-        if is_conv_layer(temp_graph.layer_list[target_id]):
-            n_add = temp_graph.layer_list[target_id].filters
-            temp_graph.to_wider_model(target_id, n_add)
-        else:
-            n_add = temp_graph.layer_list[target_id].units
-            temp_graph.to_wider_model(target_id, n_add)
-        graphs.append(temp_graph)
-
-    for target_id in graph.deep_layer_ids():
-        temp_graph = deepcopy(graph)
-        if is_conv_layer(temp_graph.layer_list[target_id]):
-            temp_graph.to_conv_deeper_model(target_id, randint(1, 2) * 2 + 1)
-        else:
-            temp_graph.to_dense_deeper_model(target_id)
-        graphs.append(temp_graph)
-
-    skip_ids = graph.skip_connection_layer_ids()
-    for index_a, a_id in enumerate(skip_ids):
-        for b_id in skip_ids[index_a + 1:]:
-            temp_graph = deepcopy(graph)
-            temp_graph.to_concat_skip_model(a_id, b_id)
-            # if temp_graph.layer_list[a_id].filters != temp_graph.layer_list[b_id].filters:
-            #     temp_graph.to_concat_skip_model(a_id, b_id)
-            # else:
-            #     temp_graph.to_add_skip_model(a_id, b_id)
-            graphs.append(temp_graph)
-
-    graphs = list(filter(legal_graph, graphs))
-    shuffle(graphs)
-    return graphs[:8]
+    for i in range(8):
+        a = randrange(3)
+        if a == 0:
+            graphs.append(to_deeper_graph(deepcopy(graph)))
+        elif a == 1:
+            graphs.append(to_wider_graph(deepcopy(graph)))
+        elif a == 2:
+            graphs.append(to_skip_connection_graph(deepcopy(graph)))
+    return graphs
 

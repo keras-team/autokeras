@@ -17,7 +17,7 @@ plt.semilogx(x1, y1, 'o-', label=r'$\beta$')
 plt.ylabel('Error Rate')
 
 x2 = x1
-y2 = [1 - 0.7252, 1 - 0.8137, 1 - 0.8396, 1 - 0.8162, 1 - 0.8035]
+y2 = [1 - 0.7252, 1 - 0.8137, 1 - 0.8396, 1 - 0.8208, 1 - 0.8035]
 # plt.semilogx(x2, y2, 'o-')
 # plt.subplot(2, 1, 2)
 plt.plot(x2, y2, 'o-', label=r'$\lambda$')
