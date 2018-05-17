@@ -250,7 +250,7 @@ class BayesianSearcher(Searcher):
         pickle_to_file(self, os.path.join(self.path, 'searcher'))
 
     def maximize_acq(self):
-        model_ids = self.search_tree.get_leaves()
+        model_ids = self.search_tree.adj_list.keys()
         target_graph = None
         father_id = None
         descriptors = self.descriptors
