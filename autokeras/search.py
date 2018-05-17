@@ -92,15 +92,16 @@ class Searcher:
         Returns:
             History object.
         """
+        if self.verbose:
+            print('Training model.')
         loss, accuracy = ModelTrainer(model,
                                       x_train,
                                       y_train,
                                       x_test,
                                       y_test,
                                       False).train_model(**self.trainer_args)
-
-        accuracy += 0.005 * len(Graph(model, False).extract_descriptor().skip_connections)
-        accuracy = min(accuracy, 1)
+        if self.verbose:
+            print('Saving model.')
 
         model.save(os.path.join(self.path, str(self.model_count) + '.h5'))
         plot_model(model, to_file=os.path.join(self.path, str(self.model_count) + '.png'), show_shapes=True)

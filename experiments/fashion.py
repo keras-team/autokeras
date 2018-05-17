@@ -13,7 +13,7 @@ def select_gpu():
     try:
         # Get the first available GPU
         DEVICE_ID_LIST = GPUtil.getFirstAvailable()
-        DEVICE_ID = DEVICE_ID_LIST[0] # grab first element from list
+        DEVICE_ID = DEVICE_ID_LIST[0]  # grab first element from list
 
         # Set CUDA_VISIBLE_DEVICES to mask out all other GPUs than the first available device id
         os.environ["CUDA_VISIBLE_DEVICES"] = str(DEVICE_ID)
@@ -30,9 +30,11 @@ if __name__ == '__main__':
     x_test = x_test.reshape(x_test.shape + (1,))
     X = np.concatenate((x_train, x_test))
     Y = np.concatenate((y_train, y_test))
-    clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/fashion', verbose=False)
+    clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/fashion', verbose=True,
+                          searcher_args={'trainer_args': {'max_iter_num': 10, 'augment': False},
+                                         'default_model_len': 3})
 
-    clf.fit(x_train, y_train, time_limit=12*60*60)
+    clf.fit(x_train, y_train, time_limit=12 * 60 * 60)
     clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
     y = clf.evaluate(x_test, y_test)
     print(y)
