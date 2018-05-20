@@ -4,15 +4,14 @@ from queue import Queue
 
 from keras import Input
 from keras.engine import Model
-from keras.layers import Concatenate, Dense, BatchNormalization, Dropout, Activation, Flatten
-from keras.regularizers import l2
+from keras.layers import Concatenate, Dropout, Activation
 
 from autokeras import constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_weighted_add, \
     wider_pre_dense, wider_pre_conv, deeper_conv_block, dense_to_deeper_block
-from autokeras.layers import WeightedAdd, StubConcatenate, StubWeightedAdd
+from autokeras.layers import WeightedAdd, StubConcatenate, StubWeightedAdd, is_layer, layer_width, to_real_layer
 from autokeras.stub import to_stub_model
-from autokeras.utils import get_int_tuple, is_layer, layer_width
+from autokeras.utils import get_int_tuple
 
 
 class NetworkDescriptor:
@@ -43,33 +42,6 @@ class NetworkDescriptor:
             raise ValueError('connection_type should be NetworkDescriptor.CONCAT_CONNECT '
                              'or NetworkDescriptor.ADD_CONNECT.')
         self.skip_connections.append((u, v, connection_type))
-
-
-def to_real_layer(layer):
-    if is_layer(layer, 'Dense'):
-        return Dense(layer.units, activation=layer.activation)
-    if is_layer(layer, 'Conv'):
-        return layer.func(layer.filters,
-                          kernel_size=layer.kernel_size,
-                          padding='same',
-                          kernel_initializer='he_normal',
-                          kernel_regularizer=l2(1e-4))
-    if is_layer(layer, 'Pooling'):
-        return layer.func(padding='same')
-    if is_layer(layer, 'BatchNormalization'):
-        return BatchNormalization()
-    if is_layer(layer, 'Concatenate'):
-        return Concatenate()
-    if is_layer(layer, 'WeightedAdd'):
-        return WeightedAdd()
-    if is_layer(layer, 'Dropout'):
-        return Dropout(layer.rate)
-    if is_layer(layer, 'Activation'):
-        return Activation(layer.func)
-    if is_layer(layer, 'Flatten'):
-        return Flatten()
-    if is_layer(layer, 'GlobalAveragePooling'):
-        return layer.func()
 
 
 class Graph:

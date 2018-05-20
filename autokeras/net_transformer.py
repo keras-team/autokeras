@@ -3,7 +3,7 @@ from random import randint, random, shuffle, randrange
 
 from autokeras import constant
 from autokeras.constant import WEIGHTED_LAYER_FUNC_LIST
-from autokeras.utils import is_conv_layer, is_dense_layer
+from autokeras.layers import is_conv_layer, is_dense_layer
 
 
 def to_wider_graph(graph):
