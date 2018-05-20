@@ -179,11 +179,10 @@ class StubConv(StubLayer):
 
 
 class StubConvBlock(StubLayer):
-    def __init__(self, filters, kernel_size, add_skip, input_node=None, output_node=None):
+    def __init__(self, filters, kernel_size, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
         self.filters = filters
         self.kernel_size = kernel_size
-        self.add_skip = add_skip
 
 
 class StubAggregateLayer(StubLayer):
@@ -263,12 +262,18 @@ def is_layer(layer, layer_type):
         return isinstance(layer, (StubFlatten, Flatten))
     if layer_type == 'GlobalAveragePooling':
         return isinstance(layer, StubGlobalPooling) or is_global_pooling_layer(layer)
+    if layer_type == 'ConvBlock':
+        return isinstance(layer, (StubConvBlock, ConvBlock))
+    if layer_type == 'ConvConcat':
+        return isinstance(layer, (StubConvConcat, ConvConcat))
 
 
 def layer_width(layer):
     if is_layer(layer, 'Dense'):
         return layer.units
     if is_layer(layer, 'Conv'):
+        return layer.filters
+    if is_layer(layer, 'ConvBlock'):
         return layer.filters
     raise TypeError('The layer should be either Dense or Conv layer.')
 
@@ -331,7 +336,7 @@ def to_stub_layer(input_id, layer, output_id):
         temp_stub_layer = StubDropout(layer.rate, input_id, output_id)
     elif is_layer(layer, 'Pooling'):
         temp_stub_layer = StubPooling(layer.__class__, input_id, output_id)
-    elif is_layer(layer, 'GloabalAveragePooling'):
+    elif is_layer(layer, 'GlobalAveragePooling'):
         temp_stub_layer = StubGlobalPooling(layer.__class__, input_id, output_id)
     elif is_layer(layer, 'ConvBlock'):
         temp_stub_layer = StubConvBlock(layer.filters, layer.kernel_size, input_id, output_id)
@@ -367,3 +372,7 @@ def to_real_layer(layer):
         return Flatten()
     if is_layer(layer, 'GlobalAveragePooling'):
         return layer.func()
+    if is_layer(layer, 'ConvBlock'):
+        return ConvBlock(layer.filters, layer.kernel_size)
+    if is_layer(layer, 'ConvConcat'):
+        return ConvConcat()

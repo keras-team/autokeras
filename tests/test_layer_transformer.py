@@ -1,12 +1,14 @@
 from autokeras.layer_transformer import *
+from autokeras.layers import is_layer
 from autokeras.stub import to_stub_model
 from tests.common import get_conv_model, get_add_skip_model, get_conv_dense_model
 
 
 def test_deeper_conv_block():
     model = to_stub_model(get_conv_model(), True)
-    layers = deeper_conv_block(model.layers[3], 3)
-    assert len(layers) == constant.CONV_BLOCK_DISTANCE + 2
+    conv_block = deeper_conv_block(model.layers[1], 3)
+    assert is_layer(conv_block, 'ConvBlock')
+    assert conv_block.filters == 3
 
 
 def test_dense_to_deeper_layer():
@@ -36,13 +38,13 @@ def test_wider_bn():
 
 def test_wider_weighted_add():
     layer = StubWeightedAdd()
-    layer.set_weights(get_add_skip_model().layers[13].get_weights())
+    layer.set_weights(get_add_skip_model().layers[3].get_weights())
     new_layer = wider_weighted_add(layer, 4)
     assert isinstance(new_layer, StubWeightedAdd)
 
 
 def test_wider_next_dense():
-    real_layer = get_conv_dense_model().layers[6]
+    real_layer = get_conv_dense_model().layers[3]
     layer = StubDense(real_layer.units, 'relu')
     layer.set_weights(real_layer.get_weights())
     new_layer = wider_next_dense(layer, 3, 3, 3)
@@ -52,6 +54,5 @@ def test_wider_next_dense():
 def test_wider_conv():
     model = to_stub_model(get_conv_model(), True)
 
-    assert isinstance(wider_pre_conv(model.layers[3], 3), StubConv)
-    assert isinstance(wider_bn(model.layers[1], 3, 3, 3), StubBatchNormalization)
-    assert isinstance(wider_next_conv(model.layers[7], 3, 3, 3), StubConv)
+    assert isinstance(wider_pre_conv_block(model.layers[1], 3), StubConvBlock)
+    assert isinstance(wider_next_conv(model.layers[2], 3, 3, 3), StubConvBlock)

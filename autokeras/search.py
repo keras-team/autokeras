@@ -14,7 +14,7 @@ from autokeras import constant
 from autokeras.bayesian import IncrementalGaussianProcess
 from autokeras.generator import RandomConvClassifierGenerator, DefaultClassifierGenerator
 from autokeras.graph import Graph
-from autokeras.layers import WeightedAdd
+from autokeras.layers import WeightedAdd, ConvConcat, ConvBlock
 from autokeras.net_transformer import transform
 from autokeras.utils import ModelTrainer, pickle_to_file
 from autokeras.utils import extract_config
@@ -68,7 +68,8 @@ class Searcher:
         pass
 
     def load_model_by_id(self, model_id):
-        return load_model(os.path.join(self.path, str(model_id) + '.h5'), {'WeightedAdd': WeightedAdd})
+        return load_model(os.path.join(self.path, str(model_id) + '.h5'),
+                          {'WeightedAdd': WeightedAdd, 'ConvBlock': ConvBlock, 'ConvConcat': ConvConcat})
 
     def load_best_model(self):
         """return model with best accuracy"""
@@ -124,74 +125,6 @@ class Searcher:
             print('Loss:', loss)
             print('Accuracy', accuracy)
         return ret
-
-
-class RandomSearcher(Searcher):
-    """Random Searcher class inherited from ClassifierBase class
-
-    RandomSearcher implements its search function with random strategy
-    """
-
-    def __init__(self, n_classes, input_shape, path, verbose):
-        """Init RandomSearcher with n_classes, input_shape, path, verbose"""
-        super().__init__(n_classes, input_shape, path, verbose)
-
-    def search(self, x_train, y_train, x_test, y_test):
-        """Override parent's search function. First model is randomly generated"""
-        while self.model_count < constant.MAX_MODEL_NUM:
-            model = RandomConvClassifierGenerator(self.n_classes, self.input_shape).generate()
-            self.add_model(model, x_train, y_train, x_test, y_test)
-            pickle_to_file(self, os.path.join(self.path, 'searcher'))
-            backend.clear_session()
-
-        return self.load_best_model()
-
-
-class HillClimbingSearcher(Searcher):
-    """HillClimbing Searcher class inherited from ClassifierBase class
-
-    HillClimbing Searcher implements its search function with hill climbing strategy
-    """
-
-    def __init__(self, n_classes, input_shape, path, verbose):
-        """Init HillClimbing Searcher with n_classes, input_shape, path, verbose"""
-        super().__init__(n_classes, input_shape, path, verbose)
-
-    def _remove_duplicate(self, models):
-        """Remove the duplicate in the history_models"""
-        ans = []
-        for model_a in models:
-            model_a_config = extract_config(model_a)
-            if model_a_config not in self.history_configs:
-                ans.append(model_a)
-        return ans
-
-    def search(self, x_train, y_train, x_test, y_test):
-        """Override parent's search function. First model is randomly generated"""
-        if not self.history:
-            model = DefaultClassifierGenerator(self.n_classes, self.input_shape).generate()
-            self.add_model(model, x_train, y_train, x_test, y_test)
-            pickle_to_file(self, os.path.join(self.path, 'searcher'))
-
-        else:
-            model = self.load_best_model()
-            new_graphs = transform(Graph(model, False))
-            new_models = []
-            for graph in new_graphs:
-                nm_graph = Graph(model, True)
-                for args in graph.operation_history:
-                    getattr(nm_graph, args[0])(*list(args[1:]))
-                    new_models.append(nm_graph.produce_model())
-            new_models = self._remove_duplicate(list(new_models))
-
-            for model in new_models:
-                if self.model_count < constant.MAX_MODEL_NUM:
-                    self.add_model(model, x_train, y_train, x_test, y_test)
-                    pickle_to_file(self, os.path.join(self.path, 'searcher'))
-
-            backend.clear_session()
-
-        return self.load_best_model()
 
 
 class BayesianSearcher(Searcher):
