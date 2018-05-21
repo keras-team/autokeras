@@ -541,7 +541,7 @@ class Graph:
             for u, layer_id in self.reverse_adj_list[v]:
                 layer = self.layer_list[layer_id]
                 weighted = 0
-                if is_layer(layer, 'ConvBlock') or is_layer(layer, 'Dense'):
+                if is_layer(layer, 'Conv') or is_layer(layer, 'Dense'):
                     weighted = 1
                 layer_count = max(pos[u] + weighted, layer_count)
             pos[v] = layer_count
