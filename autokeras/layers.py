@@ -99,13 +99,9 @@ class ConvBlock(Layer):
     def build(self, input_shape):
         super(ConvBlock, self).build(input_shape)
 
-        self.batch_normalization = BatchNormalization()
-        self.batch_normalization.build(input_shape)
-        output_shape = self.batch_normalization.compute_output_shape(input_shape)
-
         self.activation = Activation('relu')
-        self.activation.build(output_shape)
-        output_shape = self.activation.compute_output_shape(output_shape)
+        self.activation.build(input_shape)
+        output_shape = self.activation.compute_output_shape(input_shape)
 
         self.conv = get_conv_layer_func(len(output_shape) - 2)(self.filters,
                                                                kernel_size=self.kernel_size,
@@ -114,6 +110,10 @@ class ConvBlock(Layer):
                                                                kernel_regularizer=l2(1e-4))
         self.conv.build(output_shape)
         output_shape = self.conv.compute_output_shape(output_shape)
+
+        self.batch_normalization = BatchNormalization()
+        self.batch_normalization.build(output_shape)
+        output_shape = self.batch_normalization.compute_output_shape(output_shape)
 
         self.dropout = Dropout(constant.CONV_DROPOUT_RATE)
         self.dropout.build(output_shape)
@@ -126,9 +126,9 @@ class ConvBlock(Layer):
     def call(self, inputs, **kwargs):
         """Override call function in Add and return new weights"""
         super(ConvBlock, self).call(inputs)
-        output = self.batch_normalization(inputs)
-        output = self.activation(output)
+        output = self.activation(inputs)
         output = self.conv(output)
+        output = self.batch_normalization(output)
         output = self.dropout(output)
         return output
 
