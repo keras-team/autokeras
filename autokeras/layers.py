@@ -61,6 +61,8 @@ class ConvConcat(Layer):
         output_shape = self.concatenate.compute_output_shape(input_shape)
         self.conv.build(output_shape)
 
+        self._trainable_weights += self.conv.trainable_weights
+
     def call(self, inputs, **kwargs):
         """Override call function in Add and return new weights"""
         super(ConvConcat, self).call(inputs)
@@ -115,6 +117,11 @@ class ConvBlock(Layer):
 
         self.dropout = Dropout(constant.CONV_DROPOUT_RATE)
         self.dropout.build(output_shape)
+
+        self._trainable_weights += self.batch_normalization.trainable_weights
+        self._trainable_weights += self.activation.trainable_weights
+        self._trainable_weights += self.conv.trainable_weights
+        self._trainable_weights += self.dropout.trainable_weights
 
     def call(self, inputs, **kwargs):
         """Override call function in Add and return new weights"""
