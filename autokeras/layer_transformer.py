@@ -281,7 +281,7 @@ def wider_next_conv_concat(layer, start_dim, total_dim, n_add, weighted=True):
        The next wider convolution layer
     """
     if not weighted:
-        return StubConvConcat()
+        return StubConvConcat(layer.filters)
 
     teacher_w, teacher_b = layer.get_weights()
 
@@ -292,7 +292,7 @@ def wider_next_conv_concat(layer, start_dim, total_dim, n_add, weighted=True):
     student_w = np.concatenate((teacher_w[..., :start_dim, :].copy(),
                                 add_noise(new_weight, teacher_w),
                                 teacher_w[..., start_dim:total_dim, :].copy()), axis=-2)
-    new_layer = StubConvConcat()
+    new_layer = StubConvConcat(layer.filters)
     new_layer.set_weights((student_w, teacher_b))
     return new_layer
 
@@ -309,9 +309,8 @@ def wider_pre_conv_concat(layer, n_add_filters, weighted=True):
        The previous convolution layer
    """
     if not weighted:
-        return StubConvConcat()
+        return StubConvConcat(layer.filters)
 
-    pre_filter_shape = layer.kernel_size
     n_pre_filters = layer.filters
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
 
@@ -325,7 +324,7 @@ def wider_pre_conv_concat(layer, n_add_filters, weighted=True):
         new_weight = new_weight[..., np.newaxis]
         student_w = np.concatenate((student_w, new_weight), axis=-1)
         student_b = np.append(student_b, teacher_b[teacher_index])
-    new_pre_layer = StubConvConcat()
+    new_pre_layer = StubConvConcat(layer.filters)
     new_pre_layer.set_weights((add_noise(student_w, teacher_w), add_noise(student_b, teacher_b)))
     return new_pre_layer
 

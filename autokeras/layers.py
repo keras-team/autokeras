@@ -41,16 +41,19 @@ class WeightedAdd(Add):
 
 
 class ConvConcat(Layer):
-    def __init__(self, **kwargs):
+    def __init__(self, filters=None, **kwargs):
         """Init Weighted add class"""
         super(ConvConcat, self).__init__(**kwargs)
         self.concatenate = None
         self.conv = None
+        self.filters = filters
 
     def build(self, input_shape):
         super(ConvConcat, self).build(input_shape)
         self.concatenate = Concatenate()
-        self.conv = get_conv_layer_func(len(input_shape[0]) - 2)(input_shape[0][-1],
+        if self.filters is None:
+            self.filters = input_shape[0][-1]
+        self.conv = get_conv_layer_func(len(input_shape[0]) - 2)(self.filters,
                                                                  kernel_size=1,
                                                                  padding='same',
                                                                  kernel_initializer='he_normal',
@@ -67,13 +70,17 @@ class ConvConcat(Layer):
 
     def compute_output_shape(self, input_shape):
         """Return output_shape"""
-        return input_shape[0]
+        concat_output_shape = self.concatenate.compute_output_shape(input_shape)
+        return self.conv.compute_output_shape(concat_output_shape)
 
     def get_weights(self):
         return self.conv.get_weights()
 
     def set_weights(self, weights):
         self.conv.set_weights(weights)
+
+    def get_config(self):
+        return {'filters': self.filters}
 
 
 class ConvBlock(Layer):
@@ -193,7 +200,9 @@ class StubAggregateLayer(StubLayer):
 
 
 class StubConvConcat(StubAggregateLayer):
-    pass
+    def __init__(self, filters, input_nodes=None, output_nodes=None):
+        super().__init__(input_nodes, output_nodes)
+        self.filters = filters
 
 
 class StubConcatenate(StubAggregateLayer):
@@ -341,7 +350,7 @@ def to_stub_layer(input_id, layer, output_id):
     elif is_layer(layer, 'ConvBlock'):
         temp_stub_layer = StubConvBlock(layer.filters, layer.kernel_size, input_id, output_id)
     elif is_layer(layer, 'ConvConcat'):
-        temp_stub_layer = StubConvConcat(input_id, output_id)
+        temp_stub_layer = StubConvConcat(layer.filters, input_id, output_id)
     else:
         raise TypeError("The layer {} is illegal.".format(layer))
     return temp_stub_layer
@@ -375,4 +384,4 @@ def to_real_layer(layer):
     if is_layer(layer, 'ConvBlock'):
         return ConvBlock(layer.filters, layer.kernel_size)
     if is_layer(layer, 'ConvConcat'):
-        return ConvConcat()
+        return ConvConcat(layer.filters)

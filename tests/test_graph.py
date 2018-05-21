@@ -1,3 +1,5 @@
+from keras.utils import plot_model
+
 from autokeras.generator import DefaultClassifierGenerator
 from autokeras.graph import *
 from tests.common import get_conv_model, get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model, \
@@ -193,19 +195,30 @@ def test_add_skip_wider():
 
     assert np.sum(np.abs(output1 - output2)) < 1e-4
 
-
-def test_long_transform():
-    model = DefaultClassifierGenerator(10, (32, 32, 3)).generate(10)
-    graph = Graph(model, True)
-    history1 = [('to_add_skip_model', 0, 12), ('to_add_skip_model', 1, 4), ('to_add_skip_model', 0, 1),
-                ('to_add_skip_model', 7, 10), ('to_wider_model', 13, 401), ('to_concat_skip_model', 6, 13)]
-
-    for args in history1:
-        getattr(graph, args[0])(*list(args[1:]))
-    graph = Graph(graph.produce_model(), True)
-    history2 = [('to_add_skip_model', 0, 4), ('to_add_skip_model', 12, 13), ('to_wider_model', 10, 119),
-                ('to_concat_skip_model', 1, 10), ('to_add_skip_model', 1, 4), ('to_concat_skip_model', 0, 13),
-                ('to_wider_model', 20, 363)]
-    for args in history2:
-        getattr(graph, args[0])(*list(args[1:]))
-    graph.produce_model()
+#
+# def test_long_transform():
+#     model = DefaultClassifierGenerator(10, (32, 32, 3)).generate(10)
+#     graph = Graph(model, True)
+#     history1 = [('to_add_skip_model', 0, 12), ('to_add_skip_model', 1, 4), ('to_add_skip_model', 0, 1),
+#                 ('to_add_skip_model', 7, 10), ('to_wider_model', 13, 401), ('to_concat_skip_model', 6, 13)]
+#
+#     for args in history1:
+#         getattr(graph, args[0])(*list(args[1:]))
+#     graph = Graph(graph.produce_model(), True)
+#     history2 = [('to_add_skip_model', 0, 4), ('to_add_skip_model', 12, 13), ('to_wider_model', 10, 119),
+#                 ('to_concat_skip_model', 1, 10), ('to_add_skip_model', 1, 4), ('to_concat_skip_model', 0, 13),
+#                 ('to_wider_model', 20, 363)]
+#     for args in history2:
+#         getattr(graph, args[0])(*list(args[1:]))
+#     graph.produce_model()
+#
+#
+# def test_long_transform2():
+#     model = DefaultClassifierGenerator(10, (32, 32, 3)).generate(10)
+#     graph = Graph(model, True)
+#     history = [('to_concat_skip_model', 3, 12), ('to_wider_model', 12, 512)]
+#
+#     for args in history:
+#         print(args)
+#         getattr(graph, args[0])(*list(args[1:]))
+#     graph.produce_model()

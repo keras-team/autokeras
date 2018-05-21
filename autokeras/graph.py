@@ -450,7 +450,7 @@ class Graph:
 
         # Add the concatenate layer.
         new_node_id = self._add_new_node()
-        layer = StubConvConcat()
+        layer = StubConvConcat(self.layer_list[end_id].filters)
         if self.weighted:
             filters_end = self.layer_list[end_id].filters
             filters_start = self.layer_list[start_id].filters
@@ -481,15 +481,17 @@ class Graph:
                 if is_layer(layer, 'Dense'):
                     ret.add_dense_width(layer_width(layer))
 
-        layer_count = 0
         # The position of each node, how many Conv and Dense layers before it.
         pos = [0] * len(topological_node_list)
-        for u in topological_node_list:
-            pos[u] = layer_count
-            for v, layer_id in self.adj_list[u]:
+        for v in topological_node_list:
+            layer_count = 0
+            for u, layer_id in self.reverse_adj_list[v]:
                 layer = self.layer_list[layer_id]
+                weighted = 0
                 if is_layer(layer, 'ConvBlock') or is_layer(layer, 'Dense'):
-                    layer_count += 1
+                    weighted = 1
+                layer_count = max(pos[u] + weighted, layer_count)
+            pos[v] = layer_count
 
         for u in topological_node_list:
             for v, layer_id in self.adj_list[u]:
