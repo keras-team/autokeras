@@ -115,7 +115,18 @@ def wider_pre_conv_block(layer, n_add_filters, weighted=True):
     n_pre_filters = layer.filters
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
 
-    bn_weights = layer.get_weights()[0]
+    weights = layer.get_weights()[0]
+
+    new_weights = [np.ones(n_add_filters, dtype=np.float32),
+                   np.zeros(n_add_filters, dtype=np.float32),
+                   np.zeros(n_add_filters, dtype=np.float32),
+                   np.ones(n_add_filters, dtype=np.float32)]
+
+    bn_student_w = tuple()
+    for weight, new_weight in zip(weights, new_weights):
+        temp_w = weight.copy()
+        temp_w = np.concatenate((temp_w[:n_pre_filters], new_weight))
+        bn_student_w += (temp_w,)
 
     teacher_w, teacher_b = layer.get_weights()[1]
     student_w = teacher_w.copy()
@@ -128,7 +139,7 @@ def wider_pre_conv_block(layer, n_add_filters, weighted=True):
         student_w = np.concatenate((student_w, new_weight), axis=-1)
         student_b = np.append(student_b, teacher_b[teacher_index])
     new_pre_layer = StubConvBlock(n_pre_filters + n_add_filters, kernel_size=pre_filter_shape)
-    new_pre_layer.set_weights([bn_weights, (add_noise(student_w, teacher_w), add_noise(student_b, teacher_b))])
+    new_pre_layer.set_weights([bn_student_w, (add_noise(student_w, teacher_w), add_noise(student_b, teacher_b))])
     return new_pre_layer
 
 
@@ -150,19 +161,7 @@ def wider_next_conv(layer, start_dim, total_dim, n_add, weighted=True):
     filter_shape = layer.kernel_size
     n_filters = layer.filters
 
-    weights = layer.get_weights()[0]
-
-    new_weights = [np.ones(n_add, dtype=np.float32),
-                   np.zeros(n_add, dtype=np.float32),
-                   np.zeros(n_add, dtype=np.float32),
-                   np.ones(n_add, dtype=np.float32)]
-
-    bn_student_w = tuple()
-    for weight, new_weight in zip(weights, new_weights):
-        temp_w = weight.copy()
-        temp_w = np.concatenate((temp_w[:start_dim], new_weight, temp_w[start_dim:total_dim]))
-        bn_student_w += (temp_w,)
-
+    bn_weights = layer.get_weights()[0]
     teacher_w, teacher_b = layer.get_weights()[1]
 
     new_weight_shape = list(teacher_w.shape)
@@ -173,7 +172,7 @@ def wider_next_conv(layer, start_dim, total_dim, n_add, weighted=True):
                                 add_noise(new_weight, teacher_w),
                                 teacher_w[..., start_dim:total_dim, :].copy()), axis=-2)
     new_layer = StubConvBlock(n_filters, kernel_size=filter_shape)
-    new_layer.set_weights([bn_student_w, (student_w, teacher_b)])
+    new_layer.set_weights([bn_weights, (student_w, teacher_b)])
     return new_layer
 
 
