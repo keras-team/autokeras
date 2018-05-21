@@ -29,7 +29,7 @@ if __name__ == '__main__':
     Y = np.concatenate((y_train, y_test))
     trainer_args = {'max_iter_num': 0}
     clf = ImageClassifier(searcher_type='bayesian', path='/Users/haifeng/cifar102', verbose=True,
-                          searcher_args={'trainer_args': {'max_iter_num': 10}})
+                          searcher_args={'trainer_args': {'max_iter_num': 0}, 'default_model_len': 15})
 
     clf.fit(x_train, y_train, time_limit=12*60*60)
     # clf.final_fit(x_train, y_train)

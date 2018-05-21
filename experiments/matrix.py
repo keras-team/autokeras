@@ -43,18 +43,13 @@ print(mse / 47.0 / 47.0)
 
 
 plt.matshow(m1, cmap='bone')
-plt.axis('off')
 plt.savefig('/Users/haifeng/m1.png', bbox_inches='tight', pad_inches=0)
 
-plt.figure(frameon=False)
 plt.matshow(m2, cmap='bone')
-plt.axis('off')
-plt.savefig('/Users/haifeng/m2.png', bbox_inches='tight')
+plt.savefig('/Users/haifeng/m2.png', bbox_inches='tight', pad_inches=0)
 
 plt.matshow(m3, cmap='bone')
-plt.axis('off')
 plt.savefig('/Users/haifeng/m3.png', bbox_inches='tight', pad_inches=0)
 
-plt.axis('off')
 plt.matshow(m4, cmap='bone')
 plt.savefig('/Users/haifeng/m4.png', bbox_inches='tight', pad_inches=0)

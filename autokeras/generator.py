@@ -7,7 +7,7 @@ from keras.losses import categorical_crossentropy
 from keras.optimizers import Adadelta, Adam
 
 from autokeras import constant
-from autokeras.layers import get_conv_layer_func, get_ave_layer_func, ConvBlock
+from autokeras.utils import get_conv_layer_func, get_ave_layer_func
 
 
 class ClassifierGenerator:
@@ -51,13 +51,17 @@ class DefaultClassifierGenerator(ClassifierGenerator):
     def generate(self, model_len=constant.MODEL_LEN, model_width=constant.MODEL_WIDTH):
         """Return the default classifier model that has been compiled."""
         pool = self._get_pool_layer_func()
+        conv = get_conv_layer_func(len(self._get_shape(3)))
         ave = get_ave_layer_func(len(self._get_shape(3)))
 
         pooling_len = int(model_len / 4)
         output_tensor = input_tensor = Input(shape=self.input_shape)
         for i in range(model_len):
-            output_tensor = ConvBlock(model_width)(output_tensor)
-            if pooling_len == 0 or ((i + 1) % pooling_len == 0 and i != model_len - 1):
+            output_tensor = BatchNormalization()(output_tensor)
+            output_tensor = Activation('relu')(output_tensor)
+            output_tensor = conv(model_width, kernel_size=self._get_shape(3), padding='same')(output_tensor)
+            output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+            if (i + 1) % pooling_len == 0 and i != model_len - 1:
                 output_tensor = pool(padding='same')(output_tensor)
 
         output_tensor = ave()(output_tensor)

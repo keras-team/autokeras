@@ -27,11 +27,11 @@ if __name__ == '__main__':
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     X = np.concatenate((x_train, x_test))
     Y = np.concatenate((y_train, y_test))
-    clf = ImageClassifier(path='/home/haifeng/cifar10', verbose=True,
-                          searcher_args={'trainer_args': {'max_iter_num': 10}, 'default_model_len': 10})
+    clf = ImageClassifier(searcher_type='bayesian', path='/home/haifeng/cifar10', verbose=True,
+                          searcher_args={'trainer_args': {'max_iter_num': 10}, 'default_model_len': 15})
 
     clf.fit(x_train, y_train, time_limit=12*60*60)
-    clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
+    clf.final_fit(x_train, y_train, x_test, y_test)
     y = clf.evaluate(x_test, y_test)
     print(y)
     # MLP for Pima Indians Dataset with 10-fold cross validation

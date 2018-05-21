@@ -6,23 +6,39 @@ from keras.layers import Conv2D, BatchNormalization, Activation, Flatten, Dense,
     GlobalAveragePooling2D
 
 from autokeras import constant
-from autokeras.layers import WeightedAdd, ConvBlock, ConvConcat
+from autokeras.layers import WeightedAdd
 
 
 def get_concat_skip_model():
     output_tensor = input_tensor = Input(shape=(5, 5, 3))
-    output_tensor = ConvBlock(3)(output_tensor)
-    output_tensor = ConvBlock(3)(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
     add_input = output_tensor
-    output_tensor = ConvBlock(3)(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
-    output_tensor = ConvConcat()([output_tensor, add_input])
+    output_tensor = Concatenate()([output_tensor, add_input])
     add_input = output_tensor
-    output_tensor = ConvBlock(3)(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
-    output_tensor = ConvConcat()([output_tensor, add_input])
-    output_tensor = ConvBlock(3)(output_tensor)
+    output_tensor = Concatenate()([output_tensor, add_input])
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
     output_tensor = Flatten()(output_tensor)
     output_tensor = Dense(5, activation='relu')(output_tensor)
@@ -33,13 +49,28 @@ def get_concat_skip_model():
 
 def get_add_skip_model():
     output_tensor = input_tensor = Input(shape=(5, 5, 3))
-    output_tensor = ConvBlock(3)(output_tensor)
-    output_tensor = ConvBlock(3)(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+
     add_input = output_tensor
-    output_tensor = ConvBlock(3)(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+
     output_tensor = WeightedAdd()([output_tensor, add_input])
     add_input = output_tensor
-    output_tensor = ConvBlock(3)(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
     output_tensor = WeightedAdd()([output_tensor, add_input])
     output_tensor = Flatten()(output_tensor)
@@ -51,8 +82,14 @@ def get_add_skip_model():
 
 def get_conv_model():
     output_tensor = input_tensor = Input(shape=(5, 5, 3))
-    output_tensor = ConvBlock(3)(output_tensor)
-    output_tensor = ConvBlock(3)(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
     output_tensor = GlobalAveragePooling2D()(output_tensor)
     output_tensor = Dense(5, activation='relu')(output_tensor)
     output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
@@ -66,7 +103,10 @@ def get_conv_data():
 
 def get_conv_dense_model():
     output_tensor = input_tensor = Input(shape=(5, 5, 3))
-    output_tensor = ConvBlock(3)(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
     output_tensor = GlobalAveragePooling2D()(output_tensor)
     output_tensor = Dense(5, activation='relu')(output_tensor)
     output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
@@ -76,13 +116,27 @@ def get_conv_dense_model():
 
 def get_pooling_model():
     output_tensor = input_tensor = Input(shape=(5, 5, 3))
-    output_tensor = ConvBlock(3)(output_tensor)
-    output_tensor = ConvBlock(3)(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
     output_tensor = MaxPooling2D(padding='same')(output_tensor)
 
-    output_tensor = ConvBlock(3)(output_tensor)
-    output_tensor = ConvBlock(3)(output_tensor)
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+
+    output_tensor = BatchNormalization()(output_tensor)
+    output_tensor = Activation('relu')(output_tensor)
+    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
+    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
     output_tensor = Flatten()(output_tensor)
     output_tensor = Dense(5, activation='relu')(output_tensor)
