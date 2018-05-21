@@ -303,12 +303,11 @@ class Graph:
     def _upper_layer_width(self, u):
         for v, layer_id in self.reverse_adj_list[u]:
             layer = self.layer_list[layer_id]
-            if is_layer(layer, 'Conv') or is_layer(layer, 'Dense'):
+            if is_layer(layer, 'ConvBlock') or is_layer(layer, 'Dense'):
                 return layer_width(layer)
-            elif is_layer(layer, 'Concatenate'):
+            elif is_layer(layer, 'ConvConcat'):
                 a = self.layer_id_to_input_node_ids[layer_id][0]
-                b = self.layer_id_to_input_node_ids[layer_id][1]
-                return self._upper_layer_width(a) + self._upper_layer_width(b)
+                return self._upper_layer_width(a)
             else:
                 return self._upper_layer_width(v)
         return self.input_shape[-1]

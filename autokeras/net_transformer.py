@@ -20,9 +20,9 @@ def to_wider_graph(graph):
         target_id = weighted_layer_ids[randint(0, len(weighted_layer_ids) - 1)]
 
     if is_layer(graph.layer_list[target_id], 'ConvBlock'):
-        n_add = randint(1, 2 * graph.layer_list[target_id].filters)
+        n_add = graph.layer_list[target_id].filters
     else:
-        n_add = randint(1, 2 * graph.layer_list[target_id].units)
+        n_add = graph.layer_list[target_id].units
 
     graph.to_wider_model(target_id, n_add)
     return graph
