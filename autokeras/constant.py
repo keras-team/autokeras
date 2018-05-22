@@ -1,9 +1,3 @@
-from keras.layers import Conv3D, Conv2D, Conv1D, Dense
-
-from autokeras.layers import StubDense, StubConv
-
-CONV_FUNC_LIST = [Conv1D, Conv2D, Conv3D, StubConv]
-WEIGHTED_LAYER_FUNC_LIST = CONV_FUNC_LIST + [Dense, StubDense]
 DEFAULT_SAVE_PATH = '/tmp/autokeras/'
 
 

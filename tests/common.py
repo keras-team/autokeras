@@ -28,6 +28,7 @@ def get_concat_skip_model():
     output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
     output_tensor = Concatenate()([output_tensor, add_input])
+    output_tensor = Conv2D(3, kernel_size=(1, 1), padding='same', activation='linear')(output_tensor)
     add_input = output_tensor
     output_tensor = BatchNormalization()(output_tensor)
     output_tensor = Activation('relu')(output_tensor)
@@ -35,6 +36,7 @@ def get_concat_skip_model():
     output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
     output_tensor = Concatenate()([output_tensor, add_input])
+    output_tensor = Conv2D(3, kernel_size=(1, 1), padding='same', activation='linear')(output_tensor)
     output_tensor = BatchNormalization()(output_tensor)
     output_tensor = Activation('relu')(output_tensor)
     output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)

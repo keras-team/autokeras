@@ -7,7 +7,7 @@ from keras.losses import categorical_crossentropy
 from keras.optimizers import Adadelta, Adam
 
 from autokeras import constant
-from autokeras.utils import get_conv_layer_func, get_ave_layer_func
+from autokeras.layers import get_conv_layer_func, get_ave_layer_func
 
 
 class ClassifierGenerator:

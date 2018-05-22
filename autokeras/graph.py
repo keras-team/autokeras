@@ -1,18 +1,18 @@
 from copy import deepcopy
 
 from queue import Queue
+import numpy as np
 
 from keras import Input
 from keras.engine import Model
-from keras.layers import Concatenate, Dense, BatchNormalization, Dropout, Activation, Flatten
-from keras.regularizers import l2
+from keras.layers import Concatenate, Dropout, Activation
 
 from autokeras import constant
-from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_weighted_add, \
-    wider_pre_dense, wider_pre_conv, deeper_conv_block, dense_to_deeper_block
-from autokeras.layers import WeightedAdd, StubConcatenate, StubWeightedAdd
+from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, deeper_conv_block, dense_to_deeper_block, add_noise
+from autokeras.layers import WeightedAdd, StubConcatenate, StubWeightedAdd, StubConv, is_layer, layer_width, \
+    to_real_layer
 from autokeras.stub import to_stub_model
-from autokeras.utils import get_int_tuple, is_layer, layer_width
+from autokeras.utils import get_int_tuple
 
 
 class NetworkDescriptor:
@@ -43,33 +43,6 @@ class NetworkDescriptor:
             raise ValueError('connection_type should be NetworkDescriptor.CONCAT_CONNECT '
                              'or NetworkDescriptor.ADD_CONNECT.')
         self.skip_connections.append((u, v, connection_type))
-
-
-def to_real_layer(layer):
-    if is_layer(layer, 'Dense'):
-        return Dense(layer.units, activation=layer.activation)
-    if is_layer(layer, 'Conv'):
-        return layer.func(layer.filters,
-                          kernel_size=layer.kernel_size,
-                          padding='same',
-                          kernel_initializer='he_normal',
-                          kernel_regularizer=l2(1e-4))
-    if is_layer(layer, 'Pooling'):
-        return layer.func(padding='same')
-    if is_layer(layer, 'BatchNormalization'):
-        return BatchNormalization()
-    if is_layer(layer, 'Concatenate'):
-        return Concatenate()
-    if is_layer(layer, 'WeightedAdd'):
-        return WeightedAdd()
-    if is_layer(layer, 'Dropout'):
-        return Dropout(layer.rate)
-    if is_layer(layer, 'Activation'):
-        return Activation(layer.func)
-    if is_layer(layer, 'Flatten'):
-        return Flatten()
-    if is_layer(layer, 'GlobalAveragePooling'):
-        return layer.func()
 
 
 class Graph:
@@ -115,8 +88,7 @@ class Graph:
         self.reverse_adj_list = {}
         self.operation_history = []
 
-        self.next_vis = None
-        self.pre_vis = None
+        self.vis = None
         self.middle_layer_vis = None
         self.input_shape = model.input_shape
 
@@ -262,7 +234,7 @@ class Graph:
 
         return False
 
-    def _search_next(self, u, start_dim, total_dim, n_add):
+    def _search(self, u, start_dim, total_dim, n_add):
         """Search downward the graph for widening the layers.
 
         Args:
@@ -271,6 +243,9 @@ class Graph:
             total_dim: The total number of dimensions the layer has before widening.
             n_add: The number of dimensions to add.
         """
+        if (u, start_dim, total_dim, n_add) in self.vis:
+            return
+        self.vis[(u, start_dim, total_dim, n_add)] = True
         for v, layer_id in self.adj_list[u]:
             layer = self.layer_list[layer_id]
 
@@ -285,12 +260,7 @@ class Graph:
             elif is_layer(layer, 'BatchNormalization'):
                 new_layer = wider_bn(layer, start_dim, total_dim, n_add, self.weighted)
                 self._replace_layer(layer_id, new_layer)
-                self._search_next(v, start_dim, total_dim, n_add)
-
-            elif is_layer(layer, 'WeightedAdd'):
-                new_layer = wider_weighted_add(layer, n_add, self.weighted)
-                self._replace_layer(layer_id, new_layer)
-                self._search_next(v, start_dim, total_dim, n_add)
+                self._search(v, start_dim, total_dim, n_add)
 
             elif is_layer(layer, 'Concatenate'):
                 if self.layer_id_to_input_node_ids[layer_id][1] == u:
@@ -302,24 +272,11 @@ class Graph:
                 else:
                     next_start_dim = start_dim
                     next_total_dim = total_dim + self._upper_layer_width(self.layer_id_to_input_node_ids[layer_id][1])
-                self._search_next(v, next_start_dim, next_total_dim, n_add)
+                self._search(v, next_start_dim, next_total_dim, n_add)
 
             else:
-                self._search_next(v, start_dim, total_dim, n_add)
+                self._search(v, start_dim, total_dim, n_add)
 
-    def _search_pre(self, u, start_dim, total_dim, n_add):
-        """Search upward the graph for widening the layers.
-
-        Args:
-            u: The starting node identifier.
-            start_dim: The dimension to insert the additional dimensions.
-            total_dim: The total number of dimensions the layer has before widening.
-            n_add: The number of dimensions to add.
-        """
-        if self.pre_vis[u]:
-            return
-        self.pre_vis[u] = True
-        self._search_next(u, start_dim, total_dim, n_add)
         for v, layer_id in self.reverse_adj_list[u]:
             layer = self.layer_list[layer_id]
             if is_layer(layer, 'Conv'):
@@ -328,21 +285,10 @@ class Graph:
             elif is_layer(layer, 'Dense'):
                 new_layer = wider_pre_dense(layer, n_add, self.weighted)
                 self._replace_layer(layer_id, new_layer)
-            elif is_layer(layer, 'BatchNormalization'):
-                self._search_pre(v, start_dim, total_dim, n_add)
             elif is_layer(layer, 'Concatenate'):
-                if self.layer_id_to_input_node_ids[layer_id][1] == v:
-                    # v is on the right
-                    other_branch_v = self.layer_id_to_input_node_ids[layer_id][0]
-                    if self.pre_vis[other_branch_v]:
-                        # The other branch is already been widen, which means the widen for upper part of this concat
-                        #  layer is done.
-                        continue
-                    pre_total_dim = self._upper_layer_width(v)
-                    pre_start_dim = start_dim - (total_dim - pre_total_dim)
-                    self._search_pre(v, pre_start_dim, pre_total_dim, n_add)
+                continue
             else:
-                self._search_pre(v, start_dim, total_dim, n_add)
+                self._search(v, start_dim, total_dim, n_add)
 
     def _upper_layer_width(self, u):
         for v, layer_id in self.reverse_adj_list[u]:
@@ -389,13 +335,8 @@ class Graph:
         pre_layer = self.layer_list[pre_layer_id]
         output_id = self.layer_id_to_output_node_ids[pre_layer_id][0]
         dim = layer_width(pre_layer)
-        if is_layer(pre_layer, 'Conv'):
-            new_layer = wider_pre_conv(pre_layer, n_add, self.weighted)
-            self._replace_layer(pre_layer_id, new_layer)
-        else:
-            new_layer = wider_pre_dense(pre_layer, n_add, self.weighted)
-            self._replace_layer(pre_layer_id, new_layer)
-        self._search_next(output_id, dim, dim, n_add)
+        self.vis = {}
+        self._search(output_id, dim, dim, n_add)
 
     def to_dense_deeper_model(self, target_id):
         """Insert a dense layer after the target layer.
@@ -512,16 +453,33 @@ class Graph:
         # Add the concatenate layer.
         new_node_id = self._add_new_node()
         layer = StubConcatenate()
+        new_node_id2 = self._add_new_node()
+        layer2 = StubConv(self.layer_list[end_id].filters, 1, self.layer_list[end_id].func)
+        if self.weighted:
+            if self.weighted:
+                filters_end = self.layer_list[end_id].filters
+                filters_start = self.layer_list[start_id].filters
+                filter_shape = (1,) * (len(self.layer_list[end_id].get_weights()[0].shape) - 2)
+                weights = np.zeros(filter_shape + (filters_end, filters_end))
+                for i in range(filters_end):
+                    filter_weight = np.zeros(filter_shape + (filters_end,))
+                    filter_weight[(0, 0, i)] = 1
+                    weights[..., i] = filter_weight
+                weights = np.concatenate((weights,
+                                          np.zeros(filter_shape + (filters_start, filters_end))), axis=2)
+                bias = np.zeros(filters_end)
+                layer2.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
 
         dropout_output_id = self.adj_list[dropout_input_id][0][0]
         self._redirect_edge(dropout_input_id, dropout_output_id, new_node_id)
-        self._add_edge(layer, new_node_id, dropout_output_id)
-        self._add_edge(layer, skip_output_id, dropout_output_id)
+        self._add_edge(layer, new_node_id, new_node_id2)
+        self._add_edge(layer, skip_output_id, new_node_id2)
+        self._add_edge(layer2, new_node_id2, dropout_output_id)
 
-        # Widen the related layers.
-        dim = layer_width(end)
-        n_add = self._upper_layer_width(conv_block_input_id)
-        self._search_next(dropout_output_id, dim, dim, n_add)
+        # # Widen the related layers.
+        # dim = layer_width(end)
+        # n_add = self._upper_layer_width(conv_block_input_id)
+        # self._search(dropout_output_id, dim, dim, n_add)
 
     def extract_descriptor(self):
         ret = NetworkDescriptor()
@@ -529,7 +487,7 @@ class Graph:
         for u in topological_node_list:
             for v, layer_id in self.adj_list[u]:
                 layer = self.layer_list[layer_id]
-                if is_layer(layer, 'Conv'):
+                if is_layer(layer, 'Conv') and layer.kernel_size not in [1, (1,), (1, 1), (1, 1, 1)]:
                     ret.add_conv_width(layer_width(layer))
                 if is_layer(layer, 'Dense'):
                     ret.add_dense_width(layer_width(layer))
@@ -541,7 +499,8 @@ class Graph:
             for u, layer_id in self.reverse_adj_list[v]:
                 layer = self.layer_list[layer_id]
                 weighted = 0
-                if is_layer(layer, 'Conv') or is_layer(layer, 'Dense'):
+                if (is_layer(layer, 'Conv') and layer.kernel_size not in [1, (1,), (1, 1), (1, 1, 1)]) \
+                        or is_layer(layer, 'Dense'):
                     weighted = 1
                 layer_count = max(pos[u] + weighted, layer_count)
             pos[v] = layer_count
@@ -608,7 +567,9 @@ class Graph:
         return list(filter(lambda layer_id: is_layer(self.layer_list[layer_id], type_str), range(self.n_layers)))
 
     def _conv_layer_ids_in_order(self):
-        return self._layer_ids_in_order(self._layer_ids_by_type('Conv'))
+        return self._layer_ids_in_order(
+            list(filter(lambda layer_id: self.layer_list[layer_id].kernel_size not in [1, (1,), (1, 1), (1, 1, 1)],
+                        self._layer_ids_by_type('Conv'))))
 
     def _dense_layer_ids_in_order(self):
         return self._layer_ids_in_order(self._layer_ids_by_type('Dense'))

@@ -4,45 +4,11 @@ import numpy as np
 
 from keras.callbacks import Callback, LearningRateScheduler, ReduceLROnPlateau
 from keras.losses import categorical_crossentropy
-from keras.layers import Conv1D, Conv2D, Conv3D, MaxPooling3D, MaxPooling2D, MaxPooling1D, Dense, BatchNormalization, \
-    Concatenate, Dropout, Activation, Flatten, GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from tensorflow import Dimension
 
 from autokeras import constant
-from autokeras.constant import CONV_FUNC_LIST
-from autokeras.layers import StubConv, StubDense, StubBatchNormalization, StubConcatenate, StubWeightedAdd, \
-    WeightedAdd, StubPooling, StubDropout, StubActivation, StubFlatten, StubGlobalPooling
-
-
-def is_conv_layer(layer):
-    """Return whether the layer is convolution layer"""
-    return isinstance(layer, tuple(CONV_FUNC_LIST))
-
-
-def is_dense_layer(layer):
-    return isinstance(layer, Dense)
-
-
-def get_conv_layer_func(n_dim):
-    """Return convolution function based on the dimension"""
-    conv_layer_functions = [Conv1D, Conv2D, Conv3D]
-    if n_dim > 3:
-        raise ValueError('The input dimension is too high.')
-    if n_dim < 1:
-        raise ValueError('The input dimension is too low.')
-    return conv_layer_functions[n_dim - 1]
-
-
-def get_ave_layer_func(n_dim):
-    """Return convolution function based on the dimension"""
-    conv_layer_functions = [GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D]
-    if n_dim > 3:
-        raise ValueError('The input dimension is too high.')
-    if n_dim < 1:
-        raise ValueError('The input dimension is too low.')
-    return conv_layer_functions[n_dim - 1]
 
 
 def lr_schedule(epoch):
@@ -237,14 +203,6 @@ def get_int_tuple(temp_shape):
     return tuple(input_shape)
 
 
-def is_pooling_layer(layer):
-    return isinstance(layer, (MaxPooling1D, MaxPooling2D, MaxPooling3D))
-
-
-def is_global_pooling_layer(layer):
-    return isinstance(layer, (GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D))
-
-
 def pickle_from_file(path):
     return pickle.load(open(path, 'rb'))
 
@@ -253,32 +211,3 @@ def pickle_to_file(obj, path):
     pickle.dump(obj, open(path, 'wb'))
 
 
-def is_layer(layer, layer_type):
-    if layer_type == 'Conv':
-        return isinstance(layer, StubConv) or is_conv_layer(layer)
-    if layer_type == 'Dense':
-        return isinstance(layer, (StubDense, Dense))
-    if layer_type == 'BatchNormalization':
-        return isinstance(layer, (StubBatchNormalization, BatchNormalization))
-    if layer_type == 'Concatenate':
-        return isinstance(layer, (StubConcatenate, Concatenate))
-    if layer_type == 'WeightedAdd':
-        return isinstance(layer, (StubWeightedAdd, WeightedAdd))
-    if layer_type == 'Pooling':
-        return isinstance(layer, StubPooling) or is_pooling_layer(layer)
-    if layer_type == 'Dropout':
-        return isinstance(layer, (StubDropout, Dropout))
-    if layer_type == 'Activation':
-        return isinstance(layer, (StubActivation, Activation))
-    if layer_type == 'Flatten':
-        return isinstance(layer, (StubFlatten, Flatten))
-    if layer_type == 'GlobalAveragePooling':
-        return isinstance(layer, StubGlobalPooling) or is_global_pooling_layer(layer)
-
-
-def layer_width(layer):
-    if is_layer(layer, 'Dense'):
-        return layer.units
-    if is_layer(layer, 'Conv'):
-        return layer.filters
-    raise TypeError('The layer should be either Dense or Conv layer.')

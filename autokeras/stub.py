@@ -1,9 +1,5 @@
-from keras.engine import InputLayer
-from keras.layers import Dense, Concatenate, BatchNormalization, Activation, Flatten, Dropout
-
-from autokeras.layers import WeightedAdd, StubLayer, StubBatchNormalization, StubDense, StubConv, StubConcatenate, \
-    StubWeightedAdd, StubActivation, StubPooling, StubDropout, StubFlatten, StubGlobalPooling
-from autokeras.utils import is_conv_layer, is_pooling_layer, get_int_tuple, is_global_pooling_layer
+from autokeras.layers import to_stub_layer
+from autokeras.utils import get_int_tuple
 
 
 class StubModel:
@@ -41,30 +37,7 @@ def to_stub_model(model, weighted=False):
             input_id = tensor_dict[layer.input]
         output_id = tensor_dict[layer.output]
 
-        if is_conv_layer(layer):
-            temp_stub_layer = StubConv(layer.filters, layer.kernel_size, layer.__class__, input_id, output_id)
-        elif isinstance(layer, Dense):
-            temp_stub_layer = StubDense(layer.units, layer.activation, input_id, output_id)
-        elif isinstance(layer, WeightedAdd):
-            temp_stub_layer = StubWeightedAdd(input_id, output_id)
-        elif isinstance(layer, Concatenate):
-            temp_stub_layer = StubConcatenate(input_id, output_id)
-        elif isinstance(layer, BatchNormalization):
-            temp_stub_layer = StubBatchNormalization(input_id, output_id)
-        elif isinstance(layer, Activation):
-            temp_stub_layer = StubActivation(layer.activation, input_id, output_id)
-        elif isinstance(layer, InputLayer):
-            temp_stub_layer = StubLayer(input_id, output_id)
-        elif isinstance(layer, Flatten):
-            temp_stub_layer = StubFlatten(input_id, output_id)
-        elif isinstance(layer, Dropout):
-            temp_stub_layer = StubDropout(layer.rate, input_id, output_id)
-        elif is_pooling_layer(layer):
-            temp_stub_layer = StubPooling(layer.__class__, input_id, output_id)
-        elif is_global_pooling_layer(layer):
-            temp_stub_layer = StubGlobalPooling(layer.__class__, input_id, output_id)
-        else:
-            raise TypeError("The layer {} is illegal.".format(layer))
+        temp_stub_layer = to_stub_layer(layer, input_id, output_id)
         if weighted:
             temp_stub_layer.set_weights(layer.get_weights())
         ret.add_layer(temp_stub_layer)

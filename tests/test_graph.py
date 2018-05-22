@@ -129,7 +129,7 @@ def test_skip_concat_over_pooling_stub():
     layer_num = graph.n_layers
     graph.to_concat_skip_model(2, 15)
 
-    assert graph.n_layers == layer_num + 2
+    assert graph.n_layers == layer_num + 3
 
 
 def test_skip_concat_over_pooling():
@@ -180,20 +180,3 @@ def test_skip_connection_layer_ids():
     model = get_conv_dense_model()
     graph = Graph(model, True)
     assert len(graph.skip_connection_layer_ids()) == 0
-
-
-def test_long_transform():
-    graph = Graph(DefaultClassifierGenerator(10, (32, 32, 2)).generate(), True)
-    graph.to_concat_skip_model(2, 12)
-    graph = Graph(graph.produce_model(), True)
-    operations = [('to_concat_skip_model', 2, 7), ('to_concat_skip_model', 7, 12), ('to_wider_model', 7, 32),
-                  ('to_conv_deeper_model', 19, 5), ('to_concat_skip_model', 12, 19), ('to_concat_skip_model', 7, 19),
-                  ('to_conv_deeper_model', 12, 3), ('to_concat_skip_model', 12, 19), ('to_concat_skip_model', 12, 34),
-                  ('to_concat_skip_model', 2, 12)]
-
-    for args in operations[:-1]:
-        getattr(graph, args[0])(*list(args[1:]))
-        print(args)
-    graph.to_concat_skip_model(2, 12)
-    graph.produce_model()
-
