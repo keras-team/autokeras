@@ -396,11 +396,8 @@ class Graph:
             A new Keras model with the added connection.
         """
         self.operation_history.append(('to_add_skip_model', start_id, end_id))
-        conv_layer_ids = self._conv_layer_ids_in_order()
-        start_id = conv_layer_ids[conv_layer_ids.index(start_id) + 1]
-        conv_block_input_id = self.layer_id_to_input_node_ids[start_id][0]
-        conv_block_input_id = self.reverse_adj_list[conv_block_input_id][0][0]
-        conv_block_input_id = self.reverse_adj_list[conv_block_input_id][0][0]
+        conv_block_input_id = self._conv_block_end_node(start_id)
+        conv_block_input_id = self.adj_list[conv_block_input_id][0][0]
 
         dropout_input_id = self._conv_block_end_node(end_id)
 
@@ -431,14 +428,9 @@ class Graph:
             A new Keras model with the added connection.
         """
         self.operation_history.append(('to_concat_skip_model', start_id, end_id))
-        # start = self.layer_list[start_id]
-        conv_layer_ids = self._conv_layer_ids_in_order()
-        start_id = conv_layer_ids[conv_layer_ids.index(start_id) + 1]
-        conv_block_input_id = self.layer_id_to_input_node_ids[start_id][0]
-        conv_block_input_id = self.reverse_adj_list[conv_block_input_id][0][0]
-        conv_block_input_id = self.reverse_adj_list[conv_block_input_id][0][0]
+        conv_block_input_id = self._conv_block_end_node(start_id)
+        conv_block_input_id = self.adj_list[conv_block_input_id][0][0]
 
-        end = self.layer_list[end_id]
         dropout_input_id = self._conv_block_end_node(end_id)
 
         # Add the pooling layer chain.

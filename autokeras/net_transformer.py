@@ -1,8 +1,6 @@
 from copy import deepcopy
-from random import randint, random, shuffle, randrange
-
-from autokeras import constant
-from autokeras.layers import is_conv_layer, is_dense_layer, WEIGHTED_LAYER_FUNC_LIST
+from random import randint, randrange
+from autokeras.layers import is_conv_layer
 
 
 def to_wider_graph(graph):
@@ -21,9 +19,9 @@ def to_wider_graph(graph):
         target_id = weighted_layer_ids[randint(0, len(weighted_layer_ids) - 1)]
 
     if is_conv_layer(graph.layer_list[target_id]):
-        n_add = randint(1, 2 * graph.layer_list[target_id].filters)
+        n_add = graph.layer_list[target_id].filters
     else:
-        n_add = randint(1, 2 * graph.layer_list[target_id].units)
+        n_add = graph.layer_list[target_id].units
 
     graph.to_wider_model(target_id, n_add)
     return graph
@@ -51,7 +49,10 @@ def to_skip_connection_graph(graph):
         index_a, index_b = index_b, index_a
     a_id = weighted_layer_ids[index_a]
     b_id = weighted_layer_ids[index_b]
-    graph.to_concat_skip_model(a_id, b_id)
+    if graph.layer_list[a_id].filters == graph.layer_list[b_id].filters:
+        graph.to_add_skip_model(a_id, b_id)
+    else:
+        graph.to_concat_skip_model(a_id, b_id)
     return graph
 
 
@@ -99,5 +100,5 @@ def transform(graph):
             graphs.append(to_wider_graph(deepcopy(graph)))
         elif a == 2:
             graphs.append(to_skip_connection_graph(deepcopy(graph)))
-    return graphs
+    return list(filter(lambda graph: legal_graph(graph), graphs))
 

@@ -180,3 +180,17 @@ def test_skip_connection_layer_ids():
     model = get_conv_dense_model()
     graph = Graph(model, True)
     assert len(graph.skip_connection_layer_ids()) == 0
+
+
+def test_long_transform():
+    graph = Graph(DefaultClassifierGenerator(10, (32, 32, 3)).generate(), True)
+    history = [('to_wider_model', 2, 256), ('to_conv_deeper_model', 2, 3),
+               ('to_concat_skip_model', 23, 7)]
+    for args in history:
+        print(args)
+        if args[1] == 23:
+            print('now')
+        getattr(graph, args[0])(*list(args[1:]))
+        graph.produce_model()
+    # assert not legal_graph(graph)
+
