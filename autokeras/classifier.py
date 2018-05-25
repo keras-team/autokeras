@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split, StratifiedKFold
 from autokeras import constant
 from autokeras.graph import Graph
 from autokeras.preprocessor import OneHotEncoder
-from autokeras.search import HillClimbingSearcher, RandomSearcher, BayesianSearcher
+from autokeras.search import BayesianSearcher
 from autokeras.utils import ensure_dir, ModelTrainer, has_file, pickle_from_file, pickle_to_file
 
 
@@ -181,7 +181,7 @@ class ClassifierBase:
         if time_limit is None:
             while True:
                 searcher = self.load_searcher()
-                if searcher.model_count >= constant.MAX_MODEL_NUM:
+                if len(searcher.history) >= constant.MAX_MODEL_NUM:
                     return
                 p = multiprocessing.Process(target=run_searcher_once, args=(x_train, y_train, x_test, y_test, self.path))
                 p.start()
@@ -225,13 +225,7 @@ class ClassifierBase:
 
     def _get_searcher_class(self):
         """Return searcher class based on the 'searcher_type'."""
-        if self.searcher_type == 'climb':
-            return HillClimbingSearcher
-        elif self.searcher_type == 'random':
-            return RandomSearcher
-        elif self.searcher_type == 'bayesian':
-            return BayesianSearcher
-        return None
+        return BayesianSearcher
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and test_y."""

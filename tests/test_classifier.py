@@ -5,7 +5,7 @@ import pytest
 
 from autokeras.classifier import *
 from autokeras import constant
-from tests.common import clean_dir
+from tests.common import clean_dir, MockProcess
 
 
 def mock_train(**kwargs):
@@ -31,18 +31,6 @@ def test_x_float_exception():
     with pytest.raises(Exception) as info:
         clf.fit([[1, 'abc'], [3, 4]], [7, 8])
     assert str(info.value) == 'x_train should only contain numerical data.'
-
-
-class MockProcess(object):
-    def __init__(self, target, args):
-        self.target = target
-        self.args = args
-
-    def join(self):
-        pass
-
-    def start(self):
-        self.target(*self.args)
 
 
 def simple_transform(graph):

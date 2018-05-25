@@ -151,3 +151,15 @@ def clean_dir(path):
     for f in os.listdir(path):
         if f != '.gitkeep':
             os.remove(os.path.join(path, f))
+
+
+class MockProcess(object):
+    def __init__(self, target, args):
+        self.target = target
+        self.args = args
+
+    def join(self):
+        pass
+
+    def start(self):
+        self.target(*self.args)
