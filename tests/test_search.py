@@ -32,10 +32,10 @@ def test_bayesian_searcher(_, _1):
     generator = BayesianSearcher(3, (28, 28, 1), verbose=False, path=default_test_path)
     constant.N_NEIGHBOURS = 1
     constant.T_MIN = 0.8
-    for _ in range(4):
+    for _ in range(2):
         generator.search(x_train, y_train, x_test, y_test)
     clean_dir(default_test_path)
-    assert len(generator.history) == 4
+    assert len(generator.history) == 2
 
 
 def test_search_tree():
