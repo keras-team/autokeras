@@ -7,7 +7,10 @@ from keras.losses import categorical_crossentropy
 from keras.optimizers import Adadelta, Adam
 
 from autokeras import constant
-from autokeras.layers import get_conv_layer_func, get_ave_layer_func
+from autokeras.graph import Graph
+from autokeras.layers import get_conv_layer_func, get_ave_layer_func, StubBatchNormalization, StubActivation, StubConv, \
+    StubDropout, StubPooling, StubGlobalPooling, StubDense, StubInput
+from autokeras.stub import StubModel
 
 
 class ClassifierGenerator:
@@ -55,18 +58,25 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         ave = get_ave_layer_func(len(self._get_shape(3)))
 
         pooling_len = int(model_len / 4)
-        output_tensor = input_tensor = Input(shape=self.input_shape)
+        model = StubModel()
+        model.input_shape = self.input_shape
+        model.inputs = [0]
+        model.layers.append(StubInput())
         for i in range(model_len):
-            output_tensor = BatchNormalization()(output_tensor)
-            output_tensor = Activation('relu')(output_tensor)
-            output_tensor = conv(model_width, kernel_size=self._get_shape(3), padding='same')(output_tensor)
-            output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+            model.layers += [StubBatchNormalization(),
+                             StubActivation('relu'),
+                             StubConv(model_width, kernel_size=3, func=conv),
+                             StubDropout(constant.CONV_DROPOUT_RATE)]
             if (i + 1) % pooling_len == 0 and i != model_len - 1:
-                output_tensor = pool(padding='same')(output_tensor)
+                model.layers.append(StubPooling(func=pool))
 
-        output_tensor = ave()(output_tensor)
-        output_tensor = Dense(self.n_classes, activation='softmax')(output_tensor)
-        return Model(inputs=input_tensor, outputs=output_tensor)
+        model.layers.append(StubGlobalPooling(ave))
+        model.layers.append(StubDense(self.n_classes, activation='softmax'))
+        model.outputs = [len(model.layers)]
+        for index, layer in enumerate(model.layers):
+            layer.input = index
+            layer.output = index + 1
+        return Graph(model, False)
 
 
 class RandomConvClassifierGenerator(ClassifierGenerator):

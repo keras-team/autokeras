@@ -26,7 +26,7 @@ def to_stub_model(model, weighted=False):
 
         for node in input_nodes + [layer.output]:
             if node not in tensor_dict:
-                tensor_dict[node] = StubTensor(get_int_tuple(node.shape))
+                tensor_dict[node] = StubTensor()
                 node_count += 1
 
         if isinstance(layer.input, list):

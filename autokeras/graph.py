@@ -8,11 +8,11 @@ from keras.engine import Model
 from keras.layers import Concatenate, Dropout, Activation
 
 from autokeras import constant
-from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, deeper_conv_block, dense_to_deeper_block, add_noise
+from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
+    deeper_conv_block, dense_to_deeper_block, add_noise
 from autokeras.layers import WeightedAdd, StubConcatenate, StubWeightedAdd, StubConv, is_layer, layer_width, \
     to_real_layer
 from autokeras.stub import to_stub_model
-from autokeras.utils import get_int_tuple
 
 
 class NetworkDescriptor:
@@ -66,8 +66,6 @@ class Graph:
             identified by tensor identifiers. In each edge list, the elements are two-element tuples
             of (tensor identifier, layer identifier).
         reverse_adj_list: A reverse adjacent list in the same format as adj_list.
-        next_vis: A boolean list marking whether a node has been visited or not.
-        pre_vis: A boolean list marking whether a node has been visited or not.
         middle_layer_vis: A boolean list marking whether a node has been visited or not.
     """
 
@@ -75,8 +73,9 @@ class Graph:
         model = to_stub_model(model, weighted)
         layers = model.layers[1:]
         self.weighted = weighted
-        self.input = model.inputs[0]
-        self.output = model.outputs[0]
+        self.input_shape = model.input_shape
+        if self.input_shape[0] is None:
+            self.input_shape = self.input_shape[1:]
         self.node_list = []
         self.layer_list = []
         # node id start with 0
@@ -90,7 +89,6 @@ class Graph:
 
         self.vis = None
         self.middle_layer_vis = None
-        self.input_shape = model.input_shape
 
         # Add all nodes
         for layer in layers:
@@ -511,9 +509,10 @@ class Graph:
 
     def produce_model(self):
         """Build a new Keras model based on the current graph."""
-        input_tensor = Input(shape=get_int_tuple(self.input.shape[1:]))
-        input_id = self.node_to_id[self.input]
-        output_id = self.node_to_id[self.output]
+        input_tensor = Input(shape=self.input_shape)
+        topo_node_list = self._topological_order()
+        output_id = topo_node_list[-1]
+        input_id = topo_node_list[0]
 
         new_to_old_layer = {}
 
@@ -523,7 +522,7 @@ class Graph:
         node_to_id = deepcopy(self.node_to_id)
         node_to_id[input_tensor] = input_id
 
-        for v in self._topological_order():
+        for v in topo_node_list:
             for u, layer_id in self.reverse_adj_list[v]:
                 layer = self.layer_list[layer_id]
 

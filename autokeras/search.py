@@ -7,17 +7,12 @@ from queue import PriorityQueue
 import numpy as np
 import math
 
-from keras.models import load_model
-from keras.utils import plot_model
-
 from autokeras import constant
 from autokeras.bayesian import IncrementalGaussianProcess
 from autokeras.generator import DefaultClassifierGenerator
 from autokeras.graph import Graph
-from autokeras.layers import WeightedAdd
 from autokeras.net_transformer import transform
-from autokeras.utils import ModelTrainer, pickle_to_file
-from autokeras.utils import extract_config
+from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
 
 
 class BayesianSearcher:
@@ -33,7 +28,6 @@ class BayesianSearcher:
                    Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
                    when using this layer as the first layer in a model.
         verbose: verbosity mode
-        history_configs: a list that stores all historical configuration
         history: a list that stores the performance of model
         path: place that store searcher
         model_count: the id of model
@@ -55,7 +49,6 @@ class BayesianSearcher:
         self.n_classes = n_classes
         self.input_shape = input_shape
         self.verbose = verbose
-        self.history_configs = []
         self.history = []
         self.path = path
         self.model_count = 0
@@ -71,12 +64,11 @@ class BayesianSearcher:
         self.training_queue = []
         self.x_queue = []
         self.y_queue = []
-        self.train_queue = []
         self.beta = beta
         self.t_min = t_min
 
     def load_model_by_id(self, model_id):
-        return load_model(os.path.join(self.path, str(model_id) + '.h5'), {'WeightedAdd': WeightedAdd})
+        return pickle_from_file(os.path.join(self.path, str(model_id) + '.h5'))
 
     def load_best_model(self):
         """return model with best accuracy"""
@@ -91,80 +83,77 @@ class BayesianSearcher:
     def get_best_model_id(self):
         return max(self.history, key=lambda x: x['accuracy'])['model_id']
 
-    def replace_model(self, model, model_id):
-        model.save(os.path.join(self.path, str(model_id) + '.h5'))
+    def replace_model(self, graph, model_id):
+        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.h5'))
 
-    def add_model(self, model, x_train, y_train, x_test, y_test, model_id):
+    def add_model(self, accuracy, loss, graph, model_id):
         """add one model while will be trained to history list
 
         Returns:
             History object.
         """
         if self.verbose:
-            print('Training model.')
-        loss, accuracy = ModelTrainer(model,
-                                      x_train,
-                                      y_train,
-                                      x_test,
-                                      y_test,
-                                      False).train_model(**self.trainer_args)
-        if self.verbose:
             print('Saving model.')
 
-        model.save(os.path.join(self.path, str(model_id) + '.h5'))
-        plot_model(model, to_file=os.path.join(self.path, str(model_id) + '.png'), show_shapes=True)
-
-        ret = {'model_id': model_id, 'loss': loss, 'accuracy': accuracy}
-        self.history.append(ret)
-        self.history_configs.append(extract_config(model))
-        self.descriptors[Graph(model, False).extract_descriptor()] = True
+        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.h5'))
+        # plot_model(model, to_file=os.path.join(self.path, str(model_id) + '.png'), show_shapes=True)
 
         # Update best_model text file
-        if model_id == self.get_best_model_id():
-            file = open(os.path.join(self.path, 'best_model.txt'), 'w')
-            file.write('best model: ' + str(model_id))
-            file.close()
 
         if self.verbose:
             print('Model ID:', model_id)
             print('Loss:', loss)
             print('Accuracy', accuracy)
 
-        # Update GP queue and tree
+        ret = {'model_id': model_id, 'loss': loss, 'accuracy': accuracy}
+        descriptor = graph.extract_descriptor()
+        self.history.append(ret)
+        if model_id == self.get_best_model_id():
+            file = open(os.path.join(self.path, 'best_model.txt'), 'w')
+            file.write('best model: ' + str(model_id))
+            file.close()
+
+        self.descriptors[descriptor] = True
         self.search_tree.add_child(-1, model_id)
-        self.x_queue.append(Graph(model).extract_descriptor())
+        self.x_queue.append(descriptor)
         self.y_queue.append(accuracy)
 
         return ret
 
+    def init_search(self):
+        if self.verbose:
+            print('Initializing search.')
+        graph = DefaultClassifierGenerator(self.n_classes,
+                                           self.input_shape).generate(self.default_model_len,
+                                                                      self.default_model_width)
+        model_id = self.model_count
+        self.model_count += 1
+        self.training_queue.append((graph, -1, model_id))
+        for child_graph in transform(graph):
+            child_id = self.model_count
+            self.model_count += 1
+            self.training_queue.append((child_graph, model_id, child_id))
+        if self.verbose:
+            print('Initialization finished.')
+
     def search(self, x_train, y_train, x_test, y_test):
         if not self.history:
-            model = DefaultClassifierGenerator(self.n_classes,
-                                               self.input_shape).generate(self.default_model_len,
-                                                                          self.default_model_width)
-            model_id = self.model_count
-            self.model_count += 1
-            graph = Graph(model)
-            self.training_queue.append((graph, -1, model_id))
-            for child_graph in transform(graph):
-                child_id = self.model_count
-                self.model_count += 1
-                self.training_queue.append((child_graph, model_id, child_id))
+            self.init_search()
 
         # Start the new process for training.
-        graph, father_id, model_id = self.training_queue.pop()
-        model = graph.produce_model()
-        p = multiprocessing.Process(target=self.add_model, args=(model, x_train, y_train, x_test, y_test, model_id))
-        p.start()
+        graph, father_id, model_id = self.training_queue.pop(0)
+        pool = multiprocessing.Pool(1)
+        train_results = pool.map_async(train, [(graph, x_test, x_train, y_test, y_train, self.trainer_args)])
 
         # Do the search in current thread.
         if not self.training_queue:
-            new_model, father_id = self.maximize_acq()
-            model_id = self.model_count
+            graph, father_id = self.maximize_acq()
+            new_model_id = self.model_count
             self.model_count += 1
-            self.training_queue.append((Graph(new_model), father_id, model_id))
+            self.training_queue.append((graph, father_id, new_model_id))
 
-        p.join()
+        accuracy, loss, graph = train_results.get()[0]
+        self.add_model(accuracy, loss, graph, model_id)
         self.gpr.fit(self.x_queue, self.y_queue)
         self.x_queue = []
         self.y_queue = []
@@ -186,8 +175,7 @@ class BayesianSearcher:
         if len(temp_list) > 5:
             temp_list = temp_list[:-5]
         for accuracy, model_id in temp_list:
-            model = self.load_model_by_id(model_id)
-            graph = Graph(model, False)
+            graph = self.load_model_by_id(model_id)
             pq.put(Elem(accuracy, model_id, graph))
 
         t = 1.0
@@ -212,14 +200,13 @@ class BayesianSearcher:
                         target_graph = temp_graph
             t *= alpha
 
-        model = self.load_model_by_id(father_id)
-        nm_graph = Graph(model, True)
+        nm_graph = self.load_model_by_id(father_id)
         if self.verbose:
             print('Father ID: ', father_id)
             print(target_graph.operation_history)
         for args in target_graph.operation_history:
             getattr(nm_graph, args[0])(*list(args[1:]))
-        return nm_graph.produce_model(), father_id
+        return nm_graph, father_id
 
     def acq(self, graph):
         mean, std = self.gpr.predict(np.array([graph.extract_descriptor()]))
@@ -261,3 +248,15 @@ class Elem:
 
     def __lt__(self, other):
         return self.accuracy < other.accuracy
+
+
+def train(args):
+    graph, x_test, x_train, y_test, y_train, trainer_args = args
+    model = graph.produce_model()
+    loss, accuracy = ModelTrainer(model,
+                                  x_train,
+                                  y_train,
+                                  x_test,
+                                  y_test,
+                                  False).train_model(**trainer_args)
+    return accuracy, loss, Graph(model, True)

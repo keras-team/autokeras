@@ -215,7 +215,7 @@ class ClassifierBase:
             init = tf.global_variables_initializer()
             sess.run(init)
             backend.set_session(sess)
-        model = self.load_searcher().load_best_model()
+        model = self.load_searcher().load_best_model().produce_model()
         return self.y_encoder.inverse_transform(model.predict(x_test, ))
 
     def summary(self):
@@ -249,7 +249,7 @@ class ClassifierBase:
         ret = []
         y_raw_all = y_all
         y_all = self.y_encoder.transform(y_all)
-        model = self.load_searcher().load_best_model()
+        model = self.load_searcher().load_best_model().produce_model()
         for train, test in k_fold.split(x_all, y_raw_all):
             graph = Graph(model, False)
             backend.clear_session()

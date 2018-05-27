@@ -154,12 +154,20 @@ def clean_dir(path):
 
 
 class MockProcess(object):
-    def __init__(self, target, args):
+    def __init__(self, target=None, args=None):
         self.target = target
         self.args = args
+        self.result = None
 
     def join(self):
         pass
 
     def start(self):
         self.target(*self.args)
+
+    def map_async(self, a, b):
+        self.result = a(b[0])
+        return self
+
+    def get(self):
+        return [self.result]

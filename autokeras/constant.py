@@ -7,6 +7,7 @@ MAX_MODEL_NUM = 1000
 BETA = 2.576
 KERNEL_LAMBDA = 1.0
 T_MIN = 0.0001
+# T_MIN = 0.8
 N_NEIGHBOURS = 8
 
 # Model Defaults

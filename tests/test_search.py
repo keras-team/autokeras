@@ -19,6 +19,7 @@ def mock_train(**kwargs):
 
 
 @patch('multiprocessing.Process', new=MockProcess)
+@patch('multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_bayesian_searcher(_, _1):
@@ -30,10 +31,11 @@ def test_bayesian_searcher(_, _1):
     clean_dir(default_test_path)
     generator = BayesianSearcher(3, (28, 28, 1), verbose=False, path=default_test_path)
     constant.N_NEIGHBOURS = 1
+    constant.T_MIN = 0.8
     for _ in range(4):
         generator.search(x_train, y_train, x_test, y_test)
     clean_dir(default_test_path)
-    assert len(generator.history) == len(generator.history_configs)
+    assert len(generator.history) == 4
 
 
 def test_search_tree():
