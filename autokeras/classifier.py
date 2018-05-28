@@ -184,6 +184,8 @@ class ClassifierBase:
         start_time = time.time()
         while time.time() - start_time <= time_limit:
             run_searcher_once(x_train, y_train, x_test, y_test, self.path)
+            if len(self.load_searcher().history) >= constant.MAX_MODEL_NUM:
+                break
 
     def predict(self, x_test):
         """Return predict result for the testing data.
@@ -260,11 +262,11 @@ class ClassifierBase:
         y_train = self.y_encoder.transform(y_train)
         y_test = self.y_encoder.transform(y_test)
         searcher = self.load_searcher()
-        model = searcher.load_best_model()
+        graph = searcher.load_best_model()
         if retrain:
-            model = Graph(model, False).produce_model()
-        ModelTrainer(model, x_train, y_train, x_test, y_test, True).train_model(**trainer_args)
-        searcher.replace_model(model, searcher.get_best_model_id())
+            graph.weighted = False
+        ModelTrainer(graph, x_train, y_train, x_test, y_test, True).train_model(**trainer_args)
+        searcher.replace_model(graph, searcher.get_best_model_id())
 
 
 class ImageClassifier(ClassifierBase):
