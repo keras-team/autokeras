@@ -155,6 +155,8 @@ class BayesianSearcher:
             self.training_queue.append((graph, father_id, new_model_id))
 
         accuracy, loss, graph = train_results.get()[0]
+        pool.terminate()
+        pool.join()
         self.add_model(accuracy, loss, graph, model_id)
         self.gpr.fit(self.x_queue, self.y_queue)
         self.x_queue = []
