@@ -7,6 +7,8 @@ from queue import PriorityQueue
 import numpy as np
 import math
 
+from keras.utils import plot_model
+
 from autokeras import constant
 from autokeras.bayesian import IncrementalGaussianProcess
 from autokeras.generator import DefaultClassifierGenerator
@@ -96,7 +98,6 @@ class BayesianSearcher:
             print('Saving model.')
 
         pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.h5'))
-        # plot_model(model, to_file=os.path.join(self.path, str(model_id) + '.png'), show_shapes=True)
 
         # Update best_model text file
 
@@ -143,7 +144,8 @@ class BayesianSearcher:
         # Start the new process for training.
         graph, father_id, model_id = self.training_queue.pop(0)
         pool = multiprocessing.Pool(1)
-        train_results = pool.map_async(train, [(graph, x_test, x_train, y_test, y_train, self.trainer_args)])
+        train_results = pool.map_async(train, [(graph, x_test, x_train, y_test, y_train, self.trainer_args,
+                                                os.path.join(self.path, str(model_id) + '.png'))])
 
         # Do the search in current thread.
         if not self.training_queue:
@@ -172,8 +174,8 @@ class BayesianSearcher:
             accuracy = self.get_accuracy_by_id(model_id)
             temp_list.append((accuracy, model_id))
         temp_list = sorted(temp_list)
-        if len(temp_list) > 5:
-            temp_list = temp_list[:-5]
+        # if len(temp_list) > 5:
+        #     temp_list = temp_list[:-5]
         for accuracy, model_id in temp_list:
             graph = self.load_model_by_id(model_id)
             pq.put(Elem(accuracy, model_id, graph))
@@ -251,8 +253,9 @@ class Elem:
 
 
 def train(args):
-    graph, x_test, x_train, y_test, y_train, trainer_args = args
+    graph, x_test, x_train, y_test, y_train, trainer_args, path = args
     model = graph.produce_model()
+    plot_model(model, to_file=path, show_shapes=True)
     loss, accuracy = ModelTrainer(model,
                                   x_train,
                                   y_train,
