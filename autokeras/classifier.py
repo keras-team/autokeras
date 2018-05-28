@@ -179,28 +179,11 @@ class ClassifierBase:
         pickle_to_file(self, os.path.join(self.path, 'classifier'))
 
         if time_limit is None:
-            while True:
-                searcher = self.load_searcher()
-                if len(searcher.history) >= constant.MAX_MODEL_NUM:
-                    return
-                p = multiprocessing.Process(target=run_searcher_once, args=(x_train, y_train, x_test, y_test, self.path))
-                p.start()
-                p.join()
+            time_limit = 24*60*60
 
         start_time = time.time()
         while time.time() - start_time <= time_limit:
-            p = multiprocessing.Process(target=run_searcher_once, args=(x_train, y_train, x_test, y_test, self.path))
-            p.start()
-            # Kill the process if necessary.
-            while time.time() - start_time <= time_limit:
-                if p.is_alive():
-                    time.sleep(1)
-                else:
-                    break
-            else:
-                # If break above the code in this else won't run
-                p.terminate()
-                p.join()
+            run_searcher_once(x_train, y_train, x_test, y_test, self.path)
 
     def predict(self, x_test):
         """Return predict result for the testing data.

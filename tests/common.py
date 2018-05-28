@@ -171,3 +171,6 @@ class MockProcess(object):
 
     def get(self):
         return [self.result]
+
+    def terminate(self):
+        pass
