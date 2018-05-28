@@ -10,7 +10,7 @@ from keras.layers import Concatenate, Dropout, Activation
 from autokeras import constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
     deeper_conv_block, dense_to_deeper_block, add_noise
-from autokeras.layers import WeightedAdd, StubConcatenate, StubWeightedAdd, StubConv, is_layer, layer_width, \
+from autokeras.layers import StubConcatenate, StubWeightedAdd, StubConv, is_layer, layer_width, \
     to_real_layer
 from autokeras.stub import to_stub_model
 
@@ -412,7 +412,7 @@ class Graph:
         new_node_id = self._add_new_node()
         layer = StubWeightedAdd()
         if self.weighted:
-            layer.set_weights(WeightedAdd().get_weights())
+            layer.set_weights([np.float32(1.0)])
 
         dropout_output_id = self.adj_list[dropout_input_id][0][0]
         self._redirect_edge(dropout_input_id, dropout_output_id, new_node_id)
