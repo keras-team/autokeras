@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split, StratifiedKFold
 from autokeras import constant
 from autokeras.graph import Graph
 from autokeras.preprocessor import OneHotEncoder
-from autokeras.search import BayesianSearcher
+from autokeras.search import BayesianSearcher, train
 from autokeras.utils import ensure_dir, ModelTrainer, has_file, pickle_from_file, pickle_to_file
 
 
@@ -265,7 +265,7 @@ class ClassifierBase:
         graph = searcher.load_best_model()
         if retrain:
             graph.weighted = False
-        ModelTrainer(graph, x_train, y_train, x_test, y_test, True).train_model(**trainer_args)
+        _, _1, graph = train((graph, x_train, y_train, x_test, y_test, trainer_args, None))
         searcher.replace_model(graph, searcher.get_best_model_id())
 
 

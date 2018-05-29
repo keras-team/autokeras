@@ -84,6 +84,8 @@ def test_final_fit(_, _1):
     constant.MAX_ITER_NUM = 1
     constant.MAX_MODEL_NUM = 1
     constant.SEARCH_MAX_ITER = 1
+    constant.N_NEIGHBOURS = 1
+    constant.T_MIN = 0.8
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
