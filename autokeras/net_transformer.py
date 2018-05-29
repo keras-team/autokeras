@@ -1,5 +1,7 @@
 from copy import deepcopy
 from random import randint, randrange
+
+from autokeras import constant
 from autokeras.layers import is_conv_layer
 
 
@@ -92,7 +94,7 @@ def transform(graph):
         A list of graphs.
     """
     graphs = []
-    for i in range(8):
+    for i in range(constant.N_NEIGHBOURS):
         a = randrange(3)
         if a == 0:
             graphs.append(to_deeper_graph(deepcopy(graph)))

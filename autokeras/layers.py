@@ -17,6 +17,7 @@ class WeightedAdd(Add):
         kernel: None
         _trainable_weights: list that store weight
     """
+
     def __init__(self, **kwargs):
         """Init Weighted add class"""
         super(WeightedAdd, self).__init__(**kwargs)
@@ -102,9 +103,9 @@ class StubFlatten(StubLayer):
 
 
 class StubActivation(StubLayer):
-    def __init__(self, func, input_node=None, output_node=None):
+    def __init__(self, activation, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
-        self.func = func
+        self.activation = activation
 
 
 class StubPooling(StubLayer):
@@ -126,13 +127,13 @@ class StubDropout(StubLayer):
 
 
 class StubInput(StubLayer):
-    def __init__(self, units, input_node=None, output_node=None):
+    def __init__(self, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
-        self.units = units
-        self.output_shape = (None, units)
 
 
 def is_layer(layer, layer_type):
+    if layer_type == 'Input':
+        return isinstance(layer, (InputLayer, StubInput))
     if layer_type == 'Conv':
         return isinstance(layer, StubConv) or is_conv_layer(layer)
     if layer_type == 'Dense':
@@ -204,13 +205,13 @@ def to_real_layer(layer):
     if is_layer(layer, 'Dense'):
         return Dense(layer.units, activation=layer.activation)
     if is_layer(layer, 'Conv'):
-        return layer.func(layer.filters,
-                          kernel_size=layer.kernel_size,
-                          padding='same',
-                          kernel_initializer='he_normal',
-                          kernel_regularizer=l2(1e-4))
+        return Conv2D(layer.filters,
+                      kernel_size=layer.kernel_size,
+                      padding='same',
+                      kernel_initializer='he_normal',
+                      kernel_regularizer=l2(1e-4))
     if is_layer(layer, 'Pooling'):
-        return layer.func(padding='same')
+        return MaxPooling2D(padding='same')
     if is_layer(layer, 'BatchNormalization'):
         return BatchNormalization()
     if is_layer(layer, 'Concatenate'):
@@ -220,35 +221,35 @@ def to_real_layer(layer):
     if is_layer(layer, 'Dropout'):
         return Dropout(layer.rate)
     if is_layer(layer, 'Activation'):
-        return Activation(layer.func)
+        return Activation(layer.activation)
     if is_layer(layer, 'Flatten'):
         return Flatten()
     if is_layer(layer, 'GlobalAveragePooling'):
-        return layer.func()
+        return GlobalAveragePooling2D()
 
 
 def to_stub_layer(layer, input_id, output_id):
     if is_conv_layer(layer):
         temp_stub_layer = StubConv(layer.filters, layer.kernel_size, layer.__class__, input_id, output_id)
-    elif isinstance(layer, Dense):
+    elif is_layer(layer, 'Dense'):
         temp_stub_layer = StubDense(layer.units, layer.activation, input_id, output_id)
-    elif isinstance(layer, WeightedAdd):
+    elif is_layer(layer, 'WeightedAdd'):
         temp_stub_layer = StubWeightedAdd(input_id, output_id)
-    elif isinstance(layer, Concatenate):
+    elif is_layer(layer, 'Concatenate'):
         temp_stub_layer = StubConcatenate(input_id, output_id)
-    elif isinstance(layer, BatchNormalization):
+    elif is_layer(layer, 'BatchNormalization'):
         temp_stub_layer = StubBatchNormalization(input_id, output_id)
-    elif isinstance(layer, Activation):
+    elif is_layer(layer, 'Activation'):
         temp_stub_layer = StubActivation(layer.activation, input_id, output_id)
-    elif isinstance(layer, InputLayer):
-        temp_stub_layer = StubLayer(input_id, output_id)
-    elif isinstance(layer, Flatten):
+    elif is_layer(layer, 'Input'):
+        temp_stub_layer = StubInput(input_id, output_id)
+    elif is_layer(layer, 'Flatten'):
         temp_stub_layer = StubFlatten(input_id, output_id)
-    elif isinstance(layer, Dropout):
+    elif is_layer(layer, 'Dropout'):
         temp_stub_layer = StubDropout(layer.rate, input_id, output_id)
-    elif is_pooling_layer(layer):
+    elif is_layer(layer, 'Pooling'):
         temp_stub_layer = StubPooling(layer.__class__, input_id, output_id)
-    elif is_global_pooling_layer(layer):
+    elif is_layer(layer, 'GlobalAveragePooling'):
         temp_stub_layer = StubGlobalPooling(layer.__class__, input_id, output_id)
     else:
         raise TypeError("The layer {} is illegal.".format(layer))

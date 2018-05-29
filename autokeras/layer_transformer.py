@@ -18,7 +18,7 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
     Returns:
         The deeper convolution layer
     """
-    filter_shape = (kernel_size,) * (len(conv_layer.kernel_size))
+    filter_shape = (kernel_size,) * 2
     n_filters = conv_layer.filters
     weight = np.zeros(filter_shape + (n_filters, n_filters))
     center = tuple(map(lambda x: int((x - 1) / 2), filter_shape))

@@ -64,11 +64,17 @@ class IncrementalGaussianProcess:
     def kernel_matrix(self):
         return self._k_matrix
 
+    def fit(self, train_x, train_y):
+        if self.first_fitted:
+            self.incremental_fit(train_x, train_y)
+        else:
+            self.first_fit(train_x, train_y)
+
     def incremental_fit(self, train_x, train_y):
         if not self._first_fitted:
             raise ValueError("The first_fit function needs to be called first.")
 
-        train_x, train_y = np.array([train_x]), np.array([train_y])
+        train_x, train_y = np.array(train_x), np.array(train_y)
 
         # Incrementally compute K
         up_right_k = self.kernel(self.kernel_lambda, self._x, train_x)  # Shape (len(X_train_), len(train_x))

@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split, StratifiedKFold
 from autokeras import constant
 from autokeras.graph import Graph
 from autokeras.preprocessor import OneHotEncoder
-from autokeras.search import HillClimbingSearcher, RandomSearcher, BayesianSearcher
+from autokeras.search import BayesianSearcher
 from autokeras.utils import ensure_dir, ModelTrainer, has_file, pickle_from_file, pickle_to_file
 
 
@@ -179,28 +179,13 @@ class ClassifierBase:
         pickle_to_file(self, os.path.join(self.path, 'classifier'))
 
         if time_limit is None:
-            while True:
-                searcher = self.load_searcher()
-                if searcher.model_count >= constant.MAX_MODEL_NUM:
-                    return
-                p = multiprocessing.Process(target=run_searcher_once, args=(x_train, y_train, x_test, y_test, self.path))
-                p.start()
-                p.join()
+            time_limit = 24*60*60
 
         start_time = time.time()
         while time.time() - start_time <= time_limit:
-            p = multiprocessing.Process(target=run_searcher_once, args=(x_train, y_train, x_test, y_test, self.path))
-            p.start()
-            # Kill the process if necessary.
-            while time.time() - start_time <= time_limit:
-                if p.is_alive():
-                    time.sleep(1)
-                else:
-                    break
-            else:
-                # If break above the code in this else won't run
-                p.terminate()
-                p.join()
+            run_searcher_once(x_train, y_train, x_test, y_test, self.path)
+            if len(self.load_searcher().history) >= constant.MAX_MODEL_NUM:
+                break
 
     def predict(self, x_test):
         """Return predict result for the testing data.
@@ -215,7 +200,7 @@ class ClassifierBase:
             init = tf.global_variables_initializer()
             sess.run(init)
             backend.set_session(sess)
-        model = self.load_searcher().load_best_model()
+        model = self.load_searcher().load_best_model().produce_model()
         return self.y_encoder.inverse_transform(model.predict(x_test, ))
 
     def summary(self):
@@ -225,13 +210,7 @@ class ClassifierBase:
 
     def _get_searcher_class(self):
         """Return searcher class based on the 'searcher_type'."""
-        if self.searcher_type == 'climb':
-            return HillClimbingSearcher
-        elif self.searcher_type == 'random':
-            return RandomSearcher
-        elif self.searcher_type == 'bayesian':
-            return BayesianSearcher
-        return None
+        return BayesianSearcher
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and test_y."""
@@ -255,7 +234,7 @@ class ClassifierBase:
         ret = []
         y_raw_all = y_all
         y_all = self.y_encoder.transform(y_all)
-        model = self.load_searcher().load_best_model()
+        model = self.load_searcher().load_best_model().produce_model()
         for train, test in k_fold.split(x_all, y_raw_all):
             graph = Graph(model, False)
             backend.clear_session()
@@ -283,11 +262,11 @@ class ClassifierBase:
         y_train = self.y_encoder.transform(y_train)
         y_test = self.y_encoder.transform(y_test)
         searcher = self.load_searcher()
-        model = searcher.load_best_model()
+        graph = searcher.load_best_model()
         if retrain:
-            model = Graph(model, False).produce_model()
-        ModelTrainer(model, x_train, y_train, x_test, y_test, True).train_model(**trainer_args)
-        searcher.replace_model(model, searcher.get_best_model_id())
+            graph.weighted = False
+        ModelTrainer(graph, x_train, y_train, x_test, y_test, True).train_model(**trainer_args)
+        searcher.replace_model(graph, searcher.get_best_model_id())
 
 
 class ImageClassifier(ClassifierBase):

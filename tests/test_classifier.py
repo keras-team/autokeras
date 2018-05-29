@@ -5,7 +5,7 @@ import pytest
 
 from autokeras.classifier import *
 from autokeras import constant
-from tests.common import clean_dir
+from tests.common import clean_dir, MockProcess
 
 
 def mock_train(**kwargs):
@@ -33,23 +33,11 @@ def test_x_float_exception():
     assert str(info.value) == 'x_train should only contain numerical data.'
 
 
-class MockProcess(object):
-    def __init__(self, target, args):
-        self.target = target
-        self.args = args
-
-    def join(self):
-        pass
-
-    def start(self):
-        self.target(*self.args)
-
-
 def simple_transform(graph):
     return [deepcopy(graph), deepcopy(graph)]
 
 
-@patch('multiprocessing.Process', new=MockProcess)
+@patch('multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_predict(_, _1):
@@ -68,7 +56,14 @@ def test_fit_predict(_, _1):
     clean_dir(path)
 
 
-def test_timout():
+@patch('multiprocessing.Pool', new=MockProcess)
+@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+def test_timout(_, _1):
+    constant.MAX_ITER_NUM = 1
+    constant.MAX_MODEL_NUM = 4
+    constant.SEARCH_MAX_ITER = 1
+    constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
@@ -78,7 +73,7 @@ def test_timout():
     clean_dir(path)
 
 
-@patch('multiprocessing.Process', new=MockProcess)
+@patch('multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_final_fit(_, _1):
@@ -100,7 +95,7 @@ def test_final_fit(_, _1):
     clean_dir(path)
 
 
-@patch('multiprocessing.Process', new=MockProcess)
+@patch('multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_save_continue(_, _1):
@@ -125,13 +120,6 @@ def test_save_continue(_, _1):
     assert len(clf.load_searcher().history) == 2
 
     constant.MAX_MODEL_NUM = 1
-    clf = ImageClassifier(verbose=False, path=path, resume=True)
-    clf.fit(train_x, train_y)
-    results = clf.predict(test_x)
-    assert len(results) == 100
-    assert len(clf.load_searcher().history) == 2
-
-    constant.MAX_MODEL_NUM = 1
     clf = ImageClassifier(verbose=False, path=path, resume=False)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
@@ -140,7 +128,7 @@ def test_save_continue(_, _1):
     clean_dir(path)
 
 
-@patch('multiprocessing.Process', new=MockProcess)
+@patch('multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_csv_file(_, _1):
@@ -160,6 +148,7 @@ def test_fit_csv_file(_, _1):
 
 
 @patch('multiprocessing.Process', new=MockProcess)
+@patch('multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.search.transform', side_effect=simple_transform)
 def test_cross_validate(_):
     constant.MAX_MODEL_NUM = 2
