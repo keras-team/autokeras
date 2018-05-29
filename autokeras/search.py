@@ -144,7 +144,11 @@ class BayesianSearcher:
         # Start the new process for training.
         graph, father_id, model_id = self.training_queue.pop(0)
         pool = multiprocessing.Pool(1)
+<<<<<<< HEAD
         train_results = pool.map_async(train, [(graph, x_test, x_train, y_test, y_train, self.trainer_args,
+=======
+        train_results = pool.map_async(train, [(graph, x_train, y_train, x_test, y_test, self.trainer_args,
+>>>>>>> cpu
                                                 os.path.join(self.path, str(model_id) + '.png'))])
 
         # Do the search in current thread.
@@ -255,9 +259,10 @@ class Elem:
 
 
 def train(args):
-    graph, x_test, x_train, y_test, y_train, trainer_args, path = args
+    graph, x_train, y_train, x_test, y_test, trainer_args, path = args
     model = graph.produce_model()
-    plot_model(model, to_file=path, show_shapes=True)
+    if path is not None:
+        plot_model(model, to_file=path, show_shapes=True)
     loss, accuracy = ModelTrainer(model,
                                   x_train,
                                   y_train,
