@@ -1,4 +1,3 @@
-import multiprocessing
 import os
 import pickle
 import csv
@@ -15,11 +14,7 @@ from sklearn.model_selection import train_test_split, StratifiedKFold
 from autokeras import constant
 from autokeras.graph import Graph
 from autokeras.preprocessor import OneHotEncoder
-<<<<<<< HEAD
-from autokeras.search import BayesianSearcher
-=======
 from autokeras.search import BayesianSearcher, train
->>>>>>> cpu
 from autokeras.utils import ensure_dir, ModelTrainer, has_file, pickle_from_file, pickle_to_file
 
 
