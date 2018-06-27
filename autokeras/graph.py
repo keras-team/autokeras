@@ -10,7 +10,7 @@ from keras.layers import Concatenate, Dropout, Activation
 from autokeras import constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
     deeper_conv_block, dense_to_deeper_block, add_noise
-from autokeras.layers import StubConcatenate, StubWeightedAdd, StubConv, is_layer, layer_width, \
+from autokeras.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, \
     to_real_layer
 from autokeras.stub import to_stub_model
 
@@ -410,7 +410,7 @@ class Graph:
 
         # Add the weighted add layer.
         new_node_id = self._add_new_node()
-        layer = StubWeightedAdd()
+        layer = StubAdd()
         if self.weighted:
             layer.set_weights([np.float32(1.0)])
 
@@ -526,7 +526,7 @@ class Graph:
             for u, layer_id in self.reverse_adj_list[v]:
                 layer = self.layer_list[layer_id]
 
-                if isinstance(layer, (StubWeightedAdd, StubConcatenate)):
+                if isinstance(layer, (StubAdd, StubConcatenate)):
                     edge_input_tensor = list(map(lambda x: node_list[x],
                                                  self.layer_id_to_input_node_ids[layer_id]))
                 else:

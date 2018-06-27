@@ -2,7 +2,7 @@ import numpy as np
 
 from autokeras import constant
 from autokeras.layers import StubConv, StubBatchNormalization, StubActivation, StubDropout, StubDense, \
-    StubWeightedAdd
+    StubAdd
 
 NOISE_RATIO = 1e-4
 
@@ -237,10 +237,10 @@ def wider_weighted_add(layer, n_add, weighted=True):
         The wider weighted add layer
     """
     if not weighted:
-        return StubWeightedAdd()
+        return StubAdd()
 
     n_add += 0
-    new_layer = StubWeightedAdd()
+    new_layer = StubAdd()
     new_layer.set_weights(layer.get_weights())
     return new_layer
 
