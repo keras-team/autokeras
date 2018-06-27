@@ -183,7 +183,7 @@ def to_real_layer(layer):
         return BatchNormalization()
     if is_layer(layer, 'Concatenate'):
         return Concatenate()
-    if is_layer(layer, 'WeightedAdd'):
+    if is_layer(layer, 'Add'):
         return Add()
     if is_layer(layer, 'Dropout'):
         return Dropout(layer.rate)
@@ -200,7 +200,7 @@ def to_stub_layer(layer, input_id, output_id):
         temp_stub_layer = StubConv(layer.filters, layer.kernel_size, layer.__class__, input_id, output_id)
     elif is_layer(layer, 'Dense'):
         temp_stub_layer = StubDense(layer.units, layer.activation, input_id, output_id)
-    elif is_layer(layer, 'WeightedAdd'):
+    elif is_layer(layer, 'Add'):
         temp_stub_layer = StubAdd(input_id, output_id)
     elif is_layer(layer, 'Concatenate'):
         temp_stub_layer = StubConcatenate(input_id, output_id)

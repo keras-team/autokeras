@@ -5,7 +5,7 @@ import numpy as np
 
 from keras import Input
 from keras.engine import Model
-from keras.layers import Concatenate, Dropout, Activation
+from keras.layers import Concatenate, Dropout, Activation, Add
 
 from autokeras import constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
@@ -51,7 +51,7 @@ class Graph:
     Graph extracts the neural architecture graph from a Keras model. Each node in the graph
     is a intermediate tensor between layers. Each layer is an edge in the graph.
 
-    Notably, multiple edges may refer to the same layer. (e.g. WeightedAdd layer is adding
+    Notably, multiple edges may refer to the same layer. (e.g. Add layer is adding
     two tensor into one tensor. So it is related to two edges.)
 
     Attributes:
@@ -400,19 +400,32 @@ class Graph:
         dropout_input_id = self._conv_block_end_node(end_id)
 
         # Add the pooling layer chain.
-        pooling_layer_list = self._get_pooling_layers(conv_block_input_id, dropout_input_id)
+        layer_list = self._get_pooling_layers(conv_block_input_id, dropout_input_id)
         skip_output_id = conv_block_input_id
-        for index, layer_id in enumerate(pooling_layer_list):
+        for index, layer_id in enumerate(layer_list):
             layer = self.layer_list[layer_id]
             new_node_id = self._add_new_node()
             self._add_edge(deepcopy(layer), skip_output_id, new_node_id)
             skip_output_id = new_node_id
 
-        # Add the weighted add layer.
+        # Add the conv layer
+        layer2 = StubConv(self.layer_list[end_id].filters, 1, self.layer_list[end_id].func)
+        new_node_id = self._add_new_node()
+        self._add_edge(layer2, skip_output_id, new_node_id)
+        skip_output_id = new_node_id
+
+        # Set weights to the additional conv layer.
+        if self.weighted:
+            filters_end = self.layer_list[end_id].filters
+            filters_start = self.layer_list[start_id].filters
+            filter_shape = (1,) * (len(self.layer_list[end_id].get_weights()[0].shape) - 2)
+            weights = np.zeros(filter_shape + (filters_start, filters_end))
+            bias = np.zeros(filters_end)
+            layer2.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
+
+        # Add the add layer.
         new_node_id = self._add_new_node()
         layer = StubAdd()
-        if self.weighted:
-            layer.set_weights([np.float32(1.0)])
 
         dropout_output_id = self.adj_list[dropout_input_id][0][0]
         self._redirect_edge(dropout_input_id, dropout_output_id, new_node_id)
@@ -446,19 +459,18 @@ class Graph:
         new_node_id2 = self._add_new_node()
         layer2 = StubConv(self.layer_list[end_id].filters, 1, self.layer_list[end_id].func)
         if self.weighted:
-            if self.weighted:
-                filters_end = self.layer_list[end_id].filters
-                filters_start = self.layer_list[start_id].filters
-                filter_shape = (1,) * (len(self.layer_list[end_id].get_weights()[0].shape) - 2)
-                weights = np.zeros(filter_shape + (filters_end, filters_end))
-                for i in range(filters_end):
-                    filter_weight = np.zeros(filter_shape + (filters_end,))
-                    filter_weight[(0, 0, i)] = 1
-                    weights[..., i] = filter_weight
-                weights = np.concatenate((weights,
-                                          np.zeros(filter_shape + (filters_start, filters_end))), axis=2)
-                bias = np.zeros(filters_end)
-                layer2.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
+            filters_end = self.layer_list[end_id].filters
+            filters_start = self.layer_list[start_id].filters
+            filter_shape = (1,) * (len(self.layer_list[end_id].get_weights()[0].shape) - 2)
+            weights = np.zeros(filter_shape + (filters_end, filters_end))
+            for i in range(filters_end):
+                filter_weight = np.zeros(filter_shape + (filters_end,))
+                filter_weight[(0, 0, i)] = 1
+                weights[..., i] = filter_weight
+            weights = np.concatenate((weights,
+                                      np.zeros(filter_shape + (filters_start, filters_end))), axis=2)
+            bias = np.zeros(filters_end)
+            layer2.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
 
         dropout_output_id = self.adj_list[dropout_input_id][0][0]
         self._redirect_edge(dropout_input_id, dropout_output_id, new_node_id)
@@ -502,7 +514,7 @@ class Graph:
                 layer = self.layer_list[layer_id]
                 if is_layer(layer, 'Concatenate'):
                     ret.add_skip_connection(pos[u], pos[v], NetworkDescriptor.CONCAT_CONNECT)
-                if is_layer(layer, 'WeightedAdd'):
+                if is_layer(layer, 'Add'):
                     ret.add_skip_connection(pos[u], pos[v], NetworkDescriptor.ADD_CONNECT)
 
         return ret
@@ -540,7 +552,7 @@ class Graph:
                 node_to_id[temp_tensor] = v
         model = Model(input_tensor, node_list[output_id])
         for layer in model.layers[1:]:
-            if not isinstance(layer, (Activation, Dropout, Concatenate)):
+            if not isinstance(layer, (Activation, Dropout, Concatenate, Add)):
                 old_layer = new_to_old_layer[layer]
                 if self.weighted:
                     layer.set_weights(old_layer.get_weights())
