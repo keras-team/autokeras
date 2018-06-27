@@ -266,6 +266,15 @@ class ClassifierBase:
             graph.weighted = False
         _, _1, graph = train((graph, x_train, y_train, x_test, y_test, trainer_args, None))
 
+    def export_keras_model(self, path, model_id=None):
+        if model_id is None:
+            model_id = self.get_best_model_id()
+        graph = self.load_searcher().load_model_by_id(model_id)
+        graph.produce_model().save(path)
+
+    def get_best_model_id(self):
+        return self.load_searcher().get_best_model_id()
+
 
 class ImageClassifier(ClassifierBase):
     """Image classifier class inherited from ClassifierBase class.
