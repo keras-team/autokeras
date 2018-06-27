@@ -1,6 +1,3 @@
-import numpy as np
-from keras.utils import plot_model
-
 from autokeras.generator import DefaultClassifierGenerator
 from autokeras.graph import *
 from autokeras.net_transformer import legal_graph
@@ -190,4 +187,3 @@ def test_long_transform():
         getattr(graph, args[0])(*list(args[1:]))
         graph.produce_model()
     assert legal_graph(graph)
-
