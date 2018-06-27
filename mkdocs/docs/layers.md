@@ -19,3 +19,28 @@ Override call function in Add and return new weights
 ###compute_output_shape
 Return output_shape
 
+##StubLayer
+###__init__
+###build
+###set_weights
+###get_weights
+##StubBatchNormalization
+##StubDense
+###__init__
+##StubConv
+###__init__
+##StubAggregateLayer
+###__init__
+##StubConcatenate
+##StubWeightedAdd
+##StubFlatten
+##StubActivation
+###__init__
+##StubPooling
+###__init__
+##StubGlobalPooling
+###__init__
+##StubDropout
+###__init__
+##StubInput
+###__init__
