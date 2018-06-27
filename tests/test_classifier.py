@@ -171,19 +171,3 @@ def test_fit_csv_file(_, _1):
     assert len(clf.load_searcher().history) == 1
     assert len(results) == 5
     clean_dir(os.path.join(path, "temp"))
-
-
-@patch('multiprocessing.Process', new=MockProcess)
-@patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform)
-def test_cross_validate(_):
-    constant.MAX_MODEL_NUM = 2
-    path = 'tests/resources/temp'
-    clean_dir(path)
-    clf = ImageClassifier(path=path, verbose=False, searcher_args={'trainer_args': {'max_iter_num': 0}})
-    train_x = np.random.rand(100, 25, 25, 1)
-    train_y = np.random.randint(0, 5, 100)
-    clf.fit(train_x, train_y)
-    results = clf.cross_validate(train_x, train_y, 2, trainer_args={'max_iter_num': 0})
-    clean_dir(path)
-    assert len(results) == 2

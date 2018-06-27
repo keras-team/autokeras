@@ -216,39 +216,6 @@ class ClassifierBase:
         y_predict = self.predict(x_test)
         return accuracy_score(y_test, y_predict)
 
-    def cross_validate(self, x_all, y_all, n_splits, trainer_args=None):
-        """Do the n_splits cross-validation for the input."""
-        if trainer_args is None:
-            trainer_args = {}
-
-        if constant.LIMIT_MEMORY:
-            config = tf.ConfigProto()
-            config.gpu_options.allow_growth = True
-            sess = tf.Session(config=config)
-            init = tf.global_variables_initializer()
-            sess.run(init)
-            backend.set_session(sess)
-
-        k_fold = StratifiedKFold(n_splits=n_splits, shuffle=False, random_state=7)
-        ret = []
-        y_raw_all = y_all
-        y_all = self.y_encoder.transform(y_all)
-        model = self.load_searcher().load_best_model().produce_model()
-        for train, test in k_fold.split(x_all, y_raw_all):
-            graph = Graph(model, False)
-            backend.clear_session()
-            model = graph.produce_model()
-            ModelTrainer(model,
-                         x_all[train],
-                         y_all[train],
-                         x_all[test],
-                         y_all[test], False).train_model(**trainer_args)
-            scores = model.evaluate(x_all[test], y_all[test], verbose=self.verbose)
-            if self.verbose:
-                print('Score:', scores[1])
-            ret.append(scores[1] * 100)
-        return np.array(ret)
-
     def save_searcher(self, searcher):
         pickle.dump(searcher, open(os.path.join(self.path, 'searcher'), 'wb'))
 
