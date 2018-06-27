@@ -5,8 +5,8 @@ from tests.common import get_conv_model, get_add_skip_model, get_conv_dense_mode
 
 def test_deeper_conv_block():
     model = to_stub_model(get_conv_model(), True)
-    layers = deeper_conv_block(model.layers[3], 3)
-    assert len(layers) == constant.CONV_BLOCK_DISTANCE + 2
+    layers = deeper_conv_block(model.layers[2], 3)
+    assert len(layers) == constant.CONV_BLOCK_DISTANCE + 1
 
 
 def test_dense_to_deeper_layer():
@@ -52,6 +52,6 @@ def test_wider_next_dense():
 def test_wider_conv():
     model = to_stub_model(get_conv_model(), True)
 
-    assert isinstance(wider_pre_conv(model.layers[3], 3), StubConv)
-    assert isinstance(wider_bn(model.layers[1], 3, 3, 3), StubBatchNormalization)
-    assert isinstance(wider_next_conv(model.layers[7], 3, 3, 3), StubConv)
+    assert isinstance(wider_pre_conv(model.layers[2], 3), StubConv)
+    assert isinstance(wider_bn(model.layers[3], 3, 3, 3), StubBatchNormalization)
+    assert isinstance(wider_next_conv(model.layers[6], 3, 3, 3), StubConv)
