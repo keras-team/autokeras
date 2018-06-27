@@ -35,10 +35,10 @@ def test_wider_bn():
 
 
 def test_wider_weighted_add():
-    layer = StubWeightedAdd()
+    layer = StubAdd()
     layer.set_weights(get_add_skip_model().layers[13].get_weights())
     new_layer = wider_weighted_add(layer, 4)
-    assert isinstance(new_layer, StubWeightedAdd)
+    assert isinstance(new_layer, StubAdd)
 
 
 def test_wider_next_dense():

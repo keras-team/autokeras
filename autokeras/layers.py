@@ -1,41 +1,8 @@
-from keras import backend
 from keras.engine import InputLayer
 from keras.layers import Add, Conv2D, Conv3D, Conv1D, Dense, BatchNormalization, Concatenate, Dropout, Activation, \
     Flatten, MaxPooling1D, MaxPooling2D, MaxPooling3D, GlobalAveragePooling1D, GlobalAveragePooling2D, \
     GlobalAveragePooling3D
 from keras.regularizers import l2
-
-
-class WeightedAdd(Add):
-    """Weighted Add class inherited from Add class
-
-    It's used to do add weights for data in Add layer
-
-    Attributes:
-        weights: backend variable
-        one: const 1.0
-        kernel: None
-        _trainable_weights: list that store weight
-    """
-
-    def __init__(self, **kwargs):
-        """Init Weighted add class"""
-        super(WeightedAdd, self).__init__(**kwargs)
-        self.weight = backend.variable(1.0)
-        self.one = backend.constant(1.0)
-        self.kernel = None
-        self._trainable_weights.append(self.weight)
-
-    def call(self, x, **kwargs):
-        """Override call function in Add and return new weights"""
-        a = backend.tf.scalar_mul(self.weight, x[0])
-        b = backend.tf.scalar_mul(backend.tf.subtract(self.one, self.weight), x[1])
-        c = backend.tf.add(a, b)
-        return c
-
-    def compute_output_shape(self, input_shape):
-        """Return output_shape"""
-        return input_shape
 
 
 class StubLayer:
@@ -94,7 +61,7 @@ class StubConcatenate(StubAggregateLayer):
     pass
 
 
-class StubWeightedAdd(StubAggregateLayer):
+class StubAdd(StubAggregateLayer):
     pass
 
 
@@ -142,8 +109,8 @@ def is_layer(layer, layer_type):
         return isinstance(layer, (StubBatchNormalization, BatchNormalization))
     if layer_type == 'Concatenate':
         return isinstance(layer, (StubConcatenate, Concatenate))
-    if layer_type == 'WeightedAdd':
-        return isinstance(layer, (StubWeightedAdd, WeightedAdd))
+    if layer_type == 'Add':
+        return isinstance(layer, (StubAdd, Add))
     if layer_type == 'Pooling':
         return isinstance(layer, StubPooling) or is_pooling_layer(layer)
     if layer_type == 'Dropout':
@@ -216,8 +183,8 @@ def to_real_layer(layer):
         return BatchNormalization()
     if is_layer(layer, 'Concatenate'):
         return Concatenate()
-    if is_layer(layer, 'WeightedAdd'):
-        return WeightedAdd()
+    if is_layer(layer, 'Add'):
+        return Add()
     if is_layer(layer, 'Dropout'):
         return Dropout(layer.rate)
     if is_layer(layer, 'Activation'):
@@ -233,8 +200,8 @@ def to_stub_layer(layer, input_id, output_id):
         temp_stub_layer = StubConv(layer.filters, layer.kernel_size, layer.__class__, input_id, output_id)
     elif is_layer(layer, 'Dense'):
         temp_stub_layer = StubDense(layer.units, layer.activation, input_id, output_id)
-    elif is_layer(layer, 'WeightedAdd'):
-        temp_stub_layer = StubWeightedAdd(input_id, output_id)
+    elif is_layer(layer, 'Add'):
+        temp_stub_layer = StubAdd(input_id, output_id)
     elif is_layer(layer, 'Concatenate'):
         temp_stub_layer = StubConcatenate(input_id, output_id)
     elif is_layer(layer, 'BatchNormalization'):

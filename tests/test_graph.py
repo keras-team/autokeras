@@ -105,22 +105,22 @@ def test_skip_add_over_pooling_stub():
     model = get_pooling_model()
     graph = Graph(model, False)
     layer_num = graph.n_layers
-    graph.to_add_skip_model(2, 10)
+    graph.to_add_skip_model(2, 11)
 
-    assert graph.n_layers == layer_num + 2
+    assert graph.n_layers == layer_num + 3
 
 
 def test_skip_add_over_pooling():
     model = get_pooling_model()
     graph = Graph(model, True)
-    graph.to_add_skip_model(2, 10)
+    graph.to_add_skip_model(2, 11)
     new_model = graph.produce_model()
     input_data = get_conv_data()
 
     output1 = model.predict_on_batch(input_data).flatten()
     output2 = new_model.predict_on_batch(input_data).flatten()
 
-    assert np.array_equal(output1, output2)
+    assert np.sum(np.abs(output1 - output2)) < 1e-4
 
 
 def test_skip_concat_over_pooling_stub():
@@ -187,10 +187,7 @@ def test_long_transform():
     history = [('to_wider_model', 2, 256), ('to_conv_deeper_model', 2, 3),
                ('to_concat_skip_model', 23, 7)]
     for args in history:
-        print(args)
-        if args[1] == 23:
-            print('now')
         getattr(graph, args[0])(*list(args[1:]))
         graph.produce_model()
-    # assert not legal_graph(graph)
+    assert legal_graph(graph)
 
