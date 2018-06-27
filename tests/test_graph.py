@@ -17,7 +17,7 @@ def test_conv_deeper_stub():
     model = get_conv_model()
     graph = Graph(model, False)
     layer_num = graph.n_layers
-    graph.to_conv_deeper_model(6, 3)
+    graph.to_conv_deeper_model(5, 3)
 
     assert graph.n_layers == layer_num + 4
 
@@ -25,7 +25,7 @@ def test_conv_deeper_stub():
 def test_conv_deeper():
     model = get_conv_model()
     graph = Graph(model, True)
-    graph.to_conv_deeper_model(6, 3)
+    graph.to_conv_deeper_model(5, 3)
     new_model = graph.produce_model()
     input_data = get_conv_data()
 
@@ -61,7 +61,7 @@ def test_conv_wider_stub():
     model = get_add_skip_model()
     graph = Graph(model, False)
     layer_num = graph.n_layers
-    graph.to_wider_model(10, 3)
+    graph.to_wider_model(9, 3)
 
     assert graph.n_layers == layer_num
 
@@ -69,7 +69,7 @@ def test_conv_wider_stub():
 def test_conv_wider():
     model = get_concat_skip_model()
     graph = Graph(model, True)
-    graph.to_wider_model(6, 3)
+    graph.to_wider_model(5, 3)
     new_model = graph.produce_model()
     input_data = get_conv_data()
 
@@ -105,7 +105,7 @@ def test_skip_add_over_pooling_stub():
     model = get_pooling_model()
     graph = Graph(model, False)
     layer_num = graph.n_layers
-    graph.to_add_skip_model(2, 11)
+    graph.to_add_skip_model(1, 10)
 
     assert graph.n_layers == layer_num + 3
 
@@ -113,7 +113,7 @@ def test_skip_add_over_pooling_stub():
 def test_skip_add_over_pooling():
     model = get_pooling_model()
     graph = Graph(model, True)
-    graph.to_add_skip_model(2, 11)
+    graph.to_add_skip_model(1, 10)
     new_model = graph.produce_model()
     input_data = get_conv_data()
 
@@ -127,7 +127,7 @@ def test_skip_concat_over_pooling_stub():
     model = get_pooling_model()
     graph = Graph(model, False)
     layer_num = graph.n_layers
-    graph.to_concat_skip_model(2, 15)
+    graph.to_concat_skip_model(1, 14)
 
     assert graph.n_layers == layer_num + 3
 
@@ -135,8 +135,8 @@ def test_skip_concat_over_pooling_stub():
 def test_skip_concat_over_pooling():
     model = get_pooling_model()
     graph = Graph(model, True)
-    graph.to_concat_skip_model(6, 11)
-    graph.to_concat_skip_model(6, 11)
+    graph.to_concat_skip_model(5, 10)
+    graph.to_concat_skip_model(5, 10)
     graph = Graph(graph.produce_model(), True)
     new_model = graph.produce_model()
     input_data = get_conv_data()
@@ -184,8 +184,8 @@ def test_skip_connection_layer_ids():
 
 def test_long_transform():
     graph = DefaultClassifierGenerator(10, (32, 32, 3)).generate()
-    history = [('to_wider_model', 2, 256), ('to_conv_deeper_model', 2, 3),
-               ('to_concat_skip_model', 23, 7)]
+    history = [('to_wider_model', 1, 256), ('to_conv_deeper_model', 1, 3),
+               ('to_concat_skip_model', 22, 6)]
     for args in history:
         getattr(graph, args[0])(*list(args[1:]))
         graph.produce_model()

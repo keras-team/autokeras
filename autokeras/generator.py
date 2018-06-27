@@ -63,9 +63,9 @@ class DefaultClassifierGenerator(ClassifierGenerator):
         model.inputs = [0]
         model.layers.append(StubInput())
         for i in range(model_len):
-            model.layers += [StubBatchNormalization(),
-                             StubActivation('relu'),
+            model.layers += [StubActivation('relu'),
                              StubConv(model_width, kernel_size=3, func=conv),
+                             StubBatchNormalization(),
                              StubDropout(constant.CONV_DROPOUT_RATE)]
             if (i + 1) % pooling_len == 0 and i != model_len - 1:
                 model.layers.append(StubPooling(func=pool))
