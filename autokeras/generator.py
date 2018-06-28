@@ -67,7 +67,7 @@ class DefaultClassifierGenerator(ClassifierGenerator):
                              StubConv(model_width, kernel_size=3, func=conv),
                              StubBatchNormalization(),
                              StubDropout(constant.CONV_DROPOUT_RATE)]
-            if (i + 1) % pooling_len == 0 and i != model_len - 1:
+            if pooling_len == 0 or ((i + 1) % pooling_len == 0 and i != model_len - 1):
                 model.layers.append(StubPooling(func=pool))
 
         model.layers.append(StubGlobalPooling(ave))
