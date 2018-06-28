@@ -1,3 +1,4 @@
+from autokeras.generator import DefaultClassifierGenerator
 from autokeras.graph import Graph
 from autokeras.net_transformer import *
 from autokeras.stub import to_stub_model
@@ -43,3 +44,13 @@ def test_legal_graph2():
     assert legal_graph(graph)
     graph.to_concat_skip_model(1, 5)
     assert not legal_graph(graph)
+
+
+def test_default_transform():
+    graphs = default_transform(DefaultClassifierGenerator(10, (28, 28, 1)).generate())
+    # print()
+    # for index, layer in enumerate(graphs[0].layer_list):
+    #     print(index, layer)
+    graphs[0].produce_model()
+    assert len(graphs) == 1
+    assert len(graphs[0].layer_list) == 41

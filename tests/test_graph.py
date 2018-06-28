@@ -182,7 +182,7 @@ def test_skip_connection_layer_ids():
 def test_long_transform():
     graph = DefaultClassifierGenerator(10, (32, 32, 3)).generate()
     history = [('to_wider_model', 1, 256), ('to_conv_deeper_model', 1, 3),
-               ('to_concat_skip_model', 22, 6)]
+               ('to_concat_skip_model', 6, 11)]
     for args in history:
         getattr(graph, args[0])(*list(args[1:]))
         graph.produce_model()

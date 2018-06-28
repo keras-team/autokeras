@@ -9,13 +9,12 @@ import scipy.ndimage as ndimage
 import numpy as np
 from keras import backend
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.model_selection import train_test_split
 
 from autokeras import constant
-from autokeras.graph import Graph
 from autokeras.preprocessor import OneHotEncoder
 from autokeras.search import BayesianSearcher, train
-from autokeras.utils import ensure_dir, ModelTrainer, has_file, pickle_from_file, pickle_to_file
+from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file
 
 
 def _validate(x_train, y_train):
@@ -199,6 +198,7 @@ class ClassifierBase:
             init = tf.global_variables_initializer()
             sess.run(init)
             backend.set_session(sess)
+        x_test = x_test.astype('float32') / 255
         model = self.load_searcher().load_best_model().produce_model()
         return self.y_encoder.inverse_transform(model.predict(x_test, ))
 

@@ -13,7 +13,7 @@ from autokeras import constant
 from autokeras.bayesian import IncrementalGaussianProcess
 from autokeras.generator import DefaultClassifierGenerator
 from autokeras.graph import Graph
-from autokeras.net_transformer import transform
+from autokeras.net_transformer import transform, default_transform
 from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
 
 
@@ -130,7 +130,7 @@ class BayesianSearcher:
         model_id = self.model_count
         self.model_count += 1
         self.training_queue.append((graph, -1, model_id))
-        for child_graph in transform(graph):
+        for child_graph in default_transform(graph):
             child_id = self.model_count
             self.model_count += 1
             self.training_queue.append((child_graph, model_id, child_id))
