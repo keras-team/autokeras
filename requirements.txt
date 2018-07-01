@@ -8,7 +8,7 @@ gast==0.2.0
 grpcio==1.12.1
 h5py==2.8.0
 html5lib==0.9999999
-Keras==2.1.5
+Keras==2.1.6
 Keras-Applications==1.0.2
 Keras-Preprocessing==1.0.1
 Markdown==2.6.11

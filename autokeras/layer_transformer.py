@@ -8,16 +8,6 @@ NOISE_RATIO = 1e-4
 
 
 def deeper_conv_block(conv_layer, kernel_size, weighted=True):
-    """Get deeper layer for convolution layer
-
-    Args:
-        weighted:
-        conv_layer: the convolution layer from which we get deeper layer
-        kernel_size: the size of kernel
-
-    Returns:
-        The deeper convolution layer
-    """
     filter_shape = (kernel_size,) * 2
     n_filters = conv_layer.filters
     weight = np.zeros(filter_shape + (n_filters, n_filters))
@@ -46,15 +36,6 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
 
 
 def dense_to_deeper_block(dense_layer, weighted=True):
-    """Get deeper layer for dense layer
-
-    Args:
-        weighted:
-        dense_layer: the dense layer from which we get deeper layer
-
-    Returns:
-        The deeper dense layer
-    """
     units = dense_layer.units
     weight = np.eye(units)
     bias = np.zeros(units)
@@ -65,16 +46,6 @@ def dense_to_deeper_block(dense_layer, weighted=True):
 
 
 def wider_pre_dense(layer, n_add, weighted=True):
-    """Get previous dense layer for current layer
-
-   Args:
-       weighted:
-       layer: the layer from which we get wide previous dense layer
-       n_add: output shape
-
-   Returns:
-       The previous dense layer
-   """
     if not weighted:
         return StubDense(layer.units + n_add, layer.activation)
 
@@ -100,16 +71,6 @@ def wider_pre_dense(layer, n_add, weighted=True):
 
 
 def wider_pre_conv(layer, n_add_filters, weighted=True):
-    """Get previous convolution layer for current layer
-
-   Args:
-       weighted:
-       layer: layer from which we get wider previous convolution layer
-       n_add_filters: the filters size of convolution layer
-
-   Returns:
-       The previous convolution layer
-   """
     if not weighted:
         return StubConv(layer.filters + n_add_filters, kernel_size=layer.kernel_size, func=layer.func)
 
@@ -132,18 +93,6 @@ def wider_pre_conv(layer, n_add_filters, weighted=True):
 
 
 def wider_next_conv(layer, start_dim, total_dim, n_add, weighted=True):
-    """Get next wider convolution layer for current layer
-
-    Args:
-       weighted:
-       layer: the layer from which we get wider next convolution layer
-       start_dim: the started dimension
-       total_dim: the total dimension
-       n_add: the filters size of convolution layer
-
-    Returns:
-       The next wider convolution layer
-    """
     if not weighted:
         return StubConv(layer.filters, kernel_size=layer.kernel_size, func=layer.func)
     filter_shape = layer.kernel_size
@@ -163,18 +112,6 @@ def wider_next_conv(layer, start_dim, total_dim, n_add, weighted=True):
 
 
 def wider_bn(layer, start_dim, total_dim, n_add, weighted=True):
-    """Get new layer with wider batch normalization for current layer
-
-   Args:
-       weighted:
-       layer: the layer from which we get new layer with wider batch normalization
-       start_dim: the started dimension
-       total_dim: the total dimension
-       n_add: the output shape
-
-   Returns:
-       The new layer with wider batch normalization
-   """
     if not weighted:
         return StubBatchNormalization()
 
@@ -196,18 +133,6 @@ def wider_bn(layer, start_dim, total_dim, n_add, weighted=True):
 
 
 def wider_next_dense(layer, start_dim, total_dim, n_add, weighted=True):
-    """Get next dense layer for current layer
-
-    Args:
-       weighted:
-       layer: the dense layer from which we search next dense layer
-       n_add: output shape
-       start_dim: the started dimension
-       total_dim: the total dimension
-
-    Returns:
-       The next dense layer
-    """
     if not weighted:
         return StubDense(layer.units, layer.activation)
     n_units = layer.units
@@ -226,16 +151,6 @@ def wider_next_dense(layer, start_dim, total_dim, n_add, weighted=True):
 
 
 def wider_weighted_add(layer, n_add, weighted=True):
-    """Return wider weighted add layer
-
-    Args:
-        weighted:
-        layer: the layer from which we get wider weighted add layer
-        n_add: output shape
-
-    Returns:
-        The wider weighted add layer
-    """
     if not weighted:
         return StubAdd()
 

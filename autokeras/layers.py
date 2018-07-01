@@ -140,7 +140,6 @@ def is_global_pooling_layer(layer):
 
 
 def get_conv_layer_func(n_dim):
-    """Return convolution function based on the dimension"""
     conv_layer_functions = [Conv1D, Conv2D, Conv3D]
     if n_dim > 3:
         raise ValueError('The input dimension is too high.')
@@ -150,7 +149,6 @@ def get_conv_layer_func(n_dim):
 
 
 def get_ave_layer_func(n_dim):
-    """Return convolution function based on the dimension"""
     conv_layer_functions = [GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D]
     if n_dim > 3:
         raise ValueError('The input dimension is too high.')
@@ -160,7 +158,6 @@ def get_ave_layer_func(n_dim):
 
 
 def is_conv_layer(layer):
-    """Return whether the layer is convolution layer"""
     return isinstance(layer, tuple(CONV_FUNC_LIST))
 
 

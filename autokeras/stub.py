@@ -1,5 +1,4 @@
 from autokeras.layers import to_stub_layer
-from autokeras.utils import get_int_tuple
 
 
 class StubModel:
