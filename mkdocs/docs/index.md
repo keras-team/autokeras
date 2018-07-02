@@ -8,6 +8,10 @@ It aims at automatically search for the architecture and hyperparameters for dee
 The ultimate goal for this project is for domain experts in fields other than computer science or machine learning
 to use deep learning models conveniently.
 
+To install the package please use the commend as follows:
+
+    pip install autokeras
+
 Here is a short example for using the package.
 
     
@@ -20,3 +24,20 @@ Here is a short example for using the package.
 
 For the repository on GitHub visit [Auto-Keras on GitHub](https://github.com/jhfjhfj1/autokeras).
 
+If you use Auto-Keras in a scientific publication, we would appreciate references to the following paper:
+
+Efficient Neural Architecture Search with Network Morphism.
+Haifeng Jin, Qingquan Song, Xia Hu.
+[arXiv:1806.10282](https://arxiv.org/abs/1806.10282).
+
+Biblatex entry:
+
+    @online{jin2018efficient,
+      author       = {Haifeng Jin and Qingquan Song and Xia Hu},
+      title        = {Efficient Neural Architecture Search with Network Morphism},
+      date         = {2018-06-27},
+      year         = {2018},
+      eprintclass  = {cs.LG},
+      eprinttype   = {arXiv},
+      eprint       = {cs.LG/1806.10282},
+    }
