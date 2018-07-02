@@ -92,6 +92,17 @@ class ModelTrainer:
                     batch_size=constant.MAX_BATCH_SIZE,
                     optimizer=None,
                     augment=constant.DATA_AUGMENTATION):
+        """Train the model.
+
+        Args:
+            max_iter_num: An integer. The maximum number of epochs to train the model.
+                The training will stop when this number is reached.
+            max_no_improvement_num: An integer. The maximum number of epochs when the loss value doesn't decrease.
+                The training will stop when this number is reached.
+            batch_size: An integer. The batch size during the training.
+            optimizer: An optimizer class.
+            augment: A boolean of whether the data will be augmented.
+        """
         if augment:
             datagen = ImageDataGenerator(
                 # set input mean to 0 over the dataset

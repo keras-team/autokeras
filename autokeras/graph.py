@@ -55,18 +55,22 @@ class Graph:
     two tensor into one tensor. So it is related to two edges.)
 
     Attributes:
-        model: The Keras model, from which to extract the graph.
-        node_list: A list of tensors, the indices of the list are the identifiers.
-        layer_list: A list of Keras layers, the indices of the list are the identifiers.
-        node_to_id: A dict instance mapping from tensors to their identifiers.
-        layer_to_id: A dict instance mapping from Keras layers to their identifiers.
+        weighted: A boolean of whether the weights and biases in the neural network
+            should be included in the graph.
+        input_shape: Tuple of integers, does not include the batch axis.
+        node_list: A list of integers, the indices of the list are the identifiers.
+        layer_list: A list of stub layers, the indices of the list are the identifiers.
+        node_to_id: A dict instance mapping from node integers to their identifiers.
+        layer_to_id: A dict instance mapping from stub layers to their identifiers.
         layer_id_to_input_node_ids: A dict instance mapping from layer identifiers
             to their input nodes identifiers.
         adj_list: A two dimensional list. The adjacency list of the graph. The first dimension is
             identified by tensor identifiers. In each edge list, the elements are two-element tuples
             of (tensor identifier, layer identifier).
         reverse_adj_list: A reverse adjacent list in the same format as adj_list.
-        middle_layer_vis: A boolean list marking whether a node has been visited or not.
+        operation_history: A list saving all the network morphism operations.
+        vis: A dictionary of temporary storage for whether an local operation has been done
+            during the network morphism.
     """
 
     def __init__(self, model, weighted=True):
@@ -88,7 +92,6 @@ class Graph:
         self.operation_history = []
 
         self.vis = None
-        self.middle_layer_vis = None
 
         # Add all nodes
         for layer in layers:
@@ -233,11 +236,11 @@ class Graph:
         return False
 
     def _search(self, u, start_dim, total_dim, n_add):
-        """Search downward the graph for widening the layers.
+        """Search the graph for widening the layers.
 
         Args:
             u: The starting node identifier.
-            start_dim: The dimension to insert the additional dimensions.
+            start_dim: The position to insert the additional dimensions.
             total_dim: The total number of dimensions the layer has before widening.
             n_add: The number of dimensions to add.
         """
@@ -302,15 +305,11 @@ class Graph:
         return self.input_shape[-1]
 
     def to_conv_deeper_model(self, target_id, kernel_size):
-        """Insert a convolution, batch-normalization, relu block after the target block.
+        """Insert a relu-conv-bn block after the target block.
 
         Args:
-            target_id: A convolutional layer ID. The new block should be inserted after the relu layer
-                in its conv-batch-relu block.
+            target_id: A convolutional layer ID. The new block should be inserted after the block.
             kernel_size: An integer. The kernel size of the new convolutional layer.
-
-        Returns:
-            A new Keras model with the inserted block.
         """
         self.operation_history.append(('to_conv_deeper_model', target_id, kernel_size))
         target = self.layer_list[target_id]
@@ -323,11 +322,8 @@ class Graph:
         """Widen the last dimension of the output of the pre_layer.
 
         Args:
-            pre_layer_id: A convolutional layer or dense layer.
+            pre_layer_id: The ID of a convolutional layer or dense layer.
             n_add: The number of dimensions to add.
-
-        Returns:
-            A new Keras model with the widened layers.
         """
         self.operation_history.append(('to_wider_model', pre_layer_id, n_add))
         pre_layer = self.layer_list[pre_layer_id]
@@ -340,10 +336,7 @@ class Graph:
         """Insert a dense layer after the target layer.
 
         Args:
-            target_id: A dense layer.
-
-        Returns:
-            A new Keras model with an inserted dense layer.
+            target_id: The ID of a dense layer.
         """
         self.operation_history.append(('to_dense_deeper_model', target_id))
         target = self.layer_list[target_id]
@@ -372,7 +365,7 @@ class Graph:
         return self._block_end_node(layer_id, constant.DENSE_BLOCK_DISTANCE)
 
     def _conv_block_end_node(self, layer_id):
-        """
+        """Get the input node ID of the last layer in the block by layer ID.
 
         Args:
             layer_id: the convolutional layer ID.
@@ -384,14 +377,11 @@ class Graph:
         return self._block_end_node(layer_id, constant.CONV_BLOCK_DISTANCE)
 
     def to_add_skip_model(self, start_id, end_id):
-        """Add a weighted add skip connection from before start node to end node.
+        """Add a weighted add skip connection from after start node to end node.
 
         Args:
             start_id: The convolutional layer ID, after which to start the skip-connection.
             end_id: The convolutional layer ID, after which to end the skip-connection.
-
-        Returns:
-            A new Keras model with the added connection.
         """
         self.operation_history.append(('to_add_skip_model', start_id, end_id))
         conv_block_input_id = self._conv_block_end_node(start_id)
@@ -433,10 +423,11 @@ class Graph:
         self._add_edge(layer, skip_output_id, dropout_output_id)
 
     def to_concat_skip_model(self, start_id, end_id):
-        """Add a weighted add concatenate connection from before start node to end node.
+        """Add a weighted add concatenate connection from after start node to end node.
 
-        Returns:
-            A new Keras model with the added connection.
+        Args:
+            start_id: The convolutional layer ID, after which to start the skip-connection.
+            end_id: The convolutional layer ID, after which to end the skip-connection.
         """
         self.operation_history.append(('to_concat_skip_model', start_id, end_id))
         conv_block_input_id = self._conv_block_end_node(start_id)
