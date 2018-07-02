@@ -171,9 +171,9 @@ def to_md(comment_dict):
 def get_func_comments(function_definitions):
     doc = ''
     for f in function_definitions:
-        doc += '###' + f.name
-        doc += '\n'
-        doc += to_md(parse_func_string(ast.get_docstring(f)))
+        temp_str = to_md(parse_func_string(ast.get_docstring(f)))
+        if temp_str != '':
+            doc += '###' + f.name + '\n' + temp_str
 
     return doc
 
@@ -183,16 +183,15 @@ def get_comments_str(file_name):
         file_contents = fd.read()
     module = ast.parse(file_contents)
     function_definitions = [node for node in module.body if isinstance(node, ast.FunctionDef)]
-    get_func_comments(function_definitions)
+    doc = get_func_comments(function_definitions)
 
     class_definitions = [node for node in module.body if isinstance(node, ast.ClassDef)]
-    doc = ''
     for class_def in class_definitions:
-        doc += '##' + class_def.name
-        doc += '\n'
-        doc += to_md(parse_func_string(ast.get_docstring(class_def)))
+        temp_str = to_md(parse_func_string(ast.get_docstring(class_def)))
         method_definitions = [node for node in class_def.body if isinstance(node, ast.FunctionDef)]
-        doc += get_func_comments(method_definitions)
+        temp_str += get_func_comments(method_definitions)
+        if temp_str != '':
+            doc += '##' + class_def.name + '\n' + temp_str
     return doc
 
 

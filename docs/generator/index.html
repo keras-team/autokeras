@@ -70,10 +70,6 @@
                 </li>
                 <li class="">
                     
-    <a class="" href="../net_transformer/">net_transformer</a>
-                </li>
-                <li class="">
-                    
     <a class="" href="../preprocessor/">preprocessor</a>
                 </li>
                 <li class="">
@@ -85,39 +81,11 @@
     <a class="current" href="./">generator</a>
     <ul class="subnav">
             
-    <li class="toctree-l3"><a href="#classifiergenerator">ClassifierGenerator</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#attributes">Attributes</a></li>
-        
-            <li><a class="toctree-l4" href="#init">init</a></li>
-        
-            <li><a class="toctree-l4" href="#_get_pool_layer_func">_get_pool_layer_func</a></li>
-        
-            <li><a class="toctree-l4" href="#_get_shape">_get_shape</a></li>
-        
-        </ul>
-    
-
-    <li class="toctree-l3"><a href="#defaultclassifiergenerator">DefaultClassifierGenerator</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#init_1">init</a></li>
-        
-            <li><a class="toctree-l4" href="#generate">generate</a></li>
-        
-        </ul>
-    
-
     <li class="toctree-l3"><a href="#randomconvclassifiergenerator">RandomConvClassifierGenerator</a></li>
     
         <ul>
         
-            <li><a class="toctree-l4" href="#init_2">init</a></li>
-        
-            <li><a class="toctree-l4" href="#generate_1">generate</a></li>
+            <li><a class="toctree-l4" href="#generate">generate</a></li>
         
         </ul>
     
@@ -168,28 +136,8 @@
           <div role="main">
             <div class="section">
               
-                <h2 id="classifiergenerator">ClassifierGenerator</h2>
-<p>The base class of classifier generators.
-ClassifierGenerator is the base class of all classifier generator classes. It is used for generating classifier models.</p>
-<h4 id="attributes">Attributes</h4>
-<p><strong>n_classes</strong>: Number of classes in the input data.</p>
-<p><strong>input_shape</strong>: A tuple of integers containing the size of each dimension of the input data,
-    excluding the dimension of number of training examples. The length of the tuple should
-    between two and four inclusively.</p>
-<h3 id="init"><strong>init</strong></h3>
-<h3 id="_get_pool_layer_func">_get_pool_layer_func</h3>
-<p>Return MaxPooling function based on the dimension of input shape.</p>
-<h3 id="_get_shape">_get_shape</h3>
-<p>Return filter shape tuple based on the dimension of input shape.</p>
-<h2 id="defaultclassifiergenerator">DefaultClassifierGenerator</h2>
-<p>A classifier generator always generates models with the same default architecture and configuration.</p>
-<h3 id="init_1"><strong>init</strong></h3>
+                <h2 id="randomconvclassifiergenerator">RandomConvClassifierGenerator</h2>
 <h3 id="generate">generate</h3>
-<p>Return the default classifier model that has been compiled.</p>
-<h2 id="randomconvclassifiergenerator">RandomConvClassifierGenerator</h2>
-<p>A classifier generator that generates random convolutional neural networks.</p>
-<h3 id="init_2"><strong>init</strong></h3>
-<h3 id="generate_1">generate</h3>
 <p>Return the random generated CNN model.</p>
               
             </div>
