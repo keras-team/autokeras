@@ -1,4 +1,6 @@
+![alt text](https://github.com/jhfjhfj1/autokeras/blob/docs/logo.png?raw=true)
 # Welcome to Auto-Keras
+
 
 [![Build Status](https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master)](https://travis-ci.org/jhfjhfj1/autokeras)
 [![Coverage Status](https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg?branch=master)](https://coveralls.io/github/jhfjhfj1/autokeras?branch=master)
