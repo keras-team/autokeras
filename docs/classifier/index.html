@@ -61,27 +61,36 @@
     <a class="current" href="./">classifier</a>
     <ul class="subnav">
             
-    <li class="toctree-l3"><a href="#classifierbase">ClassifierBase</a></li>
+    <li class="toctree-l3"><a href="#_validate">_validate</a></li>
+    
+
+    <li class="toctree-l3"><a href="#read_csv_file">read_csv_file</a></li>
     
         <ul>
         
-            <li><a class="toctree-l4" href="#attributes">Attributes</a></li>
+            <li><a class="toctree-l4" href="#args">Args</a></li>
         
-            <li><a class="toctree-l4" href="#init">init</a></li>
+            <li><a class="toctree-l4" href="#returns">Returns</a></li>
         
-            <li><a class="toctree-l4" href="#_validate">_validate</a></li>
+        </ul>
+    
+
+    <li class="toctree-l3"><a href="#read_images">read_images</a></li>
+    
+        <ul>
         
-            <li><a class="toctree-l4" href="#fit">fit</a></li>
+            <li><a class="toctree-l4" href="#args_1">Args</a></li>
         
-            <li><a class="toctree-l4" href="#predict">predict</a></li>
+        </ul>
+    
+
+    <li class="toctree-l3"><a href="#load_image_dataset">load_image_dataset</a></li>
+    
+        <ul>
         
-            <li><a class="toctree-l4" href="#summary">summary</a></li>
+            <li><a class="toctree-l4" href="#args_2">Args</a></li>
         
-            <li><a class="toctree-l4" href="#_get_searcher_class">_get_searcher_class</a></li>
-        
-            <li><a class="toctree-l4" href="#evaluate">evaluate</a></li>
-        
-            <li><a class="toctree-l4" href="#cross_validate">cross_validate</a></li>
+            <li><a class="toctree-l4" href="#returns_1">Returns</a></li>
         
         </ul>
     
@@ -90,7 +99,23 @@
     
         <ul>
         
-            <li><a class="toctree-l4" href="#init_1">init</a></li>
+            <li><a class="toctree-l4" href="#attributes">Attributes</a></li>
+        
+            <li><a class="toctree-l4" href="#init">init</a></li>
+        
+            <li><a class="toctree-l4" href="#fit">fit</a></li>
+        
+            <li><a class="toctree-l4" href="#predict">predict</a></li>
+        
+            <li><a class="toctree-l4" href="#summary">summary</a></li>
+        
+            <li><a class="toctree-l4" href="#evaluate">evaluate</a></li>
+        
+            <li><a class="toctree-l4" href="#final_fit">final_fit</a></li>
+        
+            <li><a class="toctree-l4" href="#export_keras_model">export_keras_model</a></li>
+        
+            <li><a class="toctree-l4" href="#get_best_model_id">get_best_model_id</a></li>
         
         </ul>
     
@@ -104,10 +129,6 @@
                 <li class="">
                     
     <a class="" href="../graph/">graph</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../net_transformer/">net_transformer</a>
                 </li>
                 <li class="">
                     
@@ -165,44 +186,78 @@
           <div role="main">
             <div class="section">
               
-                <h2 id="classifierbase">ClassifierBase</h2>
-<p>Base class of Classifier.
-ClassifierBase is the base class of all classifier classes, classifier is used to train and predict data.</p>
+                <h3 id="_validate">_validate</h3>
+<p>Check x_train's type and the shape of x_train, y_train.</p>
+<h3 id="read_csv_file">read_csv_file</h3>
+<p>Read the cvs file and returns two seperate list containing images name and their labels</p>
+<h4 id="args">Args</h4>
+<p><strong>csv_file_path</strong>: Path to the CVS file.</p>
+<h4 id="returns">Returns</h4>
+<p>img_file_names list containing images names and img_label list containing their respective labels.</p>
+<h3 id="read_images">read_images</h3>
+<p>Reads the images from the path and return there numpy.ndarray instance</p>
+<h4 id="args_1">Args</h4>
+<p><strong>img_file_names</strong>: List containing images names</p>
+<p><strong>images_dir_path</strong>: Path to directory containing images</p>
+<h3 id="load_image_dataset">load_image_dataset</h3>
+<p>Load images from the files and labels from a csv file.
+Second, the dataset is a set of images and the labels are in a CSV file. The CSV file should contain two columns whose names are 'File Name' and 'Label'. The file names in the first column should match the file names of the images with extensions, e.g., .jpg, .png. The path to the CSV file should be passed through the csv_file_path. The path to the directory containing all the images should be passed through image_path.</p>
+<h4 id="args_2">Args</h4>
+<p><strong>csv_file_path</strong>: CVS file path.</p>
+<p><strong>images_path</strong>: Path where images exist.</p>
+<h4 id="returns_1">Returns</h4>
+<p>x: Four dimensional numpy.ndarray. The channel dimension is the last dimension. y: The labels.</p>
+<h2 id="imageclassifier">ImageClassifier</h2>
+<p>The image classifier class.
+It is used for image classification. It searches convolutional neural network architectures for the best configuration for the dataset.</p>
 <h4 id="attributes">Attributes</h4>
+<p><strong>path</strong>: A path to the directory to save the classifier.</p>
 <p><strong>y_encoder</strong>: An instance of OneHotEncoder for y_train (array of categorical labels).</p>
 <p><strong>verbose</strong>: A boolean value indicating the verbosity mode.</p>
-<p><strong>searcher</strong>: An instance of one of the subclasses of Searcher. It search different
+<p><strong>searcher</strong>: An instance of BayesianSearcher. It search different
     neural architecture to find the best model.</p>
-<p><strong>searcher_type</strong>: The type of searcher to use. It must be 'climb' or 'random'.</p>
-<p><strong>path</strong>: A path to the directory to save the classifier.</p>
-<p><strong>model_id</strong>: Identifier for the best model.</p>
+<p><strong>searcher_args</strong>: A dictionary containing the parameters for the searcher's <strong>init</strong> function.</p>
 <h3 id="init"><strong>init</strong></h3>
 <p>Initialize the instance.
-The classifier will be loaded from file if the directory in 'path' has a saved classifier. Otherwise it would create a new one.</p>
-<h3 id="_validate">_validate</h3>
-<p>Check x_train's type and the shape of x_train, y_train.</p>
+The classifier will be loaded from the files in 'path' if parameter 'resume' is True. Otherwise it would create a new one.</p>
+<h4 id="args_3">Args</h4>
+<p><strong>verbose</strong>: An boolean of whether the search process will be printed to stdout.</p>
+<p><strong>path</strong>: A string. The path to a directory, where the intermediate results are saved.</p>
+<p><strong>resume</strong>: An boolean. If True, the classifier will continue to previous work saved in path.
+    Otherwise, the classifier will start a new search.</p>
 <h3 id="fit">fit</h3>
-<p>Find the best model.
-Format the input, and split the dataset into training and testing set, save the classifier and find the best model.</p>
-<h4 id="args">Args</h4>
+<p>Find the best neural architecture and train it.
+Based on the given dataset, the function will find the best neural architecture for it. The dataset is in numpy.ndarray format. So they training data should be passed through x_train, y_train.</p>
+<h4 id="args_4">Args</h4>
 <p><strong>x_train</strong>: An numpy.ndarray instance contains the training data.</p>
 <p><strong>y_train</strong>: An numpy.ndarray instance contains the label of the training data.</p>
+<p><strong>time_limit</strong>: The time limit for the search in seconds.</p>
 <h3 id="predict">predict</h3>
 <p>Return predict result for the testing data.</p>
-<h4 id="args_1">Args</h4>
+<h4 id="args_5">Args</h4>
 <p><strong>x_test</strong>: An instance of numpy.ndarray contains the testing data.</p>
+<h4 id="returns_2">Returns</h4>
+<p>An numpy.ndarray containing the results.</p>
 <h3 id="summary">summary</h3>
 <p>Print the summary of the best model.</p>
-<h3 id="_get_searcher_class">_get_searcher_class</h3>
-<p>Return searcher class based on the 'searcher_type'.</p>
 <h3 id="evaluate">evaluate</h3>
 <p>Return the accuracy score between predict value and test_y.</p>
-<h3 id="cross_validate">cross_validate</h3>
-<p>Do the n_splits cross-validation for the input.</p>
-<h2 id="imageclassifier">ImageClassifier</h2>
-<p>Image classifier class inherited from ClassifierBase class.
-It is used for image classification. It searches convolutional neural network architectures for the best configuration for the dataset.</p>
-<h3 id="init_1"><strong>init</strong></h3>
+<h3 id="final_fit">final_fit</h3>
+<p>Final training after found the best architecture.</p>
+<h4 id="args_6">Args</h4>
+<p><strong>x_train</strong>: An numpy.ndarray of training data.</p>
+<p><strong>y_train</strong>: An numpy.ndarray of training targets.</p>
+<p><strong>x_test</strong>: An numpy.ndarray of testing data.</p>
+<p><strong>y_test</strong>: An numpy.ndarray of testing targets.</p>
+<p><strong>trainer_args</strong>: A dictionary containing the parameters of the ModelTrainer constructure.</p>
+<p><strong>retrain</strong>: A boolean of whether reinitialize the weights of the model.</p>
+<h3 id="export_keras_model">export_keras_model</h3>
+<p>Export the searched model as a Keras saved model.</p>
+<h4 id="args_7">Args</h4>
+<p><strong>path</strong>: A string. The path to the file to save.</p>
+<p><strong>model_id</strong>: A integer. If not provided, the function will export the best model.</p>
+<h3 id="get_best_model_id">get_best_model_id</h3>
+<p>Returns: An integer. The best model id.</p>
               
             </div>
           </div>

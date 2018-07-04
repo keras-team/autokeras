@@ -65,43 +65,13 @@
     <a class="current" href="./">search</a>
     <ul class="subnav">
             
-    <li class="toctree-l3"><a href="#searcher">Searcher</a></li>
+    <li class="toctree-l3"><a href="#bayesiansearcher">BayesianSearcher</a></li>
     
         <ul>
         
             <li><a class="toctree-l4" href="#attributes">Attributes</a></li>
         
             <li><a class="toctree-l4" href="#init">init</a></li>
-        
-            <li><a class="toctree-l4" href="#search">search</a></li>
-        
-            <li><a class="toctree-l4" href="#load_best_model">load_best_model</a></li>
-        
-            <li><a class="toctree-l4" href="#add_model">add_model</a></li>
-        
-        </ul>
-    
-
-    <li class="toctree-l3"><a href="#randomsearcher">RandomSearcher</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#init_1">init</a></li>
-        
-            <li><a class="toctree-l4" href="#search_1">search</a></li>
-        
-        </ul>
-    
-
-    <li class="toctree-l3"><a href="#hillclimbingsearcher">HillClimbingSearcher</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#init_2">init</a></li>
-        
-            <li><a class="toctree-l4" href="#_remove_duplicate">_remove_duplicate</a></li>
-        
-            <li><a class="toctree-l4" href="#search_2">search</a></li>
         
         </ul>
     
@@ -111,10 +81,6 @@
                 <li class="">
                     
     <a class="" href="../graph/">graph</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../net_transformer/">net_transformer</a>
                 </li>
                 <li class="">
                     
@@ -172,44 +138,32 @@
           <div role="main">
             <div class="section">
               
-                <h2 id="searcher">Searcher</h2>
+                <h2 id="bayesiansearcher">BayesianSearcher</h2>
 <p>Base class of all searcher class
 This class is the base class of all searcher class, every searcher class can override its search function to implements its strategy</p>
 <h4 id="attributes">Attributes</h4>
 <p><strong>n_classes</strong>: number of classification</p>
 <p><strong>input_shape</strong>: Arbitrary, although all dimensions in the input shaped must be fixed.
-           Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
-           when using this layer as the first layer in a model.</p>
+    Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
+    when using this layer as the first layer in a model.</p>
 <p><strong>verbose</strong>: verbosity mode</p>
-<p><strong>history_configs</strong>: a list that stores all historical configuration</p>
-<p><strong>history</strong>: a list that stores the performance of model</p>
-<p><strong>path</strong>: place that store searcher</p>
-<p><strong>model_count</strong>: the id of model</p>
+<p><strong>history</strong>: A list that stores the performance of model. Each element in it is a dictionary of 'model_id',
+    'loss', and 'accuracy'.</p>
+<p><strong>path</strong>: A string. The path to the directory for saving the searcher.</p>
+<p><strong>model_count</strong>: An integer. the total number of neural networks in the current searcher.</p>
+<p><strong>descriptors</strong>: A dictionary of all the neural networks architectures searched.</p>
+<p><strong>trainer_args</strong>: A dictionary. The params for the constructor of ModelTrainer.</p>
+<p><strong>default_model_len</strong>: An integer. Number of convolutional layers in the initial architecture.</p>
+<p><strong>default_model_width</strong>: An integer. The number of filters in each layer in the initial architecture.</p>
+<p><strong>gpr</strong>: A GaussianProcessRegressor for bayesian optimization.</p>
+<p><strong>search_tree</strong>: The data structure for storing all the searched architectures in tree structure.</p>
+<p><strong>training_queue</strong>: A list of the generated architectures to be trained.</p>
+<p><strong>x_queue</strong>: A list of trained architectures not updated to the gpr.</p>
+<p><strong>y_queue</strong>: A list of trained architecture performances not updated to the gpr.</p>
+<p><strong>beta</strong>: A float. The beta in the UCB acquisition function.</p>
+<p><strong>t_min</strong>: A float. The minimum temperature during simulated annealing.</p>
 <h3 id="init"><strong>init</strong></h3>
-<p>Init Searcher class with n_classes, input_shape, path, verbose
-The Searcher will be loaded from file if it has been saved before.</p>
-<h3 id="search">search</h3>
-<p>an search strategy that will be overridden by children classes</p>
-<h3 id="load_best_model">load_best_model</h3>
-<p>return model with best accuracy</p>
-<h3 id="add_model">add_model</h3>
-<p>add one model while will be trained to history list</p>
-<h2 id="randomsearcher">RandomSearcher</h2>
-<p>Random Searcher class inherited from ClassifierBase class
-RandomSearcher implements its search function with random strategy</p>
-<h3 id="init_1"><strong>init</strong></h3>
-<p>Init RandomSearcher with n_classes, input_shape, path, verbose</p>
-<h3 id="search_1">search</h3>
-<p>Override parent's search function. First model is randomly generated</p>
-<h2 id="hillclimbingsearcher">HillClimbingSearcher</h2>
-<p>HillClimbing Searcher class inherited from ClassifierBase class
-HillClimbing Searcher implements its search function with hill climbing strategy</p>
-<h3 id="init_2"><strong>init</strong></h3>
-<p>Init HillClimbing Searcher with n_classes, input_shape, path, verbose</p>
-<h3 id="_remove_duplicate">_remove_duplicate</h3>
-<p>Remove the duplicate in the history_models</p>
-<h3 id="search_2">search</h3>
-<p>Override parent's search function. First model is randomly generated</p>
+<p>Args: n_classes: An integer, the number of classes. input_shape: A tuple. e.g. (28, 28, 1). path: A string. The path to the directory to save the searcher. verbose: A boolean. Whether to output the intermediate information to stdout. trainer_args: A dictionary. The params for the constructor of ModelTrainer. default_model_len: An integer. Number of convolutional layers in the initial architecture. default_model_width: An integer. The number of filters in each layer in the initial architecture. beta: A float. The beta in the UCB acquisition function. kernel_lambda: A float. The balance factor in the neural network kernel. t_min: A float. The minimum temperature during simulated annealing.</p>
               
             </div>
           </div>

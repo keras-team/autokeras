@@ -7,7 +7,7 @@ from queue import PriorityQueue
 import numpy as np
 import math
 
-from keras.utils import plot_model
+# from keras.utils import plot_model
 
 from autokeras import constant
 from autokeras.bayesian import IncrementalGaussianProcess
@@ -27,12 +27,24 @@ class BayesianSearcher:
     Attributes:
         n_classes: number of classification
         input_shape: Arbitrary, although all dimensions in the input shaped must be fixed.
-                   Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
-                   when using this layer as the first layer in a model.
+            Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
+            when using this layer as the first layer in a model.
         verbose: verbosity mode
-        history: a list that stores the performance of model
-        path: place that store searcher
-        model_count: the id of model
+        history: A list that stores the performance of model. Each element in it is a dictionary of 'model_id',
+            'loss', and 'accuracy'.
+        path: A string. The path to the directory for saving the searcher.
+        model_count: An integer. the total number of neural networks in the current searcher.
+        descriptors: A dictionary of all the neural networks architectures searched.
+        trainer_args: A dictionary. The params for the constructor of ModelTrainer.
+        default_model_len: An integer. Number of convolutional layers in the initial architecture.
+        default_model_width: An integer. The number of filters in each layer in the initial architecture.
+        gpr: A GaussianProcessRegressor for bayesian optimization.
+        search_tree: The data structure for storing all the searched architectures in tree structure.
+        training_queue: A list of the generated architectures to be trained.
+        x_queue: A list of trained architectures not updated to the gpr.
+        y_queue: A list of trained architecture performances not updated to the gpr.
+        beta: A float. The beta in the UCB acquisition function.
+        t_min: A float. The minimum temperature during simulated annealing.
     """
 
     def __init__(self, n_classes, input_shape, path, verbose,
@@ -42,9 +54,19 @@ class BayesianSearcher:
                  beta=constant.BETA,
                  kernel_lambda=constant.KERNEL_LAMBDA,
                  t_min=constant.T_MIN):
-        """Init Searcher class with n_classes, input_shape, path, verbose
+        """
 
-        The Searcher will be loaded from file if it has been saved before.
+        Args:
+            n_classes: An integer, the number of classes.
+            input_shape: A tuple. e.g. (28, 28, 1).
+            path: A string. The path to the directory to save the searcher.
+            verbose: A boolean. Whether to output the intermediate information to stdout.
+            trainer_args: A dictionary. The params for the constructor of ModelTrainer.
+            default_model_len: An integer. Number of convolutional layers in the initial architecture.
+            default_model_width: An integer. The number of filters in each layer in the initial architecture.
+            beta: A float. The beta in the UCB acquisition function.
+            kernel_lambda: A float. The balance factor in the neural network kernel.
+            t_min: A float. The minimum temperature during simulated annealing.
         """
         if trainer_args is None:
             trainer_args = {}
@@ -73,7 +95,6 @@ class BayesianSearcher:
         return pickle_from_file(os.path.join(self.path, str(model_id) + '.h5'))
 
     def load_best_model(self):
-        """return model with best accuracy"""
         return self.load_model_by_id(self.get_best_model_id())
 
     def get_accuracy_by_id(self, model_id):
@@ -89,11 +110,6 @@ class BayesianSearcher:
         pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.h5'))
 
     def add_model(self, accuracy, loss, graph, model_id):
-        """add one model while will be trained to history list
-
-        Returns:
-            History object.
-        """
         if self.verbose:
             print('Saving model.')
 
@@ -143,6 +159,8 @@ class BayesianSearcher:
 
         # Start the new process for training.
         graph, father_id, model_id = self.training_queue.pop(0)
+        if self.verbose:
+            print('Training model ', model_id)
         pool = multiprocessing.Pool(1)
         train_results = pool.map_async(train, [(graph, x_train, y_train, x_test, y_test, self.trainer_args,
                                                 os.path.join(self.path, str(model_id) + '.png'))])
@@ -257,8 +275,8 @@ class Elem:
 def train(args):
     graph, x_train, y_train, x_test, y_test, trainer_args, path = args
     model = graph.produce_model()
-    if path is not None:
-        plot_model(model, to_file=path, show_shapes=True)
+    # if path is not None:
+    #     plot_model(model, to_file=path, show_shapes=True)
     loss, accuracy = ModelTrainer(model,
                                   x_train,
                                   y_train,

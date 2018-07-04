@@ -6,23 +6,11 @@ from keras.callbacks import Callback, LearningRateScheduler, ReduceLROnPlateau
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
-from tensorflow import Dimension
 
 from autokeras import constant
 
 
 def lr_schedule(epoch):
-    """Learning Rate Schedule
-
-    Learning rate is scheduled to be reduced after 80, 120, 160, 180 epochs.
-    Called automatically every epoch as part of callbacks during training.
-
-    # Arguments
-        epoch (int): The number of epochs
-
-    # Returns
-        lr (float32): learning rate
-    """
     lr = 1e-3
     if epoch > 180:
         lr *= 0.5e-3
@@ -104,6 +92,17 @@ class ModelTrainer:
                     batch_size=constant.MAX_BATCH_SIZE,
                     optimizer=None,
                     augment=constant.DATA_AUGMENTATION):
+        """Train the model.
+
+        Args:
+            max_iter_num: An integer. The maximum number of epochs to train the model.
+                The training will stop when this number is reached.
+            max_no_improvement_num: An integer. The maximum number of epochs when the loss value doesn't decrease.
+                The training will stop when this number is reached.
+            batch_size: An integer. The batch size during the training.
+            optimizer: An optimizer class.
+            augment: A boolean of whether the data will be augmented.
+        """
         if augment:
             datagen = ImageDataGenerator(
                 # set input mean to 0 over the dataset
@@ -137,7 +136,7 @@ class ModelTrainer:
             self.model.compile(loss=categorical_crossentropy,
                                optimizer=optimizer(),
                                metrics=['accuracy'])
-        """Train the model with dataset and return the minimum_loss"""
+
         batch_size = min(self.x_train.shape[0], batch_size)
         terminator = EarlyStop(max_no_improvement_num=max_no_improvement_num)
         lr_scheduler = LearningRateScheduler(lr_schedule)
@@ -171,11 +170,6 @@ class ModelTrainer:
         return terminator.minimum_loss, terminator.max_accuracy
 
 
-def extract_config(network):
-    """Return configuration of one model"""
-    return network.get_config()
-
-
 def ensure_dir(directory):
     """Create directory if it does not exist"""
     if not os.path.exists(directory):
@@ -188,19 +182,7 @@ def ensure_file_dir(path):
 
 
 def has_file(path):
-    """Return whether the path has a file"""
     return os.path.exists(path)
-
-
-def get_int_tuple(temp_shape):
-    """Return the input shape of temp_shape in the form of tuple"""
-    input_shape = []
-    for i in temp_shape:
-        if isinstance(i, Dimension):
-            input_shape.append(i.value)
-        else:
-            input_shape.append(i)
-    return tuple(input_shape)
 
 
 def pickle_from_file(path):
@@ -209,5 +191,3 @@ def pickle_from_file(path):
 
 def pickle_to_file(obj, path):
     pickle.dump(obj, open(path, 'wb'))
-
-

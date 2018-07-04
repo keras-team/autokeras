@@ -70,10 +70,6 @@
                 </li>
                 <li class="">
                     
-    <a class="" href="../net_transformer/">net_transformer</a>
-                </li>
-                <li class="">
-                    
     <a class="" href="../preprocessor/">preprocessor</a>
                 </li>
                 <li class=" current">
@@ -81,6 +77,12 @@
     <a class="current" href="./">utils</a>
     <ul class="subnav">
             
+    <li class="toctree-l3"><a href="#ensure_dir">ensure_dir</a></li>
+    
+
+    <li class="toctree-l3"><a href="#ensure_file_dir">ensure_file_dir</a></li>
+    
+
     <li class="toctree-l3"><a href="#modeltrainer">ModelTrainer</a></li>
     
         <ul>
@@ -88,8 +90,6 @@
             <li><a class="toctree-l4" href="#attributes">Attributes</a></li>
         
             <li><a class="toctree-l4" href="#init">init</a></li>
-        
-            <li><a class="toctree-l4" href="#_converged">_converged</a></li>
         
             <li><a class="toctree-l4" href="#train_model">train_model</a></li>
         
@@ -146,7 +146,11 @@
           <div role="main">
             <div class="section">
               
-                <h2 id="modeltrainer">ModelTrainer</h2>
+                <h3 id="ensure_dir">ensure_dir</h3>
+<p>Create directory if it does not exist</p>
+<h3 id="ensure_file_dir">ensure_file_dir</h3>
+<p>Create path if it does not exist</p>
+<h2 id="modeltrainer">ModelTrainer</h2>
 <p>A class that is used to train model
 This class can train a model with dataset and will not stop until getting minimum loss</p>
 <h4 id="attributes">Attributes</h4>
@@ -156,15 +160,18 @@ This class can train a model with dataset and will not stop until getting minimu
 <p><strong>x_test</strong>: the input test data</p>
 <p><strong>y_test</strong>: the input test data labels</p>
 <p><strong>verbose</strong>: verbosity mode</p>
-<p><strong>training_losses</strong>: a list to store all losses during training</p>
-<p><strong>minimum_loss</strong>: the minimum loss during training</p>
-<p><strong>_no_improvement_count</strong>: the number of iterations that don't improve the result</p>
 <h3 id="init"><strong>init</strong></h3>
 <p>Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose</p>
-<h3 id="_converged">_converged</h3>
-<p>Return whether the training is converged</p>
 <h3 id="train_model">train_model</h3>
-<p>Train the model with dataset and return the minimum_loss</p>
+<p>Train the model.</p>
+<h4 id="args">Args</h4>
+<p><strong>max_iter_num</strong>: An integer. The maximum number of epochs to train the model.
+    The training will stop when this number is reached.</p>
+<p><strong>max_no_improvement_num</strong>: An integer. The maximum number of epochs when the loss value doesn't decrease.
+    The training will stop when this number is reached.</p>
+<p><strong>batch_size</strong>: An integer. The batch size during the training.</p>
+<p><strong>optimizer</strong>: An optimizer class.</p>
+<p><strong>augment</strong>: A boolean of whether the data will be augmented.</p>
               
             </div>
           </div>

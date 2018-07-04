@@ -163,10 +163,11 @@ def test_fit_csv_file(_, _1):
     constant.SEARCH_MAX_ITER = 1
     path = 'tests/resources'
     clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"), resume=False)
-    clf.fit(csv_file_path=os.path.join(path, "images_test/images_name.csv"),
-            images_path=os.path.join(path, "images_test/Color_images"))
-    img_file_name, y_train = read_csv_file(csv_file_path=os.path.join(path, "images_test/images_name.csv"))
-    x_test = read_images(img_file_name, images_dir_path=os.path.join(path, "images_test/Color_images"))
+    x_train, y_train = load_image_dataset(csv_file_path=os.path.join(path, "images_test/images_name.csv"),
+                                          images_path=os.path.join(path, "images_test/Color_images"))
+    clf.fit(x_train, y_train)
+    x_test, y_test = load_image_dataset(csv_file_path=os.path.join(path, "images_test/images_name.csv"),
+                                        images_path=os.path.join(path, "images_test/Color_images"))
     results = clf.predict(x_test)
     assert len(clf.load_searcher().history) == 1
     assert len(results) == 5
