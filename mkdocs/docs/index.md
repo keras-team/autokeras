@@ -1,4 +1,4 @@
-<img src="https://github.com/jhfjhfj1/autokeras/blob/docs/logo.png?raw=true" alt="drawing" width="400px"/>
+<img src="https://github.com/jhfjhfj1/autokeras/blob/master/logo.png?raw=true" alt="drawing" width="400px"/>
 
 [![Build Status](https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master)](https://travis-ci.org/jhfjhfj1/autokeras)
 [![Coverage Status](https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg?branch=master)](https://coveralls.io/github/jhfjhfj1/autokeras?branch=master)
