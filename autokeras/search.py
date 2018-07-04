@@ -159,6 +159,8 @@ class BayesianSearcher:
 
         # Start the new process for training.
         graph, father_id, model_id = self.training_queue.pop(0)
+        if self.verbose:
+            print('Training model ', model_id)
         pool = multiprocessing.Pool(1)
         train_results = pool.map_async(train, [(graph, x_train, y_train, x_test, y_test, self.trainer_args,
                                                 os.path.join(self.path, str(model_id) + '.png'))])
