@@ -1,4 +1,5 @@
 site_name: Auto-Keras
+repo_url: https://github.com/jhfjhfj1/autokeras
 pages:
     - Home: index.md
     - Documentation:
