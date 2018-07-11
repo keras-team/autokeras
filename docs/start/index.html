@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>generator - Auto-Keras</title>
+  <title>Getting Started - Auto-Keras</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,9 +17,9 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "generator";
-    var mkdocs_page_input_path = "generator.md";
-    var mkdocs_page_url = "/generator/";
+    var mkdocs_page_name = "Getting Started";
+    var mkdocs_page_input_path = "start.md";
+    var mkdocs_page_url = "/start/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -52,9 +52,23 @@
     <a class="" href="..">Home</a>
 	    </li>
           
-            <li class="toctree-l1">
+            <li class="toctree-l1 current">
 		
-    <a class="" href="../start/">Getting Started</a>
+    <a class="current" href="./">Getting Started</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#getting-started">Getting Started</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#installation">Installation</a></li>
+        
+            <li><a class="toctree-l3" href="#example">Example</a></li>
+        
+        </ul>
+    
+
+    </ul>
 	    </li>
           
             <li class="toctree-l1">
@@ -81,21 +95,9 @@
                     
     <a class="" href="../utils/">utils</a>
                 </li>
-                <li class=" current">
+                <li class="">
                     
-    <a class="current" href="./">generator</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l3"><a href="#randomconvclassifiergenerator">RandomConvClassifierGenerator</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#generate">generate</a></li>
-        
-        </ul>
-    
-
-    </ul>
+    <a class="" href="../generator/">generator</a>
                 </li>
     </ul>
 	    </li>
@@ -126,15 +128,11 @@
     <li><a href="..">Docs</a> &raquo;</li>
     
       
-        
-          <li>Documentation &raquo;</li>
-        
-      
     
-    <li>generator</li>
+    <li>Getting Started</li>
     <li class="wy-breadcrumbs-aside">
       
-        <a href="https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/docs/generator.md"
+        <a href="https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/docs/start.md"
           class="icon icon-github"> Edit on GitHub</a>
       
     </li>
@@ -144,9 +142,29 @@
           <div role="main">
             <div class="section">
               
-                <h2 id="randomconvclassifiergenerator">RandomConvClassifierGenerator</h2>
-<h3 id="generate">generate</h3>
-<p>Return the random generated CNN model.</p>
+                <h1 id="getting-started">Getting Started</h1>
+<h2 id="installation">Installation</h2>
+<p>The installation of Auto-Keras is the same as other python packages.
+Just use pip install.
+You can run the following command in your terminal.</p>
+<pre><code>pip install autokeras
+</code></pre>
+<h2 id="example">Example</h2>
+<p>Here we show an example of image classification on the MNIST dataset, is a famous image dataset for hand-written digits classification.</p>
+<pre><code>from keras.datasets import mnist
+from autokeras.classifier import ImageClassifier
+
+if __name__ == '__main__':
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    x_train = x_train.reshape(x_train.shape + (1,))
+    x_test = x_test.reshape(x_test.shape + (1,))
+
+    clf = ImageClassifier(verbose=True)
+    clf.fit(x_train, y_train, time_limit=12 * 60 * 60)
+    clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
+    y = clf.evaluate(x_test, y_test)
+    print(y)
+</code></pre>
               
             </div>
           </div>
@@ -154,10 +172,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../about/" class="btn btn-neutral float-right" title="About">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../classifier/" class="btn btn-neutral float-right" title="classifier">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../utils/" class="btn btn-neutral" title="utils"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -185,10 +203,10 @@
           <a href="https://github.com/jhfjhfj1/autokeras/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
-        <span><a href="../utils/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../about/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../classifier/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

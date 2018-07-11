@@ -5,6 +5,7 @@ edit_uri: https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/docs/
 
 pages:
     - Home: index.md
+    - Getting Started: start.md
     - Documentation:
       - classifier: classifier.md
       - search: search.md
