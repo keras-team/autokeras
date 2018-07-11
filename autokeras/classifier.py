@@ -109,7 +109,7 @@ def load_image_dataset(csv_file_path, images_path):
     """
     img_file_name, y = read_csv_file(csv_file_path)
     x = read_images(img_file_name, images_path)
-    return x, y
+    return np.array(x), np.array(y)
 
 
 class ImageClassifier:
