@@ -131,7 +131,6 @@ class BayesianSearcher:
             file.close()
 
         self.descriptors[descriptor] = True
-        self.search_tree.add_child(-1, model_id)
         self.x_queue.append(descriptor)
         self.y_queue.append(accuracy)
 
@@ -167,15 +166,16 @@ class BayesianSearcher:
 
         # Do the search in current thread.
         if not self.training_queue:
-            graph, father_id = self.maximize_acq()
+            new_graph, new_father_id = self.maximize_acq()
             new_model_id = self.model_count
             self.model_count += 1
-            self.training_queue.append((graph, father_id, new_model_id))
+            self.training_queue.append((new_graph, new_father_id, new_model_id))
 
         accuracy, loss, graph = train_results.get()[0]
         pool.terminate()
         pool.join()
         self.add_model(accuracy, loss, graph, model_id)
+        self.search_tree.add_child(father_id, model_id)
         self.gpr.fit(self.x_queue, self.y_queue)
         self.x_queue = []
         self.y_queue = []
@@ -234,6 +234,22 @@ class BayesianSearcher:
         mean, std = self.gpr.predict(np.array([graph.extract_descriptor()]))
         return mean + self.beta * std
 
+    def export_json(self, path):
+        data = dict()
+
+        networks = []
+        for model_id in range(self.model_count - len(self.training_queue)):
+            networks.append(self.load_model_by_id(model_id).extract_descriptor().to_json())
+
+        tree = self.search_tree.get_dict()
+
+        # Saving the data to file.
+        data['networks'] = networks
+        data['tree'] = tree
+        import json
+        with open(path, 'w') as fp:
+            json.dump(data, fp)
+
 
 class SearchTree:
     def __init__(self):
@@ -255,6 +271,15 @@ class SearchTree:
         for key, value in self.adj_list.items():
             if not value:
                 ret.append(key)
+        return ret
+
+    def get_dict(self, u=None):
+        if u is None:
+            return self.get_dict(self.root)
+        children = []
+        for v in self.adj_list[u]:
+            children.append(self.get_dict(v))
+        ret = {'name': u, 'children': children}
         return ret
 
 
