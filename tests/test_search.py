@@ -58,12 +58,13 @@ def test_export_json(_, _1):
     generator = BayesianSearcher(3, (28, 28, 1), verbose=False, path=default_test_path)
     constant.N_NEIGHBOURS = 1
     constant.T_MIN = 0.8
-    for _ in range(2):
+    for _ in range(3):
         generator.search(x_train, y_train, x_test, y_test)
     file_path = os.path.join(default_test_path, 'test.json')
     generator.export_json(file_path)
     import json
     data = json.load(open(file_path, 'r'))
-    assert isinstance(data['networks'], list)
+    assert len(data['networks']) == 3
+    assert len(data['tree']['children']) == 2
     clean_dir(default_test_path)
-    assert len(generator.history) == 2
+    assert len(generator.history) == 3
