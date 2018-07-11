@@ -234,6 +234,22 @@ class BayesianSearcher:
         mean, std = self.gpr.predict(np.array([graph.extract_descriptor()]))
         return mean + self.beta * std
 
+    def export_json(self, path):
+        data = dict()
+
+        networks = []
+        for model_id in range(self.model_count - len(self.training_queue)):
+            networks.append(self.load_model_by_id(model_id).extract_descriptor().to_json())
+
+        tree = self.search_tree.get_dict()
+
+        # Saving the data to file.
+        data['networks'] = networks
+        data['tree'] = tree
+        import json
+        with open(path, 'w') as fp:
+            json.dump(data, fp)
+
 
 class SearchTree:
     def __init__(self):
@@ -256,6 +272,9 @@ class SearchTree:
             if not value:
                 ret.append(key)
         return ret
+
+    def get_dict(self):
+        return dict()
 
 
 @total_ordering

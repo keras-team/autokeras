@@ -44,6 +44,12 @@ class NetworkDescriptor:
                              'or NetworkDescriptor.ADD_CONNECT.')
         self.skip_connections.append((u, v, connection_type))
 
+    def to_json(self):
+        skip_list = []
+        for u, v, connection_type in self.skip_connections:
+            skip_list.append({'from': u, 'to': v, 'type': connection_type})
+        return {'node_list': self.conv_widths, 'skip_list': skip_list}
+
 
 class Graph:
     """A class represent the neural architecture graph of a Keras model.
