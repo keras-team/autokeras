@@ -14,7 +14,7 @@ def simple_transform(graph):
     return [deepcopy(graph)]
 
 
-def mock_train(**kwargs):
+def mock_train(**_):
     return 1, 0
 
 
