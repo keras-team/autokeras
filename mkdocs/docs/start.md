@@ -3,9 +3,17 @@
 ## Installation
 The installation of Auto-Keras is the same as other python packages.
 Just use pip install.
-You can run the following command in your terminal.
+Notably, currently we only support Python 3.6.
+You can run the following command in your terminal to install the latest stable version.
 
     pip install autokeras
+
+If you want to install the latest development version. 
+You need to download the code from the GitHub repo and run the following commands in the project directory.
+
+    pip install -r requirements.txt
+    python setup.py install
+    
 
 ## Example
 
@@ -24,3 +32,38 @@ Here we show an example of image classification on the MNIST dataset, is a famou
         clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
         y = clf.evaluate(x_test, y_test)
         print(y)
+        
+In the example above the images and the labels are already formatted into numpy arrays.
+What if your data are images files (*e.g.* .jpg, .png, .bmp)?
+You can use our `load_image_dataset` function to load the images and there labels as follows.
+
+    from autokeras.classifier import load_image_dataset
+    
+    x_train, y_train = load_image_dataset(csv_file_path="train/label.csv",
+                                          images_path="train")
+    print(x_train.shape)
+    print(y_train.shape)
+    
+    x_test, y_test = load_image_dataset(csv_file_path="test/label.csv",
+                                        images_path="test")
+    print(x_test.shape)
+    print(y_test.shape)
+
+The argument `csv_file_path` is the path to the CSV file containing the image file names and their corresponding labels.
+Here is an example of the csv file.
+
+
+    File Name,Label
+    00000.jpg,5
+    00001.jpg,0
+    00002.jpg,4
+    00003.jpg,1
+    00004.jpg,9
+    00005.jpg,2
+    00006.jpg,1
+    ...
+
+
+The second argument `images_path` is the path to the directory containing all the images with those file names listed in the CSV file.
+The returned values `x_train` and `y_train` are the numpy arrays,
+which can be directly feed into the `fit` function of `ImageClassifier`.
