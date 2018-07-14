@@ -2,7 +2,7 @@ site_name: Auto-Keras
 repo_url: https://github.com/jhfjhfj1/autokeras
 site_url: http://autokeras.com
 edit_uri: https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/docs/
-google_analytics: ['UA-44322747-3', 'mkdocs.org']
+google_analytics: ['UA-44322747-3', 'autokeras.com']
 
 pages:
     - Home: index.md
