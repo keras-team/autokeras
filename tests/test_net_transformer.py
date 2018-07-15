@@ -1,7 +1,6 @@
 from autokeras.generator import DefaultClassifierGenerator
 from autokeras.graph import Graph
 from autokeras.net_transformer import *
-from autokeras.stub import to_stub_model
 from tests.common import get_conv_dense_model, get_pooling_model
 
 
