@@ -23,10 +23,10 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
 
     if weighted:
         new_conv_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
-        new_weights = [np.ones(n_filters, dtype=np.float32),
-                       np.zeros(n_filters, dtype=np.float32),
-                       np.zeros(n_filters, dtype=np.float32),
-                       np.ones(n_filters, dtype=np.float32)]
+        new_weights = [add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1])),
+                       add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
+                       add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
+                       add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1]))]
         bn.set_weights(new_weights)
 
     return [StubActivation('relu'),
@@ -117,10 +117,10 @@ def wider_bn(layer, start_dim, total_dim, n_add, weighted=True):
 
     weights = layer.get_weights()
 
-    new_weights = [np.ones(n_add, dtype=np.float32),
-                   np.zeros(n_add, dtype=np.float32),
-                   np.zeros(n_add, dtype=np.float32),
-                   np.ones(n_add, dtype=np.float32)]
+    new_weights = [add_noise(np.ones(n_add, dtype=np.float32), np.array([0, 1])),
+                   add_noise(np.zeros(n_add, dtype=np.float32), np.array([0, 1])),
+                   add_noise(np.zeros(n_add, dtype=np.float32), np.array([0, 1])),
+                   add_noise(np.ones(n_add, dtype=np.float32), np.array([0, 1]))]
 
     student_w = tuple()
     for weight, new_weight in zip(weights, new_weights):

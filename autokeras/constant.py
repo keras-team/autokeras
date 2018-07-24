@@ -1,5 +1,8 @@
 DEFAULT_SAVE_PATH = '/tmp/autokeras/'
 
+# Data
+
+VALIDATION_SET_RATIO = 0.08333
 
 # Searcher
 
