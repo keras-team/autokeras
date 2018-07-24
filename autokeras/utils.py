@@ -80,11 +80,21 @@ class ModelTrainer:
     def __init__(self, model, x_train, y_train, x_test, y_test, verbose):
         """Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
         self.model = model
-        self.x_train = x_train.astype('float32') / 255
         self.y_train = y_train
-        self.x_test = x_test.astype('float32') / 255
         self.y_test = y_test
+
+        x_train = x_train.astype('float32') / 255.0
+        x_test = x_test.astype('float32') / 255.0
+
+        mean = np.mean(x_train, axis=(0, 1, 2), keepdims=True)
+        std = np.std(x_train, axis=(0, 1, 2), keepdims=True)
+
+        x_train = (x_train - mean) / std
+        x_test = (x_test - mean) / std
+
         self.verbose = verbose
+        self.x_train = x_train
+        self.x_test = x_test
 
     def train_model(self,
                     max_iter_num=constant.MAX_ITER_NUM,
@@ -146,7 +156,8 @@ class ModelTrainer:
                                        patience=5,
                                        min_lr=0.5e-6)
 
-        callbacks = [terminator, lr_scheduler, lr_reducer]
+        # callbacks = [terminator, lr_scheduler, lr_reducer]
+        callbacks = []
         try:
             if augment:
                 flow = datagen.flow(self.x_train, self.y_train, batch_size)

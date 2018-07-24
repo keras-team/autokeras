@@ -26,5 +26,5 @@ if __name__ == '__main__':
                  y_train,
                  x_test,
                  y_test,
-                 True).train_model()
+                 True).train_model(max_no_improvement_num=100, batch_size=128)
     print(keras_model.evaluate(x_test, y_test, True))

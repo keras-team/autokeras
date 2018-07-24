@@ -199,7 +199,9 @@ class ImageClassifier:
             self.searcher = True
 
         # Divide training data into training and testing data.
-        x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.25, random_state=42)
+        x_train, x_test, y_train, y_test = train_test_split(x_train, y_train,
+                                                            test_size=constant.VALIDATION_SET_RATIO,
+                                                            random_state=42)
 
         pickle.dump(self, open(os.path.join(self.path, 'classifier'), 'wb'))
         pickle_to_file(self, os.path.join(self.path, 'classifier'))
