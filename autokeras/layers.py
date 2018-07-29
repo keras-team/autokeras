@@ -190,7 +190,7 @@ def layer_width(layer):
 
 class TorchConcatenate(nn.Module):
     def forward(self, input_list):
-        return torch.cat(input_list)
+        return torch.cat(input_list, dim=1)
 
 
 class TorchAdd(nn.Module):

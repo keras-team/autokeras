@@ -182,6 +182,8 @@ class Graph:
     def _replace_layer(self, layer_id, new_layer):
         """Replace the layer with a new layer."""
         old_layer = self.layer_list[layer_id]
+        new_layer.input = old_layer.input
+        new_layer.output = old_layer.output
         self.layer_list[layer_id] = new_layer
         self.layer_to_id[new_layer] = layer_id
         self.layer_to_id.pop(old_layer)
@@ -444,7 +446,8 @@ class Graph:
         new_node_id = self._add_new_node()
         layer = StubConcatenate()
         new_node_id2 = self._add_new_node()
-        layer2 = StubConv(self.layer_list[end_id].filters, 1, self.layer_list[end_id].func)
+        layer2 = StubConv(self.layer_list[start_id].filters + self.layer_list[end_id].filters,
+                          self.layer_list[end_id].filters, 1)
         if self.weighted:
             filters_end = self.layer_list[end_id].filters
             filters_start = self.layer_list[start_id].filters
@@ -542,13 +545,13 @@ class Graph:
 class TorchModel(torch.nn.Module):
     def __init__(self, graph):
         super(TorchModel, self).__init__()
+        self.graph = graph
         self.layers = []
         for layer in graph.layer_list:
             self.layers.append(to_real_layer(layer))
         if graph.weighted:
             for index, layer in enumerate(self.layers):
                 set_stub_weight_to_torch(self.graph.layer_list[index], layer)
-        self.graph = graph
 
     def forward(self, input_tensor):
         """Build a new Keras model based on the current graph."""
@@ -562,7 +565,7 @@ class TorchModel(torch.nn.Module):
         for v in topo_node_list:
             for u, layer_id in self.graph.reverse_adj_list[v]:
                 layer = self.graph.layer_list[layer_id]
-                torch_layer = self.layer_list[layer_id]
+                torch_layer = self.layers[layer_id]
 
                 if isinstance(layer, (StubAdd, StubConcatenate)):
                     edge_input_tensor = list(map(lambda x: node_list[x],
@@ -575,5 +578,11 @@ class TorchModel(torch.nn.Module):
         return node_list[output_id]
 
     def set_weight_to_graph(self):
+        self.graph.weighted = True
         for index, layer in enumerate(self.layers):
             set_torch_weight_to_stub(layer, self.graph.layer_list[index])
+
+    def eval(self):
+        super().eval()
+        for layer in self.layers:
+            layer.eval()

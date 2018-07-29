@@ -41,7 +41,7 @@ def dense_to_deeper_block(dense_layer, weighted=True):
     new_dense_layer = StubDense(units, units)
     if weighted:
         new_dense_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
-    return [new_dense_layer, StubReLU(), StubDropout(constant.DENSE_DROPOUT_RATE)]
+    return [StubReLU(), new_dense_layer, StubDropout(constant.DENSE_DROPOUT_RATE)]
 
 
 def wider_pre_dense(layer, n_add, weighted=True):
@@ -58,13 +58,15 @@ def wider_pre_dense(layer, n_add, weighted=True):
     # target layer update (i)
     for i in range(n_add):
         teacher_index = rand[i]
-        new_weight = teacher_w[:, teacher_index]
-        new_weight = new_weight[:, np.newaxis]
-        student_w = np.concatenate((student_w, add_noise(new_weight, student_w)), axis=1)
+        new_weight = teacher_w[teacher_index, :]
+        new_weight = new_weight[np.newaxis, :]
+        student_w = np.concatenate((student_w, add_noise(new_weight, student_w)), axis=0)
         student_b = np.append(student_b, add_noise(teacher_b[teacher_index], student_b))
 
     new_pre_layer = StubDense(layer.input_units, n_units2 + n_add)
     new_pre_layer.set_weights((student_w, student_b))
+    print("###")
+    print(student_w.shape)
 
     return new_pre_layer
 
@@ -136,10 +138,11 @@ def wider_next_dense(layer, start_dim, total_dim, n_add, weighted=True):
     student_w = teacher_w.copy()
     n_units_each_channel = int(teacher_w.shape[0] / total_dim)
 
-    new_weight = np.zeros((n_add * n_units_each_channel, teacher_w.shape[1]))
-    student_w = np.concatenate((student_w[:start_dim * n_units_each_channel],
+    new_weight = np.zeros((teacher_w.shape[0], n_add * n_units_each_channel))
+    student_w = np.concatenate((student_w[:, :start_dim * n_units_each_channel],
                                 add_noise(new_weight, student_w),
-                                student_w[start_dim * n_units_each_channel:total_dim * n_units_each_channel]))
+                                student_w[:, start_dim * n_units_each_channel:total_dim * n_units_each_channel]),
+                               axis=1)
 
     new_layer = StubDense(layer.input_units + n_add, layer.units)
     new_layer.set_weights((student_w, teacher_b))
