@@ -1,8 +1,5 @@
-from keras.engine import InputLayer
-from keras.layers import Add, Conv2D, Conv3D, Conv1D, Dense, BatchNormalization, Concatenate, Dropout, Activation, \
-    Flatten, MaxPooling1D, MaxPooling2D, MaxPooling3D, GlobalAveragePooling1D, GlobalAveragePooling2D, \
-    GlobalAveragePooling3D
-from keras.regularizers import l2
+import torch
+from torch import nn
 
 
 class StubLayer:
@@ -11,7 +8,6 @@ class StubLayer:
         self.output = output_node
         self.weights = None
         self.input_shape = None
-        self.output_shape = None
 
     def build(self, shape):
         pass
@@ -19,35 +15,71 @@ class StubLayer:
     def set_weights(self, weights):
         self.weights = weights
 
+    def import_weights(self, torch_layer):
+        pass
+
+    def export_weights(self, torch_layer):
+        pass
+
     def get_weights(self):
         return self.weights
 
+    @property
+    def output_shape(self):
+        return self.input.shape
 
-class StubBatchNormalization(StubLayer):
-    pass
+
+class StubWeightBiasLayer(StubLayer):
+    def import_weights(self, torch_layer):
+        self.set_weights((torch_layer.weight.data.numpy(), torch_layer.bias.data.numpy()))
+
+    def export_weights(self, torch_layer):
+        torch_layer.weight.data = torch.Tensor(self.weights[0])
+        torch_layer.bias.data = torch.Tensor(self.weights[1])
 
 
-class StubDense(StubLayer):
-    def __init__(self, units, activation, input_node=None, output_node=None):
+class StubBatchNormalization(StubWeightBiasLayer):
+    def __init__(self, num_features, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
+        self.num_features = num_features
+
+    def import_weights(self, torch_layer):
+        self.set_weights((torch_layer.weight.data.numpy(),
+                          torch_layer.bias.data.numpy(),
+                          torch_layer.running_mean.numpy(),
+                          torch_layer.running_var.numpy(),
+                          ))
+
+    def export_weights(self, torch_layer):
+        torch_layer.weight.data = torch.Tensor(self.weights[0])
+        torch_layer.bias.data = torch.Tensor(self.weights[1])
+        torch_layer.running_mean = torch.Tensor(self.weights[2])
+        torch_layer.running_var = torch.Tensor(self.weights[3])
+
+
+class StubDense(StubWeightBiasLayer):
+    def __init__(self, input_units, units, input_node=None, output_node=None):
+        super().__init__(input_node, output_node)
+        self.input_units = input_units
         self.units = units
-        self.output_shape = (None, units)
-        self.activation = activation
+
+    @property
+    def output_shape(self):
+        return self.units,
 
 
-class StubConv(StubLayer):
-    def __init__(self, filters, kernel_size, func, input_node=None, output_node=None):
+class StubConv(StubWeightBiasLayer):
+    def __init__(self, input_channel, filters, kernel_size, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
+        self.input_channel = input_channel
         self.filters = filters
-        self.output_shape = (None, filters)
         self.kernel_size = kernel_size
-        self.func = func
-        if func is Conv1D:
-            self.n_dim = 1
-        if func is Conv2D:
-            self.n_dim = 2
-        if func is Conv3D:
-            self.n_dim = 3
+
+    @property
+    def output_shape(self):
+        ret = self.input.shape[:-1]
+        ret = ret + (self.filters,)
+        return ret
 
 
 class StubAggregateLayer(StubLayer):
@@ -58,27 +90,50 @@ class StubAggregateLayer(StubLayer):
 
 
 class StubConcatenate(StubAggregateLayer):
-    pass
+    @property
+    def output_shape(self):
+        ret = 0
+        for current_input in self.input:
+            ret += current_input.shape[-1]
+        ret = self.input[0].shape[:-1] + (ret,)
+        return ret
 
 
 class StubAdd(StubAggregateLayer):
-    pass
+    @property
+    def output_shape(self):
+        return self.input[0].shape
 
 
 class StubFlatten(StubLayer):
+    @property
+    def output_shape(self):
+        ret = 1
+        for dim in self.input.shape:
+            ret *= dim
+        return ret,
+
+
+class StubReLU(StubLayer):
     pass
 
 
-class StubActivation(StubLayer):
-    def __init__(self, activation, input_node=None, output_node=None):
-        super().__init__(input_node, output_node)
-        self.activation = activation
+class StubSoftmax(StubLayer):
+    pass
 
 
 class StubPooling(StubLayer):
-    def __init__(self, func, input_node=None, output_node=None):
+    def __init__(self, kernel_size=2, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
-        self.func = func
+        self.kernel_size = kernel_size
+
+    @property
+    def output_shape(self):
+        ret = tuple()
+        for dim in self.input.shape[:-1]:
+            ret = ret + (int((dim + 1) / self.kernel_size),)
+        ret = ret + (self.input.shape[-1],)
+        return ret
 
 
 class StubGlobalPooling(StubLayer):
@@ -100,27 +155,29 @@ class StubInput(StubLayer):
 
 def is_layer(layer, layer_type):
     if layer_type == 'Input':
-        return isinstance(layer, (InputLayer, StubInput))
+        return isinstance(layer, StubInput)
     if layer_type == 'Conv':
-        return isinstance(layer, StubConv) or is_conv_layer(layer)
+        return isinstance(layer, StubConv)
     if layer_type == 'Dense':
-        return isinstance(layer, (StubDense, Dense))
+        return isinstance(layer, (StubDense,))
     if layer_type == 'BatchNormalization':
-        return isinstance(layer, (StubBatchNormalization, BatchNormalization))
+        return isinstance(layer, (StubBatchNormalization,))
     if layer_type == 'Concatenate':
-        return isinstance(layer, (StubConcatenate, Concatenate))
+        return isinstance(layer, (StubConcatenate,))
     if layer_type == 'Add':
-        return isinstance(layer, (StubAdd, Add))
+        return isinstance(layer, (StubAdd,))
     if layer_type == 'Pooling':
-        return isinstance(layer, StubPooling) or is_pooling_layer(layer)
+        return isinstance(layer, StubPooling)
     if layer_type == 'Dropout':
-        return isinstance(layer, (StubDropout, Dropout))
-    if layer_type == 'Activation':
-        return isinstance(layer, (StubActivation, Activation))
+        return isinstance(layer, (StubDropout,))
+    if layer_type == 'Softmax':
+        return isinstance(layer, (StubSoftmax,))
+    if layer_type == 'ReLU':
+        return isinstance(layer, (StubReLU,))
     if layer_type == 'Flatten':
-        return isinstance(layer, (StubFlatten, Flatten))
+        return isinstance(layer, (StubFlatten,))
     if layer_type == 'GlobalAveragePooling':
-        return isinstance(layer, StubGlobalPooling) or is_global_pooling_layer(layer)
+        return isinstance(layer, StubGlobalPooling)
 
 
 def layer_width(layer):
@@ -131,80 +188,62 @@ def layer_width(layer):
     raise TypeError('The layer should be either Dense or Conv layer.')
 
 
-def is_pooling_layer(layer):
-    return isinstance(layer, (MaxPooling1D, MaxPooling2D, MaxPooling3D))
+class TorchConcatenate(nn.Module):
+    def forward(self, input_list):
+        return torch.cat(input_list)
 
 
-def is_global_pooling_layer(layer):
-    return isinstance(layer, (GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D))
+class TorchAdd(nn.Module):
+    def forward(self, input_list):
+        return input_list[0] + input_list[1]
 
 
-def get_conv_layer_func(n_dim):
-    conv_layer_functions = [Conv1D, Conv2D, Conv3D]
-    if n_dim > 3:
-        raise ValueError('The input dimension is too high.')
-    if n_dim < 1:
-        raise ValueError('The input dimension is too low.')
-    return conv_layer_functions[n_dim - 1]
-
-
-def get_ave_layer_func(n_dim):
-    conv_layer_functions = [GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D]
-    if n_dim > 3:
-        raise ValueError('The input dimension is too high.')
-    if n_dim < 1:
-        raise ValueError('The input dimension is too low.')
-    return conv_layer_functions[n_dim - 1]
-
-
-def is_conv_layer(layer):
-    return isinstance(layer, tuple(CONV_FUNC_LIST))
-
-
-def is_dense_layer(layer):
-    return isinstance(layer, Dense)
+class TorchFlatten(nn.Module):
+    def forward(self, input_tensor):
+        return input_tensor.view(input_tensor.size(0), -1)
 
 
 def to_real_layer(layer):
     if is_layer(layer, 'Dense'):
-        return Dense(layer.units, activation=layer.activation)
+        return torch.nn.Linear(layer.input_units, layer.units)
     if is_layer(layer, 'Conv'):
-        return Conv2D(layer.filters,
-                      kernel_size=layer.kernel_size,
-                      padding='same',
-                      kernel_initializer='he_normal',
-                      kernel_regularizer=l2(1e-4))
+        return torch.nn.Conv2d(layer.input_channel,
+                               layer.filters,
+                               layer.kernel_size,
+                               padding=layer.kernel_size / 2)
     if is_layer(layer, 'Pooling'):
-        return MaxPooling2D(padding='same')
+        return torch.nn.MaxPool2d(2)
     if is_layer(layer, 'BatchNormalization'):
-        return BatchNormalization()
+        return torch.nn.BatchNorm2d(layer.num_features)
     if is_layer(layer, 'Concatenate'):
-        return Concatenate()
+        return TorchConcatenate()
     if is_layer(layer, 'Add'):
-        return Add()
+        return TorchAdd()
     if is_layer(layer, 'Dropout'):
-        return Dropout(layer.rate)
-    if is_layer(layer, 'Activation'):
-        return Activation(layer.activation)
+        return torch.nn.Dropout2d(layer.rate)
+    if is_layer(layer, 'ReLU'):
+        return torch.nn.ReLU()
+    if is_layer(layer, 'Softmax'):
+        return torch.nn.Softmax()
     if is_layer(layer, 'Flatten'):
-        return Flatten()
-    if is_layer(layer, 'GlobalAveragePooling'):
-        return GlobalAveragePooling2D()
+        return TorchFlatten()
 
 
 def to_stub_layer(layer, input_id, output_id):
-    if is_conv_layer(layer):
-        temp_stub_layer = StubConv(layer.filters, layer.kernel_size, layer.__class__, input_id, output_id)
+    if is_layer(layer, 'Conv'):
+        temp_stub_layer = StubConv(layer.input_channels, layer.filters, layer.kernel_size, input_id, output_id)
     elif is_layer(layer, 'Dense'):
-        temp_stub_layer = StubDense(layer.units, layer.activation, input_id, output_id)
+        temp_stub_layer = StubDense(layer.input_units, layer.units, input_id, output_id)
     elif is_layer(layer, 'Add'):
         temp_stub_layer = StubAdd(input_id, output_id)
     elif is_layer(layer, 'Concatenate'):
         temp_stub_layer = StubConcatenate(input_id, output_id)
     elif is_layer(layer, 'BatchNormalization'):
         temp_stub_layer = StubBatchNormalization(input_id, output_id)
-    elif is_layer(layer, 'Activation'):
-        temp_stub_layer = StubActivation(layer.activation, input_id, output_id)
+    elif is_layer(layer, 'Softmax'):
+        temp_stub_layer = StubSoftmax(input_id, output_id)
+    elif is_layer(layer, 'ReLU'):
+        temp_stub_layer = StubReLU(input_id, output_id)
     elif is_layer(layer, 'Input'):
         temp_stub_layer = StubInput(input_id, output_id)
     elif is_layer(layer, 'Flatten'):
@@ -220,5 +259,9 @@ def to_stub_layer(layer, input_id, output_id):
     return temp_stub_layer
 
 
-CONV_FUNC_LIST = [Conv1D, Conv2D, Conv3D, StubConv]
-WEIGHTED_LAYER_FUNC_LIST = CONV_FUNC_LIST + [Dense, StubDense]
+def set_torch_weight_to_stub(torch_layer, stub_layer):
+    stub_layer.import_weights(torch_layer)
+
+
+def set_stub_weight_to_torch(stub_layer, torch_layer):
+    stub_layer.export_weights(torch_layer)

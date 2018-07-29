@@ -1,8 +1,7 @@
 import numpy as np
 
 from autokeras import constant
-from autokeras.layers import StubConv, StubBatchNormalization, StubActivation, StubDropout, StubDense, \
-    StubAdd
+from autokeras.layers import StubConv, StubBatchNormalization, StubDropout, StubDense, StubReLU
 
 NOISE_RATIO = 1e-4
 
@@ -18,8 +17,8 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
         filter_weight[index] = 1
         weight[..., i] = filter_weight
     bias = np.zeros(n_filters)
-    new_conv_layer = StubConv(n_filters, kernel_size=filter_shape, func=conv_layer.func)
-    bn = StubBatchNormalization()
+    new_conv_layer = StubConv(conv_layer.filters, n_filters, kernel_size=kernel_size)
+    bn = StubBatchNormalization(n_filters)
 
     if weighted:
         new_conv_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
@@ -29,7 +28,7 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
                        add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1]))]
         bn.set_weights(new_weights)
 
-    return [StubActivation('relu'),
+    return [StubReLU(),
             new_conv_layer,
             bn,
             StubDropout(constant.CONV_DROPOUT_RATE)]
@@ -39,15 +38,15 @@ def dense_to_deeper_block(dense_layer, weighted=True):
     units = dense_layer.units
     weight = np.eye(units)
     bias = np.zeros(units)
-    new_dense_layer = StubDense(units, dense_layer.activation)
+    new_dense_layer = StubDense(units, units)
     if weighted:
         new_dense_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
-    return [new_dense_layer, StubDropout(constant.DENSE_DROPOUT_RATE)]
+    return [new_dense_layer, StubReLU(), StubDropout(constant.DENSE_DROPOUT_RATE)]
 
 
 def wider_pre_dense(layer, n_add, weighted=True):
     if not weighted:
-        return StubDense(layer.units + n_add, layer.activation)
+        return StubDense(layer.input_units, layer.units + n_add)
 
     n_units2 = layer.units
 
@@ -64,7 +63,7 @@ def wider_pre_dense(layer, n_add, weighted=True):
         student_w = np.concatenate((student_w, add_noise(new_weight, student_w)), axis=1)
         student_b = np.append(student_b, add_noise(teacher_b[teacher_index], student_b))
 
-    new_pre_layer = StubDense(n_units2 + n_add, layer.activation)
+    new_pre_layer = StubDense(layer.input_units, n_units2 + n_add)
     new_pre_layer.set_weights((student_w, student_b))
 
     return new_pre_layer
@@ -72,9 +71,8 @@ def wider_pre_dense(layer, n_add, weighted=True):
 
 def wider_pre_conv(layer, n_add_filters, weighted=True):
     if not weighted:
-        return StubConv(layer.filters + n_add_filters, kernel_size=layer.kernel_size, func=layer.func)
+        return StubConv(layer.input_channel, layer.filters + n_add_filters, kernel_size=layer.kernel_size)
 
-    pre_filter_shape = layer.kernel_size
     n_pre_filters = layer.filters
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
     teacher_w, teacher_b = layer.get_weights()
@@ -83,37 +81,36 @@ def wider_pre_conv(layer, n_add_filters, weighted=True):
     # target layer update (i)
     for i in range(len(rand)):
         teacher_index = rand[i]
-        new_weight = teacher_w[..., teacher_index]
-        new_weight = new_weight[..., np.newaxis]
-        student_w = np.concatenate((student_w, new_weight), axis=-1)
+        new_weight = teacher_w[teacher_index, ...]
+        new_weight = new_weight[np.newaxis, ...]
+        student_w = np.concatenate((student_w, new_weight), axis=0)
         student_b = np.append(student_b, teacher_b[teacher_index])
-    new_pre_layer = StubConv(n_pre_filters + n_add_filters, kernel_size=pre_filter_shape, func=layer.func)
+    new_pre_layer = StubConv(layer.input_channel, n_pre_filters + n_add_filters, layer.kernel_size)
     new_pre_layer.set_weights((add_noise(student_w, teacher_w), add_noise(student_b, teacher_b)))
     return new_pre_layer
 
 
 def wider_next_conv(layer, start_dim, total_dim, n_add, weighted=True):
     if not weighted:
-        return StubConv(layer.filters, kernel_size=layer.kernel_size, func=layer.func)
-    filter_shape = layer.kernel_size
+        return StubConv(layer.input_channel + n_add, layer.filters, kernel_size=layer.kernel_size)
     n_filters = layer.filters
     teacher_w, teacher_b = layer.get_weights()
 
     new_weight_shape = list(teacher_w.shape)
-    new_weight_shape[-2] = n_add
+    new_weight_shape[1] = n_add
     new_weight = np.zeros(tuple(new_weight_shape))
 
-    student_w = np.concatenate((teacher_w[..., :start_dim, :].copy(),
+    student_w = np.concatenate((teacher_w[:, :start_dim, ...].copy(),
                                 add_noise(new_weight, teacher_w),
-                                teacher_w[..., start_dim:total_dim, :].copy()), axis=-2)
-    new_layer = StubConv(n_filters, kernel_size=filter_shape, func=layer.func)
+                                teacher_w[:, start_dim:total_dim, ...].copy()), axis=1)
+    new_layer = StubConv(layer.input_channel + n_add, n_filters, layer.kernel_size)
     new_layer.set_weights((student_w, teacher_b))
     return new_layer
 
 
 def wider_bn(layer, start_dim, total_dim, n_add, weighted=True):
     if not weighted:
-        return StubBatchNormalization()
+        return StubBatchNormalization(layer.num_features + n_add)
 
     weights = layer.get_weights()
 
@@ -127,15 +124,14 @@ def wider_bn(layer, start_dim, total_dim, n_add, weighted=True):
         temp_w = weight.copy()
         temp_w = np.concatenate((temp_w[:start_dim], new_weight, temp_w[start_dim:total_dim]))
         student_w += (temp_w,)
-    new_layer = StubBatchNormalization()
+    new_layer = StubBatchNormalization(layer.num_features + n_add)
     new_layer.set_weights(student_w)
     return new_layer
 
 
 def wider_next_dense(layer, start_dim, total_dim, n_add, weighted=True):
     if not weighted:
-        return StubDense(layer.units, layer.activation)
-    n_units = layer.units
+        return StubDense(layer.input_units + n_add, layer.units)
     teacher_w, teacher_b = layer.get_weights()
     student_w = teacher_w.copy()
     n_units_each_channel = int(teacher_w.shape[0] / total_dim)
@@ -145,18 +141,8 @@ def wider_next_dense(layer, start_dim, total_dim, n_add, weighted=True):
                                 add_noise(new_weight, student_w),
                                 student_w[start_dim * n_units_each_channel:total_dim * n_units_each_channel]))
 
-    new_layer = StubDense(n_units, layer.activation)
+    new_layer = StubDense(layer.input_units + n_add, layer.units)
     new_layer.set_weights((student_w, teacher_b))
-    return new_layer
-
-
-def wider_weighted_add(layer, n_add, weighted=True):
-    if not weighted:
-        return StubAdd()
-
-    n_add += 0
-    new_layer = StubAdd()
-    new_layer.set_weights(layer.get_weights())
     return new_layer
 
 

@@ -2,7 +2,7 @@ from copy import deepcopy
 from random import randint, randrange
 
 from autokeras import constant
-from autokeras.layers import is_conv_layer
+from autokeras.layers import is_layer
 
 
 def to_wider_graph(graph):
@@ -12,7 +12,7 @@ def to_wider_graph(graph):
     else:
         target_id = weighted_layer_ids[randint(0, len(weighted_layer_ids) - 1)]
 
-    if is_conv_layer(graph.layer_list[target_id]):
+    if is_layer(graph.layer_list[target_id], 'Conv'):
         n_add = graph.layer_list[target_id].filters
     else:
         n_add = graph.layer_list[target_id].units
@@ -45,7 +45,7 @@ def to_skip_connection_graph(graph):
 def to_deeper_graph(graph):
     weighted_layer_ids = graph.deep_layer_ids()
     target_id = weighted_layer_ids[randint(0, len(weighted_layer_ids) - 1)]
-    if is_conv_layer(graph.layer_list[target_id]):
+    if is_layer(graph.layer_list[target_id], 'Conv'):
         graph.to_conv_deeper_model(target_id, randint(1, 2) * 2 + 1)
     else:
         graph.to_dense_deeper_model(target_id)
@@ -70,7 +70,7 @@ def transform(graph):
             graphs.append(to_wider_graph(deepcopy(graph)))
         elif a == 2:
             graphs.append(to_skip_connection_graph(deepcopy(graph)))
-    return list(filter(lambda graph: legal_graph(graph), graphs))
+    return list(filter(lambda x: legal_graph(x), graphs))
 
 
 def default_transform(graph):
