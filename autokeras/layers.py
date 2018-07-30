@@ -131,7 +131,7 @@ class StubPooling(StubLayer):
     def output_shape(self):
         ret = tuple()
         for dim in self.input.shape[:-1]:
-            ret = ret + (int((dim + 1) / self.kernel_size),)
+            ret = ret + (int(dim / self.kernel_size),)
         ret = ret + (self.input.shape[-1],)
         return ret
 

@@ -65,8 +65,6 @@ def wider_pre_dense(layer, n_add, weighted=True):
 
     new_pre_layer = StubDense(layer.input_units, n_units2 + n_add)
     new_pre_layer.set_weights((student_w, student_b))
-    print("###")
-    print(student_w.shape)
 
     return new_pre_layer
 

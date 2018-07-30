@@ -397,7 +397,7 @@ class Graph:
             skip_output_id = new_node_id
 
         # Add the conv layer
-        layer2 = StubConv(self.layer_list[end_id].filters, 1, self.layer_list[end_id].func)
+        layer2 = StubConv(self.layer_list[start_id].filters, self.layer_list[end_id].filters, 1)
         new_node_id = self._add_new_node()
         self._add_edge(layer2, skip_output_id, new_node_id)
         skip_output_id = new_node_id
@@ -407,7 +407,7 @@ class Graph:
             filters_end = self.layer_list[end_id].filters
             filters_start = self.layer_list[start_id].filters
             filter_shape = (1,) * (len(self.layer_list[end_id].get_weights()[0].shape) - 2)
-            weights = np.zeros(filter_shape + (filters_start, filters_end))
+            weights = np.zeros((filters_end, filters_start) + filter_shape)
             bias = np.zeros(filters_end)
             layer2.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
 
@@ -452,13 +452,13 @@ class Graph:
             filters_end = self.layer_list[end_id].filters
             filters_start = self.layer_list[start_id].filters
             filter_shape = (1,) * (len(self.layer_list[end_id].get_weights()[0].shape) - 2)
-            weights = np.zeros(filter_shape + (filters_end, filters_end))
+            weights = np.zeros((filters_end, filters_end) + filter_shape)
             for i in range(filters_end):
-                filter_weight = np.zeros(filter_shape + (filters_end,))
-                filter_weight[(0, 0, i)] = 1
-                weights[..., i] = filter_weight
+                filter_weight = np.zeros((filters_end,) + filter_shape)
+                filter_weight[(i, 0, 0)] = 1
+                weights[i, ...] = filter_weight
             weights = np.concatenate((weights,
-                                      np.zeros(filter_shape + (filters_start, filters_end))), axis=2)
+                                      np.zeros((filters_end, filters_start) + filter_shape)), axis=1)
             bias = np.zeros(filters_end)
             layer2.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
 

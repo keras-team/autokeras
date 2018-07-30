@@ -90,10 +90,10 @@ def test_dense_wider_stub():
 
 
 def test_dense_wider():
-    graph = get_conv_dense_model()
+    graph = get_add_skip_model()
     model = graph.produce_model()
     graph = deepcopy(graph)
-    graph.to_wider_model(10, 3)
+    graph.to_wider_model(26, 3)
     new_model = graph.produce_model()
     input_data = torch.Tensor(get_conv_data())
 
@@ -107,8 +107,8 @@ def test_dense_wider():
 
 
 def test_skip_add_over_pooling_stub():
-    model = get_pooling_model()
-    graph = Graph(model, False)
+    graph = get_pooling_model()
+    graph.weighted = False
     layer_num = graph.n_layers
     graph.to_add_skip_model(1, 10)
 
@@ -116,21 +116,25 @@ def test_skip_add_over_pooling_stub():
 
 
 def test_skip_add_over_pooling():
-    model = get_pooling_model()
-    graph = Graph(model, True)
+    graph = get_pooling_model()
+    model = graph.produce_model()
+    graph = deepcopy(graph)
     graph.to_add_skip_model(1, 10)
     new_model = graph.produce_model()
-    input_data = get_conv_data()
+    input_data = torch.Tensor(get_conv_data())
 
-    output1 = model.predict_on_batch(input_data).flatten()
-    output2 = new_model.predict_on_batch(input_data).flatten()
+    model.eval()
+    new_model.eval()
 
-    assert np.sum(np.abs(output1 - output2)) < 1e-4
+    output1 = model(input_data)
+    output2 = new_model(input_data)
+
+    assert (output1 - output2).abs().sum() < 1e-4
 
 
 def test_skip_concat_over_pooling_stub():
-    model = get_pooling_model()
-    graph = Graph(model, False)
+    graph = get_pooling_model()
+    graph.weighted = False
     layer_num = graph.n_layers
     graph.to_concat_skip_model(1, 14)
 
@@ -138,31 +142,32 @@ def test_skip_concat_over_pooling_stub():
 
 
 def test_skip_concat_over_pooling():
-    model = get_pooling_model()
-    graph = Graph(model, True)
+    graph = get_pooling_model()
+    model = graph.produce_model()
+    graph = deepcopy(graph)
     graph.to_concat_skip_model(5, 10)
     graph.to_concat_skip_model(5, 10)
-    graph = Graph(graph.produce_model(), True)
     new_model = graph.produce_model()
-    input_data = get_conv_data()
+    input_data = torch.Tensor(get_conv_data())
 
-    output1 = model.predict_on_batch(input_data).flatten()
-    output2 = new_model.predict_on_batch(input_data).flatten()
+    model.eval()
+    new_model.eval()
 
-    assert np.sum(np.abs(output1 - output2)) < 4e-1
+    output1 = model(input_data)
+    output2 = new_model(input_data)
+
+    assert (output1 - output2).abs().sum() < 1e-4
 
 
 def test_extract_descriptor_add():
-    model = get_add_skip_model()
-    descriptor = Graph(model).extract_descriptor()
-    assert descriptor.n_conv == 4
+    descriptor = get_add_skip_model().extract_descriptor()
+    assert descriptor.n_conv == 5
     assert descriptor.n_dense == 2
     assert descriptor.skip_connections == [(2, 3, NetworkDescriptor.ADD_CONNECT), (3, 4, NetworkDescriptor.ADD_CONNECT)]
 
 
 def test_extract_descriptor_concat():
-    model = get_concat_skip_model()
-    descriptor = Graph(model).extract_descriptor()
+    descriptor = get_concat_skip_model().extract_descriptor()
     assert descriptor.n_conv == 5
     assert descriptor.n_dense == 2
     assert descriptor.skip_connections == [(2, 3, NetworkDescriptor.CONCAT_CONNECT),
