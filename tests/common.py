@@ -1,9 +1,5 @@
 import os
 import numpy as np
-from keras import Input
-from keras.engine import Model
-from keras.layers import Conv2D, BatchNormalization, Activation, Flatten, Dense, MaxPooling2D, Concatenate, Dropout, \
-    GlobalAveragePooling2D, Add
 
 from autokeras import constant
 from autokeras.graph import Graph
