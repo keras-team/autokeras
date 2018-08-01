@@ -229,36 +229,6 @@ def to_real_layer(layer):
         return TorchFlatten()
 
 
-def to_stub_layer(layer, input_id, output_id):
-    if is_layer(layer, 'Conv'):
-        temp_stub_layer = StubConv(layer.input_channels, layer.filters, layer.kernel_size, input_id, output_id)
-    elif is_layer(layer, 'Dense'):
-        temp_stub_layer = StubDense(layer.input_units, layer.units, input_id, output_id)
-    elif is_layer(layer, 'Add'):
-        temp_stub_layer = StubAdd(input_id, output_id)
-    elif is_layer(layer, 'Concatenate'):
-        temp_stub_layer = StubConcatenate(input_id, output_id)
-    elif is_layer(layer, 'BatchNormalization'):
-        temp_stub_layer = StubBatchNormalization(input_id, output_id)
-    elif is_layer(layer, 'Softmax'):
-        temp_stub_layer = StubSoftmax(input_id, output_id)
-    elif is_layer(layer, 'ReLU'):
-        temp_stub_layer = StubReLU(input_id, output_id)
-    elif is_layer(layer, 'Input'):
-        temp_stub_layer = StubInput(input_id, output_id)
-    elif is_layer(layer, 'Flatten'):
-        temp_stub_layer = StubFlatten(input_id, output_id)
-    elif is_layer(layer, 'Dropout'):
-        temp_stub_layer = StubDropout(layer.rate, input_id, output_id)
-    elif is_layer(layer, 'Pooling'):
-        temp_stub_layer = StubPooling(layer.__class__, input_id, output_id)
-    elif is_layer(layer, 'GlobalAveragePooling'):
-        temp_stub_layer = StubGlobalPooling(layer.__class__, input_id, output_id)
-    else:
-        raise TypeError("The layer {} is illegal.".format(layer))
-    return temp_stub_layer
-
-
 def set_torch_weight_to_stub(torch_layer, stub_layer):
     stub_layer.import_weights(torch_layer)
 
