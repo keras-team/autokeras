@@ -3,16 +3,16 @@
 <p><a href="https://travis-ci.org/jhfjhfj1/autokeras"><img alt="Build Status" src="https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master" style="width: 90px"/></a>
 <a href="https://coveralls.io/github/jhfjhfj1/autokeras?branch=master"><img alt="Coverage Status" src="https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg?branch=master" style="width: 99px"/></a></p>
 
-This is a automated machine learning (AutoML) package based on Keras.
-It aims at automatically search for the architecture and hyperparameters for deep learning models.
-The ultimate goal for this project is for domain experts in fields other than computer science or machine learning
-to use deep learning models conveniently.
+Auto-Keras is an automated machine learning (AutoML) package based on Keras.
+It aims at automatically searching for the architecture and hyperparameters for deep learning models.
+The ultimate goal of this project is to enable domain experts in fields other than computer science or machine learning
+accessible to deep learning models conveniently.
 
 To install the package please use the commend as follows:
 
     pip install autokeras
 
-Here is a short example for using the package.
+Here is a short example of using the package.
 
 
     import autokeras as ak
@@ -21,12 +21,12 @@ Here is a short example for using the package.
     clf.fit(x_train, y_train)
     results = clf.predict(x_test)
 
-For the repository on GitHub visit [Auto-Keras on GitHub](https://github.com/jhfjhfj1/autokeras).
+For the repository on GitHub please visit [Auto-Keras on GitHub](https://github.com/jhfjhfj1/autokeras).
 
 If you use Auto-Keras in a scientific publication, we would appreciate references to the following paper:
 
 Efficient Neural Architecture Search with Network Morphism.
-Haifeng Jin, Qingquan Song, Xia Hu.
+Haifeng Jin, Qingquan Song, and Xia Hu.
 [arXiv:1806.10282](https://arxiv.org/abs/1806.10282).
 
 Biblatex entry:
