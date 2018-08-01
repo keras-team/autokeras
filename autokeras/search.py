@@ -152,7 +152,7 @@ class BayesianSearcher:
         if self.verbose:
             print('Initialization finished.')
 
-    def search(self, x_train, y_train, x_test, y_test):
+    def search(self, train_data, test_data):
         if not self.history:
             self.init_search()
 
@@ -161,7 +161,7 @@ class BayesianSearcher:
         if self.verbose:
             print('Training model ', model_id)
         pool = multiprocessing.Pool(1)
-        train_results = pool.map_async(train, [(graph, x_train, y_train, x_test, y_test, self.trainer_args,
+        train_results = pool.map_async(train, [(graph, train_data, test_data, self.trainer_args,
                                                 os.path.join(self.path, str(model_id) + '.png'))])
 
         # Do the search in current thread.
@@ -298,14 +298,13 @@ class Elem:
 
 
 def train(args):
-    graph, x_train, y_train, x_test, y_test, trainer_args, path = args
+    graph, train_data, test_data, trainer_args, path = args
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)
     loss, accuracy = ModelTrainer(model,
-                                  x_train,
-                                  y_train,
-                                  x_test,
-                                  y_test,
+                                  train_data,
+                                  test_data,
                                   False).train_model(**trainer_args)
-    return accuracy, loss, Graph(model, True)
+    model.set_weight_to_graph()
+    return accuracy, loss, model.graph

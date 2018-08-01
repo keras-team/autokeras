@@ -1,149 +1,213 @@
 import os
 import numpy as np
-from keras import Input
-from keras.engine import Model
-from keras.layers import Conv2D, BatchNormalization, Activation, Flatten, Dense, MaxPooling2D, Concatenate, Dropout, \
-    GlobalAveragePooling2D, Add
 
 from autokeras import constant
+from autokeras.graph import Graph
+from autokeras.layers import StubReLU, StubConv, StubBatchNormalization, StubDropout, StubFlatten, StubSoftmax, \
+    StubDense, StubConcatenate, StubAdd, StubPooling
+from autokeras.preprocessor import DataTransformer
 
 
 def get_concat_skip_model():
-    output_tensor = input_tensor = Input(shape=(5, 5, 3))
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    graph = Graph((5, 5, 3), False)
+    output_node_id = 0
 
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
 
-    add_input = output_tensor
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
 
-    output_tensor = Concatenate()([output_tensor, add_input])
-    output_tensor = Conv2D(3, kernel_size=(1, 1), padding='same', activation='linear')(output_tensor)
-    add_input = output_tensor
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    temp_node_id = output_node_id
 
-    output_tensor = Concatenate()([output_tensor, add_input])
-    output_tensor = Conv2D(3, kernel_size=(1, 1), padding='same', activation='linear')(output_tensor)
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
 
-    output_tensor = Flatten()(output_tensor)
-    output_tensor = Dense(5, activation='relu')(output_tensor)
-    output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
-    output_tensor = Dense(5, activation='softmax')(output_tensor)
-    return Model(inputs=input_tensor, outputs=output_tensor)
+    output_node_id = graph.add_layer(StubConcatenate(), [output_node_id, temp_node_id])
+    output_node_id = graph.add_layer(StubConv(6, 3, 1), output_node_id)
+
+    temp_node_id = output_node_id
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
+
+    output_node_id = graph.add_layer(StubConcatenate(), [output_node_id, temp_node_id])
+    output_node_id = graph.add_layer(StubConv(6, 3, 1), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
+
+    output_node_id = graph.add_layer(StubFlatten(), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
+                                     output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.DENSE_DROPOUT_RATE), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubDense(5, 5), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.DENSE_DROPOUT_RATE), output_node_id)
+    graph.add_layer(StubSoftmax(), output_node_id)
+
+    graph.produce_model().set_weight_to_graph()
+
+    return graph
 
 
 def get_add_skip_model():
-    output_tensor = input_tensor = Input(shape=(5, 5, 3))
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    graph = Graph((5, 5, 3), False)
+    output_node_id = 0
 
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
 
-    add_input = output_tensor
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
 
-    output_tensor = Add()([output_tensor, add_input])
-    add_input = output_tensor
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    temp_node_id = output_node_id
 
-    output_tensor = Add()([output_tensor, add_input])
-    output_tensor = Flatten()(output_tensor)
-    output_tensor = Dense(5, activation='relu')(output_tensor)
-    output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
-    output_tensor = Dense(5, activation='softmax')(output_tensor)
-    return Model(inputs=input_tensor, outputs=output_tensor)
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
 
+    temp_node_id = graph.add_layer(StubConv(3, 3, 1), temp_node_id)
+    output_node_id = graph.add_layer(StubAdd(), [output_node_id, temp_node_id])
 
-def get_conv_model():
-    output_tensor = input_tensor = Input(shape=(5, 5, 3))
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
-    output_tensor = GlobalAveragePooling2D()(output_tensor)
-    output_tensor = Dense(5, activation='relu')(output_tensor)
-    output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
-    output_tensor = Dense(5, activation='softmax')(output_tensor)
-    return Model(inputs=input_tensor, outputs=output_tensor)
+    temp_node_id = output_node_id
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
+
+    temp_node_id = graph.add_layer(StubConv(3, 3, 1), temp_node_id)
+    output_node_id = graph.add_layer(StubAdd(), [output_node_id, temp_node_id])
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
+
+    output_node_id = graph.add_layer(StubFlatten(), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
+                                     output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.DENSE_DROPOUT_RATE), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubDense(5, 5), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.DENSE_DROPOUT_RATE), output_node_id)
+    graph.add_layer(StubSoftmax(), output_node_id)
+
+    graph.produce_model().set_weight_to_graph()
+
+    return graph
 
 
 def get_conv_data():
-    return np.random.rand(1, 5, 5, 3)
+    return np.random.rand(1, 3, 5, 5)
 
 
 def get_conv_dense_model():
-    output_tensor = input_tensor = Input(shape=(5, 5, 3))
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
-    output_tensor = GlobalAveragePooling2D()(output_tensor)
-    output_tensor = Dense(5, activation='relu')(output_tensor)
-    output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
-    output_tensor = Dense(5, activation='softmax')(output_tensor)
-    return Model(inputs=input_tensor, outputs=output_tensor)
+    graph = Graph((5, 5, 3), False)
+    output_node_id = 0
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
+
+    output_node_id = graph.add_layer(StubFlatten(), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
+                                     output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.DENSE_DROPOUT_RATE), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubDense(5, 5), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.DENSE_DROPOUT_RATE), output_node_id)
+    graph.add_layer(StubSoftmax(), output_node_id)
+
+    graph.produce_model().set_weight_to_graph()
+
+    return graph
 
 
 def get_pooling_model():
-    output_tensor = input_tensor = Input(shape=(5, 5, 3))
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
 
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    graph = Graph((5, 5, 3), False)
+    output_node_id = 0
 
-    output_tensor = MaxPooling2D(padding='same')(output_tensor)
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
 
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
 
-    output_tensor = Activation('relu')(output_tensor)
-    output_tensor = Conv2D(3, kernel_size=(3, 3), padding='same', activation='linear')(output_tensor)
-    output_tensor = BatchNormalization()(output_tensor)
-    output_tensor = Dropout(constant.CONV_DROPOUT_RATE)(output_tensor)
+    output_node_id = graph.add_layer(StubPooling(2), output_node_id)
 
-    output_tensor = Flatten()(output_tensor)
-    output_tensor = Dense(5, activation='relu')(output_tensor)
-    output_tensor = Dropout(constant.DENSE_DROPOUT_RATE)(output_tensor)
-    output_tensor = Dense(5, activation='softmax')(output_tensor)
-    return Model(inputs=input_tensor, outputs=output_tensor)
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.CONV_DROPOUT_RATE), output_node_id)
+
+    output_node_id = graph.add_layer(StubFlatten(), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
+                                     output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.DENSE_DROPOUT_RATE), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubDense(5, 5), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(constant.DENSE_DROPOUT_RATE), output_node_id)
+    graph.add_layer(StubSoftmax(), output_node_id)
+
+    graph.produce_model().set_weight_to_graph()
+
+    return graph
+
+
+def get_processed_data():
+    x_train = np.random.rand(20, 28, 28, 3)
+    y_train = np.random.rand(20, 3)
+    x_test = np.random.rand(10, 28, 28, 3)
+    y_test = np.random.rand(10, 3)
+    data_transformer = DataTransformer(x_train)
+    train_data = data_transformer.transform_train(x_train, y_train)
+    test_data = data_transformer.transform_train(x_test, y_test)
+    return train_data, test_data
 
 
 def clean_dir(path):

@@ -1,18 +1,15 @@
 from copy import deepcopy
+from itertools import chain
 
 from queue import Queue
 import numpy as np
-
-from keras import Input
-from keras.engine import Model
-from keras.layers import Concatenate, Dropout, Activation, Add
+import torch
 
 from autokeras import constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
     deeper_conv_block, dense_to_deeper_block, add_noise
-from autokeras.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, \
-    to_real_layer
-from autokeras.stub import to_stub_model
+from autokeras.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, to_real_layer, \
+    set_torch_weight_to_stub, set_stub_weight_to_torch
 
 
 class NetworkDescriptor:
@@ -51,6 +48,11 @@ class NetworkDescriptor:
         return {'node_list': self.conv_widths, 'skip_list': skip_list}
 
 
+class Node:
+    def __init__(self, shape):
+        self.shape = shape
+
+
 class Graph:
     """A class represent the neural architecture graph of a Keras model.
 
@@ -79,13 +81,8 @@ class Graph:
             during the network morphism.
     """
 
-    def __init__(self, model, weighted=True):
-        model = to_stub_model(model, weighted)
-        layers = model.layers[1:]
+    def __init__(self, input_shape, weighted=True):
         self.weighted = weighted
-        self.input_shape = model.input_shape
-        if self.input_shape[0] is None:
-            self.input_shape = self.input_shape[1:]
         self.node_list = []
         self.layer_list = []
         # node id start with 0
@@ -98,29 +95,21 @@ class Graph:
         self.operation_history = []
 
         self.vis = None
+        self._add_node(Node(input_shape))
 
-        # Add all nodes
-        for layer in layers:
-            if isinstance(layer.input, list):
-                for temp_input in layer.input:
-                    if temp_input not in self.node_list:
-                        self._add_node(temp_input)
-            else:
-                if layer.input not in self.node_list:
-                    self._add_node(layer.input)
-            self._add_node(layer.output)
+    def add_layer(self, layer, input_node_id):
+        if isinstance(input_node_id, list):
+            layer.input = list(map(lambda x: self.node_list[x], input_node_id))
+            output_node_id = self._add_node(Node(layer.output_shape))
+            for node_id in input_node_id:
+                self._add_edge(layer, node_id, output_node_id)
 
-        # Add all edges
-        for layer in layers:
-            if isinstance(layer.input, list):
-                for temp_input in layer.input:
-                    self._add_edge(layer,
-                                   self.node_to_id[temp_input],
-                                   self.node_to_id[layer.output])
-            else:
-                self._add_edge(layer,
-                               self.node_to_id[layer.input],
-                               self.node_to_id[layer.output])
+        else:
+            layer.input = self.node_list[input_node_id]
+            output_node_id = self._add_node(Node(layer.output_shape))
+            self._add_edge(layer, input_node_id, output_node_id)
+
+        return output_node_id
 
     def clear_operation_history(self):
         self.operation_history = []
@@ -142,6 +131,7 @@ class Graph:
         self.node_list.append(node)
         self.adj_list[node_id] = []
         self.reverse_adj_list[node_id] = []
+        return node_id
 
     def _add_new_node(self):
         node_value = len(self.node_list)
@@ -193,11 +183,14 @@ class Graph:
     def _replace_layer(self, layer_id, new_layer):
         """Replace the layer with a new layer."""
         old_layer = self.layer_list[layer_id]
+        new_layer.input = old_layer.input
+        new_layer.output = old_layer.output
         self.layer_list[layer_id] = new_layer
         self.layer_to_id[new_layer] = layer_id
         self.layer_to_id.pop(old_layer)
 
-    def _topological_order(self):
+    @property
+    def topological_order(self):
         """Return the topological order of the node ids."""
         q = Queue()
         in_degree = {}
@@ -308,7 +301,7 @@ class Graph:
                 return self._upper_layer_width(a) + self._upper_layer_width(b)
             else:
                 return self._upper_layer_width(v)
-        return self.input_shape[-1]
+        return self.node_list[0][-1]
 
     def to_conv_deeper_model(self, target_id, kernel_size):
         """Insert a relu-conv-bn block after the target block.
@@ -405,7 +398,7 @@ class Graph:
             skip_output_id = new_node_id
 
         # Add the conv layer
-        layer2 = StubConv(self.layer_list[end_id].filters, 1, self.layer_list[end_id].func)
+        layer2 = StubConv(self.layer_list[start_id].filters, self.layer_list[end_id].filters, 1)
         new_node_id = self._add_new_node()
         self._add_edge(layer2, skip_output_id, new_node_id)
         skip_output_id = new_node_id
@@ -415,7 +408,7 @@ class Graph:
             filters_end = self.layer_list[end_id].filters
             filters_start = self.layer_list[start_id].filters
             filter_shape = (1,) * (len(self.layer_list[end_id].get_weights()[0].shape) - 2)
-            weights = np.zeros(filter_shape + (filters_start, filters_end))
+            weights = np.zeros((filters_end, filters_start) + filter_shape)
             bias = np.zeros(filters_end)
             layer2.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
 
@@ -454,18 +447,19 @@ class Graph:
         new_node_id = self._add_new_node()
         layer = StubConcatenate()
         new_node_id2 = self._add_new_node()
-        layer2 = StubConv(self.layer_list[end_id].filters, 1, self.layer_list[end_id].func)
+        layer2 = StubConv(self.layer_list[start_id].filters + self.layer_list[end_id].filters,
+                          self.layer_list[end_id].filters, 1)
         if self.weighted:
             filters_end = self.layer_list[end_id].filters
             filters_start = self.layer_list[start_id].filters
             filter_shape = (1,) * (len(self.layer_list[end_id].get_weights()[0].shape) - 2)
-            weights = np.zeros(filter_shape + (filters_end, filters_end))
+            weights = np.zeros((filters_end, filters_end) + filter_shape)
             for i in range(filters_end):
-                filter_weight = np.zeros(filter_shape + (filters_end,))
-                filter_weight[(0, 0, i)] = 1
-                weights[..., i] = filter_weight
+                filter_weight = np.zeros((filters_end,) + filter_shape)
+                filter_weight[(i, 0, 0)] = 1
+                weights[i, ...] = filter_weight
             weights = np.concatenate((weights,
-                                      np.zeros(filter_shape + (filters_start, filters_end))), axis=2)
+                                      np.zeros((filters_end, filters_start) + filter_shape)), axis=1)
             bias = np.zeros(filters_end)
             layer2.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
 
@@ -482,7 +476,7 @@ class Graph:
 
     def extract_descriptor(self):
         ret = NetworkDescriptor()
-        topological_node_list = self._topological_order()
+        topological_node_list = self.topological_order
         for u in topological_node_list:
             for v, layer_id in self.adj_list[u]:
                 layer = self.layer_list[layer_id]
@@ -518,46 +512,11 @@ class Graph:
 
     def produce_model(self):
         """Build a new Keras model based on the current graph."""
-        input_tensor = Input(shape=self.input_shape)
-        topo_node_list = self._topological_order()
-        output_id = topo_node_list[-1]
-        input_id = topo_node_list[0]
-
-        new_to_old_layer = {}
-
-        node_list = deepcopy(self.node_list)
-        node_list[input_id] = input_tensor
-
-        node_to_id = deepcopy(self.node_to_id)
-        node_to_id[input_tensor] = input_id
-
-        for v in topo_node_list:
-            for u, layer_id in self.reverse_adj_list[v]:
-                layer = self.layer_list[layer_id]
-
-                if isinstance(layer, (StubAdd, StubConcatenate)):
-                    edge_input_tensor = list(map(lambda x: node_list[x],
-                                                 self.layer_id_to_input_node_ids[layer_id]))
-                else:
-                    edge_input_tensor = node_list[u]
-
-                new_layer = to_real_layer(layer)
-                new_to_old_layer[new_layer] = layer
-
-                temp_tensor = new_layer(edge_input_tensor)
-                node_list[v] = temp_tensor
-                node_to_id[temp_tensor] = v
-        model = Model(input_tensor, node_list[output_id])
-        for layer in model.layers[1:]:
-            if not isinstance(layer, (Activation, Dropout, Concatenate, Add)):
-                old_layer = new_to_old_layer[layer]
-                if self.weighted:
-                    layer.set_weights(old_layer.get_weights())
-        return model
+        return TorchModel(self)
 
     def _layer_ids_in_order(self, layer_ids):
         node_id_to_order_index = {}
-        for index, node_id in enumerate(self._topological_order()):
+        for index, node_id in enumerate(self.topological_order):
             node_id_to_order_index[node_id] = index
         return sorted(layer_ids,
                       key=lambda layer_id:
@@ -568,7 +527,7 @@ class Graph:
 
     def _conv_layer_ids_in_order(self):
         return self._layer_ids_in_order(
-            list(filter(lambda layer_id: self.layer_list[layer_id].kernel_size not in [1, (1,), (1, 1), (1, 1, 1)],
+            list(filter(lambda layer_id: self.layer_list[layer_id].kernel_size != 1,
                         self._layer_ids_by_type('Conv'))))
 
     def _dense_layer_ids_in_order(self):
@@ -582,3 +541,60 @@ class Graph:
 
     def skip_connection_layer_ids(self):
         return self._conv_layer_ids_in_order()[:-1]
+
+
+class TorchModel(torch.nn.Module):
+    def __init__(self, graph):
+        super(TorchModel, self).__init__()
+        self.graph = graph
+        self.layers = []
+        for layer in graph.layer_list:
+            self.layers.append(to_real_layer(layer))
+        if graph.weighted:
+            for index, layer in enumerate(self.layers):
+                set_stub_weight_to_torch(self.graph.layer_list[index], layer)
+
+    def forward(self, input_tensor):
+        """Build a new Keras model based on the current graph."""
+        topo_node_list = self.graph.topological_order
+        output_id = topo_node_list[-1]
+        input_id = topo_node_list[0]
+
+        node_list = deepcopy(self.graph.node_list)
+        node_list[input_id] = input_tensor
+
+        for v in topo_node_list:
+            for u, layer_id in self.graph.reverse_adj_list[v]:
+                layer = self.graph.layer_list[layer_id]
+                torch_layer = self.layers[layer_id]
+
+                if isinstance(layer, (StubAdd, StubConcatenate)):
+                    edge_input_tensor = list(map(lambda x: node_list[x],
+                                                 self.graph.layer_id_to_input_node_ids[layer_id]))
+                else:
+                    edge_input_tensor = node_list[u]
+
+                temp_tensor = torch_layer(edge_input_tensor)
+                node_list[v] = temp_tensor
+        return node_list[output_id]
+
+    def set_weight_to_graph(self):
+        self.graph.weighted = True
+        for index, layer in enumerate(self.layers):
+            set_torch_weight_to_stub(layer, self.graph.layer_list[index])
+
+    def eval(self):
+        super().eval()
+        for layer in self.layers:
+            layer.eval()
+
+    def train(self, mode=True):
+        super().train()
+        for layer in self.layers:
+            layer.train()
+
+    def parameters(self):
+        parameters = []
+        for layer in self.layers:
+            parameters += list(layer.parameters())
+        return parameters

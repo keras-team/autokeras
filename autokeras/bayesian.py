@@ -21,7 +21,7 @@ def layers_distance(list_a, list_b):
     for i in range(len_a):
         for j in range(len_b):
             f[i][j] = min(f[i][j - 1] + 1, f[i - 1][j] + 1, f[i - 1][j - 1] + layer_distance(list_a[i], list_b[j]))
-    return f[len_a][len_b]
+    return f[len_a - 1][len_b - 1]
 
 
 def skip_connection_distance(a, b):

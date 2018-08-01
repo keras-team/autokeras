@@ -2,7 +2,6 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
-from keras.models import load_model
 
 from autokeras.classifier import *
 from autokeras import constant
@@ -36,29 +35,6 @@ def test_x_float_exception():
 
 def simple_transform(graph):
     return [deepcopy(graph), deepcopy(graph)]
-
-
-@patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_export(_, _1):
-    constant.MAX_ITER_NUM = 1
-    constant.MAX_MODEL_NUM = 4
-    constant.SEARCH_MAX_ITER = 1
-    constant.DATA_AUGMENTATION = False
-    path = 'tests/resources/temp'
-    clean_dir(path)
-    clf = ImageClassifier(path=path, verbose=False)
-    train_x = np.random.rand(100, 25, 25, 1)
-    train_y = np.random.randint(0, 5, 100)
-    clf.fit(train_x, train_y)
-    # results = clf.predict(train_x)
-    # assert all(map(lambda result: result in train_y, results))
-    clf.export_keras_model(os.path.join(path, 'model'))
-    load_model(os.path.join(path, 'model'))
-    clf.export_keras_model(os.path.join(path, 'model1'), 1)
-    load_model(os.path.join(path, 'model1'))
-    clean_dir(path)
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
