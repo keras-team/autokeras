@@ -3,6 +3,8 @@ python:
   - "3.6"
 before_install:
   - sudo apt-get install graphviz
+install:
+  - pip install -r requirements.txt --quiet
 script:
   - pytest tests --cov=autokeras
 after_success:
