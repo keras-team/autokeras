@@ -2,17 +2,19 @@ import os
 import pickle
 import csv
 import time
-import tensorflow as tf
+from functools import reduce
+
+import torch
 
 import scipy.ndimage as ndimage
 
 import numpy as np
-from keras import backend
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader
 
 from autokeras import constant
-from autokeras.preprocessor import OneHotEncoder
+from autokeras.preprocessor import OneHotEncoder, DataTransformer
 from autokeras.search import BayesianSearcher, train
 from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file
 
@@ -31,16 +33,12 @@ def _validate(x_train, y_train):
         raise ValueError('x_train and y_train should have the same number of instances.')
 
 
-def run_searcher_once(x_train, y_train, x_test, y_test, path):
+def run_searcher_once(train_data, test_data, path):
     if constant.LIMIT_MEMORY:
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        sess = tf.Session(config=config)
-        init = tf.global_variables_initializer()
-        sess.run(init)
-        backend.set_session(sess)
+        # TODO: limit pytorch memory.
+        pass
     searcher = pickle_from_file(os.path.join(path, 'searcher'))
-    searcher.search(x_train, y_train, x_test, y_test)
+    searcher.search(train_data, test_data)
 
 
 def read_csv_file(csv_file_path):
@@ -150,6 +148,7 @@ class ImageClassifier:
             self.path = path
         else:
             self.y_encoder = None
+            self.data_transformer = None
             self.verbose = verbose
             self.searcher = False
             self.path = path
@@ -186,6 +185,10 @@ class ImageClassifier:
 
         y_train = self.y_encoder.transform(y_train)
 
+        # Transform x_train
+        if self.data_transformer is None:
+            self.data_transformer = DataTransformer(x_train)
+
         # Create the searcher and save on disk
         if not self.searcher:
             input_shape = x_train.shape[1:]
@@ -203,6 +206,8 @@ class ImageClassifier:
                                                             test_size=constant.VALIDATION_SET_RATIO,
                                                             random_state=42)
 
+        train_data = self.data_transformer.transform_train(x_train, y_train)
+        test_data = self.data_transformer.transform_test(x_test, y_test)
         pickle.dump(self, open(os.path.join(self.path, 'classifier'), 'wb'))
         pickle_to_file(self, os.path.join(self.path, 'classifier'))
 
@@ -211,7 +216,7 @@ class ImageClassifier:
 
         start_time = time.time()
         while time.time() - start_time <= time_limit:
-            run_searcher_once(x_train, y_train, x_test, y_test, self.path)
+            run_searcher_once(train_data, test_data, self.path)
             if len(self.load_searcher().history) >= constant.MAX_MODEL_NUM:
                 break
 
@@ -225,20 +230,19 @@ class ImageClassifier:
             An numpy.ndarray containing the results.
         """
         if constant.LIMIT_MEMORY:
-            config = tf.ConfigProto()
-            config.gpu_options.allow_growth = True
-            sess = tf.Session(config=config)
-            init = tf.global_variables_initializer()
-            sess.run(init)
-            backend.set_session(sess)
-        x_test = x_test.astype('float32') / 255
+            # TODO: limit pytorch memory.
+            pass
+        test_data = self.data_transformer.transform_test(x_test)
+        test_loader = DataLoader(test_data, batch_size=constant.MAX_BATCH_SIZE, shuffle=True)
         model = self.load_searcher().load_best_model().produce_model()
-        return self.y_encoder.inverse_transform(model.predict(x_test, ))
+        model.eval()
 
-    def summary(self):
-        """Print the summary of the best model."""
-        model = self.load_searcher().load_best_model()
-        model.summary()
+        outputs = []
+        with torch.no_grad():
+            for index, inputs in enumerate(test_loader):
+                outputs.append(model(inputs).numpy())
+        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
+        return self.y_encoder.inverse_transform(output)
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and test_y."""
@@ -264,25 +268,19 @@ class ImageClassifier:
         """
         if trainer_args is None:
             trainer_args = {}
+
         y_train = self.y_encoder.transform(y_train)
         y_test = self.y_encoder.transform(y_test)
+
+        train_data = self.data_transformer.transform_train(x_train, y_train)
+        test_data = self.data_transformer.transform_test(x_test, y_test)
+
         searcher = self.load_searcher()
         graph = searcher.load_best_model()
+
         if retrain:
             graph.weighted = False
-        _, _1, graph = train((graph, x_train, y_train, x_test, y_test, trainer_args, None))
-
-    def export_keras_model(self, path, model_id=None):
-        """Export the searched model as a Keras saved model.
-
-        Args:
-            path: A string. The path to the file to save.
-            model_id: A integer. If not provided, the function will export the best model.
-        """
-        if model_id is None:
-            model_id = self.get_best_model_id()
-        graph = self.load_searcher().load_model_by_id(model_id)
-        graph.produce_model().save(path)
+        _, _1, graph = train((graph, train_data, test_data, trainer_args, None))
 
     def get_best_model_id(self):
         """

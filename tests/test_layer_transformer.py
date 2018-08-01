@@ -35,11 +35,11 @@ def test_wider_bn():
 
 
 def test_wider_next_dense():
-    real_layer = get_conv_dense_model().layers[6]
-    layer = StubDense(real_layer.units, 'relu')
+    real_layer = get_conv_dense_model().layer_list[10]
+    layer = StubDense(real_layer.input_units, real_layer.units)
     layer.set_weights(real_layer.get_weights())
     new_layer = wider_next_dense(layer, 3, 3, 3)
-    assert new_layer.get_weights()[0].shape == (6, 5)
+    assert new_layer.get_weights()[0].shape == (5, 6)
 
 
 def test_wider_conv():

@@ -9,6 +9,7 @@ from autokeras import constant
 from autokeras.graph import Graph
 from autokeras.layers import StubReLU, StubConv, StubBatchNormalization, StubDropout, StubFlatten, StubSoftmax, \
     StubDense, StubConcatenate, StubAdd, StubPooling
+from autokeras.preprocessor import DataTransformer
 
 
 def get_concat_skip_model():
@@ -200,6 +201,17 @@ def get_pooling_model():
     graph.produce_model().set_weight_to_graph()
 
     return graph
+
+
+def get_processed_data():
+    x_train = np.random.rand(20, 28, 28, 3)
+    y_train = np.random.rand(20, 3)
+    x_test = np.random.rand(10, 28, 28, 3)
+    y_test = np.random.rand(10, 3)
+    data_transformer = DataTransformer(x_train)
+    train_data = data_transformer.transform_train(x_train, y_train)
+    test_data = data_transformer.transform_train(x_test, y_test)
+    return train_data, test_data
 
 
 def clean_dir(path):

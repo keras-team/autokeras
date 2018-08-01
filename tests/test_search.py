@@ -2,9 +2,8 @@ from copy import deepcopy
 from unittest.mock import patch
 
 from autokeras.search import *
-import numpy as np
 
-from tests.common import clean_dir, MockProcess
+from tests.common import clean_dir, MockProcess, get_conv_dense_model, get_processed_data
 
 default_test_path = 'tests/resources/temp'
 
@@ -22,17 +21,13 @@ def mock_train(**_):
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_bayesian_searcher(_, _1):
-    x_train = np.random.rand(2, 28, 28, 1)
-    y_train = np.random.rand(2, 3)
-    x_test = np.random.rand(1, 28, 28, 1)
-    y_test = np.random.rand(1, 3)
-
+    train_data, test_data = get_processed_data()
     clean_dir(default_test_path)
-    generator = BayesianSearcher(3, (28, 28, 1), verbose=False, path=default_test_path)
+    generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path)
     constant.N_NEIGHBOURS = 1
     constant.T_MIN = 0.8
     for _ in range(2):
-        generator.search(x_train, y_train, x_test, y_test)
+        generator.search(train_data, test_data)
     clean_dir(default_test_path)
     assert len(generator.history) == 2
 
@@ -49,17 +44,14 @@ def test_search_tree():
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_export_json(_, _1):
-    x_train = np.random.rand(2, 28, 28, 1)
-    y_train = np.random.rand(2, 3)
-    x_test = np.random.rand(1, 28, 28, 1)
-    y_test = np.random.rand(1, 3)
+    train_data, test_data = get_processed_data()
 
     clean_dir(default_test_path)
-    generator = BayesianSearcher(3, (28, 28, 1), verbose=False, path=default_test_path)
+    generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path)
     constant.N_NEIGHBOURS = 1
     constant.T_MIN = 0.8
     for _ in range(3):
-        generator.search(x_train, y_train, x_test, y_test)
+        generator.search(train_data, test_data)
     file_path = os.path.join(default_test_path, 'test.json')
     generator.export_json(file_path)
     import json

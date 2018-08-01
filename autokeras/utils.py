@@ -1,11 +1,8 @@
 import os
 import pickle
-import numpy as np
+import torch
 
-from keras.callbacks import Callback, LearningRateScheduler, ReduceLROnPlateau
-from keras.losses import categorical_crossentropy
-from keras.optimizers import Adam
-from keras.preprocessing.image import ImageDataGenerator
+from torch.utils.data import DataLoader
 
 from autokeras import constant
 
@@ -28,7 +25,7 @@ class NoImprovementError(Exception):
         self.message = message
 
 
-class EarlyStop(Callback):
+class EarlyStop:
     def __init__(self, max_no_improvement_num=constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=constant.MIN_LOSS_DEC):
         super().__init__()
         self.training_losses = []
@@ -45,13 +42,10 @@ class EarlyStop(Callback):
         self._done = False
         self.minimum_loss = float('inf')
 
-    def on_epoch_end(self, batch, logs=None):
-        # self.max_accuracy = max(self.max_accuracy, logs.get('val_acc'))
-        self.max_accuracy = logs.get('val_acc')
-        loss = logs.get('val_loss')
+    def on_epoch_end(self, loss):
         self.training_losses.append(loss)
         if self._done and loss > (self.minimum_loss - self._min_loss_dec):
-            raise NoImprovementError('No improvement for {} epochs.'.format(self._max_no_improvement_num))
+            return False
 
         if loss > (self.minimum_loss - self._min_loss_dec):
             self._no_improvement_count += 1
@@ -61,6 +55,8 @@ class EarlyStop(Callback):
 
         if self._no_improvement_count > self._max_no_improvement_num:
             self._done = True
+
+        return True
 
 
 class ModelTrainer:
@@ -77,31 +73,21 @@ class ModelTrainer:
         verbose: verbosity mode
     """
 
-    def __init__(self, model, x_train, y_train, x_test, y_test, verbose):
+    def __init__(self, model, train_data, test_data, verbose):
         """Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
         self.model = model
-        self.y_train = y_train
-        self.y_test = y_test
-
-        x_train = x_train.astype('float32') / 255.0
-        x_test = x_test.astype('float32') / 255.0
-
-        mean = np.mean(x_train, axis=(0, 1, 2), keepdims=True)
-        std = np.std(x_train, axis=(0, 1, 2), keepdims=True)
-
-        x_train = (x_train - mean) / std
-        x_test = (x_test - mean) / std
-
         self.verbose = verbose
-        self.x_train = x_train
-        self.x_test = x_test
+        self.train_data = train_data
+        self.test_data = test_data
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.criterion = torch.nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.SGD(model.parameters(), lr=lr_schedule(0), momentum=0.9, weight_decay=5e-4)
+        self.early_stop = None
 
     def train_model(self,
                     max_iter_num=constant.MAX_ITER_NUM,
                     max_no_improvement_num=constant.MAX_NO_IMPROVEMENT_NUM,
-                    batch_size=constant.MAX_BATCH_SIZE,
-                    optimizer=None,
-                    augment=constant.DATA_AUGMENTATION):
+                    batch_size=constant.MAX_BATCH_SIZE):
         """Train the model.
 
         Args:
@@ -111,74 +97,58 @@ class ModelTrainer:
                 The training will stop when this number is reached.
             batch_size: An integer. The batch size during the training.
             optimizer: An optimizer class.
-            augment: A boolean of whether the data will be augmented.
         """
-        if augment:
-            datagen = ImageDataGenerator(
-                # set input mean to 0 over the dataset
-                featurewise_center=False,
-                # set each sample mean to 0
-                samplewise_center=False,
-                # divide inputs by std of dataset
-                featurewise_std_normalization=False,
-                # divide each input by its std
-                samplewise_std_normalization=False,
-                # apply ZCA whitening
-                zca_whitening=False,
-                # randomly rotate images in the range (deg 0 to 180)
-                rotation_range=0,
-                # randomly shift images horizontally
-                width_shift_range=0.1,
-                # randomly shift images vertically
-                height_shift_range=0.1,
-                # randomly flip images
-                horizontal_flip=True,
-                # randomly flip images
-                vertical_flip=False)
-            datagen.fit(self.x_train)
-        else:
-            datagen = None
-        if optimizer is None:
-            self.model.compile(loss=categorical_crossentropy,
-                               optimizer=Adam(lr=lr_schedule(0)),
-                               metrics=['accuracy'])
-        else:
-            self.model.compile(loss=categorical_crossentropy,
-                               optimizer=optimizer(),
-                               metrics=['accuracy'])
+        batch_size = min(len(self.train_data), batch_size)
 
-        batch_size = min(self.x_train.shape[0], batch_size)
-        terminator = EarlyStop(max_no_improvement_num=max_no_improvement_num)
-        lr_scheduler = LearningRateScheduler(lr_schedule)
+        train_loader = DataLoader(self.train_data, batch_size=batch_size, shuffle=True)
+        test_loader = DataLoader(self.test_data, batch_size=batch_size, shuffle=True)
 
-        lr_reducer = ReduceLROnPlateau(factor=np.sqrt(0.1),
-                                       cooldown=0,
-                                       patience=5,
-                                       min_lr=0.5e-6)
+        self.early_stop = EarlyStop(max_no_improvement_num)
+        self.early_stop.on_train_begin()
 
-        # callbacks = [terminator, lr_scheduler, lr_reducer]
-        callbacks = []
-        try:
-            if augment:
-                flow = datagen.flow(self.x_train, self.y_train, batch_size)
-                self.model.fit_generator(flow,
-                                         epochs=max_iter_num,
-                                         validation_data=(self.x_test, self.y_test),
-                                         callbacks=callbacks,
-                                         verbose=self.verbose)
-            else:
-                self.model.fit(self.x_train, self.y_train,
-                               batch_size=batch_size,
-                               epochs=max_iter_num,
-                               validation_data=(self.x_test, self.y_test),
-                               callbacks=callbacks,
-                               verbose=self.verbose)
-        except NoImprovementError as e:
-            if self.verbose:
-                print('Training finished!')
-                print(e.message)
-            return terminator.minimum_loss, terminator.max_accuracy
-        return terminator.minimum_loss, terminator.max_accuracy
+        for epoch in range(max_iter_num):
+            self._train(train_loader)
+            test_loss = self._test(test_loader)
+            terminate = self.early_stop.on_epoch_end(test_loss)
+            if terminate:
+                break
+
+    def _train(self, loader):
+        self.model.train()
+        train_loss = 0
+        correct = 0
+        total = 0
+        for batch_idx, (inputs, targets) in enumerate(loader):
+            targets = targets.argmax(1)
+            inputs, targets = inputs.to(self.device), targets.to(self.device)
+            self.optimizer.zero_grad()
+            outputs = self.model(inputs)
+            loss = self.criterion(outputs, targets)
+            loss.backward()
+            self.optimizer.step()
+
+            train_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
+    def _test(self, test_loader):
+        self.model.eval()
+        test_loss = 0
+        correct = 0
+        total = 0
+        with torch.no_grad():
+            for batch_idx, (inputs, targets) in enumerate(test_loader):
+                targets = targets.argmax(1)
+                inputs, targets = inputs.to(self.device), targets.to(self.device)
+                outputs = self.model(inputs)
+                loss = self.criterion(outputs, targets)
+
+                test_loss += loss.item()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
+        return test_loss
 
 
 def ensure_dir(directory):

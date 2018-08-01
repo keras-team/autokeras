@@ -79,7 +79,7 @@ def default_transform(graph):
     graph.to_conv_deeper_model(1, 3)
     graph.to_conv_deeper_model(6, 3)
     graph.to_conv_deeper_model(11, 3)
-    graph.to_add_skip_model(1, 18)
-    graph.to_add_skip_model(18, 26)
-    graph.to_add_skip_model(26, 30)
+    graph.to_add_skip_model(1, 19)
+    graph.to_add_skip_model(19, 27)
+    graph.to_add_skip_model(27, 31)
     return [graph]

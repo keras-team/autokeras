@@ -1,4 +1,5 @@
 from copy import deepcopy
+from itertools import chain
 
 from queue import Queue
 import numpy as np
@@ -526,7 +527,7 @@ class Graph:
 
     def _conv_layer_ids_in_order(self):
         return self._layer_ids_in_order(
-            list(filter(lambda layer_id: self.layer_list[layer_id].kernel_size not in [1, (1,), (1, 1), (1, 1, 1)],
+            list(filter(lambda layer_id: self.layer_list[layer_id].kernel_size != 1,
                         self._layer_ids_by_type('Conv'))))
 
     def _dense_layer_ids_in_order(self):
@@ -586,3 +587,14 @@ class TorchModel(torch.nn.Module):
         super().eval()
         for layer in self.layers:
             layer.eval()
+
+    def train(self, mode=True):
+        super().train()
+        for layer in self.layers:
+            layer.train()
+
+    def parameters(self):
+        parameters = []
+        for layer in self.layers:
+            parameters += list(layer.parameters())
+        return parameters
