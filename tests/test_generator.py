@@ -1,5 +1,3 @@
-import numpy as np
-
 from autokeras.generator import *
 from autokeras.graph import TorchModel
 

@@ -1,6 +1,5 @@
 from autokeras.generator import DefaultClassifierGenerator
 from autokeras.utils import *
-import numpy as np
 
 from tests.common import get_processed_data
 

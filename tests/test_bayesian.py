@@ -1,5 +1,4 @@
 from autokeras.bayesian import *
-from autokeras.graph import Graph
 from tests.common import get_add_skip_model, get_concat_skip_model, get_conv_dense_model
 
 

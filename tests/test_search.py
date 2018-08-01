@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from autokeras.search import *
 
-from tests.common import clean_dir, MockProcess, get_conv_dense_model, get_processed_data
+from tests.common import clean_dir, MockProcess, get_processed_data
 
 default_test_path = 'tests/resources/temp'
 

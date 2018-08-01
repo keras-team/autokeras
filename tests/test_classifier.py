@@ -2,7 +2,6 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
-from keras.models import load_model
 
 from autokeras.classifier import *
 from autokeras import constant
