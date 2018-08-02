@@ -1,7 +1,7 @@
 from copy import deepcopy
 from random import randint, randrange
 
-from autokeras import constant
+from autokeras.constant import Constant
 from autokeras.layers import is_layer
 
 
@@ -62,7 +62,7 @@ def legal_graph(graph):
 
 def transform(graph):
     graphs = []
-    for i in range(constant.N_NEIGHBOURS):
+    for i in range(Constant.N_NEIGHBOURS):
         a = randrange(3)
         if a == 0:
             graphs.append(to_deeper_graph(deepcopy(graph)))

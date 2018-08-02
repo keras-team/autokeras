@@ -24,8 +24,8 @@ def test_bayesian_searcher(_, _1):
     train_data, test_data = get_processed_data()
     clean_dir(default_test_path)
     generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path)
-    constant.N_NEIGHBOURS = 1
-    constant.T_MIN = 0.8
+    Constant.N_NEIGHBOURS = 1
+    Constant.T_MIN = 0.8
     for _ in range(2):
         generator.search(train_data, test_data)
     clean_dir(default_test_path)
@@ -48,8 +48,8 @@ def test_export_json(_, _1):
 
     clean_dir(default_test_path)
     generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path)
-    constant.N_NEIGHBOURS = 1
-    constant.T_MIN = 0.8
+    Constant.N_NEIGHBOURS = 1
+    Constant.T_MIN = 0.8
     for _ in range(3):
         generator.search(train_data, test_data)
     file_path = os.path.join(default_test_path, 'test.json')

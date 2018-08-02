@@ -9,10 +9,9 @@ import math
 
 # from keras.utils import plot_model
 
-from autokeras import constant
+from autokeras.constant import Constant
 from autokeras.bayesian import IncrementalGaussianProcess
 from autokeras.generator import DefaultClassifierGenerator
-from autokeras.graph import Graph
 from autokeras.net_transformer import transform, default_transform
 from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
 
@@ -49,11 +48,11 @@ class BayesianSearcher:
 
     def __init__(self, n_classes, input_shape, path, verbose,
                  trainer_args=None,
-                 default_model_len=constant.MODEL_LEN,
-                 default_model_width=constant.MODEL_WIDTH,
-                 beta=constant.BETA,
-                 kernel_lambda=constant.KERNEL_LAMBDA,
-                 t_min=constant.T_MIN):
+                 default_model_len=Constant.MODEL_LEN,
+                 default_model_width=Constant.MODEL_WIDTH,
+                 beta=Constant.BETA,
+                 kernel_lambda=Constant.KERNEL_LAMBDA,
+                 t_min=Constant.T_MIN):
         """
 
         Args:
@@ -81,7 +80,7 @@ class BayesianSearcher:
         self.default_model_len = default_model_len
         self.default_model_width = default_model_width
         if 'max_iter_num' not in self.trainer_args:
-            self.trainer_args['max_iter_num'] = constant.SEARCH_MAX_ITER
+            self.trainer_args['max_iter_num'] = Constant.SEARCH_MAX_ITER
 
         self.gpr = IncrementalGaussianProcess(kernel_lambda)
         self.search_tree = SearchTree()

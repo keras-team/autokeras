@@ -1,11 +1,10 @@
 from copy import deepcopy
-from itertools import chain
 
 from queue import Queue
 import numpy as np
 import torch
 
-from autokeras import constant
+from autokeras.constant import Constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
     deeper_conv_block, dense_to_deeper_block, add_noise
 from autokeras.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, to_real_layer, \
@@ -361,7 +360,7 @@ class Graph:
         return ret
 
     def _dense_block_end_node(self, layer_id):
-        return self._block_end_node(layer_id, constant.DENSE_BLOCK_DISTANCE)
+        return self._block_end_node(layer_id, Constant.DENSE_BLOCK_DISTANCE)
 
     def _conv_block_end_node(self, layer_id):
         """Get the input node ID of the last layer in the block by layer ID.
@@ -373,7 +372,7 @@ class Graph:
             The input node ID of the last layer in the convolutional block.
 
         """
-        return self._block_end_node(layer_id, constant.CONV_BLOCK_DISTANCE)
+        return self._block_end_node(layer_id, Constant.CONV_BLOCK_DISTANCE)
 
     def to_add_skip_model(self, start_id, end_id):
         """Add a weighted add skip connection from after start node to end node.

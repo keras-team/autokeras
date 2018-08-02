@@ -4,7 +4,7 @@ import numpy as np
 from torch.utils.data import Dataset
 from torchvision.transforms import ToPILImage, RandomCrop, RandomHorizontalFlip, ToTensor, Normalize, Compose
 
-from autokeras import constant
+from autokeras.constant import Constant
 
 
 class OneHotEncoder:
@@ -52,7 +52,7 @@ class OneHotEncoder:
 
 
 class DataTransformer:
-    def __init__(self, data, augment=constant.DATA_AUGMENTATION):
+    def __init__(self, data, augment=Constant.DATA_AUGMENTATION):
         self.mean = np.mean(data, axis=(0, 1, 2), keepdims=True).flatten()
         self.std = np.std(data, axis=(0, 1, 2), keepdims=True).flatten()
         self.augment = augment

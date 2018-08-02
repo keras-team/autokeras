@@ -6,7 +6,7 @@ from tests.common import get_conv_dense_model
 def test_deeper_conv_block():
     graph = DefaultClassifierGenerator(10, (28, 28, 3)).generate()
     layers = deeper_conv_block(graph.layer_list[1], 3)
-    assert len(layers) == constant.CONV_BLOCK_DISTANCE + 1
+    assert len(layers) == Constant.CONV_BLOCK_DISTANCE + 1
 
 
 def test_dense_to_deeper_layer():

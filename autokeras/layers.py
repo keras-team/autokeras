@@ -131,7 +131,7 @@ class StubPooling(StubLayer):
     def output_shape(self):
         ret = tuple()
         for dim in self.input.shape[:-1]:
-            ret = ret + (int(dim / self.kernel_size),)
+            ret = ret + (max(int(dim / self.kernel_size), 1),)
         ret = ret + (self.input.shape[-1],)
         return ret
 
@@ -224,7 +224,7 @@ def to_real_layer(layer):
     if is_layer(layer, 'ReLU'):
         return torch.nn.ReLU()
     if is_layer(layer, 'Softmax'):
-        return torch.nn.Softmax()
+        return torch.nn.Softmax(dim=1)
     if is_layer(layer, 'Flatten'):
         return TorchFlatten()
 

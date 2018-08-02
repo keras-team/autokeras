@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from autokeras.classifier import *
-from autokeras import constant
+from autokeras.constant import Constant
 from tests.common import clean_dir, MockProcess
 
 
@@ -41,10 +41,10 @@ def simple_transform(graph):
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_predict(_, _1):
-    constant.MAX_ITER_NUM = 1
-    constant.MAX_MODEL_NUM = 4
-    constant.SEARCH_MAX_ITER = 1
-    constant.DATA_AUGMENTATION = False
+    Constant.MAX_ITER_NUM = 1
+    Constant.MAX_MODEL_NUM = 4
+    Constant.SEARCH_MAX_ITER = 1
+    Constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
@@ -60,10 +60,10 @@ def test_fit_predict(_, _1):
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_timout(_, _1):
-    constant.MAX_ITER_NUM = 1
-    constant.MAX_MODEL_NUM = 4
-    constant.SEARCH_MAX_ITER = 1
-    constant.DATA_AUGMENTATION = False
+    Constant.MAX_ITER_NUM = 1
+    Constant.MAX_MODEL_NUM = 4
+    Constant.SEARCH_MAX_ITER = 1
+    Constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
@@ -77,15 +77,15 @@ def test_timout(_, _1):
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_final_fit(_, _1):
-    constant.LIMIT_MEMORY = True
+    Constant.LIMIT_MEMORY = True
     path = 'tests/resources/temp'
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False)
-    constant.MAX_ITER_NUM = 1
-    constant.MAX_MODEL_NUM = 1
-    constant.SEARCH_MAX_ITER = 1
-    constant.N_NEIGHBOURS = 1
-    constant.T_MIN = 0.8
+    Constant.MAX_ITER_NUM = 1
+    Constant.MAX_MODEL_NUM = 1
+    Constant.SEARCH_MAX_ITER = 1
+    Constant.N_NEIGHBOURS = 1
+    Constant.T_MIN = 0.8
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
@@ -101,9 +101,9 @@ def test_final_fit(_, _1):
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_save_continue(_, _1):
-    constant.MAX_ITER_NUM = 1
-    constant.MAX_MODEL_NUM = 1
-    constant.SEARCH_MAX_ITER = 1
+    Constant.MAX_ITER_NUM = 1
+    Constant.MAX_MODEL_NUM = 1
+    Constant.SEARCH_MAX_ITER = 1
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
@@ -114,14 +114,14 @@ def test_save_continue(_, _1):
     clf.fit(train_x, train_y)
     assert len(clf.load_searcher().history) == 1
 
-    constant.MAX_MODEL_NUM = 2
+    Constant.MAX_MODEL_NUM = 2
     clf = ImageClassifier(verbose=False, path=path, resume=True)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
     assert len(clf.load_searcher().history) == 2
 
-    constant.MAX_MODEL_NUM = 1
+    Constant.MAX_MODEL_NUM = 1
     clf = ImageClassifier(verbose=False, path=path, resume=False)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
@@ -134,9 +134,9 @@ def test_save_continue(_, _1):
 @patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_csv_file(_, _1):
-    constant.MAX_ITER_NUM = 1
-    constant.MAX_MODEL_NUM = 1
-    constant.SEARCH_MAX_ITER = 1
+    Constant.MAX_ITER_NUM = 1
+    Constant.MAX_MODEL_NUM = 1
+    Constant.SEARCH_MAX_ITER = 1
     path = 'tests/resources'
     clf = ImageClassifier(verbose=False, path=os.path.join(path, "temp"), resume=False)
     x_train, y_train = load_image_dataset(csv_file_path=os.path.join(path, "images_test/images_name.csv"),

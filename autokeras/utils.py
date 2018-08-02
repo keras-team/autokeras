@@ -4,7 +4,7 @@ import torch
 
 from torch.utils.data import DataLoader
 
-from autokeras import constant
+from autokeras.constant import Constant
 
 
 def lr_schedule(epoch):
@@ -26,7 +26,7 @@ class NoImprovementError(Exception):
 
 
 class EarlyStop:
-    def __init__(self, max_no_improvement_num=constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=constant.MIN_LOSS_DEC):
+    def __init__(self, max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=Constant.MIN_LOSS_DEC):
         super().__init__()
         self.training_losses = []
         self.minimum_loss = None
@@ -36,7 +36,7 @@ class EarlyStop:
         self._min_loss_dec = min_loss_dec
         self.max_accuracy = 0
 
-    def on_train_begin(self, logs=None):
+    def on_train_begin(self):
         self.training_losses = []
         self._no_improvement_count = 0
         self._done = False
@@ -85,9 +85,9 @@ class ModelTrainer:
         self.early_stop = None
 
     def train_model(self,
-                    max_iter_num=constant.MAX_ITER_NUM,
-                    max_no_improvement_num=constant.MAX_NO_IMPROVEMENT_NUM,
-                    batch_size=constant.MAX_BATCH_SIZE):
+                    max_iter_num=None,
+                    max_no_improvement_num=None,
+                    batch_size=None):
         """Train the model.
 
         Args:
@@ -98,6 +98,15 @@ class ModelTrainer:
             batch_size: An integer. The batch size during the training.
             optimizer: An optimizer class.
         """
+        print(max_iter_num)
+        if max_iter_num is None:
+            max_iter_num = Constant.MAX_ITER_NUM
+
+        if max_no_improvement_num is None:
+            max_no_improvement_num = Constant.MAX_NO_IMPROVEMENT_NUM
+
+        if batch_size is None:
+            batch_size = Constant.MAX_BATCH_SIZE
         batch_size = min(len(self.train_data), batch_size)
 
         train_loader = DataLoader(self.train_data, batch_size=batch_size, shuffle=True)
@@ -106,12 +115,15 @@ class ModelTrainer:
         self.early_stop = EarlyStop(max_no_improvement_num)
         self.early_stop.on_train_begin()
 
+        test_loss = 0
+        accuracy = 0
         for epoch in range(max_iter_num):
             self._train(train_loader)
-            test_loss = self._test(test_loader)
+            test_loss, accuracy = self._test(test_loader)
             terminate = self.early_stop.on_epoch_end(test_loss)
             if terminate:
                 break
+        return test_loss, accuracy
 
     def _train(self, loader):
         self.model.train()
@@ -148,7 +160,7 @@ class ModelTrainer:
                 _, predicted = outputs.max(1)
                 total += targets.size(0)
                 correct += predicted.eq(targets).sum().item()
-        return test_loss
+        return test_loss, correct * 1.0 / total
 
 
 def ensure_dir(directory):

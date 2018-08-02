@@ -1,7 +1,9 @@
+import torch
+
 from autokeras.generator import DefaultClassifierGenerator
 from autokeras.graph import Graph
 from autokeras.net_transformer import *
-from tests.common import get_conv_dense_model, get_pooling_model
+from tests.common import get_conv_dense_model, get_pooling_model, get_conv_data
 
 
 def test_wider():
@@ -26,7 +28,7 @@ def test_skip():
 
 def test_transform():
     models = transform(get_pooling_model())
-    assert len(models) == constant.N_NEIGHBOURS
+    assert len(models) == Constant.N_NEIGHBOURS
 
 
 def test_legal_graph():
@@ -46,10 +48,8 @@ def test_legal_graph2():
 
 
 def test_default_transform():
-    graphs = default_transform(DefaultClassifierGenerator(10, (28, 28, 1)).generate())
-    # print()
-    # for index, layer in enumerate(graphs[0].layer_list):
-    #     print(index, layer)
-    graphs[0].produce_model()
+    graphs = default_transform(DefaultClassifierGenerator(10, (32, 32, 3)).generate())
+    model = graphs[0].produce_model()
+    model(torch.Tensor(get_conv_data()))
     assert len(graphs) == 1
     assert len(graphs[0].layer_list) == 42

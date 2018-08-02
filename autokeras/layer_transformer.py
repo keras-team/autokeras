@@ -1,6 +1,6 @@
 import numpy as np
 
-from autokeras import constant
+from autokeras.constant import Constant
 from autokeras.layers import StubConv, StubBatchNormalization, StubDropout, StubDense, StubReLU
 
 NOISE_RATIO = 1e-4
@@ -9,13 +9,13 @@ NOISE_RATIO = 1e-4
 def deeper_conv_block(conv_layer, kernel_size, weighted=True):
     filter_shape = (kernel_size,) * 2
     n_filters = conv_layer.filters
-    weight = np.zeros(filter_shape + (n_filters, n_filters))
+    weight = np.zeros((n_filters, n_filters) + filter_shape)
     center = tuple(map(lambda x: int((x - 1) / 2), filter_shape))
     for i in range(n_filters):
-        filter_weight = np.zeros(filter_shape + (n_filters,))
-        index = center + (i,)
+        filter_weight = np.zeros((n_filters,) + filter_shape)
+        index = (i,) + center
         filter_weight[index] = 1
-        weight[..., i] = filter_weight
+        weight[i, ...] = filter_weight
     bias = np.zeros(n_filters)
     new_conv_layer = StubConv(conv_layer.filters, n_filters, kernel_size=kernel_size)
     bn = StubBatchNormalization(n_filters)
@@ -31,7 +31,7 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
     return [StubReLU(),
             new_conv_layer,
             bn,
-            StubDropout(constant.CONV_DROPOUT_RATE)]
+            StubDropout(Constant.CONV_DROPOUT_RATE)]
 
 
 def dense_to_deeper_block(dense_layer, weighted=True):
@@ -41,7 +41,7 @@ def dense_to_deeper_block(dense_layer, weighted=True):
     new_dense_layer = StubDense(units, units)
     if weighted:
         new_dense_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
-    return [StubReLU(), new_dense_layer, StubDropout(constant.DENSE_DROPOUT_RATE)]
+    return [StubReLU(), new_dense_layer, StubDropout(Constant.DENSE_DROPOUT_RATE)]
 
 
 def wider_pre_dense(layer, n_add, weighted=True):
@@ -76,6 +76,11 @@ def wider_pre_conv(layer, n_add_filters, weighted=True):
     n_pre_filters = layer.filters
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
     teacher_w, teacher_b = layer.get_weights()
+
+    # print(n_pre_filters)
+    # print(teacher_w.shape)
+    # print(rand)
+
     student_w = teacher_w.copy()
     student_b = teacher_b.copy()
     # target layer update (i)

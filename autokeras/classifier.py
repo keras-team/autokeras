@@ -13,7 +13,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
-from autokeras import constant
+from autokeras.constant import Constant
 from autokeras.preprocessor import OneHotEncoder, DataTransformer
 from autokeras.search import BayesianSearcher, train
 from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file
@@ -34,7 +34,7 @@ def _validate(x_train, y_train):
 
 
 def run_searcher_once(train_data, test_data, path):
-    if constant.LIMIT_MEMORY:
+    if Constant.LIMIT_MEMORY:
         # TODO: limit pytorch memory.
         pass
     searcher = pickle_from_file(os.path.join(path, 'searcher'))
@@ -125,7 +125,7 @@ class ImageClassifier:
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
     """
 
-    def __init__(self, verbose=False, path=constant.DEFAULT_SAVE_PATH, resume=False,
+    def __init__(self, verbose=False, path=Constant.DEFAULT_SAVE_PATH, resume=False,
                  searcher_args=None):
         """Initialize the instance.
 
@@ -203,7 +203,7 @@ class ImageClassifier:
 
         # Divide training data into training and testing data.
         x_train, x_test, y_train, y_test = train_test_split(x_train, y_train,
-                                                            test_size=constant.VALIDATION_SET_RATIO,
+                                                            test_size=Constant.VALIDATION_SET_RATIO,
                                                             random_state=42)
 
         train_data = self.data_transformer.transform_train(x_train, y_train)
@@ -217,7 +217,7 @@ class ImageClassifier:
         start_time = time.time()
         while time.time() - start_time <= time_limit:
             run_searcher_once(train_data, test_data, self.path)
-            if len(self.load_searcher().history) >= constant.MAX_MODEL_NUM:
+            if len(self.load_searcher().history) >= Constant.MAX_MODEL_NUM:
                 break
 
     def predict(self, x_test):
@@ -229,11 +229,11 @@ class ImageClassifier:
         Returns:
             An numpy.ndarray containing the results.
         """
-        if constant.LIMIT_MEMORY:
+        if Constant.LIMIT_MEMORY:
             # TODO: limit pytorch memory.
             pass
         test_data = self.data_transformer.transform_test(x_test)
-        test_loader = DataLoader(test_data, batch_size=constant.MAX_BATCH_SIZE, shuffle=True)
+        test_loader = DataLoader(test_data, batch_size=Constant.MAX_BATCH_SIZE, shuffle=True)
         model = self.load_searcher().load_best_model().produce_model()
         model.eval()
 
