@@ -35,7 +35,7 @@ Here we show an example of image classification on the MNIST dataset, is a famou
         
 In the example above the images and the labels are already formatted into numpy arrays.
 What if your data are images files (*e.g.* .jpg, .png, .bmp)?
-You can use our `load_image_dataset` function to load the images and there labels as follows.
+You can use our `load_image_dataset` function to load the images and their labels as follows.
 
     from autokeras.classifier import load_image_dataset
     
