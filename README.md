@@ -19,7 +19,7 @@ Here is a short example of using the package.
     clf.fit(x_train, y_train)
     results = clf.predict(x_test)
 
-For the documentation, please visit the [Auto-Keras](https://autokeras.com/) official website.
+For the documentation, please visit the [Auto-Keras](http://autokeras.com/) official website.
 
 If you use Auto-Keras in a scientific publication, we would appreciate references to the following paper:
 
