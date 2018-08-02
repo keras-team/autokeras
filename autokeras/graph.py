@@ -108,6 +108,7 @@ class Graph:
             output_node_id = self._add_node(Node(layer.output_shape))
             self._add_edge(layer, input_node_id, output_node_id)
 
+        layer.output = self.node_list[output_node_id]
         return output_node_id
 
     def clear_operation_history(self):
@@ -131,11 +132,6 @@ class Graph:
         self.adj_list[node_id] = []
         self.reverse_adj_list[node_id] = []
         return node_id
-
-    def _add_new_node(self):
-        node_value = len(self.node_list)
-        self._add_node(node_value)
-        return self.node_to_id[node_value]
 
     def _add_edge(self, layer, input_id, output_id):
         """Add edge to the graph."""
@@ -184,6 +180,7 @@ class Graph:
         old_layer = self.layer_list[layer_id]
         new_layer.input = old_layer.input
         new_layer.output = old_layer.output
+        new_layer.output.shape = new_layer.output_shape
         self.layer_list[layer_id] = new_layer
         self.layer_to_id[new_layer] = layer_id
         self.layer_to_id.pop(old_layer)
@@ -329,6 +326,9 @@ class Graph:
         dim = layer_width(pre_layer)
         self.vis = {}
         self._search(output_id, dim, dim, n_add)
+        for u in self.topological_order:
+            for v, layer_id in self.adj_list[u]:
+                self.node_list[v].shape = self.layer_list[layer_id].output_shape
 
     def to_dense_deeper_model(self, target_id):
         """Insert a dense layer after the target layer.
@@ -344,14 +344,15 @@ class Graph:
         self._insert_new_layers(new_layers, output_id)
 
     def _insert_new_layers(self, new_layers, output_id):
-        node_ids = []
-        n_new_layers = len(new_layers)
-        for i in range(n_new_layers):
-            node_ids.append(self._add_new_node())
-        for i in range(n_new_layers - 1):
-            self._add_edge(new_layers[i], node_ids[i], node_ids[i + 1])
-        self._add_edge(new_layers[n_new_layers - 1], node_ids[n_new_layers - 1], self.adj_list[output_id][0][0])
-        self._redirect_edge(output_id, self.adj_list[output_id][0][0], node_ids[0])
+        new_node_id = self._add_node(deepcopy(self.node_list[self.adj_list[output_id][0][0]]))
+        temp_output_id = new_node_id
+        for layer in new_layers[:-1]:
+            temp_output_id = self.add_layer(layer, temp_output_id)
+
+        self._add_edge(new_layers[-1], temp_output_id, self.adj_list[output_id][0][0])
+        new_layers[-1].input = self.node_list[temp_output_id]
+        new_layers[-1].output = self.node_list[self.adj_list[output_id][0][0]]
+        self._redirect_edge(output_id, self.adj_list[output_id][0][0], new_node_id)
 
     def _block_end_node(self, layer_id, block_size):
         ret = self.layer_id_to_output_node_ids[layer_id][0]
@@ -391,16 +392,23 @@ class Graph:
         layer_list = self._get_pooling_layers(conv_block_input_id, dropout_input_id)
         skip_output_id = conv_block_input_id
         for index, layer_id in enumerate(layer_list):
-            layer = self.layer_list[layer_id]
-            new_node_id = self._add_new_node()
-            self._add_edge(deepcopy(layer), skip_output_id, new_node_id)
-            skip_output_id = new_node_id
+            skip_output_id = self.add_layer(deepcopy(self.layer_list[layer_id]), skip_output_id)
 
         # Add the conv layer
-        layer2 = StubConv(self.layer_list[start_id].filters, self.layer_list[end_id].filters, 1)
-        new_node_id = self._add_new_node()
-        self._add_edge(layer2, skip_output_id, new_node_id)
-        skip_output_id = new_node_id
+        new_conv_layer = StubConv(self.layer_list[start_id].filters, self.layer_list[end_id].filters, 1)
+        skip_output_id = self.add_layer(new_conv_layer, skip_output_id)
+
+        # Add the add layer.
+        dropout_output_id = self.adj_list[dropout_input_id][0][0]
+        add_input_node_id = self._add_node(deepcopy(self.node_list[dropout_output_id]))
+        add_layer = StubAdd()
+
+        self._redirect_edge(dropout_input_id, dropout_output_id, add_input_node_id)
+        self._add_edge(add_layer, add_input_node_id, dropout_output_id)
+        self._add_edge(add_layer, skip_output_id, dropout_output_id)
+        add_layer.input = [self.node_list[add_input_node_id], self.node_list[skip_output_id]]
+        add_layer.output = self.node_list[dropout_output_id]
+        self.node_list[dropout_output_id].shape = add_layer.output_shape
 
         # Set weights to the additional conv layer.
         if self.weighted:
@@ -409,16 +417,7 @@ class Graph:
             filter_shape = (1,) * (len(self.layer_list[end_id].get_weights()[0].shape) - 2)
             weights = np.zeros((filters_end, filters_start) + filter_shape)
             bias = np.zeros(filters_end)
-            layer2.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
-
-        # Add the add layer.
-        new_node_id = self._add_new_node()
-        layer = StubAdd()
-
-        dropout_output_id = self.adj_list[dropout_input_id][0][0]
-        self._redirect_edge(dropout_input_id, dropout_output_id, new_node_id)
-        self._add_edge(layer, new_node_id, dropout_output_id)
-        self._add_edge(layer, skip_output_id, dropout_output_id)
+            new_conv_layer.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
 
     def to_concat_skip_model(self, start_id, end_id):
         """Add a weighted add concatenate connection from after start node to end node.
@@ -437,17 +436,29 @@ class Graph:
         pooling_layer_list = self._get_pooling_layers(conv_block_input_id, dropout_input_id)
         skip_output_id = conv_block_input_id
         for index, layer_id in enumerate(pooling_layer_list):
-            layer = self.layer_list[layer_id]
-            new_node_id = self._add_new_node()
-            self._add_edge(deepcopy(layer), skip_output_id, new_node_id)
-            skip_output_id = new_node_id
+            skip_output_id = self.add_layer(deepcopy(self.layer_list[layer_id]), skip_output_id)
 
         # Add the concatenate layer.
-        new_node_id = self._add_new_node()
-        layer = StubConcatenate()
-        new_node_id2 = self._add_new_node()
-        layer2 = StubConv(self.layer_list[start_id].filters + self.layer_list[end_id].filters,
-                          self.layer_list[end_id].filters, 1)
+        new_conv_layer = StubConv(self.layer_list[start_id].filters + self.layer_list[end_id].filters,
+                                  self.layer_list[end_id].filters, 1)
+
+        dropout_output_id = self.adj_list[dropout_input_id][0][0]
+        concat_input_node_id = self._add_node(deepcopy(self.node_list[dropout_output_id]))
+        self._redirect_edge(dropout_input_id, dropout_output_id, concat_input_node_id)
+
+        concat_layer = StubConcatenate()
+        concat_layer.input = [self.node_list[concat_input_node_id], self.node_list[skip_output_id]]
+        concat_output_node_id = self._add_node(Node(concat_layer.output_shape))
+        self._add_edge(concat_layer, concat_input_node_id, concat_output_node_id)
+        self._add_edge(concat_layer, skip_output_id, concat_output_node_id)
+        concat_layer.output = self.node_list[concat_output_node_id]
+        self.node_list[concat_output_node_id].shape = concat_layer.output_shape
+
+        self._add_edge(new_conv_layer, concat_output_node_id, dropout_output_id)
+        new_conv_layer.input = self.node_list[concat_output_node_id]
+        new_conv_layer.output = self.node_list[dropout_output_id]
+        self.node_list[dropout_output_id].shape = new_conv_layer.output_shape
+
         if self.weighted:
             filters_end = self.layer_list[end_id].filters
             filters_start = self.layer_list[start_id].filters
@@ -460,18 +471,7 @@ class Graph:
             weights = np.concatenate((weights,
                                       np.zeros((filters_end, filters_start) + filter_shape)), axis=1)
             bias = np.zeros(filters_end)
-            layer2.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
-
-        dropout_output_id = self.adj_list[dropout_input_id][0][0]
-        self._redirect_edge(dropout_input_id, dropout_output_id, new_node_id)
-        self._add_edge(layer, new_node_id, new_node_id2)
-        self._add_edge(layer, skip_output_id, new_node_id2)
-        self._add_edge(layer2, new_node_id2, dropout_output_id)
-
-        # # Widen the related layers.
-        # dim = layer_width(end)
-        # n_add = self._upper_layer_width(conv_block_input_id)
-        # self._search(dropout_output_id, dim, dim, n_add)
+            new_conv_layer.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
 
     def extract_descriptor(self):
         ret = NetworkDescriptor()

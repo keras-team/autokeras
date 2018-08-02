@@ -197,3 +197,35 @@ def test_long_transform():
         getattr(graph, args[0])(*list(args[1:]))
         graph.produce_model()
     assert legal_graph(graph)
+
+
+def test_node_consistency():
+    graph = DefaultClassifierGenerator(10, (32, 32, 3)).generate()
+    assert graph.layer_list[6].output.shape == (16, 16, 64)
+
+    for layer in graph.layer_list:
+        assert layer.output.shape == layer.output_shape
+
+    graph.to_wider_model(6, 64)
+    assert graph.layer_list[6].output.shape == (16, 16, 128)
+
+    for layer in graph.layer_list:
+        assert layer.output.shape == layer.output_shape
+
+    graph.to_conv_deeper_model(6, 3)
+    assert graph.layer_list[19].output.shape == (16, 16, 128)
+
+    for layer in graph.layer_list:
+        assert layer.output.shape == layer.output_shape
+
+    graph.to_add_skip_model(6, 19)
+    assert graph.layer_list[23].output.shape == (16, 16, 128)
+
+    for layer in graph.layer_list:
+        assert layer.output.shape == layer.output_shape
+
+    graph.to_concat_skip_model(6, 19)
+    assert graph.layer_list[25].output.shape == (16, 16, 128)
+
+    for layer in graph.layer_list:
+        assert layer.output.shape == layer.output_shape

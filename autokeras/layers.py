@@ -7,7 +7,6 @@ class StubLayer:
         self.input = input_node
         self.output = output_node
         self.weights = None
-        self.input_shape = None
 
     def build(self, shape):
         pass
