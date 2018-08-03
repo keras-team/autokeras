@@ -185,33 +185,57 @@
             <div class="section">
               
                 <h2 id="graph">Graph</h2>
-<p>A class represent the neural architecture graph of a Keras model.
-Graph extracts the neural architecture graph from a Keras model. Each node in the graph is a intermediate tensor between layers. Each layer is an edge in the graph.  Notably, multiple edges may refer to the same layer. (e.g. Add layer is adding two tensor into one tensor. So it is related to two edges.)</p>
-<h4 id="attributes">Attributes</h4>
+<p>A class represents the neural architecture graph of a Keras model.
+Graph extracts the neural architecture graph from a Keras model. Each node in the graph is a intermediate tensor between layers. Each layer is an edge in the graph.  Notably, multiple edges may refer to the same layer. (<em>e.g.</em> Add layer is adding two tensor into one tensor. So it is related to two edges.)</p>
+<h5 id="attributes">Attributes</h5>
+<ul>
+<li>
 <p><strong>weighted</strong>: A boolean of whether the weights and biases in the neural network
     should be included in the graph.</p>
-<p><strong>input_shape</strong>: Tuple of integers, does not include the batch axis.</p>
-<p><strong>node_list</strong>: A list of integers, the indices of the list are the identifiers.</p>
-<p><strong>layer_list</strong>: A list of stub layers, the indices of the list are the identifiers.</p>
+</li>
+<li>
+<p><strong>input_shape</strong>: Tuple of integers, which does not include the batch axis.</p>
+</li>
+<li>
+<p><strong>node_list</strong>: A list of integers. The indices of the list are the identifiers.</p>
+</li>
+<li>
+<p><strong>layer_list</strong>: A list of stub layers. The indices of the list are the identifiers.</p>
+</li>
+<li>
 <p><strong>node_to_id</strong>: A dict instance mapping from node integers to their identifiers.</p>
+</li>
+<li>
 <p><strong>layer_to_id</strong>: A dict instance mapping from stub layers to their identifiers.</p>
+</li>
+<li>
 <p><strong>layer_id_to_input_node_ids</strong>: A dict instance mapping from layer identifiers
     to their input nodes identifiers.</p>
+</li>
+<li>
 <p><strong>adj_list</strong>: A two dimensional list. The adjacency list of the graph. The first dimension is
     identified by tensor identifiers. In each edge list, the elements are two-element tuples
     of (tensor identifier, layer identifier).</p>
+</li>
+<li>
 <p><strong>reverse_adj_list</strong>: A reverse adjacent list in the same format as adj_list.</p>
+</li>
+<li>
 <p><strong>operation_history</strong>: A list saving all the network morphism operations.</p>
-<p><strong>vis</strong>: A dictionary of temporary storage for whether an local operation has been done
+</li>
+<li>
+<p><strong>vis</strong>: A dictionary of temporary storage for whether a local operation has been done
     during the network morphism.</p>
+</li>
+</ul>
 <h3 id="n_nodes">n_nodes</h3>
 <p>Return the number of nodes in the model.</p>
 <h3 id="n_layers">n_layers</h3>
 <p>Return the number of layers in the model.</p>
 <h3 id="_add_node">_add_node</h3>
-<p>Add node to node list if it not in node list.</p>
+<p>Add a node to node list if it not in node list.</p>
 <h3 id="_add_edge">_add_edge</h3>
-<p>Add edge to the graph.</p>
+<p>Add an edge to the graph.</p>
 <h3 id="_redirect_edge">_redirect_edge</h3>
 <p>Redirect the edge to a new node. Change the edge originally from u_id to v_id into an edge from u_id to new_v_id while keeping all other property of the edge the same.</p>
 <h3 id="_replace_layer">_replace_layer</h3>
@@ -220,41 +244,79 @@ Graph extracts the neural architecture graph from a Keras model. Each node in th
 <p>Return the topological order of the node ids.</p>
 <h3 id="_search">_search</h3>
 <p>Search the graph for widening the layers.</p>
-<h4 id="args">Args</h4>
+<h5 id="args">Args</h5>
+<ul>
+<li>
 <p><strong>u</strong>: The starting node identifier.</p>
+</li>
+<li>
 <p><strong>start_dim</strong>: The position to insert the additional dimensions.</p>
+</li>
+<li>
 <p><strong>total_dim</strong>: The total number of dimensions the layer has before widening.</p>
+</li>
+<li>
 <p><strong>n_add</strong>: The number of dimensions to add.</p>
+</li>
+</ul>
 <h3 id="to_conv_deeper_model">to_conv_deeper_model</h3>
 <p>Insert a relu-conv-bn block after the target block.</p>
-<h4 id="args_1">Args</h4>
+<h5 id="args_1">Args</h5>
+<ul>
+<li>
 <p><strong>target_id</strong>: A convolutional layer ID. The new block should be inserted after the block.</p>
+</li>
+<li>
 <p><strong>kernel_size</strong>: An integer. The kernel size of the new convolutional layer.</p>
+</li>
+</ul>
 <h3 id="to_wider_model">to_wider_model</h3>
-<p>Widen the last dimension of the output of the pre_layer.</p>
-<h4 id="args_2">Args</h4>
+<ul>
+<li>Widen the last dimension of the output of the pre_layer.</li>
+</ul>
+<h5 id="args_2">Args</h5>
+<ul>
+<li>
 <p><strong>pre_layer_id</strong>: The ID of a convolutional layer or dense layer.</p>
+</li>
+<li>
 <p><strong>n_add</strong>: The number of dimensions to add.</p>
+</li>
+</ul>
 <h3 id="to_dense_deeper_model">to_dense_deeper_model</h3>
 <p>Insert a dense layer after the target layer.</p>
-<h4 id="args_3">Args</h4>
-<p><strong>target_id</strong>: The ID of a dense layer.</p>
+<h5 id="args_3">Args</h5>
+<ul>
+<li><strong>target_id</strong>: The ID of a dense layer.</li>
+</ul>
 <h3 id="_conv_block_end_node">_conv_block_end_node</h3>
 <p>Get the input node ID of the last layer in the block by layer ID.</p>
-<h4 id="args_4">Args</h4>
+<h5 id="args_4">Args</h5>
 <p><strong>layer_id</strong>: the convolutional layer ID.</p>
-<h4 id="returns">Returns</h4>
+<h5 id="returns">Returns</h5>
 <p>The input node ID of the last layer in the convolutional block.</p>
 <h3 id="to_add_skip_model">to_add_skip_model</h3>
-<p>Add a weighted add skip connection from after start node to end node.</p>
-<h4 id="args_5">Args</h4>
+<p>Add a weighted skip-connection from after start node to end node.</p>
+<h5 id="args_5">Args</h5>
+<ul>
+<li>
 <p><strong>start_id</strong>: The convolutional layer ID, after which to start the skip-connection.</p>
+</li>
+<li>
 <p><strong>end_id</strong>: The convolutional layer ID, after which to end the skip-connection.</p>
+</li>
+</ul>
 <h3 id="to_concat_skip_model">to_concat_skip_model</h3>
 <p>Add a weighted add concatenate connection from after start node to end node.</p>
-<h4 id="args_6">Args</h4>
+<h5 id="args_6">Args</h5>
+<ul>
+<li>
 <p><strong>start_id</strong>: The convolutional layer ID, after which to start the skip-connection.</p>
+</li>
+<li>
 <p><strong>end_id</strong>: The convolutional layer ID, after which to end the skip-connection.</p>
+</li>
+</ul>
 <h3 id="produce_model">produce_model</h3>
 <p>Build a new model based on the current graph.</p>
               

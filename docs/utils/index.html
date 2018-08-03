@@ -165,27 +165,45 @@
             <div class="section">
               
                 <h3 id="ensure_dir">ensure_dir</h3>
-<p>Create directory if it does not exist</p>
+<p>Create directory if it does not exist.</p>
 <h3 id="ensure_file_dir">ensure_file_dir</h3>
-<p>Create path if it does not exist</p>
+<p>Create path if it does not exist.</p>
 <h2 id="modeltrainer">ModelTrainer</h2>
-<p>A class that is used to train model
-This class can train a model with dataset and will not stop until getting minimum loss</p>
-<h4 id="attributes">Attributes</h4>
-<p><strong>model</strong>: the model that will be trained</p>
-<p><strong>train_data</strong>: training data wrapped in batches.</p>
-<p><strong>test_data</strong>: testing data wrapped in batches.</p>
-<p><strong>verbose</strong>: verbosity mode</p>
+<p>A class that is used to train model.
+This class can train a model with dataset and will not stop until getting minimum loss.</p>
+<h5 id="attributes">Attributes</h5>
+<ul>
+<li>
+<p><strong>model</strong>: The model to be trained.</p>
+</li>
+<li>
+<p><strong>train_data</strong>: Training data wrapped in batches.</p>
+</li>
+<li>
+<p><strong>test_data</strong>: Testing data wrapped in batches.</p>
+</li>
+<li>
+<p><strong>verbose</strong>: Verbosity mode.</p>
+</li>
+</ul>
 <h3 id="init"><strong>init</strong></h3>
-<p>Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose</p>
+<p>Initialize a ModelTrainer with <code>model</code>, <code>x_train</code>, <code>y_train</code>, <code>x_test</code>, <code>y_test</code>, <code>verbose</code>.</p>
 <h3 id="train_model">train_model</h3>
 <p>Train the model.</p>
-<h4 id="args">Args</h4>
+<h5 id="args">Args</h5>
+<ul>
+<li>
 <p><strong>max_iter_num</strong>: An integer. The maximum number of epochs to train the model.
     The training will stop when this number is reached.</p>
+</li>
+<li>
 <p><strong>max_no_improvement_num</strong>: An integer. The maximum number of epochs when the loss value doesn't decrease.
     The training will stop when this number is reached.</p>
+</li>
+<li>
 <p><strong>batch_size</strong>: An integer. The batch size during the training.</p>
+</li>
+</ul>
               
             </div>
           </div>
