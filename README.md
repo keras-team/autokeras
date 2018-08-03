@@ -47,4 +47,4 @@ Biblatex entry:
       eprint       = {cs.LG/1806.10282},
     }
  
-### `Note`: The current version of Auto-Keras is only the pre-release version, which may not fully guarantee the quality and users’ requirements. We will continue updating and will release the alpha version soon.
+### `Note`: The current version of Auto-Keras is only the pre-release version, which may not fully guarantee the quality and users’ requirements. We will continue updating and will release the beta version soon.
