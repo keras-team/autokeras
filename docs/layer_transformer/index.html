@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>utils - Auto-Keras</title>
+  <title>Layer transformer - Auto-Keras</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,9 +17,9 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "utils";
-    var mkdocs_page_input_path = "utils.md";
-    var mkdocs_page_url = "/utils/";
+    var mkdocs_page_name = "Layer transformer";
+    var mkdocs_page_input_path = "layer_transformer.md";
+    var mkdocs_page_url = "/layer_transformer/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js" defer></script>
@@ -88,31 +88,9 @@
                     
     <a class="" href="../preprocessor/">preprocessor</a>
                 </li>
-                <li class=" current">
+                <li class="">
                     
-    <a class="current" href="./">utils</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l3"><a href="#ensure_dir">ensure_dir</a></li>
-    
-
-    <li class="toctree-l3"><a href="#ensure_file_dir">ensure_file_dir</a></li>
-    
-
-    <li class="toctree-l3"><a href="#modeltrainer">ModelTrainer</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#attributes">Attributes</a></li>
-        
-            <li><a class="toctree-l4" href="#init">init</a></li>
-        
-            <li><a class="toctree-l4" href="#train_model">train_model</a></li>
-        
-        </ul>
-    
-
-    </ul>
+    <a class="" href="../utils/">utils</a>
                 </li>
                 <li class="">
                     
@@ -147,15 +125,11 @@
     <li><a href="..">Docs</a> &raquo;</li>
     
       
-        
-          <li>Documentation &raquo;</li>
-        
-      
     
-    <li>utils</li>
+    <li>Layer transformer</li>
     <li class="wy-breadcrumbs-aside">
       
-        <a href="https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/docs/utils.md"
+        <a href="https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/docs/layer_transformer.md"
           class="icon icon-github"> Edit on GitHub</a>
       
     </li>
@@ -165,45 +139,11 @@
           <div role="main">
             <div class="section">
               
-                <h3 id="ensure_dir">ensure_dir</h3>
-<p>Create directory if it does not exist</p>
-<h3 id="ensure_file_dir">ensure_file_dir</h3>
-<p>Create path if it does not exist</p>
-<h2 id="modeltrainer">ModelTrainer</h2>
-<p>A class that is used to train model
-This class can train a model with dataset and will not stop until getting minimum loss</p>
-<h4 id="attributes">Attributes</h4>
-<p><strong>model</strong>: the model that will be trained</p>
-<p><strong>x_train</strong>: the input train data</p>
-<p><strong>y_train</strong>: the input train data labels</p>
-<p><strong>x_test</strong>: the input test data</p>
-<p><strong>y_test</strong>: the input test data labels</p>
-<p><strong>verbose</strong>: verbosity mode</p>
-<h3 id="init"><strong>init</strong></h3>
-<p>Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose</p>
-<h3 id="train_model">train_model</h3>
-<p>Train the model.</p>
-<h4 id="args">Args</h4>
-<p><strong>max_iter_num</strong>: An integer. The maximum number of epochs to train the model.
-    The training will stop when this number is reached.</p>
-<p><strong>max_no_improvement_num</strong>: An integer. The maximum number of epochs when the loss value doesn't decrease.
-    The training will stop when this number is reached.</p>
-<p><strong>batch_size</strong>: An integer. The batch size during the training.</p>
-<p><strong>optimizer</strong>: An optimizer class.</p>
-<p><strong>augment</strong>: A boolean of whether the data will be augmented.</p>
+                
               
             </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../generator/" class="btn btn-neutral float-right" title="generator">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-        <a href="../preprocessor/" class="btn btn-neutral" title="preprocessor"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>
@@ -229,10 +169,6 @@ This class can train a model with dataset and will not stop until getting minimu
           <a href="https://github.com/jhfjhfj1/autokeras/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
-        <span><a href="../preprocessor/" style="color: #fcfcfc;">&laquo; Previous</a></span>
-      
-      
-        <span style="margin-left: 15px"><a href="../generator/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
