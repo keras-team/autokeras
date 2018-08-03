@@ -3,12 +3,12 @@
 ## Installation
 The installation of Auto-Keras is the same as other python packages. Notably, currently we only support Python 3.6.
 
-### Latest Stable Version (`pip` installation):
+#### Latest Stable Version (`pip` installation):
 You can run the following `pip` installation command in your terminal to install the latest stable version.
 
     pip install autokeras
 
-### Bleeding Edge Version (manual installation):
+#### Bleeding Edge Version (manual installation):
 If you want to install the latest development version. 
 You need to download the code from the GitHub repo and run the following commands in the project directory.
 
@@ -40,7 +40,7 @@ If the images and the labels are already formatted into numpy arrays, you can
         
 In the example above, the images and the labels are already formatted into numpy arrays.
 
-### What if your data are images files (*e.g.* .jpg, .png, .bmp)?
+#### What if your data are images files (*e.g.* .jpg, .png, .bmp)?
 
 You can use our `load_image_dataset` function to load the images and there labels as follows.
 
