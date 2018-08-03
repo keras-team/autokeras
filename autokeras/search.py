@@ -1,6 +1,6 @@
-import multiprocessing
 import os
 import random
+from copy import deepcopy
 from functools import total_ordering
 from queue import PriorityQueue
 
@@ -10,10 +10,19 @@ import math
 # from keras.utils import plot_model
 
 from autokeras.constant import Constant
-from autokeras.bayesian import IncrementalGaussianProcess
+from autokeras.bayesian import IncrementalGaussianProcess, edit_distance
 from autokeras.generator import DefaultClassifierGenerator
 from autokeras.net_transformer import transform, default_transform
 from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
+
+import multiprocessing
+
+
+def contain(descriptors, target_descriptor):
+    for descriptor in descriptors:
+        if edit_distance(descriptor, target_descriptor, 1) == 0:
+            return True
+    return False
 
 
 class BayesianSearcher:
@@ -159,9 +168,10 @@ class BayesianSearcher:
         graph, father_id, model_id = self.training_queue.pop(0)
         if self.verbose:
             print('Training model ', model_id)
+        multiprocessing.set_start_method('spawn', force=True)
         pool = multiprocessing.Pool(1)
         train_results = pool.map_async(train, [(graph, train_data, test_data, self.trainer_args,
-                                                os.path.join(self.path, str(model_id) + '.png'))])
+                                                os.path.join(self.path, str(model_id) + '.png'), self.verbose)])
 
         # Do the search in current thread.
         if not self.training_queue:
@@ -180,12 +190,13 @@ class BayesianSearcher:
         self.y_queue = []
 
         pickle_to_file(self, os.path.join(self.path, 'searcher'))
+        self.export_json(os.path.join(self.path, 'history.json'))
 
     def maximize_acq(self):
         model_ids = self.search_tree.adj_list.keys()
         target_graph = None
         father_id = None
-        descriptors = self.descriptors
+        descriptors = deepcopy(self.descriptors)
 
         pq = PriorityQueue()
         temp_list = []
@@ -205,13 +216,16 @@ class BayesianSearcher:
         max_acq = -1
         while not pq.empty() and t > t_min:
             elem = pq.get()
-            ap = math.exp((elem.accuracy - max_acq) / t)
+            temp_exp = min((elem.accuracy - max_acq) / t, 709.0)
+            ap = math.exp(temp_exp)
             if ap > random.uniform(0, 1):
                 graphs = transform(elem.graph)
-                graphs = list(filter(lambda x: x.extract_descriptor() not in descriptors, graphs))
+
                 if not graphs:
                     continue
                 for temp_graph in graphs:
+                    if contain(descriptors, temp_graph.extract_descriptor()):
+                        continue
                     temp_acq_value = self.acq(temp_graph)
                     pq.put(Elem(temp_acq_value, elem.father_id, temp_graph))
                     descriptors[temp_graph.extract_descriptor()] = True
@@ -297,13 +311,17 @@ class Elem:
 
 
 def train(args):
-    graph, train_data, test_data, trainer_args, path = args
+    graph, train_data, test_data, trainer_args, path, verbose = args
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)
     loss, accuracy = ModelTrainer(model,
                                   train_data,
                                   test_data,
-                                  False).train_model(**trainer_args)
+                                  verbose).train_model(**trainer_args)
     model.set_weight_to_graph()
     return accuracy, loss, model.graph
+
+
+def same_graph(des1, des2):
+    return edit_distance(des1, des2, 1) == 0

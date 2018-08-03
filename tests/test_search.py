@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from autokeras.search import *
 
-from tests.common import clean_dir, MockProcess, get_processed_data
+from tests.common import clean_dir, MockProcess, get_processed_data, get_add_skip_model, get_concat_skip_model
 
 default_test_path = 'tests/resources/temp'
 
@@ -60,3 +60,9 @@ def test_export_json(_, _1):
     assert len(data['tree']['children']) == 2
     clean_dir(default_test_path)
     assert len(generator.history) == 3
+
+
+def test_graph_duplicate():
+    assert same_graph(get_add_skip_model().extract_descriptor(), get_add_skip_model().extract_descriptor())
+    assert not same_graph(get_concat_skip_model().extract_descriptor(), get_add_skip_model().extract_descriptor())
+

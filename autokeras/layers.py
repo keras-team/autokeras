@@ -30,7 +30,7 @@ class StubLayer:
 
 class StubWeightBiasLayer(StubLayer):
     def import_weights(self, torch_layer):
-        self.set_weights((torch_layer.weight.data.numpy(), torch_layer.bias.data.numpy()))
+        self.set_weights((torch_layer.weight.data.cpu().numpy(), torch_layer.bias.data.cpu().numpy()))
 
     def export_weights(self, torch_layer):
         torch_layer.weight.data = torch.Tensor(self.weights[0])
@@ -43,10 +43,10 @@ class StubBatchNormalization(StubWeightBiasLayer):
         self.num_features = num_features
 
     def import_weights(self, torch_layer):
-        self.set_weights((torch_layer.weight.data.numpy(),
-                          torch_layer.bias.data.numpy(),
-                          torch_layer.running_mean.numpy(),
-                          torch_layer.running_var.numpy(),
+        self.set_weights((torch_layer.weight.data.cpu().numpy(),
+                          torch_layer.bias.data.cpu().numpy(),
+                          torch_layer.running_mean.cpu().numpy(),
+                          torch_layer.running_var.cpu().numpy(),
                           ))
 
     def export_weights(self, torch_layer):

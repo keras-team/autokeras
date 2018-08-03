@@ -552,6 +552,8 @@ class TorchModel(torch.nn.Module):
         if graph.weighted:
             for index, layer in enumerate(self.layers):
                 set_stub_weight_to_torch(self.graph.layer_list[index], layer)
+        for index, layer in enumerate(self.layers):
+            self.add_module(str(index), layer)
 
     def forward(self, input_tensor):
         """Build a new Keras model based on the current graph."""
@@ -582,22 +584,22 @@ class TorchModel(torch.nn.Module):
         for index, layer in enumerate(self.layers):
             set_torch_weight_to_stub(layer, self.graph.layer_list[index])
 
-    def eval(self):
-        super().eval()
-        for layer in self.layers:
-            layer.eval()
-
-    def train(self, mode=True):
-        super().train()
-        for layer in self.layers:
-            layer.train()
-
-    def parameters(self):
-        parameters = []
-        for layer in self.layers:
-            parameters += list(layer.parameters())
-        return parameters
-
-    def to(self, device):
-        for layer in self.layers:
-            layer.to(device)
+    # def eval(self):
+    #     super().eval()
+    #     for layer in self.layers:
+    #         layer.eval()
+    #
+    # def train(self, mode=True):
+    #     super().train()
+    #     for layer in self.layers:
+    #         layer.train()
+    #
+    # def parameters(self):
+    #     parameters = []
+    #     for layer in self.layers:
+    #         parameters += list(layer.parameters())
+    #     return parameters
+    #
+    # def to(self, device):
+    #     for layer in self.layers:
+    #         layer.to(device)

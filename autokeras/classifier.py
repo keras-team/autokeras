@@ -35,7 +35,6 @@ def _validate(x_train, y_train):
 
 def run_searcher_once(train_data, test_data, path):
     if Constant.LIMIT_MEMORY:
-        # TODO: limit pytorch memory.
         pass
     searcher = pickle_from_file(os.path.join(path, 'searcher'))
     searcher.search(train_data, test_data)
@@ -126,7 +125,7 @@ class ImageClassifier:
     """
 
     def __init__(self, verbose=False, path=Constant.DEFAULT_SAVE_PATH, resume=False,
-                 searcher_args=None):
+                 searcher_args=None, augment=None):
         """Initialize the instance.
 
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
@@ -142,6 +141,9 @@ class ImageClassifier:
         if searcher_args is None:
             searcher_args = {}
 
+        if augment is None:
+            augment = Constant.DATA_AUGMENTATION
+
         if has_file(os.path.join(path, 'classifier')) and resume:
             classifier = pickle_from_file(os.path.join(path, 'classifier'))
             self.__dict__ = classifier.__dict__
@@ -153,6 +155,7 @@ class ImageClassifier:
             self.searcher = False
             self.path = path
             self.searcher_args = searcher_args
+            self.augment = augment
             ensure_dir(path)
 
     def fit(self, x_train=None, y_train=None, time_limit=None):
@@ -187,7 +190,7 @@ class ImageClassifier:
 
         # Transform x_train
         if self.data_transformer is None:
-            self.data_transformer = DataTransformer(x_train)
+            self.data_transformer = DataTransformer(x_train, augment=self.augment)
 
         # Create the searcher and save on disk
         if not self.searcher:
@@ -230,10 +233,9 @@ class ImageClassifier:
             An numpy.ndarray containing the results.
         """
         if Constant.LIMIT_MEMORY:
-            # TODO: limit pytorch memory.
             pass
         test_data = self.data_transformer.transform_test(x_test)
-        test_loader = DataLoader(test_data, batch_size=Constant.MAX_BATCH_SIZE, shuffle=True)
+        test_loader = DataLoader(test_data, batch_size=Constant.MAX_BATCH_SIZE, shuffle=False)
         model = self.load_searcher().load_best_model().produce_model()
         model.eval()
 
@@ -280,7 +282,7 @@ class ImageClassifier:
 
         if retrain:
             graph.weighted = False
-        _, _1, graph = train((graph, train_data, test_data, trainer_args, None))
+        _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.verbose))
 
     def get_best_model_id(self):
         """

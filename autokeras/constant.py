@@ -8,7 +8,7 @@ class Constant:
     # Searcher
 
     MAX_MODEL_NUM = 1000
-    BETA = 2.576
+    BETA = 10.576
     KERNEL_LAMBDA = 1.0
     T_MIN = 0.0001
     N_NEIGHBOURS = 8
@@ -29,7 +29,7 @@ class Constant:
     DATA_AUGMENTATION = True
     MAX_ITER_NUM = 200
     MIN_LOSS_DEC = 1e-4
-    MAX_NO_IMPROVEMENT_NUM = 10
+    MAX_NO_IMPROVEMENT_NUM = 5
     MAX_BATCH_SIZE = 128
     LIMIT_MEMORY = False
     SEARCH_MAX_ITER = 30
