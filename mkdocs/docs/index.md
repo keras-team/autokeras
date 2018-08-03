@@ -6,13 +6,13 @@
 Auto-Keras is an open source software library for automated machine learning (AutoML). The ultimate goal of AutoML is to allow domain experts with limited data science or machine learning background easily accessible to deep learning models.
 Auto-Keras provides functions to automatically search for architecture and hyperparameters of deep learning models.
 
-# Installation
+## Installation
 
 To install the package please use the commend as follows:
 
     pip install autokeras
 
-# Example
+## Example
 
 Here is a short example of using the package.
 
@@ -23,11 +23,11 @@ Here is a short example of using the package.
     clf.fit(x_train, y_train)
     results = clf.predict(x_test)
 
-# Documentation
+## Documentation
 
 For the documentation, please visit the [Auto-Keras](http://autokeras.com/) official website.
 
-# Citing this work
+## Citing this work
 
 If you use Auto-Keras in a scientific publication, we would appreciate references to the following paper:
 
@@ -48,8 +48,10 @@ Biblatex entry:
     }
  
 
-`DISCLAIMER`: Please note that this is a *pre-release* version of the Auto-Keras which is still undergoing final testing before its official release. The website, its software and all content found on it are provided on an
-“as is” and “as available” basis. Auto-Keras does *not* give any warranties, whether express or implied, as to the suitability or usability of the website, its software or any of its content. Auto-Keras will *not* be liable for any loss, whether such loss is direct, indirect, special or consequential, suffered by any party as a result of their use of the libraries or content. Any usage of the libraries is done at the user’s own risk and the user will be solely responsible for any damage to any computer system or loss of data that results from such activities. Should you encounter any bugs, glitches, lack of functionality or
+## DISCLAIMER
+
+Please note that this is a **pre-release** version of the Auto-Keras which is still undergoing final testing before its official release. The website, its software and all content found on it are provided on an
+“as is” and “as available” basis. Auto-Keras does **not** give any warranties, whether express or implied, as to the suitability or usability of the website, its software or any of its content. Auto-Keras will **not** be liable for any loss, whether such loss is direct, indirect, special or consequential, suffered by any party as a result of their use of the libraries or content. Any usage of the libraries is done at the user’s own risk and the user will be solely responsible for any damage to any computer system or loss of data that results from such activities. Should you encounter any bugs, glitches, lack of functionality or
 other problems on the website, please let us know immediately so we
 can rectify these accordingly. Your help in this regard is greatly
 appreciated.
