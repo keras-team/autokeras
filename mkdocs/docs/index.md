@@ -4,10 +4,10 @@
 <a href="https://coveralls.io/github/jhfjhfj1/autokeras?branch=master"><img alt="Coverage Status" src="https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg?branch=master" style="width: 99px"/></a></p>
 
 Auto-Keras is an open source software library for automated machine learning (AutoML) based on Keras. The ultimate goal of AutoML is to allow domain experts with limited data science or machine learning background easily accessible to deep learning models.
-Auto-Keras procides functions to automatically search for architecture and hyperparameters of deep learning models.
+Auto-Keras provides functions to automatically search for architecture and hyperparameters of deep learning models.
 
 
-To install the package please use the commend as follows:
+To install the package please use the command as follows:
 
     pip install autokeras
 
