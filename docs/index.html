@@ -7,13 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="None">
   
-  <link rel="shortcut icon" href="./img/favicon.ico">
+  <link rel="shortcut icon" href="img/favicon.ico">
   <title>Home - Auto-Keras</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
-  <link rel="stylesheet" href="./css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
-  <link rel="stylesheet" href="./css/highlight.css">
+  <link rel="stylesheet" href="css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
   
   <script>
     // Current page data
@@ -22,15 +22,16 @@
     var mkdocs_page_url = "/";
   </script>
   
-  <script src="./js/jquery-2.1.1.min.js"></script>
-  <script src="./js/modernizr-2.8.3.min.js"></script>
-  <script type="text/javascript" src="./js/highlight.pack.js"></script> 
+  <script src="js/jquery-2.1.1.min.js" defer></script>
+  <script src="js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
   
   <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
       ga('create', 'UA-44322747-3', 'autokeras.com');
       ga('send', 'pageview');
@@ -48,7 +49,7 @@
         <a href="." class="icon icon-home"> Auto-Keras</a>
         <div role="search">
   <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
@@ -59,9 +60,24 @@
           
             <li class="toctree-l1 current">
 		
-    <a class="current" href=".">Home</a>
+    <span class="caption-text">Home</span>
     <ul class="subnav">
             
+    <li class="toctree-l2"><a href="#installation">Installation</a></li>
+    
+
+    <li class="toctree-l2"><a href="#example">Example</a></li>
+    
+
+    <li class="toctree-l2"><a href="#documentation">Documentation</a></li>
+    
+
+    <li class="toctree-l2"><a href="#citing-this-work">Citing this work</a></li>
+    
+
+    <li class="toctree-l2"><a href="#disclaimer">DISCLAIMER</a></li>
+    
+
     </ul>
 	    </li>
           
@@ -145,11 +161,13 @@
 <p><a href="https://travis-ci.org/jhfjhfj1/autokeras"><img alt="Build Status" src="https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master" style="width: 90px"/></a>
 <a href="https://coveralls.io/github/jhfjhfj1/autokeras?branch=master"><img alt="Coverage Status" src="https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg?branch=master" style="width: 99px"/></a></p>
 
-<p>Auto-Keras is an open source software library for automated machine learning (AutoML) based on Keras. The ultimate goal of AutoML is to allow domain experts with limited data science or machine learning background easily accessible to deep learning models.
-Auto-Keras procides functions to automatically search for architecture and hyperparameters of deep learning models.</p>
-<p>To install the package please use the commend as follows:</p>
+<p>Auto-Keras is an open source software library for automated machine learning (AutoML). The ultimate goal of AutoML is to allow domain experts with limited data science or machine learning background easily accessible to deep learning models.
+Auto-Keras provides functions to automatically search for architecture and hyperparameters of deep learning models.</p>
+<h2 id="installation">Installation</h2>
+<p>To install the package, please use the <code>pip</code> installation as follows:</p>
 <pre><code>pip install autokeras
 </code></pre>
+<h2 id="example">Example</h2>
 <p>Here is a short example of using the package.</p>
 <pre><code>import autokeras as ak
 
@@ -157,8 +175,10 @@ clf = ak.ImageClassifier()
 clf.fit(x_train, y_train)
 results = clf.predict(x_test)
 </code></pre>
-<p>For the repository on GitHub please visit <a href="https://github.com/jhfjhfj1/autokeras">Auto-Keras on GitHub</a>.</p>
-<p>If you use Auto-Keras in a scientific publication, we would appreciate references to the following paper:</p>
+<h2 id="documentation">Documentation</h2>
+<p>For the documentation, please visit the <a href="http://autokeras.com/">Auto-Keras</a> official website.</p>
+<h2 id="citing-this-work">Citing this work</h2>
+<p>If you use Auto-Keras in a scientific publication, you are highly encouraged (though not required) to cite the following paper:</p>
 <p>Efficient Neural Architecture Search with Network Morphism.
 Haifeng Jin, Qingquan Song, and Xia Hu.
 <a href="https://arxiv.org/abs/1806.10282">arXiv:1806.10282</a>.</p>
@@ -173,6 +193,12 @@ Haifeng Jin, Qingquan Song, and Xia Hu.
   eprint       = {cs.LG/1806.10282},
 }
 </code></pre>
+<h2 id="disclaimer"><code>DISCLAIMER</code></h2>
+<p>Please note that this is a <strong><code>pre-release</code></strong> version of the Auto-Keras which is still undergoing final testing before its official release. The website, its software and all content found on it are provided on an
+“as is” and “as available” basis. Auto-Keras does <strong><code>not</code></strong> give any warranties, whether express or implied, as to the suitability or usability of the website, its software or any of its content. Auto-Keras will <strong><code>not</code></strong> be liable for any loss, whether such loss is direct, indirect, special or consequential, suffered by any party as a result of their use of the libraries or content. Any usage of the libraries is done at the user’s own risk and the user will be solely responsible for any damage to any computer system or loss of data that results from such activities. Should you encounter any bugs, glitches, lack of functionality or
+other problems on the website, please let us know immediately so we
+can rectify these accordingly. Your help in this regard is greatly
+appreciated.</p>
               
             </div>
           </div>
@@ -215,14 +241,13 @@ Haifeng Jin, Qingquan Song, and Xia Hu.
     </span>
 </div>
     <script>var base_url = '.';</script>
-    <script src="./js/theme.js"></script>
-      <script src="./search/require.js"></script>
-      <script src="./search/search.js"></script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
 
 </body>
 </html>
 
 <!--
-MkDocs version : 0.17.4
-Build Date UTC : 2018-08-01 20:36:25
+MkDocs version : 1.0rc1
+Build Date UTC : 2018-08-03 05:44:31
 -->
