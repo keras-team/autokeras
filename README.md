@@ -11,6 +11,8 @@ Auto-Keras provides functions to automatically search for architecture and hyper
 To install the package, please use the `pip` installation as follows:
 
     pip install autokeras
+    
+**Note:** currently, Auto-Keras only supports Python 3.6.
 
 ## Example
 
