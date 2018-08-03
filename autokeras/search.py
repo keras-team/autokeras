@@ -21,7 +21,7 @@ import multiprocessing
 
 def contain(descriptors, target_descriptor):
     for descriptor in descriptors:
-        if edit_distance(descriptor, target_descriptor, 1) == 0:
+        if edit_distance(descriptor, target_descriptor, 1) < 1e-5:
             return True
     return False
 
@@ -85,7 +85,7 @@ class BayesianSearcher:
         self.history = []
         self.path = path
         self.model_count = 0
-        self.descriptors = {}
+        self.descriptors = []
         self.trainer_args = trainer_args
         self.default_model_len = default_model_len
         self.default_model_width = default_model_width
@@ -134,14 +134,13 @@ class BayesianSearcher:
             print('Accuracy', accuracy)
 
         ret = {'model_id': model_id, 'loss': loss, 'accuracy': accuracy}
-        descriptor = graph.extract_descriptor()
         self.history.append(ret)
         if model_id == self.get_best_model_id():
             file = open(os.path.join(self.path, 'best_model.txt'), 'w')
             file.write('best model: ' + str(model_id))
             file.close()
 
-        self.descriptors[descriptor] = True
+        descriptor = graph.extract_descriptor()
         self.x_queue.append(descriptor)
         self.y_queue.append(accuracy)
 
@@ -156,10 +155,12 @@ class BayesianSearcher:
         model_id = self.model_count
         self.model_count += 1
         self.training_queue.append((graph, -1, model_id))
+        self.descriptors.append(graph.extract_descriptor())
         for child_graph in default_transform(graph):
             child_id = self.model_count
             self.model_count += 1
             self.training_queue.append((child_graph, model_id, child_id))
+            self.descriptors.append(child_graph.extract_descriptor())
         if self.verbose:
             print('Initialization finished.')
 
@@ -183,6 +184,8 @@ class BayesianSearcher:
             new_model_id = self.model_count
             self.model_count += 1
             self.training_queue.append((new_graph, new_father_id, new_model_id))
+            descriptor = new_graph.extract_descriptor()
+            self.descriptors.append(new_graph.extract_descriptor())
 
         accuracy, loss, graph = train_results.get()[0]
         pool.terminate()
@@ -202,16 +205,16 @@ class BayesianSearcher:
         father_id = None
         descriptors = deepcopy(self.descriptors)
 
+        # Initialize the priority queue.
         pq = PriorityQueue()
         temp_list = []
         for model_id in model_ids:
             accuracy = self.get_accuracy_by_id(model_id)
             temp_list.append((accuracy, model_id))
         temp_list = sorted(temp_list)
-        # if len(temp_list) > 5:
-        #     temp_list = temp_list[:-5]
         for accuracy, model_id in temp_list:
             graph = self.load_model_by_id(model_id)
+            graph.clear_operation_history()
             pq.put(Elem(accuracy, model_id, graph))
 
         t = 1.0
@@ -228,9 +231,10 @@ class BayesianSearcher:
                 for temp_graph in graphs:
                     if contain(descriptors, temp_graph.extract_descriptor()):
                         continue
+
                     temp_acq_value = self.acq(temp_graph)
                     pq.put(Elem(temp_acq_value, elem.father_id, temp_graph))
-                    descriptors[temp_graph.extract_descriptor()] = True
+                    descriptors.append(temp_graph.extract_descriptor())
                     if temp_acq_value > max_acq:
                         max_acq = temp_acq_value
                         father_id = elem.father_id
