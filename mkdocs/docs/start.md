@@ -1,13 +1,14 @@
 # Getting Started
 
 ## Installation
-The installation of Auto-Keras is the same as other python packages.
-Just use pip install.
-Notably, currently we only support Python 3.6.
-You can run the following command in your terminal to install the latest stable version.
+The installation of Auto-Keras is the same as other python packages. Notably, currently we only support Python 3.6.
+
+#### Latest Stable Version (`pip` installation):
+You can run the following `pip` installation command in your terminal to install the latest stable version.
 
     pip install autokeras
 
+#### Bleeding Edge Version (manual installation):
 If you want to install the latest development version. 
 You need to download the code from the GitHub repo and run the following commands in the project directory.
 
@@ -17,7 +18,11 @@ You need to download the code from the GitHub repo and run the following command
 
 ## Example
 
-Here we show an example of image classification on the MNIST dataset, is a famous image dataset for hand-written digits classification.
+We show an example of image classification on the MNIST dataset, which is a famous benchmark image dataset for hand-written digits classification. Auto-Keras supports different types of data inputs. 
+
+#### Data with numpy array (.npy) format.
+
+If the images and the labels are already formatted into numpy arrays, you can 
 
     from keras.datasets import mnist
     from autokeras.classifier import ImageClassifier
@@ -33,8 +38,10 @@ Here we show an example of image classification on the MNIST dataset, is a famou
         y = clf.evaluate(x_test, y_test)
         print(y)
         
-In the example above the images and the labels are already formatted into numpy arrays.
-What if your data are images files (*e.g.* .jpg, .png, .bmp)?
+In the example above, the images and the labels are already formatted into numpy arrays.
+
+#### What if your data are images files (*e.g.* .jpg, .png, .bmp)?
+
 You can use our `load_image_dataset` function to load the images and there labels as follows.
 
     from autokeras.classifier import load_image_dataset
