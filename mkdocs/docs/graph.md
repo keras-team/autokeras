@@ -47,7 +47,7 @@ Redirect the edge to a new node. Change the edge originally from u_id to v_id in
 ###_replace_layer
 Replace the layer with a new layer.
 
-###_topological_order
+###topological_order
 Return the topological order of the node ids.
 
 ###_search
@@ -109,5 +109,5 @@ Add a weighted add concatenate connection from after start node to end node.
 **end_id**: The convolutional layer ID, after which to end the skip-connection.
 
 ###produce_model
-Build a new Keras model based on the current graph.
+Build a new model based on the current graph.
 

@@ -42,6 +42,8 @@ It is used for image classification. It searches convolutional neural network ar
 
 **searcher_args**: A dictionary containing the parameters for the searcher's __init__ function.
 
+**augment**: A boolean value indicating whether the data needs augmentation.
+
 ###__init__
 Initialize the instance.
 The classifier will be loaded from the files in 'path' if parameter 'resume' is True. Otherwise it would create a new one.
@@ -52,6 +54,8 @@ The classifier will be loaded from the files in 'path' if parameter 'resume' is 
 
 **resume**: An boolean. If True, the classifier will continue to previous work saved in path.
     Otherwise, the classifier will start a new search.
+
+**augment**: A boolean value indicating whether the data needs augmentation.
 
 ###fit
 Find the best neural architecture and train it.
@@ -71,9 +75,6 @@ Return predict result for the testing data.
 
 ####Returns
 An numpy.ndarray containing the results.
-###summary
-Print the summary of the best model.
-
 ###evaluate
 Return the accuracy score between predict value and test_y.
 
@@ -92,14 +93,6 @@ Final training after found the best architecture.
 **trainer_args**: A dictionary containing the parameters of the ModelTrainer constructure.
 
 **retrain**: A boolean of whether reinitialize the weights of the model.
-
-###export_keras_model
-Export the searched model as a Keras saved model.
-
-####Args
-**path**: A string. The path to the file to save.
-
-**model_id**: A integer. If not provided, the function will export the best model.
 
 ###get_best_model_id
 Returns: An integer. The best model id.

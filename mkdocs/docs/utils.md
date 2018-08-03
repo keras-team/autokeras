@@ -10,13 +10,9 @@ This class can train a model with dataset and will not stop until getting minimu
 ####Attributes
 **model**: the model that will be trained
 
-**x_train**: the input train data
+**train_data**: training data wrapped in batches.
 
-**y_train**: the input train data labels
-
-**x_test**: the input test data
-
-**y_test**: the input test data labels
+**test_data**: testing data wrapped in batches.
 
 **verbose**: verbosity mode
 
@@ -34,8 +30,4 @@ Train the model.
     The training will stop when this number is reached.
 
 **batch_size**: An integer. The batch size during the training.
-
-**optimizer**: An optimizer class.
-
-**augment**: A boolean of whether the data will be augmented.
 
