@@ -1,5 +1,6 @@
 import os
 import random
+import torch
 from copy import deepcopy
 from functools import total_ordering
 from queue import PriorityQueue
@@ -61,7 +62,7 @@ class BayesianSearcher:
                  default_model_width=Constant.MODEL_WIDTH,
                  beta=Constant.BETA,
                  kernel_lambda=Constant.KERNEL_LAMBDA,
-                 t_min=Constant.T_MIN):
+                 t_min=None):
         """
 
         Args:
@@ -97,6 +98,8 @@ class BayesianSearcher:
         self.x_queue = []
         self.y_queue = []
         self.beta = beta
+        if t_min is None:
+            t_min = Constant.T_MIN
         self.t_min = t_min
 
     def load_model_by_id(self, model_id):
@@ -161,6 +164,7 @@ class BayesianSearcher:
             print('Initialization finished.')
 
     def search(self, train_data, test_data):
+        torch.cuda.empty_cache()
         if not self.history:
             self.init_search()
 
@@ -221,8 +225,6 @@ class BayesianSearcher:
             if ap > random.uniform(0, 1):
                 graphs = transform(elem.graph)
 
-                if not graphs:
-                    continue
                 for temp_graph in graphs:
                     if contain(descriptors, temp_graph.extract_descriptor()):
                         continue
