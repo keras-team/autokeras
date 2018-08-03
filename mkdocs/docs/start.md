@@ -18,7 +18,7 @@ You need to download the code from the GitHub repo and run the following command
 
 ## Example
 
-We show an example of image classification on the MNIST dataset, which is a famous benchmark image dataset for hand-written digits classification. Auto-Keras support different types of data inputs. 
+We show an example of image classification on the MNIST dataset, which is a famous benchmark image dataset for hand-written digits classification. Auto-Keras supports different types of data inputs. 
 
 #### Data with numpy array (.npy) format.
 
