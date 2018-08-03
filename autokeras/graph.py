@@ -510,7 +510,7 @@ class Graph:
         return ret
 
     def produce_model(self):
-        """Build a new Keras model based on the current graph."""
+        """Build a new model based on the current graph."""
         return TorchModel(self)
 
     def _layer_ids_in_order(self, layer_ids):
@@ -556,7 +556,6 @@ class TorchModel(torch.nn.Module):
             self.add_module(str(index), layer)
 
     def forward(self, input_tensor):
-        """Build a new Keras model based on the current graph."""
         topo_node_list = self.graph.topological_order
         output_id = topo_node_list[-1]
         input_id = topo_node_list[0]
@@ -583,23 +582,3 @@ class TorchModel(torch.nn.Module):
         self.graph.weighted = True
         for index, layer in enumerate(self.layers):
             set_torch_weight_to_stub(layer, self.graph.layer_list[index])
-
-    # def eval(self):
-    #     super().eval()
-    #     for layer in self.layers:
-    #         layer.eval()
-    #
-    # def train(self, mode=True):
-    #     super().train()
-    #     for layer in self.layers:
-    #         layer.train()
-    #
-    # def parameters(self):
-    #     parameters = []
-    #     for layer in self.layers:
-    #         parameters += list(layer.parameters())
-    #     return parameters
-    #
-    # def to(self, device):
-    #     for layer in self.layers:
-    #         layer.to(device)

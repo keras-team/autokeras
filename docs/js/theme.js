@@ -17,10 +17,10 @@ $( document ).ready(function() {
         var key = e.which || e.keyCode || window.event && window.event.keyCode;
         var page;
         switch (key) {
-            case 78:  // n
+            case 39:  // right arrow
                 page = $('[role="navigation"] a:contains(Next):first').prop('href');
                 break;
-            case 80:  // p
+            case 37:  // left arrow
                 page = $('[role="navigation"] a:contains(Previous):first').prop('href');
                 break;
             default: break;
@@ -34,6 +34,8 @@ $( document ).ready(function() {
 
     // Make tables responsive
     $("table.docutils:not(.field-list)").wrap("<div class='wy-table-responsive'></div>");
+
+    hljs.initHighlightingOnLoad();
 
     $('table').addClass('docutils');
 });

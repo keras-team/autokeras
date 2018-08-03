@@ -122,6 +122,7 @@ class ImageClassifier:
         searcher: An instance of BayesianSearcher. It search different
             neural architecture to find the best model.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
+        augment: A boolean value indicating whether the data needs augmentation.
     """
 
     def __init__(self, verbose=False, path=Constant.DEFAULT_SAVE_PATH, resume=False,
@@ -136,6 +137,7 @@ class ImageClassifier:
             path: A string. The path to a directory, where the intermediate results are saved.
             resume: An boolean. If True, the classifier will continue to previous work saved in path.
                 Otherwise, the classifier will start a new search.
+            augment: A boolean value indicating whether the data needs augmentation.
 
         """
         if searcher_args is None:
