@@ -223,7 +223,7 @@ def to_real_layer(layer):
     if is_layer(layer, 'ReLU'):
         return torch.nn.ReLU()
     if is_layer(layer, 'Softmax'):
-        return torch.nn.Softmax(dim=1)
+        return torch.nn.LogSoftmax(dim=1)
     if is_layer(layer, 'Flatten'):
         return TorchFlatten()
 

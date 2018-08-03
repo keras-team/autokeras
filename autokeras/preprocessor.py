@@ -53,11 +53,14 @@ class OneHotEncoder:
 
 class DataTransformer:
     def __init__(self, data, augment=Constant.DATA_AUGMENTATION):
+        self.max_val = data.max()
+        data = data / self.max_val
         self.mean = np.mean(data, axis=(0, 1, 2), keepdims=True).flatten()
         self.std = np.std(data, axis=(0, 1, 2), keepdims=True).flatten()
         self.augment = augment
 
     def transform_train(self, data, targets=None):
+        data = data / self.max_val
         data = torch.Tensor(data.transpose(0, 3, 1, 2))
         if not self.augment:
             augment_list = []
@@ -65,12 +68,14 @@ class DataTransformer:
             augment_list = [ToPILImage(),
                             RandomCrop(data.shape[2:], padding=4),
                             RandomHorizontalFlip(),
-                            ToTensor()]
+                            ToTensor()
+                            ]
         common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
         data_transforms = Compose(augment_list + common_list)
         return MultiTransformDataset(data, targets, data_transforms)
 
     def transform_test(self, data, targets=None):
+        data = data / self.max_val
         data = torch.Tensor(data.transpose(0, 3, 1, 2))
         common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
         data_transforms = Compose(common_list)

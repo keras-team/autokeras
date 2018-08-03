@@ -11,11 +11,7 @@ from autokeras.utils import ModelTrainer
 
 
 if __name__ == '__main__':
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
-    x_test = x_test.reshape(x_test.shape[0], 28, 28, 1)
-    x_train = x_train / 255.0
-    x_test = x_test / 255.0
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
     print('Start Encoding')
     encoder = OneHotEncoder()
@@ -24,7 +20,7 @@ if __name__ == '__main__':
     y_train = encoder.transform(y_train)
     y_test = encoder.transform(y_test)
 
-    data_transformer = DataTransformer(x_train, augment=False)
+    data_transformer = DataTransformer(x_train, augment=True)
 
     train_data = data_transformer.transform_train(x_train, y_train)
     test_data = data_transformer.transform_test(x_test, y_test)

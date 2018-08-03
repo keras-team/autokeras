@@ -597,3 +597,7 @@ class TorchModel(torch.nn.Module):
         for layer in self.layers:
             parameters += list(layer.parameters())
         return parameters
+
+    def to(self, device):
+        for layer in self.layers:
+            layer.to(device)
