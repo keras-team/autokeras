@@ -1,7 +1,11 @@
-<img src="https://github.com/jhfjhfj1/autokeras/blob/master/logo.png?raw=true" alt="drawing" width="400px"/>
 
+
+<img src="https://github.com/jhfjhfj1/autokeras/blob/master/logo.png?raw=true" alt="drawing" width="400px" style="display: block; margin-left: auto; margin-right: auto"/>
+
+<div style="text-align: center">
 <p><a href="https://travis-ci.org/jhfjhfj1/autokeras"><img alt="Build Status" src="https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master" style="width: 90px"/></a>
 <a href="https://coveralls.io/github/jhfjhfj1/autokeras?branch=master"><img alt="Coverage Status" src="https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg?branch=master" style="width: 99px"/></a></p>
+</div>
 
 Auto-Keras is an open source software library for automated machine learning (AutoML). The ultimate goal of AutoML is to allow domain experts with limited data science or machine learning background easily accessible to deep learning models.
 Auto-Keras provides functions to automatically search for architecture and hyperparameters of deep learning models.

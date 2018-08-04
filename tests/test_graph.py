@@ -84,7 +84,7 @@ def test_dense_wider_stub():
     graph = get_add_skip_model()
     graph.weighted = False
     layer_num = graph.n_layers
-    graph.to_wider_model(26, 3)
+    graph.to_wider_model(32, 3)
 
     assert graph.n_layers == layer_num
 
@@ -93,7 +93,7 @@ def test_dense_wider():
     graph = get_add_skip_model()
     model = graph.produce_model()
     graph = deepcopy(graph)
-    graph.to_wider_model(26, 3)
+    graph.to_wider_model(32, 3)
     new_model = graph.produce_model()
     input_data = torch.Tensor(get_conv_data())
 
@@ -112,7 +112,7 @@ def test_skip_add_over_pooling_stub():
     layer_num = graph.n_layers
     graph.to_add_skip_model(1, 10)
 
-    assert graph.n_layers == layer_num + 3
+    assert graph.n_layers == layer_num + 6
 
 
 def test_skip_add_over_pooling():
@@ -138,7 +138,7 @@ def test_skip_concat_over_pooling_stub():
     layer_num = graph.n_layers
     graph.to_concat_skip_model(1, 14)
 
-    assert graph.n_layers == layer_num + 3
+    assert graph.n_layers == layer_num + 6
 
 
 def test_skip_concat_over_pooling():

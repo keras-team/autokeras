@@ -115,11 +115,14 @@ class ModelTrainer:
         self.early_stop = EarlyStop(max_no_improvement_num)
         self.early_stop.on_train_begin()
 
-        test_loss = 0
-        accuracy = 0
+        test_accuracy_list = []
+        test_loss_list = []
+        self.optimizer = torch.optim.Adam(self.model.parameters())
         for epoch in range(max_iter_num):
             self._train(train_loader, epoch)
             test_loss, accuracy = self._test(test_loader)
+            test_accuracy_list.append(accuracy)
+            test_loss_list.append(test_loss)
             if self.verbose:
                 print('Epoch {}: loss {}, accuracy {}'.format(epoch + 1, test_loss, accuracy))
             decreasing = self.early_stop.on_epoch_end(test_loss)
@@ -127,12 +130,12 @@ class ModelTrainer:
                 if self.verbose:
                     print('No loss decrease after {} epochs'.format(max_no_improvement_num))
                 break
-        return test_loss, accuracy
+        return (sum(test_loss_list[-max_no_improvement_num:]) / max_no_improvement_num,
+                sum(test_accuracy_list[-max_no_improvement_num:]) / max_no_improvement_num)
 
     def _train(self, loader, epoch):
         self.model.train()
 
-        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=lr_schedule(epoch), momentum=0.5)
         for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
             targets = targets.argmax(1)
             inputs, targets = inputs.to(self.device), targets.to(self.device)
