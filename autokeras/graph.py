@@ -8,7 +8,7 @@ from autokeras.constant import Constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
     deeper_conv_block, dense_to_deeper_block, add_noise
 from autokeras.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, to_real_layer, \
-    set_torch_weight_to_stub, set_stub_weight_to_torch
+    set_torch_weight_to_stub, set_stub_weight_to_torch, StubBatchNormalization, StubReLU, StubDropout
 
 
 class NetworkDescriptor:
@@ -395,8 +395,14 @@ class Graph:
             skip_output_id = self.add_layer(deepcopy(self.layer_list[layer_id]), skip_output_id)
 
         # Add the conv layer
+        new_relu_layer = StubReLU()
+        skip_output_id = self.add_layer(new_relu_layer, skip_output_id)
         new_conv_layer = StubConv(self.layer_list[start_id].filters, self.layer_list[end_id].filters, 1)
         skip_output_id = self.add_layer(new_conv_layer, skip_output_id)
+        new_bn_layer = StubBatchNormalization(self.layer_list[end_id].filters)
+        skip_output_id = self.add_layer(new_bn_layer, skip_output_id)
+        new_dropout_layer = StubDropout(Constant.CONV_DROPOUT_RATE)
+        skip_output_id = self.add_layer(new_dropout_layer, skip_output_id)
 
         # Add the add layer.
         dropout_output_id = self.adj_list[dropout_input_id][0][0]
@@ -419,6 +425,13 @@ class Graph:
             bias = np.zeros(filters_end)
             new_conv_layer.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
 
+            n_filters = filters_end
+            new_weights = [add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1]))]
+            new_bn_layer.set_weights(new_weights)
+
     def to_concat_skip_model(self, start_id, end_id):
         """Add a weighted add concatenate connection from after start node to end node.
 
@@ -438,10 +451,6 @@ class Graph:
         for index, layer_id in enumerate(pooling_layer_list):
             skip_output_id = self.add_layer(deepcopy(self.layer_list[layer_id]), skip_output_id)
 
-        # Add the concatenate layer.
-        new_conv_layer = StubConv(self.layer_list[start_id].filters + self.layer_list[end_id].filters,
-                                  self.layer_list[end_id].filters, 1)
-
         dropout_output_id = self.adj_list[dropout_input_id][0][0]
         concat_input_node_id = self._add_node(deepcopy(self.node_list[dropout_output_id]))
         self._redirect_edge(dropout_input_id, dropout_output_id, concat_input_node_id)
@@ -454,10 +463,20 @@ class Graph:
         concat_layer.output = self.node_list[concat_output_node_id]
         self.node_list[concat_output_node_id].shape = concat_layer.output_shape
 
-        self._add_edge(new_conv_layer, concat_output_node_id, dropout_output_id)
-        new_conv_layer.input = self.node_list[concat_output_node_id]
-        new_conv_layer.output = self.node_list[dropout_output_id]
-        self.node_list[dropout_output_id].shape = new_conv_layer.output_shape
+        # Add the concatenate layer.
+        new_relu_layer = StubReLU()
+        concat_output_node_id = self.add_layer(new_relu_layer, concat_output_node_id)
+        new_conv_layer = StubConv(self.layer_list[start_id].filters + self.layer_list[end_id].filters,
+                                  self.layer_list[end_id].filters, 1)
+        concat_output_node_id = self.add_layer(new_conv_layer, concat_output_node_id)
+        new_bn_layer = StubBatchNormalization(self.layer_list[end_id].filters)
+        concat_output_node_id = self.add_layer(new_bn_layer, concat_output_node_id)
+        new_dropout_layer = StubDropout(Constant.CONV_DROPOUT_RATE)
+
+        self._add_edge(new_dropout_layer, concat_output_node_id, dropout_output_id)
+        new_dropout_layer.input = self.node_list[concat_output_node_id]
+        new_dropout_layer.output = self.node_list[dropout_output_id]
+        self.node_list[dropout_output_id].shape = new_dropout_layer.output_shape
 
         if self.weighted:
             filters_end = self.layer_list[end_id].filters
@@ -472,6 +491,13 @@ class Graph:
                                       np.zeros((filters_end, filters_start) + filter_shape)), axis=1)
             bias = np.zeros(filters_end)
             new_conv_layer.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
+
+            n_filters = filters_end
+            new_weights = [add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1]))]
+            new_bn_layer.set_weights(new_weights)
 
     def extract_descriptor(self):
         ret = NetworkDescriptor()

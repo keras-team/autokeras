@@ -52,4 +52,4 @@ def test_default_transform():
     model = graphs[0].produce_model()
     model(torch.Tensor(get_conv_data()))
     assert len(graphs) == 1
-    assert len(graphs[0].layer_list) == 42
+    assert len(graphs[0].layer_list) == 51
