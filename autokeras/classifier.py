@@ -208,7 +208,8 @@ class ImageClassifier:
 
         # Divide training data into training and testing data.
         x_train, x_test, y_train, y_test = train_test_split(x_train, y_train,
-                                                            test_size=Constant.VALIDATION_SET_RATIO,
+                                                            test_size=min(Constant.VALIDATION_SET_SIZE,
+                                                                          int(len(y_train) * 0.2)),
                                                             random_state=42)
 
         train_data = self.data_transformer.transform_train(x_train, y_train)

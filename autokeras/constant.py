@@ -3,7 +3,7 @@ class Constant:
 
     # Data
 
-    VALIDATION_SET_RATIO = 0.08333
+    VALIDATION_SET_SIZE = 0.08333
 
     # Searcher
 

@@ -117,6 +117,7 @@ class ModelTrainer:
 
         test_accuracy_list = []
         test_loss_list = []
+        self.optimizer = torch.optim.Adam(self.model.parameters())
         for epoch in range(max_iter_num):
             self._train(train_loader, epoch)
             test_loss, accuracy = self._test(test_loader)
@@ -135,7 +136,6 @@ class ModelTrainer:
     def _train(self, loader, epoch):
         self.model.train()
 
-        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=lr_schedule(epoch), momentum=0.5)
         for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
             targets = targets.argmax(1)
             inputs, targets = inputs.to(self.device), targets.to(self.device)
