@@ -154,7 +154,7 @@ class Graph:
 
     def _redirect_edge(self, u_id, v_id, new_v_id):
         """Redirect the edge to a new node.
-        Change the edge originally from ｀u_id｀ to ｀v_id｀ into an edge from ｀u_id｀ to ｀new_v_id｀
+        Change the edge originally from `u_id` to `v_id` into an edge from `u_id` to `new_v_id`
         while keeping all other property of the edge the same.
         """
         layer_id = None

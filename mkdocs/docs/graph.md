@@ -42,7 +42,7 @@ Add node to node list if it is not in node list.
 Add an edge to the graph.
 
 ###_redirect_edge
-Redirect the edge to a new node. Change the edge originally from ｀u_id｀ to ｀v_id｀ into an edge from ｀u_id｀ to ｀new_v_id｀ while keeping all other property of the edge the same.
+Redirect the edge to a new node. Change the edge originally from `u_id` to `v_id` into an edge from `u_id` to `new_v_id` while keeping all other property of the edge the same.
 
 ###_replace_layer
 Replace the layer with a new layer.
