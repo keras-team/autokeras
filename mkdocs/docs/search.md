@@ -1,12 +1,11 @@
 ##BayesianSearcher
-Base class of all searcher class.
-This class is the base class of all searcher class, every searcher class can override its search function to implements its strategy.
-
-##### Attributes
+Base class of all searcher classes.
+This class is the base class of all searcher classes, every searcher class can override its search function to implements its strategy.
+#####Attributes
 * **n_classes**: Number of classes in the traget classification task.
 
 * **input_shape**: Arbitrary, although all dimensions in the input shaped must be fixed.
-    Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
+    Use the keyword argument `input_shape` (tuple of integers, does not include the batch axis)
     when using this layer as the first layer in a model.
 
 * **verbose**: Verbosity mode.
@@ -18,7 +17,7 @@ This class is the base class of all searcher class, every searcher class can ove
 
 * **model_count**: An integer. the total number of neural networks in the current searcher.
 
-* **descriptors**: A dictionary of all the neural networks architectures searched.
+* **descriptors**: A dictionary of all the neural network architectures searched.
 
 * **trainer_args**: A dictionary. The params for the constructor of ModelTrainer.
 
@@ -40,27 +39,27 @@ This class is the base class of all searcher class, every searcher class can ove
 
 * **t_min**: A float. The minimum temperature during simulated annealing.
 
-### __init__
-Initialize a BayesianSearcher.
+###__init__
+Initialize the BayesianSearcher.
 
-##### Args
-* **n_classes**: An integer, the number of classes. 
+#####Args
+* **n_classes**: An integer, the number of classes.
 
-* **input_shape**: A tuple. e.g. (28, 28, 1). 
+* **input_shape**: A tuple. e.g. (28, 28, 1).
 
-* **path**: A string. The path to the directory to save the searcher. 
+* **path**: A string. The path to the directory to save the searcher.
 
-* **verbose**: A boolean. Whether to output the intermediate information to stdout. 
+* **verbose**: A boolean. Whether to output the intermediate information to stdout.
 
-* **trainer_args**: A dictionary. The params for the constructor of ModelTrainer. 
+* **trainer_args**: A dictionary. The params for the constructor of ModelTrainer.
 
 * **default_model_len**: An integer. Number of convolutional layers in the initial architecture.
 
-* **default_model_width**: An integer. The number of filters in each layer in the initial architecture. 
+* **default_model_width**: An integer. The number of filters in each layer in the initial architecture.
 
-* **beta**: A float. The regularization parameter beta in the UCB acquisition function. 
+* **beta**: A float. The beta in the UCB acquisition function.
 
-* **kernel_lambda**: A float. The balance factor in the neural network kernel. 
+* **kernel_lambda**: A float. The balance factor in the neural network kernel.
 
 * **t_min**: A float. The minimum temperature during simulated annealing.
 

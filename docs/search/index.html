@@ -157,8 +157,8 @@
             <div class="section">
               
                 <h2 id="bayesiansearcher">BayesianSearcher</h2>
-<p>Base class of all searcher class.
-This class is the base class of all searcher class, every searcher class can override its search function to implements its strategy.</p>
+<p>Base class of all searcher classes.
+This class is the base class of all searcher classes, every searcher class can override its search function to implements its strategy.</p>
 <h5 id="attributes">Attributes</h5>
 <ul>
 <li>
@@ -166,7 +166,7 @@ This class is the base class of all searcher class, every searcher class can ove
 </li>
 <li>
 <p><strong>input_shape</strong>: Arbitrary, although all dimensions in the input shaped must be fixed.
-    Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
+    Use the keyword argument <code>input_shape</code> (tuple of integers, does not include the batch axis)
     when using this layer as the first layer in a model.</p>
 </li>
 <li>
@@ -183,7 +183,7 @@ This class is the base class of all searcher class, every searcher class can ove
 <p><strong>model_count</strong>: An integer. the total number of neural networks in the current searcher.</p>
 </li>
 <li>
-<p><strong>descriptors</strong>: A dictionary of all the neural networks architectures searched.</p>
+<p><strong>descriptors</strong>: A dictionary of all the neural network architectures searched.</p>
 </li>
 <li>
 <p><strong>trainer_args</strong>: A dictionary. The params for the constructor of ModelTrainer.</p>
@@ -217,35 +217,35 @@ This class is the base class of all searcher class, every searcher class can ove
 </li>
 </ul>
 <h3 id="init"><strong>init</strong></h3>
-<p>Initialize a BayesianSearcher.</p>
+<p>Initialize the BayesianSearcher.</p>
 <h5 id="args">Args</h5>
 <ul>
 <li>
-<p><strong>n_classes</strong>: An integer, the number of classes. </p>
+<p><strong>n_classes</strong>: An integer, the number of classes.</p>
 </li>
 <li>
-<p><strong>input_shape</strong>: A tuple. e.g. (28, 28, 1). </p>
+<p><strong>input_shape</strong>: A tuple. e.g. (28, 28, 1).</p>
 </li>
 <li>
-<p><strong>path</strong>: A string. The path to the directory to save the searcher. </p>
+<p><strong>path</strong>: A string. The path to the directory to save the searcher.</p>
 </li>
 <li>
-<p><strong>verbose</strong>: A boolean. Whether to output the intermediate information to stdout. </p>
+<p><strong>verbose</strong>: A boolean. Whether to output the intermediate information to stdout.</p>
 </li>
 <li>
-<p><strong>trainer_args</strong>: A dictionary. The params for the constructor of ModelTrainer. </p>
+<p><strong>trainer_args</strong>: A dictionary. The params for the constructor of ModelTrainer.</p>
 </li>
 <li>
 <p><strong>default_model_len</strong>: An integer. Number of convolutional layers in the initial architecture.</p>
 </li>
 <li>
-<p><strong>default_model_width</strong>: An integer. The number of filters in each layer in the initial architecture. </p>
+<p><strong>default_model_width</strong>: An integer. The number of filters in each layer in the initial architecture.</p>
 </li>
 <li>
-<p><strong>beta</strong>: A float. The regularization parameter beta in the UCB acquisition function. </p>
+<p><strong>beta</strong>: A float. The beta in the UCB acquisition function.</p>
 </li>
 <li>
-<p><strong>kernel_lambda</strong>: A float. The balance factor in the neural network kernel. </p>
+<p><strong>kernel_lambda</strong>: A float. The balance factor in the neural network kernel.</p>
 </li>
 <li>
 <p><strong>t_min</strong>: A float. The minimum temperature during simulated annealing.</p>

@@ -185,8 +185,8 @@
             <div class="section">
               
                 <h2 id="graph">Graph</h2>
-<p>A class represents the neural architecture graph of a Keras model.
-Graph extracts the neural architecture graph from a Keras model. Each node in the graph is a intermediate tensor between layers. Each layer is an edge in the graph.  Notably, multiple edges may refer to the same layer. (<em>e.g.</em> Add layer is adding two tensor into one tensor. So it is related to two edges.)</p>
+<p>A class representing the neural architecture graph of a Keras model.
+Graph extracts the neural architecture graph from a Keras model. Each node in the graph is a intermediate tensor between layers. Each layer is an edge in the graph. Notably, multiple edges may refer to the same layer. (e.g. Add layer is adding two tensor into one tensor. So it is related to two edges.)</p>
 <h5 id="attributes">Attributes</h5>
 <ul>
 <li>
@@ -194,7 +194,7 @@ Graph extracts the neural architecture graph from a Keras model. Each node in th
     should be included in the graph.</p>
 </li>
 <li>
-<p><strong>input_shape</strong>: Tuple of integers, which does not include the batch axis.</p>
+<p><strong>input_shape</strong>: A tuple of integers, which does not include the batch axis.</p>
 </li>
 <li>
 <p><strong>node_list</strong>: A list of integers. The indices of the list are the identifiers.</p>
@@ -224,7 +224,7 @@ Graph extracts the neural architecture graph from a Keras model. Each node in th
 <p><strong>operation_history</strong>: A list saving all the network morphism operations.</p>
 </li>
 <li>
-<p><strong>vis</strong>: A dictionary of temporary storage for whether a local operation has been done
+<p><strong>vis</strong>: A dictionary of temporary storage for whether an local operation has been done
     during the network morphism.</p>
 </li>
 </ul>
@@ -233,11 +233,11 @@ Graph extracts the neural architecture graph from a Keras model. Each node in th
 <h3 id="n_layers">n_layers</h3>
 <p>Return the number of layers in the model.</p>
 <h3 id="_add_node">_add_node</h3>
-<p>Add a node to node list if it not in node list.</p>
+<p>Add node to node list if it is not in node list.</p>
 <h3 id="_add_edge">_add_edge</h3>
 <p>Add an edge to the graph.</p>
 <h3 id="_redirect_edge">_redirect_edge</h3>
-<p>Redirect the edge to a new node. Change the edge originally from u_id to v_id into an edge from u_id to new_v_id while keeping all other property of the edge the same.</p>
+<p>Redirect the edge to a new node. Change the edge originally from ｀u_id｀ to ｀v_id｀ into an edge from ｀u_id｀ to ｀new_v_id｀ while keeping all other property of the edge the same.</p>
 <h3 id="_replace_layer">_replace_layer</h3>
 <p>Replace the layer with a new layer.</p>
 <h3 id="topological_order">topological_order</h3>
@@ -271,9 +271,7 @@ Graph extracts the neural architecture graph from a Keras model. Each node in th
 </li>
 </ul>
 <h3 id="to_wider_model">to_wider_model</h3>
-<ul>
-<li>Widen the last dimension of the output of the pre_layer.</li>
-</ul>
+<p>Widen the last dimension of the output of the pre_layer.</p>
 <h5 id="args_2">Args</h5>
 <ul>
 <li>
@@ -290,13 +288,13 @@ Graph extracts the neural architecture graph from a Keras model. Each node in th
 <li><strong>target_id</strong>: The ID of a dense layer.</li>
 </ul>
 <h3 id="_conv_block_end_node">_conv_block_end_node</h3>
-<p>Get the input node ID of the last layer in the block by layer ID.</p>
+<p>Get the input node ID of the last layer in the block by layer ID. Return the input node ID of the last layer in the convolutional block.</p>
 <h5 id="args_4">Args</h5>
-<p><strong>layer_id</strong>: the convolutional layer ID.</p>
-<h5 id="returns">Returns</h5>
-<p>The input node ID of the last layer in the convolutional block.</p>
+<ul>
+<li><strong>layer_id</strong>: the convolutional layer ID.</li>
+</ul>
 <h3 id="to_add_skip_model">to_add_skip_model</h3>
-<p>Add a weighted skip-connection from after start node to end node.</p>
+<p>Add a weighted add skip-connection from after start node to end node.</p>
 <h5 id="args_5">Args</h5>
 <ul>
 <li>

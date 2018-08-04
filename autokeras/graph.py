@@ -53,20 +53,20 @@ class Node:
 
 
 class Graph:
-    """A class represent the neural architecture graph of a Keras model.
+    """A class representing the neural architecture graph of a Keras model.
 
-    Graph extracts the neural architecture graph from a Keras model. Each node in the graph
-    is a intermediate tensor between layers. Each layer is an edge in the graph.
-
-    Notably, multiple edges may refer to the same layer. (e.g. Add layer is adding
-    two tensor into one tensor. So it is related to two edges.)
+    Graph extracts the neural architecture graph from a Keras model.
+    Each node in the graph is a intermediate tensor between layers.
+    Each layer is an edge in the graph.
+    Notably, multiple edges may refer to the same layer.
+    (e.g. Add layer is adding two tensor into one tensor. So it is related to two edges.)
 
     Attributes:
         weighted: A boolean of whether the weights and biases in the neural network
             should be included in the graph.
-        input_shape: Tuple of integers, does not include the batch axis.
-        node_list: A list of integers, the indices of the list are the identifiers.
-        layer_list: A list of stub layers, the indices of the list are the identifiers.
+        input_shape: A tuple of integers, which does not include the batch axis.
+        node_list: A list of integers. The indices of the list are the identifiers.
+        layer_list: A list of stub layers. The indices of the list are the identifiers.
         node_to_id: A dict instance mapping from node integers to their identifiers.
         layer_to_id: A dict instance mapping from stub layers to their identifiers.
         layer_id_to_input_node_ids: A dict instance mapping from layer identifiers
@@ -125,7 +125,7 @@ class Graph:
         return len(self.layer_list)
 
     def _add_node(self, node):
-        """Add node to node list if it not in node list."""
+        """Add node to node list if it is not in node list."""
         node_id = len(self.node_list)
         self.node_to_id[node] = node_id
         self.node_list.append(node)
@@ -134,7 +134,7 @@ class Graph:
         return node_id
 
     def _add_edge(self, layer, input_id, output_id):
-        """Add edge to the graph."""
+        """Add an edge to the graph."""
 
         if layer in self.layer_to_id:
             layer_id = self.layer_to_id[layer]
@@ -154,7 +154,7 @@ class Graph:
 
     def _redirect_edge(self, u_id, v_id, new_v_id):
         """Redirect the edge to a new node.
-        Change the edge originally from u_id to v_id into an edge from u_id to new_v_id
+        Change the edge originally from ｀u_id｀ to ｀v_id｀ into an edge from ｀u_id｀ to ｀new_v_id｀
         while keeping all other property of the edge the same.
         """
         layer_id = None
@@ -365,18 +365,15 @@ class Graph:
 
     def _conv_block_end_node(self, layer_id):
         """Get the input node ID of the last layer in the block by layer ID.
+            Return the input node ID of the last layer in the convolutional block.
 
         Args:
             layer_id: the convolutional layer ID.
-
-        Returns:
-            The input node ID of the last layer in the convolutional block.
-
         """
         return self._block_end_node(layer_id, Constant.CONV_BLOCK_DISTANCE)
 
     def to_add_skip_model(self, start_id, end_id):
-        """Add a weighted add skip connection from after start node to end node.
+        """Add a weighted add skip-connection from after start node to end node.
 
         Args:
             start_id: The convolutional layer ID, after which to start the skip-connection.

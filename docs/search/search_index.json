@@ -72,12 +72,12 @@
         },
         {
             "location": "/classifier/",
-            "text": "_validate\n\n\nCheck x_train's type and the shape of \nx_train\n, \ny_train\n.\n\n\nread_csv_file\n\n\nRead the cvs file and returns two seperate list containing images name and their labels.\n\n\nArgs\n\n\n\n\ncsv_file_path\n: Path to the CVS file.\n\n\n\n\nReturns\n\n\n\n\nimg_file_names\n: List containing images names. \n\n\nimg_label\n: List containing their respective labels.\n\n\n\n\nread_images\n\n\nReads the images from the path and return their numpy.ndarray instance.\n\n\nArgs\n\n\n\n\nimg_file_names\n: List containing images names\n\n\nimages_dir_path\n: Path to directory containing images\n\n\n\n\nload_image_dataset\n\n\nLoad images from the files and labels from a csv file.\nSecond, the dataset is a set of images and the labels are in a CSV file. The CSV file should contain two columns whose names are 'File Name' and 'Label'. The file names in the first column should match the file names of the images with extensions, e.g., .jpg, .png. The path to the CSV file should be passed through the \ncsv_file_path\n. The path to the directory containing all the images should be passed through \nimage_path\n.\n\n\nArgs\n\n\n\n\ncsv_file_path\n: CVS file path.\n\n\nimages_path\n: Path where images exist.\n\n\n\n\nReturns\n\n\n\n\nx: Four dimensional numpy.ndarray. The channel dimension is the last dimension. \n\n\ny: The labels.\n\n\n\n\nImageClassifier\n\n\nThe image classifier class.\nIt is used for image classification. It searches convolutional neural network architectures for the best configuration for the dataset.\n\n\nAttributes\n\n\n\n\npath\n: A path to the directory to save the classifier.\n\n\ny_encoder\n: An instance of OneHotEncoder for \ny_train\n (array of categorical labels).\n\n\nverbose\n: A boolean value indicating the verbosity mode.\n\n\nsearcher\n: An instance of BayesianSearcher. It searches different\n    neural architecture to find the best model.\n\n\nsearcher_args\n: A dictionary containing the parameters for the searcher's \ninit\n function.\n\n\naugment\n: A boolean value indicating whether the data needs augmentation.\n\n\n\n\ninit\n\n\nInitialize the instance.\nThe classifier will be loaded from the files in 'path' if parameter 'resume' is True. Otherwise it would create a new one.\n\n\nArgs\n\n\n\n\nverbose\n: A boolean of whether the search process will be printed to stdout.\n\n\npath\n: A string. The path to a directory, where the intermediate results are saved.\n\n\nresume\n: A boolean. If True, the classifier will continue to previous work saved in path.\n    Otherwise, the classifier will start a new search.\n\n\naugment\n: A boolean value indicating whether the data needs augmentation.\n\n\n\n\nfit\n\n\nFind the best neural architecture and train it.\nBased on the given dataset, the function will find the best neural architecture for it. The dataset is in numpy.ndarray format. So they training data should be passed through \nx_train\n, \ny_train\n.\n\n\nArgs\n\n\n\n\nx_train\n: A numpy.ndarray instance contains the training data.\n\n\ny_train\n: A numpy.ndarray instance contains the label of the training data.\n\n\ntime_limit\n: The time limit for the search in seconds.\n\n\n\n\npredict\n\n\nReturn predict result for the testing data.\n\n\nArgs\n\n\n\n\nx_test\n: An instance of numpy.ndarray contains the testing data.\n\n\n\n\nReturns\n\n\nA numpy.ndarray containing the results.\n\n\nevaluate\n\n\nReturn the accuracy score between predict value and test_y.\n\n\nfinal_fit\n\n\nFinal training after found the best architecture.\n\n\nArgs\n\n\n\n\nx_train\n: A numpy.ndarray of training data.\n\n\ny_train\n: A numpy.ndarray of training targets.\n\n\nx_test\n: A numpy.ndarray of testing data.\n\n\ny_test\n: A numpy.ndarray of testing targets.\n\n\ntrainer_args\n: A dictionary containing the parameters of the ModelTrainer constructure.\n\n\nretrain\n: A boolean of whether reinitialize the weights of the model.\n\n\n\n\nget_best_model_id\n\n\nReturns\n\n\nAn integer (the best model id).",
+            "text": "_validate\n\n\nCheck \nx_train\n's type and the shape of \nx_train\n, \ny_train\n.\n\n\nread_csv_file\n\n\nRead the cvs file and returns two seperate list containing images name and their labels.\n\n\nArgs\n\n\n\n\ncsv_file_path\n: Path to the CVS file.\n\n\n\n\nReturns\n\n\n\n\n\n\nimg_file_names\n: List containing images names.\n\n\n\n\n\n\nimg_label\n: List containing their respective labels.\n\n\n\n\n\n\nread_images\n\n\nRead the images from the path and return their numpy.ndarray instance. Return a numpy.ndarray instance containing the training data.\n\n\nArgs\n\n\n\n\n\n\nimg_file_names\n: List containing images names.\n\n\n\n\n\n\nimages_dir_path\n: Path to the directory containing images.\n\n\n\n\n\n\nload_image_dataset\n\n\nLoad images from the files and labels from a csv file.\nSecond, the dataset is a set of images and the labels are in a CSV file. The CSV file should contain two columns whose names are 'File Name' and 'Label'. The file names in the first column should match the file names of the images with extensions, e.g., .jpg, .png. The path to the CSV file should be passed through the \ncsv_file_path\n. The path to the directory containing all the images should be passed through \nimage_path\n.\n\n\nArgs\n\n\n\n\n\n\ncsv_file_path\n: CVS file path.\n\n\n\n\n\n\nimages_path\n: Path where images exist.\n\n\n\n\n\n\nReturns\n\n\n\n\n\n\nx\n: Four dimensional numpy.ndarray. The channel dimension is the last dimension.\n\n\n\n\n\n\ny\n: The labels.\n\n\n\n\n\n\nImageClassifier\n\n\nThe image classifier class.\nIt is used for image classification. It searches convolutional neural network architectures for the best configuration for the dataset.\n\n\nAttributes\n\n\n\n\n\n\npath\n: A path to the directory to save the classifier.\n\n\n\n\n\n\ny_encoder\n: An instance of OneHotEncoder for \ny_train\n (array of categorical labels).\n\n\n\n\n\n\nverbose\n: A boolean value indicating the verbosity mode.\n\n\n\n\n\n\nsearcher\n: An instance of BayesianSearcher. It searches different\n    neural architecture to find the best model.\n\n\n\n\n\n\nsearcher_args\n: A dictionary containing the parameters for the searcher's \ninit\n function.\n\n\n\n\n\n\naugment\n: A boolean value indicating whether the data needs augmentation.\n\n\n\n\n\n\ninit\n\n\nInitialize the instance.\nThe classifier will be loaded from the files in 'path' if parameter 'resume' is True. Otherwise it would create a new one.\n\n\nArgs\n\n\n\n\n\n\nverbose\n: A boolean of whether the search process will be printed to stdout.\n\n\n\n\n\n\npath\n: A string. The path to a directory, where the intermediate results are saved.\n\n\n\n\n\n\nresume\n: A boolean. If True, the classifier will continue to previous work saved in path.\n    Otherwise, the classifier will start a new search.\n\n\n\n\n\n\naugment\n: A boolean value indicating whether the data needs augmentation.\n\n\n\n\n\n\nfit\n\n\nFind the best neural architecture and train it.\nBased on the given dataset, the function will find the best neural architecture for it. The dataset is in numpy.ndarray format. So they training data should be passed through \nx_train\n, \ny_train\n.\n\n\nArgs\n\n\n\n\n\n\nx_train\n: A numpy.ndarray instance containing the training data.\n\n\n\n\n\n\ny_train\n: A numpy.ndarray instance containing the label of the training data.\n\n\n\n\n\n\ntime_limit\n: The time limit for the search in seconds.\n\n\n\n\n\n\npredict\n\n\nReturn predict results for the testing data.\n\n\nArgs\n\n\n\n\nx_test\n: An instance of numpy.ndarray containing the testing data.\n\n\n\n\nReturns\n\n\nevaluate\n\n\nReturn the accuracy score between predict value and \ny_test\n.\n\n\nfinal_fit\n\n\nFinal training after found the best architecture.\n\n\nArgs\n\n\n\n\n\n\nx_train\n: A numpy.ndarray of training data.\n\n\n\n\n\n\ny_train\n: A numpy.ndarray of training targets.\n\n\n\n\n\n\nx_test\n: A numpy.ndarray of testing data.\n\n\n\n\n\n\ny_test\n: A numpy.ndarray of testing targets.\n\n\n\n\n\n\ntrainer_args\n: A dictionary containing the parameters of the ModelTrainer constructure.\n\n\n\n\n\n\nretrain\n: A boolean of whether reinitialize the weights of the model.\n\n\n\n\n\n\nget_best_model_id\n\n\nReturn an integer indicating the id of the best model.",
             "title": "classifier"
         },
         {
             "location": "/classifier/#_validate",
-            "text": "Check x_train's type and the shape of  x_train ,  y_train .",
+            "text": "Check  x_train 's type and the shape of  x_train ,  y_train .",
             "title": "_validate"
         },
         {
@@ -92,17 +92,17 @@
         },
         {
             "location": "/classifier/#returns",
-            "text": "img_file_names : List containing images names.   img_label : List containing their respective labels.",
+            "text": "img_file_names : List containing images names.    img_label : List containing their respective labels.",
             "title": "Returns"
         },
         {
             "location": "/classifier/#read_images",
-            "text": "Reads the images from the path and return their numpy.ndarray instance.",
+            "text": "Read the images from the path and return their numpy.ndarray instance. Return a numpy.ndarray instance containing the training data.",
             "title": "read_images"
         },
         {
             "location": "/classifier/#args_1",
-            "text": "img_file_names : List containing images names  images_dir_path : Path to directory containing images",
+            "text": "img_file_names : List containing images names.    images_dir_path : Path to the directory containing images.",
             "title": "Args"
         },
         {
@@ -112,12 +112,12 @@
         },
         {
             "location": "/classifier/#args_2",
-            "text": "csv_file_path : CVS file path.  images_path : Path where images exist.",
+            "text": "csv_file_path : CVS file path.    images_path : Path where images exist.",
             "title": "Args"
         },
         {
             "location": "/classifier/#returns_1",
-            "text": "x: Four dimensional numpy.ndarray. The channel dimension is the last dimension.   y: The labels.",
+            "text": "x : Four dimensional numpy.ndarray. The channel dimension is the last dimension.    y : The labels.",
             "title": "Returns"
         },
         {
@@ -127,7 +127,7 @@
         },
         {
             "location": "/classifier/#attributes",
-            "text": "path : A path to the directory to save the classifier.  y_encoder : An instance of OneHotEncoder for  y_train  (array of categorical labels).  verbose : A boolean value indicating the verbosity mode.  searcher : An instance of BayesianSearcher. It searches different\n    neural architecture to find the best model.  searcher_args : A dictionary containing the parameters for the searcher's  init  function.  augment : A boolean value indicating whether the data needs augmentation.",
+            "text": "path : A path to the directory to save the classifier.    y_encoder : An instance of OneHotEncoder for  y_train  (array of categorical labels).    verbose : A boolean value indicating the verbosity mode.    searcher : An instance of BayesianSearcher. It searches different\n    neural architecture to find the best model.    searcher_args : A dictionary containing the parameters for the searcher's  init  function.    augment : A boolean value indicating whether the data needs augmentation.",
             "title": "Attributes"
         },
         {
@@ -137,7 +137,7 @@
         },
         {
             "location": "/classifier/#args_3",
-            "text": "verbose : A boolean of whether the search process will be printed to stdout.  path : A string. The path to a directory, where the intermediate results are saved.  resume : A boolean. If True, the classifier will continue to previous work saved in path.\n    Otherwise, the classifier will start a new search.  augment : A boolean value indicating whether the data needs augmentation.",
+            "text": "verbose : A boolean of whether the search process will be printed to stdout.    path : A string. The path to a directory, where the intermediate results are saved.    resume : A boolean. If True, the classifier will continue to previous work saved in path.\n    Otherwise, the classifier will start a new search.    augment : A boolean value indicating whether the data needs augmentation.",
             "title": "Args"
         },
         {
@@ -147,27 +147,27 @@
         },
         {
             "location": "/classifier/#args_4",
-            "text": "x_train : A numpy.ndarray instance contains the training data.  y_train : A numpy.ndarray instance contains the label of the training data.  time_limit : The time limit for the search in seconds.",
+            "text": "x_train : A numpy.ndarray instance containing the training data.    y_train : A numpy.ndarray instance containing the label of the training data.    time_limit : The time limit for the search in seconds.",
             "title": "Args"
         },
         {
             "location": "/classifier/#predict",
-            "text": "Return predict result for the testing data.",
+            "text": "Return predict results for the testing data.",
             "title": "predict"
         },
         {
             "location": "/classifier/#args_5",
-            "text": "x_test : An instance of numpy.ndarray contains the testing data.",
+            "text": "x_test : An instance of numpy.ndarray containing the testing data.",
             "title": "Args"
         },
         {
             "location": "/classifier/#returns_2",
-            "text": "A numpy.ndarray containing the results.",
+            "text": "",
             "title": "Returns"
         },
         {
             "location": "/classifier/#evaluate",
-            "text": "Return the accuracy score between predict value and test_y.",
+            "text": "Return the accuracy score between predict value and  y_test .",
             "title": "evaluate"
         },
         {
@@ -177,57 +177,52 @@
         },
         {
             "location": "/classifier/#args_6",
-            "text": "x_train : A numpy.ndarray of training data.  y_train : A numpy.ndarray of training targets.  x_test : A numpy.ndarray of testing data.  y_test : A numpy.ndarray of testing targets.  trainer_args : A dictionary containing the parameters of the ModelTrainer constructure.  retrain : A boolean of whether reinitialize the weights of the model.",
+            "text": "x_train : A numpy.ndarray of training data.    y_train : A numpy.ndarray of training targets.    x_test : A numpy.ndarray of testing data.    y_test : A numpy.ndarray of testing targets.    trainer_args : A dictionary containing the parameters of the ModelTrainer constructure.    retrain : A boolean of whether reinitialize the weights of the model.",
             "title": "Args"
         },
         {
             "location": "/classifier/#get_best_model_id",
-            "text": "",
+            "text": "Return an integer indicating the id of the best model.",
             "title": "get_best_model_id"
         },
         {
-            "location": "/classifier/#returns_3",
-            "text": "An integer (the best model id).",
-            "title": "Returns"
-        },
-        {
             "location": "/search/",
-            "text": "BayesianSearcher\n\n\nBase class of all searcher class.\nThis class is the base class of all searcher class, every searcher class can override its search function to implements its strategy.\n\n\nAttributes\n\n\n\n\n\n\nn_classes\n: Number of classes in the traget classification task.\n\n\n\n\n\n\ninput_shape\n: Arbitrary, although all dimensions in the input shaped must be fixed.\n    Use the keyword argument input_shape (tuple of integers, does not include the batch axis)\n    when using this layer as the first layer in a model.\n\n\n\n\n\n\nverbose\n: Verbosity mode.\n\n\n\n\n\n\nhistory\n: A list that stores the performance of model. Each element in it is a dictionary of 'model_id',\n    'loss', and 'accuracy'.\n\n\n\n\n\n\npath\n: A string. The path to the directory for saving the searcher.\n\n\n\n\n\n\nmodel_count\n: An integer. the total number of neural networks in the current searcher.\n\n\n\n\n\n\ndescriptors\n: A dictionary of all the neural networks architectures searched.\n\n\n\n\n\n\ntrainer_args\n: A dictionary. The params for the constructor of ModelTrainer.\n\n\n\n\n\n\ndefault_model_len\n: An integer. Number of convolutional layers in the initial architecture.\n\n\n\n\n\n\ndefault_model_width\n: An integer. The number of filters in each layer in the initial architecture.\n\n\n\n\n\n\ngpr\n: A GaussianProcessRegressor for bayesian optimization.\n\n\n\n\n\n\nsearch_tree\n: The data structure for storing all the searched architectures in tree structure.\n\n\n\n\n\n\ntraining_queue\n: A list of the generated architectures to be trained.\n\n\n\n\n\n\nx_queue\n: A list of trained architectures not updated to the gpr.\n\n\n\n\n\n\ny_queue\n: A list of trained architecture performances not updated to the gpr.\n\n\n\n\n\n\nbeta\n: A float. The beta in the UCB acquisition function.\n\n\n\n\n\n\nt_min\n: A float. The minimum temperature during simulated annealing.\n\n\n\n\n\n\ninit\n\n\nInitialize a BayesianSearcher.\n\n\nArgs\n\n\n\n\n\n\nn_classes\n: An integer, the number of classes. \n\n\n\n\n\n\ninput_shape\n: A tuple. e.g. (28, 28, 1). \n\n\n\n\n\n\npath\n: A string. The path to the directory to save the searcher. \n\n\n\n\n\n\nverbose\n: A boolean. Whether to output the intermediate information to stdout. \n\n\n\n\n\n\ntrainer_args\n: A dictionary. The params for the constructor of ModelTrainer. \n\n\n\n\n\n\ndefault_model_len\n: An integer. Number of convolutional layers in the initial architecture.\n\n\n\n\n\n\ndefault_model_width\n: An integer. The number of filters in each layer in the initial architecture. \n\n\n\n\n\n\nbeta\n: A float. The regularization parameter beta in the UCB acquisition function. \n\n\n\n\n\n\nkernel_lambda\n: A float. The balance factor in the neural network kernel. \n\n\n\n\n\n\nt_min\n: A float. The minimum temperature during simulated annealing.",
+            "text": "BayesianSearcher\n\n\nBase class of all searcher classes.\nThis class is the base class of all searcher classes, every searcher class can override its search function to implements its strategy.\n\n\nAttributes\n\n\n\n\n\n\nn_classes\n: Number of classes in the traget classification task.\n\n\n\n\n\n\ninput_shape\n: Arbitrary, although all dimensions in the input shaped must be fixed.\n    Use the keyword argument \ninput_shape\n (tuple of integers, does not include the batch axis)\n    when using this layer as the first layer in a model.\n\n\n\n\n\n\nverbose\n: Verbosity mode.\n\n\n\n\n\n\nhistory\n: A list that stores the performance of model. Each element in it is a dictionary of 'model_id',\n    'loss', and 'accuracy'.\n\n\n\n\n\n\npath\n: A string. The path to the directory for saving the searcher.\n\n\n\n\n\n\nmodel_count\n: An integer. the total number of neural networks in the current searcher.\n\n\n\n\n\n\ndescriptors\n: A dictionary of all the neural network architectures searched.\n\n\n\n\n\n\ntrainer_args\n: A dictionary. The params for the constructor of ModelTrainer.\n\n\n\n\n\n\ndefault_model_len\n: An integer. Number of convolutional layers in the initial architecture.\n\n\n\n\n\n\ndefault_model_width\n: An integer. The number of filters in each layer in the initial architecture.\n\n\n\n\n\n\ngpr\n: A GaussianProcessRegressor for bayesian optimization.\n\n\n\n\n\n\nsearch_tree\n: The data structure for storing all the searched architectures in tree structure.\n\n\n\n\n\n\ntraining_queue\n: A list of the generated architectures to be trained.\n\n\n\n\n\n\nx_queue\n: A list of trained architectures not updated to the gpr.\n\n\n\n\n\n\ny_queue\n: A list of trained architecture performances not updated to the gpr.\n\n\n\n\n\n\nbeta\n: A float. The beta in the UCB acquisition function.\n\n\n\n\n\n\nt_min\n: A float. The minimum temperature during simulated annealing.\n\n\n\n\n\n\ninit\n\n\nInitialize the BayesianSearcher.\n\n\nArgs\n\n\n\n\n\n\nn_classes\n: An integer, the number of classes.\n\n\n\n\n\n\ninput_shape\n: A tuple. e.g. (28, 28, 1).\n\n\n\n\n\n\npath\n: A string. The path to the directory to save the searcher.\n\n\n\n\n\n\nverbose\n: A boolean. Whether to output the intermediate information to stdout.\n\n\n\n\n\n\ntrainer_args\n: A dictionary. The params for the constructor of ModelTrainer.\n\n\n\n\n\n\ndefault_model_len\n: An integer. Number of convolutional layers in the initial architecture.\n\n\n\n\n\n\ndefault_model_width\n: An integer. The number of filters in each layer in the initial architecture.\n\n\n\n\n\n\nbeta\n: A float. The beta in the UCB acquisition function.\n\n\n\n\n\n\nkernel_lambda\n: A float. The balance factor in the neural network kernel.\n\n\n\n\n\n\nt_min\n: A float. The minimum temperature during simulated annealing.",
             "title": "search"
         },
         {
             "location": "/search/#bayesiansearcher",
-            "text": "Base class of all searcher class.\nThis class is the base class of all searcher class, every searcher class can override its search function to implements its strategy.",
+            "text": "Base class of all searcher classes.\nThis class is the base class of all searcher classes, every searcher class can override its search function to implements its strategy.",
             "title": "BayesianSearcher"
         },
         {
             "location": "/search/#attributes",
-            "text": "n_classes : Number of classes in the traget classification task.    input_shape : Arbitrary, although all dimensions in the input shaped must be fixed.\n    Use the keyword argument input_shape (tuple of integers, does not include the batch axis)\n    when using this layer as the first layer in a model.    verbose : Verbosity mode.    history : A list that stores the performance of model. Each element in it is a dictionary of 'model_id',\n    'loss', and 'accuracy'.    path : A string. The path to the directory for saving the searcher.    model_count : An integer. the total number of neural networks in the current searcher.    descriptors : A dictionary of all the neural networks architectures searched.    trainer_args : A dictionary. The params for the constructor of ModelTrainer.    default_model_len : An integer. Number of convolutional layers in the initial architecture.    default_model_width : An integer. The number of filters in each layer in the initial architecture.    gpr : A GaussianProcessRegressor for bayesian optimization.    search_tree : The data structure for storing all the searched architectures in tree structure.    training_queue : A list of the generated architectures to be trained.    x_queue : A list of trained architectures not updated to the gpr.    y_queue : A list of trained architecture performances not updated to the gpr.    beta : A float. The beta in the UCB acquisition function.    t_min : A float. The minimum temperature during simulated annealing.",
+            "text": "n_classes : Number of classes in the traget classification task.    input_shape : Arbitrary, although all dimensions in the input shaped must be fixed.\n    Use the keyword argument  input_shape  (tuple of integers, does not include the batch axis)\n    when using this layer as the first layer in a model.    verbose : Verbosity mode.    history : A list that stores the performance of model. Each element in it is a dictionary of 'model_id',\n    'loss', and 'accuracy'.    path : A string. The path to the directory for saving the searcher.    model_count : An integer. the total number of neural networks in the current searcher.    descriptors : A dictionary of all the neural network architectures searched.    trainer_args : A dictionary. The params for the constructor of ModelTrainer.    default_model_len : An integer. Number of convolutional layers in the initial architecture.    default_model_width : An integer. The number of filters in each layer in the initial architecture.    gpr : A GaussianProcessRegressor for bayesian optimization.    search_tree : The data structure for storing all the searched architectures in tree structure.    training_queue : A list of the generated architectures to be trained.    x_queue : A list of trained architectures not updated to the gpr.    y_queue : A list of trained architecture performances not updated to the gpr.    beta : A float. The beta in the UCB acquisition function.    t_min : A float. The minimum temperature during simulated annealing.",
             "title": "Attributes"
         },
         {
             "location": "/search/#init",
-            "text": "Initialize a BayesianSearcher.",
+            "text": "Initialize the BayesianSearcher.",
             "title": "init"
         },
         {
             "location": "/search/#args",
-            "text": "n_classes : An integer, the number of classes.     input_shape : A tuple. e.g. (28, 28, 1).     path : A string. The path to the directory to save the searcher.     verbose : A boolean. Whether to output the intermediate information to stdout.     trainer_args : A dictionary. The params for the constructor of ModelTrainer.     default_model_len : An integer. Number of convolutional layers in the initial architecture.    default_model_width : An integer. The number of filters in each layer in the initial architecture.     beta : A float. The regularization parameter beta in the UCB acquisition function.     kernel_lambda : A float. The balance factor in the neural network kernel.     t_min : A float. The minimum temperature during simulated annealing.",
+            "text": "n_classes : An integer, the number of classes.    input_shape : A tuple. e.g. (28, 28, 1).    path : A string. The path to the directory to save the searcher.    verbose : A boolean. Whether to output the intermediate information to stdout.    trainer_args : A dictionary. The params for the constructor of ModelTrainer.    default_model_len : An integer. Number of convolutional layers in the initial architecture.    default_model_width : An integer. The number of filters in each layer in the initial architecture.    beta : A float. The beta in the UCB acquisition function.    kernel_lambda : A float. The balance factor in the neural network kernel.    t_min : A float. The minimum temperature during simulated annealing.",
             "title": "Args"
         },
         {
             "location": "/graph/",
-            "text": "Graph\n\n\nA class represents the neural architecture graph of a Keras model.\nGraph extracts the neural architecture graph from a Keras model. Each node in the graph is a intermediate tensor between layers. Each layer is an edge in the graph.  Notably, multiple edges may refer to the same layer. (\ne.g.\n Add layer is adding two tensor into one tensor. So it is related to two edges.)\n\n\nAttributes\n\n\n\n\n\n\nweighted\n: A boolean of whether the weights and biases in the neural network\n    should be included in the graph.\n\n\n\n\n\n\ninput_shape\n: Tuple of integers, which does not include the batch axis.\n\n\n\n\n\n\nnode_list\n: A list of integers. The indices of the list are the identifiers.\n\n\n\n\n\n\nlayer_list\n: A list of stub layers. The indices of the list are the identifiers.\n\n\n\n\n\n\nnode_to_id\n: A dict instance mapping from node integers to their identifiers.\n\n\n\n\n\n\nlayer_to_id\n: A dict instance mapping from stub layers to their identifiers.\n\n\n\n\n\n\nlayer_id_to_input_node_ids\n: A dict instance mapping from layer identifiers\n    to their input nodes identifiers.\n\n\n\n\n\n\nadj_list\n: A two dimensional list. The adjacency list of the graph. The first dimension is\n    identified by tensor identifiers. In each edge list, the elements are two-element tuples\n    of (tensor identifier, layer identifier).\n\n\n\n\n\n\nreverse_adj_list\n: A reverse adjacent list in the same format as adj_list.\n\n\n\n\n\n\noperation_history\n: A list saving all the network morphism operations.\n\n\n\n\n\n\nvis\n: A dictionary of temporary storage for whether a local operation has been done\n    during the network morphism.\n\n\n\n\n\n\nn_nodes\n\n\nReturn the number of nodes in the model.\n\n\nn_layers\n\n\nReturn the number of layers in the model.\n\n\n_add_node\n\n\nAdd a node to node list if it not in node list.\n\n\n_add_edge\n\n\nAdd an edge to the graph.\n\n\n_redirect_edge\n\n\nRedirect the edge to a new node. Change the edge originally from u_id to v_id into an edge from u_id to new_v_id while keeping all other property of the edge the same.\n\n\n_replace_layer\n\n\nReplace the layer with a new layer.\n\n\ntopological_order\n\n\nReturn the topological order of the node ids.\n\n\n_search\n\n\nSearch the graph for widening the layers.\n\n\nArgs\n\n\n\n\n\n\nu\n: The starting node identifier.\n\n\n\n\n\n\nstart_dim\n: The position to insert the additional dimensions.\n\n\n\n\n\n\ntotal_dim\n: The total number of dimensions the layer has before widening.\n\n\n\n\n\n\nn_add\n: The number of dimensions to add.\n\n\n\n\n\n\nto_conv_deeper_model\n\n\nInsert a relu-conv-bn block after the target block.\n\n\nArgs\n\n\n\n\n\n\ntarget_id\n: A convolutional layer ID. The new block should be inserted after the block.\n\n\n\n\n\n\nkernel_size\n: An integer. The kernel size of the new convolutional layer.\n\n\n\n\n\n\nto_wider_model\n\n\n\n\nWiden the last dimension of the output of the pre_layer.\n\n\n\n\nArgs\n\n\n\n\n\n\npre_layer_id\n: The ID of a convolutional layer or dense layer.\n\n\n\n\n\n\nn_add\n: The number of dimensions to add.\n\n\n\n\n\n\nto_dense_deeper_model\n\n\nInsert a dense layer after the target layer.\n\n\nArgs\n\n\n\n\ntarget_id\n: The ID of a dense layer.\n\n\n\n\n_conv_block_end_node\n\n\nGet the input node ID of the last layer in the block by layer ID.\n\n\nArgs\n\n\nlayer_id\n: the convolutional layer ID.\n\n\nReturns\n\n\nThe input node ID of the last layer in the convolutional block.\n\n\nto_add_skip_model\n\n\nAdd a weighted skip-connection from after start node to end node.\n\n\nArgs\n\n\n\n\n\n\nstart_id\n: The convolutional layer ID, after which to start the skip-connection.\n\n\n\n\n\n\nend_id\n: The convolutional layer ID, after which to end the skip-connection.\n\n\n\n\n\n\nto_concat_skip_model\n\n\nAdd a weighted add concatenate connection from after start node to end node.\n\n\nArgs\n\n\n\n\n\n\nstart_id\n: The convolutional layer ID, after which to start the skip-connection.\n\n\n\n\n\n\nend_id\n: The convolutional layer ID, after which to end the skip-connection.\n\n\n\n\n\n\nproduce_model\n\n\nBuild a new model based on the current graph.",
+            "text": "Graph\n\n\nA class representing the neural architecture graph of a Keras model.\nGraph extracts the neural architecture graph from a Keras model. Each node in the graph is a intermediate tensor between layers. Each layer is an edge in the graph. Notably, multiple edges may refer to the same layer. (e.g. Add layer is adding two tensor into one tensor. So it is related to two edges.)\n\n\nAttributes\n\n\n\n\n\n\nweighted\n: A boolean of whether the weights and biases in the neural network\n    should be included in the graph.\n\n\n\n\n\n\ninput_shape\n: A tuple of integers, which does not include the batch axis.\n\n\n\n\n\n\nnode_list\n: A list of integers. The indices of the list are the identifiers.\n\n\n\n\n\n\nlayer_list\n: A list of stub layers. The indices of the list are the identifiers.\n\n\n\n\n\n\nnode_to_id\n: A dict instance mapping from node integers to their identifiers.\n\n\n\n\n\n\nlayer_to_id\n: A dict instance mapping from stub layers to their identifiers.\n\n\n\n\n\n\nlayer_id_to_input_node_ids\n: A dict instance mapping from layer identifiers\n    to their input nodes identifiers.\n\n\n\n\n\n\nadj_list\n: A two dimensional list. The adjacency list of the graph. The first dimension is\n    identified by tensor identifiers. In each edge list, the elements are two-element tuples\n    of (tensor identifier, layer identifier).\n\n\n\n\n\n\nreverse_adj_list\n: A reverse adjacent list in the same format as adj_list.\n\n\n\n\n\n\noperation_history\n: A list saving all the network morphism operations.\n\n\n\n\n\n\nvis\n: A dictionary of temporary storage for whether an local operation has been done\n    during the network morphism.\n\n\n\n\n\n\nn_nodes\n\n\nReturn the number of nodes in the model.\n\n\nn_layers\n\n\nReturn the number of layers in the model.\n\n\n_add_node\n\n\nAdd node to node list if it is not in node list.\n\n\n_add_edge\n\n\nAdd an edge to the graph.\n\n\n_redirect_edge\n\n\nRedirect the edge to a new node. Change the edge originally from \uff40u_id\uff40 to \uff40v_id\uff40 into an edge from \uff40u_id\uff40 to \uff40new_v_id\uff40 while keeping all other property of the edge the same.\n\n\n_replace_layer\n\n\nReplace the layer with a new layer.\n\n\ntopological_order\n\n\nReturn the topological order of the node ids.\n\n\n_search\n\n\nSearch the graph for widening the layers.\n\n\nArgs\n\n\n\n\n\n\nu\n: The starting node identifier.\n\n\n\n\n\n\nstart_dim\n: The position to insert the additional dimensions.\n\n\n\n\n\n\ntotal_dim\n: The total number of dimensions the layer has before widening.\n\n\n\n\n\n\nn_add\n: The number of dimensions to add.\n\n\n\n\n\n\nto_conv_deeper_model\n\n\nInsert a relu-conv-bn block after the target block.\n\n\nArgs\n\n\n\n\n\n\ntarget_id\n: A convolutional layer ID. The new block should be inserted after the block.\n\n\n\n\n\n\nkernel_size\n: An integer. The kernel size of the new convolutional layer.\n\n\n\n\n\n\nto_wider_model\n\n\nWiden the last dimension of the output of the pre_layer.\n\n\nArgs\n\n\n\n\n\n\npre_layer_id\n: The ID of a convolutional layer or dense layer.\n\n\n\n\n\n\nn_add\n: The number of dimensions to add.\n\n\n\n\n\n\nto_dense_deeper_model\n\n\nInsert a dense layer after the target layer.\n\n\nArgs\n\n\n\n\ntarget_id\n: The ID of a dense layer.\n\n\n\n\n_conv_block_end_node\n\n\nGet the input node ID of the last layer in the block by layer ID. Return the input node ID of the last layer in the convolutional block.\n\n\nArgs\n\n\n\n\nlayer_id\n: the convolutional layer ID.\n\n\n\n\nto_add_skip_model\n\n\nAdd a weighted add skip-connection from after start node to end node.\n\n\nArgs\n\n\n\n\n\n\nstart_id\n: The convolutional layer ID, after which to start the skip-connection.\n\n\n\n\n\n\nend_id\n: The convolutional layer ID, after which to end the skip-connection.\n\n\n\n\n\n\nto_concat_skip_model\n\n\nAdd a weighted add concatenate connection from after start node to end node.\n\n\nArgs\n\n\n\n\n\n\nstart_id\n: The convolutional layer ID, after which to start the skip-connection.\n\n\n\n\n\n\nend_id\n: The convolutional layer ID, after which to end the skip-connection.\n\n\n\n\n\n\nproduce_model\n\n\nBuild a new model based on the current graph.",
             "title": "graph"
         },
         {
             "location": "/graph/#graph",
-            "text": "A class represents the neural architecture graph of a Keras model.\nGraph extracts the neural architecture graph from a Keras model. Each node in the graph is a intermediate tensor between layers. Each layer is an edge in the graph.  Notably, multiple edges may refer to the same layer. ( e.g.  Add layer is adding two tensor into one tensor. So it is related to two edges.)",
+            "text": "A class representing the neural architecture graph of a Keras model.\nGraph extracts the neural architecture graph from a Keras model. Each node in the graph is a intermediate tensor between layers. Each layer is an edge in the graph. Notably, multiple edges may refer to the same layer. (e.g. Add layer is adding two tensor into one tensor. So it is related to two edges.)",
             "title": "Graph"
         },
         {
             "location": "/graph/#attributes",
-            "text": "weighted : A boolean of whether the weights and biases in the neural network\n    should be included in the graph.    input_shape : Tuple of integers, which does not include the batch axis.    node_list : A list of integers. The indices of the list are the identifiers.    layer_list : A list of stub layers. The indices of the list are the identifiers.    node_to_id : A dict instance mapping from node integers to their identifiers.    layer_to_id : A dict instance mapping from stub layers to their identifiers.    layer_id_to_input_node_ids : A dict instance mapping from layer identifiers\n    to their input nodes identifiers.    adj_list : A two dimensional list. The adjacency list of the graph. The first dimension is\n    identified by tensor identifiers. In each edge list, the elements are two-element tuples\n    of (tensor identifier, layer identifier).    reverse_adj_list : A reverse adjacent list in the same format as adj_list.    operation_history : A list saving all the network morphism operations.    vis : A dictionary of temporary storage for whether a local operation has been done\n    during the network morphism.",
+            "text": "weighted : A boolean of whether the weights and biases in the neural network\n    should be included in the graph.    input_shape : A tuple of integers, which does not include the batch axis.    node_list : A list of integers. The indices of the list are the identifiers.    layer_list : A list of stub layers. The indices of the list are the identifiers.    node_to_id : A dict instance mapping from node integers to their identifiers.    layer_to_id : A dict instance mapping from stub layers to their identifiers.    layer_id_to_input_node_ids : A dict instance mapping from layer identifiers\n    to their input nodes identifiers.    adj_list : A two dimensional list. The adjacency list of the graph. The first dimension is\n    identified by tensor identifiers. In each edge list, the elements are two-element tuples\n    of (tensor identifier, layer identifier).    reverse_adj_list : A reverse adjacent list in the same format as adj_list.    operation_history : A list saving all the network morphism operations.    vis : A dictionary of temporary storage for whether an local operation has been done\n    during the network morphism.",
             "title": "Attributes"
         },
         {
@@ -242,7 +237,7 @@
         },
         {
             "location": "/graph/#_add_node",
-            "text": "Add a node to node list if it not in node list.",
+            "text": "Add node to node list if it is not in node list.",
             "title": "_add_node"
         },
         {
@@ -252,7 +247,7 @@
         },
         {
             "location": "/graph/#_redirect_edge",
-            "text": "Redirect the edge to a new node. Change the edge originally from u_id to v_id into an edge from u_id to new_v_id while keeping all other property of the edge the same.",
+            "text": "Redirect the edge to a new node. Change the edge originally from \uff40u_id\uff40 to \uff40v_id\uff40 into an edge from \uff40u_id\uff40 to \uff40new_v_id\uff40 while keeping all other property of the edge the same.",
             "title": "_redirect_edge"
         },
         {
@@ -307,7 +302,7 @@
         },
         {
             "location": "/graph/#_conv_block_end_node",
-            "text": "Get the input node ID of the last layer in the block by layer ID.",
+            "text": "Get the input node ID of the last layer in the block by layer ID. Return the input node ID of the last layer in the convolutional block.",
             "title": "_conv_block_end_node"
         },
         {
@@ -316,13 +311,8 @@
             "title": "Args"
         },
         {
-            "location": "/graph/#returns",
-            "text": "The input node ID of the last layer in the convolutional block.",
-            "title": "Returns"
-        },
-        {
             "location": "/graph/#to_add_skip_model",
-            "text": "Add a weighted skip-connection from after start node to end node.",
+            "text": "Add a weighted add skip-connection from after start node to end node.",
             "title": "to_add_skip_model"
         },
         {
@@ -347,22 +337,22 @@
         },
         {
             "location": "/preprocessor/",
-            "text": "OneHotEncoder\n\n\nA class that can format data\nThis class provide ways to transform data's classification into vector\n\n\nAttributes\n\n\n\n\n\n\ndata\n: The input data.\n\n\n\n\n\n\nn_classes\n: The number of classification.\n\n\n\n\n\n\nlabels\n: The number of label.\n\n\n\n\n\n\nlabel_to_vec\n: Mapping from label to vector.\n\n\n\n\n\n\nint_to_label\n: Mapping from int to label.\n\n\n\n\n\n\ninit\n\n\nInitialize a OneHotEncoder.\n\n\nfit\n\n\nCreate mapping from label to vector, and vector to label.\n\n\ntransform\n\n\nGet vector for every element in the data array.\n\n\ninverse_transform\n\n\nGet label for every element in data.",
+            "text": "OneHotEncoder\n\n\nA class that can format data.\nThis class provides ways to transform data's classification label into vector.\n\n\nAttributes\n\n\n\n\n\n\ndata\n: The input data\n\n\n\n\n\n\nn_classes\n: The number of classes in the classification problem.\n\n\n\n\n\n\nlabels\n: The number of labels.\n\n\n\n\n\n\nlabel_to_vec\n: Mapping from label to vector.\n\n\n\n\n\n\nint_to_label\n: Mapping from int to label.\n\n\n\n\n\n\ninit\n\n\nInitialize a OneHotEncoder\n\n\nfit\n\n\nCreate mapping from label to vector, and vector to label.\n\n\ntransform\n\n\nGet vector for every element in the data array.\n\n\ninverse_transform\n\n\nGet label for every element in data.",
             "title": "preprocessor"
         },
         {
             "location": "/preprocessor/#onehotencoder",
-            "text": "A class that can format data\nThis class provide ways to transform data's classification into vector",
+            "text": "A class that can format data.\nThis class provides ways to transform data's classification label into vector.",
             "title": "OneHotEncoder"
         },
         {
             "location": "/preprocessor/#attributes",
-            "text": "data : The input data.    n_classes : The number of classification.    labels : The number of label.    label_to_vec : Mapping from label to vector.    int_to_label : Mapping from int to label.",
+            "text": "data : The input data    n_classes : The number of classes in the classification problem.    labels : The number of labels.    label_to_vec : Mapping from label to vector.    int_to_label : Mapping from int to label.",
             "title": "Attributes"
         },
         {
             "location": "/preprocessor/#init",
-            "text": "Initialize a OneHotEncoder.",
+            "text": "Initialize a OneHotEncoder",
             "title": "init"
         },
         {
@@ -382,32 +372,32 @@
         },
         {
             "location": "/utils/",
-            "text": "ensure_dir\n\n\nCreate directory if it does not exist.\n\n\nensure_file_dir\n\n\nCreate path if it does not exist.\n\n\nModelTrainer\n\n\nA class that is used to train model.\nThis class can train a model with dataset and will not stop until getting minimum loss.\n\n\nAttributes\n\n\n\n\n\n\nmodel\n: The model to be trained.\n\n\n\n\n\n\ntrain_data\n: Training data wrapped in batches.\n\n\n\n\n\n\ntest_data\n: Testing data wrapped in batches.\n\n\n\n\n\n\nverbose\n: Verbosity mode.\n\n\n\n\n\n\ninit\n\n\nInitialize a ModelTrainer with \nmodel\n, \nx_train\n, \ny_train\n, \nx_test\n, \ny_test\n, \nverbose\n.\n\n\ntrain_model\n\n\nTrain the model.\n\n\nArgs\n\n\n\n\n\n\nmax_iter_num\n: An integer. The maximum number of epochs to train the model.\n    The training will stop when this number is reached.\n\n\n\n\n\n\nmax_no_improvement_num\n: An integer. The maximum number of epochs when the loss value doesn't decrease.\n    The training will stop when this number is reached.\n\n\n\n\n\n\nbatch_size\n: An integer. The batch size during the training.",
+            "text": "ensure_dir\n\n\nCreate directory if it does not exist\n\n\nensure_file_dir\n\n\nCreate path if it does not exist\n\n\nModelTrainer\n\n\nA class that is used to train the model.\nThis class can train a model with dataset and will not stop until getting the minimum loss.\n\n\nAttributes\n\n\n\n\n\n\nmodel\n: The model that will be trained\n\n\n\n\n\n\ntrain_data\n: Training data wrapped in batches.\n\n\n\n\n\n\ntest_data\n: Testing data wrapped in batches.\n\n\n\n\n\n\nverbose\n: Verbosity mode.\n\n\n\n\n\n\ninit\n\n\nInit the ModelTrainer with \nmodel\n, \nx_train\n, \ny_train\n, \nx_test\n, \ny_test\n, \nverbose\n\n\ntrain_model\n\n\nTrain the model.\n\n\nArgs\n\n\n\n\n\n\nmax_iter_num\n: An integer. The maximum number of epochs to train the model.\n    The training will stop when this number is reached.\n\n\n\n\n\n\nmax_no_improvement_num\n: An integer. The maximum number of epochs when the loss value doesn't decrease.\n    The training will stop when this number is reached.\n\n\n\n\n\n\nbatch_size\n: An integer. The batch size during the training.",
             "title": "utils"
         },
         {
             "location": "/utils/#ensure_dir",
-            "text": "Create directory if it does not exist.",
+            "text": "Create directory if it does not exist",
             "title": "ensure_dir"
         },
         {
             "location": "/utils/#ensure_file_dir",
-            "text": "Create path if it does not exist.",
+            "text": "Create path if it does not exist",
             "title": "ensure_file_dir"
         },
         {
             "location": "/utils/#modeltrainer",
-            "text": "A class that is used to train model.\nThis class can train a model with dataset and will not stop until getting minimum loss.",
+            "text": "A class that is used to train the model.\nThis class can train a model with dataset and will not stop until getting the minimum loss.",
             "title": "ModelTrainer"
         },
         {
             "location": "/utils/#attributes",
-            "text": "model : The model to be trained.    train_data : Training data wrapped in batches.    test_data : Testing data wrapped in batches.    verbose : Verbosity mode.",
+            "text": "model : The model that will be trained    train_data : Training data wrapped in batches.    test_data : Testing data wrapped in batches.    verbose : Verbosity mode.",
             "title": "Attributes"
         },
         {
             "location": "/utils/#init",
-            "text": "Initialize a ModelTrainer with  model ,  x_train ,  y_train ,  x_test ,  y_test ,  verbose .",
+            "text": "Init the ModelTrainer with  model ,  x_train ,  y_train ,  x_test ,  y_test ,  verbose",
             "title": "init"
         },
         {
