@@ -1,7 +1,9 @@
 # Getting Started
 
 ## Installation
-The installation of Auto-Keras is the same as other python packages. Notably, currently we only support Python 3.6.
+The installation of Auto-Keras is the same as other python packages. 
+
+**Note:** currently, Auto-Keras is only compatible with: **Python 3.6**.
 
 #### Latest Stable Version (`pip` installation):
 You can run the following `pip` installation command in your terminal to install the latest stable version.

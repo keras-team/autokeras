@@ -157,31 +157,100 @@
             <div class="section">
               
                 <h2 id="bayesiansearcher">BayesianSearcher</h2>
-<p>Base class of all searcher class
-This class is the base class of all searcher class, every searcher class can override its search function to implements its strategy</p>
-<h4 id="attributes">Attributes</h4>
-<p><strong>n_classes</strong>: number of classification</p>
+<p>Base class of all searcher class.
+This class is the base class of all searcher class, every searcher class can override its search function to implements its strategy.</p>
+<h5 id="attributes">Attributes</h5>
+<ul>
+<li>
+<p><strong>n_classes</strong>: Number of classes in the traget classification task.</p>
+</li>
+<li>
 <p><strong>input_shape</strong>: Arbitrary, although all dimensions in the input shaped must be fixed.
     Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
     when using this layer as the first layer in a model.</p>
-<p><strong>verbose</strong>: verbosity mode</p>
+</li>
+<li>
+<p><strong>verbose</strong>: Verbosity mode.</p>
+</li>
+<li>
 <p><strong>history</strong>: A list that stores the performance of model. Each element in it is a dictionary of 'model_id',
     'loss', and 'accuracy'.</p>
+</li>
+<li>
 <p><strong>path</strong>: A string. The path to the directory for saving the searcher.</p>
+</li>
+<li>
 <p><strong>model_count</strong>: An integer. the total number of neural networks in the current searcher.</p>
+</li>
+<li>
 <p><strong>descriptors</strong>: A dictionary of all the neural networks architectures searched.</p>
+</li>
+<li>
 <p><strong>trainer_args</strong>: A dictionary. The params for the constructor of ModelTrainer.</p>
+</li>
+<li>
 <p><strong>default_model_len</strong>: An integer. Number of convolutional layers in the initial architecture.</p>
+</li>
+<li>
 <p><strong>default_model_width</strong>: An integer. The number of filters in each layer in the initial architecture.</p>
+</li>
+<li>
 <p><strong>gpr</strong>: A GaussianProcessRegressor for bayesian optimization.</p>
+</li>
+<li>
 <p><strong>search_tree</strong>: The data structure for storing all the searched architectures in tree structure.</p>
+</li>
+<li>
 <p><strong>training_queue</strong>: A list of the generated architectures to be trained.</p>
+</li>
+<li>
 <p><strong>x_queue</strong>: A list of trained architectures not updated to the gpr.</p>
+</li>
+<li>
 <p><strong>y_queue</strong>: A list of trained architecture performances not updated to the gpr.</p>
+</li>
+<li>
 <p><strong>beta</strong>: A float. The beta in the UCB acquisition function.</p>
+</li>
+<li>
 <p><strong>t_min</strong>: A float. The minimum temperature during simulated annealing.</p>
+</li>
+</ul>
 <h3 id="init"><strong>init</strong></h3>
-<p>Args: n_classes: An integer, the number of classes. input_shape: A tuple. e.g. (28, 28, 1). path: A string. The path to the directory to save the searcher. verbose: A boolean. Whether to output the intermediate information to stdout. trainer_args: A dictionary. The params for the constructor of ModelTrainer. default_model_len: An integer. Number of convolutional layers in the initial architecture. default_model_width: An integer. The number of filters in each layer in the initial architecture. beta: A float. The beta in the UCB acquisition function. kernel_lambda: A float. The balance factor in the neural network kernel. t_min: A float. The minimum temperature during simulated annealing.</p>
+<p>Initialize a BayesianSearcher.</p>
+<h5 id="args">Args</h5>
+<ul>
+<li>
+<p><strong>n_classes</strong>: An integer, the number of classes. </p>
+</li>
+<li>
+<p><strong>input_shape</strong>: A tuple. e.g. (28, 28, 1). </p>
+</li>
+<li>
+<p><strong>path</strong>: A string. The path to the directory to save the searcher. </p>
+</li>
+<li>
+<p><strong>verbose</strong>: A boolean. Whether to output the intermediate information to stdout. </p>
+</li>
+<li>
+<p><strong>trainer_args</strong>: A dictionary. The params for the constructor of ModelTrainer. </p>
+</li>
+<li>
+<p><strong>default_model_len</strong>: An integer. Number of convolutional layers in the initial architecture.</p>
+</li>
+<li>
+<p><strong>default_model_width</strong>: An integer. The number of filters in each layer in the initial architecture. </p>
+</li>
+<li>
+<p><strong>beta</strong>: A float. The regularization parameter beta in the UCB acquisition function. </p>
+</li>
+<li>
+<p><strong>kernel_lambda</strong>: A float. The balance factor in the neural network kernel. </p>
+</li>
+<li>
+<p><strong>t_min</strong>: A float. The minimum temperature during simulated annealing.</p>
+</li>
+</ul>
               
             </div>
           </div>

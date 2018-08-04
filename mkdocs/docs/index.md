@@ -16,6 +16,8 @@ To install the package, please use the `pip` installation as follows:
 
     pip install autokeras
 
+**Note:** currently, Auto-Keras is only compatible with: **Python 3.6**.
+
 ## Example
 
 Here is a short example of using the package.
