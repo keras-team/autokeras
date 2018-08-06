@@ -3,12 +3,15 @@ from copy import deepcopy
 from queue import Queue
 import numpy as np
 import torch
+import keras
+from keras import layers
 
 from autokeras.constant import Constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
     deeper_conv_block, dense_to_deeper_block, add_noise
 from autokeras.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, to_real_layer, \
-    set_torch_weight_to_stub, set_stub_weight_to_torch, StubBatchNormalization, StubReLU, StubDropout
+    to_real_keras_layer, set_torch_weight_to_stub, set_stub_weight_to_torch, set_stub_weight_to_keras, \
+    StubBatchNormalization, StubReLU, StubDropout
 
 
 class NetworkDescriptor:
@@ -536,6 +539,10 @@ class Graph:
         """Build a new model based on the current graph."""
         return TorchModel(self)
 
+    def produce_keras_model(self):
+        """Build a new keras model based on the current graph."""
+        return KerasModel(self).model
+
     def _layer_ids_in_order(self, layer_ids):
         node_id_to_order_index = {}
         for index, node_id in enumerate(self.topological_order):
@@ -605,3 +612,52 @@ class TorchModel(torch.nn.Module):
         self.graph.weighted = True
         for index, layer in enumerate(self.layers):
             set_torch_weight_to_stub(layer, self.graph.layer_list[index])
+
+
+# class KerasModel(keras.engine.network.Network):
+# class KerasModel(keras.models.Model):
+class KerasModel():
+    def __init__(self, graph):
+        super(KerasModel, self).__init__()
+        self.graph = graph
+        self._layers = []
+        for layer in graph.layer_list:
+            self._layers.append(to_real_keras_layer(layer))
+
+        # Construct the keras graph.
+
+        # Input
+        topo_node_list = self.graph.topological_order
+        output_id = topo_node_list[-1]
+        input_id = topo_node_list[0]
+        input_tensor = keras.layers.Input(shape=graph.node_list[input_id].shape)
+
+        node_list = deepcopy(self.graph.node_list)
+        node_list[input_id] = input_tensor
+
+        # Output
+        for v in topo_node_list:
+            for u, layer_id in self.graph.reverse_adj_list[v]:
+                layer = self.graph.layer_list[layer_id]
+                keras_layer = self._layers[layer_id]
+
+                if isinstance(layer, (StubAdd, StubConcatenate)):
+                    edge_input_tensor = list(map(lambda x: node_list[x],
+                                                 self.graph.layer_id_to_input_node_ids[layer_id]))
+                else:
+                    edge_input_tensor = node_list[u]
+
+                temp_tensor = keras_layer(edge_input_tensor)
+                node_list[v] = temp_tensor
+
+        output_tensor = node_list[output_id]
+        self.model = keras.models.Model(inputs=input_tensor, outputs=output_tensor)
+
+        if graph.weighted:
+            for index, layer in enumerate(self._layers):
+                set_stub_weight_to_keras(self.graph.layer_list[index], layer)
+
+    def set_weight_to_graph(self):
+        self.graph.weighted = True
+        for index, layer in enumerate(self._layers):
+            set_keras_weight_to_stub(layer, self.graph.layer_list[index])
