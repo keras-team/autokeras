@@ -20,7 +20,7 @@ from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_fi
 
 
 def _validate(x_train, y_train):
-    """Check x_train's type and the shape of x_train, y_train."""
+    """Check `x_train`'s type and the shape of `x_train`, `y_train`."""
     try:
         x_train = x_train.astype('float64')
     except ValueError:
@@ -41,13 +41,14 @@ def run_searcher_once(train_data, test_data, path):
 
 
 def read_csv_file(csv_file_path):
-    """Read the cvs file and returns two seperate list containing images name and their labels
+    """Read the cvs file and returns two seperate list containing images name and their labels.
 
     Args:
         csv_file_path: Path to the CVS file.
 
     Returns:
-        img_file_names list containing images names and img_label list containing their respective labels.
+        img_file_names: List containing images names.
+        img_label: List containing their respective labels.
     """
     img_file_names = []
     img_labels = []
@@ -61,14 +62,12 @@ def read_csv_file(csv_file_path):
 
 
 def read_images(img_file_names, images_dir_path):
-    """Reads the images from the path and return there numpy.ndarray instance
+    """Read the images from the path and return their numpy.ndarray instance.
+        Return a numpy.ndarray instance containing the training data.
 
     Args:
-        img_file_names: List containing images names
-        images_dir_path: Path to directory containing images
-
-    Returns:
-        Returns a numpy.ndarray instance containing the training data.
+        img_file_names: List containing images names.
+        images_dir_path: Path to the directory containing images.
     """
     x_train = []
     if os.path.isdir(images_dir_path):
@@ -93,8 +92,8 @@ def load_image_dataset(csv_file_path, images_path):
     The CSV file should contain two columns whose names are 'File Name' and 'Label'.
     The file names in the first column should match the file names of the images with extensions,
     e.g., .jpg, .png.
-    The path to the CSV file should be passed through the csv_file_path.
-    The path to the directory containing all the images should be passed through image_path.
+    The path to the CSV file should be passed through the `csv_file_path`.
+    The path to the directory containing all the images should be passed through `image_path`.
 
     Args:
         csv_file_path: CVS file path.
@@ -117,9 +116,9 @@ class ImageClassifier:
 
     Attributes:
         path: A path to the directory to save the classifier.
-        y_encoder: An instance of OneHotEncoder for y_train (array of categorical labels).
+        y_encoder: An instance of OneHotEncoder for `y_train` (array of categorical labels).
         verbose: A boolean value indicating the verbosity mode.
-        searcher: An instance of BayesianSearcher. It search different
+        searcher: An instance of BayesianSearcher. It searches different
             neural architecture to find the best model.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
         augment: A boolean value indicating whether the data needs augmentation.
@@ -133,9 +132,9 @@ class ImageClassifier:
         Otherwise it would create a new one.
 
         Args:
-            verbose: An boolean of whether the search process will be printed to stdout.
+            verbose: A boolean of whether the search process will be printed to stdout.
             path: A string. The path to a directory, where the intermediate results are saved.
-            resume: An boolean. If True, the classifier will continue to previous work saved in path.
+            resume: A boolean. If True, the classifier will continue to previous work saved in path.
                 Otherwise, the classifier will start a new search.
             augment: A boolean value indicating whether the data needs augmentation.
 
@@ -165,11 +164,11 @@ class ImageClassifier:
 
         Based on the given dataset, the function will find the best neural architecture for it.
         The dataset is in numpy.ndarray format.
-        So they training data should be passed through x_train, y_train.
+        So they training data should be passed through `x_train`, `y_train`.
 
         Args:
-            x_train: An numpy.ndarray instance contains the training data.
-            y_train: An numpy.ndarray instance contains the label of the training data.
+            x_train: A numpy.ndarray instance containing the training data.
+            y_train: A numpy.ndarray instance containing the label of the training data.
             time_limit: The time limit for the search in seconds.
         """
 
@@ -227,13 +226,13 @@ class ImageClassifier:
                 break
 
     def predict(self, x_test):
-        """Return predict result for the testing data.
+        """Return predict results for the testing data.
 
         Args:
-            x_test: An instance of numpy.ndarray contains the testing data.
+            x_test: An instance of numpy.ndarray containing the testing data.
 
         Returns:
-            An numpy.ndarray containing the results.
+            A numpy.ndarray containing the results.
         """
         if Constant.LIMIT_MEMORY:
             pass
@@ -250,7 +249,7 @@ class ImageClassifier:
         return self.y_encoder.inverse_transform(output)
 
     def evaluate(self, x_test, y_test):
-        """Return the accuracy score between predict value and test_y."""
+        """Return the accuracy score between predict value and `y_test`."""
         y_predict = self.predict(x_test)
         return accuracy_score(y_test, y_predict)
 
@@ -264,10 +263,10 @@ class ImageClassifier:
         """Final training after found the best architecture.
 
         Args:
-            x_train: An numpy.ndarray of training data.
-            y_train: An numpy.ndarray of training targets.
-            x_test: An numpy.ndarray of testing data.
-            y_test: An numpy.ndarray of testing targets.
+            x_train: A numpy.ndarray of training data.
+            y_train: A numpy.ndarray of training targets.
+            x_test: A numpy.ndarray of testing data.
+            y_test: A numpy.ndarray of testing targets.
             trainer_args: A dictionary containing the parameters of the ModelTrainer constructure.
             retrain: A boolean of whether reinitialize the weights of the model.
         """
@@ -288,8 +287,5 @@ class ImageClassifier:
         _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.verbose))
 
     def get_best_model_id(self):
-        """
-        Returns:
-            An integer. The best model id.
-        """
+        """ Return an integer indicating the id of the best model."""
         return self.load_searcher().get_best_model_id()

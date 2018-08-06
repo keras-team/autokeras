@@ -63,19 +63,19 @@ class EarlyStop:
 
 
 class ModelTrainer:
-    """A class that is used to train model
+    """A class that is used to train the model.
 
-    This class can train a model with dataset and will not stop until getting minimum loss
+    This class can train a model with dataset and will not stop until getting the minimum loss.
 
     Attributes:
-        model: the model that will be trained
-        train_data: training data wrapped in batches.
-        test_data: testing data wrapped in batches.
-        verbose: verbosity mode
+        model: The model that will be trained
+        train_data: Training data wrapped in batches.
+        test_data: Testing data wrapped in batches.
+        verbose: Verbosity mode.
     """
 
     def __init__(self, model, train_data, test_data, verbose):
-        """Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
+        """Init the ModelTrainer with `model`, `x_train`, `y_train`, `x_test`, `y_test`, `verbose`"""
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.model = model
         self.model.to(self.device)
