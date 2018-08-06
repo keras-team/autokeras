@@ -272,7 +272,7 @@ class ImageClassifier:
             retrain: A boolean of whether reinitialize the weights of the model.
         """
         if trainer_args is None:
-            trainer_args = {}
+            trainer_args = {'max_no_improvement_num': 30}
 
         y_train = self.y_encoder.transform(y_train)
         y_test = self.y_encoder.transform(y_test)

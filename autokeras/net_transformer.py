@@ -1,5 +1,5 @@
 from copy import deepcopy
-from random import randint, randrange
+from random import randint, randrange, sample
 
 from autokeras.constant import Constant
 from autokeras.layers import is_layer
@@ -7,17 +7,17 @@ from autokeras.layers import is_layer
 
 def to_wider_graph(graph):
     weighted_layer_ids = graph.wide_layer_ids()
-    if len(weighted_layer_ids) <= 1:
-        target_id = weighted_layer_ids[0]
-    else:
-        target_id = weighted_layer_ids[randint(0, len(weighted_layer_ids) - 1)]
+    n_wider_layer = randint(1, len(weighted_layer_ids))
+    wider_layers = sample(weighted_layer_ids, n_wider_layer)
 
-    if is_layer(graph.layer_list[target_id], 'Conv'):
-        n_add = graph.layer_list[target_id].filters
-    else:
-        n_add = graph.layer_list[target_id].units
+    for layer_id in wider_layers:
+        layer = graph.layer_list[layer_id]
+        if is_layer(layer, 'Conv'):
+            n_add = layer.filters
+        else:
+            n_add = layer.units
 
-    graph.to_wider_model(target_id, n_add)
+        graph.to_wider_model(layer_id, n_add)
     return graph
 
 
@@ -44,11 +44,15 @@ def to_skip_connection_graph(graph):
 
 def to_deeper_graph(graph):
     weighted_layer_ids = graph.deep_layer_ids()
-    target_id = weighted_layer_ids[randint(0, len(weighted_layer_ids) - 1)]
-    if is_layer(graph.layer_list[target_id], 'Conv'):
-        graph.to_conv_deeper_model(target_id, randint(1, 2) * 2 + 1)
-    else:
-        graph.to_dense_deeper_model(target_id)
+    n_deeper_layer = randint(1, len(weighted_layer_ids))
+    deeper_layer_ids = sample(weighted_layer_ids, n_deeper_layer)
+
+    for layer_id in deeper_layer_ids:
+        layer = graph.layer_list[layer_id]
+        if is_layer(layer, 'Conv'):
+            graph.to_conv_deeper_model(layer_id, randint(1, 2) * 2 + 1)
+        else:
+            graph.to_dense_deeper_model(layer_id)
     return graph
 
 
