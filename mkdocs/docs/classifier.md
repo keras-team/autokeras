@@ -2,10 +2,10 @@
 Check `x_train`'s type and the shape of `x_train`, `y_train`.
 
 ###read_csv_file
-Read the cvs file and returns two seperate list containing images name and their labels.
+Read the csv file and returns two seperate list containing images name and their labels.
 
 #####Args
-* **csv_file_path**: Path to the CVS file.
+* **csv_file_path**: Path to the CSV file.
 
 #####Returns
 * **img_file_names**: List containing images names.
@@ -24,7 +24,7 @@ Read the images from the path and return their numpy.ndarray instance. Return a 
 Load images from the files and labels from a csv file.
 Second, the dataset is a set of images and the labels are in a CSV file. The CSV file should contain two columns whose names are 'File Name' and 'Label'. The file names in the first column should match the file names of the images with extensions, e.g., .jpg, .png. The path to the CSV file should be passed through the `csv_file_path`. The path to the directory containing all the images should be passed through `image_path`.
 #####Args
-* **csv_file_path**: CVS file path.
+* **csv_file_path**: CSV file path.
 
 * **images_path**: Path where images exist.
 
