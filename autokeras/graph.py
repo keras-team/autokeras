@@ -614,8 +614,6 @@ class TorchModel(torch.nn.Module):
             set_torch_weight_to_stub(layer, self.graph.layer_list[index])
 
 
-# class KerasModel(keras.engine.network.Network):
-# class KerasModel(keras.models.Model):
 class KerasModel():
     def __init__(self, graph):
         super(KerasModel, self).__init__()
@@ -625,7 +623,6 @@ class KerasModel():
             self._layers.append(to_real_keras_layer(layer))
 
         # Construct the keras graph.
-
         # Input
         topo_node_list = self.graph.topological_order
         output_id = topo_node_list[-1]
