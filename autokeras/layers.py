@@ -209,7 +209,7 @@ def to_real_layer(layer):
         return torch.nn.Conv2d(layer.input_channel,
                                layer.filters,
                                layer.kernel_size,
-                               padding=layer.kernel_size / 2)
+                               padding=int(layer.kernel_size / 2))
     if is_layer(layer, 'Pooling'):
         return torch.nn.MaxPool2d(2)
     if is_layer(layer, 'BatchNormalization'):
