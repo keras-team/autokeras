@@ -109,3 +109,6 @@ Add a weighted add concatenate connection from after start node to end node.
 ###produce_model
 Build a new model based on the current graph.
 
+###produce_keras_model
+Build a new keras model based on the current graph.
+
