@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-
+from keras import layers
 
 class StubLayer:
     def __init__(self, input_node=None, output_node=None):
@@ -17,7 +17,13 @@ class StubLayer:
     def import_weights(self, torch_layer):
         pass
 
+    def import_weights_keras(self, keras_layer):
+        pass
+
     def export_weights(self, torch_layer):
+        pass
+
+    def export_weights_keras(self, keras_layer):
         pass
 
     def get_weights(self):
@@ -32,9 +38,15 @@ class StubWeightBiasLayer(StubLayer):
     def import_weights(self, torch_layer):
         self.set_weights((torch_layer.weight.data.cpu().numpy(), torch_layer.bias.data.cpu().numpy()))
 
+    def import_weights_keras(self, keras_layer):
+        self.set_weights(keras_layer.get_weights())
+
     def export_weights(self, torch_layer):
         torch_layer.weight.data = torch.Tensor(self.weights[0])
         torch_layer.bias.data = torch.Tensor(self.weights[1])
+
+    def export_weights_keras(self, keras_layer):
+        keras_layer.set_weights(self.weights)
 
 
 class StubBatchNormalization(StubWeightBiasLayer):
@@ -66,6 +78,12 @@ class StubDense(StubWeightBiasLayer):
     def output_shape(self):
         return self.units,
 
+    def import_weights_keras(self, keras_layer):
+        self.set_weights((keras_layer.get_weights()[0].T, keras_layer.get_weights()[1]))
+
+    def export_weights_keras(self, keras_layer):
+        keras_layer.set_weights((self.weights[0].T, self.weights[1]))
+
 
 class StubConv(StubWeightBiasLayer):
     def __init__(self, input_channel, filters, kernel_size, input_node=None, output_node=None):
@@ -79,6 +97,12 @@ class StubConv(StubWeightBiasLayer):
         ret = self.input.shape[:-1]
         ret = ret + (self.filters,)
         return ret
+
+    def import_weights_keras(self, keras_layer):
+        self.set_weights((keras_layer.get_weights()[0].T, keras_layer.get_weights()[1]))
+
+    def export_weights_keras(self, keras_layer):
+        keras_layer.set_weights((self.weights[0].T, self.weights[1]))
 
 
 class StubAggregateLayer(StubLayer):
@@ -202,6 +226,18 @@ class TorchFlatten(nn.Module):
         return input_tensor.view(input_tensor.size(0), -1)
 
 
+def KerasDropout(layer, rate):
+    input_dim = len(layer.input.shape)
+    if input_dim == 2:
+        return layers.SpatialDropout1D(rate)
+    elif input_dim == 3:
+        return layers.SpatialDropout2D(rate)
+    elif input_dim == 4:
+        return layers.SpatialDropout3D(rate)
+    else:
+        return layers.Dropout(rate)
+
+
 def to_real_layer(layer):
     if is_layer(layer, 'Dense'):
         return torch.nn.Linear(layer.input_units, layer.units)
@@ -228,9 +264,43 @@ def to_real_layer(layer):
         return TorchFlatten()
 
 
+def to_real_keras_layer(layer):
+    if is_layer(layer, 'Dense'):
+        return layers.Dense(layer.units, input_shape=(layer.input_units, ))
+    if is_layer(layer, 'Conv'):
+        return layers.Conv2D(layer.filters,
+                             layer.kernel_size,
+                             input_shape=layer.input.shape,
+                             padding='same')  # padding
+    if is_layer(layer, 'Pooling'):
+        return layers.MaxPool2D(2)
+    if is_layer(layer, 'BatchNormalization'):
+        return layers.BatchNormalization(input_shape=layer.input.shape)
+    if is_layer(layer, 'Concatenate'):
+        return layers.Concatenate()
+    if is_layer(layer, 'Add'):
+        return layers.Add()
+    if is_layer(layer, 'Dropout'):
+        return KerasDropout(layer, layer.rate)
+    if is_layer(layer, 'ReLU'):
+        return layers.Activation('relu')
+    if is_layer(layer, 'Softmax'):
+        return layers.Activation('softmax')
+    if is_layer(layer, 'Flatten'):
+        return layers.Flatten()
+
+
 def set_torch_weight_to_stub(torch_layer, stub_layer):
     stub_layer.import_weights(torch_layer)
 
 
+def set_keras_weight_to_stub(keras_layer, stub_layer):
+    stub_layer.import_weights_keras(keras_layer)
+
+
 def set_stub_weight_to_torch(stub_layer, torch_layer):
     stub_layer.export_weights(torch_layer)
+
+
+def set_stub_weight_to_keras(stub_layer, keras_layer):
+    stub_layer.export_weights_keras(keras_layer)
