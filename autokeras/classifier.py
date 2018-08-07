@@ -41,10 +41,10 @@ def run_searcher_once(train_data, test_data, path):
 
 
 def read_csv_file(csv_file_path):
-    """Read the cvs file and returns two seperate list containing images name and their labels.
+    """Read the csv file and returns two seperate list containing images name and their labels.
 
     Args:
-        csv_file_path: Path to the CVS file.
+        csv_file_path: Path to the CSV file.
 
     Returns:
         img_file_names: List containing images names.
@@ -96,7 +96,7 @@ def load_image_dataset(csv_file_path, images_path):
     The path to the directory containing all the images should be passed through `image_path`.
 
     Args:
-        csv_file_path: CVS file path.
+        csv_file_path: CSV file path.
         images_path: Path where images exist.
 
     Returns:
