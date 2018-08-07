@@ -39,6 +39,8 @@ def to_skip_connection_graph(graph):
                 else:
                     valid_connection.append((index_a, index_b, skip_type))
 
+    if len(valid_connection) < 1:
+        return graph
     n_skip_connection = randint(1, len(valid_connection))
     for index_a, index_b, skip_type in sample(valid_connection, n_skip_connection):
         a_id = weighted_layer_ids[index_a]
