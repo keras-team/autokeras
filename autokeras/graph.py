@@ -616,11 +616,10 @@ class TorchModel(torch.nn.Module):
 
 class KerasModel():
     def __init__(self, graph):
-        super(KerasModel, self).__init__()
         self.graph = graph
-        self._layers = []
+        self.layers = []
         for layer in graph.layer_list:
-            self._layers.append(to_real_keras_layer(layer))
+            self.layers.append(to_real_keras_layer(layer))
 
         # Construct the keras graph.
         # Input
@@ -636,7 +635,7 @@ class KerasModel():
         for v in topo_node_list:
             for u, layer_id in self.graph.reverse_adj_list[v]:
                 layer = self.graph.layer_list[layer_id]
-                keras_layer = self._layers[layer_id]
+                keras_layer = self.layers[layer_id]
 
                 if isinstance(layer, (StubAdd, StubConcatenate)):
                     edge_input_tensor = list(map(lambda x: node_list[x],
@@ -651,10 +650,10 @@ class KerasModel():
         self.model = keras.models.Model(inputs=input_tensor, outputs=output_tensor)
 
         if graph.weighted:
-            for index, layer in enumerate(self._layers):
+            for index, layer in enumerate(self.layers):
                 set_stub_weight_to_keras(self.graph.layer_list[index], layer)
 
     def set_weight_to_graph(self):
         self.graph.weighted = True
-        for index, layer in enumerate(self._layers):
+        for index, layer in enumerate(self.layers):
             set_keras_weight_to_stub(layer, self.graph.layer_list[index])
