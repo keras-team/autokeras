@@ -44,7 +44,7 @@ In the example above, the images and the labels are already formatted into numpy
 
 #### What if your data are raw image files (*e.g.* .jpg, .png, .bmp)?
 
-You can use our `load_image_dataset` function to load the images and there labels as follows.
+You can use our `load_image_dataset` function to load the images and their labels as follows.
 
     from autokeras.classifier import load_image_dataset
     
