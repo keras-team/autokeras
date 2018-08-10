@@ -27,7 +27,7 @@ We show an example of image classification on the MNIST dataset, which is a famo
 If the images and the labels are already formatted into numpy arrays, you can 
 
     from keras.datasets import mnist
-    from autokeras.classifier import ImageClassifier
+    from autokeras.image_classifier import ImageClassifier
 
     if __name__ == '__main__':
         (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -46,7 +46,7 @@ In the example above, the images and the labels are already formatted into numpy
 
 You can use our `load_image_dataset` function to load the images and their labels as follows.
 
-    from autokeras.classifier import load_image_dataset
+    from autokeras.image_classifier import load_image_dataset
     
     x_train, y_train = load_image_dataset(csv_file_path="train/label.csv",
                                           images_path="train")

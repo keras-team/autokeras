@@ -41,77 +41,29 @@ def run_searcher_once(train_data, test_data, path):
 
 
 def read_csv_file(csv_file_path):
-    """Read the csv file and returns two seperate list containing images name and their labels.
+    """Read the csv file and returns two seperate list containing files name and their labels.
 
     Args:
         csv_file_path: Path to the CSV file.
 
     Returns:
-        img_file_names: List containing images names.
-        img_label: List containing their respective labels.
+        file_names: List containing files names.
+        file_label: List containing their respective labels.
     """
-    img_file_names = []
-    img_labels = []
-    with open(csv_file_path, 'r') as images_path:
-        path_list = csv.DictReader(images_path)
+    file_names = []
+    file_labels = []
+    with open(csv_file_path, 'r') as files_path:
+        path_list = csv.DictReader(files_path)
         fieldnames = path_list.fieldnames
         for path in path_list:
-            img_file_names.append(path[fieldnames[0]])
-            img_labels.append(path[fieldnames[1]])
-    return img_file_names, img_labels
+            file_names.append(path[fieldnames[0]])
+            file_labels.append(path[fieldnames[1]])
+    return file_names, file_labels
 
+class Classifier:
+    """The base classifier class.
 
-def read_images(img_file_names, images_dir_path):
-    """Read the images from the path and return their numpy.ndarray instance.
-        Return a numpy.ndarray instance containing the training data.
-
-    Args:
-        img_file_names: List containing images names.
-        images_dir_path: Path to the directory containing images.
-    """
-    x_train = []
-    if os.path.isdir(images_dir_path):
-        for img_file in img_file_names:
-            img_path = os.path.join(images_dir_path, img_file)
-            if os.path.exists(img_path):
-                img = ndimage.imread(fname=img_path)
-                if len(img.shape) < 3:
-                    img = img[..., np.newaxis]
-                x_train.append(img)
-            else:
-                raise ValueError("%s image does not exist" % img_file)
-    else:
-        raise ValueError("Directory containing images does not exist")
-    return np.asanyarray(x_train)
-
-
-def load_image_dataset(csv_file_path, images_path):
-    """Load images from the files and labels from a csv file.
-
-    Second, the dataset is a set of images and the labels are in a CSV file.
-    The CSV file should contain two columns whose names are 'File Name' and 'Label'.
-    The file names in the first column should match the file names of the images with extensions,
-    e.g., .jpg, .png.
-    The path to the CSV file should be passed through the `csv_file_path`.
-    The path to the directory containing all the images should be passed through `image_path`.
-
-    Args:
-        csv_file_path: CSV file path.
-        images_path: Path where images exist.
-
-    Returns:
-        x: Four dimensional numpy.ndarray. The channel dimension is the last dimension.
-        y: The labels.
-    """
-    img_file_name, y = read_csv_file(csv_file_path)
-    x = read_images(img_file_name, images_path)
-    return np.array(x), np.array(y)
-
-
-class ImageClassifier:
-    """The image classifier class.
-
-    It is used for image classification. It searches convolutional neural network architectures
+    It is the base class used for classification. It searches convolutional neural network architectures
     for the best configuration for the dataset.
 
     Attributes:
