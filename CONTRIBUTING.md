@@ -1,3 +1,33 @@
+## Contributing:
+
+Contributions are welcome, and greatly appreciated! Every little bit helps, and credit will always be given.
+
+
+There are many ways to contribute to Auto-Keras, with the most common ones being contribution of code or documentation to the project. If you find a typo in the documentation, or have made improvements, do not hesitate to submit a GitHub pull request ([Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md)). 
+
+### Types of Contributions:
+#### Report Bugs:
+Refer to our [Bug Reporting Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/.github/ISSUE_TEMPLATE/bug_report.md) and report bugs at https://github.com/jhfjhfj1/autokeras/issues. 
+#### Fix Bugs:
+Look through the [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues) for bugs. Anything tagged with "bug" and "help wanted" is open to whoever wants to implement it.
+#### Implement Features
+Look through the [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues) for features. Anything tagged with "enhancement" and "help wanted" is open to whoever wants to implement it.
+#### Write Documentation
+Auto-Keras could always use more documentation, whether as part of the official [Auto-Keras docs](https://github.com/jhfjhfj1/autokeras/tree/master/mkdocs/docs), in docstrings, or even on the web in blog posts, articles, and such.
+#### Submit Feedback
+The best way to send feedback is to file an issue at  https://github.com/jhfjhfj1/autokeras/issues
+
+#### Issue Tracker Tags
+All issues and pull requests on the Github issue tracker should have (at least) one of the following tags:
+
+  Tag | Description
+  :--- | :---
+  Bug:           |	Something is happening that clearly shouldn’t happen. Wrong results as well as unexpected errors go here.
+  Enhancement:	 |  Improving performance, usability, consistency.                                                            
+  Documentation: |  Missing, incorrect or sub-standard documentations and examples.                                            
+  New Feature:	 |  Feature requests and pull requests implementing a new feature.                                             
+
+
 ## Code Style Guide:
 
 This project tries to closely follow the official Python Style Guide detailed in [PEP8](https://www.python.org/dev/peps/pep-0008/).
