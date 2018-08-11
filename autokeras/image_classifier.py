@@ -61,6 +61,7 @@ def read_csv_file(csv_file_path):
             file_labels.append(path[fieldnames[1]])
     return file_names, file_labels
 
+
 def read_images(img_file_names, images_dir_path):
     """Read the images from the path and return their numpy.ndarray instance.
         Return a numpy.ndarray instance containing the training data.
@@ -123,8 +124,8 @@ class ImageClassifier(Classifier):
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
         augment: A boolean value indicating whether the data needs augmentation.
     """
-    def __init__(self, verbose=False, path=Constant.DEFAULT_SAVE_PATH, resume=False,
-                 searcher_args=None, augment=None):
+
+    def __init__(self, verbose=False, path=Constant.DEFAULT_SAVE_PATH, resume=False, searcher_args=None, augment=None):
         """Initialize the instance.
 
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
@@ -138,6 +139,7 @@ class ImageClassifier(Classifier):
             augment: A boolean value indicating whether the data needs augmentation.
 
         """
+        super().__init__(verbose)
         if searcher_args is None:
             searcher_args = {}
 
@@ -216,7 +218,7 @@ class ImageClassifier(Classifier):
         pickle_to_file(self, os.path.join(self.path, 'classifier'))
 
         if time_limit is None:
-            time_limit = 24*60*60
+            time_limit = 24 * 60 * 60
 
         start_time = time.time()
         while time.time() - start_time <= time_limit:
