@@ -35,7 +35,7 @@ and
 to ensure your merge request meet our requirements.
 
 #### Write Documentation
-The documentation of Auto-Keras is either directly writen into the Markdown files in
+The documentation of Auto-Keras is either directly written into the Markdown files in
 [mkdocs directory](https://github.com/jhfjhfj1/autokeras/tree/master/mkdocs/docs),
 or automatically extracted from the docstrings by executing the [autogen.py](https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/autogen.py).
 In the first situation, you only need to change the markdown file.
@@ -55,7 +55,7 @@ which would be extracted automatically to generate the documentation.
 
 ## API Guide
 
-You only need to read this guide if you are contributing or updating a new task module, e.g. TextClassifier, VideoClassifier.
+You only need to read this guide if you are creating or updating a new task module, e.g. TextClassifier, VideoClassifier.
 In general, all new task module should inherit their objects from the `Classifier` class in [`autokeras/classifier.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/classifier.py).
 Reach out to us if you feel there is a special requirement.
 For every new feature, a new directory should be created inside the /autokeras directory, e.g. text_classifier.
@@ -68,7 +68,7 @@ The documentation should be provided in two ways, docstring, tutorial, and readm
 We prefer the documentation to be as complete as possible.
 
 ### Docstring
-All the methods and classes may directly called by the user need to be documented with docstrings.
+All the methods and classes may directly be called by the user need to be documented with docstrings.
 The docstrings should contain all the fields required by the [Google Python Style Guide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#381-docstrings).
 
 ### Tutorial
@@ -76,7 +76,7 @@ You only need to add tutorials to your code if you are contributing or updating 
 e.g. TextClassifier, VideoClassifier,
 or a new function could be directly called by the user.
 You can modify `mkdocs/docs/start.md` to add your tutorial.
-The code example of your new task module should be added to `examples` directory.
+The code example of your new task module should be added to the `examples` directory.
 
 ### Readme File
 You only need to add tutorials to your code if you are contributing or updating a new task module,
@@ -88,9 +88,9 @@ The content should contain your name, affiliation, and any reference to the meth
 ## Testing Guide
 [Pytest](https://docs.pytest.org/en/latest/) is used to write the unit tests of Auto-Keras.
 You should test your code by writing unit testing code in `tests` directory.
-The testing file name should be the `.py` file with a prefix of `test_` in corresponding directory,
+The testing file name should be the `.py` file with a prefix of `test_` in the corresponding directory,
 e.g., the name should be `test_layers.py` if the code of which is to test `layer.py`.
 The tests should be run in the root directory of the project by executing the `cov.sh` file.
 It would output the coverage information into a directory named `htmlcov`.
 Please make sure the code coverage percentage does not decrease after your contribution,
-otherwise the code will not be merged.
+otherwise, the code will not be merged.
