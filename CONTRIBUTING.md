@@ -16,9 +16,9 @@ Anything tagged with "bug report" is open to whoever wants to implement it.
 Please follow the 
 [Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md) to submit your pull request. 
 Please also read
-[Code Style Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#code-style-guide),
+[Code Style Guide](#code-style-guide),
 and
-[Documentation Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#documentation-guide)
+[Documentation Guide](#documentation-guide)
 to ensure your merge request meet our requirements.
 
 #### Implement Features
@@ -27,9 +27,9 @@ Anything tagged with "feature request" is open to whoever wants to implement it.
 Please follow the 
 [Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md) to submit your pull request. 
 Please also read
-[Code Style Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#code-style-guide),
-[API Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#api-guide),
-[Documentation Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#documentation-guide),
+[Code Style Guide](#code-style-guide),
+[API Guide](#api-guide),
+[Documentation Guide](#documentation-guide),
 and
 [Testing Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#testing-guide)
 to ensure your merge request meet our requirements.
@@ -43,7 +43,7 @@ In the second situation, you need to change the docstrings and execute [autogen.
 Please follow the 
 [Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md) to submit your pull request. 
 Please also read
-[Documentation Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#documentation-guide)
+[Documentation Guide](#documentation-guide)
 to ensure your merge request meet our requirements.
 
 ## Code Style Guide
