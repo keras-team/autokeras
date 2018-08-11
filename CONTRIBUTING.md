@@ -1,48 +1,66 @@
-## Contributing:
+# Contributing Guide
 
 Contributions are welcome, and greatly appreciated! Every little bit helps, and credit will always be given.
 
+There are many ways to contribute to Auto-Keras,
+including submit feedback, fix bugs, implement features, and write documentation.
+The guide for each type of contribution is as follows.
 
-There are many ways to contribute to Auto-Keras, with the most common ones being contribution of code or documentation to the project. If you find a typo in the documentation, or have made improvements, do not hesitate to submit a GitHub pull request ([Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md)). 
-
-### Types of Contributions:
-#### Report Bugs:
-Refer to our [Bug Reporting Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/.github/ISSUE_TEMPLATE/bug_report.md) and report bugs at https://github.com/jhfjhfj1/autokeras/issues. 
-#### Fix Bugs:
-Look through the [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues) for bugs. Anything tagged with "bug" and "help wanted" is open to whoever wants to implement it.
-#### Implement Features
-Look through the [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues) for features. Anything tagged with "enhancement" and "help wanted" is open to whoever wants to implement it.
-#### Write Documentation
-Auto-Keras could always use more documentation, whether as part of the official [Auto-Keras docs](https://github.com/jhfjhfj1/autokeras/tree/master/mkdocs/docs), in docstrings, or even on the web in blog posts, articles, and such.
 #### Submit Feedback
-The best way to send feedback is to file an issue at  https://github.com/jhfjhfj1/autokeras/issues
+The feedback should be submitted by creating an issue at [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues).
+Select the related template (bug report, feature request, or custom) and add the corresponding labels.
 
-#### Issue Tracker Tags
-All issues and pull requests on the Github issue tracker should have (at least) one of the following tags:
+#### Fix Bugs:
+You may look through the [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues) for bugs.
+Anything tagged with "bug report" is open to whoever wants to implement it.
+Please follow the 
+[Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md) to submit your pull request. 
+Please also read
+[Code Style Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#code-style-guide),
+and
+[Documentation Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#documentation-guide)
+to ensure your merge request meet our requirements.
 
-  Tag | Description
-  :--- | :---
-  Bug:           |	Something is happening that clearly shouldn’t happen. Wrong results as well as unexpected errors go here.
-  Enhancement:	 |  Improving performance, usability, consistency.                                                            
-  Documentation: |  Missing, incorrect or sub-standard documentations and examples.                                            
-  New Feature:	 |  Feature requests and pull requests implementing a new feature.                                             
+#### Implement Features
+You may look through the [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues) for feature requests.
+Anything tagged with "feature request" is open to whoever wants to implement it.
+Please follow the 
+[Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md) to submit your pull request. 
+Please also read
+[Code Style Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#code-style-guide),
+[API Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#api-guide),
+[Documentation Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#documentation-guide),
+and
+[Testing Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#testing-guide)
+to ensure your merge request meet our requirements.
 
+#### Write Documentation
+The documentation of Auto-Keras is either directly writen into the Markdown files in
+[mkdocs directory](https://github.com/jhfjhfj1/autokeras/tree/master/mkdocs/docs),
+or automatically extracted from the docstrings by executing the [autogen.py](https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/autogen.py).
+In the first situation, you only need to change the markdown file.
+In the second situation, you need to change the docstrings and execute [autogen.py](https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/autogen.py) to update the Markdown files.
+Please follow the 
+[Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md) to submit your pull request. 
+Please also read
+[Documentation Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#documentation-guide)
+to ensure your merge request meet our requirements.
 
-## Code Style Guide:
+## Code Style Guide
 
 This project tries to closely follow the official Python Style Guide detailed in [PEP8](https://www.python.org/dev/peps/pep-0008/).
 The docstrings follow the [Google Python Style Guide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#381-docstrings).
 Please follow these style guide closely, especially for the docstrings,
 which would be extracted automatically to generate the documentation.
 
-## API Guide:
+## API Guide
 
 You only need to read this guide if you are contributing or updating a new task module, e.g. TextClassifier, VideoClassifier.
-In general, all new task module should inherit their objects from the `Classifier` class in `autokeras/classifier.py`.
+In general, all new task module should inherit their objects from the `Classifier` class in [`autokeras/classifier.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/classifier.py).
 Reach out to us if you feel there is a special requirement.
 For every new feature, a new directory should be created inside the /autokeras directory, e.g. text_classifier.
 All the code contributed should be within the directory.
-The details of the functions to inherit is in the documentation of [`autokeras/classifier.py`]()
+The details of the functions to inherit is in the documentation of [`autokeras/classifier.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/classifier.py)
  
 ## Documentation Guide:
 
