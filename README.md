@@ -7,7 +7,7 @@
 </p>
 </div>
 
-Auto-Keras is an open source software library for automated machine learning (AutoML). The ultimate goal of AutoML is to allow domain experts with limited data science or machine learning background easily accessible to deep learning models.
+Auto-Keras is an open source software library for automated machine learning (AutoML). It is developed by Data Analytics at Texas A&M (DATA) Lab and community contributors. The ultimate goal of AutoML is to allow domain experts with limited data science or machine learning background easily accessible to deep learning models.
 Auto-Keras provides functions to automatically search for architecture and hyperparameters of deep learning models.
 
 ## Installation
