@@ -1,8 +1,34 @@
 # Contributing Guide
 
 Contributions are welcome, and greatly appreciated! Every little bit helps, and credit will always be given.
+**The type of contribution we would be most happy to see is new task modules, e.g. TextClassifier, VideoClassifier.**
 
-There are many ways to contribute to Auto-Keras,
+## Implement New Task Modules
+A task module is a comparatively separate module which can handle a specify task.
+For example, ImageClassifier is the only task module we have for now.
+The list of task modules we are seeking is all the issues with label "new task module" (in progress).
+
+The new task module should be submitted by pull request from the first day you start to develop the module.
+Make sure your pull request follow the [Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md).
+Your module will be run against our reserved datasets to test the performance.
+If your module's performance meets our expectation,
+the new task module will be merged into Auto-Keras package.
+
+In general, all new task module should inherit their objects from the `Classifier` class in [`autokeras/classifier.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/classifier.py).
+Reach out to us if you feel there is a special requirement.
+For every new feature, a new directory should be created inside the /autokeras directory, e.g. text_classifier.
+All the code contributed should be within the directory.
+The details of the functions to inherit is in the documentation of [`autokeras/classifier.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/classifier.py)
+
+Please also read
+[Code Style Guide](#code-style-guide),
+[Documentation Guide](#documentation-guide),
+and
+[Testing Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#testing-guide)
+to ensure your merge request meet our requirements.
+
+## Other Contributions
+There are many other ways to contribute to Auto-Keras,
 including submit feedback, fix bugs, implement features, and write documentation.
 The guide for each type of contribution is as follows.
 
@@ -28,7 +54,6 @@ Please follow the
 [Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md) to submit your pull request. 
 Please also read
 [Code Style Guide](#code-style-guide),
-[API Guide](#api-guide),
 [Documentation Guide](#documentation-guide),
 and
 [Testing Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#testing-guide)
@@ -53,14 +78,6 @@ The docstrings follow the [Google Python Style Guide](https://github.com/google/
 Please follow these style guide closely, especially for the docstrings,
 which would be extracted automatically to generate the documentation.
 
-## API Guide
-
-You only need to read this guide if you are creating or updating a new task module, e.g. TextClassifier, VideoClassifier.
-In general, all new task module should inherit their objects from the `Classifier` class in [`autokeras/classifier.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/classifier.py).
-Reach out to us if you feel there is a special requirement.
-For every new feature, a new directory should be created inside the /autokeras directory, e.g. text_classifier.
-All the code contributed should be within the directory.
-The details of the functions to inherit is in the documentation of [`autokeras/classifier.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/classifier.py)
  
 ## Documentation Guide:
 
