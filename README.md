@@ -12,6 +12,8 @@ Auto-Keras provides functions to automatically search for architecture and hyper
 
 ## Installation
 
+[![Join the chat at https://gitter.im/autokeras/Lobby](https://badges.gitter.im/autokeras/Lobby.svg)](https://gitter.im/autokeras/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 To install the package, please use the `pip` installation as follows:
 
     pip install autokeras
