@@ -34,8 +34,7 @@ Second, the dataset is a set of images and the labels are in a CSV file. The CSV
 * **y**: The labels.
 
 ##ImageClassifier
-The image classifier class.
-It is used for image classification. It searches convolutional neural network architectures for the best configuration for the dataset.
+The image classifier class is used for image classification. It searches convolutional neural network architectures for the best configuration for the dataset.
 #####Attributes
 * **path**: A path to the directory to save the classifier.
 
