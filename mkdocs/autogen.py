@@ -102,7 +102,7 @@ def parse_func_string(comment):
             elif start_with.startswith(paras[1]):
                 comments[paras[1]] = change_args_to_dict(part)
             elif start_with.startswith(paras[2]):
-                comments[paras[2]] = part
+                comments[paras[2]] = change_args_to_dict(part)
             elif start_with.startswith(paras[3]):
                 comments[paras[3]] = part
             ind = skip_space_line(parts, ind)
@@ -152,19 +152,23 @@ def to_md(comment_dict):
         doc += '\n'
 
     if 'Args' in comment_dict and comment_dict['Args'] is not None:
-        doc += '####Args\n'
+        doc += '#####Args\n'
         for arg, des in comment_dict['Args'].items():
-            doc += '**' + arg + '**: ' + des + '\n\n'
+            doc += '* **' + arg + '**: ' + des + '\n\n'
 
     if 'Attributes' in comment_dict and comment_dict['Attributes'] is not None:
-        doc += '####Attributes\n'
+        doc += '#####Attributes\n'
         for arg, des in comment_dict['Attributes'].items():
-            doc += '**' + arg + '**: ' + des + '\n\n'
+            doc += '* **' + arg + '**: ' + des + '\n\n'
 
     if 'Returns' in comment_dict and comment_dict['Returns'] is not None:
-        doc += '####Returns\n'
-        doc += comment_dict['Returns']
-        doc += '\n'
+        doc += '#####Returns\n'
+        if isinstance(comment_dict['Returns'], str):
+            doc += comment_dict['Returns']
+            doc += '\n'
+        else:
+            for arg, des in comment_dict['Returns'].items():
+                doc += '* **' + arg + '**: ' + des + '\n\n'
     return doc
 
 

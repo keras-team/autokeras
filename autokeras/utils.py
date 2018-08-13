@@ -1,5 +1,8 @@
 import os
+import sys
 import pickle
+from copy import deepcopy
+
 import torch
 
 from torch.utils.data import DataLoader
@@ -60,28 +63,27 @@ class EarlyStop:
 
 
 class ModelTrainer:
-    """A class that is used to train model
+    """A class that is used to train the model.
 
-    This class can train a model with dataset and will not stop until getting minimum loss
+    This class can train a model with dataset and will not stop until getting the minimum loss.
 
     Attributes:
-        model: the model that will be trained
-        x_train: the input train data
-        y_train: the input train data labels
-        x_test: the input test data
-        y_test: the input test data labels
-        verbose: verbosity mode
+        model: The model that will be trained
+        train_data: Training data wrapped in batches.
+        test_data: Testing data wrapped in batches.
+        verbose: Verbosity mode.
     """
 
     def __init__(self, model, train_data, test_data, verbose):
-        """Init ModelTrainer with model, x_train, y_train, x_test, y_test, verbose"""
+        """Init the ModelTrainer with `model`, `x_train`, `y_train`, `x_test`, `y_test`, `verbose`"""
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.model = model
+        self.model.to(self.device)
         self.verbose = verbose
         self.train_data = train_data
         self.test_data = test_data
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.criterion = torch.nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.SGD(model.parameters(), lr=lr_schedule(0), momentum=0.9, weight_decay=5e-4)
+        self.criterion = torch.nn.NLLLoss()
+        self.optimizer = None
         self.early_stop = None
 
     def train_model(self,
@@ -96,9 +98,7 @@ class ModelTrainer:
             max_no_improvement_num: An integer. The maximum number of epochs when the loss value doesn't decrease.
                 The training will stop when this number is reached.
             batch_size: An integer. The batch size during the training.
-            optimizer: An optimizer class.
         """
-        print(max_iter_num)
         if max_iter_num is None:
             max_iter_num = Constant.MAX_ITER_NUM
 
@@ -115,52 +115,56 @@ class ModelTrainer:
         self.early_stop = EarlyStop(max_no_improvement_num)
         self.early_stop.on_train_begin()
 
-        test_loss = 0
-        accuracy = 0
+        test_accuracy_list = []
+        test_loss_list = []
+        self.optimizer = torch.optim.Adam(self.model.parameters())
         for epoch in range(max_iter_num):
-            self._train(train_loader)
+            self._train(train_loader, epoch)
             test_loss, accuracy = self._test(test_loader)
-            terminate = self.early_stop.on_epoch_end(test_loss)
-            if terminate:
+            test_accuracy_list.append(accuracy)
+            test_loss_list.append(test_loss)
+            if self.verbose:
+                print('Epoch {}: loss {}, accuracy {}'.format(epoch + 1, test_loss, accuracy))
+            decreasing = self.early_stop.on_epoch_end(test_loss)
+            if not decreasing:
+                if self.verbose:
+                    print('No loss decrease after {} epochs'.format(max_no_improvement_num))
                 break
-        return test_loss, accuracy
+        return (sum(test_loss_list[-max_no_improvement_num:]) / max_no_improvement_num,
+                sum(test_accuracy_list[-max_no_improvement_num:]) / max_no_improvement_num)
 
-    def _train(self, loader):
+    def _train(self, loader, epoch):
         self.model.train()
-        train_loss = 0
-        correct = 0
-        total = 0
-        for batch_idx, (inputs, targets) in enumerate(loader):
+
+        for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
             targets = targets.argmax(1)
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
-            loss = self.criterion(outputs, targets)
+            loss = torch.nn.functional.nll_loss(outputs, targets)
             loss.backward()
             self.optimizer.step()
-
-            train_loss += loss.item()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+            if self.verbose:
+                if batch_idx % 10 == 0:
+                    print('.', end='')
+                    sys.stdout.flush()
+        if self.verbose:
+            print()
 
     def _test(self, test_loader):
         self.model.eval()
         test_loss = 0
         correct = 0
-        total = 0
         with torch.no_grad():
-            for batch_idx, (inputs, targets) in enumerate(test_loader):
+            for batch_idx, (inputs, targets) in enumerate(deepcopy(test_loader)):
                 targets = targets.argmax(1)
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 outputs = self.model(inputs)
-                loss = self.criterion(outputs, targets)
+                test_loss += self.criterion(outputs, targets)
 
-                test_loss += loss.item()
                 _, predicted = outputs.max(1)
-                total += targets.size(0)
                 correct += predicted.eq(targets).sum().item()
-        return test_loss, correct * 1.0 / total
+        return test_loss, correct * 100.0 / len(test_loader.dataset)
 
 
 def ensure_dir(directory):

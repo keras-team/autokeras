@@ -18,10 +18,16 @@ def test_edit_distance2():
     assert edit_distance(descriptor1, descriptor2, 1.0) == 1.5
 
 
+def test_bourgain_embedding():
+    assert bourgain_embedding_matrix([[0]]).shape == (1, 1)
+    assert bourgain_embedding_matrix([[1, 0], [0, 1]]).shape == (2, 2)
+
+
 def test_gpr():
     gpr = IncrementalGaussianProcess(1.0)
     gpr.first_fit([get_add_skip_model().extract_descriptor()], [0.5])
     assert gpr.first_fitted
 
     gpr.incremental_fit([get_concat_skip_model().extract_descriptor()], [0.6])
+    assert abs(gpr.predict(np.array([get_add_skip_model().extract_descriptor()]))[0] - 0.5) < 1e-4
     assert abs(gpr.predict(np.array([get_concat_skip_model().extract_descriptor()]))[0] - 0.6) < 1e-4

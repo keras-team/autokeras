@@ -1,26 +1,26 @@
 ##OneHotEncoder
-A class that can format data
-This class provide ways to transform data's classification into vector
-####Attributes
-**data**: the input data
+A class that can format data.
+This class provides ways to transform data's classification label into vector.
+#####Attributes
+* **data**: The input data
 
-**n_classes**: the number of classification
+* **n_classes**: The number of classes in the classification problem.
 
-**labels**: the number of label
+* **labels**: The number of labels.
 
-**label_to_vec**: mapping from label to vector
+* **label_to_vec**: Mapping from label to vector.
 
-**int_to_label**: mapping from int to label
+* **int_to_label**: Mapping from int to label.
 
 ###__init__
-Init OneHotEncoder
+Initialize a OneHotEncoder
 
 ###fit
-Create mapping from label to vector, and vector to label
+Create mapping from label to vector, and vector to label.
 
 ###transform
-Get vector for every element in the data array
+Get vector for every element in the data array.
 
 ###inverse_transform
-Get label for every element in data
+Get label for every element in data.
 

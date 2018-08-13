@@ -5,6 +5,7 @@ from tests.common import get_conv_data, get_add_skip_model, get_conv_dense_model
     get_concat_skip_model
 
 
+
 def test_conv_deeper_stub():
     graph = get_conv_dense_model()
     layer_num = graph.n_layers
@@ -84,7 +85,7 @@ def test_dense_wider_stub():
     graph = get_add_skip_model()
     graph.weighted = False
     layer_num = graph.n_layers
-    graph.to_wider_model(26, 3)
+    graph.to_wider_model(32, 3)
 
     assert graph.n_layers == layer_num
 
@@ -93,7 +94,7 @@ def test_dense_wider():
     graph = get_add_skip_model()
     model = graph.produce_model()
     graph = deepcopy(graph)
-    graph.to_wider_model(26, 3)
+    graph.to_wider_model(32, 3)
     new_model = graph.produce_model()
     input_data = torch.Tensor(get_conv_data())
 
@@ -112,7 +113,7 @@ def test_skip_add_over_pooling_stub():
     layer_num = graph.n_layers
     graph.to_add_skip_model(1, 10)
 
-    assert graph.n_layers == layer_num + 3
+    assert graph.n_layers == layer_num + 6
 
 
 def test_skip_add_over_pooling():
@@ -138,7 +139,7 @@ def test_skip_concat_over_pooling_stub():
     layer_num = graph.n_layers
     graph.to_concat_skip_model(1, 14)
 
-    assert graph.n_layers == layer_num + 3
+    assert graph.n_layers == layer_num + 6
 
 
 def test_skip_concat_over_pooling():
@@ -229,3 +230,22 @@ def test_node_consistency():
 
     for layer in graph.layer_list:
         assert layer.output.shape == layer.output_shape
+
+
+def test_produce_keras_model():
+    for graph in [get_conv_dense_model(),
+                  get_add_skip_model(),
+                  get_pooling_model(),
+                  get_concat_skip_model()]:
+        model = graph.produce_keras_model()
+        assert isinstance(model, keras.models.Model)
+
+
+def test_KerasModel():
+    for graph in [get_conv_dense_model(),
+                  get_add_skip_model(),
+                  get_pooling_model(),
+                  get_concat_skip_model()]:
+        Kmodel = KerasModel(graph)
+        Kmodel.set_weight_to_graph()
+        assert isinstance(Kmodel, KerasModel)

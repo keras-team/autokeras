@@ -1,6 +1,7 @@
-import multiprocessing
 import os
 import random
+import torch
+from copy import deepcopy
 from functools import total_ordering
 from queue import PriorityQueue
 
@@ -10,30 +11,39 @@ import math
 # from keras.utils import plot_model
 
 from autokeras.constant import Constant
-from autokeras.bayesian import IncrementalGaussianProcess
+from autokeras.bayesian import IncrementalGaussianProcess, edit_distance
 from autokeras.generator import DefaultClassifierGenerator
 from autokeras.net_transformer import transform, default_transform
 from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
 
+import multiprocessing
+
+
+def contain(descriptors, target_descriptor):
+    for descriptor in descriptors:
+        if edit_distance(descriptor, target_descriptor, 1) < 1e-5:
+            return True
+    return False
+
 
 class BayesianSearcher:
-    """Base class of all searcher class
+    """Base class of all searcher classes.
 
-    This class is the base class of all searcher class,
+    This class is the base class of all searcher classes,
     every searcher class can override its search function
-    to implements its strategy
+    to implements its strategy.
 
     Attributes:
-        n_classes: number of classification
+        n_classes: Number of classes in the traget classification task.
         input_shape: Arbitrary, although all dimensions in the input shaped must be fixed.
-            Use the keyword argument input_shape (tuple of integers, does not include the batch axis)
+            Use the keyword argument `input_shape` (tuple of integers, does not include the batch axis)
             when using this layer as the first layer in a model.
-        verbose: verbosity mode
+        verbose: Verbosity mode.
         history: A list that stores the performance of model. Each element in it is a dictionary of 'model_id',
             'loss', and 'accuracy'.
         path: A string. The path to the directory for saving the searcher.
         model_count: An integer. the total number of neural networks in the current searcher.
-        descriptors: A dictionary of all the neural networks architectures searched.
+        descriptors: A dictionary of all the neural network architectures searched.
         trainer_args: A dictionary. The params for the constructor of ModelTrainer.
         default_model_len: An integer. Number of convolutional layers in the initial architecture.
         default_model_width: An integer. The number of filters in each layer in the initial architecture.
@@ -52,8 +62,8 @@ class BayesianSearcher:
                  default_model_width=Constant.MODEL_WIDTH,
                  beta=Constant.BETA,
                  kernel_lambda=Constant.KERNEL_LAMBDA,
-                 t_min=Constant.T_MIN):
-        """
+                 t_min=None):
+        """Initialize the BayesianSearcher.
 
         Args:
             n_classes: An integer, the number of classes.
@@ -75,7 +85,7 @@ class BayesianSearcher:
         self.history = []
         self.path = path
         self.model_count = 0
-        self.descriptors = {}
+        self.descriptors = []
         self.trainer_args = trainer_args
         self.default_model_len = default_model_len
         self.default_model_width = default_model_width
@@ -88,6 +98,8 @@ class BayesianSearcher:
         self.x_queue = []
         self.y_queue = []
         self.beta = beta
+        if t_min is None:
+            t_min = Constant.T_MIN
         self.t_min = t_min
 
     def load_model_by_id(self, model_id):
@@ -122,14 +134,13 @@ class BayesianSearcher:
             print('Accuracy', accuracy)
 
         ret = {'model_id': model_id, 'loss': loss, 'accuracy': accuracy}
-        descriptor = graph.extract_descriptor()
         self.history.append(ret)
         if model_id == self.get_best_model_id():
             file = open(os.path.join(self.path, 'best_model.txt'), 'w')
             file.write('best model: ' + str(model_id))
             file.close()
 
-        self.descriptors[descriptor] = True
+        descriptor = graph.extract_descriptor()
         self.x_queue.append(descriptor)
         self.y_queue.append(accuracy)
 
@@ -144,14 +155,17 @@ class BayesianSearcher:
         model_id = self.model_count
         self.model_count += 1
         self.training_queue.append((graph, -1, model_id))
+        self.descriptors.append(graph.extract_descriptor())
         for child_graph in default_transform(graph):
             child_id = self.model_count
             self.model_count += 1
             self.training_queue.append((child_graph, model_id, child_id))
+            self.descriptors.append(child_graph.extract_descriptor())
         if self.verbose:
             print('Initialization finished.')
 
     def search(self, train_data, test_data):
+        torch.cuda.empty_cache()
         if not self.history:
             self.init_search()
 
@@ -159,9 +173,10 @@ class BayesianSearcher:
         graph, father_id, model_id = self.training_queue.pop(0)
         if self.verbose:
             print('Training model ', model_id)
+        multiprocessing.set_start_method('spawn', force=True)
         pool = multiprocessing.Pool(1)
         train_results = pool.map_async(train, [(graph, train_data, test_data, self.trainer_args,
-                                                os.path.join(self.path, str(model_id) + '.png'))])
+                                                os.path.join(self.path, str(model_id) + '.png'), self.verbose)])
 
         # Do the search in current thread.
         if not self.training_queue:
@@ -169,6 +184,8 @@ class BayesianSearcher:
             new_model_id = self.model_count
             self.model_count += 1
             self.training_queue.append((new_graph, new_father_id, new_model_id))
+            descriptor = new_graph.extract_descriptor()
+            self.descriptors.append(new_graph.extract_descriptor())
 
         accuracy, loss, graph = train_results.get()[0]
         pool.terminate()
@@ -180,23 +197,24 @@ class BayesianSearcher:
         self.y_queue = []
 
         pickle_to_file(self, os.path.join(self.path, 'searcher'))
+        self.export_json(os.path.join(self.path, 'history.json'))
 
     def maximize_acq(self):
         model_ids = self.search_tree.adj_list.keys()
         target_graph = None
         father_id = None
-        descriptors = self.descriptors
+        descriptors = deepcopy(self.descriptors)
 
+        # Initialize the priority queue.
         pq = PriorityQueue()
         temp_list = []
         for model_id in model_ids:
             accuracy = self.get_accuracy_by_id(model_id)
             temp_list.append((accuracy, model_id))
         temp_list = sorted(temp_list)
-        # if len(temp_list) > 5:
-        #     temp_list = temp_list[:-5]
         for accuracy, model_id in temp_list:
             graph = self.load_model_by_id(model_id)
+            graph.clear_operation_history()
             pq.put(Elem(accuracy, model_id, graph))
 
         t = 1.0
@@ -205,16 +223,18 @@ class BayesianSearcher:
         max_acq = -1
         while not pq.empty() and t > t_min:
             elem = pq.get()
-            ap = math.exp((elem.accuracy - max_acq) / t)
+            temp_exp = min((elem.accuracy - max_acq) / t, 709.0)
+            ap = math.exp(temp_exp)
             if ap > random.uniform(0, 1):
                 graphs = transform(elem.graph)
-                graphs = list(filter(lambda x: x.extract_descriptor() not in descriptors, graphs))
-                if not graphs:
-                    continue
+
                 for temp_graph in graphs:
+                    if contain(descriptors, temp_graph.extract_descriptor()):
+                        continue
+
                     temp_acq_value = self.acq(temp_graph)
                     pq.put(Elem(temp_acq_value, elem.father_id, temp_graph))
-                    descriptors[temp_graph.extract_descriptor()] = True
+                    descriptors.append(temp_graph.extract_descriptor())
                     if temp_acq_value > max_acq:
                         max_acq = temp_acq_value
                         father_id = elem.father_id
@@ -297,13 +317,17 @@ class Elem:
 
 
 def train(args):
-    graph, train_data, test_data, trainer_args, path = args
+    graph, train_data, test_data, trainer_args, path, verbose = args
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)
     loss, accuracy = ModelTrainer(model,
                                   train_data,
                                   test_data,
-                                  False).train_model(**trainer_args)
+                                  verbose).train_model(**trainer_args)
     model.set_weight_to_graph()
     return accuracy, loss, model.graph
+
+
+def same_graph(des1, des2):
+    return edit_distance(des1, des2, 1) == 0

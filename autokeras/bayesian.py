@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+import math
 from scipy.linalg import cholesky, cho_solve, solve_triangular
 from scipy.optimize import linear_sum_assignment
 
@@ -52,17 +53,18 @@ class IncrementalGaussianProcess:
     def __init__(self, kernel_lambda):
         self.alpha = 1e-10
         self._k_matrix = None
+        self._distance_matrix = None
         self._x = None
         self._y = None
         self._first_fitted = False
         self._l_matrix = None
         self._alpha_vector = None
-        self.kernel = kernel
+        self.edit_distance_matrix = edit_distance_matrix
         self.kernel_lambda = kernel_lambda
 
     @property
     def kernel_matrix(self):
-        return self._k_matrix
+        return self._distance_matrix
 
     def fit(self, train_x, train_y):
         if self.first_fitted:
@@ -77,13 +79,17 @@ class IncrementalGaussianProcess:
         train_x, train_y = np.array(train_x), np.array(train_y)
 
         # Incrementally compute K
-        up_right_k = self.kernel(self.kernel_lambda, self._x, train_x)  # Shape (len(X_train_), len(train_x))
+        up_right_k = self.edit_distance_matrix(self.kernel_lambda, self._x, train_x)  # Shape (len(X_train_), len(train_x))
         down_left_k = np.transpose(up_right_k)
-        down_right_k = self.kernel(self.kernel_lambda, train_x)
-        down_right_k[np.diag_indices_from(down_right_k)] += self.alpha
-        up_k = np.concatenate((self._k_matrix, up_right_k), axis=1)
+        down_right_k = self.edit_distance_matrix(self.kernel_lambda, train_x)
+        up_k = np.concatenate((self._distance_matrix, up_right_k), axis=1)
         down_k = np.concatenate((down_left_k, down_right_k), axis=1)
-        self._k_matrix = np.concatenate((up_k, down_k), axis=0)
+        self._distance_matrix = np.concatenate((up_k, down_k), axis=0)
+        self._distance_matrix = bourgain_embedding_matrix(self._distance_matrix)
+        self._k_matrix = 1.0 / np.exp(self._distance_matrix)
+        diag = np.diag_indices_from(self._k_matrix)
+        diag = (diag[0][-len(train_x):], diag[1][-len(train_x):])
+        self._k_matrix[diag] += self.alpha
 
         self._x = np.concatenate((self._x, train_x), axis=0)
         self._y = np.concatenate((self._y, train_y), axis=0)
@@ -104,7 +110,9 @@ class IncrementalGaussianProcess:
         self._x = np.copy(train_x)
         self._y = np.copy(train_y)
 
-        self._k_matrix = self.kernel(self.kernel_lambda, self._x)
+        self._distance_matrix = self.edit_distance_matrix(self.kernel_lambda, self._x)
+        self._distance_matrix = bourgain_embedding_matrix(self._distance_matrix)
+        self._k_matrix = 1.0 / np.exp(self._distance_matrix)
         self._k_matrix[np.diag_indices_from(self._k_matrix)] += self.alpha
 
         self._l_matrix = cholesky(self._k_matrix, lower=True)  # Line 2
@@ -115,7 +123,7 @@ class IncrementalGaussianProcess:
         return self
 
     def predict(self, train_x):
-        k_trans = self.kernel(self.kernel_lambda, train_x, self._x)
+        k_trans = 1.0 / np.exp(self.edit_distance_matrix(self.kernel_lambda, train_x, self._x))
         y_mean = k_trans.dot(self._alpha_vector)  # Line 4 (y_mean = f_star)
 
         # compute inverse K_inv of K based on its Cholesky
@@ -136,20 +144,54 @@ class IncrementalGaussianProcess:
         return y_mean, np.sqrt(y_var)
 
 
-def kernel(kernel_lambda, train_x, train_y=None):
+def edit_distance_matrix(kernel_lambda, train_x, train_y=None):
     if train_y is None:
         ret = np.zeros((train_x.shape[0], train_x.shape[0]))
         for x_index, x in enumerate(train_x):
             for y_index, y in enumerate(train_x):
                 if x_index == y_index:
-                    ret[x_index][y_index] = 1.0
+                    ret[x_index][y_index] = 0
                 elif x_index < y_index:
-                    ret[x_index][y_index] = 1.0 / np.exp(edit_distance(x, y, kernel_lambda))
+                    ret[x_index][y_index] = edit_distance(x, y, kernel_lambda)
                 else:
                     ret[x_index][y_index] = ret[y_index][x_index]
         return ret
     ret = np.zeros((train_x.shape[0], train_y.shape[0]))
     for x_index, x in enumerate(train_x):
         for y_index, y in enumerate(train_y):
-            ret[x_index][y_index] = 1.0 / np.exp(edit_distance(x, y, kernel_lambda))
+            ret[x_index][y_index] = edit_distance(x, y, kernel_lambda)
     return ret
+
+
+def vector_distance(a, b):
+    a = np.array(a)
+    b = np.array(b)
+    return np.linalg.norm(a - b)
+
+
+def bourgain_embedding_matrix(distance_matrix):
+    distance_matrix = np.array(distance_matrix)
+    n = len(distance_matrix)
+    if n == 1:
+        return distance_matrix
+    np.random.seed(123)
+    distort_elements = []
+    r = range(n)
+    k = int(math.ceil(math.log(n) / math.log(2) - 1))
+    t = int(math.ceil(math.log(n)))
+    counter = 0
+    for i in range(0, k + 1):
+        for t in range(t):
+            s = np.random.choice(r, 2 ** i)
+            for j in r:
+                d = min([distance_matrix[j][s] for s in s])
+                counter += len(s)
+                if i == 0 and t == 0:
+                    distort_elements.append([d])
+                else:
+                    distort_elements[j].append(d)
+    distort_matrix = np.zeros((n, n))
+    for i in range(n):
+        for j in range(i + 1, n):
+            distort_matrix[i][j] = distort_matrix[j][i] = vector_distance(distort_elements[i], distort_elements[j])
+    return np.array(distort_matrix)

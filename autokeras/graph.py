@@ -3,12 +3,15 @@ from copy import deepcopy
 from queue import Queue
 import numpy as np
 import torch
+import keras
+from keras import layers
 
 from autokeras.constant import Constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
     deeper_conv_block, dense_to_deeper_block, add_noise
 from autokeras.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, to_real_layer, \
-    set_torch_weight_to_stub, set_stub_weight_to_torch
+    to_real_keras_layer, set_torch_weight_to_stub, set_stub_weight_to_torch, set_stub_weight_to_keras, \
+    set_keras_weight_to_stub, StubBatchNormalization, StubReLU, StubDropout
 
 
 class NetworkDescriptor:
@@ -53,20 +56,20 @@ class Node:
 
 
 class Graph:
-    """A class represent the neural architecture graph of a Keras model.
+    """A class representing the neural architecture graph of a Keras model.
 
-    Graph extracts the neural architecture graph from a Keras model. Each node in the graph
-    is a intermediate tensor between layers. Each layer is an edge in the graph.
-
-    Notably, multiple edges may refer to the same layer. (e.g. Add layer is adding
-    two tensor into one tensor. So it is related to two edges.)
+    Graph extracts the neural architecture graph from a Keras model.
+    Each node in the graph is a intermediate tensor between layers.
+    Each layer is an edge in the graph.
+    Notably, multiple edges may refer to the same layer.
+    (e.g. Add layer is adding two tensor into one tensor. So it is related to two edges.)
 
     Attributes:
         weighted: A boolean of whether the weights and biases in the neural network
             should be included in the graph.
-        input_shape: Tuple of integers, does not include the batch axis.
-        node_list: A list of integers, the indices of the list are the identifiers.
-        layer_list: A list of stub layers, the indices of the list are the identifiers.
+        input_shape: A tuple of integers, which does not include the batch axis.
+        node_list: A list of integers. The indices of the list are the identifiers.
+        layer_list: A list of stub layers. The indices of the list are the identifiers.
         node_to_id: A dict instance mapping from node integers to their identifiers.
         layer_to_id: A dict instance mapping from stub layers to their identifiers.
         layer_id_to_input_node_ids: A dict instance mapping from layer identifiers
@@ -125,7 +128,7 @@ class Graph:
         return len(self.layer_list)
 
     def _add_node(self, node):
-        """Add node to node list if it not in node list."""
+        """Add node to node list if it is not in node list."""
         node_id = len(self.node_list)
         self.node_to_id[node] = node_id
         self.node_list.append(node)
@@ -134,7 +137,7 @@ class Graph:
         return node_id
 
     def _add_edge(self, layer, input_id, output_id):
-        """Add edge to the graph."""
+        """Add an edge to the graph."""
 
         if layer in self.layer_to_id:
             layer_id = self.layer_to_id[layer]
@@ -154,7 +157,7 @@ class Graph:
 
     def _redirect_edge(self, u_id, v_id, new_v_id):
         """Redirect the edge to a new node.
-        Change the edge originally from u_id to v_id into an edge from u_id to new_v_id
+        Change the edge originally from `u_id` to `v_id` into an edge from `u_id` to `new_v_id`
         while keeping all other property of the edge the same.
         """
         layer_id = None
@@ -365,18 +368,15 @@ class Graph:
 
     def _conv_block_end_node(self, layer_id):
         """Get the input node ID of the last layer in the block by layer ID.
+            Return the input node ID of the last layer in the convolutional block.
 
         Args:
             layer_id: the convolutional layer ID.
-
-        Returns:
-            The input node ID of the last layer in the convolutional block.
-
         """
         return self._block_end_node(layer_id, Constant.CONV_BLOCK_DISTANCE)
 
     def to_add_skip_model(self, start_id, end_id):
-        """Add a weighted add skip connection from after start node to end node.
+        """Add a weighted add skip-connection from after start node to end node.
 
         Args:
             start_id: The convolutional layer ID, after which to start the skip-connection.
@@ -395,8 +395,14 @@ class Graph:
             skip_output_id = self.add_layer(deepcopy(self.layer_list[layer_id]), skip_output_id)
 
         # Add the conv layer
+        new_relu_layer = StubReLU()
+        skip_output_id = self.add_layer(new_relu_layer, skip_output_id)
         new_conv_layer = StubConv(self.layer_list[start_id].filters, self.layer_list[end_id].filters, 1)
         skip_output_id = self.add_layer(new_conv_layer, skip_output_id)
+        new_bn_layer = StubBatchNormalization(self.layer_list[end_id].filters)
+        skip_output_id = self.add_layer(new_bn_layer, skip_output_id)
+        new_dropout_layer = StubDropout(Constant.CONV_DROPOUT_RATE)
+        skip_output_id = self.add_layer(new_dropout_layer, skip_output_id)
 
         # Add the add layer.
         dropout_output_id = self.adj_list[dropout_input_id][0][0]
@@ -419,6 +425,13 @@ class Graph:
             bias = np.zeros(filters_end)
             new_conv_layer.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
 
+            n_filters = filters_end
+            new_weights = [add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1]))]
+            new_bn_layer.set_weights(new_weights)
+
     def to_concat_skip_model(self, start_id, end_id):
         """Add a weighted add concatenate connection from after start node to end node.
 
@@ -438,10 +451,6 @@ class Graph:
         for index, layer_id in enumerate(pooling_layer_list):
             skip_output_id = self.add_layer(deepcopy(self.layer_list[layer_id]), skip_output_id)
 
-        # Add the concatenate layer.
-        new_conv_layer = StubConv(self.layer_list[start_id].filters + self.layer_list[end_id].filters,
-                                  self.layer_list[end_id].filters, 1)
-
         dropout_output_id = self.adj_list[dropout_input_id][0][0]
         concat_input_node_id = self._add_node(deepcopy(self.node_list[dropout_output_id]))
         self._redirect_edge(dropout_input_id, dropout_output_id, concat_input_node_id)
@@ -454,10 +463,20 @@ class Graph:
         concat_layer.output = self.node_list[concat_output_node_id]
         self.node_list[concat_output_node_id].shape = concat_layer.output_shape
 
-        self._add_edge(new_conv_layer, concat_output_node_id, dropout_output_id)
-        new_conv_layer.input = self.node_list[concat_output_node_id]
-        new_conv_layer.output = self.node_list[dropout_output_id]
-        self.node_list[dropout_output_id].shape = new_conv_layer.output_shape
+        # Add the concatenate layer.
+        new_relu_layer = StubReLU()
+        concat_output_node_id = self.add_layer(new_relu_layer, concat_output_node_id)
+        new_conv_layer = StubConv(self.layer_list[start_id].filters + self.layer_list[end_id].filters,
+                                  self.layer_list[end_id].filters, 1)
+        concat_output_node_id = self.add_layer(new_conv_layer, concat_output_node_id)
+        new_bn_layer = StubBatchNormalization(self.layer_list[end_id].filters)
+        concat_output_node_id = self.add_layer(new_bn_layer, concat_output_node_id)
+        new_dropout_layer = StubDropout(Constant.CONV_DROPOUT_RATE)
+
+        self._add_edge(new_dropout_layer, concat_output_node_id, dropout_output_id)
+        new_dropout_layer.input = self.node_list[concat_output_node_id]
+        new_dropout_layer.output = self.node_list[dropout_output_id]
+        self.node_list[dropout_output_id].shape = new_dropout_layer.output_shape
 
         if self.weighted:
             filters_end = self.layer_list[end_id].filters
@@ -472,6 +491,13 @@ class Graph:
                                       np.zeros((filters_end, filters_start) + filter_shape)), axis=1)
             bias = np.zeros(filters_end)
             new_conv_layer.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
+
+            n_filters = filters_end
+            new_weights = [add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
+                           add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1]))]
+            new_bn_layer.set_weights(new_weights)
 
     def extract_descriptor(self):
         ret = NetworkDescriptor()
@@ -510,8 +536,12 @@ class Graph:
         return ret
 
     def produce_model(self):
-        """Build a new Keras model based on the current graph."""
+        """Build a new model based on the current graph."""
         return TorchModel(self)
+
+    def produce_keras_model(self):
+        """Build a new keras model based on the current graph."""
+        return KerasModel(self).model
 
     def _layer_ids_in_order(self, layer_ids):
         node_id_to_order_index = {}
@@ -552,9 +582,10 @@ class TorchModel(torch.nn.Module):
         if graph.weighted:
             for index, layer in enumerate(self.layers):
                 set_stub_weight_to_torch(self.graph.layer_list[index], layer)
+        for index, layer in enumerate(self.layers):
+            self.add_module(str(index), layer)
 
     def forward(self, input_tensor):
-        """Build a new Keras model based on the current graph."""
         topo_node_list = self.graph.topological_order
         output_id = topo_node_list[-1]
         input_id = topo_node_list[0]
@@ -582,18 +613,47 @@ class TorchModel(torch.nn.Module):
         for index, layer in enumerate(self.layers):
             set_torch_weight_to_stub(layer, self.graph.layer_list[index])
 
-    def eval(self):
-        super().eval()
-        for layer in self.layers:
-            layer.eval()
 
-    def train(self, mode=True):
-        super().train()
-        for layer in self.layers:
-            layer.train()
+class KerasModel():
+    def __init__(self, graph):
+        self.graph = graph
+        self.layers = []
+        for layer in graph.layer_list:
+            self.layers.append(to_real_keras_layer(layer))
 
-    def parameters(self):
-        parameters = []
-        for layer in self.layers:
-            parameters += list(layer.parameters())
-        return parameters
+        # Construct the keras graph.
+        # Input
+        topo_node_list = self.graph.topological_order
+        output_id = topo_node_list[-1]
+        input_id = topo_node_list[0]
+        input_tensor = keras.layers.Input(shape=graph.node_list[input_id].shape)
+
+        node_list = deepcopy(self.graph.node_list)
+        node_list[input_id] = input_tensor
+
+        # Output
+        for v in topo_node_list:
+            for u, layer_id in self.graph.reverse_adj_list[v]:
+                layer = self.graph.layer_list[layer_id]
+                keras_layer = self.layers[layer_id]
+
+                if isinstance(layer, (StubAdd, StubConcatenate)):
+                    edge_input_tensor = list(map(lambda x: node_list[x],
+                                                 self.graph.layer_id_to_input_node_ids[layer_id]))
+                else:
+                    edge_input_tensor = node_list[u]
+
+                temp_tensor = keras_layer(edge_input_tensor)
+                node_list[v] = temp_tensor
+
+        output_tensor = node_list[output_id]
+        self.model = keras.models.Model(inputs=input_tensor, outputs=output_tensor)
+
+        if graph.weighted:
+            for index, layer in enumerate(self.layers):
+                set_stub_weight_to_keras(self.graph.layer_list[index], layer)
+
+    def set_weight_to_graph(self):
+        self.graph.weighted = True
+        for index, layer in enumerate(self.layers):
+            set_keras_weight_to_stub(layer, self.graph.layer_list[index])

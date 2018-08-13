@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from autokeras.classifier import *
+from autokeras.image_classifier import *
 from autokeras.constant import Constant
 from tests.common import clean_dir, MockProcess
 
@@ -38,12 +38,12 @@ def simple_transform(graph):
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_fit_predict(_, _1):
+def test_fit_predict(_):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
     Constant.SEARCH_MAX_ITER = 1
+    Constant.T_MIN = 0.8
     Constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
     clean_dir(path)
@@ -57,12 +57,12 @@ def test_fit_predict(_, _1):
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_timout(_, _1):
+def test_timout(_):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
     Constant.SEARCH_MAX_ITER = 1
+    Constant.T_MIN = 0.8
     Constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
     clean_dir(path)
@@ -98,12 +98,12 @@ def test_final_fit(_, _1):
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_save_continue(_, _1):
+def test_save_continue(_):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 1
     Constant.SEARCH_MAX_ITER = 1
+    Constant.T_MIN = 0.8
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
