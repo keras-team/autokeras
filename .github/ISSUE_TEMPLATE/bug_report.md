@@ -30,6 +30,7 @@ A clear and concise description of what you expected to happen.
 Include the details about the versions of:
  - OS type and version:
  - Python: 
+ - autokeras: <!--- e.g. 0.2.1, 0.2.0, master-->
  - scikit-learn:
  - numpy:
  - keras:
