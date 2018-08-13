@@ -52,7 +52,7 @@ def test_dense_deeper():
     output1 = model(input_data)
     output2 = new_model(input_data)
 
-    assert (output1 - output2).abs().sum() < 1e-4
+    assert (output1 - output2).abs().sum() < 1e-3
 
 
 def test_conv_wider_stub():
