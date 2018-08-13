@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from autokeras.classifier import *
+from autokeras.image_classifier import *
 from autokeras.constant import Constant
 from tests.common import clean_dir, MockProcess
 
