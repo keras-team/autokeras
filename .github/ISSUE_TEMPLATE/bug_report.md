@@ -4,10 +4,12 @@ about: Create a report to help us improve
 
 ---
 
+<!---
 **If you are reporting a bug:**
 *  Verify that your issue is not being currently addressed by other issues or pull requests.
 *  Please note that Auto-Keras is only compatible with **Python 3.6**.
-*  Tag the issue with the **Bug** tag.
+*  Tag the issue with the `bug report` tag.
+-->
 
 **Describe the bug:**
 A clear and concise description of what the bug is.
@@ -21,7 +23,7 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Setup Details:**
-Any details about your local setup that might be helpful in troubleshooting. Include the details about the versions of:
+Include the details about the versions of:
  - OS type and version:
  - Python: 
  - scikit-learn:
@@ -29,6 +31,7 @@ Any details about your local setup that might be helpful in troubleshooting. Inc
  - keras:
  - scipy:
  - tensorflow:
+ - pytorch:
 
 **Additional context:**
 Add any other context about the problem here.
