@@ -11,18 +11,22 @@ about: Create a report to help us improve
 *  Tag the issue with the `bug report` tag.
 -->
 
-**Describe the bug:**
+### Bug Description
+<!---
 A clear and concise description of what the bug is.
+-->
 
-**To Reproduce:**
+### Reproducing Steps
 Steps to reproduce the behavior:
   * Step 1: ...
   * Step 2: ...
 
-**Expected behavior:**
+### Expected Behavior
+<!---
 A clear and concise description of what you expected to happen.
+-->
 
-**Setup Details:**
+### Setup Details
 Include the details about the versions of:
  - OS type and version:
  - Python: 
@@ -33,5 +37,7 @@ Include the details about the versions of:
  - tensorflow:
  - pytorch:
 
-**Additional context:**
+### Additional context
+<!---
 Add any other context about the problem here.
+-->
