@@ -4,17 +4,31 @@ about: Suggest an idea for this project
 
 ---
 
-**Describe which feature do you want to add to this project**
+<!---
+Please label your issue with `feature_request`.
+-->
+
+### Feature Description
+<!---
 A clear and concise description of idea/feature. If it is related to some problem you are facing, then explain the problem.
+-->
 
-**Explain why this feature is needed**
+### Reason
+<!---
 A clear and concise description of why this feature would be useful for the project.
+-->
 
-**Describe the solution you'd like**
+### Solution
+<!---
 A clear and concise description of what you want to happen.
+-->
 
-**Describe alternatives you've considered**
+### Alternative Solutions
+<!---
 A clear and concise description of any alternative solutions or features you've considered.
+-->
 
-**Additional context**
+### Additional Context
+<!---
 Add any other context or screenshots about the feature request here.
+-->
