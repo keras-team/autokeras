@@ -166,8 +166,8 @@ class ModelTrainer:
                 test_loss += self.criterion(outputs, targets)
 
                 _, predicted = outputs.max(1)
-                all_predicted = np.concatenate((all_predicted, predicted.numpy()))
-                all_targets = np.concatenate((all_targets, targets.numpy()))
+                all_predicted = np.concatenate((all_predicted, predicted.cpu().numpy()))
+                all_targets = np.concatenate((all_targets, targets.cpu().numpy()))
         return test_loss, self.metric.compute(all_predicted, all_targets)
 
 
