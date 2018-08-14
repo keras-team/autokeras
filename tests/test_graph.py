@@ -189,6 +189,16 @@ def test_skip_connection_layer_ids():
     assert len(graph.skip_connection_layer_ids()) == 1
 
 
+def test_wider_dense():
+    graph = DefaultClassifierGenerator(10, (32, 32, 3)).generate()
+    graph.produce_model().set_weight_to_graph()
+    history = [('to_wider_model', 14, 64)]
+    for args in history:
+        getattr(graph, args[0])(*list(args[1:]))
+        graph.produce_model()
+    assert legal_graph(graph)
+
+
 def test_long_transform():
     graph = DefaultClassifierGenerator(10, (32, 32, 3)).generate()
     history = [('to_wider_model', 1, 256), ('to_conv_deeper_model', 1, 3),

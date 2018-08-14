@@ -75,10 +75,6 @@ def wider_pre_conv(layer, n_add_filters, weighted=True):
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
     teacher_w, teacher_b = layer.get_weights()
 
-    # print(n_pre_filters)
-    # print(teacher_w.shape)
-    # print(rand)
-
     student_w = teacher_w.copy()
     student_b = teacher_b.copy()
     # target layer update (i)
@@ -137,7 +133,7 @@ def wider_next_dense(layer, start_dim, total_dim, n_add, weighted=True):
         return StubDense(layer.input_units + n_add, layer.units)
     teacher_w, teacher_b = layer.get_weights()
     student_w = teacher_w.copy()
-    n_units_each_channel = int(teacher_w.shape[0] / total_dim)
+    n_units_each_channel = int(teacher_w.shape[1] / total_dim)
 
     new_weight = np.zeros((teacher_w.shape[0], n_add * n_units_each_channel))
     student_w = np.concatenate((student_w[:, :start_dim * n_units_each_channel],
