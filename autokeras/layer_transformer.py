@@ -1,7 +1,6 @@
 import numpy as np
 
-from autokeras.constant import Constant
-from autokeras.layers import StubConv, StubBatchNormalization, StubDropout, StubDense, StubReLU
+from autokeras.layers import StubConv, StubBatchNormalization, StubDense, StubReLU
 
 NOISE_RATIO = 1e-4
 
@@ -30,8 +29,7 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
 
     return [StubReLU(),
             new_conv_layer,
-            bn,
-            StubDropout(Constant.CONV_DROPOUT_RATE)]
+            bn]
 
 
 def dense_to_deeper_block(dense_layer, weighted=True):
@@ -41,7 +39,7 @@ def dense_to_deeper_block(dense_layer, weighted=True):
     new_dense_layer = StubDense(units, units)
     if weighted:
         new_dense_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
-    return [StubReLU(), new_dense_layer, StubDropout(Constant.DENSE_DROPOUT_RATE)]
+    return [StubReLU(), new_dense_layer]
 
 
 def wider_pre_dense(layer, n_add, weighted=True):

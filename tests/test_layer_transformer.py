@@ -1,3 +1,4 @@
+from autokeras.constant import Constant
 from autokeras.generator import DefaultClassifierGenerator
 from autokeras.layer_transformer import *
 from tests.common import get_conv_dense_model
@@ -11,7 +12,7 @@ def test_deeper_conv_block():
 
 def test_dense_to_deeper_layer():
     a = StubDense(100, 100)
-    assert len(dense_to_deeper_block(a)) == 3
+    assert len(dense_to_deeper_block(a)) == 2
 
 
 def test_dense_to_wider_layer():
@@ -35,7 +36,7 @@ def test_wider_bn():
 
 
 def test_wider_next_dense():
-    real_layer = get_conv_dense_model().layer_list[10]
+    real_layer = get_conv_dense_model().layer_list[9]
     layer = StubDense(real_layer.input_units, real_layer.units)
     layer.set_weights(real_layer.get_weights())
     new_layer = wider_next_dense(layer, 3, 3, 3)
@@ -49,4 +50,4 @@ def test_wider_conv():
 
     assert isinstance(wider_pre_conv(graph.layer_list[1], 3), StubConv)
     assert isinstance(wider_bn(graph.layer_list[2], 3, 3, 3), StubBatchNormalization)
-    assert isinstance(wider_next_conv(graph.layer_list[6], 3, 3, 3), StubConv)
+    assert isinstance(wider_next_conv(graph.layer_list[5], 3, 3, 3), StubConv)

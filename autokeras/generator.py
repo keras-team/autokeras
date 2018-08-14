@@ -31,13 +31,15 @@ class DefaultClassifierGenerator(ClassifierGenerator):
             output_node_id = graph.add_layer(StubReLU(), output_node_id)
             output_node_id = graph.add_layer(StubConv(temp_input_channel, model_width, kernel_size=3), output_node_id)
             output_node_id = graph.add_layer(StubBatchNormalization(model_width), output_node_id)
-            output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
             temp_input_channel = model_width
             if pooling_len == 0 or ((i + 1) % pooling_len == 0 and i != model_len - 1):
                 output_node_id = graph.add_layer(StubPooling(), output_node_id)
 
         output_node_id = graph.add_layer(StubFlatten(), output_node_id)
-        output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], self.n_classes),
+        output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
+        output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], model_width),
                                          output_node_id)
+        output_node_id = graph.add_layer(StubReLU(), output_node_id)
+        output_node_id = graph.add_layer(StubDense(model_width, self.n_classes), output_node_id)
         graph.add_layer(StubSoftmax(), output_node_id)
         return graph
