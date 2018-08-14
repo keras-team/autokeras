@@ -9,7 +9,7 @@ For example, ImageClassifier is the only task module we have for now.
 The list of task modules we are seeking is all the issues with label "new task module" (in progress).
 
 The new task module should be submitted by pull request from the first day you start to develop the module.
-Make sure your pull request follow the [Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md).
+Make sure your pull request follow the [Pull Request Guideline](#pull-request-guide).
 Your module will be run against our reserved datasets to test the performance.
 If your module's performance meets our expectation,
 the new task module will be merged into Auto-Keras package.
@@ -40,7 +40,7 @@ Select the related template (bug report, feature request, or custom) and add the
 You may look through the [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues) for bugs.
 Anything tagged with "bug report" is open to whoever wants to implement it.
 Please follow the 
-[Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md) to submit your pull request. 
+[Pull Request Guide](#pull-request-guide) to submit your pull request. 
 Please also read
 [Code Style Guide](#code-style-guide),
 and
@@ -51,7 +51,7 @@ to ensure your merge request meet our requirements.
 You may look through the [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues) for feature requests.
 Anything tagged with "feature request" is open to whoever wants to implement it.
 Please follow the 
-[Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md) to submit your pull request. 
+[Pull Request Guide](#pull-request-guide) to submit your pull request. 
 Please also read
 [Code Style Guide](#code-style-guide),
 [Documentation Guide](#documentation-guide),
@@ -66,21 +66,32 @@ or automatically extracted from the docstrings by executing the [autogen.py](htt
 In the first situation, you only need to change the markdown file.
 In the second situation, you need to change the docstrings and execute [autogen.py](https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/autogen.py) to update the Markdown files.
 Please follow the 
-[Pull Request Guideline](https://github.com/jhfjhfj1/autokeras/blob/master/PULL_REQUEST_TEMPLATE.md) to submit your pull request. 
+[Pull Request Guide](#pull-request-guide) to submit your pull request. 
 Please also read
 [Documentation Guide](#documentation-guide)
 to ensure your merge request meet our requirements.
 
-## Code Style Guide
+## Pull Request Guide
+Before you submit a pull request, check that it meets these guidelines:
+1. Give your pull request a **helpful title** that summarizing your contribution.
+2. Give your branch a **helpful name** summarizing your contribution (fork the repo and create a new branch for pull request).
+3. Also, **add the issue number** which it addresses.
+If there is no associated issue, feel free to [create one](https://github.com/jhfjhfj1/autokeras/issues).
+4. Often pull requests resolve one or more other issues.
+If merging your pull request means that some issues should be closed,
+you should use keywords to link to them by following [this tutorial](https://blog.github.com/2013-05-14-closing-issues-via-pull-requests/).
+5. For the case of bug fixes, at the time of the PR,
+the test case should fail for the code base in the master branch and pass for the PR code.
+6. Please prefix the title of your pull request with [MRG] if the contribution is complete and should be subjected to a detailed review.
+ An incomplete contribution – where you expect to do more work before receiving a full review – should be prefixed [WIP] (to indicate a work in progress) and changed to [MRG] when it matures. 
 
+## Code Style Guide
 This project tries to closely follow the official Python Style Guide detailed in [PEP8](https://www.python.org/dev/peps/pep-0008/).
 The docstrings follow the [Google Python Style Guide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#381-docstrings).
 Please follow these style guide closely, especially for the docstrings,
 which would be extracted automatically to generate the documentation.
 
- 
 ## Documentation Guide:
-
 The documentation should be provided in two ways, docstring, tutorial, and readme file.
 We prefer the documentation to be as complete as possible.
 

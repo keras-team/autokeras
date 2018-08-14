@@ -5,7 +5,6 @@ from tests.common import get_conv_data, get_add_skip_model, get_conv_dense_model
     get_concat_skip_model
 
 
-
 def test_conv_deeper_stub():
     graph = get_conv_dense_model()
     layer_num = graph.n_layers
@@ -52,7 +51,7 @@ def test_dense_deeper():
     output1 = model(input_data)
     output2 = new_model(input_data)
 
-    assert (output1 - output2).abs().sum() < 1e-4
+    assert (output1 - output2).abs().sum() < 1e-3
 
 
 def test_conv_wider_stub():
@@ -241,11 +240,11 @@ def test_produce_keras_model():
         assert isinstance(model, keras.models.Model)
 
 
-def test_KerasModel():
+def test_keras_model():
     for graph in [get_conv_dense_model(),
                   get_add_skip_model(),
                   get_pooling_model(),
                   get_concat_skip_model()]:
-        Kmodel = KerasModel(graph)
-        Kmodel.set_weight_to_graph()
-        assert isinstance(Kmodel, KerasModel)
+        keras_model = KerasModel(graph)
+        keras_model.set_weight_to_graph()
+        assert isinstance(keras_model, KerasModel)
