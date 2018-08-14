@@ -185,11 +185,22 @@ class BayesianSearcher:
             self.model_count += 1
             self.training_queue.append((new_graph, new_father_id, new_model_id))
             descriptor = new_graph.extract_descriptor()
-            self.descriptors.append(new_graph.extract_descriptor())
+            self.descriptors.append(descriptor)
+        try:
+            accuracy, loss, graph = train_results.get(timeout)[0]
+        except multiprocessing.TimeoutError as e:
+            # if no model found in the time limit, raise TimeoutError
+            if self.model_count == 0:
+                # convert multiprocessing.TimeoutError to builtin TimeoutError for ux
+                raise TimeoutError("search Timeout") from e
+            # else return the result found in the time limit
+            else:
+                return
+        finally:
+            # terminate and join the subprocess to prevent any resource leak
+            pool.terminate()
+            pool.join()
 
-        accuracy, loss, graph = train_results.get()[0]
-        pool.terminate()
-        pool.join()
         self.add_model(accuracy, loss, graph, model_id)
         self.search_tree.add_child(father_id, model_id)
         self.gpr.fit(self.x_queue, self.y_queue)
