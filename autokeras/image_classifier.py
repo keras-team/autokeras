@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
 from autokeras.constant import Constant
+from autokeras.metric import Accuracy
 from autokeras.preprocessor import OneHotEncoder, DataTransformer
 from autokeras.search import BayesianSearcher, train
 from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file
@@ -158,6 +159,7 @@ class ImageClassifier(Classifier):
             self.path = path
             self.searcher_args = searcher_args
             self.augment = augment
+            self.metric = Accuracy
             ensure_dir(path)
 
     def fit(self, x_train=None, y_train=None, time_limit=None):
@@ -201,6 +203,7 @@ class ImageClassifier(Classifier):
             self.searcher_args['n_classes'] = n_classes
             self.searcher_args['input_shape'] = input_shape
             self.searcher_args['path'] = self.path
+            self.searcher_args['metric'] = self.metric
             self.searcher_args['verbose'] = self.verbose
             searcher = BayesianSearcher(**self.searcher_args)
             self.save_searcher(searcher)
@@ -285,7 +288,7 @@ class ImageClassifier(Classifier):
 
         if retrain:
             graph.weighted = False
-        _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.verbose))
+        _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.verbose))
 
     def get_best_model_id(self):
         """ Return an integer indicating the id of the best model."""

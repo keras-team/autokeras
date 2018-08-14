@@ -1,6 +1,7 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+from autokeras.metric import Accuracy
 from autokeras.search import *
 
 from tests.common import clean_dir, MockProcess, get_processed_data, get_add_skip_model, get_concat_skip_model
@@ -23,7 +24,7 @@ def mock_train(**_):
 def test_bayesian_searcher(_, _1):
     train_data, test_data = get_processed_data()
     clean_dir(default_test_path)
-    generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path)
+    generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy)
     Constant.N_NEIGHBOURS = 1
     Constant.T_MIN = 0.8
     for _ in range(2):
@@ -47,7 +48,7 @@ def test_export_json(_, _1):
     train_data, test_data = get_processed_data()
 
     clean_dir(default_test_path)
-    generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path)
+    generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy)
     Constant.N_NEIGHBOURS = 1
     Constant.T_MIN = 0.8
     for _ in range(3):
@@ -82,7 +83,7 @@ def test_max_acq(_, _1):
     Constant.SEARCH_MAX_ITER = 0
     Constant.T_MIN = 0.8
     Constant.BETA = 1
-    generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path)
+    generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy)
     for _ in range(3):
         generator.search(train_data, test_data)
     for index1, descriptor1 in enumerate(generator.descriptors):

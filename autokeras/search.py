@@ -40,7 +40,7 @@ class BayesianSearcher:
             when using this layer as the first layer in a model.
         verbose: Verbosity mode.
         history: A list that stores the performance of model. Each element in it is a dictionary of 'model_id',
-            'loss', and 'accuracy'.
+            'loss', and 'metric_value'.
         path: A string. The path to the directory for saving the searcher.
         model_count: An integer. the total number of neural networks in the current searcher.
         descriptors: A dictionary of all the neural network architectures searched.
@@ -56,7 +56,7 @@ class BayesianSearcher:
         t_min: A float. The minimum temperature during simulated annealing.
     """
 
-    def __init__(self, n_classes, input_shape, path, verbose,
+    def __init__(self, n_classes, input_shape, path, metric, verbose,
                  trainer_args=None,
                  default_model_len=Constant.MODEL_LEN,
                  default_model_width=Constant.MODEL_WIDTH,
@@ -83,6 +83,7 @@ class BayesianSearcher:
         self.input_shape = input_shape
         self.verbose = verbose
         self.history = []
+        self.metric = metric
         self.path = path
         self.model_count = 0
         self.descriptors = []
@@ -108,19 +109,19 @@ class BayesianSearcher:
     def load_best_model(self):
         return self.load_model_by_id(self.get_best_model_id())
 
-    def get_accuracy_by_id(self, model_id):
+    def get_metric_value_by_id(self, model_id):
         for item in self.history:
             if item['model_id'] == model_id:
-                return item['accuracy']
+                return item['metric_value']
         return None
 
     def get_best_model_id(self):
-        return max(self.history, key=lambda x: x['accuracy'])['model_id']
+        return max(self.history, key=lambda x: x['metric_value'])['model_id']
 
     def replace_model(self, graph, model_id):
         pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.h5'))
 
-    def add_model(self, accuracy, loss, graph, model_id):
+    def add_model(self, metric_value, loss, graph, model_id):
         if self.verbose:
             print('Saving model.')
 
@@ -131,9 +132,9 @@ class BayesianSearcher:
         if self.verbose:
             print('Model ID:', model_id)
             print('Loss:', loss)
-            print('Accuracy', accuracy)
+            print('Metric Value:', metric_value)
 
-        ret = {'model_id': model_id, 'loss': loss, 'accuracy': accuracy}
+        ret = {'model_id': model_id, 'loss': loss, 'metric_value': metric_value}
         self.history.append(ret)
         if model_id == self.get_best_model_id():
             file = open(os.path.join(self.path, 'best_model.txt'), 'w')
@@ -142,7 +143,7 @@ class BayesianSearcher:
 
         descriptor = graph.extract_descriptor()
         self.x_queue.append(descriptor)
-        self.y_queue.append(accuracy)
+        self.y_queue.append(metric_value)
 
         return ret
 
@@ -176,7 +177,8 @@ class BayesianSearcher:
         multiprocessing.set_start_method('spawn', force=True)
         pool = multiprocessing.Pool(1)
         train_results = pool.map_async(train, [(graph, train_data, test_data, self.trainer_args,
-                                                os.path.join(self.path, str(model_id) + '.png'), self.verbose)])
+                                                os.path.join(self.path, str(model_id) + '.png'),
+                                                self.metric, self.verbose)])
 
         # Do the search in current thread.
         if not self.training_queue:
@@ -184,13 +186,12 @@ class BayesianSearcher:
             new_model_id = self.model_count
             self.model_count += 1
             self.training_queue.append((new_graph, new_father_id, new_model_id))
-            descriptor = new_graph.extract_descriptor()
             self.descriptors.append(new_graph.extract_descriptor())
 
-        accuracy, loss, graph = train_results.get()[0]
+        metric_value, loss, graph = train_results.get()[0]
         pool.terminate()
         pool.join()
-        self.add_model(accuracy, loss, graph, model_id)
+        self.add_model(metric_value, loss, graph, model_id)
         self.search_tree.add_child(father_id, model_id)
         self.gpr.fit(self.x_queue, self.y_queue)
         self.x_queue = []
@@ -209,13 +210,13 @@ class BayesianSearcher:
         pq = PriorityQueue()
         temp_list = []
         for model_id in model_ids:
-            accuracy = self.get_accuracy_by_id(model_id)
-            temp_list.append((accuracy, model_id))
+            metric_value = self.get_metric_value_by_id(model_id)
+            temp_list.append((metric_value, model_id))
         temp_list = sorted(temp_list)
-        for accuracy, model_id in temp_list:
+        for metric_value, model_id in temp_list:
             graph = self.load_model_by_id(model_id)
             graph.clear_operation_history()
-            pq.put(Elem(accuracy, model_id, graph))
+            pq.put(Elem(metric_value, model_id, graph))
 
         t = 1.0
         t_min = self.t_min
@@ -223,7 +224,7 @@ class BayesianSearcher:
         max_acq = -1
         while not pq.empty() and t > t_min:
             elem = pq.get()
-            temp_exp = min((elem.accuracy - max_acq) / t, 709.0)
+            temp_exp = min((elem.metric_value - max_acq) / t, 709.0)
             ap = math.exp(temp_exp)
             if ap > random.uniform(0, 1):
                 graphs = transform(elem.graph)
@@ -304,29 +305,30 @@ class SearchTree:
 
 @total_ordering
 class Elem:
-    def __init__(self, accuracy, father_id, graph):
+    def __init__(self, metric_value, father_id, graph):
         self.father_id = father_id
         self.graph = graph
-        self.accuracy = accuracy
+        self.metric_value = metric_value
 
     def __eq__(self, other):
-        return self.accuracy == other.accuracy
+        return self.metric_value == other.metric_value
 
     def __lt__(self, other):
-        return self.accuracy < other.accuracy
+        return self.metric_value < other.metric_value
 
 
 def train(args):
-    graph, train_data, test_data, trainer_args, path, verbose = args
+    graph, train_data, test_data, trainer_args, path, metric, verbose = args
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)
-    loss, accuracy = ModelTrainer(model,
-                                  train_data,
-                                  test_data,
-                                  verbose).train_model(**trainer_args)
+    loss, metric_value = ModelTrainer(model,
+                                      train_data,
+                                      test_data,
+                                      metric,
+                                      verbose).train_model(**trainer_args)
     model.set_weight_to_graph()
-    return accuracy, loss, model.graph
+    return metric_value, loss, model.graph
 
 
 def same_graph(des1, des2):
