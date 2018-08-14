@@ -1,6 +1,7 @@
 import os
 import sys
 import pickle
+import numpy as np
 from copy import deepcopy
 
 import torch
@@ -74,7 +75,7 @@ class ModelTrainer:
         verbose: Verbosity mode.
     """
 
-    def __init__(self, model, train_data, test_data, verbose):
+    def __init__(self, model, train_data, test_data, metric, verbose):
         """Init the ModelTrainer with `model`, `x_train`, `y_train`, `x_test`, `y_test`, `verbose`"""
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.model = model
@@ -85,6 +86,7 @@ class ModelTrainer:
         self.criterion = torch.nn.NLLLoss()
         self.optimizer = None
         self.early_stop = None
+        self.metric = metric
 
     def train_model(self,
                     max_iter_num=None,
@@ -154,7 +156,8 @@ class ModelTrainer:
     def _test(self, test_loader):
         self.model.eval()
         test_loss = 0
-        correct = 0
+        all_targets = []
+        all_predicted = []
         with torch.no_grad():
             for batch_idx, (inputs, targets) in enumerate(deepcopy(test_loader)):
                 targets = targets.argmax(1)
@@ -163,8 +166,9 @@ class ModelTrainer:
                 test_loss += self.criterion(outputs, targets)
 
                 _, predicted = outputs.max(1)
-                correct += predicted.eq(targets).sum().item()
-        return test_loss, correct * 100.0 / len(test_loader.dataset)
+                all_predicted = np.concatenate((all_predicted, predicted.numpy()))
+                all_targets = np.concatenate((all_targets, targets.numpy()))
+        return test_loss, self.metric.compute(all_predicted, all_targets)
 
 
 def ensure_dir(directory):
