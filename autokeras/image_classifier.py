@@ -1,24 +1,22 @@
+import csv
 import os
 import pickle
-import csv
 import time
 from functools import reduce
 
-import torch
-
-import scipy.ndimage as ndimage
-
 import numpy as np
+import scipy.ndimage as ndimage
+import torch
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
+from autokeras.classifier import Classifier
 from autokeras.constant import Constant
 from autokeras.metric import Accuracy
 from autokeras.preprocessor import OneHotEncoder, DataTransformer
 from autokeras.search import BayesianSearcher, train
-from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file
-from autokeras.classifier import Classifier
+from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file, temp_folder_generator
 
 
 def _validate(x_train, y_train):
@@ -126,7 +124,7 @@ class ImageClassifier(Classifier):
         augment: A boolean value indicating whether the data needs augmentation.
     """
 
-    def __init__(self, verbose=False, path=Constant.DEFAULT_SAVE_PATH, resume=False, searcher_args=None, augment=None):
+    def __init__(self, verbose=False, path=None, resume=False, searcher_args=None, augment=None):
         """Initialize the instance.
 
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
@@ -143,6 +141,9 @@ class ImageClassifier(Classifier):
         super().__init__(verbose)
         if searcher_args is None:
             searcher_args = {}
+
+        if path is None:
+            path = temp_folder_generator()
 
         if augment is None:
             augment = Constant.DATA_AUGMENTATION
