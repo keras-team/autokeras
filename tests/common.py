@@ -168,7 +168,6 @@ def get_conv_dense_model():
 
 
 def get_pooling_model():
-
     graph = Graph((32, 32, 3), False)
     output_node_id = 0
 
@@ -244,7 +243,7 @@ class MockProcess(object):
         self.result = a(b[0])
         return self
 
-    def get(self):
+    def get(self, timeout=None):
         return [self.result]
 
     def terminate(self):

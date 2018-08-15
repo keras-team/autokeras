@@ -1,6 +1,7 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+
 import pytest
 
 from autokeras.image_classifier import *
@@ -50,7 +51,7 @@ def test_fit_predict(_):
     clf = ImageClassifier(path=path, verbose=False)
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf.fit(train_x, train_y)
+    clf.fit(train_x, train_y, )
     results = clf.predict(train_x)
     assert all(map(lambda result: result in train_y, results))
     clean_dir(path)
@@ -69,7 +70,8 @@ def test_timout(_):
     clf = ImageClassifier(path=path, verbose=False)
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf.fit(train_x, train_y, time_limit=1)
+    with pytest.raises(TimeoutError) as e:
+        clf.fit(train_x, train_y, time_limit=1)
     clean_dir(path)
 
 

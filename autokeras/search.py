@@ -167,7 +167,7 @@ class BayesianSearcher:
         if self.verbose:
             print('Initialization finished.')
 
-    def search(self, train_data, test_data, timeout):
+    def search(self, train_data, test_data, timeout=60 * 60 * 24):
         start_time = time.time()
         torch.cuda.empty_cache()
         if not self.history:
@@ -193,7 +193,7 @@ class BayesianSearcher:
                 self.descriptors.append(new_graph.extract_descriptor())
             remaining_time = timeout - (time.time() - start_time)
             if remaining_time > 0:
-                metric_value, loss, graph = train_results.get(remaining_time)[0]
+                metric_value, loss, graph = train_results.get(timeout=remaining_time)[0]
             else:
                 raise TimeoutError
         except multiprocessing.TimeoutError as e:
