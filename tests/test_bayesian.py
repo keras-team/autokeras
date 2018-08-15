@@ -12,8 +12,8 @@ def test_edit_distance2():
     descriptor1 = get_conv_dense_model().extract_descriptor()
     graph = get_conv_dense_model()
     graph.to_conv_deeper_model(1, 3)
-    graph.to_wider_model(5, 6)
-    graph.to_wider_model(17, 3)
+    graph.to_wider_model(4, 6)
+    graph.to_wider_model(14, 3)
     descriptor2 = graph.extract_descriptor()
     assert edit_distance(descriptor1, descriptor2, 1.0) == 1.5
 
