@@ -33,11 +33,11 @@ def _validate(x_train, y_train):
         raise ValueError('x_train and y_train should have the same number of instances.')
 
 
-def run_searcher_once(train_data, test_data, path):
+def run_searcher_once(train_data, test_data, path, timeout):
     if Constant.LIMIT_MEMORY:
         pass
     searcher = pickle_from_file(os.path.join(path, 'searcher'))
-    searcher.search(train_data, test_data)
+    searcher.search(train_data, test_data, timeout)
 
 
 def read_csv_file(csv_file_path):
@@ -175,7 +175,7 @@ class ImageClassifier(Classifier):
             y_train: A numpy.ndarray instance containing the label of the training data.
             time_limit: The time limit for the search in seconds.
         """
-
+        start_time = time.time()
         if y_train is None:
             y_train = []
         if x_train is None:
@@ -224,11 +224,17 @@ class ImageClassifier(Classifier):
         if time_limit is None:
             time_limit = 24 * 60 * 60
 
-        start_time = time.time()
-        while time.time() - start_time <= time_limit:
-            run_searcher_once(train_data, test_data, self.path)
+        time_elapsed = time.time() - start_time
+        time_remain = time_limit - time_elapsed
+        while time_remain > 0:
+            run_searcher_once(train_data, test_data, self.path, int(time_remain))
             if len(self.load_searcher().history) >= Constant.MAX_MODEL_NUM:
                 break
+            time_elapsed = time.time() - start_time
+            time_remain = time_limit - time_elapsed
+        # if no search executed during the time_limit, then raise an error
+        if not len(self.load_searcher().history):
+            raise TimeoutError
 
     def predict(self, x_test):
         """Return predict results for the testing data.

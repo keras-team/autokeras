@@ -1,5 +1,7 @@
 import os
 import random
+import time
+
 import torch
 from copy import deepcopy
 from functools import total_ordering
@@ -165,7 +167,8 @@ class BayesianSearcher:
         if self.verbose:
             print('Initialization finished.')
 
-    def search(self, train_data, test_data):
+    def search(self, train_data, test_data, timeout=60 * 60 * 24):
+        start_time = time.time()
         torch.cuda.empty_cache()
         if not self.history:
             self.init_search()
@@ -181,16 +184,31 @@ class BayesianSearcher:
                                                 self.metric, self.verbose)])
 
         # Do the search in current thread.
-        if not self.training_queue:
-            new_graph, new_father_id = self.maximize_acq()
-            new_model_id = self.model_count
-            self.model_count += 1
-            self.training_queue.append((new_graph, new_father_id, new_model_id))
-            self.descriptors.append(new_graph.extract_descriptor())
+        try:
+            if not self.training_queue:
+                new_graph, new_father_id = self.maximize_acq(timeout)
+                new_model_id = self.model_count
+                self.model_count += 1
+                self.training_queue.append((new_graph, new_father_id, new_model_id))
+                self.descriptors.append(new_graph.extract_descriptor())
+            remaining_time = timeout - (time.time() - start_time)
+            if remaining_time > 0:
+                metric_value, loss, graph = train_results.get(timeout=remaining_time)[0]
+            else:
+                raise TimeoutError
+        except multiprocessing.TimeoutError as e:
+            # if no model found in the time limit, raise TimeoutError
+            if self.model_count == 0:
+                # convert multiprocessing.TimeoutError to builtin TimeoutError for ux
+                raise TimeoutError("search Timeout") from e
+            # else return the result found in the time limit
+            else:
+                return
+        finally:
+            # terminate and join the subprocess to prevent any resource leak
+            pool.terminate()
+            pool.join()
 
-        metric_value, loss, graph = train_results.get()[0]
-        pool.terminate()
-        pool.join()
         self.add_model(metric_value, loss, graph, model_id)
         self.search_tree.add_child(father_id, model_id)
         self.gpr.fit(self.x_queue, self.y_queue)
@@ -200,7 +218,8 @@ class BayesianSearcher:
         pickle_to_file(self, os.path.join(self.path, 'searcher'))
         self.export_json(os.path.join(self.path, 'history.json'))
 
-    def maximize_acq(self):
+    def maximize_acq(self, timeout):
+        start_time = time.time()
         model_ids = self.search_tree.adj_list.keys()
         target_graph = None
         father_id = None
@@ -222,7 +241,8 @@ class BayesianSearcher:
         t_min = self.t_min
         alpha = 0.9
         max_acq = -1
-        while not pq.empty() and t > t_min:
+        remaining_time = timeout - (time.time() - start_time)
+        while not pq.empty() and t > t_min and remaining_time > 0:
             elem = pq.get()
             temp_exp = min((elem.metric_value - max_acq) / t, 709.0)
             ap = math.exp(temp_exp)
@@ -241,7 +261,10 @@ class BayesianSearcher:
                         father_id = elem.father_id
                         target_graph = temp_graph
             t *= alpha
+            remaining_time = timeout - (time.time() - start_time)
 
+        if remaining_time < 0:
+            raise TimeoutError
         nm_graph = self.load_model_by_id(father_id)
         if self.verbose:
             print('Father ID: ', father_id)
