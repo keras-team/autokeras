@@ -35,9 +35,6 @@ Here is a short example of using the package.
     clf.fit(x_train, y_train)
     results = clf.predict(x_test)
 
-## Documentation
-
-For the documentation, please visit the [Auto-Keras](http://autokeras.com/) official website.
 
 ## Citing this work
 
