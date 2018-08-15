@@ -40,7 +40,7 @@ def test_wider_next_dense():
     layer = StubDense(real_layer.input_units, real_layer.units)
     layer.set_weights(real_layer.get_weights())
     new_layer = wider_next_dense(layer, 3, 3, 3)
-    assert new_layer.get_weights()[0].shape == (5, 6)
+    assert new_layer.get_weights()[0].shape == (5, 6144)
 
 
 def test_wider_conv():
