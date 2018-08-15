@@ -1,6 +1,4 @@
 class Constant:
-    DEFAULT_SAVE_PATH = '/tmp/autokeras/'
-
     # Data
 
     VALIDATION_SET_SIZE = 0.08333

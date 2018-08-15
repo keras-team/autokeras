@@ -1,11 +1,11 @@
 import os
-import sys
 import pickle
-import numpy as np
+import sys
+import tempfile
 from copy import deepcopy
 
+import numpy as np
 import torch
-
 from torch.utils.data import DataLoader
 
 from autokeras.constant import Constant
@@ -192,3 +192,11 @@ def pickle_from_file(path):
 
 def pickle_to_file(obj, path):
     pickle.dump(obj, open(path, 'wb'))
+
+
+def temp_folder_generator():
+    sys_temp = tempfile.gettempdir()
+    path = os.path.join(sys_temp, 'autokeras')
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
