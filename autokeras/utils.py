@@ -146,8 +146,8 @@ class ModelTrainer:
 
                 all_predicted.append(outputs.cpu().numpy())
                 all_targets.append(targets.cpu().numpy())
-        all_predicted = reduce(lambda x, y: np.concatenate(([x], [y])), all_predicted)
-        all_targets = reduce(lambda x, y: np.concatenate(([x], [y])), all_targets)
+        all_predicted = reduce(lambda x, y: np.concatenate((x, y)), all_predicted)
+        all_targets = reduce(lambda x, y: np.concatenate((x, y)), all_targets)
         return test_loss, self.metric.compute(all_predicted, all_targets)
 
 

@@ -31,3 +31,21 @@ def test_gpr():
     gpr.incremental_fit([get_concat_skip_model().extract_descriptor()], [0.6])
     assert abs(gpr.predict(np.array([get_add_skip_model().extract_descriptor()]))[0] - 0.5) < 1e-4
     assert abs(gpr.predict(np.array([get_concat_skip_model().extract_descriptor()]))[0] - 0.6) < 1e-4
+
+
+def test_elem_queue():
+    elem1 = Elem(1, 2, 3)
+    elem2 = Elem(2, 3, 4)
+    pq = PriorityQueue()
+    pq.put(elem1)
+    pq.put(elem2)
+    assert pq.get() == elem1
+    assert pq.get() == elem2
+
+    elem1 = ReverseElem(1, 2, 3)
+    elem2 = ReverseElem(2, 3, 4)
+    pq = PriorityQueue()
+    pq.put(elem1)
+    pq.put(elem2)
+    assert pq.get() == elem2
+    assert pq.get() == elem1

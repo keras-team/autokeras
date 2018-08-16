@@ -1,9 +1,16 @@
+import random
+import time
 import warnings
+from copy import deepcopy
+from functools import total_ordering
+from queue import PriorityQueue
 
 import numpy as np
 import math
 from scipy.linalg import cholesky, cho_solve, solve_triangular
 from scipy.optimize import linear_sum_assignment
+
+from autokeras.net_transformer import transform
 
 
 def layer_distance(a, b):
@@ -195,3 +202,119 @@ def bourgain_embedding_matrix(distance_matrix):
         for j in range(i + 1, n):
             distort_matrix[i][j] = distort_matrix[j][i] = vector_distance(distort_elements[i], distort_elements[j])
     return np.array(distort_matrix)
+
+
+class BayesianOptimizer:
+    """
+
+    gpr: A GaussianProcessRegressor for bayesian optimization.
+    """
+    def __init__(self, searcher, t_min, metric, kernel_lambda, beta):
+        self.searcher = searcher
+        self.t_min = t_min
+        self.metric = metric
+        self.gpr = IncrementalGaussianProcess(kernel_lambda)
+        self.beta = beta
+
+    def fit(self, x_queue, y_queue):
+        self.gpr.fit(x_queue, y_queue)
+
+    def optimize_acq(self, model_ids, descriptors, timeout):
+        start_time = time.time()
+        target_graph = None
+        father_id = None
+        descriptors = deepcopy(descriptors)
+        elem_class = Elem
+        if self.metric.higher_better():
+            elem_class = ReverseElem
+
+        # Initialize the priority queue.
+        pq = PriorityQueue()
+        temp_list = []
+        for model_id in model_ids:
+            metric_value = self.searcher.get_metric_value_by_id(model_id)
+            temp_list.append((metric_value, model_id))
+        temp_list = sorted(temp_list)
+        for metric_value, model_id in temp_list:
+            graph = self.searcher.load_model_by_id(model_id)
+            graph.clear_operation_history()
+            graph.clear_weights()
+            pq.put(elem_class(metric_value, model_id, graph))
+
+        t = 1.0
+        t_min = self.t_min
+        alpha = 0.9
+        opt_acq = self._get_init_opt_acq_value()
+        remaining_time = timeout - (time.time() - start_time)
+        while not pq.empty() and t > t_min and remaining_time > 0:
+            elem = pq.get()
+            if self.metric.higher_better():
+                temp_exp = min((elem.metric_value - opt_acq) / t, 709.0)
+            else:
+                temp_exp = min((opt_acq - elem.metric_value) / t, 709.0)
+            ap = math.exp(temp_exp)
+            if ap > random.uniform(0, 1):
+                for temp_graph in transform(elem.graph):
+                    if contain(descriptors, temp_graph.extract_descriptor()):
+                        continue
+
+                    temp_acq_value = self.acq(temp_graph)
+                    pq.put(elem_class(temp_acq_value, elem.father_id, temp_graph))
+                    descriptors.append(temp_graph.extract_descriptor())
+                    if self._accept_new_acq_value(opt_acq, temp_acq_value):
+                        opt_acq = temp_acq_value
+                        father_id = elem.father_id
+                        target_graph = deepcopy(temp_graph)
+            t *= alpha
+            remaining_time = timeout - (time.time() - start_time)
+
+        if remaining_time < 0:
+            raise TimeoutError
+        nm_graph = self.searcher.load_model_by_id(father_id)
+        for args in target_graph.operation_history:
+            getattr(nm_graph, args[0])(*list(args[1:]))
+        return nm_graph, father_id
+
+    def acq(self, graph):
+        mean, std = self.gpr.predict(np.array([graph.extract_descriptor()]))
+        if self.metric.higher_better():
+            return mean + self.beta * std
+        return mean - self.beta * std
+
+    def _get_init_opt_acq_value(self):
+        if self.metric.higher_better():
+            return -np.inf
+        return np.inf
+
+    def _accept_new_acq_value(self, opt_acq, temp_acq_value):
+        if temp_acq_value > opt_acq and self.metric.higher_better():
+            return True
+        if temp_acq_value < opt_acq and not self.metric.higher_better():
+            return True
+        return False
+
+
+@total_ordering
+class Elem:
+    def __init__(self, metric_value, father_id, graph):
+        self.father_id = father_id
+        self.graph = graph
+        self.metric_value = metric_value
+
+    def __eq__(self, other):
+        return self.metric_value == other.metric_value
+
+    def __lt__(self, other):
+        return self.metric_value < other.metric_value
+
+
+class ReverseElem(Elem):
+    def __lt__(self, other):
+        return self.metric_value > other.metric_value
+
+
+def contain(descriptors, target_descriptor):
+    for descriptor in descriptors:
+        if edit_distance(descriptor, target_descriptor, 1) < 1e-5:
+            return True
+    return False

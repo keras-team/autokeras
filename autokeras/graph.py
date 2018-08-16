@@ -530,6 +530,11 @@ class Graph:
 
         return ret
 
+    def clear_weights(self):
+        self.weighted = False
+        for layer in self.layer_list:
+            layer.weights = None
+
     def produce_model(self):
         """Build a new model based on the current graph."""
         return TorchModel(self)
