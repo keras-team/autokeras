@@ -1,4 +1,4 @@
-This pull request resolves issue #\[ISSUE_NUMBER\].
+This pull request resolves #\[ISSUE_NUMBER\].
 
 The pull request is in progress. OR The pull request is ready to be merged.
 
