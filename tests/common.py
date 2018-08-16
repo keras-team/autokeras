@@ -191,9 +191,9 @@ def get_processed_data():
     y_train = np.random.rand(20, 3)
     x_test = np.random.rand(10, 28, 28, 3)
     y_test = np.random.rand(10, 3)
-    data_transformer = DataTransformer(x_train)
+    data_transformer = DataTransformer(x_train, augment=True)
     train_data = data_transformer.transform_train(x_train, y_train)
-    test_data = data_transformer.transform_train(x_test, y_test)
+    test_data = data_transformer.transform_test(x_test, y_test)
     return train_data, test_data
 
 

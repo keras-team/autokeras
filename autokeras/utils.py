@@ -3,25 +3,12 @@ import pickle
 import sys
 import tempfile
 from copy import deepcopy
+from functools import reduce
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 
 from autokeras.constant import Constant
-
-
-def lr_schedule(epoch):
-    lr = 1e-3
-    if epoch > 180:
-        lr *= 0.5e-3
-    elif epoch > 160:
-        lr *= 1e-3
-    elif epoch > 120:
-        lr *= 1e-2
-    elif epoch > 80:
-        lr *= 1e-1
-    return lr
 
 
 class NoImprovementError(Exception):
@@ -75,23 +62,22 @@ class ModelTrainer:
         verbose: Verbosity mode.
     """
 
-    def __init__(self, model, train_data, test_data, metric, verbose):
+    def __init__(self, model, train_loader, test_loader, metric, loss_function, verbose):
         """Init the ModelTrainer with `model`, `x_train`, `y_train`, `x_test`, `y_test`, `verbose`"""
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.model = model
         self.model.to(self.device)
         self.verbose = verbose
-        self.train_data = train_data
-        self.test_data = test_data
-        self.criterion = torch.nn.NLLLoss()
+        self.train_loader = train_loader
+        self.test_loader = test_loader
+        self.loss_function = loss_function
         self.optimizer = None
         self.early_stop = None
         self.metric = metric
 
     def train_model(self,
                     max_iter_num=None,
-                    max_no_improvement_num=None,
-                    batch_size=None):
+                    max_no_improvement_num=None):
         """Train the model.
 
         Args:
@@ -107,13 +93,6 @@ class ModelTrainer:
         if max_no_improvement_num is None:
             max_no_improvement_num = Constant.MAX_NO_IMPROVEMENT_NUM
 
-        if batch_size is None:
-            batch_size = Constant.MAX_BATCH_SIZE
-        batch_size = min(len(self.train_data), batch_size)
-
-        train_loader = DataLoader(self.train_data, batch_size=batch_size, shuffle=True)
-        test_loader = DataLoader(self.test_data, batch_size=batch_size, shuffle=True)
-
         self.early_stop = EarlyStop(max_no_improvement_num)
         self.early_stop.on_train_begin()
 
@@ -121,8 +100,8 @@ class ModelTrainer:
         test_loss_list = []
         self.optimizer = torch.optim.Adam(self.model.parameters())
         for epoch in range(max_iter_num):
-            self._train(train_loader, epoch)
-            test_loss, accuracy = self._test(test_loader)
+            self._train(epoch)
+            test_loss, accuracy = self._test(epoch)
             test_accuracy_list.append(accuracy)
             test_loss_list.append(test_loss)
             if self.verbose:
@@ -135,15 +114,15 @@ class ModelTrainer:
         return (sum(test_loss_list[-max_no_improvement_num:]) / max_no_improvement_num,
                 sum(test_accuracy_list[-max_no_improvement_num:]) / max_no_improvement_num)
 
-    def _train(self, loader, epoch):
+    def _train(self, epoch):
         self.model.train()
+        loader = self.train_loader
 
         for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
-            targets = targets.argmax(1)
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
-            loss = torch.nn.functional.nll_loss(outputs, targets)
+            loss = self.loss_function(outputs, targets)
             loss.backward()
             self.optimizer.step()
             if self.verbose:
@@ -153,21 +132,22 @@ class ModelTrainer:
         if self.verbose:
             print()
 
-    def _test(self, test_loader):
+    def _test(self, epoch):
         self.model.eval()
         test_loss = 0
         all_targets = []
         all_predicted = []
+        loader = self.test_loader
         with torch.no_grad():
-            for batch_idx, (inputs, targets) in enumerate(deepcopy(test_loader)):
-                targets = targets.argmax(1)
+            for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 outputs = self.model(inputs)
-                test_loss += self.criterion(outputs, targets)
+                test_loss += self.loss_function(outputs, targets)
 
-                _, predicted = outputs.max(1)
-                all_predicted = np.concatenate((all_predicted, predicted.cpu().numpy()))
-                all_targets = np.concatenate((all_targets, targets.cpu().numpy()))
+                all_predicted.append(outputs.cpu().numpy())
+                all_targets.append(targets.cpu().numpy())
+        all_predicted = reduce(lambda x, y: np.concatenate(([x], [y])), all_predicted)
+        all_targets = reduce(lambda x, y: np.concatenate(([x], [y])), all_targets)
         return test_loss, self.metric.compute(all_predicted, all_targets)
 
 

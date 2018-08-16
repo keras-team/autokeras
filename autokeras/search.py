@@ -15,6 +15,7 @@ import math
 from autokeras.constant import Constant
 from autokeras.bayesian import IncrementalGaussianProcess, edit_distance
 from autokeras.generator import DefaultClassifierGenerator
+from autokeras.loss_function import classification_loss
 from autokeras.net_transformer import transform, default_transform
 from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
 
@@ -309,13 +310,6 @@ class SearchTree:
         if v not in self.adj_list:
             self.adj_list[v] = []
 
-    def get_leaves(self):
-        ret = []
-        for key, value in self.adj_list.items():
-            if not value:
-                ret.append(key)
-        return ret
-
     def get_dict(self, u=None):
         if u is None:
             return self.get_dict(self.root)
@@ -349,6 +343,7 @@ def train(args):
                                       train_data,
                                       test_data,
                                       metric,
+                                      classification_loss,
                                       verbose).train_model(**trainer_args)
     model.set_weight_to_graph()
     return metric_value, loss, model.graph
