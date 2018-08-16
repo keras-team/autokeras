@@ -151,7 +151,7 @@ def test_fit_csv_file(_, _1):
     clean_dir(os.path.join(path, "temp"))
 
 
-@patch('autokeras.image_classifier.temp_folder_generator', return_value='dummy_path/')
+@patch('autokeras.image_supervised.temp_folder_generator', return_value='dummy_path/')
 def test_init_image_classifier_with_none_path(_):
     clf = ImageClassifier()
     assert clf.path == 'dummy_path/'
