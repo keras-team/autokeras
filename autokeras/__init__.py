@@ -1,2 +1,2 @@
-from autokeras.image_classifier import ImageClassifier
-from autokeras.image_classifier import ImageRegressor
+from autokeras.image_supervised import ImageClassifier
+from autokeras.image_supervised import ImageRegressor

@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from autokeras.image_classifier import *
+from autokeras.image_supervised import *
 from tests.common import clean_dir, MockProcess
 
 
