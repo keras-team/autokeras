@@ -201,7 +201,7 @@ class ImageClassifier(Classifier):
         if not self.searcher:
             input_shape = x_train.shape[1:]
             n_classes = self.y_encoder.n_classes
-            self.searcher_args['n_classes'] = n_classes
+            self.searcher_args['n_output_node'] = n_classes
             self.searcher_args['input_shape'] = input_shape
             self.searcher_args['path'] = self.path
             self.searcher_args['metric'] = self.metric

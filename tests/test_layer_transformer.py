@@ -1,11 +1,11 @@
 from autokeras.constant import Constant
-from autokeras.generator import DefaultClassifierGenerator
+from autokeras.generator import CnnGenerator
 from autokeras.layer_transformer import *
 from tests.common import get_conv_dense_model
 
 
 def test_deeper_conv_block():
-    graph = DefaultClassifierGenerator(10, (28, 28, 3)).generate()
+    graph = CnnGenerator(10, (28, 28, 3)).generate()
     layers = deeper_conv_block(graph.layer_list[1], 3)
     assert len(layers) == Constant.CONV_BLOCK_DISTANCE + 1
 
@@ -44,7 +44,7 @@ def test_wider_next_dense():
 
 
 def test_wider_conv():
-    model = DefaultClassifierGenerator(10, (28, 28, 3)).generate().produce_model()
+    model = CnnGenerator(10, (28, 28, 3)).generate().produce_model()
     model.set_weight_to_graph()
     graph = model.graph
 

@@ -1,4 +1,4 @@
-from autokeras.generator import DefaultClassifierGenerator
+from autokeras.generator import CnnGenerator
 from autokeras.graph import *
 from autokeras.net_transformer import legal_graph
 from tests.common import get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model, \
@@ -190,7 +190,7 @@ def test_skip_connection_layer_ids():
 
 
 def test_wider_dense():
-    graph = DefaultClassifierGenerator(10, (32, 32, 3)).generate()
+    graph = CnnGenerator(10, (32, 32, 3)).generate()
     graph.produce_model().set_weight_to_graph()
     history = [('to_wider_model', 14, 64)]
     for args in history:
@@ -200,7 +200,7 @@ def test_wider_dense():
 
 
 def test_long_transform():
-    graph = DefaultClassifierGenerator(10, (32, 32, 3)).generate()
+    graph = CnnGenerator(10, (32, 32, 3)).generate()
     history = [('to_wider_model', 1, 256), ('to_conv_deeper_model', 1, 3),
                ('to_concat_skip_model', 5, 9)]
     for args in history:
@@ -210,7 +210,7 @@ def test_long_transform():
 
 
 def test_node_consistency():
-    graph = DefaultClassifierGenerator(10, (32, 32, 3)).generate()
+    graph = CnnGenerator(10, (32, 32, 3)).generate()
     assert graph.layer_list[6].output.shape == (16, 16, 64)
 
     for layer in graph.layer_list:
@@ -228,13 +228,13 @@ def test_node_consistency():
     for layer in graph.layer_list:
         assert layer.output.shape == layer.output_shape
 
-    graph.to_add_skip_model(5, 19)
+    graph.to_add_skip_model(5, 18)
     assert graph.layer_list[23].output.shape == (16, 16, 128)
 
     for layer in graph.layer_list:
         assert layer.output.shape == layer.output_shape
 
-    graph.to_concat_skip_model(5, 19)
+    graph.to_concat_skip_model(5, 18)
     assert graph.layer_list[25].output.shape == (16, 16, 256)
 
     for layer in graph.layer_list:

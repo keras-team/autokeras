@@ -14,7 +14,7 @@ import math
 
 from autokeras.constant import Constant
 from autokeras.bayesian import IncrementalGaussianProcess, edit_distance
-from autokeras.generator import DefaultClassifierGenerator
+from autokeras.generator import CnnGenerator
 from autokeras.loss_function import classification_loss
 from autokeras.net_transformer import transform, default_transform
 from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
@@ -59,7 +59,7 @@ class BayesianSearcher:
         t_min: A float. The minimum temperature during simulated annealing.
     """
 
-    def __init__(self, n_classes, input_shape, path, metric, verbose,
+    def __init__(self, n_output_node, input_shape, path, metric, verbose,
                  trainer_args=None,
                  default_model_len=Constant.MODEL_LEN,
                  default_model_width=Constant.MODEL_WIDTH,
@@ -69,7 +69,7 @@ class BayesianSearcher:
         """Initialize the BayesianSearcher.
 
         Args:
-            n_classes: An integer, the number of classes.
+            n_output_node: An integer, the number of classes.
             input_shape: A tuple. e.g. (28, 28, 1).
             path: A string. The path to the directory to save the searcher.
             verbose: A boolean. Whether to output the intermediate information to stdout.
@@ -82,7 +82,7 @@ class BayesianSearcher:
         """
         if trainer_args is None:
             trainer_args = {}
-        self.n_classes = n_classes
+        self.n_classes = n_output_node
         self.input_shape = input_shape
         self.verbose = verbose
         self.history = []
@@ -153,8 +153,8 @@ class BayesianSearcher:
     def init_search(self):
         if self.verbose:
             print('Initializing search.')
-        graph = DefaultClassifierGenerator(self.n_classes,
-                                           self.input_shape).generate(self.default_model_len,
+        graph = CnnGenerator(self.n_classes,
+                             self.input_shape).generate(self.default_model_len,
                                                                       self.default_model_width)
         model_id = self.model_count
         self.model_count += 1
