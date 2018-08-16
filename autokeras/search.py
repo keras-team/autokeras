@@ -59,7 +59,7 @@ class BayesianSearcher:
         t_min: A float. The minimum temperature during simulated annealing.
     """
 
-    def __init__(self, n_output_node, input_shape, path, metric, verbose,
+    def __init__(self, n_output_node, input_shape, path, metric, loss, verbose,
                  trainer_args=None,
                  default_model_len=Constant.MODEL_LEN,
                  default_model_width=Constant.MODEL_WIDTH,
@@ -87,6 +87,7 @@ class BayesianSearcher:
         self.verbose = verbose
         self.history = []
         self.metric = metric
+        self.loss = loss
         self.path = path
         self.model_count = 0
         self.descriptors = []
@@ -182,7 +183,7 @@ class BayesianSearcher:
         pool = multiprocessing.Pool(1)
         train_results = pool.map_async(train, [(graph, train_data, test_data, self.trainer_args,
                                                 os.path.join(self.path, str(model_id) + '.png'),
-                                                self.metric, self.verbose)])
+                                                self.metric, self.loss, self.verbose)])
 
         # Do the search in current thread.
         try:
@@ -335,7 +336,7 @@ class Elem:
 
 
 def train(args):
-    graph, train_data, test_data, trainer_args, path, metric, verbose = args
+    graph, train_data, test_data, trainer_args, path, metric, loss, verbose = args
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)
@@ -343,7 +344,7 @@ def train(args):
                                       train_data,
                                       test_data,
                                       metric,
-                                      classification_loss,
+                                      loss,
                                       verbose).train_model(**trainer_args)
     model.set_weight_to_graph()
     return metric_value, loss, model.graph

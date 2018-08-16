@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class Classifier(ABC):
+class Supervised(ABC):
     """The base classifier class.
 
     It is the base class for all the classifiers. It searches neural network architectures

@@ -26,3 +26,14 @@ class Accuracy(Metric):
         prediction = list(map(lambda x: x.argmax(), prediction))
         target = list(map(lambda x: x.argmax(), target))
         return accuracy_score(prediction, target)
+
+
+class MSE(Metric):
+    @classmethod
+    def higher_better(cls):
+        return False
+
+    @classmethod
+    def compute(cls, prediction, target):
+        # TODO: implement
+        pass
