@@ -187,10 +187,10 @@ def get_pooling_model():
 
 
 def get_processed_data():
-    x_train = np.random.rand(20, 28, 28, 3)
-    y_train = np.random.rand(20, 3)
-    x_test = np.random.rand(10, 28, 28, 3)
-    y_test = np.random.rand(10, 3)
+    x_train = np.random.rand(200, 28, 28, 3)
+    y_train = np.random.rand(200, 3)
+    x_test = np.random.rand(190, 28, 28, 3)
+    y_test = np.random.rand(190, 3)
     data_transformer = DataTransformer(x_train, augment=True)
     train_data = data_transformer.transform_train(x_train, y_train)
     test_data = data_transformer.transform_test(x_test, y_test)
