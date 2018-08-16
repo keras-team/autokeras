@@ -11,7 +11,7 @@ import torch
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
-from autokeras.loss_function import classification_loss
+from autokeras.loss_function import classification_loss, regression_loss
 from autokeras.supervised import Supervised
 from autokeras.constant import Constant
 from autokeras.metric import Accuracy, MSE
@@ -354,3 +354,9 @@ class ImageRegressor(ImageSupervised):
 
     def get_n_output_node(self):
         return 1
+
+    def transform_y(self, y_train):
+        return y_train.flatten().reshape(len(y_train), 1)
+
+    def inverse_transform_y(self, output):
+        return output.flatten()

@@ -186,7 +186,18 @@ def get_pooling_model():
     return graph
 
 
-def get_processed_data():
+def get_regression_dataloaders():
+    x_train = np.random.rand(200, 28, 28, 3)
+    y_train = np.random.rand(200, 1)
+    x_test = np.random.rand(190, 28, 28, 3)
+    y_test = np.random.rand(190, 1)
+    data_transformer = DataTransformer(x_train, augment=True)
+    train_data = data_transformer.transform_train(x_train, y_train)
+    test_data = data_transformer.transform_test(x_test, y_test)
+    return train_data, test_data
+
+
+def get_classification_dataloaders():
     x_train = np.random.rand(200, 28, 28, 3)
     y_train = np.random.rand(200, 3)
     x_test = np.random.rand(190, 28, 28, 3)

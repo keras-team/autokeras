@@ -10,12 +10,9 @@ from queue import PriorityQueue
 import numpy as np
 import math
 
-# from keras.utils import plot_model
-
 from autokeras.constant import Constant
 from autokeras.bayesian import IncrementalGaussianProcess, edit_distance
 from autokeras.generator import CnnGenerator
-from autokeras.loss_function import classification_loss
 from autokeras.net_transformer import transform, default_transform
 from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
 
@@ -120,7 +117,9 @@ class BayesianSearcher:
         return None
 
     def get_best_model_id(self):
-        return max(self.history, key=lambda x: x['metric_value'])['model_id']
+        if self.metric.higher_better():
+            return max(self.history, key=lambda x: x['metric_value'])['model_id']
+        return min(self.history, key=lambda x: x['metric_value'])['model_id']
 
     def replace_model(self, graph, model_id):
         pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.h5'))
