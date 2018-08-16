@@ -7,5 +7,4 @@ def classification_loss(prediction, target):
 
 
 def regression_loss(prediction, target):
-    # TODO: implement
-    return None
+    return torch.nn.MSELoss()(prediction, target)

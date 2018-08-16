@@ -1,6 +1,7 @@
+import math
 from abc import abstractmethod
 
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
 
 
 class Metric:
@@ -35,5 +36,5 @@ class MSE(Metric):
 
     @classmethod
     def compute(cls, prediction, target):
-        # TODO: implement
-        pass
+        return mean_squared_error(prediction, target)
+
