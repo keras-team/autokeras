@@ -75,7 +75,7 @@ def test_timout(_):
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_final_fit(_, _1):
     Constant.LIMIT_MEMORY = True
@@ -132,7 +132,7 @@ def test_save_continue(_):
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_csv_file(_, _1):
     Constant.MAX_ITER_NUM = 1

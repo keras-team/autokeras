@@ -1,29 +1,15 @@
 import os
-import random
 import time
 
 import torch
-from copy import deepcopy
-from functools import total_ordering
-from queue import PriorityQueue
-
-import numpy as np
-import math
 
 from autokeras.constant import Constant
-from autokeras.bayesian import IncrementalGaussianProcess, edit_distance
+from autokeras.bayesian import edit_distance, BayesianOptimizer
 from autokeras.generator import CnnGenerator
-from autokeras.net_transformer import transform, default_transform
+from autokeras.net_transformer import default_transform
 from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
 
 import multiprocessing
-
-
-def contain(descriptors, target_descriptor):
-    for descriptor in descriptors:
-        if edit_distance(descriptor, target_descriptor, 1) < 1e-5:
-            return True
-    return False
 
 
 class BayesianSearcher:
@@ -47,7 +33,6 @@ class BayesianSearcher:
         trainer_args: A dictionary. The params for the constructor of ModelTrainer.
         default_model_len: An integer. Number of convolutional layers in the initial architecture.
         default_model_width: An integer. The number of filters in each layer in the initial architecture.
-        gpr: A GaussianProcessRegressor for bayesian optimization.
         search_tree: The data structure for storing all the searched architectures in tree structure.
         training_queue: A list of the generated architectures to be trained.
         x_queue: A list of trained architectures not updated to the gpr.
@@ -94,15 +79,13 @@ class BayesianSearcher:
         if 'max_iter_num' not in self.trainer_args:
             self.trainer_args['max_iter_num'] = Constant.SEARCH_MAX_ITER
 
-        self.gpr = IncrementalGaussianProcess(kernel_lambda)
         self.search_tree = SearchTree()
         self.training_queue = []
         self.x_queue = []
         self.y_queue = []
-        self.beta = beta
         if t_min is None:
             t_min = Constant.T_MIN
-        self.t_min = t_min
+        self.bo = BayesianOptimizer(self, t_min, metric, kernel_lambda, beta)
 
     def load_model_by_id(self, model_id):
         return pickle_from_file(os.path.join(self.path, str(model_id) + '.h5'))
@@ -187,11 +170,17 @@ class BayesianSearcher:
         # Do the search in current thread.
         try:
             if not self.training_queue:
-                new_graph, new_father_id = self.optimize_acq(timeout)
+                new_graph, new_father_id = self.bo.optimize_acq(self.search_tree.adj_list.keys(),
+                                                                self.descriptors,
+                                                                timeout)
                 new_model_id = self.model_count
                 self.model_count += 1
                 self.training_queue.append((new_graph, new_father_id, new_model_id))
                 self.descriptors.append(new_graph.extract_descriptor())
+
+                if self.verbose:
+                    print('Father ID: ', new_father_id)
+                    print(new_graph.operation_history)
             remaining_time = timeout - (time.time() - start_time)
             if remaining_time > 0:
                 metric_value, loss, graph = train_results.get(timeout=remaining_time)[0]
@@ -212,7 +201,7 @@ class BayesianSearcher:
 
         self.add_model(metric_value, loss, graph, model_id)
         self.search_tree.add_child(father_id, model_id)
-        self.gpr.fit(self.x_queue, self.y_queue)
+        self.bo.fit(self.x_queue, self.y_queue)
         self.x_queue = []
         self.y_queue = []
 
@@ -234,83 +223,6 @@ class BayesianSearcher:
         import json
         with open(path, 'w') as fp:
             json.dump(data, fp)
-
-    def optimize_acq(self, timeout):
-        start_time = time.time()
-        model_ids = self.search_tree.adj_list.keys()
-        target_graph = None
-        father_id = None
-        descriptors = deepcopy(self.descriptors)
-        elem_class = Elem
-        if self.metric.higher_better():
-            elem_class = ReverseElem
-
-        # Initialize the priority queue.
-        pq = PriorityQueue()
-        temp_list = []
-        for model_id in model_ids:
-            metric_value = self.get_metric_value_by_id(model_id)
-            temp_list.append((metric_value, model_id))
-        temp_list = sorted(temp_list)
-        for metric_value, model_id in temp_list:
-            graph = self.load_model_by_id(model_id)
-            graph.clear_operation_history()
-            pq.put(elem_class(metric_value, model_id, graph))
-
-        t = 1.0
-        t_min = self.t_min
-        alpha = 0.9
-        opt_acq = self._get_init_opt_acq_value()
-        remaining_time = timeout - (time.time() - start_time)
-        while not pq.empty() and t > t_min and remaining_time > 0:
-            elem = pq.get()
-            if self.metric.higher_better():
-                temp_exp = min((elem.metric_value - opt_acq) / t, 709.0)
-            else:
-                temp_exp = min((opt_acq - elem.metric_value) / t, 709.0)
-            ap = math.exp(temp_exp)
-            if ap > random.uniform(0, 1):
-                for temp_graph in transform(elem.graph):
-                    if contain(descriptors, temp_graph.extract_descriptor()):
-                        continue
-
-                    temp_acq_value = self.acq(temp_graph)
-                    pq.put(elem_class(temp_acq_value, elem.father_id, temp_graph))
-                    descriptors.append(temp_graph.extract_descriptor())
-                    if self._accept_new_acq_value(opt_acq, temp_acq_value):
-                        opt_acq = temp_acq_value
-                        father_id = elem.father_id
-                        target_graph = deepcopy(temp_graph)
-            t *= alpha
-            remaining_time = timeout - (time.time() - start_time)
-
-        if remaining_time < 0:
-            raise TimeoutError
-        nm_graph = self.load_model_by_id(father_id)
-        if self.verbose:
-            print('Father ID: ', father_id)
-            print(target_graph.operation_history)
-        for args in target_graph.operation_history:
-            getattr(nm_graph, args[0])(*list(args[1:]))
-        return nm_graph, father_id
-
-    def acq(self, graph):
-        mean, std = self.gpr.predict(np.array([graph.extract_descriptor()]))
-        if self.metric.higher_better():
-            return mean + self.beta * std
-        return mean - self.beta * std
-
-    def _get_init_opt_acq_value(self):
-        if self.metric.higher_better():
-            return -np.inf
-        return np.inf
-
-    def _accept_new_acq_value(self, opt_acq, temp_acq_value):
-        if temp_acq_value > opt_acq and self.metric.higher_better():
-            return True
-        if temp_acq_value < opt_acq and not self.metric.higher_better():
-            return True
-        return False
 
 
 class SearchTree:
@@ -336,25 +248,6 @@ class SearchTree:
             children.append(self.get_dict(v))
         ret = {'name': u, 'children': children}
         return ret
-
-
-@total_ordering
-class Elem:
-    def __init__(self, metric_value, father_id, graph):
-        self.father_id = father_id
-        self.graph = graph
-        self.metric_value = metric_value
-
-    def __eq__(self, other):
-        return self.metric_value == other.metric_value
-
-    def __lt__(self, other):
-        return self.metric_value < other.metric_value
-
-
-class ReverseElem(Elem):
-    def __lt__(self, other):
-        return self.metric_value > other.metric_value
 
 
 def train(args):

@@ -20,7 +20,7 @@ def mock_train(**_):
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_bayesian_searcher(_, _1):
     train_data, test_data = get_classification_dataloaders()
@@ -44,7 +44,7 @@ def test_search_tree():
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_export_json(_, _1):
     train_data, test_data = get_classification_dataloaders()
@@ -77,7 +77,7 @@ def simple_transform2(graph):
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform2)
+@patch('autokeras.bayesian.transform', side_effect=simple_transform2)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_max_acq(_, _1):
     train_data, test_data = get_classification_dataloaders()
@@ -95,21 +95,3 @@ def test_max_acq(_, _1):
             assert edit_distance(descriptor1, descriptor2, 1) != 0
 
     clean_dir(default_test_path)
-
-
-def test_elem_queue():
-    elem1 = Elem(1, 2, 3)
-    elem2 = Elem(2, 3, 4)
-    pq = PriorityQueue()
-    pq.put(elem1)
-    pq.put(elem2)
-    assert pq.get() == elem1
-    assert pq.get() == elem2
-
-    elem1 = ReverseElem(1, 2, 3)
-    elem2 = ReverseElem(2, 3, 4)
-    pq = PriorityQueue()
-    pq.put(elem1)
-    pq.put(elem2)
-    assert pq.get() == elem2
-    assert pq.get() == elem1

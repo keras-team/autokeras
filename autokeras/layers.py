@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from keras import layers
 
+
 class StubLayer:
     def __init__(self, input_node=None, output_node=None):
         self.input = input_node
@@ -266,7 +267,7 @@ def to_real_layer(layer):
 
 def to_real_keras_layer(layer):
     if is_layer(layer, 'Dense'):
-        return layers.Dense(layer.units, input_shape=(layer.input_units, ))
+        return layers.Dense(layer.units, input_shape=(layer.input_units,))
     if is_layer(layer, 'Conv'):
         return layers.Conv2D(layer.filters,
                              layer.kernel_size,
