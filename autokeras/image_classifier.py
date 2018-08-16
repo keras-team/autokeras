@@ -216,8 +216,11 @@ class ImageClassifier(Classifier):
                                                                           int(len(y_train) * 0.2)),
                                                             random_state=42)
 
+        # Wrap the data into DataLoaders
         train_data = self.data_transformer.transform_train(x_train, y_train)
         test_data = self.data_transformer.transform_test(x_test, y_test)
+
+        # Save the classifier
         pickle.dump(self, open(os.path.join(self.path, 'classifier'), 'wb'))
         pickle_to_file(self, os.path.join(self.path, 'classifier'))
 
@@ -241,8 +244,7 @@ class ImageClassifier(Classifier):
         """
         if Constant.LIMIT_MEMORY:
             pass
-        test_data = self.data_transformer.transform_test(x_test)
-        test_loader = DataLoader(test_data, batch_size=Constant.MAX_BATCH_SIZE, shuffle=False)
+        test_loader = self.data_transformer.transform_test(x_test)
         model = self.load_searcher().load_best_model().produce_model()
         model.eval()
 

@@ -1,7 +1,7 @@
 import torch
 
 import numpy as np
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import ToPILImage, RandomCrop, RandomHorizontalFlip, ToTensor, Normalize, Compose
 
 from autokeras.constant import Constant
@@ -59,27 +59,35 @@ class DataTransformer:
         self.std = np.std(data, axis=(0, 1, 2), keepdims=True).flatten()
         self.augment = augment
 
-    def transform_train(self, data, targets=None):
-        data = data / self.max_val
-        data = torch.Tensor(data.transpose(0, 3, 1, 2))
+    def transform_train(self, data, targets=None, batch_size=None):
         if not self.augment:
             augment_list = []
         else:
             augment_list = [ToPILImage(),
-                            RandomCrop(data.shape[2:], padding=4),
+                            RandomCrop(data.shape[1:3], padding=4),
                             RandomHorizontalFlip(),
                             ToTensor()
                             ]
         common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
-        data_transforms = Compose(augment_list + common_list)
-        return MultiTransformDataset(data, targets, data_transforms)
+        compose_list = augment_list + common_list
 
-    def transform_test(self, data, targets=None):
+        return self._transform(batch_size, compose_list, data, targets)
+
+    def transform_test(self, data, targets=None, batch_size=None):
+        common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
+        compose_list = common_list
+
+        return self._transform(batch_size, compose_list, data, targets)
+
+    def _transform(self, batch_size, compose_list, data, targets):
+        if batch_size is None:
+            batch_size = Constant.MAX_BATCH_SIZE
+        batch_size = min(len(data), batch_size)
         data = data / self.max_val
         data = torch.Tensor(data.transpose(0, 3, 1, 2))
-        common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
-        data_transforms = Compose(common_list)
-        return MultiTransformDataset(data, targets, data_transforms)
+        data_transforms = Compose(compose_list)
+        dataset = MultiTransformDataset(data, targets, data_transforms)
+        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 
 class MultiTransformDataset(Dataset):

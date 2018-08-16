@@ -13,6 +13,7 @@ import math
 from autokeras.constant import Constant
 from autokeras.bayesian import IncrementalGaussianProcess, edit_distance
 from autokeras.generator import DefaultClassifierGenerator
+from autokeras.loss_function import classification_loss
 from autokeras.net_transformer import transform, default_transform
 from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
 
@@ -326,6 +327,7 @@ def train(args):
                                       train_data,
                                       test_data,
                                       metric,
+                                      classification_loss,
                                       verbose).train_model(**trainer_args)
     model.set_weight_to_graph()
     return metric_value, loss, model.graph
