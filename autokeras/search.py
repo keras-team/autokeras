@@ -287,13 +287,6 @@ class SearchTree:
         if v not in self.adj_list:
             self.adj_list[v] = []
 
-    def get_leaves(self):
-        ret = []
-        for key, value in self.adj_list.items():
-            if not value:
-                ret.append(key)
-        return ret
-
     def get_dict(self, u=None):
         if u is None:
             return self.get_dict(self.root)

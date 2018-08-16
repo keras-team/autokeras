@@ -7,22 +7,8 @@ from functools import reduce
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 
 from autokeras.constant import Constant
-
-
-def lr_schedule(epoch):
-    lr = 1e-3
-    if epoch > 180:
-        lr *= 0.5e-3
-    elif epoch > 160:
-        lr *= 1e-3
-    elif epoch > 120:
-        lr *= 1e-2
-    elif epoch > 80:
-        lr *= 1e-1
-    return lr
 
 
 class NoImprovementError(Exception):
