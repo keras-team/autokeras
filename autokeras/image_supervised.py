@@ -1,24 +1,23 @@
+import csv
 import os
 import pickle
-import csv
 import time
+from abc import abstractmethod
 from functools import reduce
 
-import torch
-
-import scipy.ndimage as ndimage
-
 import numpy as np
+import scipy.ndimage as ndimage
+import torch
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader
 
+from autokeras.loss_function import classification_loss, regression_loss
+from autokeras.supervised import Supervised
 from autokeras.constant import Constant
-from autokeras.metric import Accuracy
+from autokeras.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, DataTransformer
-from autokeras.search import BayesianSearcher, train
-from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file
-from autokeras.classifier import Classifier
+from autokeras.search import Searcher, train
+from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file, temp_folder_generator
 
 
 def _validate(x_train, y_train):
@@ -110,7 +109,7 @@ def load_image_dataset(csv_file_path, images_path):
     return np.array(x), np.array(y)
 
 
-class ImageClassifier(Classifier):
+class ImageSupervised(Supervised):
     """The image classifier class.
 
     It is used for image classification. It searches convolutional neural network architectures
@@ -126,7 +125,7 @@ class ImageClassifier(Classifier):
         augment: A boolean value indicating whether the data needs augmentation.
     """
 
-    def __init__(self, verbose=False, path=Constant.DEFAULT_SAVE_PATH, resume=False, searcher_args=None, augment=None):
+    def __init__(self, verbose=False, path=None, resume=False, searcher_args=None, augment=None):
         """Initialize the instance.
 
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
@@ -144,6 +143,9 @@ class ImageClassifier(Classifier):
         if searcher_args is None:
             searcher_args = {}
 
+        if path is None:
+            path = temp_folder_generator()
+
         if augment is None:
             augment = Constant.DATA_AUGMENTATION
 
@@ -159,8 +161,17 @@ class ImageClassifier(Classifier):
             self.path = path
             self.searcher_args = searcher_args
             self.augment = augment
-            self.metric = Accuracy
             ensure_dir(path)
+
+    @property
+    @abstractmethod
+    def metric(self):
+        pass
+
+    @property
+    @abstractmethod
+    def loss(self):
+        pass
 
     def fit(self, x_train=None, y_train=None, time_limit=None):
         """Find the best neural architecture and train it.
@@ -185,12 +196,7 @@ class ImageClassifier(Classifier):
 
         _validate(x_train, y_train)
 
-        # Transform y_train.
-        if self.y_encoder is None:
-            self.y_encoder = OneHotEncoder()
-            self.y_encoder.fit(y_train)
-
-        y_train = self.y_encoder.transform(y_train)
+        y_train = self.transform_y(y_train)
 
         # Transform x_train
         if self.data_transformer is None:
@@ -199,13 +205,13 @@ class ImageClassifier(Classifier):
         # Create the searcher and save on disk
         if not self.searcher:
             input_shape = x_train.shape[1:]
-            n_classes = self.y_encoder.n_classes
-            self.searcher_args['n_classes'] = n_classes
+            self.searcher_args['n_output_node'] = self.get_n_output_node()
             self.searcher_args['input_shape'] = input_shape
             self.searcher_args['path'] = self.path
             self.searcher_args['metric'] = self.metric
+            self.searcher_args['loss'] = self.loss
             self.searcher_args['verbose'] = self.verbose
-            searcher = BayesianSearcher(**self.searcher_args)
+            searcher = Searcher(**self.searcher_args)
             self.save_searcher(searcher)
             self.searcher = True
 
@@ -215,8 +221,11 @@ class ImageClassifier(Classifier):
                                                                           int(len(y_train) * 0.2)),
                                                             random_state=42)
 
+        # Wrap the data into DataLoaders
         train_data = self.data_transformer.transform_train(x_train, y_train)
         test_data = self.data_transformer.transform_test(x_test, y_test)
+
+        # Save the classifier
         pickle.dump(self, open(os.path.join(self.path, 'classifier'), 'wb'))
         pickle_to_file(self, os.path.join(self.path, 'classifier'))
 
@@ -235,6 +244,13 @@ class ImageClassifier(Classifier):
         if not len(self.load_searcher().history):
             raise TimeoutError
 
+    @abstractmethod
+    def get_n_output_node(self):
+        pass
+
+    def transform_y(self, y_train):
+        return y_train
+
     def predict(self, x_test):
         """Return predict results for the testing data.
 
@@ -246,8 +262,7 @@ class ImageClassifier(Classifier):
         """
         if Constant.LIMIT_MEMORY:
             pass
-        test_data = self.data_transformer.transform_test(x_test)
-        test_loader = DataLoader(test_data, batch_size=Constant.MAX_BATCH_SIZE, shuffle=False)
+        test_loader = self.data_transformer.transform_test(x_test)
         model = self.load_searcher().load_best_model().produce_model()
         model.eval()
 
@@ -256,7 +271,10 @@ class ImageClassifier(Classifier):
             for index, inputs in enumerate(test_loader):
                 outputs.append(model(inputs).numpy())
         output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
-        return self.y_encoder.inverse_transform(output)
+        return self.inverse_transform_y(output)
+
+    def inverse_transform_y(self, output):
+        return output
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
@@ -283,8 +301,8 @@ class ImageClassifier(Classifier):
         if trainer_args is None:
             trainer_args = {'max_no_improvement_num': 30}
 
-        y_train = self.y_encoder.transform(y_train)
-        y_test = self.y_encoder.transform(y_test)
+        y_train = self.transform_y(y_train)
+        y_test = self.transform_y(y_test)
 
         train_data = self.data_transformer.transform_train(x_train, y_train)
         test_data = self.data_transformer.transform_test(x_test, y_test)
@@ -294,8 +312,51 @@ class ImageClassifier(Classifier):
 
         if retrain:
             graph.weighted = False
-        _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.verbose))
+        _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.loss, self.verbose))
 
     def get_best_model_id(self):
         """ Return an integer indicating the id of the best model."""
         return self.load_searcher().get_best_model_id()
+
+
+class ImageClassifier(ImageSupervised):
+    @property
+    def loss(self):
+        return classification_loss
+
+    def transform_y(self, y_train):
+        # Transform y_train.
+        if self.y_encoder is None:
+            self.y_encoder = OneHotEncoder()
+            self.y_encoder.fit(y_train)
+        y_train = self.y_encoder.transform(y_train)
+        return y_train
+
+    def inverse_transform_y(self, output):
+        return self.y_encoder.inverse_transform(output)
+
+    def get_n_output_node(self):
+        return self.y_encoder.n_classes
+
+    @property
+    def metric(self):
+        return Accuracy
+
+
+class ImageRegressor(ImageSupervised):
+    @property
+    def loss(self):
+        return regression_loss
+
+    @property
+    def metric(self):
+        return MSE
+
+    def get_n_output_node(self):
+        return 1
+
+    def transform_y(self, y_train):
+        return y_train.flatten().reshape(len(y_train), 1)
+
+    def inverse_transform_y(self, output):
+        return output.flatten()

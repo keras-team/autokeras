@@ -1,6 +1,7 @@
 .DS_Store
 .idea
 .pytest_cache
+/experiments
 
 # resource temp folder
 tests/resources/temp/*
@@ -20,6 +21,8 @@ build/
 develop-eggs/
 dist/
 /docs/
+/mkdocs/docs/index.md
+/mkdocs/docs/contribute.md
 downloads/
 eggs/
 .eggs/

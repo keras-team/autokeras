@@ -1,6 +1,7 @@
+import math
 from abc import abstractmethod
 
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
 
 
 class Metric:
@@ -23,4 +24,17 @@ class Accuracy(Metric):
 
     @classmethod
     def compute(cls, prediction, target):
+        prediction = list(map(lambda x: x.argmax(), prediction))
+        target = list(map(lambda x: x.argmax(), target))
         return accuracy_score(prediction, target)
+
+
+class MSE(Metric):
+    @classmethod
+    def higher_better(cls):
+        return False
+
+    @classmethod
+    def compute(cls, prediction, target):
+        return mean_squared_error(prediction, target)
+

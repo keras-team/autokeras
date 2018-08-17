@@ -7,6 +7,7 @@ google_analytics: ['UA-44322747-3', 'autokeras.com']
 pages:
     - Home: index.md
     - Getting Started: start.md
+    - Contributing Guide: contribute.md
     - Documentation:
       - classifier: classifier.md
       - search: search.md

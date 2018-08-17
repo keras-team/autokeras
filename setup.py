@@ -3,14 +3,14 @@ from distutils.core import setup
 setup(
     name='autokeras',
     packages=['autokeras'],  # this must be the same as the name above
-    install_requires=['torch==0.4.0', 'torchvision==0.2.1', 'numpy==1.14.5', 'keras==2.2.2', 'scikit-learn==0.19.1',
+    install_requires=['torch==0.4.1', 'torchvision==0.2.1', 'numpy==1.14.5', 'keras==2.2.2', 'scikit-learn==0.19.1',
                       'tensorflow==1.8.0'],
-    version='0.2.3',
+    version='0.2.4',
     description='AutoML for deep learning',
     author='Haifeng Jin',
     author_email='jhfjhfj1@gmail.com',
     url='http://autokeras.com',
-    download_url='https://github.com/jhfjhfj1/autokeras/archive/0.2.3.tar.gz',
+    download_url='https://github.com/jhfjhfj1/autokeras/archive/0.2.4.tar.gz',
     keywords=['automl'],  # arbitrary keywords
     classifiers=[]
 )

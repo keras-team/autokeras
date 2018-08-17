@@ -15,54 +15,46 @@ def get_concat_skip_model():
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     temp_node_id = output_node_id
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubConcatenate(), [output_node_id, temp_node_id])
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(6, 3, 1), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     temp_node_id = output_node_id
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubConcatenate(), [output_node_id, temp_node_id])
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(6, 3, 1), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubFlatten(), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
                                      output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.DENSE_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(5, 5), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.DENSE_DROPOUT_RATE), output_node_id)
     graph.add_layer(StubSoftmax(), output_node_id)
 
     graph.produce_model().set_weight_to_graph()
@@ -77,24 +69,20 @@ def get_add_skip_model():
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     temp_node_id = output_node_id
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     temp_node_id = graph.add_layer(StubReLU(), temp_node_id)
     temp_node_id = graph.add_layer(StubConv(3, 3, 1), temp_node_id)
     temp_node_id = graph.add_layer(StubBatchNormalization(3), temp_node_id)
-    temp_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), temp_node_id)
     output_node_id = graph.add_layer(StubAdd(), [output_node_id, temp_node_id])
 
     temp_node_id = output_node_id
@@ -102,29 +90,25 @@ def get_add_skip_model():
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     temp_node_id = graph.add_layer(StubReLU(), temp_node_id)
     temp_node_id = graph.add_layer(StubConv(3, 3, 1), temp_node_id)
     temp_node_id = graph.add_layer(StubBatchNormalization(3), temp_node_id)
-    temp_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), temp_node_id)
     output_node_id = graph.add_layer(StubAdd(), [output_node_id, temp_node_id])
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubFlatten(), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
                                      output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.DENSE_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(5, 5), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.DENSE_DROPOUT_RATE), output_node_id)
     graph.add_layer(StubSoftmax(), output_node_id)
 
     graph.produce_model().set_weight_to_graph()
@@ -143,23 +127,20 @@ def get_conv_dense_model():
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubFlatten(), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(Constant.DENSE_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
                                      output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.DENSE_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(5, 5), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.DENSE_DROPOUT_RATE), output_node_id)
     graph.add_layer(StubSoftmax(), output_node_id)
 
     graph.produce_model().set_weight_to_graph()
@@ -174,35 +155,30 @@ def get_pooling_model():
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubPooling(2), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
     output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubFlatten(), output_node_id)
+    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
                                      output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.DENSE_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(5, 5), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.DENSE_DROPOUT_RATE), output_node_id)
     graph.add_layer(StubSoftmax(), output_node_id)
 
     graph.produce_model().set_weight_to_graph()
@@ -210,14 +186,25 @@ def get_pooling_model():
     return graph
 
 
-def get_processed_data():
-    x_train = np.random.rand(20, 28, 28, 3)
-    y_train = np.random.rand(20, 3)
-    x_test = np.random.rand(10, 28, 28, 3)
-    y_test = np.random.rand(10, 3)
-    data_transformer = DataTransformer(x_train)
+def get_regression_dataloaders():
+    x_train = np.random.rand(200, 28, 28, 3)
+    y_train = np.random.rand(200, 1)
+    x_test = np.random.rand(190, 28, 28, 3)
+    y_test = np.random.rand(190, 1)
+    data_transformer = DataTransformer(x_train, augment=True)
     train_data = data_transformer.transform_train(x_train, y_train)
-    test_data = data_transformer.transform_train(x_test, y_test)
+    test_data = data_transformer.transform_test(x_test, y_test)
+    return train_data, test_data
+
+
+def get_classification_dataloaders():
+    x_train = np.random.rand(200, 28, 28, 3)
+    y_train = np.random.rand(200, 3)
+    x_test = np.random.rand(190, 28, 28, 3)
+    y_test = np.random.rand(190, 3)
+    data_transformer = DataTransformer(x_train, augment=True)
+    train_data = data_transformer.transform_train(x_train, y_train)
+    test_data = data_transformer.transform_test(x_test, y_test)
     return train_data, test_data
 
 

@@ -1,10 +1,10 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+
 import pytest
 
-from autokeras.image_classifier import *
-from autokeras.constant import Constant
+from autokeras.image_supervised import *
 from tests.common import clean_dir, MockProcess
 
 
@@ -108,7 +108,7 @@ def test_timout_resume(_):
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_final_fit(_, _1):
     Constant.LIMIT_MEMORY = True
@@ -165,7 +165,7 @@ def test_save_continue(_):
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.transform', side_effect=simple_transform)
+@patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_csv_file(_, _1):
     Constant.MAX_ITER_NUM = 1
@@ -182,3 +182,28 @@ def test_fit_csv_file(_, _1):
     assert len(clf.load_searcher().history) == 1
     assert len(results) == 5
     clean_dir(os.path.join(path, "temp"))
+
+
+@patch('autokeras.image_supervised.temp_folder_generator', return_value='dummy_path/')
+def test_init_image_classifier_with_none_path(_):
+    clf = ImageClassifier()
+    assert clf.path == 'dummy_path/'
+
+
+@patch('multiprocessing.Pool', new=MockProcess)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+def test_fit_predict_regression(_):
+    Constant.MAX_ITER_NUM = 1
+    Constant.MAX_MODEL_NUM = 4
+    Constant.SEARCH_MAX_ITER = 1
+    Constant.T_MIN = 0.8
+    Constant.DATA_AUGMENTATION = False
+    path = 'tests/resources/temp'
+    clean_dir(path)
+    clf = ImageRegressor(path=path, verbose=False)
+    train_x = np.random.rand(100, 25, 25, 1)
+    train_y = np.random.randint(0, 5, 100)
+    clf.fit(train_x, train_y, )
+    results = clf.predict(train_x)
+    assert len(results) == len(train_x)
+    clean_dir(path)

@@ -1,4 +1,4 @@
-from autokeras.generator import DefaultClassifierGenerator
+from autokeras.generator import CnnGenerator
 from autokeras.graph import *
 from autokeras.net_transformer import legal_graph
 from tests.common import get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model, \
@@ -8,16 +8,16 @@ from tests.common import get_conv_data, get_add_skip_model, get_conv_dense_model
 def test_conv_deeper_stub():
     graph = get_conv_dense_model()
     layer_num = graph.n_layers
-    graph.to_conv_deeper_model(5, 3)
+    graph.to_conv_deeper_model(4, 3)
 
-    assert graph.n_layers == layer_num + 4
+    assert graph.n_layers == layer_num + 3
 
 
 def test_conv_deeper():
     graph = get_conv_dense_model()
     model = graph.produce_model()
     graph = deepcopy(graph)
-    graph.to_conv_deeper_model(5, 3)
+    graph.to_conv_deeper_model(4, 3)
     new_model = graph.produce_model()
     input_data = torch.Tensor(get_conv_data())
 
@@ -33,16 +33,16 @@ def test_dense_deeper_stub():
     graph = get_conv_dense_model()
     graph.weighted = False
     layer_num = graph.n_layers
-    graph.to_dense_deeper_model(10)
+    graph.to_dense_deeper_model(9)
 
-    assert graph.n_layers == layer_num + 3
+    assert graph.n_layers == layer_num + 2
 
 
 def test_dense_deeper():
     graph = get_conv_dense_model()
     model = graph.produce_model()
     graph = deepcopy(graph)
-    graph.to_dense_deeper_model(10)
+    graph.to_dense_deeper_model(9)
     new_model = graph.produce_model()
     input_data = torch.Tensor(get_conv_data())
 
@@ -58,7 +58,7 @@ def test_conv_wider_stub():
     graph = get_add_skip_model()
     graph.weighted = False
     layer_num = graph.n_layers
-    graph.to_wider_model(9, 3)
+    graph.to_wider_model(7, 3)
 
     assert graph.n_layers == layer_num
 
@@ -67,7 +67,7 @@ def test_conv_wider():
     graph = get_concat_skip_model()
     model = graph.produce_model()
     graph = deepcopy(graph)
-    graph.to_wider_model(5, 3)
+    graph.to_wider_model(4, 3)
     new_model = graph.produce_model()
     input_data = torch.Tensor(get_conv_data())
 
@@ -84,7 +84,7 @@ def test_dense_wider_stub():
     graph = get_add_skip_model()
     graph.weighted = False
     layer_num = graph.n_layers
-    graph.to_wider_model(32, 3)
+    graph.to_wider_model(26, 3)
 
     assert graph.n_layers == layer_num
 
@@ -93,7 +93,7 @@ def test_dense_wider():
     graph = get_add_skip_model()
     model = graph.produce_model()
     graph = deepcopy(graph)
-    graph.to_wider_model(32, 3)
+    graph.to_wider_model(26, 3)
     new_model = graph.produce_model()
     input_data = torch.Tensor(get_conv_data())
 
@@ -110,16 +110,16 @@ def test_skip_add_over_pooling_stub():
     graph = get_pooling_model()
     graph.weighted = False
     layer_num = graph.n_layers
-    graph.to_add_skip_model(1, 10)
+    graph.to_add_skip_model(1, 8)
 
-    assert graph.n_layers == layer_num + 6
+    assert graph.n_layers == layer_num + 5
 
 
 def test_skip_add_over_pooling():
     graph = get_pooling_model()
     model = graph.produce_model()
     graph = deepcopy(graph)
-    graph.to_add_skip_model(1, 10)
+    graph.to_add_skip_model(1, 8)
     new_model = graph.produce_model()
     input_data = torch.Tensor(get_conv_data())
 
@@ -136,17 +136,17 @@ def test_skip_concat_over_pooling_stub():
     graph = get_pooling_model()
     graph.weighted = False
     layer_num = graph.n_layers
-    graph.to_concat_skip_model(1, 14)
+    graph.to_concat_skip_model(1, 11)
 
-    assert graph.n_layers == layer_num + 6
+    assert graph.n_layers == layer_num + 5
 
 
 def test_skip_concat_over_pooling():
     graph = get_pooling_model()
     model = graph.produce_model()
     graph = deepcopy(graph)
-    graph.to_concat_skip_model(5, 10)
-    graph.to_concat_skip_model(5, 10)
+    graph.to_concat_skip_model(4, 8)
+    graph.to_concat_skip_model(4, 8)
     new_model = graph.produce_model()
     input_data = torch.Tensor(get_conv_data())
 
@@ -189,10 +189,20 @@ def test_skip_connection_layer_ids():
     assert len(graph.skip_connection_layer_ids()) == 1
 
 
+def test_wider_dense():
+    graph = CnnGenerator(10, (32, 32, 3)).generate()
+    graph.produce_model().set_weight_to_graph()
+    history = [('to_wider_model', 14, 64)]
+    for args in history:
+        getattr(graph, args[0])(*list(args[1:]))
+        graph.produce_model()
+    assert legal_graph(graph)
+
+
 def test_long_transform():
-    graph = DefaultClassifierGenerator(10, (32, 32, 3)).generate()
+    graph = CnnGenerator(10, (32, 32, 3)).generate()
     history = [('to_wider_model', 1, 256), ('to_conv_deeper_model', 1, 3),
-               ('to_concat_skip_model', 6, 11)]
+               ('to_concat_skip_model', 5, 9)]
     for args in history:
         getattr(graph, args[0])(*list(args[1:]))
         graph.produce_model()
@@ -200,32 +210,32 @@ def test_long_transform():
 
 
 def test_node_consistency():
-    graph = DefaultClassifierGenerator(10, (32, 32, 3)).generate()
+    graph = CnnGenerator(10, (32, 32, 3)).generate()
     assert graph.layer_list[6].output.shape == (16, 16, 64)
 
     for layer in graph.layer_list:
         assert layer.output.shape == layer.output_shape
 
-    graph.to_wider_model(6, 64)
-    assert graph.layer_list[6].output.shape == (16, 16, 128)
+    graph.to_wider_model(5, 64)
+    assert graph.layer_list[5].output.shape == (16, 16, 128)
 
     for layer in graph.layer_list:
         assert layer.output.shape == layer.output_shape
 
-    graph.to_conv_deeper_model(6, 3)
+    graph.to_conv_deeper_model(5, 3)
     assert graph.layer_list[19].output.shape == (16, 16, 128)
 
     for layer in graph.layer_list:
         assert layer.output.shape == layer.output_shape
 
-    graph.to_add_skip_model(6, 19)
+    graph.to_add_skip_model(5, 18)
     assert graph.layer_list[23].output.shape == (16, 16, 128)
 
     for layer in graph.layer_list:
         assert layer.output.shape == layer.output_shape
 
-    graph.to_concat_skip_model(6, 19)
-    assert graph.layer_list[25].output.shape == (16, 16, 128)
+    graph.to_concat_skip_model(5, 18)
+    assert graph.layer_list[25].output.shape == (16, 16, 256)
 
     for layer in graph.layer_list:
         assert layer.output.shape == layer.output_shape

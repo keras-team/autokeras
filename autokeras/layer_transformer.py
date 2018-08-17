@@ -1,7 +1,6 @@
 import numpy as np
 
-from autokeras.constant import Constant
-from autokeras.layers import StubConv, StubBatchNormalization, StubDropout, StubDense, StubReLU
+from autokeras.layers import StubConv, StubBatchNormalization, StubDense, StubReLU
 
 NOISE_RATIO = 1e-4
 
@@ -30,8 +29,7 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
 
     return [StubReLU(),
             new_conv_layer,
-            bn,
-            StubDropout(Constant.CONV_DROPOUT_RATE)]
+            bn]
 
 
 def dense_to_deeper_block(dense_layer, weighted=True):
@@ -41,7 +39,7 @@ def dense_to_deeper_block(dense_layer, weighted=True):
     new_dense_layer = StubDense(units, units)
     if weighted:
         new_dense_layer.set_weights((add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
-    return [StubReLU(), new_dense_layer, StubDropout(Constant.DENSE_DROPOUT_RATE)]
+    return [StubReLU(), new_dense_layer]
 
 
 def wider_pre_dense(layer, n_add, weighted=True):
@@ -76,10 +74,6 @@ def wider_pre_conv(layer, n_add_filters, weighted=True):
     n_pre_filters = layer.filters
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
     teacher_w, teacher_b = layer.get_weights()
-
-    # print(n_pre_filters)
-    # print(teacher_w.shape)
-    # print(rand)
 
     student_w = teacher_w.copy()
     student_b = teacher_b.copy()
@@ -139,7 +133,7 @@ def wider_next_dense(layer, start_dim, total_dim, n_add, weighted=True):
         return StubDense(layer.input_units + n_add, layer.units)
     teacher_w, teacher_b = layer.get_weights()
     student_w = teacher_w.copy()
-    n_units_each_channel = int(teacher_w.shape[0] / total_dim)
+    n_units_each_channel = int(teacher_w.shape[1] / total_dim)
 
     new_weight = np.zeros((teacher_w.shape[0], n_add * n_units_each_channel))
     student_w = np.concatenate((student_w[:, :start_dim * n_units_each_channel],

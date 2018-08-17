@@ -10,8 +10,9 @@ from autokeras.layers import is_layer
 
 def to_wider_graph(graph):
     weighted_layer_ids = graph.wide_layer_ids()
-    n_wider_layer = randint(1, len(weighted_layer_ids))
-    wider_layers = sample(weighted_layer_ids, n_wider_layer)
+    # n_wider_layer = randint(1, len(weighted_layer_ids))
+    # wider_layers = sample(weighted_layer_ids, n_wider_layer)
+    wider_layers = sample(weighted_layer_ids, 1)
 
     for layer_id in wider_layers:
         layer = graph.layer_list[layer_id]
@@ -41,8 +42,9 @@ def to_skip_connection_graph(graph):
 
     if len(valid_connection) < 1:
         return graph
-    n_skip_connection = randint(1, len(valid_connection))
-    for index_a, index_b, skip_type in sample(valid_connection, n_skip_connection):
+    # n_skip_connection = randint(1, len(valid_connection))
+    # for index_a, index_b, skip_type in sample(valid_connection, n_skip_connection):
+    for index_a, index_b, skip_type in sample(valid_connection, 1):
         a_id = weighted_layer_ids[index_a]
         b_id = weighted_layer_ids[index_b]
         if skip_type == NetworkDescriptor.ADD_CONNECT:
@@ -54,8 +56,9 @@ def to_skip_connection_graph(graph):
 
 def to_deeper_graph(graph):
     weighted_layer_ids = graph.deep_layer_ids()
-    n_deeper_layer = randint(1, len(weighted_layer_ids))
-    deeper_layer_ids = sample(weighted_layer_ids, n_deeper_layer)
+    deeper_layer_ids = sample(weighted_layer_ids, 1)
+    # n_deeper_layer = randint(1, len(weighted_layer_ids))
+    # deeper_layer_ids = sample(weighted_layer_ids, n_deeper_layer)
 
     for layer_id in deeper_layer_ids:
         layer = graph.layer_list[layer_id]
@@ -91,9 +94,9 @@ def default_transform(graph):
     graph = deepcopy(graph)
     graph.to_conv_deeper_model(1, 3)
     graph.to_conv_deeper_model(1, 3)
-    graph.to_conv_deeper_model(6, 3)
-    graph.to_conv_deeper_model(11, 3)
-    graph.to_add_skip_model(1, 19)
-    graph.to_add_skip_model(19, 27)
-    graph.to_add_skip_model(27, 31)
+    graph.to_conv_deeper_model(5, 3)
+    graph.to_conv_deeper_model(9, 3)
+    graph.to_add_skip_model(1, 18)
+    graph.to_add_skip_model(18, 24)
+    graph.to_add_skip_model(24, 27)
     return [graph]

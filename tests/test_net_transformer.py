@@ -1,6 +1,6 @@
 import torch
 
-from autokeras.generator import DefaultClassifierGenerator
+from autokeras.generator import CnnGenerator
 from autokeras.graph import Graph
 from autokeras.net_transformer import *
 from tests.common import get_conv_dense_model, get_pooling_model, get_conv_data
@@ -33,23 +33,23 @@ def test_transform():
 
 def test_legal_graph():
     graph = get_pooling_model()
-    graph.to_add_skip_model(1, 5)
+    graph.to_add_skip_model(1, 4)
     assert legal_graph(graph)
-    graph.to_add_skip_model(1, 5)
+    graph.to_add_skip_model(1, 4)
     assert not legal_graph(graph)
 
 
 def test_legal_graph2():
     graph = get_pooling_model()
-    graph.to_concat_skip_model(1, 5)
+    graph.to_concat_skip_model(1, 4)
     assert legal_graph(graph)
-    graph.to_concat_skip_model(1, 5)
+    graph.to_concat_skip_model(1, 4)
     assert not legal_graph(graph)
 
 
 def test_default_transform():
-    graphs = default_transform(DefaultClassifierGenerator(10, (32, 32, 3)).generate())
+    graphs = default_transform(CnnGenerator(10, (32, 32, 3)).generate())
     model = graphs[0].produce_model()
     model(torch.Tensor(get_conv_data()))
     assert len(graphs) == 1
-    assert len(graphs[0].layer_list) == 51
+    assert len(graphs[0].layer_list) == 43
