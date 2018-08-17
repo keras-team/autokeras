@@ -122,3 +122,11 @@ The tests should be run in the root directory of the project by executing the `c
 It would output the coverage information into a directory named `htmlcov`.
 Please make sure the code coverage percentage does not decrease after your contribution,
 otherwise, the code will not be merged.
+
+## Developer Tools Guide
+We highly recommend you to use [Pycharm](https://www.jetbrains.com/pycharm/) and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
+### Pycharm
+Pycharm is the best IDE for large project development in Python.
+### Virtualenvwrapper
+Virtualenvwrapper is a tool to build separated Python environment for each project.
+In this way, you can install a different version of Tensorflow, Pytorch, or any other package for each project.
