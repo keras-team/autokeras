@@ -12,7 +12,7 @@ from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
 import multiprocessing
 
 
-class BayesianSearcher:
+class Searcher:
     """Base class of all searcher classes.
 
     This class is the base class of all searcher classes,
@@ -20,7 +20,7 @@ class BayesianSearcher:
     to implements its strategy.
 
     Attributes:
-        n_classes: Number of classes in the traget classification task.
+        n_classes: Number of classes in the target classification task.
         input_shape: Arbitrary, although all dimensions in the input shaped must be fixed.
             Use the keyword argument `input_shape` (tuple of integers, does not include the batch axis)
             when using this layer as the first layer in a model.

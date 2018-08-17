@@ -25,7 +25,6 @@ class EarlyStop:
         self._max_no_improvement_num = max_no_improvement_num
         self._done = False
         self._min_loss_dec = min_loss_dec
-        self.max_accuracy = 0
 
     def on_train_begin(self):
         self.training_losses = []
@@ -57,8 +56,8 @@ class ModelTrainer:
 
     Attributes:
         model: The model that will be trained
-        train_data: Training data wrapped in batches.
-        test_data: Testing data wrapped in batches.
+        train_loader: Training data wrapped in batches.
+        test_loader: Testing data wrapped in batches.
         verbose: Verbosity mode.
     """
 
@@ -85,7 +84,6 @@ class ModelTrainer:
                 The training will stop when this number is reached.
             max_no_improvement_num: An integer. The maximum number of epochs when the loss value doesn't decrease.
                 The training will stop when this number is reached.
-            batch_size: An integer. The batch size during the training.
         """
         if max_iter_num is None:
             max_iter_num = Constant.MAX_ITER_NUM
@@ -96,23 +94,23 @@ class ModelTrainer:
         self.early_stop = EarlyStop(max_no_improvement_num)
         self.early_stop.on_train_begin()
 
-        test_accuracy_list = []
+        test_metric_value_list = []
         test_loss_list = []
         self.optimizer = torch.optim.Adam(self.model.parameters())
         for epoch in range(max_iter_num):
             self._train(epoch)
-            test_loss, accuracy = self._test(epoch)
-            test_accuracy_list.append(accuracy)
+            test_loss, metric_value = self._test(epoch)
+            test_metric_value_list.append(metric_value)
             test_loss_list.append(test_loss)
             if self.verbose:
-                print('Epoch {}: loss {}, accuracy {}'.format(epoch + 1, test_loss, accuracy))
+                print('Epoch {}: loss {}, metric_value {}'.format(epoch + 1, test_loss, metric_value))
             decreasing = self.early_stop.on_epoch_end(test_loss)
             if not decreasing:
                 if self.verbose:
                     print('No loss decrease after {} epochs'.format(max_no_improvement_num))
                 break
         return (sum(test_loss_list[-max_no_improvement_num:]) / max_no_improvement_num,
-                sum(test_accuracy_list[-max_no_improvement_num:]) / max_no_improvement_num)
+                sum(test_metric_value_list[-max_no_improvement_num:]) / max_no_improvement_num)
 
     def _train(self, epoch):
         self.model.train()

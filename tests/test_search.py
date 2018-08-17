@@ -25,8 +25,8 @@ def mock_train(**_):
 def test_bayesian_searcher(_, _1):
     train_data, test_data = get_classification_dataloaders()
     clean_dir(default_test_path)
-    generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
-                                 loss=classification_loss)
+    generator = Searcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
+                         loss=classification_loss)
     Constant.N_NEIGHBOURS = 1
     Constant.T_MIN = 0.8
     for _ in range(2):
@@ -50,8 +50,8 @@ def test_export_json(_, _1):
     train_data, test_data = get_classification_dataloaders()
 
     clean_dir(default_test_path)
-    generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
-                                 loss=classification_loss)
+    generator = Searcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
+                         loss=classification_loss)
     Constant.N_NEIGHBOURS = 1
     Constant.T_MIN = 0.8
     for _ in range(3):
@@ -86,8 +86,8 @@ def test_max_acq(_, _1):
     Constant.SEARCH_MAX_ITER = 0
     Constant.T_MIN = 0.8
     Constant.BETA = 1
-    generator = BayesianSearcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
-                                 loss=classification_loss)
+    generator = Searcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
+                         loss=classification_loss)
     for _ in range(3):
         generator.search(train_data, test_data)
     for index1, descriptor1 in enumerate(generator.descriptors):
