@@ -89,8 +89,7 @@ def test_timout_resume(_):
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False, resume=False)
     clf.n_epochs = 100
-    with pytest.raises(TimeoutError):
-        clf.fit(train_x, train_y, 5)
+    clf.fit(train_x, train_y, 15)
     history_len = len(clf.load_searcher().history)
     print(history_len)
     assert history_len != 0
