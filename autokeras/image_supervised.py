@@ -16,7 +16,7 @@ from autokeras.supervised import Supervised
 from autokeras.constant import Constant
 from autokeras.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, DataTransformer
-from autokeras.search import BayesianSearcher, train
+from autokeras.search import Searcher, train
 from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file, temp_folder_generator
 
 
@@ -211,7 +211,7 @@ class ImageSupervised(Supervised):
             self.searcher_args['metric'] = self.metric
             self.searcher_args['loss'] = self.loss
             self.searcher_args['verbose'] = self.verbose
-            searcher = BayesianSearcher(**self.searcher_args)
+            searcher = Searcher(**self.searcher_args)
             self.save_searcher(searcher)
             self.searcher = True
 
