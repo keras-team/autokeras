@@ -21,6 +21,8 @@ build/
 develop-eggs/
 dist/
 /docs/
+/mkdocs/docs/index.md
+/mkdocs/docs/contribute.md
 downloads/
 eggs/
 .eggs/
