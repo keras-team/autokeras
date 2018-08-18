@@ -127,6 +127,10 @@ otherwise, the code will not be merged.
 We highly recommend you to use [Pycharm](https://www.jetbrains.com/pycharm/) and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
 ### Pycharm
 Pycharm is the best IDE for large project development in Python.
+We recommend you [inspect the code](https://www.jetbrains.com/help/pycharm/running-inspections.html) before you pull request to fix any error and warning suggested by the inspection.
 ### Virtualenvwrapper
 Virtualenvwrapper is a tool to build separated Python environment for each project.
 In this way, you can install a different version of Tensorflow, Pytorch, or any other package for each project.
+We recommend you to create a virtualenv for autokeras development with virtualenvwrapper, and only install the packages required by autokeras with the corresponding version.
+The virtualenv should be created based on Python 3.6 interpreter.
+Use pycharm to select the [virtualenv as interpreter](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html).
