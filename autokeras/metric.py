@@ -1,4 +1,3 @@
-import math
 from abc import abstractmethod
 
 from sklearn.metrics import accuracy_score, mean_squared_error

@@ -614,7 +614,7 @@ class TorchModel(torch.nn.Module):
             set_torch_weight_to_stub(layer, self.graph.layer_list[index])
 
 
-class KerasModel():
+class KerasModel:
     def __init__(self, graph):
         self.graph = graph
         self.layers = []

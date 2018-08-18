@@ -186,7 +186,7 @@ def get_pooling_model():
     return graph
 
 
-def get_regression_dataloaders():
+def get_regression_data_loaders():
     x_train = np.random.rand(200, 28, 28, 3)
     y_train = np.random.rand(200, 1)
     x_test = np.random.rand(190, 28, 28, 3)
@@ -197,7 +197,7 @@ def get_regression_dataloaders():
     return train_data, test_data
 
 
-def get_classification_dataloaders():
+def get_classification_data_loaders():
     x_train = np.random.rand(200, 28, 28, 3)
     y_train = np.random.rand(200, 3)
     x_test = np.random.rand(190, 28, 28, 3)
@@ -231,6 +231,7 @@ class MockProcess(object):
         return self
 
     def get(self, timeout=None):
+        str(timeout)
         return [self.result]
 
     def terminate(self):

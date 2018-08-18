@@ -86,7 +86,7 @@ class IncrementalGaussianProcess:
         train_x, train_y = np.array(train_x), np.array(train_y)
 
         # Incrementally compute K
-        up_right_k = self.edit_distance_matrix(self.kernel_lambda, self._x, train_x)  # Shape (len(X_train_), len(train_x))
+        up_right_k = self.edit_distance_matrix(self.kernel_lambda, self._x, train_x)
         down_left_k = np.transpose(up_right_k)
         down_right_k = self.edit_distance_matrix(self.kernel_lambda, train_x)
         up_k = np.concatenate((self._distance_matrix, up_right_k), axis=1)
@@ -94,9 +94,9 @@ class IncrementalGaussianProcess:
         self._distance_matrix = np.concatenate((up_k, down_k), axis=0)
         self._distance_matrix = bourgain_embedding_matrix(self._distance_matrix)
         self._k_matrix = 1.0 / np.exp(self._distance_matrix)
-        diag = np.diag_indices_from(self._k_matrix)
-        diag = (diag[0][-len(train_x):], diag[1][-len(train_x):])
-        self._k_matrix[diag] += self.alpha
+        diagonal = np.diag_indices_from(self._k_matrix)
+        diagonal = (diagonal[0][-len(train_x):], diagonal[1][-len(train_x):])
+        self._k_matrix[diagonal] += self.alpha
 
         self._x = np.concatenate((self._x, train_x), axis=0)
         self._y = np.concatenate((self._y, train_y), axis=0)

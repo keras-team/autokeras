@@ -6,7 +6,7 @@ from abc import abstractmethod
 from functools import reduce
 
 import numpy as np
-import scipy.ndimage as ndimage
+from scipy import ndimage
 import torch
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
@@ -42,7 +42,7 @@ def run_searcher_once(train_data, test_data, path, timeout):
 
 
 def read_csv_file(csv_file_path):
-    """Read the csv file and returns two seperate list containing files name and their labels.
+    """Read the csv file and returns two separate list containing files name and their labels.
 
     Args:
         csv_file_path: Path to the CSV file.
@@ -295,7 +295,7 @@ class ImageSupervised(Supervised):
             y_train: A numpy.ndarray of training targets.
             x_test: A numpy.ndarray of testing data.
             y_test: A numpy.ndarray of testing targets.
-            trainer_args: A dictionary containing the parameters of the ModelTrainer constructure.
+            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
             retrain: A boolean of whether reinitialize the weights of the model.
         """
         if trainer_args is None:

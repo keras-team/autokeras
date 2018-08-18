@@ -5,7 +5,8 @@ from autokeras.loss_function import classification_loss
 from autokeras.metric import Accuracy
 from autokeras.search import *
 
-from tests.common import clean_dir, MockProcess, get_classification_dataloaders, get_add_skip_model, get_concat_skip_model
+from tests.common import clean_dir, MockProcess, get_classification_data_loaders, get_add_skip_model, \
+    get_concat_skip_model
 
 default_test_path = 'tests/resources/temp'
 
@@ -23,7 +24,7 @@ def mock_train(**_):
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_bayesian_searcher(_, _1):
-    train_data, test_data = get_classification_dataloaders()
+    train_data, test_data = get_classification_data_loaders()
     clean_dir(default_test_path)
     generator = Searcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
                          loss=classification_loss)
@@ -47,7 +48,7 @@ def test_search_tree():
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_export_json(_, _1):
-    train_data, test_data = get_classification_dataloaders()
+    train_data, test_data = get_classification_data_loaders()
 
     clean_dir(default_test_path)
     generator = Searcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
@@ -80,7 +81,7 @@ def simple_transform2(graph):
 @patch('autokeras.bayesian.transform', side_effect=simple_transform2)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_max_acq(_, _1):
-    train_data, test_data = get_classification_dataloaders()
+    train_data, test_data = get_classification_data_loaders()
     clean_dir(default_test_path)
     Constant.N_NEIGHBOURS = 2
     Constant.SEARCH_MAX_ITER = 0
