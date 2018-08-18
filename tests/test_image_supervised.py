@@ -48,7 +48,7 @@ def test_fit_predict(_):
     Constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
     clean_dir(path)
-    clf = ImageClassifier(path=path, verbose=False)
+    clf = ImageClassifier(path=path, verbose=True)
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y, )

@@ -10,7 +10,7 @@ from tests.common import get_classification_data_loaders, get_regression_data_lo
 def test_model_trainer_classification():
     model = CnnGenerator(3, (28, 28, 3)).generate().produce_model()
     train_data, test_data = get_classification_data_loaders()
-    ModelTrainer(model, train_data, test_data, Accuracy, classification_loss, False).train_model(max_iter_num=3)
+    ModelTrainer(model, train_data, test_data, Accuracy, classification_loss, True).train_model(max_iter_num=3)
 
 
 def test_model_trainer_regression():
