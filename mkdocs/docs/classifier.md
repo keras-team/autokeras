@@ -1,42 +1,42 @@
-###_validate
+### _validate
 Check `x_train`'s type and the shape of `x_train`, `y_train`.
 
-###read_csv_file
+### read_csv_file
 Read the csv file and returns two seperate list containing images name and their labels.
 
-#####Args
+##### Args
 * **csv_file_path**: Path to the CSV file.
 
-#####Returns
+##### Returns
 * **img_file_names**: List containing images names.
 
 * **img_label**: List containing their respective labels.
 
-###read_images
+### read_images
 Read the images from the path and return their numpy.ndarray instance. Return a numpy.ndarray instance containing the training data.
 
-#####Args
+##### Args
 * **img_file_names**: List containing images names.
 
 * **images_dir_path**: Path to the directory containing images.
 
-###load_image_dataset
+### load_image_dataset
 Load images from the files and labels from a csv file.
 Second, the dataset is a set of images and the labels are in a CSV file. The CSV file should contain two columns whose names are 'File Name' and 'Label'. The file names in the first column should match the file names of the images with extensions, e.g., .jpg, .png. The path to the CSV file should be passed through the `csv_file_path`. The path to the directory containing all the images should be passed through `image_path`.
-#####Args
+##### Args
 * **csv_file_path**: CSV file path.
 
 * **images_path**: Path where images exist.
 
-#####Returns
+##### Returns
 * **x**: Four dimensional numpy.ndarray. The channel dimension is the last dimension.
 
 * **y**: The labels.
 
-##ImageClassifier
+## ImageClassifier
 The image classifier class.
 It is used for image classification. It searches convolutional neural network architectures for the best configuration for the dataset.
-#####Attributes
+##### Attributes
 * **path**: A path to the directory to save the classifier.
 
 * **y_encoder**: An instance of OneHotEncoder for `y_train` (array of categorical labels).
@@ -50,10 +50,10 @@ It is used for image classification. It searches convolutional neural network ar
 
 * **augment**: A boolean value indicating whether the data needs augmentation.
 
-###__init__
+### __init__
 Initialize the instance.
 The classifier will be loaded from the files in 'path' if parameter 'resume' is True. Otherwise it would create a new one.
-#####Args
+##### Args
 * **verbose**: A boolean of whether the search process will be printed to stdout.
 
 * **path**: A string. The path to a directory, where the intermediate results are saved.
@@ -63,30 +63,30 @@ The classifier will be loaded from the files in 'path' if parameter 'resume' is 
 
 * **augment**: A boolean value indicating whether the data needs augmentation.
 
-###fit
+### fit
 Find the best neural architecture and train it.
 Based on the given dataset, the function will find the best neural architecture for it. The dataset is in numpy.ndarray format. So they training data should be passed through `x_train`, `y_train`.
-#####Args
+##### Args
 * **x_train**: A numpy.ndarray instance containing the training data.
 
 * **y_train**: A numpy.ndarray instance containing the label of the training data.
 
 * **time_limit**: The time limit for the search in seconds.
 
-###predict
+### predict
 Return predict results for the testing data.
 
-#####Args
+##### Args
 * **x_test**: An instance of numpy.ndarray containing the testing data.
 
-#####Returns
-###evaluate
+##### Returns
+### evaluate
 Return the accuracy score between predict value and `y_test`.
 
-###final_fit
+### final_fit
 Final training after found the best architecture.
 
-#####Args
+##### Args
 * **x_train**: A numpy.ndarray of training data.
 
 * **y_train**: A numpy.ndarray of training targets.
@@ -99,6 +99,6 @@ Final training after found the best architecture.
 
 * **retrain**: A boolean of whether reinitialize the weights of the model.
 
-###get_best_model_id
+### get_best_model_id
 Return an integer indicating the id of the best model.
 
