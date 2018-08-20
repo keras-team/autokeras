@@ -241,10 +241,12 @@ class ImageSupervised(Supervised):
                 time_elapsed = time.time() - start_time
                 time_remain = time_limit - time_elapsed
             # if no search executed during the time_limit, then raise an error
+            if time_remain <= 0:
+                raise TimeoutError
         except TimeoutError:
             if len(self.load_searcher().history) == 0:
                 raise TimeoutError("Search Time too short. No model was found during the search time.")
-            else:
+            elif self.verbose:
                 print('Time is out.')
 
     @abstractmethod

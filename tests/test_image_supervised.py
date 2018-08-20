@@ -54,7 +54,8 @@ def test_fit_predict(_):
 
 @patch('multiprocessing.Pool', new=MockProcess)
 def test_timeout():
-    Constant.MAX_MODEL_NUM = 4
+    # Constant.MAX_MODEL_NUM = 4
+    Constant.SEARCH_MAX_ITER = 1000
     Constant.T_MIN = 0.8
     Constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
