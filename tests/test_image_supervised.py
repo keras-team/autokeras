@@ -9,6 +9,7 @@ from tests.common import clean_dir, MockProcess
 
 
 def mock_train(**kwargs):
+    str(kwargs)
     return 1, 0
 
 
@@ -47,7 +48,7 @@ def test_fit_predict(_):
     Constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
     clean_dir(path)
-    clf = ImageClassifier(path=path, verbose=False)
+    clf = ImageClassifier(path=path, verbose=True)
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y, )
@@ -58,7 +59,7 @@ def test_fit_predict(_):
 
 @patch('multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_timout(_):
+def test_timeout(_):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
     Constant.SEARCH_MAX_ITER = 1

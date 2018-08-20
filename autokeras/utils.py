@@ -98,8 +98,8 @@ class ModelTrainer:
         test_loss_list = []
         self.optimizer = torch.optim.Adam(self.model.parameters())
         for epoch in range(max_iter_num):
-            self._train(epoch)
-            test_loss, metric_value = self._test(epoch)
+            self._train()
+            test_loss, metric_value = self._test()
             test_metric_value_list.append(metric_value)
             test_loss_list.append(test_loss)
             if self.verbose:
@@ -112,7 +112,7 @@ class ModelTrainer:
         return (sum(test_loss_list[-max_no_improvement_num:]) / max_no_improvement_num,
                 sum(test_metric_value_list[-max_no_improvement_num:]) / max_no_improvement_num)
 
-    def _train(self, epoch):
+    def _train(self):
         self.model.train()
         loader = self.train_loader
 
@@ -130,7 +130,7 @@ class ModelTrainer:
         if self.verbose:
             print()
 
-    def _test(self, epoch):
+    def _test(self):
         self.model.eval()
         test_loss = 0
         all_targets = []
