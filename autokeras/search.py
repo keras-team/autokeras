@@ -173,6 +173,9 @@ class Searcher:
                 new_graph, new_father_id = self.bo.optimize_acq(self.search_tree.adj_list.keys(),
                                                                 self.descriptors,
                                                                 timeout)
+                # Did not found a new architecture
+                if new_father_id is None:
+                    return
                 new_model_id = self.model_count
                 self.model_count += 1
                 self.training_queue.append((new_graph, new_father_id, new_model_id))
@@ -185,15 +188,9 @@ class Searcher:
             if remaining_time > 0:
                 metric_value, loss, graph = train_results.get(timeout=remaining_time)[0]
             else:
-                raise TimeoutError
-        except multiprocessing.TimeoutError as e:
-            # if no model found in the time limit, raise TimeoutError
-            if self.model_count == 0:
-                # convert multiprocessing.TimeoutError to builtin TimeoutError for ux
-                raise TimeoutError("search Timeout") from e
-            # else return the result found in the time limit
-            else:
                 return
+        except multiprocessing.TimeoutError as e:
+            raise TimeoutError from e
         finally:
             # terminate and join the subprocess to prevent any resource leak
             pool.terminate()

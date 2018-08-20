@@ -234,15 +234,19 @@ class ImageSupervised(Supervised):
 
         time_elapsed = time.time() - start_time
         time_remain = time_limit - time_elapsed
-        while time_remain > 0:
-            run_searcher_once(train_data, test_data, self.path, int(time_remain))
-            if len(self.load_searcher().history) >= Constant.MAX_MODEL_NUM:
-                break
-            time_elapsed = time.time() - start_time
-            time_remain = time_limit - time_elapsed
-        # if no search executed during the time_limit, then raise an error
-        if not len(self.load_searcher().history):
-            raise TimeoutError
+        try:
+            while time_remain > 0:
+                run_searcher_once(train_data, test_data, self.path, int(time_remain))
+                if len(self.load_searcher().history) >= Constant.MAX_MODEL_NUM:
+                    break
+                time_elapsed = time.time() - start_time
+                time_remain = time_limit - time_elapsed
+            # if no search executed during the time_limit, then raise an error
+        except TimeoutError:
+            if len(self.load_searcher().history) == 0:
+                raise TimeoutError("Search Time too short. No model was found during the search time.")
+            else:
+                print('Time is out.')
 
     @abstractmethod
     def get_n_output_node(self):

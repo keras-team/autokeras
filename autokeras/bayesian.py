@@ -270,6 +270,9 @@ class BayesianOptimizer:
 
         if remaining_time < 0:
             raise TimeoutError
+        # Did not found a not duplicated architecture
+        if father_id is None:
+            return None, None
         nm_graph = self.searcher.load_model_by_id(father_id)
         for args in target_graph.operation_history:
             getattr(nm_graph, args[0])(*list(args[1:]))

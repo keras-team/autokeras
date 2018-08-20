@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from autokeras.image_supervised import *
-from tests.common import clean_dir, MockProcess
+from tests.common import clean_dir, MockProcess, simple_transform
 
 
 def mock_train(**kwargs):
@@ -34,10 +34,6 @@ def test_x_float_exception():
     assert str(info.value) == 'x_train should only contain numerical data.'
 
 
-def simple_transform(graph):
-    return [deepcopy(graph), deepcopy(graph)]
-
-
 @patch('multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_predict(_):
@@ -58,11 +54,10 @@ def test_fit_predict(_):
 
 
 @patch('multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_timeout(_):
-    Constant.MAX_ITER_NUM = 1
+def test_timeout():
+    # Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
-    Constant.SEARCH_MAX_ITER = 1
+    # Constant.SEARCH_MAX_ITER = 1
     Constant.T_MIN = 0.8
     Constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
