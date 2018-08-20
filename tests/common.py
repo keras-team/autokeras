@@ -1,4 +1,6 @@
 import os
+from copy import deepcopy
+
 import numpy as np
 
 from autokeras.constant import Constant
@@ -210,8 +212,12 @@ def get_classification_data_loaders():
 
 def clean_dir(path):
     for f in os.listdir(path):
+        full_path = os.path.join(path, f)
         if f != '.gitkeep':
-            os.remove(os.path.join(path, f))
+            if os.path.isfile(full_path):
+                os.remove(full_path)
+            else:
+                os.rmdir(full_path)
 
 
 class MockProcess(object):
@@ -236,3 +242,9 @@ class MockProcess(object):
 
     def terminate(self):
         pass
+
+
+def simple_transform(graph):
+    graph.to_wider_model(5, 64)
+    return [deepcopy(graph)]
+
