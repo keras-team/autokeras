@@ -9,7 +9,7 @@ pages:
     - Getting Started: start.md
     - Contributing Guide: temp/contribute.md
     - Documentation:
-      - supervised: temp/supervise.md
+      - supervised: temp/supervised.md
       - image_supervised: temp/image_supervised.md
       - bayesian: temp/bayesian.md
       - search: temp/search.md
