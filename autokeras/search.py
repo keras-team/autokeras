@@ -186,7 +186,7 @@ class Searcher:
                 metric_value, loss, graph = train_results.get(timeout=remaining_time)[0]
             else:
                 raise TimeoutError
-        except multiprocessing.TimeoutError as e:
+        except (multiprocessing.TimeoutError, TimeoutError) as e:
             # if no model found in the time limit, raise TimeoutError
             if self.model_count == 0:
                 # convert multiprocessing.TimeoutError to builtin TimeoutError for ux
