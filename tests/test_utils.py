@@ -4,7 +4,7 @@ from autokeras.generator import CnnGenerator
 from autokeras.loss_function import classification_loss, regression_loss
 from autokeras.metric import Accuracy, MSE
 from autokeras.utils import ModelTrainer, temp_folder_generator
-from tests.common import get_classification_data_loaders, get_regression_data_loaders
+from tests.common import get_classification_data_loaders, get_regression_data_loaders, clean_dir
 
 
 def test_model_trainer_classification():
@@ -19,7 +19,11 @@ def test_model_trainer_regression():
     ModelTrainer(model, train_data, test_data, MSE, regression_loss, False).train_model(max_iter_num=3)
 
 
-@patch('tempfile.gettempdir', return_value="dummy_path/")
+@patch('tempfile.gettempdir', return_value="tests/resources/temp/")
 def test_temp_folder_generator(_):
+    path = 'tests/resources/temp'
+    clean_dir(path)
     path = temp_folder_generator()
-    assert path == "dummy_path/autokeras"
+    assert path == "tests/resources/temp/autokeras"
+    path = 'tests/resources/temp'
+    clean_dir(path)
