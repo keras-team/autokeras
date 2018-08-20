@@ -185,7 +185,6 @@ class ImageSupervised(Supervised):
             y_train: A numpy.ndarray instance containing the label of the training data.
             time_limit: The time limit for the search in seconds.
         """
-        start_time = time.time()
         if y_train is None:
             y_train = []
         if x_train is None:
@@ -232,8 +231,8 @@ class ImageSupervised(Supervised):
         if time_limit is None:
             time_limit = 24 * 60 * 60
 
-        time_elapsed = time.time() - start_time
-        time_remain = time_limit - time_elapsed
+        start_time = time.time()
+        time_remain = time_limit
         try:
             while time_remain > 0:
                 run_searcher_once(train_data, test_data, self.path, int(time_remain))

@@ -1,4 +1,3 @@
-from copy import deepcopy
 from unittest.mock import patch
 
 
@@ -55,9 +54,7 @@ def test_fit_predict(_):
 
 @patch('multiprocessing.Pool', new=MockProcess)
 def test_timeout():
-    # Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
-    # Constant.SEARCH_MAX_ITER = 1
     Constant.T_MIN = 0.8
     Constant.DATA_AUGMENTATION = False
     path = 'tests/resources/temp'
@@ -72,7 +69,7 @@ def test_timeout():
 
 @patch('multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_timout_resume(_):
+def test_timeout_resume(_):
     Constant.MAX_ITER_NUM = 1
     # make it impossible to complete within 10sec
     Constant.MAX_MODEL_NUM = 1000
@@ -87,7 +84,6 @@ def test_timout_resume(_):
     clf.n_epochs = 100
     clf.fit(train_x, train_y, 15)
     history_len = len(clf.load_searcher().history)
-    print(history_len)
     assert history_len != 0
     results = clf.predict(test_x)
     assert len(results) == 100

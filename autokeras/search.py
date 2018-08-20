@@ -188,7 +188,7 @@ class Searcher:
             if remaining_time > 0:
                 metric_value, loss, graph = train_results.get(timeout=remaining_time)[0]
             else:
-                return
+                raise TimeoutError
         except (multiprocessing.TimeoutError, TimeoutError) as e:
             raise TimeoutError from e
         finally:
