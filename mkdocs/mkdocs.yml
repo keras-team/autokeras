@@ -7,13 +7,15 @@ google_analytics: ['UA-44322747-3', 'autokeras.com']
 pages:
     - Home: index.md
     - Getting Started: start.md
-    - Contributing Guide: contribute.md
+    - Contributing Guide: temp/contribute.md
     - Documentation:
-      - classifier: classifier.md
-      - search: search.md
-      - graph: graph.md
-      - preprocessor: preprocessor.md
-      - utils: utils.md
-      - generator: generator.md
+      - supervised: temp/supervise.md
+      - image_supervised: temp/image_supervised.md
+      - bayesian: temp/bayesian.md
+      - search: temp/search.md
+      - graph: temp/graph.md
+      - preprocessor: temp/preprocessor.md
+      - utils: temp/utils.md
+      - generator: temp/generator.md
     - About: about.md
 theme: readthedocs
