@@ -25,6 +25,7 @@ The details of the functions to inherit is in the documentation of [`autokeras/c
 Please also read
 [Code Style Guide](#code-style-guide),
 [Documentation Guide](#documentation-guide),
+[Reusable Code Guide](#reusable-code-guide),
 and
 [Testing Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#testing-guide)
 to ensure your merge request meet our requirements.
