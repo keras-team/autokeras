@@ -161,11 +161,7 @@ class Searcher:
         graph, father_id, model_id = self.training_queue.pop(0)
         if self.verbose:
             print('Training model ', model_id)
-        multiprocessing.set_start_method('spawn', force=True)
-        pool = multiprocessing.Pool(1)
-        train_results = pool.map_async(train, [(graph, train_data, test_data, self.trainer_args,
-                                                os.path.join(self.path, str(model_id) + '.png'),
-                                                self.metric, self.loss, self.verbose)])
+        train_results = train((graph, train_data, test_data, self.trainer_args, os.path.join(self.path, str(model_id) + '.png'), self.metric, self.loss, self.verbose))
 
         # Do the search in current thread.
         try:
