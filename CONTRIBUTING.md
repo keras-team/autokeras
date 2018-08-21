@@ -1,6 +1,8 @@
 # Contributing Guide
 
 Contributions are welcome, and greatly appreciated! Every little bit helps, and credit will always be given.
+We recommend you to check our [Developer Tools Guide](#developer-tools-guide) 
+to make the development process easier and standard.
 **The type of contribution we would be most happy to see is new task modules, e.g. TextClassifier, VideoClassifier.**
 
 ## Implement New Task Modules
@@ -23,6 +25,7 @@ The details of the functions to inherit is in the documentation of [`autokeras/c
 Please also read
 [Code Style Guide](#code-style-guide),
 [Documentation Guide](#documentation-guide),
+[Reusable Code Guide](#reusable-code-guide),
 and
 [Testing Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#testing-guide)
 to ensure your merge request meet our requirements.
@@ -84,6 +87,9 @@ you should use keywords to link to them by following [this tutorial](https://blo
 the test case should fail for the code base in the master branch and pass for the PR code.
 6. Please prefix the title of your pull request with [MRG] if the contribution is complete and should be subjected to a detailed review.
  An incomplete contribution – where you expect to do more work before receiving a full review – should be prefixed [WIP] (to indicate a work in progress) and changed to [MRG] when it matures. 
+7. Checkout from and pull request to the right branch. 
+If it is a very urgent bug fix, checkout from master and pull request to both master and develop.
+Otherwise, checkout from develop and pull request to develop.
 
 ## Code Style Guide
 This project tries to closely follow the official Python Style Guide detailed in [PEP8](https://www.python.org/dev/peps/pep-0008/).
@@ -122,3 +128,29 @@ The tests should be run in the root directory of the project by executing the `c
 It would output the coverage information into a directory named `htmlcov`.
 Please make sure the code coverage percentage does not decrease after your contribution,
 otherwise, the code will not be merged.
+
+## Developer Tools Guide
+We highly recommend you to use [Pycharm](https://www.jetbrains.com/pycharm/) 
+and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
+### Pycharm
+Pycharm is the best IDE for large project development in Python.
+We recommend you [inspect the code](https://www.jetbrains.com/help/pycharm/running-inspections.html)
+before you pull request to fix any error and warning suggested by the inspection.
+### Virtualenvwrapper
+Virtualenvwrapper is a tool to build separated Python environment for each project.
+In this way, you can install a different version of Tensorflow, Pytorch, or any other package for each project.
+We recommend you to create a virtualenv for autokeras development with virtualenvwrapper,
+and only install the packages required by autokeras with the corresponding version.
+The virtualenv should be created based on Python 3.6 interpreter.
+Use pycharm to select the 
+[virtualenv as interpreter](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html).
+
+## Reusable Code Guide
+Other than the base classes you have to extend,
+there are some other classes you can extend.
+
+### ModelTrainer
+`autokeras.utils.ModelTrainer` is a class for training Pytorch models.
+If needed a new metric or loss function, you can add your own to `loss_function.py` and `metric.py`.
+You can follow its documentation to use it.
+Make sure your loss function, metric, Pytorch model, and Dataloader are compatible with each other.

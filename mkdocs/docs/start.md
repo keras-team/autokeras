@@ -27,7 +27,7 @@ We show an example of image classification on the MNIST dataset, which is a famo
 If the images and the labels are already formatted into numpy arrays, you can 
 
     from keras.datasets import mnist
-    from autokeras.image_classifier import ImageClassifier
+    from autokeras.image_supervised import ImageClassifier
 
     if __name__ == '__main__':
         (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -46,7 +46,7 @@ In the example above, the images and the labels are already formatted into numpy
 
 You can use our `load_image_dataset` function to load the images and their labels as follows.
 
-    from autokeras.image_classifier import load_image_dataset
+    from autokeras.image_supervised import load_image_dataset
     
     x_train, y_train = load_image_dataset(csv_file_path="train/label.csv",
                                           images_path="train")
@@ -76,3 +76,21 @@ Here is an example of the csv file.
 The second argument `images_path` is the path to the directory containing all the images with those file names listed in the CSV file.
 The returned values `x_train` and `y_train` are the numpy arrays,
 which can be directly feed into the `fit` function of `ImageClassifier`.
+
+#### How to export keras models?
+
+    from autokeras import ImageClassifier
+    clf = ImageClassifier(verbose=True, augment=False)
+    clf.load_searcher().load_best_model().produce_keras_model().save('my_model.h5')
+
+This uses the keras function model.save() to export a single HDF5 file containing the architecture of the model, the weights of the model, the training configuration, and the state of the optimizer. See https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
+Note: This is being built into AutoKeras as ImageClassifier().export_keras_model() 
+	
+#### How to visualize keras models?
+
+This is not specific to AutoKeras, however, the following will generate a .PNG visualization of the best model found by AutoKeras:
+
+    from keras.models import load_model
+    model = load_model('my_model.h5') #See 'How to export keras models?' to generate this file before loading it.
+    from keras.utils import plot_model
+    plot_model(model, to_file='my_model.png')
