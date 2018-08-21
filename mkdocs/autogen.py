@@ -205,9 +205,9 @@ def extract_comments(directory):
             if os.path.splitext(file_name)[1] == '.py' and file_name != '__init__.py':
                 # with open
                 doc = get_comments_str(os.path.join(parent, file_name))
-                output_file = open(os.path.join('mkdocs/docs', file_name[:-3] + '.md'), 'w')
+                output_file = open(os.path.join('docs/temp/', file_name[:-3] + '.md'), 'w')
                 output_file.write(doc)
                 output_file.close()
 
 
-extract_comments('autokeras')
+extract_comments('../autokeras')
