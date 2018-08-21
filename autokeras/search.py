@@ -1,5 +1,6 @@
 import os
 import time
+from copy import deepcopy
 
 import torch
 
@@ -196,7 +197,7 @@ class Searcher:
                 return
         finally:
             # terminate and join the subprocess to prevent any resource leak
-            pool.terminate()
+            pool.close()
             pool.join()
 
         self.add_model(metric_value, loss, graph, model_id)
@@ -255,14 +256,17 @@ def train(args):
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)
-    loss, metric_value = ModelTrainer(model,
+    mertic_value, loss = ModelTrainer(model,
                                       train_data,
                                       test_data,
                                       metric,
                                       loss,
                                       verbose).train_model(**trainer_args)
     model.set_weight_to_graph()
-    return metric_value, loss, model.graph
+    new_graph = deepcopy(model.graph)
+    del model
+    # del loss
+    return mertic_value, loss, new_graph
 
 
 def same_graph(des1, des2):
