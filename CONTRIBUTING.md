@@ -88,7 +88,8 @@ you should use keywords to link to them by following [this tutorial](https://blo
 the test case should fail for the code base in the master branch and pass for the PR code.
 7. Please prefix the title of your pull request with [MRG] if the contribution is complete and should be subjected to a detailed review.
  An incomplete contribution – where you expect to do more work before receiving a full review – should be prefixed [WIP] (to indicate a work in progress) and changed to [MRG] when it matures. 
-8. When the status change from WIP to MRG, assign the reviewer to @jhfjhfj1
+8. When the status change from WIP to MRG, assign the reviewer to 
+[@jhfjhfj1](https://github.com/jhfjhfj1)
 9. Checkout from and pull request to the right branch. 
 If it is a very urgent bug fix, checkout from master and pull request to both master and develop.
 Otherwise, checkout from develop and pull request to develop.
