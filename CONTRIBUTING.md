@@ -25,6 +25,7 @@ The details of the functions to inherit is in the documentation of [`autokeras/c
 Please also read
 [Code Style Guide](#code-style-guide),
 [Documentation Guide](#documentation-guide),
+[Reusable Code Guide](#reusable-code-guide),
 and
 [Testing Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#testing-guide)
 to ensure your merge request meet our requirements.
@@ -86,6 +87,9 @@ you should use keywords to link to them by following [this tutorial](https://blo
 the test case should fail for the code base in the master branch and pass for the PR code.
 6. Please prefix the title of your pull request with [MRG] if the contribution is complete and should be subjected to a detailed review.
  An incomplete contribution – where you expect to do more work before receiving a full review – should be prefixed [WIP] (to indicate a work in progress) and changed to [MRG] when it matures. 
+7. Checkout from and pull request to the right branch. 
+If it is a very urgent bug fix, checkout from master and pull request to both master and develop.
+Otherwise, checkout from develop and pull request to develop.
 
 ## Code Style Guide
 This project tries to closely follow the official Python Style Guide detailed in [PEP8](https://www.python.org/dev/peps/pep-0008/).
@@ -140,3 +144,13 @@ and only install the packages required by autokeras with the corresponding versi
 The virtualenv should be created based on Python 3.6 interpreter.
 Use pycharm to select the 
 [virtualenv as interpreter](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html).
+
+## Reusable Code Guide
+Other than the base classes you have to extend,
+there are some other classes you can extend.
+
+### ModelTrainer
+`autokeras.utils.ModelTrainer` is a class for training Pytorch models.
+If needed a new metric or loss function, you can add your own to `loss_function.py` and `metric.py`.
+You can follow its documentation to use it.
+Make sure your loss function, metric, Pytorch model, and Dataloader are compatible with each other.
