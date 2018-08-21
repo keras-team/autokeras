@@ -140,7 +140,8 @@ class ModelTrainer:
             for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 outputs = self.model(inputs)
-                test_loss += self.loss_function(outputs, targets)
+                # cast tensor to float
+                test_loss += float(self.loss_function(outputs, targets))
 
                 all_predicted.append(outputs.cpu().numpy())
                 all_targets.append(targets.cpu().numpy())
