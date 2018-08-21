@@ -243,8 +243,10 @@ class MockProcess(object):
     def terminate(self):
         pass
 
+    def close(self):
+        pass
+
 
 def simple_transform(graph):
     graph.to_wider_model(5, 64)
     return [deepcopy(graph)]
-
