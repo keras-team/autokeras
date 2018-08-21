@@ -1,6 +1,8 @@
 # Contributing Guide
 
 Contributions are welcome, and greatly appreciated! Every little bit helps, and credit will always be given.
+We recommend you to check our [Developer Tools Guide](#developer-tools-guide) 
+to make the development process easier and standard.
 **The type of contribution we would be most happy to see is new task modules, e.g. TextClassifier, VideoClassifier.**
 
 ## Implement New Task Modules
@@ -124,13 +126,17 @@ Please make sure the code coverage percentage does not decrease after your contr
 otherwise, the code will not be merged.
 
 ## Developer Tools Guide
-We highly recommend you to use [Pycharm](https://www.jetbrains.com/pycharm/) and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
+We highly recommend you to use [Pycharm](https://www.jetbrains.com/pycharm/) 
+and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
 ### Pycharm
 Pycharm is the best IDE for large project development in Python.
-We recommend you [inspect the code](https://www.jetbrains.com/help/pycharm/running-inspections.html) before you pull request to fix any error and warning suggested by the inspection.
+We recommend you [inspect the code](https://www.jetbrains.com/help/pycharm/running-inspections.html)
+before you pull request to fix any error and warning suggested by the inspection.
 ### Virtualenvwrapper
 Virtualenvwrapper is a tool to build separated Python environment for each project.
 In this way, you can install a different version of Tensorflow, Pytorch, or any other package for each project.
-We recommend you to create a virtualenv for autokeras development with virtualenvwrapper, and only install the packages required by autokeras with the corresponding version.
+We recommend you to create a virtualenv for autokeras development with virtualenvwrapper,
+and only install the packages required by autokeras with the corresponding version.
 The virtualenv should be created based on Python 3.6 interpreter.
-Use pycharm to select the [virtualenv as interpreter](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html).
+Use pycharm to select the 
+[virtualenv as interpreter](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html).
