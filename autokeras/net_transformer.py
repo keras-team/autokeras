@@ -10,7 +10,8 @@ from autokeras.layers import is_layer, layer_width
 
 def to_wider_graph(graph):
     weighted_layer_ids = graph.wide_layer_ids()
-    weighted_layer_ids = list(filter(lambda x: layer_width(x) * 2 <= Constant.MAX_MODEL_WIDTH, weighted_layer_ids))
+    weighted_layer_ids = list(filter(lambda x: layer_width(graph.layer_list[x]) * 2 <= Constant.MAX_MODEL_WIDTH,
+                                     weighted_layer_ids))
 
     # n_wider_layer = randint(1, len(weighted_layer_ids))
     # wider_layers = sample(weighted_layer_ids, n_wider_layer)
@@ -58,7 +59,7 @@ def to_skip_connection_graph(graph):
 
 def to_deeper_graph(graph):
     weighted_layer_ids = graph.deep_layer_ids()
-    if weighted_layer_ids >= Constant.MAX_MODEL_DEPTH:
+    if len(weighted_layer_ids) >= Constant.MAX_MODEL_DEPTH:
         return None
 
     deeper_layer_ids = sample(weighted_layer_ids, 1)
