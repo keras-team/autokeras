@@ -5,6 +5,7 @@ before_install:
 - sudo apt-get install graphviz
 install:
 - pip install -r requirements.txt --quiet
+- pip install mkdocs
 script:
 - pytest tests --cov=autokeras
 - sh docs.sh
