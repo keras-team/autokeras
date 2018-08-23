@@ -381,7 +381,6 @@ class PortableImageSupervised(PortableClass):
         """Initialize the instance.
         Args:
             graph: The graph form of the learned model
-
         """
         self.graph = graph
         self.data_transformer = data_transformer
