@@ -7,10 +7,11 @@ install:
 - pip install -r requirements.txt --quiet
 script:
 - pytest tests --cov=autokeras
+- sh docs.sh
 after_success:
 - pip install python-coveralls && coveralls
 deploy:
-  provider: pypi
+- provider: pypi
   user: "jhfjhfj1"
   password:
     secure: U8U+CHDkQlCv6s0ZjbwAqW1RWxU8sV+EOeXVfCIOFJt9Igk16/Onoi8Bbdc52w3rPlgdtR78MxLgR6HsaVWSoZn0dardl6C/F3u+aGzh3dsQF2lfEH+Dl4Y+EasPmo4uKsH7rttT2kpn+w8zmL4IZz/W/ML1WkXv0Dhz6iH1uPS2dsC+uxdfz+W1iii/BACaPPzZdu79N+QBepRJs3VurXyB9UpV/FmsYSTB/2eP1yD/AzkV4RbhfSVRXDqIwvwpHOBqpY/4GJFONkC7oi7JtOMs/6ZjHw/2bpIziWPK1s7HbrYtqfs9w5RG279iwakU94O45xh2v73E++/oJtRqpFAGHAw0SNhm7dprSEU/EwJUaNKj2HGRmIQ2dvr56h3W1lsteS1GR9sNcHrR/AtA+sEiHDFUxlhALEVb9xI7Yk6Bl7/rpoqIBWKSyeu7LomGoCEs6ZE2ljPcRB8OIZSE7FzjiPpWfxabwPG84XufhR834z1C3qnepTkDDRYM/5M954lEbBp8eB8GJGj51DMNifXfHvtJosQPLChFrDrZlRYKLcvKuYASFeJc/v2+Q1p1vPyjHy1eMyM+bES57qBK1KbMVa+sY7dre26b0NMpcUpk6YczR7AIiD330ME7QHglJAHaacXUyBIfflRnPvmsAwB1HY0waH4/OvTFYMU+TLo=
@@ -20,3 +21,11 @@ deploy:
     repo: jhfjhfj1/autokeras
     python: 3.6
 
+- provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+  keep-history: true
+  local-dir: docs/
+  target-branch: gh-pages
+  on:
+    branch: master
