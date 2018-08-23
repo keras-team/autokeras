@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
 from autokeras.loss_function import classification_loss, regression_loss
-from autokeras.supervised import Supervised
+from autokeras.supervised import Supervised, PortableClass
 from autokeras.constant import Constant
 from autokeras.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, DataTransformer
@@ -327,6 +327,11 @@ class ImageSupervised(Supervised):
     	""" Exports the best Keras model to the given filename. """
         self.load_searcher().load_best_model().produce_keras_model().save(model_file_name)
 
+    def export_autokeras_model(self, model_file_name):
+    	""" Creates and Exports the AutoKeras model to the given filename. """
+    	portable_model = PortableImageClassifer(graph=self.load_searcher().load_best_model())
+    	pickle_to_file(portable_model, model_file_name)
+
 
 class ImageClassifier(ImageSupervised):
     @property
@@ -369,3 +374,32 @@ class ImageRegressor(ImageSupervised):
 
     def inverse_transform_y(self, output):
         return output.flatten()
+
+class PortableImageClassifer(PortableClass):
+	def predict(self, x_test):
+        """Return predict results for the testing data.
+
+        Args:
+            x_test: An instance of numpy.ndarray containing the testing data.
+
+        Returns:
+            A numpy.ndarray containing the results.
+        """
+        #DataTransformer needs to be fixed
+        DataTransformer(x_test, augment=Constant.DATA_AUGMENTATION)
+        test_loader = DataTransformer().transform_test(x_test)
+
+        model = self.graph.produce_model()
+        model.eval()
+        
+        outputs = []
+        with torch.no_grad():
+            for index, inputs in enumerate(test_loader):
+                outputs.append(model(inputs).numpy())
+        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
+        return output
+
+    def evaluate(self, x_test, y_test):
+        """Return the accuracy score between predict value and `y_test`."""
+        y_predict = self.predict(x_test)
+        return accuracy_score(y_test, y_predict)
