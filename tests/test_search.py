@@ -14,7 +14,7 @@ def mock_train(**_):
     return 1, 0
 
 
-@patch('multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_bayesian_searcher(_, _1):
@@ -38,7 +38,7 @@ def test_search_tree():
     assert len(tree.adj_list) == 3
 
 
-@patch('multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_export_json(_, _1):
@@ -66,7 +66,7 @@ def test_graph_duplicate():
     assert not same_graph(get_concat_skip_model().extract_descriptor(), get_add_skip_model().extract_descriptor())
 
 
-@patch('multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_max_acq(_, _1):

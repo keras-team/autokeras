@@ -10,8 +10,8 @@ class Constant:
     KERNEL_LAMBDA = 0.1
     T_MIN = 0.0001
     N_NEIGHBOURS = 8
-    # T_MIN = 0.8
-    # N_NEIGHBOURS = 1
+    MAX_MODEL_WIDTH = 2048
+    MAX_MODEL_DEPTH = 15
 
     # Model Defaults
 

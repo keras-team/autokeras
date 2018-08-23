@@ -9,7 +9,7 @@ from autokeras.generator import CnnGenerator
 from autokeras.net_transformer import default_transform
 from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
 
-import multiprocessing
+import torch.multiprocessing as mp
 
 
 class Searcher:
@@ -161,8 +161,8 @@ class Searcher:
         graph, father_id, model_id = self.training_queue.pop(0)
         if self.verbose:
             print('Training model ', model_id)
-        multiprocessing.set_start_method('spawn', force=True)
-        pool = multiprocessing.Pool(1)
+        mp.set_start_method('spawn', force=True)
+        pool = mp.Pool(1)
         train_results = pool.map_async(train, [(graph, train_data, test_data, self.trainer_args,
                                                 os.path.join(self.path, str(model_id) + '.png'),
                                                 self.metric, self.loss, self.verbose)])
@@ -189,13 +189,12 @@ class Searcher:
                 metric_value, loss, graph = train_results.get(timeout=remaining_time)[0]
             else:
                 raise TimeoutError
-        except (multiprocessing.TimeoutError, TimeoutError) as e:
+        except (mp.TimeoutError, TimeoutError) as e:
             raise TimeoutError from e
         finally:
             # terminate and join the subprocess to prevent any resource leak
-            pool.terminate()
+            pool.close()
             pool.join()
-
         self.add_model(metric_value, loss, graph, model_id)
         self.search_tree.add_child(father_id, model_id)
         self.bo.fit(self.x_queue, self.y_queue)
@@ -252,14 +251,14 @@ def train(args):
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)
-    loss, metric_value = ModelTrainer(model,
+    loss, mertic_value = ModelTrainer(model,
                                       train_data,
                                       test_data,
                                       metric,
                                       loss,
                                       verbose).train_model(**trainer_args)
     model.set_weight_to_graph()
-    return metric_value, loss, model.graph
+    return mertic_value, loss, model.graph
 
 
 def same_graph(des1, des2):
