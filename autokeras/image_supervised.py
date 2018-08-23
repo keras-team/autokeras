@@ -323,6 +323,10 @@ class ImageSupervised(Supervised):
         """ Return an integer indicating the id of the best model."""
         return self.load_searcher().get_best_model_id()
 
+    def export_keras_model(self, model_file_name):
+    	""" Exports the best Keras model to the given filename. """
+        self.load_searcher().load_best_model().produce_keras_model().save(model_file_name)
+
 
 class ImageClassifier(ImageSupervised):
     @property
