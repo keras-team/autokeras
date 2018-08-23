@@ -13,6 +13,8 @@ def to_wider_graph(graph):
     weighted_layer_ids = list(filter(lambda x: layer_width(graph.layer_list[x]) * 2 <= Constant.MAX_MODEL_WIDTH,
                                      weighted_layer_ids))
 
+    if len(weighted_layer_ids) == 0:
+        return None
     # n_wider_layer = randint(1, len(weighted_layer_ids))
     # wider_layers = sample(weighted_layer_ids, n_wider_layer)
     wider_layers = sample(weighted_layer_ids, 1)
