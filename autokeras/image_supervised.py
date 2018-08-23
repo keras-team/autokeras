@@ -324,13 +324,14 @@ class ImageSupervised(Supervised):
         return self.load_searcher().get_best_model_id()
 
     def export_keras_model(self, model_file_name):
-    	""" Exports the best Keras model to the given filename. """
+        """ Exports the best Keras model to the given filename. """
         self.load_searcher().load_best_model().produce_keras_model().save(model_file_name)
 
     def export_autokeras_model(self, model_file_name):
-    	""" Creates and Exports the AutoKeras model to the given filename. """
-    	portable_model = PortableImageClassifer(graph=self.load_searcher().load_best_model())
-    	pickle_to_file(portable_model, model_file_name)
+        """ Creates and Exports the AutoKeras model to the given filename. """
+        portable_model = PortableImageSupervised(graph=self.load_searcher().load_best_model(), \
+            y_encoder=self.y_encoder, data_transformer=self.data_transformer)
+        pickle_to_file(portable_model, model_file_name)
 
 
 class ImageClassifier(ImageSupervised):
@@ -375,8 +376,18 @@ class ImageRegressor(ImageSupervised):
     def inverse_transform_y(self, output):
         return output.flatten()
 
-class PortableImageClassifer(PortableClass):
-	def predict(self, x_test):
+class PortableImageSupervised(PortableClass):
+        def __init__(self, graph, data_transformer, y_encoder):
+        """Initialize the instance.
+        Args:
+            graph: The graph form of the learned model
+
+        """
+        self.graph = graph
+        self.data_transformer = data_transformer
+        self.y_encoder = y_encoder
+
+    def predict(self, x_test):
         """Return predict results for the testing data.
 
         Args:
@@ -385,18 +396,20 @@ class PortableImageClassifer(PortableClass):
         Returns:
             A numpy.ndarray containing the results.
         """
-        #DataTransformer needs to be fixed
-        DataTransformer(x_test, augment=Constant.DATA_AUGMENTATION)
-        test_loader = DataTransformer().transform_test(x_test)
-
+        if Constant.LIMIT_MEMORY:
+            pass
+        test_loader = self.data_transformer.transform_test(x_test)
         model = self.graph.produce_model()
         model.eval()
-        
+
         outputs = []
         with torch.no_grad():
             for index, inputs in enumerate(test_loader):
                 outputs.append(model(inputs).numpy())
         output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
+        return self.inverse_transform_y(output)
+        
+    def inverse_transform_y(self, output):
         return output
 
     def evaluate(self, x_test, y_test):
