@@ -409,7 +409,7 @@ class PortableImageSupervised(PortableClass):
         return self.inverse_transform_y(output)
         
     def inverse_transform_y(self, output):
-        return output
+        return self.y_encoder.inverse_transform(output)
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""

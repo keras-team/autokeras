@@ -213,6 +213,8 @@ def test_export_keras_model():
     clf = ImageClassifier(path=path, verbose=False, resume=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
+    accuracy_score = clf.evaluate(train_x, train_y)
+    assert accuracy_score <= 1.0
 
     model_file_name = 'test_keras_model.h5'
     clf.export_keras_model(model_file_name)
@@ -228,3 +230,6 @@ def test_export_keras_model():
     model = pickle_from_file(model_file_name)
     results = model.predict(test_x)
     assert len(results) == len(test_x)
+    accuracy_score = model.evaluate(train_x, train_y)
+    assert accuracy_score <= 1.0
+    clean_dir(path)
