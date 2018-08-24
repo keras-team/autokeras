@@ -71,7 +71,7 @@ def to_deeper_graph(graph):
     for layer_id in deeper_layer_ids:
         layer = graph.layer_list[layer_id]
         if is_layer(layer, 'Conv'):
-            graph.to_conv_deeper_model(layer_id, randint(1, 2) * 2 + 1)
+            graph.to_conv_deeper_model(layer_id, 3)
         else:
             graph.to_dense_deeper_model(layer_id)
     return graph
