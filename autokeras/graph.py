@@ -507,7 +507,6 @@ class Graph:
 
         # The position of each node, how many Conv and Dense layers before it.
         pos = [0] * len(topological_node_list)
-        print(sorted(topological_node_list))
         for v in topological_node_list:
             layer_count = 0
             for u, layer_id in self.reverse_adj_list[v]:
