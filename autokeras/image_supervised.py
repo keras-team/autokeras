@@ -377,7 +377,7 @@ class ImageRegressor(ImageSupervised):
         return output.flatten()
 
 class PortableImageSupervised(PortableClass):
-        def __init__(self, graph, data_transformer, y_encoder):
+    def __init__(self, graph, data_transformer, y_encoder):
         """Initialize the instance.
         Args:
             graph: The graph form of the learned model

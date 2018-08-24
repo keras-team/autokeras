@@ -213,6 +213,7 @@ def test_export_keras_model():
     clf = ImageClassifier(path=path, verbose=False, resume=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
+    import os
 
     model_file_name = 'test_keras_model.h5'
     clf.export_keras_model(model_file_name)
