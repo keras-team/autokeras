@@ -1,6 +1,5 @@
 from unittest.mock import patch
 
-
 import pytest
 
 from autokeras.image_supervised import *
@@ -200,7 +199,10 @@ def test_fit_predict_regression(_):
     assert len(results) == len(train_x)
     clean_dir(path)
 
-def test_export_keras_model():
+
+@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+def test_export_keras_model(_):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 1
     Constant.SEARCH_MAX_ITER = 1
@@ -213,10 +215,10 @@ def test_export_keras_model():
     clf = ImageClassifier(path=path, verbose=False, resume=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
-    accuracy_score = clf.evaluate(train_x, train_y)
-    assert accuracy_score <= 1.0
+    score = clf.evaluate(train_x, train_y)
+    assert score <= 1.0
 
-    model_file_name = 'test_keras_model.h5'
+    model_file_name = os.path.join(path, 'test_keras_model.h5')
     clf.export_keras_model(model_file_name)
     from keras.models import load_model
     model = load_model(model_file_name)
@@ -224,12 +226,12 @@ def test_export_keras_model():
     assert len(results) == len(test_x)
     del model, results, model_file_name
 
-    model_file_name = 'test_autokeras_model.pkl'
+    model_file_name = os.path.join(path, 'test_autokeras_model.pkl')
     clf.export_autokeras_model(model_file_name)
     from autokeras.utils import pickle_from_file
     model = pickle_from_file(model_file_name)
     results = model.predict(test_x)
     assert len(results) == len(test_x)
-    accuracy_score = model.evaluate(train_x, train_y)
-    assert accuracy_score <= 1.0
+    score = model.evaluate(train_x, train_y)
+    assert score <= 1.0
     clean_dir(path)

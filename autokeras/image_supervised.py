@@ -330,7 +330,7 @@ class ImageSupervised(Supervised):
     def export_autokeras_model(self, model_file_name):
         """ Creates and Exports the AutoKeras model to the given filename. """
         portable_model = PortableImageSupervised(graph=self.load_searcher().load_best_model(), \
-            y_encoder=self.y_encoder, data_transformer=self.data_transformer)
+                                                 y_encoder=self.y_encoder, data_transformer=self.data_transformer)
         pickle_to_file(portable_model, model_file_name)
 
 
@@ -376,13 +376,14 @@ class ImageRegressor(ImageSupervised):
     def inverse_transform_y(self, output):
         return output.flatten()
 
+
 class PortableImageSupervised(PortableClass):
     def __init__(self, graph, data_transformer, y_encoder):
         """Initialize the instance.
         Args:
             graph: The graph form of the learned model
         """
-        self.graph = graph
+        super().__init__(graph)
         self.data_transformer = data_transformer
         self.y_encoder = y_encoder
 
@@ -407,7 +408,7 @@ class PortableImageSupervised(PortableClass):
                 outputs.append(model(inputs).numpy())
         output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
         return self.inverse_transform_y(output)
-        
+
     def inverse_transform_y(self, output):
         return self.y_encoder.inverse_transform(output)
 

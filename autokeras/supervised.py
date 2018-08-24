@@ -54,6 +54,7 @@ class Supervised(ABC):
         """Return the accuracy score between predict value and `y_test`."""
         pass
 
+
 class PortableClass(ABC):
     def __init__(self, graph):
         """Initialize the instance.
