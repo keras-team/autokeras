@@ -53,3 +53,30 @@ class Supervised(ABC):
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
         pass
+
+class PortableClass(ABC):
+    def __init__(self, graph):
+        """Initialize the instance.
+
+        Args:
+            graph: The graph form of the learned model
+
+        """
+        self.graph = graph
+
+    @abstractmethod
+    def predict(self, x_test):
+        """Return predict results for the testing data.
+
+        Args:
+            x_test: An instance of numpy.ndarray containing the testing data.
+
+        Returns:
+            A numpy.ndarray containing the results.
+        """
+        pass
+
+    @abstractmethod
+    def evaluate(self, x_test, y_test):
+        """Return the accuracy score between predict value and `y_test`."""
+        pass
