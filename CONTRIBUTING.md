@@ -8,19 +8,21 @@ to make the development process easier and standard.
 ## Implement New Task Modules
 A task module is a comparatively separate module which can handle a specify task.
 For example, ImageClassifier is the only task module we have for now.
-The list of task modules we are seeking is all the issues with label "new task module" (in progress).
+The list of task modules we are seeking is all the issues with label
+"[new task module](https://github.com/jhfjhfj1/autokeras/issues?q=is%3Aissue+is%3Aopen+label%3A%22new+task+module%22)".
 
 The new task module should be submitted by pull request from the first day you start to develop the module.
 Make sure your pull request follow the [Pull Request Guideline](#pull-request-guide).
-Your module will be run against our reserved datasets to test the performance.
-If your module's performance meets our expectation,
-the new task module will be merged into Auto-Keras package.
+You can pick any one of them which has not been assigned to anybody yet.
+If you pick some of the modules which has already been assigned to someone,
+then we will conduct a thorough evaluation on the benchmark datasets and some preserved datasets.
+The one performs better in the evaluation will be merged.
 
-In general, all new task module should inherit their objects from the `Classifier` class in [`autokeras/classifier.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/classifier.py).
+In general, all new task module should inherit their objects from the `Supervised` class in [`autokeras/supervised.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/supervised.py).
 Reach out to us if you feel there is a special requirement.
 For every new feature, a new directory should be created inside the /autokeras directory, e.g. text_classifier.
 All the code contributed should be within the directory.
-The details of the functions to inherit is in the documentation of [`autokeras/classifier.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/classifier.py)
+The details of the functions to inherit is in the documentation of [`autokeras/supervised.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/supervised.py)
 
 Please also read
 [Code Style Guide](#code-style-guide),
