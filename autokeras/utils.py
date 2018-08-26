@@ -113,7 +113,7 @@ class ModelTrainer:
 
         if self.verbose:
             pbar = tqdm(total=max_iter_num,
-                        desc='    Model    '.format(),
+                        desc='    Model    ',
                         file=sys.stdout,
                         leave=False,
                         ncols=75,
