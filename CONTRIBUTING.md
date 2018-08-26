@@ -78,20 +78,29 @@ to ensure your merge request meet our requirements.
 
 ## Pull Request Guide
 Before you submit a pull request, check that it meets these guidelines:
+
 1. Submit the pull request from the first day when you started your development and mark it as **[WIP]**
+
 2. Give your pull request a **helpful title** that summarizing your contribution.
+
 3. Give your branch a **helpful name** summarizing your contribution (fork the repo and create a new branch for pull request).
+
 4. Also, **add the issue number** which it addresses.
 If there is no associated issue, feel free to [create one](https://github.com/jhfjhfj1/autokeras/issues).
+
 5. Often pull requests resolve one or more other issues.
 If merging your pull request means that some issues should be closed,
 you should use keywords to link to them by following [this tutorial](https://blog.github.com/2013-05-14-closing-issues-via-pull-requests/).
+
 6. For the case of bug fixes, at the time of the PR,
 the test case should fail for the code base in the master branch and pass for the PR code.
+
 7. Please prefix the title of your pull request with [MRG] if the contribution is complete and should be subjected to a detailed review.
  An incomplete contribution – where you expect to do more work before receiving a full review – should be prefixed [WIP] (to indicate a work in progress) and changed to [MRG] when it matures. 
+
 8. When the status change from WIP to MRG, assign the reviewer to 
 [@jhfjhfj1](https://github.com/jhfjhfj1)
+
 9. Checkout from and pull request to the right branch. 
 If it is a very urgent bug fix, checkout from master and pull request to both master and develop.
 Otherwise, checkout from develop and pull request to develop.
