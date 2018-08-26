@@ -194,13 +194,16 @@ class Searcher:
                     cell_size = [24, 49]
                     header = ['Father Model ID', 'Added Operation']
                     line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
-                    print('+' + '-' * len(line) + '+')
+                    print('\n' + '+' + '-' * len(line) + '+')
                     print('|' + line + '|')
                     print('+' + '-' * len(line) + '+')
-
-                    r = [new_father_id, new_graph.operation_history[0]]
-                    line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
-                    print('|' + line + '|')
+                    for i in range(len(new_graph.operation_history)):
+                        if i == len(new_graph.operation_history)//2:
+                            r = [new_father_id, new_graph.operation_history[i]]
+                        else:
+                            r = [' ', new_graph.operation_history[i]]
+                        line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
+                        print('|' + line + '|')
                     print('+' + '-' * len(line) + '+')
             remaining_time = timeout - (time.time() - start_time)
             if remaining_time > 0:
