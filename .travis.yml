@@ -7,6 +7,7 @@ install:
 - pip install -r requirements.txt --quiet
 - pip install mkdocs
 script:
+- python setup.py install
 - pytest tests --cov=autokeras
 - sh docs.sh
 after_success:
