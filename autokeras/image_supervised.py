@@ -284,7 +284,7 @@ class ImageSupervised(Supervised):
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
         y_predict = self.predict(x_test)
-        return accuracy_score(y_test, y_predict)
+        return self.metric().compute(y_test, y_predict)
 
     def save_searcher(self, searcher):
         pickle.dump(searcher, open(os.path.join(self.path, 'searcher'), 'wb'))
@@ -330,7 +330,8 @@ class ImageSupervised(Supervised):
     def export_autokeras_model(self, model_file_name):
         """ Creates and Exports the AutoKeras model to the given filename. """
         portable_model = PortableImageSupervised(graph=self.load_searcher().load_best_model(), \
-                                                 y_encoder=self.y_encoder, data_transformer=self.data_transformer)
+                                                 y_encoder=self.y_encoder, data_transformer=self.data_transformer, \
+                                                 metric=self.metric, inverse_transform_y_method=self.inverse_transform_y)
         pickle_to_file(portable_model, model_file_name)
 
 
@@ -378,7 +379,7 @@ class ImageRegressor(ImageSupervised):
 
 
 class PortableImageSupervised(PortableClass):
-    def __init__(self, graph, data_transformer, y_encoder):
+    def __init__(self, graph, data_transformer, y_encoder, metric, inverse_transform_y_method):
         """Initialize the instance.
         Args:
             graph: The graph form of the learned model
@@ -386,6 +387,8 @@ class PortableImageSupervised(PortableClass):
         super().__init__(graph)
         self.data_transformer = data_transformer
         self.y_encoder = y_encoder
+        self.metric = metric
+        self.inverse_transform_y_method = inverse_transform_y_method
 
     def predict(self, x_test):
         """Return predict results for the testing data.
@@ -410,9 +413,9 @@ class PortableImageSupervised(PortableClass):
         return self.inverse_transform_y(output)
 
     def inverse_transform_y(self, output):
-        return self.y_encoder.inverse_transform(output)
+        return self.inverse_transform_y_method(output)
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
         y_predict = self.predict(x_test)
-        return accuracy_score(y_test, y_predict)
+        return self.metric().compute(y_test, y_predict)
