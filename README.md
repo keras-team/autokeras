@@ -65,5 +65,7 @@ other problems on the website, please let us know immediately so we
 can rectify these accordingly. Your help in this regard is greatly
 appreciated.
 
+## Acknowledgements
 
+The authors gratefully acknowledge the D3M program of the Defense Advanced Research Projects Agency (DARPA) administered through AFRL contract FA8750-17-2-0116; the Texas A&M College of Engineering, and Texas A&M. 
 
