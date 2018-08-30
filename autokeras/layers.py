@@ -30,6 +30,9 @@ class StubLayer:
     def get_weights(self):
         return self.weights
 
+    def size(self):
+        return 0
+
     @property
     def output_shape(self):
         return self.input.shape
@@ -68,6 +71,9 @@ class StubBatchNormalization(StubWeightBiasLayer):
         torch_layer.running_mean = torch.Tensor(self.weights[2])
         torch_layer.running_var = torch.Tensor(self.weights[3])
 
+    def size(self):
+        return self.num_features * 4
+
 
 class StubDense(StubWeightBiasLayer):
     def __init__(self, input_units, units, input_node=None, output_node=None):
@@ -84,6 +90,9 @@ class StubDense(StubWeightBiasLayer):
 
     def export_weights_keras(self, keras_layer):
         keras_layer.set_weights((self.weights[0].T, self.weights[1]))
+
+    def size(self):
+        return self.input_units * self.units
 
 
 class StubConv(StubWeightBiasLayer):
