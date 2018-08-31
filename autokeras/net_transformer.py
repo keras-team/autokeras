@@ -10,13 +10,6 @@ from autokeras.layers import is_layer, layer_width
 
 def to_wider_graph(graph):
     weighted_layer_ids = graph.wide_layer_ids()
-    weighted_layer_ids = list(filter(lambda x: layer_width(graph.layer_list[x]) * 2 <= Constant.MAX_MODEL_WIDTH,
-                                     weighted_layer_ids))
-
-    if len(weighted_layer_ids) == 0:
-        return None
-    # n_wider_layer = randint(1, len(weighted_layer_ids))
-    # wider_layers = sample(weighted_layer_ids, n_wider_layer)
     wider_layers = sample(weighted_layer_ids, 1)
 
     for layer_id in wider_layers:
@@ -61,12 +54,8 @@ def to_skip_connection_graph(graph):
 
 def to_deeper_graph(graph):
     weighted_layer_ids = graph.deep_layer_ids()
-    if len(weighted_layer_ids) >= Constant.MAX_MODEL_DEPTH:
-        return None
 
     deeper_layer_ids = sample(weighted_layer_ids, 1)
-    # n_deeper_layer = randint(1, len(weighted_layer_ids))
-    # deeper_layer_ids = sample(weighted_layer_ids, n_deeper_layer)
 
     for layer_id in deeper_layer_ids:
         layer = graph.layer_list[layer_id]
@@ -87,15 +76,22 @@ def legal_graph(graph):
 
 def transform(graph):
     graphs = []
-    for i in range(Constant.N_NEIGHBOURS):
+    for i in range(Constant.N_NEIGHBOURS * 2):
         a = randrange(3)
+        temp_graph = None
         if a == 0:
-            graphs.append(to_deeper_graph(deepcopy(graph)))
+            temp_graph = to_deeper_graph(deepcopy(graph))
         elif a == 1:
-            graphs.append(to_wider_graph(deepcopy(graph)))
+            temp_graph = to_wider_graph(deepcopy(graph))
         elif a == 2:
-            graphs.append(to_skip_connection_graph(deepcopy(graph)))
-    graphs = list(filter(lambda x: x, graphs))
+            temp_graph = to_skip_connection_graph(deepcopy(graph))
+
+        if temp_graph is not None and temp_graph.size() <= Constant.MAX_MODEL_SIZE:
+            graphs.append(temp_graph)
+
+        if len(graphs) >= Constant.N_NEIGHBOURS:
+            break
+
     return list(filter(lambda x: legal_graph(x), graphs))
 
 

@@ -92,7 +92,7 @@ class StubDense(StubWeightBiasLayer):
         keras_layer.set_weights((self.weights[0].T, self.weights[1]))
 
     def size(self):
-        return self.input_units * self.units
+        return self.input_units * self.units + self.units
 
 
 class StubConv(StubWeightBiasLayer):
@@ -113,6 +113,9 @@ class StubConv(StubWeightBiasLayer):
 
     def export_weights_keras(self, keras_layer):
         keras_layer.set_weights((self.weights[0].T, self.weights[1]))
+
+    def size(self):
+        return self.filters * self.kernel_size * self.kernel_size + self.filters
 
 
 class StubAggregateLayer(StubLayer):

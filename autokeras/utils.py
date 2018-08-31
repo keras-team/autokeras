@@ -11,6 +11,7 @@ import torch
 from autokeras.constant import Constant
 from tqdm.autonotebook import tqdm
 
+
 class NoImprovementError(Exception):
     def __init__(self, message):
         self.message = message

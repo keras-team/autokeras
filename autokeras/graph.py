@@ -571,6 +571,9 @@ class Graph:
     def skip_connection_layer_ids(self):
         return self._conv_layer_ids_in_order()[:-1]
 
+    def size(self):
+        return sum(list(map(lambda x: x.size(), self.layer_list)))
+
 
 class TorchModel(torch.nn.Module):
     def __init__(self, graph):
