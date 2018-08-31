@@ -30,9 +30,15 @@ class StubLayer:
     def get_weights(self):
         return self.weights
 
+    def size(self):
+        return 0
+
     @property
     def output_shape(self):
         return self.input.shape
+
+    def to_real_layer(self):
+        pass
 
 
 class StubWeightBiasLayer(StubLayer):
@@ -68,6 +74,12 @@ class StubBatchNormalization(StubWeightBiasLayer):
         torch_layer.running_mean = torch.Tensor(self.weights[2])
         torch_layer.running_var = torch.Tensor(self.weights[3])
 
+    def size(self):
+        return self.num_features * 4
+
+    def to_real_layer(self):
+        return torch.nn.BatchNorm2d(self.num_features)
+
 
 class StubDense(StubWeightBiasLayer):
     def __init__(self, input_units, units, input_node=None, output_node=None):
@@ -84,6 +96,12 @@ class StubDense(StubWeightBiasLayer):
 
     def export_weights_keras(self, keras_layer):
         keras_layer.set_weights((self.weights[0].T, self.weights[1]))
+
+    def size(self):
+        return self.input_units * self.units + self.units
+
+    def to_real_layer(self):
+        return torch.nn.Linear(self.input_units, self.units)
 
 
 class StubConv(StubWeightBiasLayer):
@@ -105,6 +123,15 @@ class StubConv(StubWeightBiasLayer):
     def export_weights_keras(self, keras_layer):
         keras_layer.set_weights((self.weights[0].T, self.weights[1]))
 
+    def size(self):
+        return self.filters * self.kernel_size * self.kernel_size + self.filters
+
+    def to_real_layer(self):
+        return torch.nn.Conv2d(self.input_channel,
+                               self.filters,
+                               self.kernel_size,
+                               padding=int(self.kernel_size / 2))
+
 
 class StubAggregateLayer(StubLayer):
     def __init__(self, input_nodes=None, output_node=None):
@@ -122,11 +149,17 @@ class StubConcatenate(StubAggregateLayer):
         ret = self.input[0].shape[:-1] + (ret,)
         return ret
 
+    def to_real_layer(self):
+        return TorchConcatenate()
+
 
 class StubAdd(StubAggregateLayer):
     @property
     def output_shape(self):
         return self.input[0].shape
+
+    def to_real_layer(self):
+        return TorchAdd()
 
 
 class StubFlatten(StubLayer):
@@ -137,13 +170,18 @@ class StubFlatten(StubLayer):
             ret *= dim
         return ret,
 
+    def to_real_layer(self):
+        return TorchFlatten()
+
 
 class StubReLU(StubLayer):
-    pass
+    def to_real_layer(self):
+        return torch.nn.ReLU()
 
 
 class StubSoftmax(StubLayer):
-    pass
+    def to_real_layer(self):
+        return torch.nn.LogSoftmax(dim=1)
 
 
 class StubPooling(StubLayer):
@@ -159,6 +197,9 @@ class StubPooling(StubLayer):
         ret = ret + (self.input.shape[-1],)
         return ret
 
+    def to_real_layer(self):
+        return torch.nn.MaxPool2d(2)
+
 
 class StubGlobalPooling(StubLayer):
     def __init__(self, func, input_node=None, output_node=None):
@@ -170,6 +211,9 @@ class StubDropout(StubLayer):
     def __init__(self, rate, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
         self.rate = rate
+
+    def to_real_layer(self):
+        return torch.nn.Dropout2d(self.rate)
 
 
 class StubInput(StubLayer):
@@ -237,32 +281,6 @@ def keras_dropout(layer, rate):
         return layers.SpatialDropout3D(rate)
     else:
         return layers.Dropout(rate)
-
-
-def to_real_layer(layer):
-    if is_layer(layer, 'Dense'):
-        return torch.nn.Linear(layer.input_units, layer.units)
-    if is_layer(layer, 'Conv'):
-        return torch.nn.Conv2d(layer.input_channel,
-                               layer.filters,
-                               layer.kernel_size,
-                               padding=int(layer.kernel_size / 2))
-    if is_layer(layer, 'Pooling'):
-        return torch.nn.MaxPool2d(2)
-    if is_layer(layer, 'BatchNormalization'):
-        return torch.nn.BatchNorm2d(layer.num_features)
-    if is_layer(layer, 'Concatenate'):
-        return TorchConcatenate()
-    if is_layer(layer, 'Add'):
-        return TorchAdd()
-    if is_layer(layer, 'Dropout'):
-        return torch.nn.Dropout2d(layer.rate)
-    if is_layer(layer, 'ReLU'):
-        return torch.nn.ReLU()
-    if is_layer(layer, 'Softmax'):
-        return torch.nn.LogSoftmax(dim=1)
-    if is_layer(layer, 'Flatten'):
-        return TorchFlatten()
 
 
 def to_real_keras_layer(layer):

@@ -8,7 +8,6 @@ from functools import reduce
 import numpy as np
 from scipy import ndimage
 import torch
-from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
 from autokeras.loss_function import classification_loss, regression_loss
