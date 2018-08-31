@@ -363,7 +363,7 @@ class Graph:
         return ret
 
     def _dense_block_end_node(self, layer_id):
-        return self._block_end_node(layer_id, Constant.DENSE_BLOCK_DISTANCE)
+        return self.layer_id_to_input_node_ids[layer_id][0]
 
     def _conv_block_end_node(self, layer_id):
         """Get the input node ID of the last layer in the block by layer ID.
