@@ -258,3 +258,8 @@ def test_keras_model():
         keras_model = KerasModel(graph)
         keras_model.set_weight_to_graph()
         assert isinstance(keras_model, KerasModel)
+
+
+def test_graph_size():
+    graph = CnnGenerator(10, (32, 32, 3)).generate()
+    assert graph.size() == 68938
