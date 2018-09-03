@@ -10,7 +10,7 @@ class Constant:
     KERNEL_LAMBDA = 0.1
     T_MIN = 0.0001
     N_NEIGHBOURS = 8
-    MAX_MODEL_SIZE = (1 << (10 + 10 + 10) >> 2) * 7
+    MAX_MODEL_SIZE = (1 << 17)
 
     # Model Defaults
 
