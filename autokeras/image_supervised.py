@@ -121,7 +121,8 @@ class ImageSupervised(Supervised):
         searcher: An instance of BayesianSearcher. It searches different
             neural architecture to find the best model.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
-        augment: A boolean value indicating whether the data needs augmentation.
+        augment: A boolean value indicating whether the data needs augmentation.  If not define, then it
+                will use the value of Constant.DATA_AUGMENTATION which is True by default.
     """
 
     def __init__(self, verbose=False, path=None, resume=False, searcher_args=None, augment=None):
@@ -135,7 +136,8 @@ class ImageSupervised(Supervised):
             path: A string. The path to a directory, where the intermediate results are saved.
             resume: A boolean. If True, the classifier will continue to previous work saved in path.
                 Otherwise, the classifier will start a new search.
-            augment: A boolean value indicating whether the data needs augmentation.
+            augment: A boolean value indicating whether the data needs augmentation. If not define, then it
+                will use the value of Constant.DATA_AUGMENTATION which is True by default.
 
         """
         super().__init__(verbose)
