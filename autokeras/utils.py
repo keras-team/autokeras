@@ -7,9 +7,11 @@ from functools import reduce
 
 import numpy as np
 import torch
+import torchvision.utils as vutils
+from tqdm.autonotebook import tqdm
 
 from autokeras.constant import Constant
-from tqdm.autonotebook import tqdm
+
 
 class NoImprovementError(Exception):
     def __init__(self, message):
@@ -192,6 +194,118 @@ class ModelTrainer:
         all_predicted = reduce(lambda x, y: np.concatenate((x, y)), all_predicted)
         all_targets = reduce(lambda x, y: np.concatenate((x, y)), all_targets)
         return test_loss, self.metric.compute(all_predicted, all_targets)
+
+
+class GANModelTrainer:
+    def __init__(self,
+                 g_model,
+                 d_model,
+                 train_loader,
+                 loss_function,
+                 verbose,
+                 gen_training_result):
+        """Init the ModelTrainer with `model`, `x_train`, `y_train`, `x_test`, `y_test`, `verbose`"""
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.d_model = d_model
+        self.g_model = g_model
+        self.d_model.to(self.device)
+        self.g_model.to(self.device)
+        self.outf = None
+        self.out_size = 0
+        self.verbose = verbose
+        if gen_training_result is not None:
+            self.outf, self.out_size = gen_training_result
+            self.sample_noise = torch.randn(self.out_size,
+                                            self.g_model.nz,
+                                            1, 1, device=self.device)
+        self.train_loader = train_loader
+        self.loss_function = loss_function
+        self.optimizer_d = None
+        self.optimizer_g = None
+        self.early_stop = None
+
+    def train_model(self,
+                    max_iter_num=Constant.MAX_ITER_NUM,
+                    max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM):
+        self.early_stop = EarlyStop(max_no_improvement_num)
+        self.early_stop.on_train_begin()
+        test_loss_list = []
+        self.optimizer_d = torch.optim.Adam(self.d_model.parameters())
+        self.optimizer_g = torch.optim.Adam(self.g_model.parameters())
+        if self.verbose:
+            pbar = tqdm(total=max_iter_num,
+                        desc='     Model     ',
+                        file=sys.stdout,
+                        ncols=75,
+                        position=1,
+                        unit=' epoch')
+        for epoch in range(max_iter_num):
+            self._train(epoch)
+            if self.verbose:
+                pbar.update(1)
+            # decreasing = self.early_stop.on_epoch_end(test_loss)
+            # if not decreasing:
+            #     if self.verbose:
+            #         print('\nNo loss decrease after {} epochs.\n'.format(max_no_improvement_num))
+            #     break
+            if self.verbose:
+                pbar.close()
+        # return sum(test_loss_list[-max_no_improvement_num:]) / max_no_improvement_num
+
+    def _train(self, epoch):
+        # put model into train mode
+        self.d_model.train()
+        # TODO: why?
+        cp_loader = deepcopy(self.train_loader)
+        if self.verbose:
+            pbar = tqdm(total=len(cp_loader),
+                        desc='Current Epoch',
+                        file=sys.stdout,
+                        leave=False,
+                        ncols=75,
+                        position=0,
+                        unit=' Batch')
+        real_label = 1
+        fake_label = 0
+        for batch_idx, inputs in enumerate(cp_loader):
+            # Update Discriminator network maximize log(D(x)) + log(1 - D(G(z)))
+            # train with real
+            self.optimizer_d.zero_grad()
+            inputs = inputs.to(self.device)
+            batch_size = inputs.size(0)
+            outputs = self.d_model(inputs)
+
+            label = torch.full((batch_size,), real_label, device=self.device)
+            loss_d_real = self.loss_function(outputs, label)
+            loss_d_real.backward()
+
+            # train with fake
+            noise = torch.randn((batch_size, self.g_model.nz, 1, 1,), device=self.device)
+            fake_outputs = self.g_model(noise)
+            label.fill_(fake_label)
+            outputs = self.d_model(fake_outputs.detach())
+            loss_g_fake = self.loss_function(outputs, label)
+            loss_g_fake.backward()
+            self.optimizer_d.step()
+            # (2) Update G network: maximize log(D(G(z)))
+            self.g_model.zero_grad()
+            label.fill_(real_label)
+            outputs = self.d_model(fake_outputs)
+            loss_g = self.loss_function(outputs, label)
+            loss_g.backward()
+            self.optimizer_g.step()
+
+            if self.verbose:
+                if batch_idx % 10 == 0:
+                    pbar.update(10)
+            if self.outf is not None and batch_idx % 100 == 0:
+                fake = self.g_model(self.sample_noise)
+                vutils.save_image(
+                    fake.detach(),
+                    '%s/fake_samples_epoch_%03d.png' % (self.outf, epoch),
+                    normalize=True)
+        if self.verbose:
+            pbar.close()
 
 
 def ensure_dir(directory):

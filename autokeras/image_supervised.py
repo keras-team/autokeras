@@ -317,7 +317,7 @@ class ImageSupervised(Supervised):
 
         if retrain:
             graph.weighted = False
-        _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.loss, self.verbose))
+        _, _1, graph= train((graph, train_data, test_data, trainer_args, None, self.metric, self.loss, self.verbose))
 
     def get_best_model_id(self):
         """ Return an integer indicating the id of the best model."""
