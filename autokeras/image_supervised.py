@@ -285,7 +285,7 @@ class ImageSupervised(Supervised):
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
         y_predict = self.predict(x_test)
-        return self.metric().compute(y_test, y_predict)
+        return self.metric().evaluate(y_test, y_predict)
 
     def save_searcher(self, searcher):
         pickle.dump(searcher, open(os.path.join(self.path, 'searcher'), 'wb'))
@@ -421,4 +421,4 @@ class PortableImageSupervised(PortableClass):
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
         y_predict = self.predict(x_test)
-        return self.metric().compute(y_test, y_predict)
+        return self.metric().evaluate(y_test, y_predict)
