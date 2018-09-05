@@ -53,11 +53,3 @@ def test_default_transform():
     model(torch.Tensor(get_conv_data()))
     assert len(graphs) == 1
     assert len(graphs[0].layer_list) == 43
-
-
-def test_search_space_limit():
-    graph = CnnGenerator(10, (32, 32, 3)).generate(model_len=3, model_width=2048)
-    assert to_wider_graph(graph) is None
-
-    graph = CnnGenerator(10, (32, 32, 3)).generate(model_len=14)
-    assert to_deeper_graph(graph) is None

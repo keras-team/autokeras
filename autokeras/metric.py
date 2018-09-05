@@ -15,6 +15,11 @@ class Metric:
     def compute(cls, prediction, target):
         pass
 
+    @classmethod
+    @abstractmethod
+    def evaluate(cls, prediction, target):
+        pass
+
 
 class Accuracy(Metric):
     @classmethod
@@ -25,6 +30,10 @@ class Accuracy(Metric):
     def compute(cls, prediction, target):
         prediction = list(map(lambda x: x.argmax(), prediction))
         target = list(map(lambda x: x.argmax(), target))
+        return cls.evaluate(prediction, target)
+
+    @classmethod
+    def evaluate(cls, prediction, target):
         return accuracy_score(prediction, target)
 
 
@@ -35,5 +44,8 @@ class MSE(Metric):
 
     @classmethod
     def compute(cls, prediction, target):
-        return mean_squared_error(prediction, target)
+        return cls.evaluate(prediction, target)
 
+    @classmethod
+    def evaluate(cls, prediction, target):
+        return mean_squared_error(prediction, target)
