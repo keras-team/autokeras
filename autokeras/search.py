@@ -7,7 +7,8 @@ from autokeras.constant import Constant
 from autokeras.bayesian import edit_distance, BayesianOptimizer
 from autokeras.generator import CnnGenerator
 from autokeras.net_transformer import default_transform
-from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
+from autokeras.utils import pickle_to_file, pickle_from_file
+from autokeras.model_trainer import ModelTrainer
 
 import torch.multiprocessing as mp
 

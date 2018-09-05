@@ -6,10 +6,13 @@ import torchvision.utils as vutils
 from autokeras.constant import Constant
 from autokeras.loss_function import binary_classification_loss
 from autokeras.preprocessor import DataTransformer
-from autokeras.utils import GANModelTrainer
+from autokeras.model_trainer import GANModelTrainer
 
 
 class DCGAN:
+    """ Deep Convolution Generative Adversary Network
+    """
+
     def __init__(self,
                  nz=100,
                  ngf=32,
@@ -18,6 +21,16 @@ class DCGAN:
                  verbose=False,
                  gen_training_result=None,
                  augment=Constant.DATA_AUGMENTATION):
+        """
+       Args:
+            nz: size of the latent z vector
+            ngf: of gen filters in first conv layer
+            ndf: of discrim filters in first conv layer
+            nc: number of input chanel
+            verbose: A boolean of whether the search process will be printed to stdout.
+            gen_training_result: A tuple of (path, size) to denote where to output the intermediate result with size
+            augment: A boolean value indicating whether the data needs augmentation.
+        """
         self.nz = nz
         self.ngf = ngf
         self.ndf = ndf
