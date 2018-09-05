@@ -1,6 +1,9 @@
 site_name: Auto-Keras
 theme:
   name: 'material'
+  palette:
+    primary: 'teal'
+    accent: 'teal'
 repo_url: https://github.com/jhfjhfj1/autokeras
 site_url: http://autokeras.com
 edit_uri: ""
