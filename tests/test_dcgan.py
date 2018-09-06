@@ -13,7 +13,7 @@ def mock_train(**kwargs):
 
 
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_train(_):
+def test_fit_generate(_):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
     Constant.SEARCH_MAX_ITER = 1
@@ -23,5 +23,7 @@ def test_train(_):
     clean_dir(image_path)
     dcgan = DCGAN(gen_training_result=(image_path, size))
     train_x = np.random.rand(100, 32, 32, 3)
-    dcgan.train(train_x)
+    dcgan.fit(train_x)
     clean_dir(image_path)
+    noise = np.random.randn(32, 100, 1, 1).astype('float32')
+    dcgan.generate(noise)

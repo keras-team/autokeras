@@ -7,19 +7,15 @@ from autokeras.constant import Constant
 from autokeras.loss_function import binary_classification_loss
 from autokeras.preprocessor import DataTransformer
 from autokeras.model_trainer import GANModelTrainer
+from autokeras.unsupervised import Unsupervised
+import numpy as np
 
 
-class DCGAN:
+class DCGAN(Unsupervised):
     """ Deep Convolution Generative Adversary Network
     """
 
-    def __init__(self,
-                 nz=100,
-                 ngf=32,
-                 ndf=32,
-                 nc=3,
-                 verbose=False,
-                 gen_training_result=None,
+    def __init__(self, nz=100, ngf=32, ndf=32, nc=3, verbose=False, gen_training_result=None,
                  augment=Constant.DATA_AUGMENTATION):
         """
        Args:
@@ -31,6 +27,7 @@ class DCGAN:
             gen_training_result: A tuple of (path, size) to denote where to output the intermediate result with size
             augment: A boolean value indicating whether the data needs augmentation.
         """
+        super().__init__(verbose)
         self.nz = nz
         self.ngf = ngf
         self.ndf = ndf
@@ -42,7 +39,15 @@ class DCGAN:
         self.net_d = Discriminator(self.nc, self.ndf)
         self.net_g = Generator(self.nc, self.nz, self.ngf)
 
-    def train(self, x_train):
+    def fit(self, x_train):
+        """ Train only
+
+        Args:
+            x_train: ndarray contained the training data
+
+        Returns:
+
+        """
         # input size stay the same, enable  cudnn optimization
         cudnn.benchmark = True
         self.data_transformer = DataTransformer(x_train, augment=self.augment)
@@ -54,12 +59,16 @@ class DCGAN:
                         self.verbose,
                         self.gen_training_result).train_model()
 
-    def evaluate(self, size, input=None):
-        if input is None:
-            input = torch.randn((size, self.nz, 1, 1,), device='cuda:0')
+    def generate(self, input_sample):
+        if not isinstance(input_sample, torch.Tensor) and \
+                isinstance(input_sample, np.ndarray):
+            input_sample = torch.from_numpy(input_sample)
+        if not isinstance(input_sample, torch.Tensor) and \
+                not isinstance(input_sample, np.ndarray):
+            raise TypeError("Input should be a torch.tensor or a numpy.ndarray")
         self.net_g.eval()
         with torch.no_grad():
-            generated_fake = self.net_g(input)
+            generated_fake = self.net_g(input_sample)
         vutils.save_image(generated_fake.detach(),
                           '%s/evaluation.png' % self.gen_training_result[0],
                           normalize=True)
