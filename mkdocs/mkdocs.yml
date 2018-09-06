@@ -1,10 +1,15 @@
 site_name: Auto-Keras
+theme:
+  name: 'material'
+  palette:
+    primary: 'teal'
+    accent: 'teal'
 repo_url: https://github.com/jhfjhfj1/autokeras
 site_url: http://autokeras.com
-edit_uri: https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/docs/
+edit_uri: ""
 google_analytics: ['UA-44322747-3', 'autokeras.com']
 
-pages:
+nav:
     - Home: index.md
     - Getting Started: start.md
     - Contributing Guide: temp/contribute.md
@@ -18,4 +23,3 @@ pages:
       - utils: temp/utils.md
       - generator: temp/generator.md
     - About: about.md
-theme: readthedocs
