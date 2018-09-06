@@ -248,7 +248,7 @@ class MockProcess(object):
 
 
 class MockMemoryOutProcess(MockProcess):
-    def start(self):
+    def map_async(self, a, b):
         raise RuntimeError('cuda: out of memory.')
 
 

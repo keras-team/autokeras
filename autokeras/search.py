@@ -1,4 +1,5 @@
 import os
+import re
 import time
 
 import torch
@@ -172,12 +173,12 @@ class Searcher:
             print('╘' + '=' * 46 + '╛')
         mp.set_start_method('spawn', force=True)
         pool = mp.Pool(1)
-        train_results = pool.map_async(train, [(graph, train_data, test_data, self.trainer_args,
-                                                os.path.join(self.path, str(model_id) + '.png'),
-                                                self.metric, self.loss, self.verbose)])
-
-        # Do the search in current thread.
         try:
+            train_results = pool.map_async(train, [(graph, train_data, test_data, self.trainer_args,
+                                                    os.path.join(self.path, str(model_id) + '.png'),
+                                                    self.metric, self.loss, self.verbose)])
+
+            # Do the search in current thread.
             searched = False
             new_graph = None
             new_father_id = None
@@ -228,7 +229,7 @@ class Searcher:
         except (mp.TimeoutError, TimeoutError) as e:
             raise TimeoutError from e
         except RuntimeError as e:
-            if not str(e).endswith('out of memory'):
+            if not re.search('out of memory', str(e)):
                 raise e
             if self.verbose:
                 print('out of memory')

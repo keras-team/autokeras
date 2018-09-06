@@ -100,4 +100,4 @@ def test_out_of_memory(_, _1):
     for _ in range(4):
         searcher.search(train_data, test_data)
     clean_dir(default_test_path)
-    assert len(searcher.history) == 2
+    assert len(searcher.history) == 0
