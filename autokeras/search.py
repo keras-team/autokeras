@@ -178,7 +178,11 @@ class Searcher:
 
         # Do the search in current thread.
         try:
+            searched = False
+            new_graph = None
+            new_father_id = None
             if not self.training_queue:
+                searched = True
                 new_graph, new_father_id = self.bo.optimize_acq(self.search_tree.adj_list.keys(),
                                                                 self.descriptors,
                                                                 timeout)
@@ -190,40 +194,50 @@ class Searcher:
                 self.training_queue.append((new_graph, new_father_id, new_model_id))
                 self.descriptors.append(new_graph.extract_descriptor())
 
-                if self.verbose:
-                    cell_size = [24, 49]
-                    header = ['Father Model ID', 'Added Operation']
-                    line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
-                    print('\n' + '+' + '-' * len(line) + '+')
-                    print('|' + line + '|')
-                    print('+' + '-' * len(line) + '+')
-                    for i in range(len(new_graph.operation_history)):
-                        if i == len(new_graph.operation_history) // 2:
-                            r = [new_father_id, new_graph.operation_history[i]]
-                        else:
-                            r = [' ', new_graph.operation_history[i]]
-                        line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
-                        print('|' + line + '|')
-                    print('+' + '-' * len(line) + '+')
             remaining_time = timeout - (time.time() - start_time)
-            if remaining_time > 0:
-                metric_value, loss, graph = train_results.get(timeout=remaining_time)[0]
-            else:
+            if remaining_time <= 0:
                 raise TimeoutError
+
+            metric_value, loss, graph = train_results.get(timeout=remaining_time)[0]
+
+            if self.verbose and searched:
+                cell_size = [24, 49]
+                header = ['Father Model ID', 'Added Operation']
+                line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
+                print('\n' + '+' + '-' * len(line) + '+')
+                print('|' + line + '|')
+                print('+' + '-' * len(line) + '+')
+                for i in range(len(new_graph.operation_history)):
+                    if i == len(new_graph.operation_history) // 2:
+                        r = [new_father_id, new_graph.operation_history[i]]
+                    else:
+                        r = [' ', new_graph.operation_history[i]]
+                    line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
+                    print('|' + line + '|')
+                print('+' + '-' * len(line) + '+')
+
+            self.add_model(metric_value, loss, graph, model_id)
+            self.search_tree.add_child(father_id, model_id)
+            self.bo.fit(self.x_queue, self.y_queue)
+            self.x_queue = []
+            self.y_queue = []
+
+            pickle_to_file(self, os.path.join(self.path, 'searcher'))
+            self.export_json(os.path.join(self.path, 'history.json'))
+
         except (mp.TimeoutError, TimeoutError) as e:
             raise TimeoutError from e
+        except RuntimeError as e:
+            if not str(e).endswith('out of memory'):
+                raise e
+            if self.verbose:
+                print('out of memory')
+            Constant.MAX_MODEL_SIZE = graph.size() - 1
+            return
         finally:
             # terminate and join the subprocess to prevent any resource leak
             pool.close()
             pool.join()
-        self.add_model(metric_value, loss, graph, model_id)
-        self.search_tree.add_child(father_id, model_id)
-        self.bo.fit(self.x_queue, self.y_queue)
-        self.x_queue = []
-        self.y_queue = []
-
-        pickle_to_file(self, os.path.join(self.path, 'searcher'))
-        self.export_json(os.path.join(self.path, 'history.json'))
 
     def export_json(self, path):
         data = dict()
