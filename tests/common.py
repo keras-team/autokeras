@@ -247,6 +247,11 @@ class MockProcess(object):
         pass
 
 
+class MockMemoryOutProcess(MockProcess):
+    def map_async(self, a, b):
+        raise RuntimeError('cuda: out of memory.')
+
+
 def simple_transform(graph):
     graph.to_wider_model(5, 64)
     return [deepcopy(graph)]
