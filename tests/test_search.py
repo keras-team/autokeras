@@ -5,7 +5,7 @@ from autokeras.metric import Accuracy
 from autokeras.search import *
 
 from tests.common import clean_dir, MockProcess, get_classification_data_loaders, get_add_skip_model, \
-    get_concat_skip_model, simple_transform
+    get_concat_skip_model, simple_transform, MockMemoryOutProcess
 
 default_test_path = 'tests/resources/temp'
 
@@ -85,3 +85,19 @@ def test_max_acq(_, _1):
             assert edit_distance(descriptor1, descriptor2, 1) != 0
 
     clean_dir(default_test_path)
+
+
+@patch('torch.multiprocessing.Pool', new=MockMemoryOutProcess)
+@patch('autokeras.bayesian.transform', side_effect=simple_transform)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+def test_out_of_memory(_, _1):
+    train_data, test_data = get_classification_data_loaders()
+    clean_dir(default_test_path)
+    searcher = Searcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
+                        loss=classification_loss)
+    Constant.N_NEIGHBOURS = 1
+    Constant.T_MIN = 0.8
+    for _ in range(4):
+        searcher.search(train_data, test_data)
+    clean_dir(default_test_path)
+    assert len(searcher.history) == 2
