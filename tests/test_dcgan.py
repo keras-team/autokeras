@@ -12,7 +12,7 @@ def mock_train(**kwargs):
     return 1, 0
 
 
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+@patch('autokeras.gan.GANModelTrainer.train_model', side_effect=mock_train)
 def test_fit_generate(_):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4

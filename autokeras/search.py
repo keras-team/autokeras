@@ -273,12 +273,12 @@ def train(args):
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)
-    loss, metric_value = ModelTrainer(model,
-                                      train_data,
-                                      test_data,
-                                      metric,
-                                      loss,
-                                      verbose).train_model(**trainer_args)
+    loss, metric_value = ModelTrainer(model=model,
+                                      train_data=train_data,
+                                      test_data=test_data,
+                                      metric=metric,
+                                      loss_function=loss,
+                                      verbose=verbose).train_model(**trainer_args)
     model.set_weight_to_graph()
     return metric_value, loss, model.graph
 

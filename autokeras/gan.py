@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
@@ -5,10 +6,10 @@ import torchvision.utils as vutils
 
 from autokeras.constant import Constant
 from autokeras.loss_function import binary_classification_loss
-from autokeras.preprocessor import DataTransformer
 from autokeras.model_trainer import GANModelTrainer
+from autokeras.preprocessor import DataTransformer
 from autokeras.unsupervised import Unsupervised
-import numpy as np
+from autokeras.utils import get_device
 
 
 class DCGAN(Unsupervised):
@@ -59,7 +60,9 @@ class DCGAN(Unsupervised):
                         self.verbose,
                         self.gen_training_result).train_model()
 
-    def generate(self, input_sample):
+    def generate(self, input_sample=None):
+        if input_sample is None:
+            input_sample = torch.randn(self.gen_training_result[1], self.nz, 1, 1, device=get_device())
         if not isinstance(input_sample, torch.Tensor) and \
                 isinstance(input_sample, np.ndarray):
             input_sample = torch.from_numpy(input_sample)

@@ -8,22 +8,22 @@ from torchvision import utils as vutils
 from tqdm.autonotebook import tqdm
 
 from autokeras.constant import Constant
-from autokeras.utils import EarlyStop
+from autokeras.utils import EarlyStop, get_device
 
 
 class ModelTrainerBase(abc.ABC):
     def __init__(self,
                  loss_function,
-                 train_loader,
-                 test_loader=None,
+                 train_data,
+                 test_data=None,
                  metric=None,
                  verbose=False):
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = get_device()
         self.metric = metric
         self.verbose = verbose
         self.loss_function = loss_function
-        self.train_loader = train_loader
-        self.test_loader = test_loader
+        self.train_loader = train_data
+        self.test_loader = test_data
 
     @abc.abstractmethod
     def train_model(self,
@@ -57,9 +57,9 @@ class ModelTrainer(ModelTrainerBase):
         verbose: Verbosity mode.
     """
 
-    def __init__(self, model, train_loader, test_loader, metric, loss_function, verbose):
+    def __init__(self, model, **kwargs):
         """Init the ModelTrainer with `model`, `x_train`, `y_train`, `x_test`, `y_test`, `verbose`"""
-        super().__init__(loss_function, train_loader, test_loader, metric, verbose)
+        super().__init__(**kwargs)
         self.model = model
         self.model.to(self.device)
         self.optimizer = None
@@ -133,12 +133,12 @@ class ModelTrainer(ModelTrainerBase):
         cp_loader = deepcopy(loader)
         if self.verbose:
             progress_bar = tqdm(total=len(cp_loader),
-                        desc='Current Epoch',
-                        file=sys.stdout,
-                        leave=False,
-                        ncols=75,
-                        position=0,
-                        unit=' batch')
+                                desc='Current Epoch',
+                                file=sys.stdout,
+                                leave=False,
+                                ncols=75,
+                                position=0,
+                                unit=' batch')
 
         for batch_idx, (inputs, targets) in enumerate(cp_loader):
             inputs, targets = inputs.to(self.device), targets.to(self.device)
@@ -177,12 +177,12 @@ class GANModelTrainer(ModelTrainerBase):
     def __init__(self,
                  g_model,
                  d_model,
-                 train_loader,
+                 train_data,
                  loss_function,
                  verbose,
                  gen_training_result=None):
         """Init the ModelTrainer with `model`, `x_train`, `y_train`, `x_test`, `y_test`, `verbose`"""
-        super().__init__(loss_function, train_loader, verbose=verbose)
+        super().__init__(loss_function, train_data, verbose=verbose)
         self.d_model = d_model
         self.g_model = g_model
         self.d_model.to(self.device)

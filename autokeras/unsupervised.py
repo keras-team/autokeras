@@ -25,9 +25,9 @@ class Unsupervised(ABC):
         pass
 
     @abstractmethod
-    def generate(self, input_sample):
+    def generate(self, input_sample=None):
         """
-        Args: A numpy.ndarray input fed into the model
+        Args: A numpy.ndarray or torch.tensor input fed into the model to generate the output
 
         Returns: the result of applying the model
         """
