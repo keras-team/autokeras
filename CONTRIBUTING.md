@@ -98,8 +98,8 @@ the test case should fail for the code base in the master branch and pass for th
 7. Please prefix the title of your pull request with [MRG] if the contribution is complete and should be subjected to a detailed review.
  An incomplete contribution – where you expect to do more work before receiving a full review – should be prefixed [WIP] (to indicate a work in progress) and changed to [MRG] when it matures. 
 
-8. When the status change from WIP to MRG, assign the reviewer to 
-[@jhfjhfj1](https://github.com/jhfjhfj1)
+8. When the status change from WIP to MRG, set the reviewer to 
+[@jhfjhfj1](https://github.com/jhfjhfj1). After the code review, @jhfjhfj1 will set the assign the assignee back to the contributor. The assignee will be set back to @jhfjhfj1 after the contributor has addressed all the code review comments and ready to be merged. This may go back and forth for several times.
 
 9. Checkout from and pull request to the right branch. 
 If it is a very urgent bug fix, checkout from master and pull request to both master and develop.
