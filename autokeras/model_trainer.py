@@ -123,8 +123,9 @@ class ModelTrainer(ModelTrainerBase):
                 break
         if self.verbose:
             progress_bar.close()
-        return (sum(test_loss_list[-max_no_improvement_num:]) / max_no_improvement_num,
-                sum(test_metric_value_list[-max_no_improvement_num:]) / max_no_improvement_num)
+        last_num = min(max_no_improvement_num, max_iter_num)
+        return (sum(test_loss_list[-last_num:]) / last_num,
+                sum(test_metric_value_list[-last_num:]) / last_num)
 
     def _train(self):
         self.model.train()
