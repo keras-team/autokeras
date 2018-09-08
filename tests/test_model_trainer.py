@@ -10,13 +10,23 @@ from tests.common import get_classification_data_loaders, get_regression_data_lo
 def test_model_trainer_classification():
     model = CnnGenerator(3, (28, 28, 3)).generate().produce_model()
     train_data, test_data = get_classification_data_loaders()
-    ModelTrainer(model, train_data, test_data, Accuracy, classification_loss, True).train_model(max_iter_num=3)
+    ModelTrainer(model,
+                 train_data=train_data,
+                 test_data=test_data,
+                 metric=Accuracy,
+                 loss_function=classification_loss,
+                 verbose=True).train_model(max_iter_num=3)
 
 
 def test_model_trainer_regression():
     model = CnnGenerator(1, (28, 28, 3)).generate().produce_model()
     train_data, test_data = get_regression_data_loaders()
-    ModelTrainer(model, train_data, test_data, MSE, regression_loss, False).train_model(max_iter_num=3)
+    ModelTrainer(model,
+                 train_data=train_data,
+                 test_data=test_data,
+                 metric=MSE,
+                 loss_function=regression_loss,
+                 verbose=False).train_model(max_iter_num=3)
 
 
 def test_gan_model_trainer():
