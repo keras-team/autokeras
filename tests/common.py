@@ -210,6 +210,13 @@ def get_classification_data_loaders():
     return train_data, test_data
 
 
+def get_classification_train_data_loaders():
+    x_train = np.random.rand(200, 32, 32, 3)
+    data_transformer = DataTransformer(x_train, augment=True)
+    train_data = data_transformer.transform_train(x_train)
+    return train_data
+
+
 def clean_dir(path):
     for f in os.listdir(path):
         full_path = os.path.join(path, f)

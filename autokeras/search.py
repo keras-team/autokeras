@@ -8,7 +8,8 @@ from autokeras.constant import Constant
 from autokeras.bayesian import edit_distance, BayesianOptimizer
 from autokeras.generator import CnnGenerator
 from autokeras.net_transformer import default_transform
-from autokeras.utils import ModelTrainer, pickle_to_file, pickle_from_file
+from autokeras.utils import pickle_to_file, pickle_from_file
+from autokeras.model_trainer import ModelTrainer
 
 import torch.multiprocessing as mp
 
@@ -287,12 +288,12 @@ def train(args):
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)
-    loss, metric_value = ModelTrainer(model,
-                                      train_data,
-                                      test_data,
-                                      metric,
-                                      loss,
-                                      verbose).train_model(**trainer_args)
+    loss, metric_value = ModelTrainer(model=model,
+                                      train_data=train_data,
+                                      test_data=test_data,
+                                      metric=metric,
+                                      loss_function=loss,
+                                      verbose=verbose).train_model(**trainer_args)
     model.set_weight_to_graph()
     return metric_value, loss, model.graph
 
