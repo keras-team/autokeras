@@ -2,10 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class Supervised(ABC):
-    """The base classifier class.
-
-    It is the base class for all the classifiers. It searches neural network architectures
-    for the best configuration for the dataset.
+    """The base class for all supervised task.
 
     Attributes:
         verbose: A boolean value indicating the verbosity mode.
@@ -14,12 +11,8 @@ class Supervised(ABC):
     def __init__(self, verbose=False):
         """Initialize the instance.
 
-        The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
-        Otherwise it would create a new one.
-
         Args:
             verbose: A boolean of whether the search process will be printed to stdout.
-
         """
         self.verbose = verbose
 
