@@ -20,6 +20,7 @@ nav:
       - search: temp/search.md
       - graph: temp/graph.md
       - preprocessor: temp/preprocessor.md
+      - model_trainer: temp/model_trainer.md
       - utils: temp/utils.md
       - generator: temp/generator.md
     - About: about.md
