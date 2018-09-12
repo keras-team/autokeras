@@ -22,6 +22,7 @@ In general, all new task module should inherit their objects from the `Supervise
 Reach out to us if you feel there is a special requirement.
 For every new feature, a new directory should be created inside the /autokeras directory, e.g. text_classifier.
 All the code contributed should be within the directory.
+You may put a README.md file in your directory to describe your work. 
 The details of the functions to inherit is in the documentation of [`autokeras/supervised.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/supervised.py)
 
 Please also read
@@ -164,7 +165,17 @@ Other than the base classes you have to extend,
 there are some other classes you can extend.
 
 ### ModelTrainer
-`autokeras.utils.ModelTrainer` is a class for training Pytorch models.
-If needed a new metric or loss function, you can add your own to `loss_function.py` and `metric.py`.
+[`autokeras.model_trainer.ModelTrainer`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/model_trainer.py) is a class for training Pytorch models.
+If needed a new metric or loss function other than the ones we have, you can add your own to [`loss_function.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/loss_function.py) and [`metric.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/metric.py).
 You can follow its documentation to use it.
 Make sure your loss function, metric, Pytorch model, and Dataloader are compatible with each other.
+
+## Main Contributor List
+We really appreciate all the contributions.
+To show our appreciation to those who contributed most,
+we would like to maintain a list of main contributors.
+To be in the list, you need to meet the following requirments.
+1. Be on campus of Texas A&M University.
+2. Constantly present in our meetings.
+3. Constantly contribute code to our repository.
+4. Keep the above for over 6 months.
