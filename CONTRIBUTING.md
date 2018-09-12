@@ -167,7 +167,7 @@ there are some other classes you can extend.
 ### ModelTrainer
 [`autokeras.model_trainer.ModelTrainer`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/model_trainer.py) is a class for training Pytorch models.
 If needed a new metric or loss function other than the ones we have, you can add your own to [`loss_function.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/loss_function.py) and [`metric.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/metric.py).
-You can follow its documentation to use it.
+You can follow its [documentation]() to use it.
 Make sure your loss function, metric, Pytorch model, and Dataloader are compatible with each other.
 
 ## Main Contributor List
