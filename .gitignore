@@ -116,3 +116,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+examples/load_raw_image_data.zip
+examples/text_cnn/glove_embedding/
+examples/text_cnn/labeledTrainData.tsv

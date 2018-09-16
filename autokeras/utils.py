@@ -93,6 +93,5 @@ def get_device():
 def temp_folder_generator():
     sys_temp = tempfile.gettempdir()
     path = os.path.join(sys_temp, 'autokeras')
-    if not os.path.exists(path):
-        os.makedirs(path)
+    ensure_dir(path)
     return path
