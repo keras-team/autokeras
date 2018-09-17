@@ -96,9 +96,8 @@ def get_device():
 
 
 def temp_folder_generator():
-    return '/home/linyang/tmp'
-    # sys_temp = tempfile.gettempdir()
-    # path = os.path.join(sys_temp, 'autokeras')
-    # if not os.path.exists(path):
-    #     os.makedirs(path)
-    # return path
+    sys_temp = tempfile.gettempdir()
+    path = os.path.join(sys_temp, 'autokeras')
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
