@@ -4,7 +4,8 @@ torchvision==0.2.1
 numpy==1.14.5
 scikit-learn==0.19.1
 keras==2.2.2
-tensorflow==1.8.0
+tqdm==4.25.0
+tensorflow==1.10.0
 pytest
 pytest-cov
 coverage

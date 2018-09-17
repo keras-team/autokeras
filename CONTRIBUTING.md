@@ -8,23 +8,26 @@ to make the development process easier and standard.
 ## Implement New Task Modules
 A task module is a comparatively separate module which can handle a specify task.
 For example, ImageClassifier is the only task module we have for now.
-The list of task modules we are seeking is all the issues with label "new task module" (in progress).
+The list of task modules we are seeking is all the issues with label
+"[new task module](https://github.com/jhfjhfj1/autokeras/issues?q=is%3Aissue+is%3Aopen+label%3A%22new+task+module%22)".
 
 The new task module should be submitted by pull request from the first day you start to develop the module.
 Make sure your pull request follow the [Pull Request Guideline](#pull-request-guide).
-Your module will be run against our reserved datasets to test the performance.
-If your module's performance meets our expectation,
-the new task module will be merged into Auto-Keras package.
+You can pick any one of them which has not been assigned to anybody yet.
+If you pick some of the modules which has already been assigned to someone,
+then we will conduct a thorough evaluation on the benchmark datasets and some preserved datasets.
+The one performs better in the evaluation will be merged.
 
-In general, all new task module should inherit their objects from the `Classifier` class in [`autokeras/classifier.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/classifier.py).
+In general, all new task module should inherit their objects from the `Supervised` class in [`autokeras/supervised.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/supervised.py).
 Reach out to us if you feel there is a special requirement.
 For every new feature, a new directory should be created inside the /autokeras directory, e.g. text_classifier.
 All the code contributed should be within the directory.
-The details of the functions to inherit is in the documentation of [`autokeras/classifier.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/classifier.py)
+The details of the functions to inherit is in the documentation of [`autokeras/supervised.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/supervised.py)
 
 Please also read
 [Code Style Guide](#code-style-guide),
 [Documentation Guide](#documentation-guide),
+[Reusable Code Guide](#reusable-code-guide),
 and
 [Testing Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#testing-guide)
 to ensure your merge request meet our requirements.
@@ -75,17 +78,32 @@ to ensure your merge request meet our requirements.
 
 ## Pull Request Guide
 Before you submit a pull request, check that it meets these guidelines:
-1. Give your pull request a **helpful title** that summarizing your contribution.
-2. Give your branch a **helpful name** summarizing your contribution (fork the repo and create a new branch for pull request).
-3. Also, **add the issue number** which it addresses.
+
+1. Submit the pull request from the first day when you started your development and mark it as **[WIP]**
+
+2. Give your pull request a **helpful title** that summarizing your contribution.
+
+3. Give your branch a **helpful name** summarizing your contribution (fork the repo and create a new branch for pull request).
+
+4. Also, **add the issue number** which it addresses.
 If there is no associated issue, feel free to [create one](https://github.com/jhfjhfj1/autokeras/issues).
-4. Often pull requests resolve one or more other issues.
+
+5. Often pull requests resolve one or more other issues.
 If merging your pull request means that some issues should be closed,
 you should use keywords to link to them by following [this tutorial](https://blog.github.com/2013-05-14-closing-issues-via-pull-requests/).
-5. For the case of bug fixes, at the time of the PR,
+
+6. For the case of bug fixes, at the time of the PR,
 the test case should fail for the code base in the master branch and pass for the PR code.
-6. Please prefix the title of your pull request with [MRG] if the contribution is complete and should be subjected to a detailed review.
+
+7. Please prefix the title of your pull request with [MRG] if the contribution is complete and should be subjected to a detailed review.
  An incomplete contribution – where you expect to do more work before receiving a full review – should be prefixed [WIP] (to indicate a work in progress) and changed to [MRG] when it matures. 
+
+8. When the status change from WIP to MRG, assign the reviewer to 
+[@jhfjhfj1](https://github.com/jhfjhfj1)
+
+9. Checkout from and pull request to the right branch. 
+If it is a very urgent bug fix, checkout from master and pull request to both master and develop.
+Otherwise, checkout from develop and pull request to develop.
 
 ## Code Style Guide
 This project tries to closely follow the official Python Style Guide detailed in [PEP8](https://www.python.org/dev/peps/pep-0008/).
@@ -140,3 +158,13 @@ and only install the packages required by autokeras with the corresponding versi
 The virtualenv should be created based on Python 3.6 interpreter.
 Use pycharm to select the 
 [virtualenv as interpreter](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html).
+
+## Reusable Code Guide
+Other than the base classes you have to extend,
+there are some other classes you can extend.
+
+### ModelTrainer
+`autokeras.utils.ModelTrainer` is a class for training Pytorch models.
+If needed a new metric or loss function, you can add your own to `loss_function.py` and `metric.py`.
+You can follow its documentation to use it.
+Make sure your loss function, metric, Pytorch model, and Dataloader are compatible with each other.

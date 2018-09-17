@@ -71,23 +71,31 @@ class DataTransformer:
         common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
         compose_list = augment_list + common_list
 
-        return self._transform(batch_size, compose_list, data, targets)
+        dataset = self._transform(compose_list, data, targets)
+
+        if batch_size is None:
+            batch_size = Constant.MAX_BATCH_SIZE
+        batch_size = min(len(data), batch_size)
+
+        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     def transform_test(self, data, targets=None, batch_size=None):
         common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
         compose_list = common_list
 
-        return self._transform(batch_size, compose_list, data, targets)
+        dataset = self._transform(compose_list, data, targets)
 
-    def _transform(self, batch_size, compose_list, data, targets):
         if batch_size is None:
             batch_size = Constant.MAX_BATCH_SIZE
         batch_size = min(len(data), batch_size)
+
+        return DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
+    def _transform(self, compose_list, data, targets):
         data = data / self.max_val
         data = torch.Tensor(data.transpose(0, 3, 1, 2))
         data_transforms = Compose(compose_list)
-        dataset = MultiTransformDataset(data, targets, data_transforms)
-        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        return MultiTransformDataset(data, targets, data_transforms)
 
 
 class MultiTransformDataset(Dataset):

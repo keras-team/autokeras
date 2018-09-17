@@ -8,11 +8,10 @@ from functools import reduce
 import numpy as np
 from scipy import ndimage
 import torch
-from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
 from autokeras.loss_function import classification_loss, regression_loss
-from autokeras.supervised import Supervised
+from autokeras.supervised import Supervised, PortableClass
 from autokeras.constant import Constant
 from autokeras.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, DataTransformer
@@ -122,7 +121,8 @@ class ImageSupervised(Supervised):
         searcher: An instance of BayesianSearcher. It searches different
             neural architecture to find the best model.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
-        augment: A boolean value indicating whether the data needs augmentation.
+        augment: A boolean value indicating whether the data needs augmentation.  If not define, then it
+                will use the value of Constant.DATA_AUGMENTATION which is True by default.
     """
 
     def __init__(self, verbose=False, path=None, resume=False, searcher_args=None, augment=None):
@@ -136,7 +136,8 @@ class ImageSupervised(Supervised):
             path: A string. The path to a directory, where the intermediate results are saved.
             resume: A boolean. If True, the classifier will continue to previous work saved in path.
                 Otherwise, the classifier will start a new search.
-            augment: A boolean value indicating whether the data needs augmentation.
+            augment: A boolean value indicating whether the data needs augmentation. If not define, then it
+                will use the value of Constant.DATA_AUGMENTATION which is True by default.
 
         """
         super().__init__(verbose)
@@ -284,7 +285,7 @@ class ImageSupervised(Supervised):
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
         y_predict = self.predict(x_test)
-        return accuracy_score(y_test, y_predict)
+        return self.metric().evaluate(y_test, y_predict)
 
     def save_searcher(self, searcher):
         pickle.dump(searcher, open(os.path.join(self.path, 'searcher'), 'wb'))
@@ -322,6 +323,19 @@ class ImageSupervised(Supervised):
     def get_best_model_id(self):
         """ Return an integer indicating the id of the best model."""
         return self.load_searcher().get_best_model_id()
+
+    def export_keras_model(self, model_file_name):
+        """ Exports the best Keras model to the given filename. """
+        self.load_searcher().load_best_model().produce_keras_model().save(model_file_name)
+
+    def export_autokeras_model(self, model_file_name):
+        """ Creates and Exports the AutoKeras model to the given filename. """
+        portable_model = PortableImageSupervised(graph=self.load_searcher().load_best_model(),
+                                                 y_encoder=self.y_encoder,
+                                                 data_transformer=self.data_transformer,
+                                                 metric=self.metric,
+                                                 inverse_transform_y_method=self.inverse_transform_y)
+        pickle_to_file(portable_model, model_file_name)
 
 
 class ImageClassifier(ImageSupervised):
@@ -365,3 +379,46 @@ class ImageRegressor(ImageSupervised):
 
     def inverse_transform_y(self, output):
         return output.flatten()
+
+
+class PortableImageSupervised(PortableClass):
+    def __init__(self, graph, data_transformer, y_encoder, metric, inverse_transform_y_method):
+        """Initialize the instance.
+        Args:
+            graph: The graph form of the learned model
+        """
+        super().__init__(graph)
+        self.data_transformer = data_transformer
+        self.y_encoder = y_encoder
+        self.metric = metric
+        self.inverse_transform_y_method = inverse_transform_y_method
+
+    def predict(self, x_test):
+        """Return predict results for the testing data.
+
+        Args:
+            x_test: An instance of numpy.ndarray containing the testing data.
+
+        Returns:
+            A numpy.ndarray containing the results.
+        """
+        if Constant.LIMIT_MEMORY:
+            pass
+        test_loader = self.data_transformer.transform_test(x_test)
+        model = self.graph.produce_model()
+        model.eval()
+
+        outputs = []
+        with torch.no_grad():
+            for index, inputs in enumerate(test_loader):
+                outputs.append(model(inputs).numpy())
+        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
+        return self.inverse_transform_y(output)
+
+    def inverse_transform_y(self, output):
+        return self.inverse_transform_y_method(output)
+
+    def evaluate(self, x_test, y_test):
+        """Return the accuracy score between predict value and `y_test`."""
+        y_predict = self.predict(x_test)
+        return self.metric().evaluate(y_test, y_predict)

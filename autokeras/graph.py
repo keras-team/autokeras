@@ -8,7 +8,7 @@ import keras
 from autokeras.constant import Constant
 from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
     deeper_conv_block, dense_to_deeper_block, add_noise
-from autokeras.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, to_real_layer, \
+from autokeras.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, \
     to_real_keras_layer, set_torch_weight_to_stub, set_stub_weight_to_torch, set_stub_weight_to_keras, \
     set_keras_weight_to_stub, StubBatchNormalization, StubReLU
 
@@ -363,7 +363,7 @@ class Graph:
         return ret
 
     def _dense_block_end_node(self, layer_id):
-        return self._block_end_node(layer_id, Constant.DENSE_BLOCK_DISTANCE)
+        return self.layer_id_to_input_node_ids[layer_id][0]
 
     def _conv_block_end_node(self, layer_id):
         """Get the input node ID of the last layer in the block by layer ID.
@@ -571,6 +571,9 @@ class Graph:
     def skip_connection_layer_ids(self):
         return self._conv_layer_ids_in_order()[:-1]
 
+    def size(self):
+        return sum(list(map(lambda x: x.size(), self.layer_list)))
+
 
 class TorchModel(torch.nn.Module):
     def __init__(self, graph):
@@ -578,7 +581,7 @@ class TorchModel(torch.nn.Module):
         self.graph = graph
         self.layers = []
         for layer in graph.layer_list:
-            self.layers.append(to_real_layer(layer))
+            self.layers.append(layer.to_real_layer())
         if graph.weighted:
             for index, layer in enumerate(self.layers):
                 set_stub_weight_to_torch(self.graph.layer_list[index], layer)

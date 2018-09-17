@@ -245,15 +245,15 @@ class BayesianOptimizer:
         t_min = self.t_min
         alpha = 0.9
         opt_acq = self._get_init_opt_acq_value()
-        remaining_time = timeout - (time.time() - start_time)
+        remaining_time = timeout
         while not pq.empty() and t > t_min and remaining_time > 0:
             elem = pq.get()
             if self.metric.higher_better():
-                temp_exp = min((elem.metric_value - opt_acq) / t, 709.0)
+                temp_exp = min((elem.metric_value - opt_acq) / t, 1.0)
             else:
-                temp_exp = min((opt_acq - elem.metric_value) / t, 709.0)
+                temp_exp = min((opt_acq - elem.metric_value) / t, 1.0)
             ap = math.exp(temp_exp)
-            if ap > random.uniform(0, 1):
+            if ap >= random.uniform(0, 1):
                 for temp_graph in transform(elem.graph):
                     if contain(descriptors, temp_graph.extract_descriptor()):
                         continue
