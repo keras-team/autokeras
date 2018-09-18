@@ -1,9 +1,8 @@
 import os
 import pickle
 import tempfile
-
 import torch
-
+import tempfile
 from autokeras.constant import Constant
 
 
