@@ -199,7 +199,6 @@ class Searcher:
             remaining_time = timeout - (time.time() - start_time)
             if remaining_time <= 0:
                 raise TimeoutError
-
             metric_value, loss, graph = train_results.get(timeout=remaining_time)[0]
 
             if self.verbose and searched:
