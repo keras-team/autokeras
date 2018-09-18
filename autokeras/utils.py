@@ -1,5 +1,6 @@
 import os
 import pickle
+import tempfile
 import torch
 import tempfile
 from autokeras.constant import Constant
@@ -74,19 +75,25 @@ def get_device():
 
     """
     # TODO: could use gputil in the future
+    device = 'cpu'
     if torch.cuda.is_available():
         smi_out = os.popen('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free').read()
         # smi_out=
         #       Free                 : xxxxxx MiB
         #       Free                 : xxxxxx MiB
         #                      ....
+        visible_devices = os.getenv('CUDA_VISIBLE_DEVICES', '').split(',')
+        if len(visible_devices) == 1 and visible_devices[0] == '':
+            visible_devices = []
+        visible_devices = [int(x) for x in visible_devices]
         memory_available = [int(x.split()[2]) for x in smi_out.splitlines()]
-        if not memory_available:
-            device = 'cpu'
-        else:
-            device = 'cuda:' + str(memory_available.index(max(memory_available)))
-    else:
-        device = 'cpu'
+        for cuda_index, _ in enumerate(memory_available):
+            if cuda_index not in visible_devices and visible_devices:
+                memory_available[cuda_index] = 0
+
+        if memory_available:
+            if max(memory_available) != 0:
+                device = 'cuda:' + str(memory_available.index(max(memory_available)))
     return device
 
 
@@ -96,3 +103,20 @@ def temp_folder_generator():
     if not os.path.exists(path):
         os.makedirs(path)
     return path
+
+
+def verbose_print(new_father_id, new_graph):
+    cell_size = [24, 49]
+    header = ['Father Model ID', 'Added Operation']
+    line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
+    print('\n' + '+' + '-' * len(line) + '+')
+    print('|' + line + '|')
+    print('+' + '-' * len(line) + '+')
+    for i in range(len(new_graph.operation_history)):
+        if i == len(new_graph.operation_history) // 2:
+            r = [new_father_id, new_graph.operation_history[i]]
+        else:
+            r = [' ', new_graph.operation_history[i]]
+        line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
+        print('|' + line + '|')
+    print('+' + '-' * len(line) + '+')
