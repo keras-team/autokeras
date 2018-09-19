@@ -59,7 +59,6 @@ def edit_distance(x, y, kernel_lambda):
 class IncrementalGaussianProcess:
     def __init__(self, kernel_lambda):
         self.alpha = 1e-10
-        self._k_matrix = None
         self._distance_matrix = None
         self._x = None
         self._y = None
@@ -92,16 +91,16 @@ class IncrementalGaussianProcess:
         up_k = np.concatenate((self._distance_matrix, up_right_k), axis=1)
         down_k = np.concatenate((down_left_k, down_right_k), axis=1)
         self._distance_matrix = np.concatenate((up_k, down_k), axis=0)
-        self._distance_matrix = bourgain_embedding_matrix(self._distance_matrix)
-        self._k_matrix = 1.0 / np.exp(self._distance_matrix)
-        diagonal = np.diag_indices_from(self._k_matrix)
+        distort_matrix = bourgain_embedding_matrix(self._distance_matrix)
+        k_matrix = 1.0 / np.exp(distort_matrix)
+        diagonal = np.diag_indices_from(k_matrix)
         diagonal = (diagonal[0][-len(train_x):], diagonal[1][-len(train_x):])
-        self._k_matrix[diagonal] += self.alpha
+        k_matrix[diagonal] += self.alpha
 
         self._x = np.concatenate((self._x, train_x), axis=0)
         self._y = np.concatenate((self._y, train_y), axis=0)
 
-        self._l_matrix = cholesky(self._k_matrix, lower=True)  # Line 2
+        self._l_matrix = cholesky(k_matrix, lower=True)  # Line 2
 
         self._alpha_vector = cho_solve((self._l_matrix, True), self._y)  # Line 3
 
@@ -118,11 +117,11 @@ class IncrementalGaussianProcess:
         self._y = np.copy(train_y)
 
         self._distance_matrix = self.edit_distance_matrix(self.kernel_lambda, self._x)
-        self._distance_matrix = bourgain_embedding_matrix(self._distance_matrix)
-        self._k_matrix = 1.0 / np.exp(self._distance_matrix)
-        self._k_matrix[np.diag_indices_from(self._k_matrix)] += self.alpha
+        distort_matrix = bourgain_embedding_matrix(self._distance_matrix)
+        k_matrix = 1.0 / np.exp(distort_matrix)
+        k_matrix[np.diag_indices_from(k_matrix)] += self.alpha
 
-        self._l_matrix = cholesky(self._k_matrix, lower=True)  # Line 2
+        self._l_matrix = cholesky(k_matrix, lower=True)  # Line 2
 
         self._alpha_vector = cho_solve((self._l_matrix, True), self._y)  # Line 3
 
