@@ -169,9 +169,9 @@ class Searcher:
         graph, father_id, model_id = self.training_queue.pop(0)
         if self.verbose:
             print('\n')
-            print('╒' + '=' * 46 + '╕')
+            print('+' + '-' * 46 + '+')
             print('|' + 'Training model {}'.format(model_id).center(46) + '|')
-            print('╘' + '=' * 46 + '╛')
+            print('+' + '-' * 46 + '+')
         mp.set_start_method('spawn', force=True)
         pool = mp.Pool(1)
         try:
