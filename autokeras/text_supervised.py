@@ -1,50 +1,23 @@
-import csv
 import os
 import pickle
 import time
-from abc import abstractmethod
 from functools import reduce
 
 import numpy as np
-from scipy import ndimage
 import torch
-from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
-
-from autokeras.loss_function import classification_loss, regression_loss
-from autokeras.supervised import Supervised
-from autokeras.constant import Constant
-from autokeras.metric import Accuracy, MSE
-from autokeras.preprocessor import OneHotEncoder, DataTransformer
-from autokeras.search import Searcher, train
-from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file, temp_folder_generator
 from torch.utils.data import Dataset, DataLoader
 
-from autokeras.image_supervised import ImageSupervised
+from autokeras.constant import Constant
+from autokeras.image_supervised import ImageSupervised, _validate, run_searcher_once
+from autokeras.loss_function import classification_loss
+from autokeras.metric import Accuracy
+from autokeras.search import Searcher, train
+from autokeras.text_preprocessor import text_preprocess
+from autokeras.utils import pickle_to_file
 
 
-def _validate(x_train, y_train):
-    """Check `x_train`'s type and the shape of `x_train`, `y_train`."""
-    try:
-        x_train = x_train.astype('float64')
-    except ValueError:
-        raise ValueError('x_train should only contain numerical data.')
-
-    if len(x_train.shape) < 2:
-        raise ValueError('x_train should at least has 2 dimensions.')
-
-    if x_train.shape[0] != y_train.shape[0]:
-        raise ValueError('x_train and y_train should have the same number of instances.')
-
-
-def run_searcher_once(train_data, test_data, path, timeout):
-    if Constant.LIMIT_MEMORY:
-        pass
-    searcher = pickle_from_file(os.path.join(path, 'searcher'))
-    searcher.search(train_data, test_data, timeout)
-
-
-class CustomerDataset(Dataset):
+class TextDataset(Dataset):
     def __init__(self, dataset, target):
         self.dataset = dataset
         self.target = target
@@ -54,6 +27,12 @@ class CustomerDataset(Dataset):
 
     def __len__(self):
         return len(self.dataset)
+
+
+def text_dataloader(x_data, y_data=None, batch_size=Constant.MAX_BATCH_SIZE, shuffle=True):
+    x_data = torch.Tensor(x_data.transpose(0, 3, 1, 2))
+    dataLoader = DataLoader(TextDataset(x_data, y_data), batch_size=batch_size, shuffle=shuffle)
+    return dataLoader
 
 
 class TextClassifier(ImageSupervised):
@@ -78,13 +57,11 @@ class TextClassifier(ImageSupervised):
         if x_train is None:
             x_train = []
 
+        x_train, y_train = text_preprocess(x_train, y_train, path=self.path)
+
         x_train = np.array(x_train)
-
+        y_train = np.array(y_train)
         _validate(x_train, y_train)
-
-        # Transform x_train
-        if self.data_transformer is None:
-            self.data_transformer = DataTransformer(x_train, augment=self.augment)
 
         # Create the searcher and save on disk
         if not self.searcher:
@@ -105,12 +82,9 @@ class TextClassifier(ImageSupervised):
                                                                           int(len(y_train) * 0.2)),
                                                             random_state=42)
 
-        batch_size = 20
         # Wrap the data into DataLoaders
-        x_train_transpose = torch.Tensor(x_train.transpose(0, 3, 1, 2))
-        x_test_transpose = torch.Tensor(x_test.transpose(0, 3, 1, 2))
-        train_data = DataLoader(CustomerDataset(x_train_transpose, y_train), batch_size=batch_size, shuffle=True)
-        test_data = DataLoader(CustomerDataset(x_test_transpose, y_test), batch_size=batch_size, shuffle=True)
+        train_data = text_dataloader(x_train, y_train, batch_size=batch_size, shuffle=True)
+        test_data = text_dataloader(x_test, y_test, shuffle=True)
 
         # Save the classifier
         pickle.dump(self, open(os.path.join(self.path, 'classifier'), 'wb'))
@@ -137,8 +111,38 @@ class TextClassifier(ImageSupervised):
             elif self.verbose:
                 print('Time is out.')
 
-    def inverse_transform_y(self, output):
-        return self.y_encoder.inverse_transform(output)
+    def final_fit(self, x_train=None, y_train=None, x_test=None, y_test=None, trainer_args=None, retrain=False):
+        """Final training after found the best architecture.
+
+        Args:
+            x_train: A numpy.ndarray of training data.
+            y_train: A numpy.ndarray of training targets.
+            x_test: A numpy.ndarray of testing data.
+            y_test: A numpy.ndarray of testing targets.
+            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
+            retrain: A boolean of whether reinitialize the weights of the model.
+        """
+        if trainer_args is None:
+            trainer_args = {'max_no_improvement_num': 30}
+
+        if not x_test:
+            x_train, x_test, y_train, y_test = train_test_split(x_train, y_train,
+                                                                test_size=min(Constant.VALIDATION_SET_SIZE,
+                                                                              int(len(y_train) * 0.2)),
+                                                                random_state=42)
+
+        x_train, y_train = text_preprocess(x_train, y_train, path=self.path)
+        x_test, y_test = text_preprocess(x_test, y_test, path=self.path)
+
+        train_data = text_dataloader(x_train, y_train, batch_size=Constant.MAX_BATCH_SIZE)
+        test_data = text_dataloader(x_test, y_test, batch_size=Constant.MAX_BATCH_SIZE)
+
+        searcher = self.load_searcher()
+        graph = searcher.load_best_model()
+
+        if retrain:
+            graph.weighted = False
+        _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.loss, self.verbose))
 
     def get_n_output_node(self):
         pass
@@ -146,4 +150,35 @@ class TextClassifier(ImageSupervised):
     @property
     def metric(self):
         return Accuracy
+
+    def predict(self, x_test):
+        """Return predict results for the testing data.
+
+        Args:
+            x_test: An instance of numpy.ndarray containing the testing data.
+
+        Returns:
+            A numpy.ndarray containing the results.
+        """
+        if Constant.LIMIT_MEMORY:
+            pass
+        test_loader = text_dataloader(x_test)
+        model = self.load_searcher().load_best_model().produce_model()
+        model.eval()
+
+        outputs = []
+        with torch.no_grad():
+            for index, inputs in enumerate(test_loader):
+                outputs.append(model(inputs).numpy())
+        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
+        return self.inverse_transform_y(output)
+
+    def inverse_transform_y(self, output):
+        return output
+
+    def evaluate(self, x_test, y_test):
+        x_test, y_test = text_preprocess(x_test, y_test, path=self.path)
+        """Return the accuracy score between predict value and `y_test`."""
+        y_predict = self.predict(x_test)
+        return self.metric().evaluate(y_test, y_predict)
 
