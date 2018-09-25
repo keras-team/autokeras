@@ -172,7 +172,8 @@ def edit_distance_matrix(kernel_lambda, train_x, train_y=None):
 def vector_distance(a, b):
     a = np.array(a)
     b = np.array(b)
-    return np.linalg.norm(a - b)
+    c = a - b
+    return np.inner(c, c)
 
 
 def bourgain_embedding_matrix(distance_matrix):
