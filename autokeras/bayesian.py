@@ -92,7 +92,7 @@ class IncrementalGaussianProcess:
         down_k = np.concatenate((down_left_k, down_right_k), axis=1)
         self._distance_matrix = np.concatenate((up_k, down_k), axis=0)
         distort_matrix = bourgain_embedding_matrix(self._distance_matrix)
-        k_matrix = 1.0 / np.exp(distort_matrix)
+        k_matrix = 1.0 / np.exp(np.power(distort_matrix, 2))
         diagonal = np.diag_indices_from(k_matrix)
         diagonal = (diagonal[0][-len(train_x):], diagonal[1][-len(train_x):])
         k_matrix[diagonal] += self.alpha
@@ -118,7 +118,7 @@ class IncrementalGaussianProcess:
 
         self._distance_matrix = self.edit_distance_matrix(self.kernel_lambda, self._x)
         distort_matrix = bourgain_embedding_matrix(self._distance_matrix)
-        k_matrix = 1.0 / np.exp(distort_matrix)
+        k_matrix = 1.0 / np.exp(np.power(distort_matrix, 2))
         k_matrix[np.diag_indices_from(k_matrix)] += self.alpha
 
         self._l_matrix = cholesky(k_matrix, lower=True)  # Line 2
@@ -129,7 +129,7 @@ class IncrementalGaussianProcess:
         return self
 
     def predict(self, train_x):
-        k_trans = 1.0 / np.exp(self.edit_distance_matrix(self.kernel_lambda, train_x, self._x))
+        k_trans = 1.0 / np.exp(np.power(self.edit_distance_matrix(self.kernel_lambda, train_x, self._x), 2))
         y_mean = k_trans.dot(self._alpha_vector)  # Line 4 (y_mean = f_star)
 
         # compute inverse K_inv of K based on its Cholesky
