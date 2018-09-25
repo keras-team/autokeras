@@ -7,8 +7,11 @@ from queue import PriorityQueue
 
 import numpy as np
 import math
-from scipy.linalg import cholesky, cho_solve, solve_triangular
+
+from scipy import linalg
+from scipy.linalg import cholesky, cho_solve, solve_triangular, LinAlgError
 from scipy.optimize import linear_sum_assignment
+from sklearn.metrics.pairwise import rbf_kernel
 
 from autokeras.net_transformer import transform
 
@@ -90,17 +93,20 @@ class IncrementalGaussianProcess:
         down_right_k = self.edit_distance_matrix(self.kernel_lambda, train_x)
         up_k = np.concatenate((self._distance_matrix, up_right_k), axis=1)
         down_k = np.concatenate((down_left_k, down_right_k), axis=1)
-        self._distance_matrix = np.concatenate((up_k, down_k), axis=0)
-        distort_matrix = bourgain_embedding_matrix(self._distance_matrix)
-        k_matrix = 1.0 / np.exp(np.power(distort_matrix, 2))
+        temp_distance_matrix = np.concatenate((up_k, down_k), axis=0)
+        k_matrix = bourgain_embedding_matrix(temp_distance_matrix)
         diagonal = np.diag_indices_from(k_matrix)
         diagonal = (diagonal[0][-len(train_x):], diagonal[1][-len(train_x):])
         k_matrix[diagonal] += self.alpha
 
+        try:
+            self._l_matrix = cholesky(k_matrix, lower=True)  # Line 2
+        except LinAlgError:
+            return self
+
         self._x = np.concatenate((self._x, train_x), axis=0)
         self._y = np.concatenate((self._y, train_y), axis=0)
-
-        self._l_matrix = cholesky(k_matrix, lower=True)  # Line 2
+        self._distance_matrix = temp_distance_matrix
 
         self._alpha_vector = cho_solve((self._l_matrix, True), self._y)  # Line 3
 
@@ -117,8 +123,7 @@ class IncrementalGaussianProcess:
         self._y = np.copy(train_y)
 
         self._distance_matrix = self.edit_distance_matrix(self.kernel_lambda, self._x)
-        distort_matrix = bourgain_embedding_matrix(self._distance_matrix)
-        k_matrix = 1.0 / np.exp(np.power(distort_matrix, 2))
+        k_matrix = bourgain_embedding_matrix(self._distance_matrix)
         k_matrix[np.diag_indices_from(k_matrix)] += self.alpha
 
         self._l_matrix = cholesky(k_matrix, lower=True)  # Line 2
@@ -129,7 +134,7 @@ class IncrementalGaussianProcess:
         return self
 
     def predict(self, train_x):
-        k_trans = 1.0 / np.exp(np.power(self.edit_distance_matrix(self.kernel_lambda, train_x, self._x), 2))
+        k_trans = np.exp(-np.power(self.edit_distance_matrix(self.kernel_lambda, train_x, self._x), 2))
         y_mean = k_trans.dot(self._alpha_vector)  # Line 4 (y_mean = f_star)
 
         # compute inverse K_inv of K based on its Cholesky
@@ -196,11 +201,7 @@ def bourgain_embedding_matrix(distance_matrix):
                     distort_elements.append([d])
                 else:
                     distort_elements[j].append(d)
-    distort_matrix = np.zeros((n, n))
-    for i in range(n):
-        for j in range(i + 1, n):
-            distort_matrix[i][j] = distort_matrix[j][i] = vector_distance(distort_elements[i], distort_elements[j])
-    return np.array(distort_matrix)
+    return rbf_kernel(distort_elements, distort_elements)
 
 
 class BayesianOptimizer:
@@ -320,3 +321,64 @@ def contain(descriptors, target_descriptor):
         if edit_distance(descriptor, target_descriptor, 1) < 1e-5:
             return True
     return False
+
+
+def to_nearest_pd(k_matrix):
+    """Find the nearest positive-definite matrix to input
+
+    A Python/Numpy port of John D'Errico's `nearestSPD` MATLAB code [1], which
+    credits [2].
+
+    [1] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
+
+    [2] N.J. Higham, "Computing a nearest symmetric positive semidefinite
+    matrix" (1988): https://doi.org/10.1016/0024-3795(88)90223-6
+    """
+
+    temp = is_pd(k_matrix)
+    if temp is not None:
+        return temp
+
+    b = (k_matrix + k_matrix.T) / 2
+    _, s, v = linalg.svd(b)
+
+    H = np.dot(v.T, np.dot(np.diag(s), v))
+
+    a2 = (b + H) / 2
+
+    a3 = (a2 + a2.T) / 2
+
+    temp = is_pd(a3)
+    if temp is not None:
+        return temp
+
+    spacing = np.spacing(linalg.norm(k_matrix))
+    # The above is different from [1]. It appears that MATLAB's `chol` Cholesky
+    # decomposition will accept matrixes with exactly 0-eigenvalue, whereas
+    # Numpy's will not. So where [1] uses `eps(mineig)` (where `eps` is Matlab
+    # for `np.spacing`), we use the above definition. CAVEAT: our `spacing`
+    # will be much larger than [1]'s `eps(mineig)`, since `mineig` is usually on
+    # the order of 1e-16, and `eps(1e-16)` is on the order of 1e-34, whereas
+    # `spacing` will, for Gaussian random matrixes of small dimension, be on
+    # othe order of 1e-16. In practice, both ways converge, as the unit test
+    # below suggests.
+    I = np.eye(k_matrix.shape[0])
+    k = 1
+    while True:
+        temp = is_pd(a3)
+        if temp is not None:
+            break
+        mineig = np.min(np.real(linalg.eigvals(a3)))
+        a3 += I * (-mineig * k ** 2 + spacing)
+        k += 1
+        print(k)
+
+    return temp
+
+
+def is_pd(b):
+    """Returns true when input is positive-definite, via Cholesky"""
+    try:
+        return cholesky(b, lower=True)
+    except LinAlgError:
+        return None
