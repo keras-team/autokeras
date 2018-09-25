@@ -89,9 +89,8 @@ Before you submit a pull request, check that it meets these guidelines:
 4. Also, **add the issue number** which it addresses.
 If there is no associated issue, feel free to [create one](https://github.com/jhfjhfj1/autokeras/issues).
 
-5. Often pull requests resolve one or more other issues.
-If merging your pull request means that some issues should be closed,
-you should use keywords to link to them by following [this tutorial](https://blog.github.com/2013-05-14-closing-issues-via-pull-requests/).
+5. If merging the pull requests resolve one or more other issues.
+In both the title and the description of the pull request, write "resolves #issue_number" to link the issue.
 
 6. For the case of bug fixes, at the time of the PR,
 the test case should fail for the code base in the master branch and pass for the PR code.
