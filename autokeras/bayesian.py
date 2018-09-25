@@ -8,7 +8,6 @@ from queue import PriorityQueue
 import numpy as np
 import math
 
-from scipy import linalg
 from scipy.linalg import cholesky, cho_solve, solve_triangular, LinAlgError
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import rbf_kernel
@@ -321,64 +320,3 @@ def contain(descriptors, target_descriptor):
         if edit_distance(descriptor, target_descriptor, 1) < 1e-5:
             return True
     return False
-
-
-def to_nearest_pd(k_matrix):
-    """Find the nearest positive-definite matrix to input
-
-    A Python/Numpy port of John D'Errico's `nearestSPD` MATLAB code [1], which
-    credits [2].
-
-    [1] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
-
-    [2] N.J. Higham, "Computing a nearest symmetric positive semidefinite
-    matrix" (1988): https://doi.org/10.1016/0024-3795(88)90223-6
-    """
-
-    temp = is_pd(k_matrix)
-    if temp is not None:
-        return temp
-
-    b = (k_matrix + k_matrix.T) / 2
-    _, s, v = linalg.svd(b)
-
-    H = np.dot(v.T, np.dot(np.diag(s), v))
-
-    a2 = (b + H) / 2
-
-    a3 = (a2 + a2.T) / 2
-
-    temp = is_pd(a3)
-    if temp is not None:
-        return temp
-
-    spacing = np.spacing(linalg.norm(k_matrix))
-    # The above is different from [1]. It appears that MATLAB's `chol` Cholesky
-    # decomposition will accept matrixes with exactly 0-eigenvalue, whereas
-    # Numpy's will not. So where [1] uses `eps(mineig)` (where `eps` is Matlab
-    # for `np.spacing`), we use the above definition. CAVEAT: our `spacing`
-    # will be much larger than [1]'s `eps(mineig)`, since `mineig` is usually on
-    # the order of 1e-16, and `eps(1e-16)` is on the order of 1e-34, whereas
-    # `spacing` will, for Gaussian random matrixes of small dimension, be on
-    # othe order of 1e-16. In practice, both ways converge, as the unit test
-    # below suggests.
-    I = np.eye(k_matrix.shape[0])
-    k = 1
-    while True:
-        temp = is_pd(a3)
-        if temp is not None:
-            break
-        mineig = np.min(np.real(linalg.eigvals(a3)))
-        a3 += I * (-mineig * k ** 2 + spacing)
-        k += 1
-        print(k)
-
-    return temp
-
-
-def is_pd(b):
-    """Returns true when input is positive-definite, via Cholesky"""
-    try:
-        return cholesky(b, lower=True)
-    except LinAlgError:
-        return None
