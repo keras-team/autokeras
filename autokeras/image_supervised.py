@@ -248,7 +248,7 @@ class ImageSupervised(Supervised):
             if len(self.load_searcher().history) == 0:
                 raise TimeoutError("Search Time too short. No model was found during the search time.")
             elif self.verbose:
-                print('Time is out.')
+                print('\nTime limit for model search is reached. Ending the model search.')
 
     @abstractmethod
     def get_n_output_node(self):
@@ -315,6 +315,8 @@ class ImageSupervised(Supervised):
 
         searcher = self.load_searcher()
         graph = searcher.load_best_model()
+        if self.verbose:
+            print('\nLoading and training the best model recorded from the search.')
 
         if retrain:
             graph.weighted = False

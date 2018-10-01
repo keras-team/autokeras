@@ -64,6 +64,8 @@ class ModelTrainer(ModelTrainerBase):
         self.model.to(self.device)
         self.optimizer = None
         self.early_stop = None
+        self.current_epoch = 0
+        self.current_metric_value = 0
 
     def train_model(self,
                     max_iter_num=None,
@@ -89,40 +91,17 @@ class ModelTrainer(ModelTrainerBase):
         test_loss_list = []
         self.optimizer = torch.optim.Adam(self.model.parameters())
 
-        progress_bar = None
-        if self.verbose:
-            progress_bar = tqdm(total=max_iter_num,
-                                desc='    Model    ',
-                                file=sys.stdout,
-                                leave=False,
-                                ncols=75,
-                                position=1,
-                                unit=' epoch')
-
         for epoch in range(max_iter_num):
             self._train()
             test_loss, metric_value = self._test()
+            self.current_metric_value = metric_value
             test_metric_value_list.append(metric_value)
             test_loss_list.append(test_loss)
-            if self.verbose:
-                progress_bar.update(1)
-                if epoch == 0:
-                    header = ['Epoch', 'Loss', 'Accuracy']
-                    line = '|'.join(x.center(24) for x in header)
-                    progress_bar.write('+' + '-' * len(line) + '+')
-                    progress_bar.write('|' + line + '|')
-                    progress_bar.write('+' + '-' * len(line) + '+')
-                r = [epoch + 1, test_loss, metric_value]
-                line = '|'.join(str(x).center(24) for x in r)
-                progress_bar.write('|' + line + '|')
-                progress_bar.write('+' + '-' * len(line) + '+')
             decreasing = self.early_stop.on_epoch_end(test_loss)
             if not decreasing:
                 if self.verbose:
                     print('\nNo loss decrease after {} epochs.\n'.format(max_no_improvement_num))
                 break
-        if self.verbose:
-            progress_bar.close()
         last_num = min(max_no_improvement_num, max_iter_num)
         return (sum(test_loss_list[-last_num:]) / last_num,
                 sum(test_metric_value_list[-last_num:]) / last_num)
@@ -130,14 +109,15 @@ class ModelTrainer(ModelTrainerBase):
     def _train(self):
         self.model.train()
         loader = self.train_loader
+        self.current_epoch += 1
 
         cp_loader = deepcopy(loader)
         if self.verbose:
             progress_bar = tqdm(total=len(cp_loader),
-                                desc='Current Epoch',
+                                desc='Epoch-' + str(self.current_epoch) + ', Current Metric - ' + str(self.current_metric_value),
                                 file=sys.stdout,
                                 leave=False,
-                                ncols=75,
+                                ncols=100,
                                 position=0,
                                 unit=' batch')
 
