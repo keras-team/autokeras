@@ -17,7 +17,7 @@ class Supervised(ABC):
         self.verbose = verbose
 
     @abstractmethod
-    def fit(self, x_train=None, y_train=None, time_limit=None):
+    def fit(self, x_train, y_train, x_test=None, y_test=None, time_limit=None):
         """Find the best neural architecture and train it.
 
         Based on the given dataset, the function will find the best neural architecture for it.
@@ -27,6 +27,8 @@ class Supervised(ABC):
         Args:
             x_train: A numpy.ndarray instance containing the training data.
             y_train: A numpy.ndarray instance containing the label of the training data.
+            x_test: A numpy.ndarray instance containing the testing data
+            y_test: A numpy.ndarray instance containing the label of the testing data.
             time_limit: The time limit for the search in seconds.
         """
 

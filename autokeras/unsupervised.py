@@ -32,3 +32,4 @@ class Unsupervised(ABC):
         Returns: the result of applying the model
         """
         pass
+

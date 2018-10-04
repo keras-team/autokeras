@@ -45,7 +45,7 @@ def test_fit_predict(_):
     clf = ImageClassifier(path=path, verbose=True)
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf.fit(train_x, train_y, )
+    clf.fit(train_x, train_y)
     results = clf.predict(train_x)
     assert all(map(lambda result: result in train_y, results))
     clean_dir(path)
@@ -82,7 +82,7 @@ def test_timeout_resume(_):
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False, resume=False)
     clf.n_epochs = 100
-    clf.fit(train_x, train_y, 5)
+    clf.fit(train_x, train_y, time_limit=5)
     history_len = len(clf.load_searcher().history)
     assert history_len != 0
     results = clf.predict(test_x)
@@ -194,7 +194,7 @@ def test_fit_predict_regression(_):
     clf = ImageRegressor(path=path, verbose=False)
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
-    clf.fit(train_x, train_y, )
+    clf.fit(train_x, train_y)
     results = clf.predict(train_x)
     assert len(results) == len(train_x)
     clean_dir(path)
