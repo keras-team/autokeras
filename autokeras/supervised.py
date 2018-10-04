@@ -31,6 +31,19 @@ class Supervised(ABC):
         """
 
     @abstractmethod
+    def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
+        """Final training after found the best architecture.
+
+        Args:
+            x_train: A numpy.ndarray of training data.
+            y_train: A numpy.ndarray of training targets.
+            x_test: A numpy.ndarray of testing data.
+            y_test: A numpy.ndarray of testing targets.
+            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
+            retrain: A boolean of whether reinitialize the weights of the model.
+        """
+
+    @abstractmethod
     def predict(self, x_test):
         """Return predict results for the testing data.
 
