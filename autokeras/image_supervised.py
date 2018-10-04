@@ -217,7 +217,7 @@ class ImageSupervised(Supervised):
 
         # Divide training data into training and testing data.
         x_train, x_test, y_train, y_test = train_test_split(x_train, y_train,
-                                                            test_size=min(Constant.VALIDATION_SET_SIZE,
+                                                            test_size=min(0.1,
                                                                           int(len(y_train) * 0.2)),
                                                             random_state=42)
 
