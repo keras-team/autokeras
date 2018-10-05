@@ -129,7 +129,9 @@ class Searcher:
             line = '|'.join(x.center(24) for x in header)
             print('+' + '-' * len(line) + '+')
             print('|' + line + '|')
-            for i, r in enumerate(self.history):
+
+            if self.history:
+                r = self.history[-1]
                 print('+' + '-' * len(line) + '+')
                 line = '|'.join(str(r[x]).center(24) for x in idx)
                 print('|' + line + '|')
@@ -169,9 +171,9 @@ class Searcher:
         graph, father_id, model_id = self.training_queue.pop(0)
         if self.verbose:
             print('\n')
-            print('╒' + '=' * 46 + '╕')
+            print('+' + '-' * 46 + '+')
             print('|' + 'Training model {}'.format(model_id).center(46) + '|')
-            print('╘' + '=' * 46 + '╛')
+            print('+' + '-' * 46 + '+')
         mp.set_start_method('spawn', force=True)
         pool = mp.Pool(1)
         try:
@@ -219,7 +221,7 @@ class Searcher:
             if not re.search('out of memory', str(e)):
                 raise e
             if self.verbose:
-                print('out of memory')
+                print('\nCurrent model size is too big. Discontinuing training this model to search for other models.')
             Constant.MAX_MODEL_SIZE = graph.size() - 1
             return
         finally:
