@@ -12,3 +12,4 @@ def test_temp_folder_generator(_):
     assert path == "tests/resources/temp/autokeras"
     path = 'tests/resources/temp'
     clean_dir(path)
+

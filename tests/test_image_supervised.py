@@ -82,7 +82,7 @@ def test_timeout_resume(_):
     clean_dir(path)
     clf = ImageClassifier(path=path, verbose=False, resume=False)
     clf.n_epochs = 100
-    clf.fit(train_x, train_y, 15)
+    clf.fit(train_x, train_y, 5)
     history_len = len(clf.load_searcher().history)
     assert history_len != 0
     results = clf.predict(test_x)

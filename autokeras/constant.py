@@ -32,10 +32,10 @@ class Constant:
     SEARCH_MAX_ITER = 200
 
     # text preprocessor
-    
+
     EMBEDDING_DIM = 100
-    MAX_SEQUENCE_LENGTH = 1000
-    MAX_NB_WORDS = 20000
+    MAX_SEQUENCE_LENGTH = 400
+    MAX_NB_WORDS = 5000
     EXTRACT_PATH = "glove/"
     # Download file name
     FILE_PATH = "glove.zip"

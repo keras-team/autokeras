@@ -15,6 +15,7 @@ from autokeras.metric import Accuracy
 from autokeras.search import Searcher, train
 from autokeras.text_preprocessor import text_preprocess
 from autokeras.utils import pickle_to_file
+from autokeras.preprocessor import OneHotEncoder
 
 
 class TextDataset(Dataset):
@@ -23,6 +24,8 @@ class TextDataset(Dataset):
         self.target = target
 
     def __getitem__(self, index):
+        if self.target is None:
+            return self.dataset[index]
         return self.dataset[index], self.target[index]
 
     def __len__(self):
@@ -56,17 +59,19 @@ class TextClassifier(ImageSupervised):
             y_train = []
         if x_train is None:
             x_train = []
-
-        x_train, y_train = text_preprocess(x_train, y_train, path=self.path)
+        x_train = text_preprocess(x_train, path=self.path)
 
         x_train = np.array(x_train)
         y_train = np.array(y_train)
         _validate(x_train, y_train)
+        y_train = self.transform_y(y_train)
 
+        if batch_size is None:
+            batch_size = Constant.MAX_BATCH_SIZE
         # Create the searcher and save on disk
         if not self.searcher:
             input_shape = x_train.shape[1:]
-            self.searcher_args['n_output_node'] = y_train.shape[1]
+            self.searcher_args['n_output_node'] = self.get_n_output_node()
             self.searcher_args['input_shape'] = input_shape
             self.searcher_args['path'] = self.path
             self.searcher_args['metric'] = self.metric
@@ -125,14 +130,17 @@ class TextClassifier(ImageSupervised):
         if trainer_args is None:
             trainer_args = {'max_no_improvement_num': 30}
 
-        if not x_test:
+        if x_test is None:
             x_train, x_test, y_train, y_test = train_test_split(x_train, y_train,
                                                                 test_size=min(Constant.VALIDATION_SET_SIZE,
                                                                               int(len(y_train) * 0.2)),
                                                                 random_state=42)
 
-        x_train, y_train = text_preprocess(x_train, y_train, path=self.path)
-        x_test, y_test = text_preprocess(x_test, y_test, path=self.path)
+        x_train = text_preprocess(x_train, path=self.path)
+        x_test = text_preprocess(x_test, path=self.path)
+
+        y_train = self.transform_y(y_train)
+        y_test = self.transform_y(y_test)
 
         train_data = text_dataloader(x_train, y_train, batch_size=Constant.MAX_BATCH_SIZE)
         test_data = text_dataloader(x_test, y_test, batch_size=Constant.MAX_BATCH_SIZE)
@@ -143,9 +151,6 @@ class TextClassifier(ImageSupervised):
         if retrain:
             graph.weighted = False
         _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.loss, self.verbose))
-
-    def get_n_output_node(self):
-        pass
 
     @property
     def metric(self):
@@ -173,12 +178,22 @@ class TextClassifier(ImageSupervised):
         output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
         return self.inverse_transform_y(output)
 
-    def inverse_transform_y(self, output):
-        return output
-
     def evaluate(self, x_test, y_test):
-        x_test, y_test = text_preprocess(x_test, y_test, path=self.path)
+        x_test = text_preprocess(x_test, path=self.path)
         """Return the accuracy score between predict value and `y_test`."""
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)
 
+    def transform_y(self, y_train):
+        # Transform y_train.
+        if self.y_encoder is None:
+            self.y_encoder = OneHotEncoder()
+            self.y_encoder.fit(y_train)
+        y_train = self.y_encoder.transform(y_train)
+        return y_train
+
+    def inverse_transform_y(self, output):
+        return self.y_encoder.inverse_transform(output)
+
+    def get_n_output_node(self):
+        return self.y_encoder.n_classes

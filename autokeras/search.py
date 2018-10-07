@@ -128,7 +128,9 @@ class Searcher:
             line = '|'.join(x.center(24) for x in header)
             print('+' + '-' * len(line) + '+')
             print('|' + line + '|')
-            for i, r in enumerate(self.history):
+
+            if self.history:
+                r = self.history[-1]
                 print('+' + '-' * len(line) + '+')
                 line = '|'.join(str(r[x]).center(24) for x in idx)
                 print('|' + line + '|')
@@ -218,7 +220,7 @@ class Searcher:
             if not re.search('out of memory', str(e)):
                 raise e
             if self.verbose:
-                print('out of memory')
+                print('\nCurrent model size is too big. Discontinuing training this model to search for other models.')
             Constant.MAX_MODEL_SIZE = graph.size() - 1
             return
         finally:
