@@ -225,6 +225,7 @@ class Searcher:
             return
         finally:
             # terminate and join the subprocess to prevent any resource leak
+            pool.terminate()
             pool.close()
             pool.join()
 

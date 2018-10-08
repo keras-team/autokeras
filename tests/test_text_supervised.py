@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from autokeras.text_supervised import *
+from autokeras.text.text_supervised import *
 from tests.common import clean_dir, MockProcess, simple_transform
 
 
@@ -16,7 +16,7 @@ def mock_text_preprocess(x_train, path="dummy_path"):
 
 
 @patch('torch.multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
+@patch('autokeras.text.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_predict(_, _1):
     Constant.MAX_ITER_NUM = 1
@@ -35,7 +35,7 @@ def test_fit_predict(_, _1):
 
 
 @patch('torch.multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
+@patch('autokeras.text.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
 def test_timeout(_):
     # Constant.MAX_MODEL_NUM = 4
     Constant.SEARCH_MAX_ITER = 1000
@@ -52,7 +52,7 @@ def test_timeout(_):
 
 
 @patch('torch.multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
+@patch('autokeras.text.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_timeout_resume(_, _1):
     Constant.MAX_ITER_NUM = 1
@@ -67,7 +67,7 @@ def test_timeout_resume(_, _1):
     clean_dir(path)
     clf = TextClassifier(path=path, verbose=False, resume=False)
     clf.n_epochs = 100
-    clf.fit(train_x, train_y, time_limit=1)
+    clf.fit(train_x, train_y, time_limit=2)
     history_len = len(clf.load_searcher().history)
     assert history_len != 0
     results = clf.predict(test_x)
@@ -76,7 +76,7 @@ def test_timeout_resume(_, _1):
     clf = TextClassifier(path=path, verbose=False, resume=True)
     assert len(clf.load_searcher().history) == history_len
     Constant.MAX_MODEL_NUM = history_len + 1
-    clf.fit(train_x, train_y, time_limit=1)
+    clf.fit(train_x, train_y)
     assert len(clf.load_searcher().history) == history_len + 1
     results = clf.predict(test_x)
     assert len(results) == 100
@@ -86,7 +86,7 @@ def test_timeout_resume(_, _1):
 @patch('torch.multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-@patch('autokeras.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
+@patch('autokeras.text.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
 def test_final_fit(_, _1, _2):
     Constant.LIMIT_MEMORY = True
     path = 'tests/resources/temp'
@@ -101,7 +101,7 @@ def test_final_fit(_, _1, _2):
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
     test_y = np.random.randint(0, 5, 100)
-    clf.fit(train_x, train_y, time_limit=1)
+    clf.fit(train_x, train_y)
     clf.final_fit(train_x, train_y, test_x, test_y)
     results = clf.predict(test_x)
     assert len(results) == 100
@@ -110,7 +110,7 @@ def test_final_fit(_, _1, _2):
 
 @patch('torch.multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-@patch('autokeras.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
+@patch('autokeras.text.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
 def test_save_continue(_, _1):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 1
@@ -123,19 +123,19 @@ def test_save_continue(_, _1):
     clean_dir(path)
     clf = TextClassifier(path=path, verbose=False, resume=False)
     clf.n_epochs = 100
-    clf.fit(train_x, train_y, time_limit=1)
+    clf.fit(train_x, train_y, time_limit=5)
     assert len(clf.load_searcher().history) == 1
 
     Constant.MAX_MODEL_NUM = 2
     clf = TextClassifier(verbose=False, path=path, resume=True)
-    clf.fit(train_x, train_y, time_limit=1)
+    clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
     assert len(clf.load_searcher().history) == 2
 
     Constant.MAX_MODEL_NUM = 1
     clf = TextClassifier(verbose=False, path=path, resume=False)
-    clf.fit(train_x, train_y, time_limit=1)
+    clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
     assert len(clf.load_searcher().history) == 1
@@ -150,7 +150,7 @@ def test_init_image_classifier_with_none_path(_):
 
 @patch('torch.multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-@patch('autokeras.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
+@patch('autokeras.text.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
 def test_evaluate(_, _1):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 1

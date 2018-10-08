@@ -1,6 +1,5 @@
 import os
 import pickle
-import time
 from functools import reduce
 
 import numpy as np
@@ -9,12 +8,12 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader
 
 from autokeras.constant import Constant
-from autokeras.image_supervised import ImageSupervised, _validate, run_searcher_once
+from autokeras.image_supervised import ImageSupervised, _validate
 from autokeras.loss_function import classification_loss
 from autokeras.metric import Accuracy
 from autokeras.preprocessor import OneHotEncoder
-from autokeras.search import Searcher, train
-from autokeras.text_preprocessor import text_preprocess
+from autokeras.search import Searcher
+from autokeras.text.text_preprocessor import text_preprocess
 from autokeras.utils import pickle_to_file
 
 
@@ -98,23 +97,7 @@ class TextClassifier(ImageSupervised):
         if time_limit is None:
             time_limit = 24 * 60 * 60
 
-        start_time = time.time()
-        time_remain = time_limit
-        try:
-            while time_remain > 0:
-                run_searcher_once(train_data, test_data, self.path, int(time_remain))
-                if len(self.load_searcher().history) >= Constant.MAX_MODEL_NUM:
-                    break
-                time_elapsed = time.time() - start_time
-                time_remain = time_limit - time_elapsed
-            # if no search executed during the time_limit, then raise an error
-            if time_remain <= 0:
-                raise TimeoutError
-        except TimeoutError:
-            if len(self.load_searcher().history) == 0:
-                raise TimeoutError("Search Time too short. No model was found during the search time.")
-            elif self.verbose:
-                print('Time is out.')
+        self.cnn.fit(self.get_n_output_node(), x_train.shape, train_data, test_data, time_limit)
 
     def final_fit(self, x_train=None, y_train=None, x_test=None, y_test=None, trainer_args=None, retrain=False):
         """Final training after found the best architecture.
@@ -145,12 +128,7 @@ class TextClassifier(ImageSupervised):
         train_data = text_dataloader(x_train, y_train, batch_size=Constant.MAX_BATCH_SIZE)
         test_data = text_dataloader(x_test, y_test, batch_size=Constant.MAX_BATCH_SIZE)
 
-        searcher = self.load_searcher()
-        graph = searcher.load_best_model()
-
-        if retrain:
-            graph.weighted = False
-        _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.loss, self.verbose))
+        self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
 
     @property
     def metric(self):
@@ -168,7 +146,7 @@ class TextClassifier(ImageSupervised):
         if Constant.LIMIT_MEMORY:
             pass
         test_loader = text_dataloader(x_test)
-        model = self.load_searcher().load_best_model().produce_model()
+        model = self.cnn.best_model
         model.eval()
 
         outputs = []

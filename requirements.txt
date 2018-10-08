@@ -10,3 +10,4 @@ pytest
 pytest-cov
 coverage
 requests
+GPUtil

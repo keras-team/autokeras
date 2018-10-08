@@ -6,10 +6,12 @@ from keras import Input, Model
 from keras.layers import Embedding
 from keras_preprocessing.sequence import pad_sequences
 from keras_preprocessing.text import Tokenizer
+import tensorflow as tf
 
 from autokeras.constant import Constant
 from autokeras.utils import download_file_with_extract
-
+import GPUtil
+from keras import backend as K
 
 def download_pre_train(file_path, extract_path):
     file_link = Constant.PRE_TRAIN_FILE_LINK
@@ -90,19 +92,32 @@ def load_pretrain(path, word_index):
 
 def processing(path, word_index, input_length, x_train):
     embedding_matrix = load_pretrain(path=path, word_index=word_index)
-    print("generating preprocessing model...")
-    embedding_layer = Embedding(len(word_index) + 1,
-                                Constant.EMBEDDING_DIM,
-                                weights=[embedding_matrix],
-                                input_length=input_length,
-                                trainable=False)
 
-    sequence_input = Input(shape=(input_length,), dtype='int32')
-    embedded_sequences = embedding_layer(sequence_input)
-    model = Model(sequence_input, embedded_sequences)
-    print("converting text to vector...")
-    x_train = model.predict(x_train)
-    del model
+    # Get the first available GPU
+    DEVICE_ID_LIST = GPUtil.getFirstAvailable()
+    DEVICE_ID = DEVICE_ID_LIST[0]  # grab first element from list
+
+    # Set CUDA_VISIBLE_DEVICES to mask out all other GPUs than the first available device id
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(DEVICE_ID)
+    device = '/gpu:0'
+    with tf.device(device):
+        config = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
+        config.gpu_options.allow_growth = True
+        sess = tf.Session(config=config)
+        K.set_session(sess)
+        print("generating preprocessing model...")
+        embedding_layer = Embedding(len(word_index) + 1,
+                                    Constant.EMBEDDING_DIM,
+                                    weights=[embedding_matrix],
+                                    input_length=input_length,
+                                    trainable=False)
+
+        sequence_input = Input(shape=(input_length,), dtype='int32')
+        embedded_sequences = embedding_layer(sequence_input)
+        model = Model(sequence_input, embedded_sequences)
+        print("converting text to vector...")
+        x_train = model.predict(x_train)
+        del model
     x_train = np.expand_dims(x_train, -1)
     return x_train
 

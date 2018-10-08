@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from autokeras.text_preprocessor import *
+from autokeras.text.text_preprocessor import *
 
 path = 'tests/resources/temp'
 word_index = {"foo": 0, "bar": 1}
@@ -34,9 +34,9 @@ def mock_load_pretrain(path, word_index):
     return embedding_matrix
 
 
-@patch('autokeras.text_preprocessor.processing', side_effect=mock_processing)
-@patch('autokeras.text_preprocessor.tokenlize_text', side_effect=mock_tokenlize_text)
-@patch('autokeras.text_preprocessor.clean_str', side_effect=mock_clean_str)
+@patch('autokeras.text.text_preprocessor.processing', side_effect=mock_processing)
+@patch('autokeras.text.text_preprocessor.tokenlize_text', side_effect=mock_tokenlize_text)
+@patch('autokeras.text.text_preprocessor.clean_str', side_effect=mock_clean_str)
 def test_text_preprocess_class(_, _1, _2):
     train_x = np.random.rand(100, 25, 25, 1)
     train_x = text_preprocess(train_x, path)
@@ -47,16 +47,17 @@ def test_clean_str():
     assert clean_str(test_string) == "dummy 1 's 've n't 're 'd 'll , ! \( \) \?"
 
 
-@patch('autokeras.text_preprocessor.read_embedding_index', side_effect=mock_read_embedding_index)
-@patch('autokeras.text_preprocessor.download_pre_train', side_effect=mock_download_pre_train)
+@patch('autokeras.text.text_preprocessor.read_embedding_index', side_effect=mock_read_embedding_index)
+@patch('autokeras.text.text_preprocessor.download_pre_train', side_effect=mock_download_pre_train)
 def test_load_pretrain(_, _1):
     embedding_matrix = load_pretrain(path, word_index)
     assert (embedding_matrix[0] == embedding_index.get("foo")).all()
     assert (embedding_matrix[1] == embedding_index.get("bar")).all()
 
 
-@patch('autokeras.text_preprocessor.load_pretrain', side_effect=mock_load_pretrain)
-def test_processing(_):
+@patch('autokeras.text.text_preprocessor.GPUtil.getFirstAvailable', return_value=[0])
+@patch('autokeras.text.text_preprocessor.load_pretrain', side_effect=mock_load_pretrain)
+def test_processing(_, _1):
     train_x = np.full((1, 2), 1)
     train_x = processing(path, word_index, 2, train_x)
     train_x = np.squeeze(train_x, axis=-1)
