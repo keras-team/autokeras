@@ -24,6 +24,15 @@ class CnnModule(object):
         self.metric = metric
 
     def fit(self, n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60):
+        """ Search the best CnnModule.
+
+        Args:
+            n_output_node: A integer value represent the number of output node in the final layer.
+            input_shape: A tuple to express the shape of every train entry. For example,MNIST dataset would be (28,28,1)
+            train_data: A PyTorch DataLoader instance represents the training data
+            test_data: A PyTorch DataLoader instance represents the testing data
+            time_limit: A integer value represents the time limit on searching for models.
+        """
         # Create the searcher and save on disk
         if not self.searcher:
             input_shape = input_shape[1:]
