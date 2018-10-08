@@ -3,15 +3,14 @@ import re
 import time
 
 import torch
+import torch.multiprocessing as mp
 
-from autokeras.constant import Constant
 from autokeras.bayesian import edit_distance, BayesianOptimizer
+from autokeras.constant import Constant
 from autokeras.generator import CnnGenerator
+from autokeras.model_trainer import ModelTrainer
 from autokeras.net_transformer import default_transform
 from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print
-from autokeras.model_trainer import ModelTrainer
-
-import torch.multiprocessing as mp
 
 
 class Searcher:
@@ -226,6 +225,7 @@ class Searcher:
             return
         finally:
             # terminate and join the subprocess to prevent any resource leak
+            pool.terminate()
             pool.close()
             pool.join()
 
