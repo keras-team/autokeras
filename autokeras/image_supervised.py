@@ -220,6 +220,7 @@ class ImageSupervised(Supervised):
 
         if time_limit is None:
             time_limit = 24 * 60 * 60
+
         self.cnn.fit(self.get_n_output_node(), x_train.shape, train_data, test_data, time_limit)
 
     @abstractmethod
@@ -284,6 +285,7 @@ class ImageSupervised(Supervised):
 
         train_data = self.data_transformer.transform_train(x_train, y_train)
         test_data = self.data_transformer.transform_test(x_test, y_test)
+
         self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
 
     def get_best_model_id(self):
