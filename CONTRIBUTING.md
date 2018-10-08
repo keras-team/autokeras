@@ -151,6 +151,7 @@ Use pycharm to select the
 [virtualenv as interpreter](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html).
 
 ## Reusable Code Guide
+You may checkout this code review [video](https://youtu.be/PWdfY0DmjCo) to get familiar with the code structure.
 Other than the base classes you have to extend,
 there are some other classes you can extend.
 
