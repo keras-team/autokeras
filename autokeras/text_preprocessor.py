@@ -103,7 +103,7 @@ def processing(path, word_index, input_length, x_train):
     print("converting text to vector...")
     x_train = model.predict(x_train)
     del model
-    np.expand_dims(x_train, -1)
+    x_train = np.expand_dims(x_train, -1)
     return x_train
 
 

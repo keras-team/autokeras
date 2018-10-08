@@ -47,7 +47,7 @@ def test_timeout(_):
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     with pytest.raises(TimeoutError):
-        clf.fit(train_x, train_y, time_limit=1)
+        clf.fit(train_x, train_y, time_limit=0)
     clean_dir(path)
 
 
@@ -67,7 +67,7 @@ def test_timeout_resume(_, _1):
     clean_dir(path)
     clf = TextClassifier(path=path, verbose=False, resume=False)
     clf.n_epochs = 100
-    clf.fit(train_x, train_y, time_limit=5)
+    clf.fit(train_x, train_y, time_limit=1)
     history_len = len(clf.load_searcher().history)
     assert history_len != 0
     results = clf.predict(test_x)
@@ -76,7 +76,7 @@ def test_timeout_resume(_, _1):
     clf = TextClassifier(path=path, verbose=False, resume=True)
     assert len(clf.load_searcher().history) == history_len
     Constant.MAX_MODEL_NUM = history_len + 1
-    clf.fit(train_x, train_y)
+    clf.fit(train_x, train_y, time_limit=1)
     assert len(clf.load_searcher().history) == history_len + 1
     results = clf.predict(test_x)
     assert len(results) == 100
@@ -101,7 +101,7 @@ def test_final_fit(_, _1, _2):
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
     test_y = np.random.randint(0, 5, 100)
-    clf.fit(train_x, train_y)
+    clf.fit(train_x, train_y, time_limit=1)
     clf.final_fit(train_x, train_y, test_x, test_y)
     results = clf.predict(test_x)
     assert len(results) == 100
@@ -123,19 +123,19 @@ def test_save_continue(_, _1):
     clean_dir(path)
     clf = TextClassifier(path=path, verbose=False, resume=False)
     clf.n_epochs = 100
-    clf.fit(train_x, train_y)
+    clf.fit(train_x, train_y, time_limit=1)
     assert len(clf.load_searcher().history) == 1
 
     Constant.MAX_MODEL_NUM = 2
     clf = TextClassifier(verbose=False, path=path, resume=True)
-    clf.fit(train_x, train_y)
+    clf.fit(train_x, train_y, time_limit=1)
     results = clf.predict(test_x)
     assert len(results) == 100
     assert len(clf.load_searcher().history) == 2
 
     Constant.MAX_MODEL_NUM = 1
     clf = TextClassifier(verbose=False, path=path, resume=False)
-    clf.fit(train_x, train_y)
+    clf.fit(train_x, train_y, time_limit=1)
     results = clf.predict(test_x)
     assert len(results) == 100
     assert len(clf.load_searcher().history) == 1

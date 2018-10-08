@@ -59,6 +59,7 @@ def test_load_pretrain(_, _1):
 def test_processing(_):
     train_x = np.full((1, 2), 1)
     train_x = processing(path, word_index, 2, train_x)
+    train_x = np.squeeze(train_x, axis=-1)
     assert np.allclose(train_x[0][0], embedding_matrix[1])
 
 
