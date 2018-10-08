@@ -68,4 +68,3 @@ def test_tokenlize_text():
     assert (train_x == [[0, 0, 1]]).all()
     assert (dummy_index.get("foo") == 1)
     assert (dummy_index.get("bar") == 2)
-

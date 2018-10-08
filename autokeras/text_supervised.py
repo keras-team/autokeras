@@ -12,10 +12,10 @@ from autokeras.constant import Constant
 from autokeras.image_supervised import ImageSupervised, _validate, run_searcher_once
 from autokeras.loss_function import classification_loss
 from autokeras.metric import Accuracy
+from autokeras.preprocessor import OneHotEncoder
 from autokeras.search import Searcher, train
 from autokeras.text_preprocessor import text_preprocess
 from autokeras.utils import pickle_to_file
-from autokeras.preprocessor import OneHotEncoder
 
 
 class TextDataset(Dataset):
@@ -43,7 +43,7 @@ class TextClassifier(ImageSupervised):
     def loss(self):
         return classification_loss
 
-    def fit(self, x_train=None, y_train=None, batch_size=None , time_limit=None):
+    def fit(self, x_train=None, y_train=None, batch_size=None, time_limit=None):
         """Find the best neural architecture and train it.
 
         Based on the given dataset, the function will find the best neural architecture for it.

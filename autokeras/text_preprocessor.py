@@ -110,8 +110,8 @@ def processing(path, word_index, input_length, x_train):
 def text_preprocess(x_train, path):
     x_train = [clean_str(x) for x in x_train]
     x_train, word_index = tokenlize_text(max_seq_length=Constant.MAX_SEQUENCE_LENGTH,
-                                                  max_num_words=Constant.MAX_NB_WORDS,
-                                                  x_train=x_train)
+                                         max_num_words=Constant.MAX_NB_WORDS,
+                                         x_train=x_train)
 
     print("generating preprocessing model...")
     x_train = processing(path=path, word_index=word_index, input_length=Constant.MAX_SEQUENCE_LENGTH, x_train=x_train)
