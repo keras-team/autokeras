@@ -1,8 +1,12 @@
 import os
 import pickle
+import sys
 import tempfile
+import zipfile
+
+import requests
 import torch
-import tempfile
+
 from autokeras.constant import Constant
 
 
@@ -100,9 +104,39 @@ def get_device():
 def temp_folder_generator():
     sys_temp = tempfile.gettempdir()
     path = os.path.join(sys_temp, 'autokeras')
-    if not os.path.exists(path):
-        os.makedirs(path)
+    ensure_dir(path)
     return path
+
+
+def download_file(file_link, file_path):
+    if not os.path.exists(file_path):
+        with open(file_path, "wb") as f:
+            print("Downloading %s" % file_path)
+            response = requests.get(file_link, stream=True)
+            total_length = response.headers.get('content-length')
+
+            if total_length is None:  # no content length header
+                f.write(response.content)
+            else:
+                dl = 0
+                total_length = int(total_length)
+                for data in response.iter_content(chunk_size=4096):
+                    dl += len(data)
+                    f.write(data)
+                    done = int(50 * dl / total_length)
+                    sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50 - done)))
+                    sys.stdout.flush()
+
+
+def download_file_with_extract(file_link, file_path, extract_path):
+    if not os.path.exists(extract_path):
+        download_file(file_link, file_path)
+        zip_ref = zipfile.ZipFile(file_path, 'r')
+        print("extracting downloaded file...")
+        zip_ref.extractall(extract_path)
+        os.remove(file_path)
+        print("extracted and removed downloaded zip file")
+    print("file already extracted in the path %s" % extract_path)
 
 
 def verbose_print(new_father_id, new_graph):
