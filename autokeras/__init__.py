@@ -1,1 +1,2 @@
 from autokeras.image_supervised import ImageClassifier, ImageRegressor
+from autokeras.object_detection import ObjectDetector
