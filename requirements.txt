@@ -11,3 +11,5 @@ pytest-cov
 coverage
 requests
 GPUtil
+imageio
+scikit-image

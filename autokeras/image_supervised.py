@@ -7,8 +7,7 @@ from functools import reduce
 
 import numpy as np
 import imageio
-from skimage.transform import rescale, resize, downscale_local_mean
-from scipy import ndimage
+from skimage.transform import resize
 import torch
 from sklearn.model_selection import train_test_split
 
