@@ -1,20 +1,23 @@
 import csv
 import os
 import pickle
+import time
 from abc import abstractmethod
 from functools import reduce
 
 import numpy as np
-import torch
+import imageio
+from skimage.transform import rescale, resize, downscale_local_mean
 from scipy import ndimage
+import torch
 from sklearn.model_selection import train_test_split
 
-from autokeras.cnn_module import CnnModule
-from autokeras.constant import Constant
 from autokeras.loss_function import classification_loss, regression_loss
+from autokeras.supervised import Supervised, PortableClass
+from autokeras.constant import Constant
 from autokeras.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, DataTransformer
-from autokeras.supervised import Supervised, PortableClass
+from autokeras.search import Searcher, train
 from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file, temp_folder_generator
 
 
@@ -60,20 +63,23 @@ def read_csv_file(csv_file_path):
     return file_names, file_labels
 
 
-def read_images(img_file_names, images_dir_path):
+def read_images(img_file_names, images_dir_path, normalized_size=None):
     """Read the images from the path and return their numpy.ndarray instance.
         Return a numpy.ndarray instance containing the training data.
 
     Args:
         img_file_names: List containing images names.
         images_dir_path: Path to the directory containing images.
+        normalized_size: tuple specifying resize shape (x, y, z), z = channels
     """
     x_train = []
     if os.path.isdir(images_dir_path):
         for img_file in img_file_names:
             img_path = os.path.join(images_dir_path, img_file)
             if os.path.exists(img_path):
-                img = ndimage.imread(fname=img_path)
+                # img = ndimage.imread(fname=img_path)
+                img = imageio.imread(img_path)
+                img = resize(img, output_shape=normalized_size, anti_aliasing=True)
                 if len(img.shape) < 3:
                     img = img[..., np.newaxis]
                 x_train.append(img)
@@ -84,7 +90,7 @@ def read_images(img_file_names, images_dir_path):
     return np.asanyarray(x_train)
 
 
-def load_image_dataset(csv_file_path, images_path):
+def load_image_dataset(csv_file_path, images_path, normalized_size=None):
     """Load images from the files and labels from a csv file.
 
     Second, the dataset is a set of images and the labels are in a CSV file.
@@ -103,7 +109,7 @@ def load_image_dataset(csv_file_path, images_path):
         y: The labels.
     """
     img_file_name, y = read_csv_file(csv_file_path)
-    x = read_images(img_file_name, images_path)
+    x = read_images(img_file_name, images_path, normalized_size=normalized_size)
     return np.array(x), np.array(y)
 
 
@@ -140,14 +146,11 @@ class ImageSupervised(Supervised):
 
         """
         super().__init__(verbose)
-
         if searcher_args is None:
             searcher_args = {}
 
         if path is None:
             path = temp_folder_generator()
-
-        self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
 
         if augment is None:
             augment = Constant.DATA_AUGMENTATION
@@ -204,6 +207,19 @@ class ImageSupervised(Supervised):
         if self.data_transformer is None:
             self.data_transformer = DataTransformer(x_train, augment=self.augment)
 
+        # Create the searcher and save on disk
+        if not self.searcher:
+            input_shape = x_train.shape[1:]
+            self.searcher_args['n_output_node'] = self.get_n_output_node()
+            self.searcher_args['input_shape'] = input_shape
+            self.searcher_args['path'] = self.path
+            self.searcher_args['metric'] = self.metric
+            self.searcher_args['loss'] = self.loss
+            self.searcher_args['verbose'] = self.verbose
+            searcher = Searcher(**self.searcher_args)
+            self.save_searcher(searcher)
+            self.searcher = True
+
         # Divide training data into training and testing data.
         x_train, x_test, y_train, y_test = train_test_split(x_train, y_train,
                                                             test_size=min(Constant.VALIDATION_SET_SIZE,
@@ -221,7 +237,23 @@ class ImageSupervised(Supervised):
         if time_limit is None:
             time_limit = 24 * 60 * 60
 
-        self.cnn.fit(self.get_n_output_node(), x_train.shape, train_data, test_data, time_limit)
+        start_time = time.time()
+        time_remain = time_limit
+        try:
+            while time_remain > 0:
+                run_searcher_once(train_data, test_data, self.path, int(time_remain))
+                if len(self.load_searcher().history) >= Constant.MAX_MODEL_NUM:
+                    break
+                time_elapsed = time.time() - start_time
+                time_remain = time_limit - time_elapsed
+            # if no search executed during the time_limit, then raise an error
+            if time_remain <= 0:
+                raise TimeoutError
+        except TimeoutError:
+            if len(self.load_searcher().history) == 0:
+                raise TimeoutError("Search Time too short. No model was found during the search time.")
+            elif self.verbose:
+                print('\nTime limit for model search is reached. Ending the model search.')
 
     @abstractmethod
     def get_n_output_node(self):
@@ -242,7 +274,7 @@ class ImageSupervised(Supervised):
         if Constant.LIMIT_MEMORY:
             pass
         test_loader = self.data_transformer.transform_test(x_test)
-        model = self.cnn.best_model
+        model = self.load_searcher().load_best_model().produce_model()
         model.eval()
 
         outputs = []
@@ -286,7 +318,14 @@ class ImageSupervised(Supervised):
         train_data = self.data_transformer.transform_train(x_train, y_train)
         test_data = self.data_transformer.transform_test(x_test, y_test)
 
-        self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
+        searcher = self.load_searcher()
+        graph = searcher.load_best_model()
+        if self.verbose:
+            print('\nLoading and training the best model recorded from the search.')
+
+        if retrain:
+            graph.weighted = False
+        _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.loss, self.verbose))
 
     def get_best_model_id(self):
         """ Return an integer indicating the id of the best model."""
