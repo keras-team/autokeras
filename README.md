@@ -52,7 +52,7 @@ Biblatex entry:
 
     @online{jin2018efficient,
       author       = {Haifeng Jin and Qingquan Song and Xia Hu},
-      title        = {Efficient Neural Architecture Search with Network Morphism},
+      title        = {Auto-Keras: Efficient Neural Architecture Search with Network Morphism},
       date         = {2018-06-27},
       year         = {2018},
       eprintclass  = {cs.LG},

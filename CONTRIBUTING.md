@@ -84,6 +84,7 @@ Before you submit a pull request, check that it meets these guidelines:
 
 2. Give your pull request title and branch name should contain **helpful** information summarizing your contribution.
 
+<<<<<<< HEAD
 3. Include "resolves #issue_number" in the title and the description of the pull request.
 
 4. For the case of bug fixes, at the time of the PR,
@@ -95,6 +96,14 @@ set the reviewer to
 
 6. Checkout from and pull request to the develop branch. 
 If it is a very urgent bug fix, checkout from master and pull request to both master and develop.
+=======
+3. Include "resolves #issue_number" in the description of the pull request.
+
+4. The contribution is complete, change the **[WIP]** to **[MRG]**,
+set the reviewer to 
+[@jhfjhfj1](https://github.com/jhfjhfj1).
+
+>>>>>>> 857bdcb15e2ec135f8c4e6092178edb18e59367f
 
 ## Code Style Guide
 This project tries to closely follow the official Python Style Guide detailed in [PEP8](https://www.python.org/dev/peps/pep-0008/).
@@ -151,6 +160,7 @@ Use pycharm to select the
 [virtualenv as interpreter](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html).
 
 ## Reusable Code Guide
+You may checkout this code review [video](https://youtu.be/PWdfY0DmjCo) to get familiar with the code structure.
 Other than the base classes you have to extend,
 there are some other classes you can extend.
 

@@ -63,7 +63,7 @@ def test_timeout():
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     with pytest.raises(TimeoutError):
-        clf.fit(train_x, train_y, time_limit=1)
+        clf.fit(train_x, train_y, time_limit=0)
     clean_dir(path)
 
 
