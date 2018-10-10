@@ -142,7 +142,7 @@ def test_save_continue(_, _1):
     clean_dir(path)
 
 
-@patch('autokeras.image_supervised.temp_folder_generator', return_value='dummy_path/')
+@patch('autokeras.text.text_supervised.temp_folder_generator', return_value='dummy_path/')
 def test_init_image_classifier_with_none_path(_):
     clf = TextClassifier()
     assert clf.path == 'dummy_path/'

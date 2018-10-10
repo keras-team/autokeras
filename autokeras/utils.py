@@ -102,6 +102,7 @@ def get_device():
 
 
 def temp_folder_generator():
+    # return '/home/linyang/temp'
     sys_temp = tempfile.gettempdir()
     path = os.path.join(sys_temp, 'autokeras')
     ensure_dir(path)
@@ -154,3 +155,17 @@ def verbose_print(new_father_id, new_graph):
         line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
         print('|' + line + '|')
     print('+' + '-' * len(line) + '+')
+
+
+def validate_xy(x_train, y_train):
+    """Check `x_train`'s type and the shape of `x_train`, `y_train`."""
+    try:
+        x_train = x_train.astype('float64')
+    except ValueError:
+        raise ValueError('x_train should only contain numerical data.')
+
+    if len(x_train.shape) < 2:
+        raise ValueError('x_train should at least has 2 dimensions.')
+
+    if x_train.shape[0] != y_train.shape[0]:
+        raise ValueError('x_train and y_train should have the same number of instances.')

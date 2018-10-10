@@ -7,14 +7,14 @@ import torch
 from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader
 
+from autokeras.cnn_module import CnnModule
 from autokeras.constant import Constant
-from autokeras.image_supervised import ImageSupervised, _validate
 from autokeras.loss_function import classification_loss
 from autokeras.metric import Accuracy
-from autokeras.preprocessor import OneHotEncoder
-from autokeras.search import Searcher
+from autokeras.preprocessor import OneHotEncoder, DataTransformer
+from autokeras.supervised import Supervised
 from autokeras.text.text_preprocessor import text_preprocess
-from autokeras.utils import pickle_to_file
+from autokeras.utils import pickle_to_file, validate_xy, temp_folder_generator, has_file, pickle_from_file
 
 
 class TextDataset(Dataset):
@@ -37,12 +37,28 @@ def text_dataloader(x_data, y_data=None, batch_size=Constant.MAX_BATCH_SIZE, shu
     return dataLoader
 
 
-class TextClassifier(ImageSupervised):
-    @property
-    def loss(self):
-        return classification_loss
+class TextClassifier(Supervised):
+    def __init__(self, verbose=False, path=None, resume=False, searcher_args=None):
+        super().__init__(verbose)
 
-    def fit(self, x_train=None, y_train=None, batch_size=None, time_limit=None):
+        if searcher_args is None:
+            searcher_args = {}
+
+        if path is None:
+            path = temp_folder_generator()
+
+        self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
+
+        self.path = path
+        if has_file(os.path.join(self.path, 'text_classifier')) and resume:
+            classifier = pickle_from_file(os.path.join(self.path, 'text_classifier'))
+            self.__dict__ = classifier.__dict__
+        else:
+            self.y_encoder = None
+            self.data_transformer = None
+            self.verbose = verbose
+
+    def fit(self, x, y, x_test=None, y_test=None, batch_size=None, time_limit=None):
         """Find the best neural architecture and train it.
 
         Based on the given dataset, the function will find the best neural architecture for it.
@@ -50,49 +66,41 @@ class TextClassifier(ImageSupervised):
         So they training data should be passed through `x_train`, `y_train`.
 
         Args:
-            x_train: A numpy.ndarray instance containing the training data.
-            y_train: A numpy.ndarray instance containing the label of the training data.
+            x: A numpy.ndarray instance containing the training data.
+            y: A numpy.ndarray instance containing the label of the training data.
             time_limit: The time limit for the search in seconds.
+            y_test:
+            x_test:
         """
-        if y_train is None:
-            y_train = []
-        if x_train is None:
-            x_train = []
-        x_train = text_preprocess(x_train, path=self.path)
+        x = text_preprocess(x, path=self.path)
 
-        x_train = np.array(x_train)
-        y_train = np.array(y_train)
-        _validate(x_train, y_train)
-        y_train = self.transform_y(y_train)
+        x = np.array(x)
+        y = np.array(y)
+        validate_xy(x, y)
+        y = self.transform_y(y)
 
         if batch_size is None:
             batch_size = Constant.MAX_BATCH_SIZE
-        # Create the searcher and save on disk
-        if not self.searcher:
-            input_shape = x_train.shape[1:]
-            self.searcher_args['n_output_node'] = self.get_n_output_node()
-            self.searcher_args['input_shape'] = input_shape
-            self.searcher_args['path'] = self.path
-            self.searcher_args['metric'] = self.metric
-            self.searcher_args['loss'] = self.loss
-            self.searcher_args['verbose'] = self.verbose
-            searcher = Searcher(**self.searcher_args)
-            self.save_searcher(searcher)
-            self.searcher = True
-
         # Divide training data into training and testing data.
-        x_train, x_test, y_train, y_test = train_test_split(x_train, y_train,
-                                                            test_size=min(Constant.VALIDATION_SET_SIZE,
-                                                                          int(len(y_train) * 0.2)),
-                                                            random_state=42)
+        if x_test is None or y_test is None:
+            x_train, x_test, y_train, y_test = train_test_split(x, y,
+                                                                test_size=min(Constant.VALIDATION_SET_SIZE,
+                                                                              int(len(y) * 0.2)),
+                                                                random_state=42)
+        else:
+            x_train = x
+            y_train = y
 
         # Wrap the data into DataLoaders
-        train_data = text_dataloader(x_train, y_train, batch_size=batch_size, shuffle=True)
-        test_data = text_dataloader(x_test, y_test, shuffle=True)
+        if self.data_transformer is None:
+            self.data_transformer = DataTransformer(x, False)
+
+        train_data = self.data_transformer.transform_train(x_train, y_train, batch_size=batch_size)
+        test_data = self.data_transformer.transform_test(x_test, y_test)
 
         # Save the classifier
-        pickle.dump(self, open(os.path.join(self.path, 'classifier'), 'wb'))
-        pickle_to_file(self, os.path.join(self.path, 'classifier'))
+        pickle.dump(self, open(os.path.join(self.path, 'text_classifier'), 'wb'))
+        pickle_to_file(self, os.path.join(self.path, 'text_classifier'))
 
         if time_limit is None:
             time_limit = 24 * 60 * 60
@@ -130,10 +138,6 @@ class TextClassifier(ImageSupervised):
 
         self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
 
-    @property
-    def metric(self):
-        return Accuracy
-
     def predict(self, x_test):
         """Return predict results for the testing data.
 
@@ -146,7 +150,7 @@ class TextClassifier(ImageSupervised):
         if Constant.LIMIT_MEMORY:
             pass
         test_loader = text_dataloader(x_test)
-        model = self.cnn.best_model
+        model = self.cnn.best_model.produce_model()
         model.eval()
 
         outputs = []
@@ -162,6 +166,14 @@ class TextClassifier(ImageSupervised):
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)
 
+    @property
+    def metric(self):
+        return Accuracy
+
+    @property
+    def loss(self):
+        return classification_loss
+
     def transform_y(self, y_train):
         # Transform y_train.
         if self.y_encoder is None:
@@ -172,6 +184,9 @@ class TextClassifier(ImageSupervised):
 
     def inverse_transform_y(self, output):
         return self.y_encoder.inverse_transform(output)
+
+    def load_searcher(self):
+        return pickle_from_file(os.path.join(self.path, 'searcher'))
 
     def get_n_output_node(self):
         return self.y_encoder.n_classes
