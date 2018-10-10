@@ -205,17 +205,7 @@ class ImageSupervised(Supervised):
             y_train = y
         # Transform x_train
         if self.data_transformer is None:
-<<<<<<< HEAD
             self.data_transformer = DataTransformer(x, augment=self.augment)
-=======
-            self.data_transformer = DataTransformer(x_train, augment=self.augment)
-
-        # Divide training data into training and testing data.
-        x_train, x_test, y_train, y_test = train_test_split(x_train, y_train,
-                                                            test_size=min(Constant.VALIDATION_SET_SIZE,
-                                                                          int(len(y_train) * 0.2)),
-                                                            random_state=42)
->>>>>>> 857bdcb15e2ec135f8c4e6092178edb18e59367f
 
         # Wrap the data into DataLoaders
         train_data = self.data_transformer.transform_train(x_train, y_train)
@@ -227,10 +217,7 @@ class ImageSupervised(Supervised):
 
         if time_limit is None:
             time_limit = 24 * 60 * 60
-<<<<<<< HEAD
-=======
 
->>>>>>> 857bdcb15e2ec135f8c4e6092178edb18e59367f
         self.cnn.fit(self.get_n_output_node(), x_train.shape, train_data, test_data, time_limit)
 
     @abstractmethod
@@ -295,10 +282,7 @@ class ImageSupervised(Supervised):
 
         train_data = self.data_transformer.transform_train(x_train, y_train)
         test_data = self.data_transformer.transform_test(x_test, y_test)
-<<<<<<< HEAD
-=======
 
->>>>>>> 857bdcb15e2ec135f8c4e6092178edb18e59367f
         self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
 
     def get_best_model_id(self):
