@@ -11,6 +11,7 @@ from skimage.transform import resize
 import torch
 from sklearn.model_selection import train_test_split
 
+from autokeras.cnn_module import CnnModule
 from autokeras.loss_function import classification_loss, regression_loss
 from autokeras.supervised import Supervised, PortableClass
 from autokeras.constant import Constant
