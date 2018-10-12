@@ -89,8 +89,8 @@ Before you submit a pull request, check that it meets these guidelines:
 4. For the case of bug fixes, at the time of the PR,
 the test case should fail for the code base in the master branch and pass for the PR code.
 
-5. The contribution is complete, change the **[WIP]** to **[MRG]**,
-set the reviewer to 
+5. When the contribution is complete, make sure the pull request passed the CI tests. Change the **[WIP]** to **[MRG]**.
+Set the reviewer to 
 [@jhfjhfj1](https://github.com/jhfjhfj1).
 
 6. Checkout from and pull request to the develop branch. 
