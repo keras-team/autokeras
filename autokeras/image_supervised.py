@@ -102,6 +102,7 @@ def load_image_dataset(csv_file_path, images_path, normalized_size=None):
     Args:
         csv_file_path: CSV file path.
         images_path: Path where images exist.
+        normalized_size: given in read_images function above
 
     Returns:
         x: Four dimensional numpy.ndarray. The channel dimension is the last dimension.
