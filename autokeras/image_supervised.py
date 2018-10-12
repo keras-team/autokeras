@@ -146,11 +146,14 @@ class ImageSupervised(Supervised):
 
         """
         super().__init__(verbose)
+
         if searcher_args is None:
             searcher_args = {}
 
         if path is None:
             path = temp_folder_generator()
+
+        self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
 
         if augment is None:
             augment = Constant.DATA_AUGMENTATION
@@ -179,7 +182,7 @@ class ImageSupervised(Supervised):
     def loss(self):
         pass
 
-    def fit(self, x_train=None, y_train=None, time_limit=None):
+    def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
         """Find the best neural architecture and train it.
 
         Based on the given dataset, the function will find the best neural architecture for it.
@@ -187,44 +190,28 @@ class ImageSupervised(Supervised):
         So they training data should be passed through `x_train`, `y_train`.
 
         Args:
-            x_train: A numpy.ndarray instance containing the training data.
-            y_train: A numpy.ndarray instance containing the label of the training data.
+            x: A numpy.ndarray instance containing the training data.
+            y: A numpy.ndarray instance containing the label of the training data.
+            x_test: A numpy.ndarray instance containing the testing data
+            y_test: A numpy.ndarray instance containing the label of the testing data.
             time_limit: The time limit for the search in seconds.
         """
-        if y_train is None:
-            y_train = []
-        if x_train is None:
-            x_train = []
-
-        x_train = np.array(x_train)
-        y_train = np.array(y_train).flatten()
-
-        _validate(x_train, y_train)
-
-        y_train = self.transform_y(y_train)
-
+        x = np.array(x)
+        y = np.array(y).flatten()
+        _validate(x, y)
+        y = self.transform_y(y)
+        if x_test is None or y_test is None:
+            # Divide training data into training and testing data.
+            x_train, x_test, y_train, y_test = train_test_split(x, y,
+                                                                test_size=min(Constant.VALIDATION_SET_SIZE,
+                                                                              int(len(y) * 0.2)),
+                                                                random_state=42)
+        else:
+            x_train = x
+            y_train = y
         # Transform x_train
         if self.data_transformer is None:
-            self.data_transformer = DataTransformer(x_train, augment=self.augment)
-
-        # Create the searcher and save on disk
-        if not self.searcher:
-            input_shape = x_train.shape[1:]
-            self.searcher_args['n_output_node'] = self.get_n_output_node()
-            self.searcher_args['input_shape'] = input_shape
-            self.searcher_args['path'] = self.path
-            self.searcher_args['metric'] = self.metric
-            self.searcher_args['loss'] = self.loss
-            self.searcher_args['verbose'] = self.verbose
-            searcher = Searcher(**self.searcher_args)
-            self.save_searcher(searcher)
-            self.searcher = True
-
-        # Divide training data into training and testing data.
-        x_train, x_test, y_train, y_test = train_test_split(x_train, y_train,
-                                                            test_size=min(Constant.VALIDATION_SET_SIZE,
-                                                                          int(len(y_train) * 0.2)),
-                                                            random_state=42)
+            self.data_transformer = DataTransformer(x, augment=self.augment)
 
         # Wrap the data into DataLoaders
         train_data = self.data_transformer.transform_train(x_train, y_train)
@@ -237,23 +224,7 @@ class ImageSupervised(Supervised):
         if time_limit is None:
             time_limit = 24 * 60 * 60
 
-        start_time = time.time()
-        time_remain = time_limit
-        try:
-            while time_remain > 0:
-                run_searcher_once(train_data, test_data, self.path, int(time_remain))
-                if len(self.load_searcher().history) >= Constant.MAX_MODEL_NUM:
-                    break
-                time_elapsed = time.time() - start_time
-                time_remain = time_limit - time_elapsed
-            # if no search executed during the time_limit, then raise an error
-            if time_remain <= 0:
-                raise TimeoutError
-        except TimeoutError:
-            if len(self.load_searcher().history) == 0:
-                raise TimeoutError("Search Time too short. No model was found during the search time.")
-            elif self.verbose:
-                print('\nTime limit for model search is reached. Ending the model search.')
+        self.cnn.fit(self.get_n_output_node(), x_train.shape, train_data, test_data, time_limit)
 
     @abstractmethod
     def get_n_output_node(self):
@@ -274,7 +245,7 @@ class ImageSupervised(Supervised):
         if Constant.LIMIT_MEMORY:
             pass
         test_loader = self.data_transformer.transform_test(x_test)
-        model = self.load_searcher().load_best_model().produce_model()
+        model = self.cnn.best_model
         model.eval()
 
         outputs = []
@@ -318,14 +289,7 @@ class ImageSupervised(Supervised):
         train_data = self.data_transformer.transform_train(x_train, y_train)
         test_data = self.data_transformer.transform_test(x_test, y_test)
 
-        searcher = self.load_searcher()
-        graph = searcher.load_best_model()
-        if self.verbose:
-            print('\nLoading and training the best model recorded from the search.')
-
-        if retrain:
-            graph.weighted = False
-        _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.loss, self.verbose))
+        self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
 
     def get_best_model_id(self):
         """ Return an integer indicating the id of the best model."""
