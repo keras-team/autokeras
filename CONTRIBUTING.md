@@ -84,12 +84,17 @@ Before you submit a pull request, check that it meets these guidelines:
 
 2. Give your pull request title and branch name should contain **helpful** information summarizing your contribution.
 
-3. Include "resolves #issue_number" in the description of the pull request.
+3. Include "resolves #issue_number" in the title and the description of the pull request.
 
-4. The contribution is complete, change the **[WIP]** to **[MRG]**,
+4. For the case of bug fixes, at the time of the PR,
+the test case should fail for the code base in the master branch and pass for the PR code.
+
+5. The contribution is complete, change the **[WIP]** to **[MRG]**,
 set the reviewer to 
 [@jhfjhfj1](https://github.com/jhfjhfj1).
 
+6. Checkout from and pull request to the develop branch. 
+If it is a very urgent bug fix, checkout from master and pull request to both master and develop.
 
 ## Code Style Guide
 This project tries to closely follow the official Python Style Guide detailed in [PEP8](https://www.python.org/dev/peps/pep-0008/).

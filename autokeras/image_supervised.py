@@ -176,7 +176,7 @@ class ImageSupervised(Supervised):
     def loss(self):
         pass
 
-    def fit(self, x_train=None, y_train=None, time_limit=None):
+    def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
         """Find the best neural architecture and train it.
 
         Based on the given dataset, the function will find the best neural architecture for it.
@@ -184,31 +184,28 @@ class ImageSupervised(Supervised):
         So they training data should be passed through `x_train`, `y_train`.
 
         Args:
-            x_train: A numpy.ndarray instance containing the training data.
-            y_train: A numpy.ndarray instance containing the label of the training data.
+            x: A numpy.ndarray instance containing the training data.
+            y: A numpy.ndarray instance containing the label of the training data.
+            x_test: A numpy.ndarray instance containing the testing data
+            y_test: A numpy.ndarray instance containing the label of the testing data.
             time_limit: The time limit for the search in seconds.
         """
-        if y_train is None:
-            y_train = []
-        if x_train is None:
-            x_train = []
-
-        x_train = np.array(x_train)
-        y_train = np.array(y_train).flatten()
-
-        _validate(x_train, y_train)
-
-        y_train = self.transform_y(y_train)
-
+        x = np.array(x)
+        y = np.array(y).flatten()
+        _validate(x, y)
+        y = self.transform_y(y)
+        if x_test is None or y_test is None:
+            # Divide training data into training and testing data.
+            x_train, x_test, y_train, y_test = train_test_split(x, y,
+                                                                test_size=min(Constant.VALIDATION_SET_SIZE,
+                                                                              int(len(y) * 0.2)),
+                                                                random_state=42)
+        else:
+            x_train = x
+            y_train = y
         # Transform x_train
         if self.data_transformer is None:
-            self.data_transformer = DataTransformer(x_train, augment=self.augment)
-
-        # Divide training data into training and testing data.
-        x_train, x_test, y_train, y_test = train_test_split(x_train, y_train,
-                                                            test_size=min(Constant.VALIDATION_SET_SIZE,
-                                                                          int(len(y_train) * 0.2)),
-                                                            random_state=42)
+            self.data_transformer = DataTransformer(x, augment=self.augment)
 
         # Wrap the data into DataLoaders
         train_data = self.data_transformer.transform_train(x_train, y_train)
