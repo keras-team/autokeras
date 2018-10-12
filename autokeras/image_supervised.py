@@ -77,9 +77,11 @@ def read_images(img_file_names, images_dir_path, normalized_size=None):
         for img_file in img_file_names:
             img_path = os.path.join(images_dir_path, img_file)
             if os.path.exists(img_path):
-                # img = ndimage.imread(fname=img_path)
                 img = imageio.imread(img_path)
-                img = resize(img, output_shape=normalized_size, anti_aliasing=True)
+                if normalized_size is None:
+                    img = img
+                else:
+                    img = resize(img, output_shape=normalized_size, anti_aliasing=True)
                 if len(img.shape) < 3:
                     img = img[..., np.newaxis]
                 x_train.append(img)
