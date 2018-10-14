@@ -1,7 +1,6 @@
 import csv
 import os
 import pickle
-import time
 from abc import abstractmethod
 from functools import reduce
 
@@ -17,7 +16,6 @@ from autokeras.supervised import Supervised, PortableClass
 from autokeras.constant import Constant
 from autokeras.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, DataTransformer
-from autokeras.search import Searcher, train
 from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file, temp_folder_generator
 
 
@@ -63,7 +61,7 @@ def read_csv_file(csv_file_path):
     return file_names, file_labels
 
 
-def read_images(img_file_names, images_dir_path, normalized_size=None):
+def read_images(img_file_names, images_dir_path, normalized_size=(64,64,3)):
     """Read the images from the path and return their numpy.ndarray instance.
         Return a numpy.ndarray instance containing the training data.
 
@@ -71,6 +69,7 @@ def read_images(img_file_names, images_dir_path, normalized_size=None):
         img_file_names: List containing images names.
         images_dir_path: Path to the directory containing images.
         normalized_size: tuple specifying resize shape (x, y, z), z = channels
+        set normalized_size=None to not resize images
     """
     x_train = []
     if os.path.isdir(images_dir_path):
