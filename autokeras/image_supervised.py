@@ -61,7 +61,7 @@ def read_csv_file(csv_file_path):
     return file_names, file_labels
 
 
-def read_images(img_file_names, images_dir_path, normalized_size=(64,64,3)):
+def read_images(img_file_names, images_dir_path, normalized_size=None):
     """Read the images from the path and return their numpy.ndarray instance.
         Return a numpy.ndarray instance containing the training data.
 
