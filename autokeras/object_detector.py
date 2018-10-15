@@ -101,9 +101,8 @@ class ObjectDetector():
             if dataset_root == COCO_ROOT:
                 parser.error('Must specify dataset if specifying dataset_root')
             cfg = voc
-            dataset = VOCDetection(root=dataset_root,
-                                   transform=SSDAugmentation(cfg['min_dim'],
-                                                             MEANS))
+            dataset = VOCDetection(root=dataset_root, transform=SSDAugmentation(cfg['min_dim'], MEANS))
+            print(len(dataset))
     
         ssd_net = build_ssd('train', cfg['min_dim'], cfg['num_classes'])
         net = ssd_net
@@ -161,7 +160,11 @@ class ObjectDetector():
                 self.adjust_learning_rate(optimizer, gamma, step_index, lr)
     
             # load train data
-            images, targets = next(batch_iterator)
+            try:
+                images, targets = next(batch_iterator)
+            except StopIteration:
+                batch_iterator = iter(data_loader)
+                images, targets = next(batch_iterator)
     
             if self.cuda:
                 images = Variable(images.cuda())
@@ -235,56 +238,72 @@ class ObjectDetector():
             net = net.cuda()
             cudnn.benchmark = True
         # evaluation
-        self.test_net(save_folder, net, self.cuda, dataset,
+        self.test_net(annopath, devkit_path, imgsetpath, save_folder, net, self.cuda, dataset,
                  BaseTransform(net.size, dataset_mean), top_k, set_type, 300,
                  thresh=confidence_threshold)
+    
+    def test_net(self, annopath, devkit_path, imgsetpath, save_folder, net, cuda, dataset, transform, top_k, set_type, 
+                 im_size=300, thresh=0.05):
+        num_images = len(dataset)
+        # all detections are collected into:
+        #    all_boxes[cls][image] = N x 5 array of detections in
+        #    (x1, y1, x2, y2, score)
+        all_boxes = [[[] for _ in range(num_images)]
+                     for _ in range(len(labelmap)+1)]
+    
+        # timers
+        _t = {'im_detect': Timer(), 'misc': Timer()}
+        output_dir = self.get_output_dir('ssd300_120000', set_type)
+        det_file = os.path.join(output_dir, 'detections.pkl')
+    
+        for i in range(num_images):
+            im, gt, h, w = dataset.pull_item(i)
+    
+            x = Variable(im.unsqueeze(0))
+            if self.cuda:
+                x = x.cuda()
+            _t['im_detect'].tic()
+            detections = net(x).data
+            detect_time = _t['im_detect'].toc(average=False)
+    
+            # skip j = 0, because it's the background class
+            for j in range(1, detections.size(1)):
+                dets = detections[0, j, :]
+                mask = dets[:, 0].gt(0.).expand(5, dets.size(0)).t()
+                dets = torch.masked_select(dets, mask).view(-1, 5)
+                # if dets.dim() == 0:
+                if dets.size(0) == 0:
+                    continue
+                boxes = dets[:, 1:]
+                boxes[:, 0] *= w
+                boxes[:, 2] *= w
+                boxes[:, 1] *= h
+                boxes[:, 3] *= h
+                scores = dets[:, 0].cpu().numpy()
+                cls_dets = np.hstack((boxes.cpu().numpy(),
+                                      scores[:, np.newaxis])).astype(np.float32,
+                                                                     copy=False)
+                all_boxes[j][i] = cls_dets
+    
+            print('im_detect: {:d}/{:d} {:.3f}s'.format(i + 1,
+                                                        num_images, detect_time))
+    
+        with open(det_file, 'wb') as f:
+            pickle.dump(all_boxes, f, pickle.HIGHEST_PROTOCOL)
+    
+        print('Evaluating detections')
+        self.evaluate_detections(annopath, all_boxes, devkit_path, imgsetpath, output_dir, dataset, set_type)
+    
+    
+    def evaluate_detections(self, annopath, box_list, devkit_path, imgsetpath, output_dir, dataset, set_type):
+        self.write_voc_results_file(box_list, dataset, devkit_path, set_type)
+        self.do_python_eval(annopath, devkit_path, imgsetpath, set_type, output_dir)
+    
 
-    def parse_rec(self, filename):
-        """ Parse a PASCAL VOC xml file """
-        tree = ET.parse(filename)
-        objects = []
-        for obj in tree.findall('object'):
-            obj_struct = {}
-            obj_struct['name'] = obj.find('name').text
-            obj_struct['pose'] = obj.find('pose').text
-            obj_struct['truncated'] = int(obj.find('truncated').text)
-            obj_struct['difficult'] = int(obj.find('difficult').text)
-            bbox = obj.find('bndbox')
-            obj_struct['bbox'] = [int(bbox.find('xmin').text) - 1,
-                                  int(bbox.find('ymin').text) - 1,
-                                  int(bbox.find('xmax').text) - 1,
-                                  int(bbox.find('ymax').text) - 1]
-            objects.append(obj_struct)
-    
-        return objects
-    
-    
-    def get_output_dir(self, name, phase):
-        """Return the directory where experimental artifacts are placed.
-        If the directory does not exist, it is created.
-        A canonical path is built using the name from an imdb and a network
-        (if not None).
-        """
-        filedir = os.path.join(name, phase)
-        if not os.path.exists(filedir):
-            os.makedirs(filedir)
-        return filedir
-    
-    
-    def get_voc_results_file_template(self, image_set, cls):
-        # VOCdevkit/VOC2007/results/det_test_aeroplane.txt
-        filename = 'det_' + image_set + '_%s.txt' % (cls)
-        filedir = os.path.join(devkit_path, 'results')
-        if not os.path.exists(filedir):
-            os.makedirs(filedir)
-        path = os.path.join(filedir, filename)
-        return path
-    
-    
-    def write_voc_results_file(self, all_boxes, dataset, set_type):
+    def write_voc_results_file(self, all_boxes, dataset, devkit_path, set_type):
         for cls_ind, cls in enumerate(labelmap):
             print('Writing {:s} VOC results file'.format(cls))
-            filename = self.get_voc_results_file_template(set_type, cls)
+            filename = self.get_voc_results_file_template(devkit_path, set_type, cls)
             with open(filename, 'wt') as f:
                 for im_ind, index in enumerate(dataset.ids):
                     dets = all_boxes[cls_ind+1][im_ind]
@@ -296,9 +315,9 @@ class ObjectDetector():
                                 format(index[1], dets[k, -1],
                                        dets[k, 0] + 1, dets[k, 1] + 1,
                                        dets[k, 2] + 1, dets[k, 3] + 1))
+
     
-    
-    def do_python_eval(self, set_type, output_dir='output', use_07=True):
+    def do_python_eval(self, annopath, devkit_path, imgsetpath, set_type, output_dir='output', use_07=True):
         cachedir = os.path.join(devkit_path, 'annotations_cache')
         aps = []
         # The PASCAL VOC metric changed in 2010
@@ -307,7 +326,7 @@ class ObjectDetector():
         if not os.path.isdir(output_dir):
             os.mkdir(output_dir)
         for i, cls in enumerate(labelmap):
-            filename = self.get_voc_results_file_template(set_type, cls)
+            filename = self.get_voc_results_file_template(devkit_path, set_type, cls)
             rec, prec, ap = self.voc_eval(
                filename, annopath, imgsetpath.format(set_type), cls, cachedir,
                ovthresh=0.5, use_07_metric=use_07_metric)
@@ -329,38 +348,14 @@ class ObjectDetector():
         print('--------------------------------------------------------------')
     
     
-    def voc_ap(self, rec, prec, use_07_metric=True):
-        """ ap = voc_ap(rec, prec, [use_07_metric])
-        Compute VOC AP given precision and recall.
-        If use_07_metric is true, uses the
-        VOC 07 11 point method (default:True).
-        """
-        if use_07_metric:
-            # 11 point metric
-            ap = 0.
-            for t in np.arange(0., 1.1, 0.1):
-                if np.sum(rec >= t) == 0:
-                    p = 0
-                else:
-                    p = np.max(prec[rec >= t])
-                ap = ap + p / 11.
-        else:
-            # correct AP calculation
-            # first append sentinel values at the end
-            mrec = np.concatenate(([0.], rec, [1.]))
-            mpre = np.concatenate(([0.], prec, [0.]))
-    
-            # compute the precision envelope
-            for i in range(mpre.size - 1, 0, -1):
-                mpre[i - 1] = np.maximum(mpre[i - 1], mpre[i])
-    
-            # to calculate area under PR curve, look for points
-            # where X axis (recall) changes value
-            i = np.where(mrec[1:] != mrec[:-1])[0]
-    
-            # and sum (\Delta recall) * prec
-            ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
-        return ap
+    def get_voc_results_file_template(self, devkit_path, image_set, cls):
+        # VOCdevkit/VOC2007/results/det_test_aeroplane.txt
+        filename = 'det_' + image_set + '_%s.txt' % (cls)
+        filedir = os.path.join(devkit_path, 'results')
+        if not os.path.exists(filedir):
+            os.makedirs(filedir)
+        path = os.path.join(filedir, filename)
+        return path
     
     
     def voc_eval(self, detpath,
@@ -498,61 +493,69 @@ class ObjectDetector():
     
         return rec, prec, ap
     
-    
-    def test_net(self, save_folder, net, cuda, dataset, transform, top_k, set_type, 
-                 im_size=300, thresh=0.05):
-        num_images = len(dataset)
-        # all detections are collected into:
-        #    all_boxes[cls][image] = N x 5 array of detections in
-        #    (x1, y1, x2, y2, score)
-        all_boxes = [[[] for _ in range(num_images)]
-                     for _ in range(len(labelmap)+1)]
-    
-        # timers
-        _t = {'im_detect': Timer(), 'misc': Timer()}
-        output_dir = self.get_output_dir('ssd300_120000', set_type)
-        det_file = os.path.join(output_dir, 'detections.pkl')
-    
-        for i in range(num_images):
-            im, gt, h, w = dataset.pull_item(i)
-    
-            x = Variable(im.unsqueeze(0))
-            if self.cuda:
-                x = x.cuda()
-            _t['im_detect'].tic()
-            detections = net(x).data
-            detect_time = _t['im_detect'].toc(average=False)
-    
-            # skip j = 0, because it's the background class
-            for j in range(1, detections.size(1)):
-                dets = detections[0, j, :]
-                mask = dets[:, 0].gt(0.).expand(5, dets.size(0)).t()
-                dets = torch.masked_select(dets, mask).view(-1, 5)
-                # if dets.dim() == 0:
-                if dets.size(0) == 0:
-                    continue
-                boxes = dets[:, 1:]
-                boxes[:, 0] *= w
-                boxes[:, 2] *= w
-                boxes[:, 1] *= h
-                boxes[:, 3] *= h
-                scores = dets[:, 0].cpu().numpy()
-                cls_dets = np.hstack((boxes.cpu().numpy(),
-                                      scores[:, np.newaxis])).astype(np.float32,
-                                                                     copy=False)
-                all_boxes[j][i] = cls_dets
-    
-            print('im_detect: {:d}/{:d} {:.3f}s'.format(i + 1,
-                                                        num_images, detect_time))
-    
-        with open(det_file, 'wb') as f:
-            pickle.dump(all_boxes, f, pickle.HIGHEST_PROTOCOL)
-    
-        print('Evaluating detections')
-        self.evaluate_detections(all_boxes, output_dir, dataset, set_type)
-    
-    
-    def evaluate_detections(self, box_list, output_dir, dataset, set_type):
-        self.write_voc_results_file(box_list, dataset, set_type)
-        self.do_python_eval(set_type, output_dir)
 
+    def parse_rec(self, filename):
+        """ Parse a PASCAL VOC xml file """
+        tree = ET.parse(filename)
+        objects = []
+        for obj in tree.findall('object'):
+            obj_struct = {}
+            obj_struct['name'] = obj.find('name').text
+            obj_struct['pose'] = obj.find('pose').text
+            obj_struct['truncated'] = int(obj.find('truncated').text)
+            obj_struct['difficult'] = int(obj.find('difficult').text)
+            bbox = obj.find('bndbox')
+            obj_struct['bbox'] = [int(bbox.find('xmin').text) - 1,
+                                  int(bbox.find('ymin').text) - 1,
+                                  int(bbox.find('xmax').text) - 1,
+                                  int(bbox.find('ymax').text) - 1]
+            objects.append(obj_struct)
+    
+        return objects
+    
+    
+    def voc_ap(self, rec, prec, use_07_metric=True):
+        """ ap = voc_ap(rec, prec, [use_07_metric])
+        Compute VOC AP given precision and recall.
+        If use_07_metric is true, uses the
+        VOC 07 11 point method (default:True).
+        """
+        if use_07_metric:
+            # 11 point metric
+            ap = 0.
+            for t in np.arange(0., 1.1, 0.1):
+                if np.sum(rec >= t) == 0:
+                    p = 0
+                else:
+                    p = np.max(prec[rec >= t])
+                ap = ap + p / 11.
+        else:
+            # correct AP calculation
+            # first append sentinel values at the end
+            mrec = np.concatenate(([0.], rec, [1.]))
+            mpre = np.concatenate(([0.], prec, [0.]))
+    
+            # compute the precision envelope
+            for i in range(mpre.size - 1, 0, -1):
+                mpre[i - 1] = np.maximum(mpre[i - 1], mpre[i])
+    
+            # to calculate area under PR curve, look for points
+            # where X axis (recall) changes value
+            i = np.where(mrec[1:] != mrec[:-1])[0]
+    
+            # and sum (\Delta recall) * prec
+            ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
+        return ap
+    
+    
+    def get_output_dir(self, name, phase):
+        """Return the directory where experimental artifacts are placed.
+        If the directory does not exist, it is created.
+        A canonical path is built using the name from an imdb and a network
+        (if not None).
+        """
+        filedir = os.path.join(name, phase)
+        if not os.path.exists(filedir):
+            os.makedirs(filedir)
+        return filedir
+    
