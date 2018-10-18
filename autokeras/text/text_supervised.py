@@ -5,36 +5,15 @@ from functools import reduce
 import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
-from torch.utils.data import Dataset, DataLoader
 
 from autokeras.cnn_module import CnnModule
 from autokeras.constant import Constant
 from autokeras.loss_function import classification_loss
 from autokeras.metric import Accuracy
-from autokeras.preprocessor import OneHotEncoder, DataTransformer
+from autokeras.preprocessor import OneHotEncoder, TextDataTransformer
 from autokeras.supervised import Supervised
 from autokeras.text.text_preprocessor import text_preprocess
 from autokeras.utils import pickle_to_file, validate_xy, temp_folder_generator, has_file, pickle_from_file
-
-
-class TextDataset(Dataset):
-    def __init__(self, dataset, target):
-        self.dataset = dataset
-        self.target = target
-
-    def __getitem__(self, index):
-        if self.target is None:
-            return self.dataset[index]
-        return self.dataset[index], self.target[index]
-
-    def __len__(self):
-        return len(self.dataset)
-
-
-def text_dataloader(x_data, y_data=None, batch_size=Constant.MAX_BATCH_SIZE, shuffle=True):
-    x_data = torch.Tensor(x_data.transpose(0, 3, 1, 2))
-    dataLoader = DataLoader(TextDataset(x_data, y_data), batch_size=batch_size, shuffle=shuffle)
-    return dataLoader
 
 
 class TextClassifier(Supervised):
@@ -93,7 +72,7 @@ class TextClassifier(Supervised):
 
         # Wrap the data into DataLoaders
         if self.data_transformer is None:
-            self.data_transformer = DataTransformer(x, False)
+            self.data_transformer = TextDataTransformer()
 
         train_data = self.data_transformer.transform_train(x_train, y_train, batch_size=batch_size)
         test_data = self.data_transformer.transform_test(x_test, y_test)
@@ -133,8 +112,8 @@ class TextClassifier(Supervised):
         y_train = self.transform_y(y_train)
         y_test = self.transform_y(y_test)
 
-        train_data = text_dataloader(x_train, y_train, batch_size=Constant.MAX_BATCH_SIZE)
-        test_data = text_dataloader(x_test, y_test, batch_size=Constant.MAX_BATCH_SIZE)
+        train_data = self.data_transformer.transform_train(x_train, y_train, batch_size=Constant.MAX_BATCH_SIZE)
+        test_data = self.data_transformer.transform_test(x_test, y_test, batch_size=Constant.MAX_BATCH_SIZE)
 
         self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
 
@@ -149,7 +128,7 @@ class TextClassifier(Supervised):
         """
         if Constant.LIMIT_MEMORY:
             pass
-        test_loader = text_dataloader(x_test)
+        test_loader = self.data_transformer.transform_test(x_test)
         model = self.cnn.best_model.produce_model()
         model.eval()
 

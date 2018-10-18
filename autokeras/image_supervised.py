@@ -13,7 +13,7 @@ from autokeras.cnn_module import CnnModule
 from autokeras.constant import Constant
 from autokeras.loss_function import classification_loss, regression_loss
 from autokeras.metric import Accuracy, MSE
-from autokeras.preprocessor import OneHotEncoder, DataTransformer
+from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
 from autokeras.supervised import Supervised, PortableClass
 from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy
 
@@ -167,7 +167,7 @@ class ImageSupervised(Supervised):
             y_train = y
         # Transform x_train
         if self.data_transformer is None:
-            self.data_transformer = DataTransformer(x, augment=self.augment)
+            self.data_transformer = ImageDataTransformer(x, augment=self.augment)
 
         # Wrap the data into DataLoaders
         train_data = self.data_transformer.transform_train(x_train, y_train)

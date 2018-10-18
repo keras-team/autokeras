@@ -7,7 +7,7 @@ import torchvision.utils as vutils
 from autokeras.constant import Constant
 from autokeras.loss_function import binary_classification_loss
 from autokeras.model_trainer import GANModelTrainer
-from autokeras.preprocessor import DataTransformer
+from autokeras.preprocessor import ImageDataTransformer
 from autokeras.unsupervised import Unsupervised
 from autokeras.utils import get_device
 
@@ -51,7 +51,7 @@ class DCGAN(Unsupervised):
         """
         # input size stay the same, enable  cudnn optimization
         cudnn.benchmark = True
-        self.data_transformer = DataTransformer(x_train, augment=self.augment)
+        self.data_transformer = ImageDataTransformer(x_train, augment=self.augment)
         train_dataloader = self.data_transformer.transform_train(x_train)
         GANModelTrainer(self.net_g,
                         self.net_d,

@@ -1,9 +1,8 @@
-import torch
-
 import numpy as np
+import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import ToPILImage, RandomCrop, RandomHorizontalFlip, ToTensor, Normalize, Compose
-
+from abc import ABC, abstractmethod
 from autokeras.constant import Constant
 
 
@@ -51,7 +50,41 @@ class OneHotEncoder:
         return np.array(list(map(lambda x: self.int_to_label[x], np.argmax(np.array(data), axis=1))))
 
 
-class DataTransformer:
+class DataTransformer(ABC):
+    @abstractmethod
+    def transform_train(self, data, targets=None, batch_size=None):
+        raise NotImplementedError
+
+    @abstractmethod
+    def transform_test(self, data, target=None, batch_size=None):
+        raise NotImplementedError
+
+
+class TextDataTransformer(DataTransformer):
+
+    def transform_train(self, data, targets=None, batch_size=None):
+        dataset = self._transform(compose_list=[], data=data, targets=targets)
+        if batch_size is None:
+            batch_size = Constant.MAX_BATCH_SIZE
+        batch_size = min(len(data), batch_size)
+
+        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+    def transform_test(self, data, targets=None, batch_size=None):
+        dataset = self._transform(compose_list=[], data=data, targets=targets)
+        if batch_size is None:
+            batch_size = Constant.MAX_BATCH_SIZE
+        batch_size = min(len(data), batch_size)
+
+        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+    def _transform(self, compose_list, data, targets):
+        data = torch.Tensor(data.transpose(0, 3, 1, 2))
+        data_transforms = Compose(compose_list)
+        return MultiTransformDataset(data, targets, data_transforms)
+
+
+class ImageDataTransformer:
     def __init__(self, data, augment=Constant.DATA_AUGMENTATION):
         self.max_val = data.max()
         data = data / self.max_val
