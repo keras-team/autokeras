@@ -1,5 +1,5 @@
-from autokeras.generator import CnnGenerator
-from autokeras.graph import *
+from autokeras.nn.generator import CnnGenerator
+from autokeras.nn.graph import *
 from autokeras.net_transformer import legal_graph
 from tests.common import get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model, \
     get_concat_skip_model

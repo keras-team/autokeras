@@ -6,9 +6,9 @@ import torch
 import keras
 
 from autokeras.constant import Constant
-from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
+from autokeras.nn.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
     deeper_conv_block, dense_to_deeper_block, add_noise
-from autokeras.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, \
+from autokeras.nn.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, \
     to_real_keras_layer, set_torch_weight_to_stub, set_stub_weight_to_torch, set_stub_weight_to_keras, \
     set_keras_weight_to_stub, StubBatchNormalization, StubReLU
 

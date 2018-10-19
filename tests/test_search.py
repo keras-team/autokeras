@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from autokeras.loss_function import classification_loss
-from autokeras.metric import Accuracy
+from autokeras.nn.loss_function import classification_loss
+from autokeras.nn.metric import Accuracy
 from autokeras.search import *
 
 from tests.common import clean_dir, MockProcess, get_classification_data_loaders, get_add_skip_model, \

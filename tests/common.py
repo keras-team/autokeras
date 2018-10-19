@@ -4,8 +4,8 @@ from copy import deepcopy
 import numpy as np
 
 from autokeras.constant import Constant
-from autokeras.graph import Graph
-from autokeras.layers import StubReLU, StubConv, StubBatchNormalization, StubDropout, StubFlatten, StubSoftmax, \
+from autokeras.nn.graph import Graph
+from autokeras.nn.layers import StubReLU, StubConv, StubBatchNormalization, StubDropout, StubFlatten, StubSoftmax, \
     StubDense, StubConcatenate, StubAdd, StubPooling
 from autokeras.preprocessor import ImageDataTransformer
 
