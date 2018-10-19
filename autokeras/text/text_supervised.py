@@ -58,7 +58,8 @@ class TextClassifier(ImageSupervised):
             y_train = []
         if x_train is None:
             x_train = []
-        x_train = text_preprocess(x_train, path=self.path)
+        if self.augment:
+            x_train = text_preprocess(x_train, path=self.path)
 
         x_train = np.array(x_train)
         y_train = np.array(y_train)
@@ -118,9 +119,9 @@ class TextClassifier(ImageSupervised):
                                                                 test_size=min(Constant.VALIDATION_SET_SIZE,
                                                                               int(len(y_train) * 0.2)),
                                                                 random_state=42)
-
-        x_train = text_preprocess(x_train, path=self.path)
-        x_test = text_preprocess(x_test, path=self.path)
+        if self.augment:
+            x_train = text_preprocess(x_train, path=self.path)
+            x_test = text_preprocess(x_test, path=self.path)
 
         y_train = self.transform_y(y_train)
         y_test = self.transform_y(y_test)
@@ -157,7 +158,8 @@ class TextClassifier(ImageSupervised):
         return self.inverse_transform_y(output)
 
     def evaluate(self, x_test, y_test):
-        x_test = text_preprocess(x_test, path=self.path)
+        if self.augment:
+            x_test = text_preprocess(x_test, path=self.path)
         """Return the accuracy score between predict value and `y_test`."""
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)
