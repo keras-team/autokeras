@@ -25,8 +25,10 @@ class Supervised(ABC):
         So they training data should be passed through `x_train`, `y_train`.
 
         Args:
-            x: A numpy.ndarray instance containing the training data.
-            y: A numpy.ndarray instance containing the label of the training data.
+            x: A numpy.ndarray instance containing the training data or the training data combined with the
+               validation data.
+            y: A numpy.ndarray instance containing the label of the training data. or the label of the training data
+               combined with the validation label.
             x_test: A numpy.ndarray instance containing the testing data
             y_test: A numpy.ndarray instance containing the label of the testing data.
             time_limit: The time limit for the search in seconds.

@@ -7,7 +7,7 @@ from autokeras.constant import Constant
 from autokeras.graph import Graph
 from autokeras.layers import StubReLU, StubConv, StubBatchNormalization, StubDropout, StubFlatten, StubSoftmax, \
     StubDense, StubConcatenate, StubAdd, StubPooling
-from autokeras.preprocessor import DataTransformer
+from autokeras.preprocessor import ImageDataTransformer
 
 
 def get_concat_skip_model():
@@ -193,7 +193,7 @@ def get_regression_data_loaders():
     y_train = np.random.rand(200, 1)
     x_test = np.random.rand(190, 28, 28, 3)
     y_test = np.random.rand(190, 1)
-    data_transformer = DataTransformer(x_train, augment=True)
+    data_transformer = ImageDataTransformer(x_train, augment=True)
     train_data = data_transformer.transform_train(x_train, y_train)
     test_data = data_transformer.transform_test(x_test, y_test)
     return train_data, test_data
@@ -204,7 +204,7 @@ def get_classification_data_loaders():
     y_train = np.random.rand(200, 3)
     x_test = np.random.rand(190, 28, 28, 3)
     y_test = np.random.rand(190, 3)
-    data_transformer = DataTransformer(x_train, augment=True)
+    data_transformer = ImageDataTransformer(x_train, augment=True)
     train_data = data_transformer.transform_train(x_train, y_train)
     test_data = data_transformer.transform_test(x_test, y_test)
     return train_data, test_data
@@ -212,7 +212,7 @@ def get_classification_data_loaders():
 
 def get_classification_train_data_loaders():
     x_train = np.random.rand(200, 32, 32, 3)
-    data_transformer = DataTransformer(x_train, augment=True)
+    data_transformer = ImageDataTransformer(x_train, augment=True)
     train_data = data_transformer.transform_train(x_train)
     return train_data
 

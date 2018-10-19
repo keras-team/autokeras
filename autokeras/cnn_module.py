@@ -83,7 +83,7 @@ class CnnModule(object):
 
     @property
     def best_model(self):
-        return self._load_searcher().load_best_model().produce_model()
+        return self._load_searcher().load_best_model()
 
     def _save_searcher(self, searcher):
         pickle.dump(searcher, open(os.path.join(self.path, 'searcher'), 'wb'))
