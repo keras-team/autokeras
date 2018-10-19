@@ -74,7 +74,7 @@ def test_timeout_resume(_):
     # make it impossible to complete within 10sec
     Constant.MAX_MODEL_NUM = 1000
     Constant.SEARCH_MAX_ITER = 1
-    Constant.T_MIN = 0.8
+    # Constant.T_MIN = 0.8
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)

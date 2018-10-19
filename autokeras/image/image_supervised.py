@@ -158,9 +158,11 @@ class ImageSupervised(Supervised):
         y = self.transform_y(y)
         if x_test is None or y_test is None:
             # Divide training data into training and testing data.
+            validation_set_size = int(len(y) * Constant.VALIDATION_SET_SIZE)
+            validation_set_size = min(validation_set_size, 500)
+            validation_set_size = max(validation_set_size, 1)
             x_train, x_test, y_train, y_test = train_test_split(x, y,
-                                                                test_size=min(Constant.VALIDATION_SET_SIZE,
-                                                                              int(len(y) * 0.2)),
+                                                                test_size=validation_set_size,
                                                                 random_state=42)
         else:
             x_train = x
