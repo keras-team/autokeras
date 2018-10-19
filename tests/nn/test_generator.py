@@ -1,5 +1,5 @@
-from autokeras.generator import *
-from autokeras.graph import TorchModel
+from autokeras.nn.generator import *
+from autokeras.nn.graph import TorchModel
 
 
 def test_default_generator():

@@ -5,8 +5,8 @@ import torch.nn as nn
 import torchvision.utils as vutils
 
 from autokeras.constant import Constant
-from autokeras.loss_function import binary_classification_loss
-from autokeras.model_trainer import GANModelTrainer
+from autokeras.nn.loss_function import binary_classification_loss
+from autokeras.nn.model_trainer import GANModelTrainer
 from autokeras.preprocessor import ImageDataTransformer
 from autokeras.unsupervised import Unsupervised
 from autokeras.utils import get_device

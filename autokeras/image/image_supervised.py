@@ -11,8 +11,8 @@ from sklearn.model_selection import train_test_split
 
 from autokeras.cnn_module import CnnModule
 from autokeras.constant import Constant
-from autokeras.loss_function import classification_loss, regression_loss
-from autokeras.metric import Accuracy, MSE
+from autokeras.nn.loss_function import classification_loss, regression_loss
+from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
 from autokeras.supervised import Supervised, PortableClass
 from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy

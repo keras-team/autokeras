@@ -1,8 +1,8 @@
-from autokeras.gan import Generator, Discriminator
-from autokeras.generator import CnnGenerator
-from autokeras.loss_function import classification_loss, regression_loss, binary_classification_loss
-from autokeras.metric import Accuracy, MSE
-from autokeras.model_trainer import ModelTrainer, GANModelTrainer
+from autokeras.image.gan import Generator, Discriminator
+from autokeras.nn.generator import CnnGenerator
+from autokeras.nn.loss_function import classification_loss, regression_loss, binary_classification_loss
+from autokeras.nn.metric import Accuracy, MSE
+from autokeras.nn.model_trainer import ModelTrainer, GANModelTrainer
 from tests.common import get_classification_data_loaders, get_regression_data_loaders, \
     get_classification_train_data_loaders
 

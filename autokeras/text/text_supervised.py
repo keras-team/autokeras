@@ -8,8 +8,8 @@ from sklearn.model_selection import train_test_split
 
 from autokeras.cnn_module import CnnModule
 from autokeras.constant import Constant
-from autokeras.loss_function import classification_loss
-from autokeras.metric import Accuracy
+from autokeras.nn.loss_function import classification_loss
+from autokeras.nn.metric import Accuracy
 from autokeras.preprocessor import OneHotEncoder, TextDataTransformer
 from autokeras.supervised import Supervised
 from autokeras.text.text_preprocessor import text_preprocess

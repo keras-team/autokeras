@@ -1,6 +1,6 @@
 from autokeras.constant import Constant
-from autokeras.generator import CnnGenerator
-from autokeras.layer_transformer import *
+from autokeras.nn.generator import CnnGenerator
+from autokeras.nn.layer_transformer import *
 from tests.common import get_conv_dense_model
 
 

@@ -3,7 +3,7 @@ from unittest.mock import patch
 import numpy as np
 
 from autokeras.constant import Constant
-from autokeras.gan import DCGAN
+from autokeras.image.gan import DCGAN
 from tests.common import clean_dir
 
 
@@ -12,7 +12,7 @@ def mock_train(**kwargs):
     return 1, 0
 
 
-@patch('autokeras.gan.GANModelTrainer.train_model', side_effect=mock_train)
+@patch('autokeras.image.gan.GANModelTrainer.train_model', side_effect=mock_train)
 def test_fit_generate(_):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
