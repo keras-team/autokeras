@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from autokeras.image_supervised import *
+from autokeras.image.image_supervised import *
 from tests.common import clean_dir, MockProcess, simple_transform
 
 
@@ -74,7 +74,7 @@ def test_timeout_resume(_):
     # make it impossible to complete within 10sec
     Constant.MAX_MODEL_NUM = 1000
     Constant.SEARCH_MAX_ITER = 1
-    Constant.T_MIN = 0.8
+    # Constant.T_MIN = 0.8
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
@@ -175,7 +175,7 @@ def test_fit_csv_file(_, _1):
     clean_dir(os.path.join(path, "temp"))
 
 
-@patch('autokeras.image_supervised.temp_folder_generator', return_value='dummy_path/')
+@patch('autokeras.image.image_supervised.temp_folder_generator', return_value='dummy_path/')
 def test_init_image_classifier_with_none_path(_):
     clf = ImageClassifier()
     assert clf.path == 'dummy_path/'
@@ -218,7 +218,7 @@ def test_export_keras_model(_):
     score = clf.evaluate(train_x, train_y)
     assert score <= 1.0
 
-    model_file_name = os.path.join(path, 'test_keras_model.h5')
+    model_file_name = os.path.join(path, 'test_keras_model.graph')
     clf.export_keras_model(model_file_name)
     from keras.models import load_model
     model = load_model(model_file_name)
@@ -242,7 +242,7 @@ def test_export_keras_model(_):
     score = clf.evaluate(train_x, train_y)
     assert score >= 0.0
 
-    model_file_name = os.path.join(path, 'test_keras_model.h5')
+    model_file_name = os.path.join(path, 'test_keras_model.graph')
     clf.export_keras_model(model_file_name)
     from keras.models import load_model
     model = load_model(model_file_name)

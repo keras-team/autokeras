@@ -1,7 +1,7 @@
 import torch
 
-from autokeras.generator import CnnGenerator
-from autokeras.graph import Graph
+from autokeras.nn.generator import CnnGenerator
+from autokeras.nn.graph import Graph
 from autokeras.net_transformer import *
 from tests.common import get_conv_dense_model, get_pooling_model, get_conv_data
 

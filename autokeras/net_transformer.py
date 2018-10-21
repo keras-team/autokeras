@@ -2,10 +2,10 @@ from copy import deepcopy
 from operator import itemgetter
 from random import randrange, sample
 
-from autokeras.graph import NetworkDescriptor
+from autokeras.nn.graph import NetworkDescriptor
 
 from autokeras.constant import Constant
-from autokeras.layers import is_layer
+from autokeras.nn.layers import is_layer
 
 
 def to_wider_graph(graph):

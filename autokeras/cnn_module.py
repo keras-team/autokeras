@@ -80,10 +80,11 @@ class CnnModule(object):
         if retrain:
             graph.weighted = False
         _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.loss, self.verbose))
+        searcher.replace_model(graph, searcher.get_best_model_id())
 
     @property
     def best_model(self):
-        return self._load_searcher().load_best_model().produce_model()
+        return self._load_searcher().load_best_model()
 
     def _save_searcher(self, searcher):
         pickle.dump(searcher, open(os.path.join(self.path, 'searcher'), 'wb'))

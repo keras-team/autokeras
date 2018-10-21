@@ -11,32 +11,11 @@ from sklearn.model_selection import train_test_split
 
 from autokeras.cnn_module import CnnModule
 from autokeras.constant import Constant
-from autokeras.loss_function import classification_loss, regression_loss
-from autokeras.metric import Accuracy, MSE
-from autokeras.preprocessor import OneHotEncoder, DataTransformer
+from autokeras.nn.loss_function import classification_loss, regression_loss
+from autokeras.nn.metric import Accuracy, MSE
+from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
 from autokeras.supervised import Supervised, PortableClass
-from autokeras.utils import ensure_dir, has_file, pickle_from_file, pickle_to_file, temp_folder_generator
-
-
-def _validate(x_train, y_train):
-    """Check `x_train`'s type and the shape of `x_train`, `y_train`."""
-    try:
-        x_train = x_train.astype('float64')
-    except ValueError:
-        raise ValueError('x_train should only contain numerical data.')
-
-    if len(x_train.shape) < 2:
-        raise ValueError('x_train should at least has 2 dimensions.')
-
-    if x_train.shape[0] != y_train.shape[0]:
-        raise ValueError('x_train and y_train should have the same number of instances.')
-
-
-def run_searcher_once(train_data, test_data, path, timeout):
-    if Constant.LIMIT_MEMORY:
-        pass
-    searcher = pickle_from_file(os.path.join(path, 'searcher'))
-    searcher.search(train_data, test_data, timeout)
+from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy
 
 
 def read_csv_file(csv_file_path):
@@ -152,19 +131,15 @@ class ImageSupervised(Supervised):
         if augment is None:
             augment = Constant.DATA_AUGMENTATION
 
-        if has_file(os.path.join(path, 'classifier')) and resume:
-            classifier = pickle_from_file(os.path.join(path, 'classifier'))
+        self.path = path
+        if has_file(os.path.join(self.path, 'classifier')) and resume:
+            classifier = pickle_from_file(os.path.join(self.path, 'classifier'))
             self.__dict__ = classifier.__dict__
-            self.path = path
         else:
             self.y_encoder = None
             self.data_transformer = None
             self.verbose = verbose
-            self.searcher = False
-            self.path = path
-            self.searcher_args = searcher_args
             self.augment = augment
-            ensure_dir(path)
 
     @property
     @abstractmethod
@@ -177,35 +152,24 @@ class ImageSupervised(Supervised):
         pass
 
     def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
-        """Find the best neural architecture and train it.
-
-        Based on the given dataset, the function will find the best neural architecture for it.
-        The dataset is in numpy.ndarray format.
-        So they training data should be passed through `x_train`, `y_train`.
-
-        Args:
-            x: A numpy.ndarray instance containing the training data.
-            y: A numpy.ndarray instance containing the label of the training data.
-            x_test: A numpy.ndarray instance containing the testing data
-            y_test: A numpy.ndarray instance containing the label of the testing data.
-            time_limit: The time limit for the search in seconds.
-        """
         x = np.array(x)
         y = np.array(y).flatten()
-        _validate(x, y)
+        validate_xy(x, y)
         y = self.transform_y(y)
         if x_test is None or y_test is None:
             # Divide training data into training and testing data.
+            validation_set_size = int(len(y) * Constant.VALIDATION_SET_SIZE)
+            validation_set_size = min(validation_set_size, 500)
+            validation_set_size = max(validation_set_size, 1)
             x_train, x_test, y_train, y_test = train_test_split(x, y,
-                                                                test_size=min(Constant.VALIDATION_SET_SIZE,
-                                                                              int(len(y) * 0.2)),
+                                                                test_size=validation_set_size,
                                                                 random_state=42)
         else:
             x_train = x
             y_train = y
         # Transform x_train
         if self.data_transformer is None:
-            self.data_transformer = DataTransformer(x, augment=self.augment)
+            self.data_transformer = ImageDataTransformer(x, augment=self.augment)
 
         # Wrap the data into DataLoaders
         train_data = self.data_transformer.transform_train(x_train, y_train)
@@ -239,7 +203,7 @@ class ImageSupervised(Supervised):
         if Constant.LIMIT_MEMORY:
             pass
         test_loader = self.data_transformer.transform_test(x_test)
-        model = self.cnn.best_model
+        model = self.cnn.best_model.produce_model()
         model.eval()
 
         outputs = []
@@ -256,12 +220,6 @@ class ImageSupervised(Supervised):
         """Return the accuracy score between predict value and `y_test`."""
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)
-
-    def save_searcher(self, searcher):
-        pickle.dump(searcher, open(os.path.join(self.path, 'searcher'), 'wb'))
-
-    def load_searcher(self):
-        return pickle_from_file(os.path.join(self.path, 'searcher'))
 
     def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
         """Final training after found the best architecture.
@@ -285,17 +243,16 @@ class ImageSupervised(Supervised):
 
         self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
 
-    def get_best_model_id(self):
-        """ Return an integer indicating the id of the best model."""
-        return self.load_searcher().get_best_model_id()
+    def load_searcher(self):
+        return pickle_from_file(os.path.join(self.path, 'searcher'))
 
     def export_keras_model(self, model_file_name):
         """ Exports the best Keras model to the given filename. """
-        self.load_searcher().load_best_model().produce_keras_model().save(model_file_name)
+        self.cnn.best_model.produce_keras_model().save(model_file_name)
 
     def export_autokeras_model(self, model_file_name):
         """ Creates and Exports the AutoKeras model to the given filename. """
-        portable_model = PortableImageSupervised(graph=self.load_searcher().load_best_model(),
+        portable_model = PortableImageSupervised(graph=self.cnn.best_model,
                                                  y_encoder=self.y_encoder,
                                                  data_transformer=self.data_transformer,
                                                  metric=self.metric,

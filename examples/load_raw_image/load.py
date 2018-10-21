@@ -1,8 +1,7 @@
 #To run first unzip ../load_raw_image_data.zip into ../
 # so the train and test directories reside in this directory 
 
-from autokeras.image_supervised import load_image_dataset
-from keras.datasets import mnist
+from autokeras.image.image_supervised import load_image_dataset
 from autokeras import ImageClassifier
 
 

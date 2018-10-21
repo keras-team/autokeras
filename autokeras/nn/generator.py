@@ -1,6 +1,6 @@
 from autokeras.constant import Constant
-from autokeras.graph import Graph
-from autokeras.layers import StubBatchNormalization, StubConv, StubDropout, StubPooling, StubDense, StubFlatten, \
+from autokeras.nn.graph import Graph
+from autokeras.nn.layers import StubBatchNormalization, StubConv, StubDropout, StubPooling, StubDense, StubFlatten, \
     StubReLU
 
 

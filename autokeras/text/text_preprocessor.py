@@ -13,6 +13,7 @@ from autokeras.utils import download_file_with_extract
 import GPUtil
 from keras import backend as K
 
+
 def download_pre_train(file_path, extract_path):
     file_link = Constant.PRE_TRAIN_FILE_LINK
     print("try downloading pre train weights from link %s" % file_link)

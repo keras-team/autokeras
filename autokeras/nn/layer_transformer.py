@@ -1,6 +1,6 @@
 import numpy as np
 
-from autokeras.layers import StubConv, StubBatchNormalization, StubDense, StubReLU
+from autokeras.nn.layers import StubConv, StubBatchNormalization, StubDense, StubReLU
 
 NOISE_RATIO = 1e-4
 
