@@ -218,7 +218,7 @@ def test_export_keras_model(_):
     score = clf.evaluate(train_x, train_y)
     assert score <= 1.0
 
-    model_file_name = os.path.join(path, 'test_keras_model.h5')
+    model_file_name = os.path.join(path, 'test_keras_model.graph')
     clf.export_keras_model(model_file_name)
     from keras.models import load_model
     model = load_model(model_file_name)
@@ -242,7 +242,7 @@ def test_export_keras_model(_):
     score = clf.evaluate(train_x, train_y)
     assert score >= 0.0
 
-    model_file_name = os.path.join(path, 'test_keras_model.h5')
+    model_file_name = os.path.join(path, 'test_keras_model.graph')
     clf.export_keras_model(model_file_name)
     from keras.models import load_model
     model = load_model(model_file_name)

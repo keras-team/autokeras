@@ -89,7 +89,7 @@ class Searcher:
         self.bo = BayesianOptimizer(self, t_min, metric, kernel_lambda, beta)
 
     def load_model_by_id(self, model_id):
-        return pickle_from_file(os.path.join(self.path, str(model_id) + '.h5'))
+        return pickle_from_file(os.path.join(self.path, str(model_id) + '.graph'))
 
     def load_best_model(self):
         return self.load_model_by_id(self.get_best_model_id())
@@ -106,13 +106,13 @@ class Searcher:
         return min(self.history, key=lambda x: x['metric_value'])['model_id']
 
     def replace_model(self, graph, model_id):
-        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.h5'))
+        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.graph'))
 
     def add_model(self, metric_value, loss, graph, model_id):
         if self.verbose:
             print('\nSaving model.')
 
-        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.h5'))
+        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.graph'))
 
         # Update best_model text file
         ret = {'model_id': model_id, 'loss': loss, 'metric_value': metric_value}

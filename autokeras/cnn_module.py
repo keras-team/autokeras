@@ -80,6 +80,7 @@ class CnnModule(object):
         if retrain:
             graph.weighted = False
         _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.loss, self.verbose))
+        searcher.replace_model(graph, searcher.get_best_model_id())
 
     @property
     def best_model(self):
