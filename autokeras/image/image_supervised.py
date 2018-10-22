@@ -1,4 +1,3 @@
-import csv
 import os
 import pickle
 from abc import abstractmethod
@@ -6,7 +5,6 @@ from functools import reduce
 
 import numpy as np
 import torch
-from scipy import ndimage
 from sklearn.model_selection import train_test_split
 
 from autokeras.cnn_module import CnnModule
@@ -15,28 +13,8 @@ from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
 from autokeras.supervised import Supervised, PortableClass
-from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy
-
-
-def read_csv_file(csv_file_path):
-    """Read the csv file and returns two separate list containing files name and their labels.
-
-    Args:
-        csv_file_path: Path to the CSV file.
-
-    Returns:
-        file_names: List containing files names.
-        file_label: List containing their respective labels.
-    """
-    file_names = []
-    file_labels = []
-    with open(csv_file_path, 'r') as files_path:
-        path_list = csv.DictReader(files_path)
-        fieldnames = path_list.fieldnames
-        for path in path_list:
-            file_names.append(path[fieldnames[0]])
-            file_labels.append(path[fieldnames[1]])
-    return file_names, file_labels
+from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy, \
+    read_csv_file, read_image
 
 
 def read_images(img_file_names, images_dir_path):
@@ -52,7 +30,7 @@ def read_images(img_file_names, images_dir_path):
         for img_file in img_file_names:
             img_path = os.path.join(images_dir_path, img_file)
             if os.path.exists(img_path):
-                img = ndimage.imread(fname=img_path)
+                img = read_image(img_path)
                 if len(img.shape) < 3:
                     img = img[..., np.newaxis]
                 x_train.append(img)

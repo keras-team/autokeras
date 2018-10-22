@@ -1,9 +1,11 @@
+import os
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import ToPILImage, RandomCrop, RandomHorizontalFlip, ToTensor, Normalize, Compose
 from abc import ABC, abstractmethod
 from autokeras.constant import Constant
+from autokeras.utils import read_csv_file, read_image
 
 
 class OneHotEncoder:
@@ -84,7 +86,7 @@ class TextDataTransformer(DataTransformer):
         return MultiTransformDataset(data, targets, data_transforms)
 
 
-class ImageDataTransformer:
+class ImageDataTransformer(DataTransformer):
     def __init__(self, data, augment=Constant.DATA_AUGMENTATION):
         self.max_val = data.max()
         data = data / self.max_val
@@ -145,3 +147,28 @@ class MultiTransformDataset(Dataset):
 
     def __len__(self):
         return len(self.dataset)
+
+
+class BatchDataset(Dataset):
+    def __init__(self, csv_file_path, image_path, has_target=True):
+        file_names, target = read_csv_file(csv_file_path)
+
+        self.y_encoder = OneHotEncoder()
+        self.y_encoder.fit(target)
+        target = self.y_encoder.transform(target)
+
+        self.target = target
+        self.has_target = has_target
+        self.file_paths = list(map(lambda file_name: os.path.join(image_path, file_name), file_names))
+
+    def __getitem__(self, index):
+        image = read_image(self.file_paths[index])
+        if len(image.shape) < 3:
+            image = image[..., np.newaxis]
+        image = torch.Tensor(image.transpose(2, 0, 1))
+        if self.has_target:
+            return image, self.target[index]
+        return image
+
+    def __len__(self):
+        return len(self.file_paths)

@@ -3,12 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from autokeras.image.image_supervised import *
-from tests.common import clean_dir, MockProcess, simple_transform
-
-
-def mock_train(**kwargs):
-    str(kwargs)
-    return 1, 0
+from tests.common import clean_dir, MockProcess, simple_transform, mock_train
 
 
 def test_train_x_array_exception():
@@ -173,12 +168,6 @@ def test_fit_csv_file(_, _1):
     assert len(clf.load_searcher().history) == 1
     assert len(results) == 5
     clean_dir(os.path.join(path, "temp"))
-
-
-@patch('autokeras.image.image_supervised.temp_folder_generator', return_value='dummy_path/')
-def test_init_image_classifier_with_none_path(_):
-    clf = ImageClassifier()
-    assert clf.path == 'dummy_path/'
 
 
 @patch('torch.multiprocessing.Pool', new=MockProcess)

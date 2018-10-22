@@ -262,3 +262,8 @@ class MockMemoryOutProcess(MockProcess):
 def simple_transform(graph):
     graph.to_wider_model(5, 64)
     return [deepcopy(graph)]
+
+
+def mock_train(**kwargs):
+    str(kwargs)
+    return 1, 0
