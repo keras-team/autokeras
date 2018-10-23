@@ -5,9 +5,9 @@ import sys
 import tempfile
 import zipfile
 
+import imageio
 import requests
 import torch
-from scipy import ndimage
 
 from autokeras.constant import Constant
 
@@ -195,5 +195,5 @@ def read_csv_file(csv_file_path):
 
 
 def read_image(img_path):
-    img = ndimage.imread(fname=img_path)
+    img = imageio.imread(uri=img_path)
     return img
