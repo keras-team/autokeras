@@ -262,4 +262,4 @@ def test_keras_model():
 
 def test_graph_size():
     graph = CnnGenerator(10, (32, 32, 3)).generate()
-    assert graph.size() == 68938
+    assert graph.size() == 7498

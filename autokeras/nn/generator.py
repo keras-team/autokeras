@@ -1,7 +1,7 @@
 from autokeras.constant import Constant
 from autokeras.nn.graph import Graph
 from autokeras.nn.layers import StubBatchNormalization, StubConv, StubDropout, StubPooling, StubDense, StubFlatten, \
-    StubReLU
+    StubReLU, StubGlobalPooling
 
 
 class CnnGenerator:
@@ -26,7 +26,7 @@ class CnnGenerator:
             if pooling_len == 0 or ((i + 1) % pooling_len == 0 and i != model_len - 1):
                 output_node_id = graph.add_layer(StubPooling(), output_node_id)
 
-        output_node_id = graph.add_layer(StubFlatten(), output_node_id)
+        output_node_id = graph.add_layer(StubGlobalPooling(), output_node_id)
         output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
         output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], model_width),
                                          output_node_id)
