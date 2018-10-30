@@ -44,7 +44,7 @@ class Constant:
     PRE_TRAIN_FILE_LINK = "http://nlp.stanford.edu/data/glove.6B.zip"
     PRE_TRAIN_FILE_NAME = "glove.6B.100d.txt"
 
-    # Image preprocessor
-	
+    # Image Resize
+
     MAX_IMAGE_HEIGHT = 128
     MAX_IMAGE_WIDTH = 128

@@ -69,7 +69,7 @@ def test_resize_image_data():
     # Case-2: Resize inputs to provided parameters median height and width.
     data = numpy.array([numpy.random.randint(256, size=(4, 4, 3))])
 
-    data, resize_height, resize_width = resize_image_data(data)
+    data, resize_height, resize_width = resize_image_data(data, resize_height, resize_width)
 
     assert resize_height == 2
     assert resize_width == 2
