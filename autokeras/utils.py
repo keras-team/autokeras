@@ -204,8 +204,8 @@ def resize_image_data(data):
     """Resize each image to a fixed size H x W x C. H and W are the median height and widths computed from all images.
     Number of channels C does not change from the original image.
     """
-    if data is None:
-        return None
+    if data.size == 0 or len(data[0].shape) < 3:
+        return data
 
     median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
     median_height = min(median_height.astype(int), Constant.MAX_IMAGE_HEIGHT)
