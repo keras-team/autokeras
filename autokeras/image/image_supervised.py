@@ -120,7 +120,7 @@ class ImageSupervised(Supervised):
             self.augment = augment
 
         self.resize_height = None
-        self.resize_height = None
+        self.resize_width = None
 
     @property
     @abstractmethod
