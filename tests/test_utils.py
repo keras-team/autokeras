@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from autokeras.utils import temp_folder_generator, download_file
+from autokeras.utils import temp_folder_generator, download_file, resize_image_data
 from tests.common import clean_dir
 
 import numpy
