@@ -6,6 +6,7 @@ import tempfile
 import zipfile
 
 import imageio
+import numpy
 import requests
 import torch
 
@@ -197,3 +198,22 @@ def read_csv_file(csv_file_path):
 def read_image(img_path):
     img = imageio.imread(uri=img_path)
     return img
+
+
+def resize_image_data(data):
+    """Resize each image to a fixed size H x W x C. H and W are the median height and widths computed from all images.
+    Number of channels C does not change from the original image.
+    """
+    if data is None:
+        return None
+
+    median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
+    median_height = min(median_height.astype(int), Constant.MAX_IMAGE_HEIGHT)
+    median_width = min(median_width.astype(int), Constant.MAX_IMAGE_WIDTH)
+    num_of_channels = data[0].shape[-1]
+
+    resize_data = []
+    for image in data:
+        resize_data.append(numpy.resize(image, (median_height, median_width, num_of_channels)))
+
+    return numpy.array(resize_data)

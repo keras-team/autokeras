@@ -3,6 +3,8 @@ from unittest.mock import patch
 from autokeras.utils import temp_folder_generator, download_file
 from tests.common import clean_dir
 
+import numpy
+
 path = 'tests/resources/temp'
 
 
@@ -47,3 +49,16 @@ def test_fetch(_):
     clean_dir(path)
     mgc = download_file("dummy_url", path + '/dummy_file')
     clean_dir(path)
+
+
+def test_resize_image_data():
+    data = numpy.array([numpy.random.randint(256, size=(1, 1, 3)),
+                        numpy.random.randint(256, size=(2, 2, 3)),
+                        numpy.random.randint(256, size=(3, 3, 3)),
+                        numpy.random.randint(256, size=(4, 4, 3))])
+
+    data = resize_image_data(data)
+
+    assert data[0].shape == (2, 2, 3)
+    for i in range(len(data)-1):
+        assert data[i].shape == data[i+1].shape

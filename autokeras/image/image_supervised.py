@@ -131,6 +131,8 @@ class ImageSupervised(Supervised):
 
     def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
         x = np.array(x)
+		x = resize_image_data(x)
+		
         y = np.array(y).flatten()
         validate_xy(x, y)
         y = self.transform_y(y)
@@ -212,6 +214,9 @@ class ImageSupervised(Supervised):
         """
         if trainer_args is None:
             trainer_args = {'max_no_improvement_num': 30}
+		
+		x_train = resize_image_data(x_train)
+        x_test = resize_image_data(x_test)
 
         y_train = self.transform_y(y_train)
         y_test = self.transform_y(y_test)
