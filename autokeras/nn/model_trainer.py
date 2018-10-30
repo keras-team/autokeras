@@ -120,7 +120,7 @@ class ModelTrainer(ModelTrainerBase):
                                 position=0,
                                 unit=' batch')
 
-        for batch_idx, (inputs, targets) in enumerate(loader):
+        for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
@@ -140,7 +140,7 @@ class ModelTrainer(ModelTrainerBase):
         all_predicted = []
         loader = self.test_loader
         with torch.no_grad():
-            for batch_idx, (inputs, targets) in enumerate(loader):
+            for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 outputs = self.model(inputs)
                 # cast tensor to float
