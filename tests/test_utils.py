@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from autokeras.constant import Constant
 from autokeras.utils import temp_folder_generator, download_file, resize_image_data
 from tests.common import clean_dir
 
@@ -52,13 +53,32 @@ def test_fetch(_):
 
 
 def test_resize_image_data():
+    # Case-1: Resize to median height and width for smaller images.
     data = numpy.array([numpy.random.randint(256, size=(1, 1, 3)),
                         numpy.random.randint(256, size=(2, 2, 3)),
                         numpy.random.randint(256, size=(3, 3, 3)),
                         numpy.random.randint(256, size=(4, 4, 3))])
 
-    data = resize_image_data(data)
+    data, resize_height, resize_width = resize_image_data(data)
 
-    assert data[0].shape == (2, 2, 3)
+    assert resize_height == 2
+    assert resize_width == 2
     for i in range(len(data)-1):
         assert data[i].shape == data[i+1].shape
+
+    # Case-2: Resize inputs to provided parameters median height and width.
+    data = numpy.array([numpy.random.randint(256, size=(4, 4, 3))])
+
+    data, resize_height, resize_width = resize_image_data(data)
+
+    assert resize_height == 2
+    assert resize_width == 2
+    assert data[0].shape == (2, 2, 3)
+
+    # Case-3: Resize to max height and width for larger images.
+    data = numpy.array([numpy.random.randint(256, size=(Constant.MAX_IMAGE_HEIGHT+1, Constant.MAX_IMAGE_WIDTH+1, 3))])
+    data, resize_height, resize_width = resize_image_data(data)
+
+    assert resize_height == Constant.MAX_IMAGE_HEIGHT
+    assert resize_width == Constant.MAX_IMAGE_WIDTH
+    assert data[0].shape == (Constant.MAX_IMAGE_HEIGHT, Constant.MAX_IMAGE_WIDTH, 3)

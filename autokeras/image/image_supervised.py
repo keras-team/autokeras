@@ -119,6 +119,9 @@ class ImageSupervised(Supervised):
             self.verbose = verbose
             self.augment = augment
 
+        self.resize_height = None
+        self.resize_height = None
+
     @property
     @abstractmethod
     def metric(self):
@@ -131,7 +134,7 @@ class ImageSupervised(Supervised):
 
     def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
         x = np.array(x)
-        x = resize_image_data(x)
+        x, self.resize_height, self.resize_width = resize_image_data(x)
 
         y = np.array(y).flatten()
         validate_xy(x, y)
@@ -145,6 +148,9 @@ class ImageSupervised(Supervised):
                                                                 test_size=validation_set_size,
                                                                 random_state=42)
         else:
+            x_test, self.resize_height, self.resize_width = resize_image_data(x_test,
+                                                                              self.resize_height,
+                                                                              self.resize_width)
             x_train = x
             y_train = y
         # Transform x_train
@@ -215,8 +221,12 @@ class ImageSupervised(Supervised):
         if trainer_args is None:
             trainer_args = {'max_no_improvement_num': 30}
 
-        x_train = resize_image_data(x_train)
-        x_test = resize_image_data(x_test)
+        x_train, self.resize_height, self.resize_width = resize_image_data(x_train,
+                                                                           self.resize_height,
+                                                                           self.resize_width)
+        x_test, self.resize_height, self.resize_width = resize_image_data(x_test,
+                                                                          self.resize_height,
+                                                                          self.resize_width)
 
         y_train = self.transform_y(y_train)
         y_test = self.transform_y(y_test)
@@ -239,7 +249,8 @@ class ImageSupervised(Supervised):
                                                  y_encoder=self.y_encoder,
                                                  data_transformer=self.data_transformer,
                                                  metric=self.metric,
-                                                 inverse_transform_y_method=self.inverse_transform_y)
+                                                 inverse_transform_y_method=self.inverse_transform_y,
+                                                 resize_params=(self.resize_height, self.resize_width))
         pickle_to_file(portable_model, model_file_name)
 
 
@@ -287,7 +298,7 @@ class ImageRegressor(ImageSupervised):
 
 
 class PortableImageSupervised(PortableClass):
-    def __init__(self, graph, data_transformer, y_encoder, metric, inverse_transform_y_method):
+    def __init__(self, graph, data_transformer, y_encoder, metric, inverse_transform_y_method, resize_params):
         """Initialize the instance.
         Args:
             graph: The graph form of the learned model
@@ -297,6 +308,8 @@ class PortableImageSupervised(PortableClass):
         self.y_encoder = y_encoder
         self.metric = metric
         self.inverse_transform_y_method = inverse_transform_y_method
+        self.resize_height = resize_params[0]
+        self.resize_width = resize_params[1]
 
     def predict(self, x_test):
         """Return predict results for the testing data.
@@ -309,6 +322,9 @@ class PortableImageSupervised(PortableClass):
         """
         if Constant.LIMIT_MEMORY:
             pass
+        x_test, self.resize_height, self.resize_width = resize_image_data(x_test,
+                                                                          self.resize_height,
+                                                                          self.resize_width)
         test_loader = self.data_transformer.transform_test(x_test)
         model = self.graph.produce_model()
         model.eval()
