@@ -6,12 +6,14 @@ https://github.com/fmassa/vision/blob/voc_dataset/torchvision/datasets/voc.py
 Updated by: Ellis Brown, Max deGroot
 """
 from .config import HOME
+import os
 import os.path as osp
 import sys
 import torch
 import torch.utils.data as data
 import cv2
 import numpy as np
+from sklearn import model_selection
 if sys.version_info[0] == 2:
     import xml.etree.cElementTree as ET
 else:
@@ -27,6 +29,9 @@ VOC_CLASSES = ( # always index 0
 # note: if you used our download scripts, this should be right
 VOC_ROOT = osp.join(HOME, "object_detection/data/VOCdevkit/")
 
+def is_image_file(filename):
+    return any(filename.endswith(extension) for extension in [".png", ".jpg", ".jpeg"])
+
 class VOCAnnotationTransform(object):
     """Transforms a VOC annotation into a Tensor of bbox coords and label index
     Initilized with a dictionary lookup of classnames to indexes
@@ -40,9 +45,12 @@ class VOCAnnotationTransform(object):
         width (int): width
     """
 
-    def __init__(self, class_to_ind=None, keep_difficult=False):
-        self.class_to_ind = class_to_ind or dict(
-            zip(VOC_CLASSES, range(len(VOC_CLASSES))))
+    def __init__(self, root, keep_difficult=False):
+        classes = []
+        for line in open(osp.join(root, 'labels.txt')):
+            classes.append(line.strip())
+        classes = sorted(classes)
+        self.class_to_ind = dict(zip(classes, range(len(classes))))
         self.keep_difficult = keep_difficult
 
     def __call__(self, target, width, height):
@@ -51,7 +59,7 @@ class VOCAnnotationTransform(object):
             target (annotation) : the target annotation to be made usable
                 will be an ET.Element
         Returns:
-            a list containing lists of bounding boxes  [bbox coords, class name]
+            a list containing lists of bounding boxes [bbox coords, class name]
         """
         res = []
         for obj in target.iter('object'):
@@ -76,14 +84,14 @@ class VOCAnnotationTransform(object):
         return res # [[xmin, ymin, xmax, ymax, label_ind], ... ]
 
 
-class VOCDetection(data.Dataset):
+class VOC_Custom(data.Dataset):
     """VOC Detection Dataset Object
 
     input is image, target is annotation
 
     Arguments:
         root (string): filepath to VOCdevkit folder.
-        image_set (string): imageset to use (eg. 'train', 'val', 'test')
+        mode (string): set to use ('train', 'eval', 'test')
         transform (callable, optional): transformation to perform on the
             input image
         target_transform (callable, optional): transformation to perform on the
@@ -93,22 +101,38 @@ class VOCDetection(data.Dataset):
             (default: 'VOC2007')
     """
 
-    def __init__(self, root,
-                 image_sets=[('2007', 'trainval'), ('2012', 'trainval')],
-                 transform=None, target_transform=VOCAnnotationTransform(),
-                 dataset_name='VOC0712'):
+    def __init__(self, root, train_test_split=True, mode='train', transform=None):
         self.root = root
-        self.image_set = image_sets
         self.transform = transform
-        self.target_transform = target_transform
-        self.name = dataset_name
-        self._annopath = osp.join('%s', 'Annotations', '%s.xml')
-        self._imgpath = osp.join('%s', 'JPEGImages', '%s.jpg')
-        self.ids = list()
-        for (year, name) in image_sets:
-            rootpath = osp.join(self.root, 'VOC' + year)
-            for line in open(osp.join(rootpath, 'ImageSets', 'Main', name + '.txt')):
-                self.ids.append((rootpath, line.strip()))
+        self.target_transform = VOCAnnotationTransform(self.root)
+        self.mode = mode
+        if train_test_split == False:
+            self.train_test_split = -1
+        elif train_test_split == True:
+            self.train_test_split = 42
+        else:
+            self.train_test_split = train_test_split
+
+        self._annopath = osp.join(self.root, 'Annotations', '%s.xml')
+        self._imgpath = osp.join(self.root, 'Images', '%s')
+
+        if self.train_test_split > 0:
+            # scan images as list
+            # use train_test_split to split ids
+            ids = [image_name for image_name in os.listdir(os.path.join(self.root, "Images")) if is_image_file(image_name)]
+            ids_train, ids_test = model_selection.train_test_split(ids, test_size=0.15, random_state=self.train_test_split)
+            ids_train, ids_val = model_selection.train_test_split(ids_train, test_size=0.15/0.85, random_state=self.train_test_split)
+            if self.mode == 'train':
+                self.ids = ids_train
+            elif self.mode == 'eval':
+                self.ids = ids_val
+            if self.mode == 'test':
+                self.ids = ids_test
+        else:
+            # read ids_train/val/test from file
+            self.ids = []
+            for line in open(osp.join(self.root, self.mode + '.txt')):
+                self.ids.append(line.strip())
 
     def __getitem__(self, index):
         im, gt, h, w = self.pull_item(index)
@@ -120,8 +144,9 @@ class VOCDetection(data.Dataset):
 
     def pull_item(self, index):
         img_id = self.ids[index]
+        prefix = ".".join(img_id.split(".")[:-1])
 
-        target = ET.parse(self._annopath % img_id).getroot()
+        target = ET.parse(self._annopath % prefix).getroot()
         img = cv2.imread(self._imgpath % img_id)
         height, width, channels = img.shape
 
@@ -165,7 +190,8 @@ class VOCDetection(data.Dataset):
                 eg: ('001718', [('dog', (96, 13, 438, 332))])
         '''
         img_id = self.ids[index]
-        anno = ET.parse(self._annopath % img_id).getroot()
+        prefix = ".".join(img_id.split(".")[:-1])
+        anno = ET.parse(self._annopath % prefix).getroot()
         gt = self.target_transform(anno, 1, 1)
         return img_id[1], gt
 

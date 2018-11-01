@@ -81,48 +81,51 @@ class ObjectDetector():
         else:
             torch.set_default_tensor_type('torch.FloatTensor')
         
-    def fit(self, dataset='VOC', dataset_root=VOC_ROOT, basenet='vgg16_reducedfc.pth', batch_size=32, resume=None, start_iter=0, num_workers=4, lr=1e-4, momentum=0.9, weight_decay=5e-4, gamma=0.1, save_folder=os.getcwd() + '/object_detection/weights/'):
+    def fit(self, num_classes=1, dataset_format='VOC', dataset=None, dataset_root=VOC_ROOT, train_test_split=True, basenet='vgg16_reducedfc.pth', batch_size=32, resume=None, start_iter=0, num_workers=4, lr=1e-4, momentum=0.9, weight_decay=5e-4, gamma=0.1, save_folder=os.getcwd() + '/object_detection/weights/'):
 
-        if not os.path.exists(save_folder):
-            os.mkdir(save_folder)
+        if not os.path.exists(save_folder): os.mkdir(save_folder)
 
         if dataset == 'COCO':
-            if dataset_root == VOC_ROOT:
-                if not os.path.exists(COCO_ROOT):
-                    parser.error('Must specify dataset_root if specifying dataset')
-                print("WARNING: Using default COCO dataset_root because " +
-                      "--dataset_root was not specified.")
-                dataset_root = COCO_ROOT
             cfg = coco
-            dataset = COCODetection(root=dataset_root,
-                                    transform=SSDAugmentation(cfg['min_dim'],
-                                                              MEANS))
+            dataset = COCODetection(root=dataset_root, transform=SSDAugmentation(cfg['min_dim'], MEANS))
         elif dataset == 'VOC':
-            if dataset_root == COCO_ROOT:
-                parser.error('Must specify dataset if specifying dataset_root')
             cfg = voc
             dataset = VOCDetection(root=dataset_root, transform=SSDAugmentation(cfg['min_dim'], MEANS))
-            print(len(dataset))
+        elif dataset_format == 'COCO':
+            cfg = coco
+            if num_classes < 2:
+                raise ValueError("num_classes must be equal or greater than 2!")
+            cfg['num_classes'] = num_classes + 1
+            # TODO
+            dataset = COCODetection(root=dataset_root, transform=SSDAugmentation(cfg['min_dim'], MEANS))
+        elif dataset_format == 'VOC':
+            cfg = voc
+            if num_classes < 1:
+                raise ValueError("num_classes must be equal or greater than 2!")
+            cfg['num_classes'] = num_classes + 1
+            # TODO use MEANS of customized dataset
+            dataset = VOC_Custom(root=dataset_root, transform=SSDAugmentation(cfg['min_dim'], MEANS))
+        else:
+            raise ValueError("ERROR: dataset_format must be one of 'VOC' or 'COCO'!")
+        print("dataset length", len(dataset))
     
+        print(cfg['num_classes'])
         ssd_net = build_ssd('train', cfg['min_dim'], cfg['num_classes'])
         net = ssd_net
     
         if self.cuda:
             net = torch.nn.DataParallel(ssd_net)
+            net = net.cuda()
             cudnn.benchmark = True
     
         if resume:
             print('Resuming training, loading {}...'.format(resume))
             ssd_net.load_weights(resume)
-        else:
+        elif basenet:
             vgg_weights = torch.load(save_folder + basenet)
             print('Loading base network...')
             ssd_net.vgg.load_state_dict(vgg_weights)
-    
-        if self.cuda:
-            net = net.cuda()
-    
-        if not resume:
+        else:
             print('Initializing weights...')
             # initialize newly added layers' weights with xavier method
             ssd_net.extras.apply(weights_init)
@@ -142,7 +145,7 @@ class ObjectDetector():
         print('Loading the dataset...')
     
         epoch_size = len(dataset) // batch_size
-        print('Training SSD on:', dataset.name)
+        # print('Training SSD on:', dataset.name)
         # print('Using the specified args:')
         # print(args)
     

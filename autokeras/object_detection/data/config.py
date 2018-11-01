@@ -14,7 +14,7 @@ MEANS = (104, 117, 123)
 voc = {
     'num_classes': 21,
     'lr_steps': (80000, 100000, 120000),
-    'max_iter': 100,#120000,
+    'max_iter': 120000,
     'feature_maps': [38, 19, 10, 5, 3, 1],
     'min_dim': 300,
     'steps': [8, 16, 32, 64, 100, 300],
@@ -27,7 +27,7 @@ voc = {
 }
 
 coco = {
-    'num_classes': 201,
+    'num_classes': 91,
     'lr_steps': (280000, 360000, 400000),
     'max_iter': 400000,
     'feature_maps': [38, 19, 10, 5, 3, 1],
