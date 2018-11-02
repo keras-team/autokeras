@@ -16,10 +16,6 @@ def test_default_cnn_generator():
 def test_default_mlp_generator():
     generator = MlpGenerator(5, (4,))
 
-    graph = generator.generate(3, [9, 8, 6])
-    model = graph.produce_model()
-    assert isinstance(model, TorchModel)
-
     graph = generator.generate(3, 5)
     model = graph.produce_model()
     assert isinstance(model, TorchModel)
