@@ -1,6 +1,15 @@
 import torch
 from torch import nn
 from keras import layers
+from torch.nn import functional
+
+
+class GlobalAvgPool2d(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, input_tensor):
+        return functional.avg_pool2d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
 class StubLayer:
@@ -202,9 +211,15 @@ class StubPooling(StubLayer):
 
 
 class StubGlobalPooling(StubLayer):
-    def __init__(self, func, input_node=None, output_node=None):
+    def __init__(self, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
-        self.func = func
+
+    @property
+    def output_shape(self):
+        return self.input.shape[2:]
+
+    def to_real_layer(self):
+        return GlobalAvgPool2d()
 
 
 class StubDropout(StubLayer):
@@ -307,6 +322,8 @@ def to_real_keras_layer(layer):
         return layers.Activation('softmax')
     if is_layer(layer, 'Flatten'):
         return layers.Flatten()
+    if is_layer(layer, 'GlobalAveragePooling'):
+        return layers.GlobalAveragePooling2D()
 
 
 def set_torch_weight_to_stub(torch_layer, stub_layer):

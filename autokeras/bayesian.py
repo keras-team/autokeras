@@ -1,6 +1,5 @@
 import random
 import time
-import warnings
 from copy import deepcopy
 from functools import total_ordering
 from queue import PriorityQueue
@@ -148,8 +147,6 @@ class IncrementalGaussianProcess:
         # numerical issues. If yes: set the variance to 0.
         y_var_negative = y_var < 0
         if np.any(y_var_negative):
-            warnings.warn("Predicted variances smaller than 0. "
-                          "Setting those variances to 0.")
             y_var[y_var_negative] = 0.0
         return y_mean, np.sqrt(y_var)
 

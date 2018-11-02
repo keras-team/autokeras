@@ -111,9 +111,8 @@ class ModelTrainer(ModelTrainerBase):
         loader = self.train_loader
         self.current_epoch += 1
 
-        cp_loader = deepcopy(loader)
         if self.verbose:
-            progress_bar = tqdm(total=len(cp_loader),
+            progress_bar = tqdm(total=len(loader),
                                 desc='Epoch-' + str(self.current_epoch) + ', Current Metric - ' + str(self.current_metric_value),
                                 file=sys.stdout,
                                 leave=False,
@@ -121,7 +120,7 @@ class ModelTrainer(ModelTrainerBase):
                                 position=0,
                                 unit=' batch')
 
-        for batch_idx, (inputs, targets) in enumerate(cp_loader):
+        for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
