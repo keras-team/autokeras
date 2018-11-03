@@ -169,3 +169,22 @@ class TextClassifier(Supervised):
 
     def get_n_output_node(self):
         return self.y_encoder.n_classes
+
+
+class TextRegressor(TextClassifier):
+    @property
+    def loss(self):
+        return regression_loss
+
+    @property
+    def metric(self):
+        return MSE
+
+    def get_n_output_node(self):
+        return 1
+
+    def transform_y(self, y_train):
+        return y_train.flatten().reshape(len(y_train), 1)
+
+    def inverse_transform_y(self, output):
+        return output.flatten()
