@@ -2,6 +2,8 @@ class Constant:
     # Data
 
     VALIDATION_SET_SIZE = 0.08333
+    CUTOUT_HOLES = 1
+    CUTOUT_RATIO = 0.5
 
     # Searcher
 
