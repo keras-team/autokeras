@@ -9,6 +9,8 @@ from autokeras.nn.layers import StubReLU, StubConv, StubBatchNormalization, Stub
     StubDense, StubConcatenate, StubAdd, StubPooling
 from autokeras.preprocessor import ImageDataTransformer
 
+TEST_TEMP_DIR = 'tests/resources/temp'
+
 
 def get_concat_skip_model():
     graph = Graph((32, 32, 3), False)
