@@ -50,37 +50,6 @@ def test_timeout(_):
 
 
 @patch('torch.multiprocessing.Pool', new=MockProcess)
-@patch('autokeras.text.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_timeout_resume(_, _1):
-    Constant.MAX_ITER_NUM = 1
-    # make it impossible to complete within 10sec
-    Constant.MAX_MODEL_NUM = 1000
-    Constant.SEARCH_MAX_ITER = 1
-    Constant.T_MIN = 0.8
-    train_x = np.random.rand(100, 25, 25, 1)
-    train_y = np.random.randint(0, 5, 100)
-    test_x = np.random.rand(100, 25, 25, 1)
-    clean_dir(TEST_TEMP_DIR)
-    clf = TextClassifier(path=TEST_TEMP_DIR, verbose=False, resume=False)
-    clf.n_epochs = 100
-    clf.fit(train_x, train_y, time_limit=2)
-    history_len = len(clf.load_searcher().history)
-    assert history_len != 0
-    results = clf.predict(test_x)
-    assert len(results) == 100
-
-    clf = TextClassifier(path=TEST_TEMP_DIR, verbose=False, resume=True)
-    assert len(clf.load_searcher().history) == history_len
-    Constant.MAX_MODEL_NUM = history_len + 1
-    clf.fit(train_x, train_y)
-    assert len(clf.load_searcher().history) == history_len + 1
-    results = clf.predict(test_x)
-    assert len(results) == 100
-    clean_dir(TEST_TEMP_DIR)
-
-
-@patch('torch.multiprocessing.Pool', new=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 @patch('autokeras.text.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
