@@ -5,9 +5,7 @@ from autokeras.nn.metric import Accuracy
 from autokeras.search import *
 
 from tests.common import clean_dir, MockProcess, get_classification_data_loaders, get_add_skip_model, \
-    get_concat_skip_model, simple_transform, MockMemoryOutProcess
-
-default_test_path = 'tests/resources/temp'
+    get_concat_skip_model, simple_transform, MockMemoryOutProcess, TEST_TEMP_DIR
 
 
 def mock_train(**_):
@@ -19,14 +17,14 @@ def mock_train(**_):
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_bayesian_searcher(_, _1):
     train_data, test_data = get_classification_data_loaders()
-    clean_dir(default_test_path)
-    generator = Searcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
+    clean_dir(TEST_TEMP_DIR)
+    generator = Searcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
                          loss=classification_loss)
     Constant.N_NEIGHBOURS = 1
     Constant.T_MIN = 0.8
     for _ in range(2):
         generator.search(train_data, test_data)
-    clean_dir(default_test_path)
+    clean_dir(TEST_TEMP_DIR)
     assert len(generator.history) == 2
 
 
@@ -44,20 +42,20 @@ def test_search_tree():
 def test_export_json(_, _1):
     train_data, test_data = get_classification_data_loaders()
 
-    clean_dir(default_test_path)
-    generator = Searcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
+    clean_dir(TEST_TEMP_DIR)
+    generator = Searcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
                          loss=classification_loss)
     Constant.N_NEIGHBOURS = 1
     Constant.T_MIN = 0.8
     for _ in range(3):
         generator.search(train_data, test_data)
-    file_path = os.path.join(default_test_path, 'test.json')
+    file_path = os.path.join(TEST_TEMP_DIR, 'test.json')
     generator.export_json(file_path)
     import json
     data = json.load(open(file_path, 'r'))
     assert len(data['networks']) == 3
     assert len(data['tree']['children']) == 2
-    clean_dir(default_test_path)
+    clean_dir(TEST_TEMP_DIR)
     assert len(generator.history) == 3
 
 
@@ -71,12 +69,12 @@ def test_graph_duplicate():
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_max_acq(_, _1):
     train_data, test_data = get_classification_data_loaders()
-    clean_dir(default_test_path)
+    clean_dir(TEST_TEMP_DIR)
     Constant.N_NEIGHBOURS = 2
     Constant.SEARCH_MAX_ITER = 0
     Constant.T_MIN = 0.8
     Constant.BETA = 1
-    generator = Searcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
+    generator = Searcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
                          loss=classification_loss)
     for _ in range(3):
         generator.search(train_data, test_data)
@@ -84,7 +82,7 @@ def test_max_acq(_, _1):
         for descriptor2 in generator.descriptors[index1 + 1:]:
             assert edit_distance(descriptor1, descriptor2, 1) != 0
 
-    clean_dir(default_test_path)
+    clean_dir(TEST_TEMP_DIR)
 
 
 @patch('torch.multiprocessing.Pool', new=MockMemoryOutProcess)
@@ -92,12 +90,12 @@ def test_max_acq(_, _1):
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_out_of_memory(_, _1):
     train_data, test_data = get_classification_data_loaders()
-    clean_dir(default_test_path)
-    searcher = Searcher(3, (28, 28, 3), verbose=False, path=default_test_path, metric=Accuracy,
+    clean_dir(TEST_TEMP_DIR)
+    searcher = Searcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
                         loss=classification_loss)
     Constant.N_NEIGHBOURS = 1
     Constant.T_MIN = 0.8
     for _ in range(4):
         searcher.search(train_data, test_data)
-    clean_dir(default_test_path)
+    clean_dir(TEST_TEMP_DIR)
     assert len(searcher.history) == 0
