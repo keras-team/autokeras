@@ -1,15 +1,35 @@
+from abc import abstractmethod
+
 import torch
 from torch import nn
 from keras import layers
 from torch.nn import functional
 
+from autokeras.constant import Constant
 
-class GlobalAvgPool2d(nn.Module):
+
+class GlobalAvgPool(nn.Module):
     def __init__(self):
         super().__init__()
 
+    @abstractmethod
+    def forward(self, input_tensor):
+        pass
+
+
+class GlobalAvgPool1d(GlobalAvgPool):
+    def forward(self, input_tensor):
+        return functional.avg_pool1d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
+
+
+class GlobalAvgPool2d(GlobalAvgPool):
     def forward(self, input_tensor):
         return functional.avg_pool2d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
+
+
+class GlobalAvgPool3d(GlobalAvgPool):
+    def forward(self, input_tensor):
+        return functional.avg_pool3d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
 class StubLayer:
@@ -86,8 +106,24 @@ class StubBatchNormalization(StubWeightBiasLayer):
     def size(self):
         return self.num_features * 4
 
+    @abstractmethod
+    def to_real_layer(self):
+        pass
+
+
+class StubBatchNormalization1d(StubBatchNormalization):
+    def to_real_layer(self):
+        return torch.nn.BatchNorm1d(self.num_features)
+
+
+class StubBatchNormalization2d(StubBatchNormalization):
     def to_real_layer(self):
         return torch.nn.BatchNorm2d(self.num_features)
+
+
+class StubBatchNormalization3d(StubBatchNormalization):
+    def to_real_layer(self):
+        return torch.nn.BatchNorm3d(self.num_features)
 
 
 class StubDense(StubWeightBiasLayer):
@@ -135,8 +171,30 @@ class StubConv(StubWeightBiasLayer):
     def size(self):
         return self.filters * self.kernel_size * self.kernel_size + self.filters
 
+    @abstractmethod
+    def to_real_layer(self):
+        pass
+
+
+class StubConv1d(StubConv):
+    def to_real_layer(self):
+        return torch.nn.Conv1d(self.input_channel,
+                               self.filters,
+                               self.kernel_size,
+                               padding=int(self.kernel_size / 2))
+
+
+class StubConv2d(StubConv):
     def to_real_layer(self):
         return torch.nn.Conv2d(self.input_channel,
+                               self.filters,
+                               self.kernel_size,
+                               padding=int(self.kernel_size / 2))
+
+
+class StubConv3d(StubConv):
+    def to_real_layer(self):
+        return torch.nn.Conv3d(self.input_channel,
                                self.filters,
                                self.kernel_size,
                                padding=int(self.kernel_size / 2))
@@ -206,8 +264,24 @@ class StubPooling(StubLayer):
         ret = ret + (self.input.shape[-1],)
         return ret
 
+    @abstractmethod
     def to_real_layer(self):
-        return torch.nn.MaxPool2d(2)
+        pass
+
+
+class StubPooling1d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.MaxPool1d(Constant.POOLING_KERNEL_SIZE)
+
+
+class StubPooling2d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.MaxPool2d(Constant.POOLING_KERNEL_SIZE)
+
+
+class StubPooling3d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.MaxPool3d(Constant.POOLING_KERNEL_SIZE)
 
 
 class StubGlobalPooling(StubLayer):
@@ -218,8 +292,24 @@ class StubGlobalPooling(StubLayer):
     def output_shape(self):
         return self.input.shape[2:]
 
+    @abstractmethod
+    def to_real_layer(self):
+        pass
+
+
+class StubGlobalPooling1d(StubGlobalPooling):
+    def to_real_layer(self):
+        return GlobalAvgPool1d()
+
+
+class StubGlobalPooling2d(StubGlobalPooling):
     def to_real_layer(self):
         return GlobalAvgPool2d()
+
+
+class StubGlobalPooling3d(StubGlobalPooling):
+    def to_real_layer(self):
+        return GlobalAvgPool3d()
 
 
 class StubDropout(StubLayer):
@@ -227,6 +317,7 @@ class StubDropout(StubLayer):
         super().__init__(input_node, output_node)
         self.rate = rate
 
+    @abstractmethod
     def to_real_layer(self):
         return torch.nn.Dropout2d(self.rate)
 
