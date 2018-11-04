@@ -135,17 +135,7 @@ def test_fit_csv_file(_, _1, _2):
     clean_dir(os.path.join(path, "temp"))
 
 
-<<<<<<< HEAD
-@patch('autokeras.image.image_supervised.temp_folder_generator', return_value='dummy_path/')
-def test_init_image_classifier_with_none_path(_):
-    clf = ImageClassifier()
-    assert clf.path == 'dummy_path/'
-
-
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
-=======
-@patch('torch.multiprocessing.Pool', new=MockProcess)
->>>>>>> c326ed6c8a2c341d53ee924f12c8f5e845bf0cce
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_predict_regression(_, _1):
     Constant.MAX_ITER_NUM = 1
