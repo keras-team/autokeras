@@ -3,12 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from autokeras.image.image_supervised import *
-from tests.common import clean_dir, MockProcess, simple_transform
-
-
-def mock_train(**kwargs):
-    str(kwargs)
-    return 1, 0
+from tests.common import clean_dir, MockProcess, simple_transform, mock_train, TEST_TEMP_DIR
 
 
 def test_train_x_array_exception():
@@ -40,15 +35,14 @@ def test_fit_predict(_, _1):
     Constant.SEARCH_MAX_ITER = 1
     Constant.T_MIN = 0.8
     Constant.DATA_AUGMENTATION = False
-    path = 'tests/resources/temp'
-    clean_dir(path)
-    clf = ImageClassifier(path=path, verbose=True)
+    clean_dir(TEST_TEMP_DIR)
+    clf = ImageClassifier(path=TEST_TEMP_DIR, verbose=True)
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y)
     results = clf.predict(train_x)
     assert all(map(lambda result: result in train_y, results))
-    clean_dir(path)
+    clean_dir(TEST_TEMP_DIR)
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
@@ -57,13 +51,13 @@ def test_timeout(_):
     Constant.SEARCH_MAX_ITER = 1000
     Constant.T_MIN = 0.0001
     Constant.DATA_AUGMENTATION = False
-    path = 'tests/resources/temp'
-    clean_dir(path)
-    clf = ImageClassifier(path=path, verbose=False)
+    clean_dir(TEST_TEMP_DIR)
+    clf = ImageClassifier(path=TEST_TEMP_DIR, verbose=False)
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     with pytest.raises(TimeoutError):
         clf.fit(train_x, train_y, time_limit=0)
+<<<<<<< HEAD
     clean_dir(path)
 
 
@@ -96,6 +90,9 @@ def test_timeout_resume(_, _1):
     results = clf.predict(test_x)
     assert len(results) == 100
     clean_dir(path)
+=======
+    clean_dir(TEST_TEMP_DIR)
+>>>>>>> c326ed6c8a2c341d53ee924f12c8f5e845bf0cce
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
@@ -103,9 +100,8 @@ def test_timeout_resume(_, _1):
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_final_fit(_, _1, _2):
     Constant.LIMIT_MEMORY = True
-    path = 'tests/resources/temp'
-    clean_dir(path)
-    clf = ImageClassifier(path=path, verbose=False)
+    clean_dir(TEST_TEMP_DIR)
+    clf = ImageClassifier(path=TEST_TEMP_DIR, verbose=False)
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 1
     Constant.SEARCH_MAX_ITER = 1
@@ -119,7 +115,7 @@ def test_final_fit(_, _1, _2):
     clf.final_fit(train_x, train_y, test_x, test_y)
     results = clf.predict(test_x)
     assert len(results) == 100
-    clean_dir(path)
+    clean_dir(TEST_TEMP_DIR)
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
@@ -132,27 +128,26 @@ def test_save_continue(_, _1):
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
-    path = 'tests/resources/temp'
-    clean_dir(path)
-    clf = ImageClassifier(path=path, verbose=False, resume=False)
+    clean_dir(TEST_TEMP_DIR)
+    clf = ImageClassifier(path=TEST_TEMP_DIR, verbose=False, resume=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
     assert len(clf.load_searcher().history) == 1
 
     Constant.MAX_MODEL_NUM = 2
-    clf = ImageClassifier(verbose=False, path=path, resume=True)
+    clf = ImageClassifier(verbose=False, path=TEST_TEMP_DIR, resume=True)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
     assert len(clf.load_searcher().history) == 2
 
     Constant.MAX_MODEL_NUM = 1
-    clf = ImageClassifier(verbose=False, path=path, resume=False)
+    clf = ImageClassifier(verbose=False, path=TEST_TEMP_DIR, resume=False)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
     assert len(clf.load_searcher().history) == 1
-    clean_dir(path)
+    clean_dir(TEST_TEMP_DIR)
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
@@ -175,6 +170,7 @@ def test_fit_csv_file(_, _1, _2):
     clean_dir(os.path.join(path, "temp"))
 
 
+<<<<<<< HEAD
 @patch('autokeras.image.image_supervised.temp_folder_generator', return_value='dummy_path/')
 def test_init_image_classifier_with_none_path(_):
     clf = ImageClassifier()
@@ -182,6 +178,9 @@ def test_init_image_classifier_with_none_path(_):
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
+=======
+@patch('torch.multiprocessing.Pool', new=MockProcess)
+>>>>>>> c326ed6c8a2c341d53ee924f12c8f5e845bf0cce
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_predict_regression(_, _1):
     Constant.MAX_ITER_NUM = 1
@@ -189,15 +188,14 @@ def test_fit_predict_regression(_, _1):
     Constant.SEARCH_MAX_ITER = 1
     Constant.T_MIN = 0.8
     Constant.DATA_AUGMENTATION = False
-    path = 'tests/resources/temp'
-    clean_dir(path)
-    clf = ImageRegressor(path=path, verbose=False)
+    clean_dir(TEST_TEMP_DIR)
+    clf = ImageRegressor(path=TEST_TEMP_DIR, verbose=False)
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y)
     results = clf.predict(train_x)
     assert len(results) == len(train_x)
-    clean_dir(path)
+    clean_dir(TEST_TEMP_DIR)
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
@@ -210,15 +208,14 @@ def test_export_keras_model(_,_1):
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     test_x = np.random.rand(100, 25, 25, 1)
-    path = 'tests/resources/temp'
-    clean_dir(path)
-    clf = ImageClassifier(path=path, verbose=False, resume=False)
+    clean_dir(TEST_TEMP_DIR)
+    clf = ImageClassifier(path=TEST_TEMP_DIR, verbose=False, resume=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
     score = clf.evaluate(train_x, train_y)
     assert score <= 1.0
 
-    model_file_name = os.path.join(path, 'test_keras_model.h5')
+    model_file_name = os.path.join(TEST_TEMP_DIR, 'test_keras_model.graph')
     clf.export_keras_model(model_file_name)
     from keras.models import load_model
     model = load_model(model_file_name)
@@ -226,7 +223,7 @@ def test_export_keras_model(_,_1):
     assert len(results) == len(test_x)
     del model, results, model_file_name
 
-    model_file_name = os.path.join(path, 'test_autokeras_model.pkl')
+    model_file_name = os.path.join(TEST_TEMP_DIR, 'test_autokeras_model.pkl')
     clf.export_autokeras_model(model_file_name)
     from autokeras.utils import pickle_from_file
     model = pickle_from_file(model_file_name)
@@ -234,15 +231,15 @@ def test_export_keras_model(_,_1):
     assert len(results) == len(test_x)
     score = model.evaluate(train_x, train_y)
     assert score <= 1.0
-    clean_dir(path)
+    clean_dir(TEST_TEMP_DIR)
 
-    clf = ImageRegressor(path=path, verbose=False, resume=False)
+    clf = ImageRegressor(path=TEST_TEMP_DIR, verbose=False, resume=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
     score = clf.evaluate(train_x, train_y)
     assert score >= 0.0
 
-    model_file_name = os.path.join(path, 'test_keras_model.h5')
+    model_file_name = os.path.join(TEST_TEMP_DIR, 'test_keras_model.graph')
     clf.export_keras_model(model_file_name)
     from keras.models import load_model
     model = load_model(model_file_name)
@@ -250,7 +247,7 @@ def test_export_keras_model(_,_1):
     assert len(results) == len(test_x)
     del model, results, model_file_name
 
-    model_file_name = os.path.join(path, 'test_autokeras_model.pkl')
+    model_file_name = os.path.join(TEST_TEMP_DIR, 'test_autokeras_model.pkl')
     clf.export_autokeras_model(model_file_name)
     from autokeras.utils import pickle_from_file
     model = pickle_from_file(model_file_name)
@@ -258,4 +255,4 @@ def test_export_keras_model(_,_1):
     assert len(results) == len(test_x)
     score = model.evaluate(train_x, train_y)
     assert score >= 0.0
-    clean_dir(path)
+    clean_dir(TEST_TEMP_DIR)

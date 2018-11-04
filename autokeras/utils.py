@@ -1,51 +1,18 @@
+import csv
 import os
 import pickle
 import sys
 import tempfile
 import zipfile
 
+import imageio
 import requests
 import torch
-
-from autokeras.constant import Constant
 
 
 class NoImprovementError(Exception):
     def __init__(self, message):
         self.message = message
-
-
-class EarlyStop:
-    def __init__(self, max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=Constant.MIN_LOSS_DEC):
-        super().__init__()
-        self.training_losses = []
-        self.minimum_loss = None
-        self._no_improvement_count = 0
-        self._max_no_improvement_num = max_no_improvement_num
-        self._done = False
-        self._min_loss_dec = min_loss_dec
-
-    def on_train_begin(self):
-        self.training_losses = []
-        self._no_improvement_count = 0
-        self._done = False
-        self.minimum_loss = float('inf')
-
-    def on_epoch_end(self, loss):
-        self.training_losses.append(loss)
-        if self._done and loss > (self.minimum_loss - self._min_loss_dec):
-            return False
-
-        if loss > (self.minimum_loss - self._min_loss_dec):
-            self._no_improvement_count += 1
-        else:
-            self._no_improvement_count = 0
-            self.minimum_loss = loss
-
-        if self._no_improvement_count > self._max_no_improvement_num:
-            self._done = True
-
-        return True
 
 
 def ensure_dir(directory):
@@ -169,3 +136,29 @@ def validate_xy(x_train, y_train):
 
     if x_train.shape[0] != y_train.shape[0]:
         raise ValueError('x_train and y_train should have the same number of instances.')
+
+
+def read_csv_file(csv_file_path):
+    """Read the csv file and returns two separate list containing files name and their labels.
+
+    Args:
+        csv_file_path: Path to the CSV file.
+
+    Returns:
+        file_names: List containing files names.
+        file_label: List containing their respective labels.
+    """
+    file_names = []
+    file_labels = []
+    with open(csv_file_path, 'r') as files_path:
+        path_list = csv.DictReader(files_path)
+        fieldnames = path_list.fieldnames
+        for path in path_list:
+            file_names.append(path[fieldnames[0]])
+            file_labels.append(path[fieldnames[1]])
+    return file_names, file_labels
+
+
+def read_image(img_path):
+    img = imageio.imread(uri=img_path)
+    return img

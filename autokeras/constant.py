@@ -2,6 +2,8 @@ class Constant:
     # Data
 
     VALIDATION_SET_SIZE = 0.08333
+    CUTOUT_HOLES = 1
+    CUTOUT_RATIO = 0.5
 
     # Searcher
 
@@ -11,14 +13,19 @@ class Constant:
     T_MIN = 0.0001
     N_NEIGHBOURS = 8
     MAX_MODEL_SIZE = (1 << 25)
+    MAX_LAYER_WIDTH = 4096
+    MAX_LAYERS = 100
 
     # Model Defaults
 
     DENSE_DROPOUT_RATE = 0.5
     CONV_DROPOUT_RATE = 0.25
+    MLP_DROPOUT_RATE = 0.25
     CONV_BLOCK_DISTANCE = 2
     DENSE_BLOCK_DISTANCE = 1
     MODEL_LEN = 3
+    MLP_MODEL_LEN = 3
+    MLP_MODEL_WIDTH = 5
     MODEL_WIDTH = 64
 
     # ModelTrainer

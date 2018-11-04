@@ -1,3 +1,4 @@
+import os
 import abc
 import sys
 from copy import deepcopy
@@ -8,7 +9,7 @@ from torchvision import utils as vutils
 from tqdm.autonotebook import tqdm
 
 from autokeras.constant import Constant
-from autokeras.utils import EarlyStop, get_device
+from autokeras.utils import get_device
 
 
 class ModelTrainerBase(abc.ABC):
@@ -57,7 +58,7 @@ class ModelTrainer(ModelTrainerBase):
         verbose: Verbosity mode.
     """
 
-    def __init__(self, model, **kwargs):
+    def __init__(self, model, path, **kwargs):
         """Init the ModelTrainer with `model`, `x_train`, `y_train`, `x_test`, `y_test`, `verbose`"""
         super().__init__(**kwargs)
         self.model = model
@@ -66,6 +67,7 @@ class ModelTrainer(ModelTrainerBase):
         self.early_stop = None
         self.current_epoch = 0
         self.current_metric_value = 0
+        self.temp_model_path = os.path.join(path, 'temp_model')
 
     def train_model(self,
                     max_iter_num=None,
@@ -98,10 +100,16 @@ class ModelTrainer(ModelTrainerBase):
             test_metric_value_list.append(metric_value)
             test_loss_list.append(test_loss)
             decreasing = self.early_stop.on_epoch_end(test_loss)
+
+            if self.early_stop.no_improvement_count == 0:
+                self._save_model()
+
             if not decreasing:
                 if self.verbose:
                     print('\nNo loss decrease after {} epochs.\n'.format(max_no_improvement_num))
+                self._load_model()
                 break
+
         last_num = min(max_no_improvement_num, max_iter_num)
         return (sum(test_loss_list[-last_num:]) / last_num,
                 sum(test_metric_value_list[-last_num:]) / last_num)
@@ -111,17 +119,21 @@ class ModelTrainer(ModelTrainerBase):
         loader = self.train_loader
         self.current_epoch += 1
 
-        cp_loader = deepcopy(loader)
         if self.verbose:
-            progress_bar = tqdm(total=len(cp_loader),
-                                desc='Epoch-' + str(self.current_epoch) + ', Current Metric - ' + str(self.current_metric_value),
+            progress_bar = tqdm(total=len(loader),
+                                desc='Epoch-'
+                                     + str(self.current_epoch)
+                                     + ', Current Metric - '
+                                     + str(self.current_metric_value),
                                 file=sys.stdout,
                                 leave=False,
                                 ncols=100,
                                 position=0,
                                 unit=' batch')
+        else:
+            progress_bar = None
 
-        for batch_idx, (inputs, targets) in enumerate(cp_loader):
+        for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
@@ -152,6 +164,12 @@ class ModelTrainer(ModelTrainerBase):
         all_predicted = reduce(lambda x, y: np.concatenate((x, y)), all_predicted)
         all_targets = reduce(lambda x, y: np.concatenate((x, y)), all_targets)
         return test_loss, self.metric.compute(all_predicted, all_targets)
+
+    def _save_model(self):
+        torch.save(self.model.state_dict(), self.temp_model_path)
+
+    def _load_model(self):
+        self.model.load_state_dict(torch.load(self.temp_model_path))
 
 
 class GANModelTrainer(ModelTrainerBase):
@@ -184,18 +202,20 @@ class GANModelTrainer(ModelTrainerBase):
         self.optimizer_d = torch.optim.Adam(self.d_model.parameters())
         self.optimizer_g = torch.optim.Adam(self.g_model.parameters())
         if self.verbose:
-            pbar = tqdm(total=max_iter_num,
-                        desc='     Model     ',
-                        file=sys.stdout,
-                        ncols=75,
-                        position=1,
-                        unit=' epoch')
+            progress_bar = tqdm(total=max_iter_num,
+                                desc='     Model     ',
+                                file=sys.stdout,
+                                ncols=75,
+                                position=1,
+                                unit=' epoch')
+        else:
+            progress_bar = None
         for epoch in range(max_iter_num):
             self._train(epoch)
             if self.verbose:
-                pbar.update(1)
+                progress_bar.update(1)
         if self.verbose:
-            pbar.close()
+            progress_bar.close()
 
     def _train(self, epoch):
         # put model into train mode
@@ -203,13 +223,15 @@ class GANModelTrainer(ModelTrainerBase):
         # TODO: why?
         cp_loader = deepcopy(self.train_loader)
         if self.verbose:
-            pbar = tqdm(total=len(cp_loader),
-                        desc='Current Epoch',
-                        file=sys.stdout,
-                        leave=False,
-                        ncols=75,
-                        position=0,
-                        unit=' Batch')
+            progress_bar = tqdm(total=len(cp_loader),
+                                desc='Current Epoch',
+                                file=sys.stdout,
+                                leave=False,
+                                ncols=75,
+                                position=0,
+                                unit=' Batch')
+        else:
+            progress_bar = None
         real_label = 1
         fake_label = 0
         for batch_idx, inputs in enumerate(cp_loader):
@@ -242,7 +264,7 @@ class GANModelTrainer(ModelTrainerBase):
 
             if self.verbose:
                 if batch_idx % 10 == 0:
-                    pbar.update(10)
+                    progress_bar.update(10)
             if self.outf is not None and batch_idx % 100 == 0:
                 fake = self.g_model(self.sample_noise)
                 vutils.save_image(
@@ -250,4 +272,37 @@ class GANModelTrainer(ModelTrainerBase):
                     '%s/fake_samples_epoch_%03d.png' % (self.outf, epoch),
                     normalize=True)
         if self.verbose:
-            pbar.close()
+            progress_bar.close()
+
+
+class EarlyStop:
+    def __init__(self, max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=Constant.MIN_LOSS_DEC):
+        super().__init__()
+        self.training_losses = []
+        self.minimum_loss = None
+        self.no_improvement_count = 0
+        self._max_no_improvement_num = max_no_improvement_num
+        self._done = False
+        self._min_loss_dec = min_loss_dec
+
+    def on_train_begin(self):
+        self.training_losses = []
+        self.no_improvement_count = 0
+        self._done = False
+        self.minimum_loss = float('inf')
+
+    def on_epoch_end(self, loss):
+        self.training_losses.append(loss)
+        if self._done and loss > (self.minimum_loss - self._min_loss_dec):
+            return False
+
+        if loss > (self.minimum_loss - self._min_loss_dec):
+            self.no_improvement_count += 1
+        else:
+            self.no_improvement_count = 0
+            self.minimum_loss = loss
+
+        if self.no_improvement_count > self._max_no_improvement_num:
+            self._done = True
+
+        return True
