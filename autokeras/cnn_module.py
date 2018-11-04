@@ -79,7 +79,8 @@ class CnnModule(object):
 
         if retrain:
             graph.weighted = False
-        _, _1, graph = train((graph, train_data, test_data, trainer_args, None, self.metric, self.loss, self.verbose))
+        _, _1, graph = train(q=None, args=(graph, train_data, test_data, trainer_args,
+                                           None, self.metric, self.loss, self.verbose))
 
     @property
     def best_model(self):
