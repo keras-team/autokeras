@@ -1,4 +1,5 @@
 import os
+import queue
 from copy import deepcopy
 
 import numpy as np
@@ -237,7 +238,7 @@ class MockProcess(object):
         pass
 
     def start(self):
-        self.target(*self.args)
+        self.result = self.target(*self.args)
 
     def map_async(self, a, b):
         self.result = a(b[0])
@@ -247,6 +248,17 @@ class MockProcess(object):
         str(timeout)
         return [self.result]
 
+    def get_context(self, start_method='fork'):
+        return self
+
+    def Queue(self):
+        return queue.Queue()
+
+    def Process(self, target, args):
+        self.target = target
+        self.args = args
+        return self
+
     def terminate(self):
         pass
 
@@ -255,7 +267,7 @@ class MockProcess(object):
 
 
 class MockMemoryOutProcess(MockProcess):
-    def map_async(self, a, b):
+    def start(self):
         raise RuntimeError('cuda: out of memory.')
 
 
