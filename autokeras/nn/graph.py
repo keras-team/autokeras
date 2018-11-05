@@ -6,11 +6,11 @@ import torch
 import keras
 
 from autokeras.constant import Constant
-from autokeras.nn.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, wider_pre_conv, \
-    deeper_conv_block, dense_to_deeper_block, add_noise
-from autokeras.nn.layers import StubConcatenate, StubAdd, StubConv, is_layer, layer_width, \
+from autokeras.nn.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, \
+    wider_pre_conv, deeper_conv_block, dense_to_deeper_block, add_noise
+from autokeras.nn.layers import StubConcatenate, StubAdd, is_layer, layer_width, \
     to_real_keras_layer, set_torch_weight_to_stub, set_stub_weight_to_torch, set_stub_weight_to_keras, \
-    set_keras_weight_to_stub, StubBatchNormalization, StubReLU
+    set_keras_weight_to_stub, StubReLU, get_conv_class, get_batch_norm_class
 
 
 class NetworkDescriptor:
@@ -94,6 +94,9 @@ class Graph:
         self.adj_list = {}
         self.reverse_adj_list = {}
         self.operation_history = []
+        self.n_dim = len(input_shape) - 1
+        self.conv = get_conv_class(self.n_dim)
+        self.batch_norm = get_batch_norm_class(self.n_dim)
 
         self.vis = None
         self._add_node(Node(input_shape))
@@ -396,9 +399,9 @@ class Graph:
         # Add the conv layer
         new_relu_layer = StubReLU()
         skip_output_id = self.add_layer(new_relu_layer, skip_output_id)
-        new_conv_layer = StubConv(self.layer_list[start_id].filters, self.layer_list[end_id].filters, 1)
+        new_conv_layer = self.conv(self.layer_list[start_id].filters, self.layer_list[end_id].filters, 1)
         skip_output_id = self.add_layer(new_conv_layer, skip_output_id)
-        new_bn_layer = StubBatchNormalization(self.layer_list[end_id].filters)
+        new_bn_layer = self.batch_norm(self.layer_list[end_id].filters)
         skip_output_id = self.add_layer(new_bn_layer, skip_output_id)
 
         # Add the add layer.
@@ -463,10 +466,10 @@ class Graph:
         # Add the concatenate layer.
         new_relu_layer = StubReLU()
         concat_output_node_id = self.add_layer(new_relu_layer, concat_output_node_id)
-        new_conv_layer = StubConv(self.layer_list[start_id].filters + self.layer_list[end_id].filters,
-                                  self.layer_list[end_id].filters, 1)
+        new_conv_layer = self.conv(self.layer_list[start_id].filters + self.layer_list[end_id].filters,
+                                   self.layer_list[end_id].filters, 1)
         concat_output_node_id = self.add_layer(new_conv_layer, concat_output_node_id)
-        new_bn_layer = StubBatchNormalization(self.layer_list[end_id].filters)
+        new_bn_layer = self.batch_norm(self.layer_list[end_id].filters)
 
         self._add_edge(new_bn_layer, concat_output_node_id, block_last_layer_output_id)
         new_bn_layer.input = self.node_list[concat_output_node_id]

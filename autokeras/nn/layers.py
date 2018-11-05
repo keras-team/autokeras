@@ -319,7 +319,22 @@ class StubDropout(StubLayer):
 
     @abstractmethod
     def to_real_layer(self):
+        pass
+
+
+class StubDropout1d(StubDropout):
+    def to_real_layer(self):
+        return torch.nn.Dropout(self.rate)
+
+
+class StubDropout2d(StubDropout):
+    def to_real_layer(self):
         return torch.nn.Dropout2d(self.rate)
+
+
+class StubDropout3d(StubDropout):
+    def to_real_layer(self):
+        return torch.nn.Dropout3d(self.rate)
 
 
 class StubInput(StubLayer):
@@ -431,3 +446,38 @@ def set_stub_weight_to_torch(stub_layer, torch_layer):
 
 def set_stub_weight_to_keras(stub_layer, keras_layer):
     stub_layer.export_weights_keras(keras_layer)
+
+
+def get_conv_class(n_dim):
+    conv_class_list = [StubConv1d, StubConv2d, StubConv3d]
+    return conv_class_list[n_dim - 1]
+
+
+def get_dropout_class(n_dim):
+    dropout_class_list = [StubDropout1d, StubDropout2d, StubDropout3d]
+    return dropout_class_list[n_dim - 1]
+
+
+def get_global_avg_pooling_class(n_dim):
+    global_avg_pooling_class_list = [StubGlobalPooling1d, StubGlobalPooling2d, StubGlobalPooling3d]
+    return global_avg_pooling_class_list[n_dim - 1]
+
+
+def get_pooling_class(n_dim):
+    pooling_class_list = [StubPooling1d, StubPooling2d, StubPooling3d]
+    return pooling_class_list[n_dim - 1]
+
+
+def get_batch_norm_class(n_dim):
+    batch_norm_class_list = [StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d]
+    return batch_norm_class_list[n_dim - 1]
+
+
+def get_n_dim(layer):
+    if isinstance(layer, (StubConv1d, StubDropout1d, StubGlobalPooling1d, StubPooling1d, StubBatchNormalization1d)):
+        return 1
+    if isinstance(layer, (StubConv2d, StubDropout2d, StubGlobalPooling2d, StubPooling2d, StubBatchNormalization2d)):
+        return 2
+    if isinstance(layer, (StubConv3d, StubDropout3d, StubGlobalPooling3d, StubPooling3d, StubBatchNormalization3d)):
+        return 3
+    return -1

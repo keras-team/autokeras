@@ -83,7 +83,6 @@ class CnnModule(object):
                               train_data,
                               test_data,
                               trainer_args,
-                              None,
                               self.metric,
                               self.loss,
                               self.verbose,
