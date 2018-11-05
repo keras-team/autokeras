@@ -268,7 +268,7 @@ class SearchTree:
         return ret
 
 
-def train(args):
+def train(q, args):
     graph, train_data, test_data, trainer_args, metric, loss, verbose, path = args
     model = graph.produce_model()
     # if path is not None:
