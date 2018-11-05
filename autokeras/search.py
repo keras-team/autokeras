@@ -175,8 +175,7 @@ class Searcher:
         ctx = mp.get_context('fork')
         q = ctx.Queue()
         p = ctx.Process(target=train, args=(q,(graph, train_data, test_data, self.trainer_args,
-                                            os.path.join(self.path, str(model_id) + '.png'),
-                                            self.metric, self.loss, self.verbose)))
+                                            self.metric, self.loss, self.verbose, self.path)))
         try:
             p.start()
             # Do the search in current thread.
@@ -269,8 +268,8 @@ class SearchTree:
         return ret
 
 
-def train(q, args):
-    graph, train_data, test_data, trainer_args, path, metric, loss, verbose = args
+def train(args):
+    graph, train_data, test_data, trainer_args, metric, loss, verbose, path = args
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)

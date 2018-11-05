@@ -148,6 +148,9 @@ class ImageDataTransformer(DataTransformer):
         else:
             compose_list = common_list
 
+        if len(data.shape) != 4:
+            compose_list = []
+
         dataset = self._transform(compose_list, data, targets)
 
         if batch_size is None:
@@ -159,6 +162,8 @@ class ImageDataTransformer(DataTransformer):
     def transform_test(self, data, targets=None, batch_size=None):
         common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
         compose_list = common_list
+        if len(data.shape) != 4:
+            compose_list = []
 
         dataset = self._transform(compose_list, data, targets)
 
@@ -170,7 +175,8 @@ class ImageDataTransformer(DataTransformer):
 
     def _transform(self, compose_list, data, targets):
         data = data / self.max_val
-        data = torch.Tensor(data.transpose(0, 3, 1, 2))
+        args = [0, len(data.shape) - 1] + list(range(1, len(data.shape) - 1))
+        data = torch.Tensor(data.transpose(*args))
         data_transforms = Compose(compose_list)
         return MultiTransformDataset(data, targets, data_transforms)
 
