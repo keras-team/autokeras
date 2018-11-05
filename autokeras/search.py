@@ -213,7 +213,7 @@ class Searcher:
             pickle_to_file(self, os.path.join(self.path, 'searcher'))
             self.export_json(os.path.join(self.path, 'history.json'))
 
-        except (ctx.TimeoutError, TimeoutError) as e:
+        except TimeoutError as e:
             raise TimeoutError from e
         except RuntimeError as e:
             if not re.search('out of memory', str(e)):
