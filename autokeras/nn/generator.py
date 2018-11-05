@@ -20,9 +20,9 @@ class CnnGenerator(NetworkGenerator):
     def __init__(self, n_output_node, input_shape):
         super(CnnGenerator, self).__init__(n_output_node, input_shape)
         self.n_dim = len(self.input_shape) - 1
-        if len(self.input_shape) > 3:
+        if len(self.input_shape) > 4:
             raise ValueError('The input dimension is too high.')
-        if len(self.input_shape) < 1:
+        if len(self.input_shape) < 2:
             raise ValueError('The input dimension is too low.')
         self.conv = get_conv_class(self.n_dim)
         self.dropout = get_dropout_class(self.n_dim)

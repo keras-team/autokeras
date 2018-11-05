@@ -290,7 +290,7 @@ class StubGlobalPooling(StubLayer):
 
     @property
     def output_shape(self):
-        return self.input.shape[2:]
+        return self.input.shape[-1],
 
     @abstractmethod
     def to_real_layer(self):

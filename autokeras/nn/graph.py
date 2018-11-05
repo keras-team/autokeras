@@ -483,7 +483,8 @@ class Graph:
             weights = np.zeros((filters_end, filters_end) + filter_shape)
             for i in range(filters_end):
                 filter_weight = np.zeros((filters_end,) + filter_shape)
-                filter_weight[(i, 0, 0)] = 1
+                center_index = (i,) + (0,) * self.n_dim
+                filter_weight[center_index] = 1
                 weights[i, ...] = filter_weight
             weights = np.concatenate((weights,
                                       np.zeros((filters_end, filters_start) + filter_shape)), axis=1)

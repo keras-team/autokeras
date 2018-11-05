@@ -7,11 +7,6 @@ from autokeras.search import Searcher, train
 from autokeras.utils import pickle_from_file
 
 
-def _run_searcher_once(train_data, test_data, path, timeout):
-    if Constant.LIMIT_MEMORY:
-        pass
-    searcher = pickle_from_file(os.path.join(path, 'searcher'))
-    searcher.search(train_data, test_data, timeout)
 
 
 class CnnModule(object):
@@ -28,7 +23,8 @@ class CnnModule(object):
 
         Args:
             n_output_node: A integer value represent the number of output node in the final layer.
-            input_shape: A tuple to express the shape of every train entry. For example,MNIST dataset would be (28,28,1)
+            input_shape: A tuple to express the shape of every train entry. For example,
+                MNIST dataset would be (28,28,1)
             train_data: A PyTorch DataLoader instance represents the training data
             test_data: A PyTorch DataLoader instance represents the testing data
             time_limit: A integer value represents the time limit on searching for models.
@@ -50,7 +46,8 @@ class CnnModule(object):
         time_remain = time_limit
         try:
             while time_remain > 0:
-                _run_searcher_once(train_data, test_data, self.path, int(time_remain))
+                searcher = pickle_from_file(os.path.join(self.path, 'searcher'))
+                searcher.search(train_data, test_data, int(time_remain))
                 if len(self._load_searcher().history) >= Constant.MAX_MODEL_NUM:
                     break
                 time_elapsed = time.time() - start_time
