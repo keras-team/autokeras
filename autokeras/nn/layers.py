@@ -1,15 +1,35 @@
+from abc import abstractmethod
+
 import torch
 from torch import nn
 from keras import layers
 from torch.nn import functional
 
+from autokeras.constant import Constant
 
-class GlobalAvgPool2d(nn.Module):
+
+class GlobalAvgPool(nn.Module):
     def __init__(self):
         super().__init__()
 
+    @abstractmethod
+    def forward(self, input_tensor):
+        pass
+
+
+class GlobalAvgPool1d(GlobalAvgPool):
+    def forward(self, input_tensor):
+        return functional.avg_pool1d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
+
+
+class GlobalAvgPool2d(GlobalAvgPool):
     def forward(self, input_tensor):
         return functional.avg_pool2d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
+
+
+class GlobalAvgPool3d(GlobalAvgPool):
+    def forward(self, input_tensor):
+        return functional.avg_pool3d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
 class StubLayer:
@@ -86,8 +106,24 @@ class StubBatchNormalization(StubWeightBiasLayer):
     def size(self):
         return self.num_features * 4
 
+    @abstractmethod
+    def to_real_layer(self):
+        pass
+
+
+class StubBatchNormalization1d(StubBatchNormalization):
+    def to_real_layer(self):
+        return torch.nn.BatchNorm1d(self.num_features)
+
+
+class StubBatchNormalization2d(StubBatchNormalization):
     def to_real_layer(self):
         return torch.nn.BatchNorm2d(self.num_features)
+
+
+class StubBatchNormalization3d(StubBatchNormalization):
+    def to_real_layer(self):
+        return torch.nn.BatchNorm3d(self.num_features)
 
 
 class StubDense(StubWeightBiasLayer):
@@ -135,8 +171,30 @@ class StubConv(StubWeightBiasLayer):
     def size(self):
         return self.filters * self.kernel_size * self.kernel_size + self.filters
 
+    @abstractmethod
+    def to_real_layer(self):
+        pass
+
+
+class StubConv1d(StubConv):
+    def to_real_layer(self):
+        return torch.nn.Conv1d(self.input_channel,
+                               self.filters,
+                               self.kernel_size,
+                               padding=int(self.kernel_size / 2))
+
+
+class StubConv2d(StubConv):
     def to_real_layer(self):
         return torch.nn.Conv2d(self.input_channel,
+                               self.filters,
+                               self.kernel_size,
+                               padding=int(self.kernel_size / 2))
+
+
+class StubConv3d(StubConv):
+    def to_real_layer(self):
+        return torch.nn.Conv3d(self.input_channel,
                                self.filters,
                                self.kernel_size,
                                padding=int(self.kernel_size / 2))
@@ -206,8 +264,24 @@ class StubPooling(StubLayer):
         ret = ret + (self.input.shape[-1],)
         return ret
 
+    @abstractmethod
     def to_real_layer(self):
-        return torch.nn.MaxPool2d(2)
+        pass
+
+
+class StubPooling1d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.MaxPool1d(Constant.POOLING_KERNEL_SIZE)
+
+
+class StubPooling2d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.MaxPool2d(Constant.POOLING_KERNEL_SIZE)
+
+
+class StubPooling3d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.MaxPool3d(Constant.POOLING_KERNEL_SIZE)
 
 
 class StubGlobalPooling(StubLayer):
@@ -216,10 +290,26 @@ class StubGlobalPooling(StubLayer):
 
     @property
     def output_shape(self):
-        return self.input.shape[2:]
+        return self.input.shape[-1],
 
+    @abstractmethod
+    def to_real_layer(self):
+        pass
+
+
+class StubGlobalPooling1d(StubGlobalPooling):
+    def to_real_layer(self):
+        return GlobalAvgPool1d()
+
+
+class StubGlobalPooling2d(StubGlobalPooling):
     def to_real_layer(self):
         return GlobalAvgPool2d()
+
+
+class StubGlobalPooling3d(StubGlobalPooling):
+    def to_real_layer(self):
+        return GlobalAvgPool3d()
 
 
 class StubDropout(StubLayer):
@@ -227,8 +317,24 @@ class StubDropout(StubLayer):
         super().__init__(input_node, output_node)
         self.rate = rate
 
+    @abstractmethod
+    def to_real_layer(self):
+        pass
+
+
+class StubDropout1d(StubDropout):
+    def to_real_layer(self):
+        return torch.nn.Dropout(self.rate)
+
+
+class StubDropout2d(StubDropout):
     def to_real_layer(self):
         return torch.nn.Dropout2d(self.rate)
+
+
+class StubDropout3d(StubDropout):
+    def to_real_layer(self):
+        return torch.nn.Dropout3d(self.rate)
 
 
 class StubInput(StubLayer):
@@ -340,3 +446,38 @@ def set_stub_weight_to_torch(stub_layer, torch_layer):
 
 def set_stub_weight_to_keras(stub_layer, keras_layer):
     stub_layer.export_weights_keras(keras_layer)
+
+
+def get_conv_class(n_dim):
+    conv_class_list = [StubConv1d, StubConv2d, StubConv3d]
+    return conv_class_list[n_dim - 1]
+
+
+def get_dropout_class(n_dim):
+    dropout_class_list = [StubDropout1d, StubDropout2d, StubDropout3d]
+    return dropout_class_list[n_dim - 1]
+
+
+def get_global_avg_pooling_class(n_dim):
+    global_avg_pooling_class_list = [StubGlobalPooling1d, StubGlobalPooling2d, StubGlobalPooling3d]
+    return global_avg_pooling_class_list[n_dim - 1]
+
+
+def get_pooling_class(n_dim):
+    pooling_class_list = [StubPooling1d, StubPooling2d, StubPooling3d]
+    return pooling_class_list[n_dim - 1]
+
+
+def get_batch_norm_class(n_dim):
+    batch_norm_class_list = [StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d]
+    return batch_norm_class_list[n_dim - 1]
+
+
+def get_n_dim(layer):
+    if isinstance(layer, (StubConv1d, StubDropout1d, StubGlobalPooling1d, StubPooling1d, StubBatchNormalization1d)):
+        return 1
+    if isinstance(layer, (StubConv2d, StubDropout2d, StubGlobalPooling2d, StubPooling2d, StubBatchNormalization2d)):
+        return 2
+    if isinstance(layer, (StubConv3d, StubDropout3d, StubGlobalPooling3d, StubPooling3d, StubBatchNormalization3d)):
+        return 3
+    return -1

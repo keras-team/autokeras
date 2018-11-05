@@ -177,7 +177,6 @@ class Searcher:
         pool = mp.Pool(1)
         try:
             train_results = pool.map_async(train, [(graph, train_data, test_data, self.trainer_args,
-                                                    os.path.join(self.path, str(model_id) + '.png'),
                                                     self.metric, self.loss, self.verbose, self.path)])
 
             # Do the search in current thread.
@@ -272,7 +271,7 @@ class SearchTree:
 
 
 def train(args):
-    graph, train_data, test_data, trainer_args, path, metric, loss, verbose, path = args
+    graph, train_data, test_data, trainer_args, metric, loss, verbose, path = args
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)
