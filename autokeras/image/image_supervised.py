@@ -74,8 +74,6 @@ class ImageSupervised(Supervised):
         path: A path to the directory to save the classifier.
         y_encoder: An instance of OneHotEncoder for `y_train` (array of categorical labels).
         verbose: A boolean value indicating the verbosity mode.
-        searcher: An instance of BayesianSearcher. It searches different
-            neural architecture to find the best model.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
         augment: A boolean value indicating whether the data needs augmentation.  If not define, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
@@ -278,6 +276,18 @@ class ImageClassifier(ImageSupervised):
         return Accuracy
 
 
+class ImageClassifier1D(ImageClassifier):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
+
+
+class ImageClassifier3D(ImageClassifier):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
+
+
 class ImageRegressor(ImageSupervised):
     @property
     def loss(self):
@@ -295,6 +305,18 @@ class ImageRegressor(ImageSupervised):
 
     def inverse_transform_y(self, output):
         return output.flatten()
+
+
+class ImageRegressor1D(ImageRegressor):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
+
+
+class ImageRegressor3D(ImageRegressor):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
 
 
 class PortableImageSupervised(PortableClass):

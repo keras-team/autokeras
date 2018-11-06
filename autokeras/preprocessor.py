@@ -52,6 +52,47 @@ class OneHotEncoder:
         return np.array(list(map(lambda x: self.int_to_label[x], np.argmax(np.array(data), axis=1))))
 
 
+class Cutout(object):
+    """Randomly mask out one or more patches from an image.
+    Args:
+        n_holes (int): Number of patches to cut out of each image.
+        length (int): The length (in pixels) of each square patch.
+    """
+
+    def __init__(self, n_holes, length):
+        self.n_holes = n_holes
+        self.length = length
+
+    def __call__(self, img):
+        """
+        Args:
+            img (Tensor): Tensor image of size (C, H, W).
+        Returns:
+            Tensor: Image with n_holes of dimension length x length cut out of it.
+        """
+        h = img.size(1)
+        w = img.size(2)
+
+        mask = np.ones((h, w), np.float32)
+
+        for n in range(self.n_holes):
+            y = np.random.randint(h)
+            x = np.random.randint(w)
+
+            y1 = np.clip(y - self.length // 2, 0, h)
+            y2 = np.clip(y + self.length // 2, 0, h)
+            x1 = np.clip(x - self.length // 2, 0, w)
+            x2 = np.clip(x + self.length // 2, 0, w)
+
+            mask[y1: y2, x1: x2] = 0.
+
+        mask = torch.from_numpy(mask)
+        mask = mask.expand_as(img)
+        img = img * mask
+
+        return img
+
+
 class DataTransformer(ABC):
     @abstractmethod
     def transform_train(self, data, targets=None, batch_size=None):
@@ -95,16 +136,20 @@ class ImageDataTransformer(DataTransformer):
         self.augment = augment
 
     def transform_train(self, data, targets=None, batch_size=None):
-        if not self.augment:
-            augment_list = []
-        else:
-            augment_list = [ToPILImage(),
+        short_edge_length = min(data.shape[1], data.shape[2])
+        common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
+        if self.augment:
+            compose_list = [ToPILImage(),
                             RandomCrop(data.shape[1:3], padding=4),
                             RandomHorizontalFlip(),
                             ToTensor()
-                            ]
-        common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
-        compose_list = augment_list + common_list
+                            ] + common_list + [Cutout(n_holes=Constant.CUTOUT_HOLES,
+                                                      length=int(short_edge_length * Constant.CUTOUT_RATIO))]
+        else:
+            compose_list = common_list
+
+        if len(data.shape) != 4:
+            compose_list = []
 
         dataset = self._transform(compose_list, data, targets)
 
@@ -117,6 +162,8 @@ class ImageDataTransformer(DataTransformer):
     def transform_test(self, data, targets=None, batch_size=None):
         common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
         compose_list = common_list
+        if len(data.shape) != 4:
+            compose_list = []
 
         dataset = self._transform(compose_list, data, targets)
 
@@ -128,7 +175,8 @@ class ImageDataTransformer(DataTransformer):
 
     def _transform(self, compose_list, data, targets):
         data = data / self.max_val
-        data = torch.Tensor(data.transpose(0, 3, 1, 2))
+        args = [0, len(data.shape) - 1] + list(range(1, len(data.shape) - 1))
+        data = torch.Tensor(data.transpose(*args))
         data_transforms = Compose(compose_list)
         return MultiTransformDataset(data, targets, data_transforms)
 
