@@ -129,3 +129,25 @@ def test_evaluate(_, _1, _2):
     score = clf.evaluate(train_x, train_y)
     clean_dir(TEST_TEMP_DIR)
     assert score <= 1.0
+
+
+@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+@patch('autokeras.text.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
+def test_fit_predict_regression(_, _1):
+    Constant.MAX_ITER_NUM = 1
+    Constant.MAX_MODEL_NUM = 4
+    Constant.SEARCH_MAX_ITER = 1
+    Constant.T_MIN = 0.8
+    Constant.DATA_AUGMENTATION = False
+    path = 'tests/resources/temp'
+    for f in os.listdir(path):
+        print(f)
+    clean_dir(path)
+    clf = TextRegressor(path=path, verbose=False)
+    train_x = np.random.rand(100, 25, 25, 1)
+    train_y = np.random.randint(0, 5, 100)
+    clf.fit(train_x, train_y)
+    results = clf.predict(train_x)
+    assert len(results) == len(train_x)
+    clean_dir(path)
