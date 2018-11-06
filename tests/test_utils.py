@@ -1,9 +1,7 @@
 from unittest.mock import patch
 
 from autokeras.utils import temp_folder_generator, download_file
-from tests.common import clean_dir
-
-path = 'tests/resources/temp'
+from tests.common import clean_dir, TEST_TEMP_DIR
 
 
 # This method will be used by the mock to replace requests.get
@@ -31,19 +29,17 @@ def mocked_requests_get(*args, **kwargs):
     return MockResponse(404)
 
 
-@patch('tempfile.gettempdir', return_value="tests/resources/temp/")
+@patch('tempfile.gettempdir', return_value=TEST_TEMP_DIR)
 def test_temp_folder_generator(_):
-    path = 'tests/resources/temp'
-    clean_dir(path)
+    clean_dir(TEST_TEMP_DIR)
     path = temp_folder_generator()
     assert path == "tests/resources/temp/autokeras"
-    path = 'tests/resources/temp'
-    clean_dir(path)
+    clean_dir(TEST_TEMP_DIR)
 
 
 @patch('requests.get', side_effect=mocked_requests_get)
 def test_fetch(_):
     # Assert requests.get calls
-    clean_dir(path)
-    mgc = download_file("dummy_url", path + '/dummy_file')
-    clean_dir(path)
+    clean_dir(TEST_TEMP_DIR)
+    mgc = download_file("dummy_url", TEST_TEMP_DIR + '/dummy_file')
+    clean_dir(TEST_TEMP_DIR)

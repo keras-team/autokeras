@@ -2,6 +2,8 @@ class Constant:
     # Data
 
     VALIDATION_SET_SIZE = 0.08333
+    CUTOUT_HOLES = 1
+    CUTOUT_RATIO = 0.5
 
     # Searcher
 
@@ -25,6 +27,7 @@ class Constant:
     MLP_MODEL_LEN = 3
     MLP_MODEL_WIDTH = 5
     MODEL_WIDTH = 64
+    POOLING_KERNEL_SIZE = 2
 
     # ModelTrainer
 
