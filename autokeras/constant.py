@@ -2,6 +2,8 @@ class Constant:
     # Data
 
     VALIDATION_SET_SIZE = 0.08333
+    CUTOUT_HOLES = 1
+    CUTOUT_RATIO = 0.5
 
     # Searcher
 
@@ -18,10 +20,14 @@ class Constant:
 
     DENSE_DROPOUT_RATE = 0.5
     CONV_DROPOUT_RATE = 0.25
+    MLP_DROPOUT_RATE = 0.25
     CONV_BLOCK_DISTANCE = 2
     DENSE_BLOCK_DISTANCE = 1
     MODEL_LEN = 3
+    MLP_MODEL_LEN = 3
+    MLP_MODEL_WIDTH = 5
     MODEL_WIDTH = 64
+    POOLING_KERNEL_SIZE = 2
 
     # ModelTrainer
 
@@ -46,5 +52,4 @@ class Constant:
 
     # Image Resize
 
-    MAX_IMAGE_HEIGHT = 128
-    MAX_IMAGE_WIDTH = 128
+    MAX_IMAGE_SIZE = 128 * 128

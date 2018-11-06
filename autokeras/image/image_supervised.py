@@ -14,7 +14,7 @@ from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
 from autokeras.supervised import Supervised, PortableClass
 from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy, \
-    read_csv_file, read_image, resize_image_data
+    read_csv_file, read_image, compute_image_resize_params
 
 
 def read_images(img_file_names, images_dir_path):
@@ -74,8 +74,6 @@ class ImageSupervised(Supervised):
         path: A path to the directory to save the classifier.
         y_encoder: An instance of OneHotEncoder for `y_train` (array of categorical labels).
         verbose: A boolean value indicating the verbosity mode.
-        searcher: An instance of BayesianSearcher. It searches different
-            neural architecture to find the best model.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
         augment: A boolean value indicating whether the data needs augmentation.  If not define, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
@@ -134,7 +132,7 @@ class ImageSupervised(Supervised):
 
     def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
         x = np.array(x)
-        x, self.resize_height, self.resize_width = resize_image_data(x)
+        self.resize_height, self.resize_width = compute_image_resize_params(x)
 
         y = np.array(y).flatten()
         validate_xy(x, y)
@@ -148,9 +146,6 @@ class ImageSupervised(Supervised):
                                                                 test_size=validation_set_size,
                                                                 random_state=42)
         else:
-            x_test, self.resize_height, self.resize_width = resize_image_data(x_test,
-                                                                              self.resize_height,
-                                                                              self.resize_width)
             x_train = x
             y_train = y
         # Transform x_train
@@ -221,13 +216,6 @@ class ImageSupervised(Supervised):
         if trainer_args is None:
             trainer_args = {'max_no_improvement_num': 30}
 
-        x_train, self.resize_height, self.resize_width = resize_image_data(x_train,
-                                                                           self.resize_height,
-                                                                           self.resize_width)
-        x_test, self.resize_height, self.resize_width = resize_image_data(x_test,
-                                                                          self.resize_height,
-                                                                          self.resize_width)
-
         y_train = self.transform_y(y_train)
         y_test = self.transform_y(y_test)
 
@@ -278,6 +266,18 @@ class ImageClassifier(ImageSupervised):
         return Accuracy
 
 
+class ImageClassifier1D(ImageClassifier):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
+
+
+class ImageClassifier3D(ImageClassifier):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
+
+
 class ImageRegressor(ImageSupervised):
     @property
     def loss(self):
@@ -295,6 +295,18 @@ class ImageRegressor(ImageSupervised):
 
     def inverse_transform_y(self, output):
         return output.flatten()
+
+
+class ImageRegressor1D(ImageRegressor):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
+
+
+class ImageRegressor3D(ImageRegressor):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
 
 
 class PortableImageSupervised(PortableClass):
@@ -322,9 +334,7 @@ class PortableImageSupervised(PortableClass):
         """
         if Constant.LIMIT_MEMORY:
             pass
-        x_test, self.resize_height, self.resize_width = resize_image_data(x_test,
-                                                                          self.resize_height,
-                                                                          self.resize_width)
+
         test_loader = self.data_transformer.transform_test(x_test)
         model = self.graph.produce_model()
         model.eval()

@@ -18,39 +18,6 @@ class NoImprovementError(Exception):
         self.message = message
 
 
-class EarlyStop:
-    def __init__(self, max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=Constant.MIN_LOSS_DEC):
-        super().__init__()
-        self.training_losses = []
-        self.minimum_loss = None
-        self._no_improvement_count = 0
-        self._max_no_improvement_num = max_no_improvement_num
-        self._done = False
-        self._min_loss_dec = min_loss_dec
-
-    def on_train_begin(self):
-        self.training_losses = []
-        self._no_improvement_count = 0
-        self._done = False
-        self.minimum_loss = float('inf')
-
-    def on_epoch_end(self, loss):
-        self.training_losses.append(loss)
-        if self._done and loss > (self.minimum_loss - self._min_loss_dec):
-            return False
-
-        if loss > (self.minimum_loss - self._min_loss_dec):
-            self._no_improvement_count += 1
-        else:
-            self._no_improvement_count = 0
-            self.minimum_loss = loss
-
-        if self._no_improvement_count > self._max_no_improvement_num:
-            self._done = True
-
-        return True
-
-
 def ensure_dir(directory):
     """Create directory if it does not exist"""
     if not os.path.exists(directory):
@@ -200,21 +167,17 @@ def read_image(img_path):
     return img
 
 
-def resize_image_data(data, median_height=None, median_width=None):
-    """Resize each image to a fixed size H x W x C. H and W are the median height and widths computed from all images.
-    Number of channels C does not change from the original image.
+def compute_image_resize_params(data):
+    """Compute median height and width of all images in data. These values are used to resize the images at later point.
+    Number of channels do not change from the original images. Currently, only 2-D images are supported.
     """
-    if len(data.shape) == 0 or len(data[0].shape) < 3:
-        return data, median_height, median_width
+    if len(data.shape) == 0 or len(data[0].shape) != 3:
+        return None, None
 
-    if median_height is None:
-        median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
-        median_height = min(median_height.astype(int), Constant.MAX_IMAGE_HEIGHT)
-        median_width = min(median_width.astype(int), Constant.MAX_IMAGE_WIDTH)
-    num_of_channels = data[0].shape[-1]
+    median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
+    if median_height * median_width > Constant.MAX_IMAGE_SIZE:
+        reduction_factor = numpy.sqrt(median_height * median_width / Constant.MAX_IMAGE_SIZE)
+        median_height = median_height / reduction_factor
+        median_width = median_width / reduction_factor
 
-    resize_data = []
-    for image in data:
-        resize_data.append(numpy.resize(image, (median_height, median_width, num_of_channels)))
-
-    return numpy.array(resize_data), median_height, median_width
+    return int(median_height), int(median_width)
