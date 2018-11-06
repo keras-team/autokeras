@@ -12,10 +12,10 @@ def mock_train(**_):
     return 1, 0
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_bayesian_searcher(_, _1):
+def test_bayesian_searcher(_, _1, _2):
     train_data, test_data = get_classification_data_loaders()
     clean_dir(TEST_TEMP_DIR)
     generator = Searcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
@@ -36,10 +36,10 @@ def test_search_tree():
     assert len(tree.adj_list) == 3
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_export_json(_, _1):
+def test_export_json(_, _1, _2):
     train_data, test_data = get_classification_data_loaders()
 
     clean_dir(TEST_TEMP_DIR)
@@ -64,10 +64,10 @@ def test_graph_duplicate():
     assert not same_graph(get_concat_skip_model().extract_descriptor(), get_add_skip_model().extract_descriptor())
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_max_acq(_, _1):
+def test_max_acq(_, _1, _2):
     train_data, test_data = get_classification_data_loaders()
     clean_dir(TEST_TEMP_DIR)
     Constant.N_NEIGHBOURS = 2
@@ -85,10 +85,10 @@ def test_max_acq(_, _1):
     clean_dir(TEST_TEMP_DIR)
 
 
-@patch('torch.multiprocessing.Pool', new=MockMemoryOutProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockMemoryOutProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_out_of_memory(_, _1):
+def test_out_of_memory(_, _1, _2):
     train_data, test_data = get_classification_data_loaders()
     clean_dir(TEST_TEMP_DIR)
     searcher = Searcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,

@@ -27,9 +27,9 @@ def test_x_float_exception():
     assert str(info.value) == 'x_train should only contain numerical data.'
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_fit_predict(_):
+def test_fit_predict(_, _1):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
     Constant.SEARCH_MAX_ITER = 1
@@ -75,8 +75,8 @@ def test_fit_predict(_):
     clean_dir(TEST_TEMP_DIR)
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
-def test_timeout():
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
+def test_timeout(_):
     # Constant.MAX_MODEL_NUM = 4
     Constant.SEARCH_MAX_ITER = 1000
     Constant.T_MIN = 0.0001
@@ -90,10 +90,10 @@ def test_timeout():
     clean_dir(TEST_TEMP_DIR)
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_final_fit(_, _1):
+def test_final_fit(_, _1, _2):
     Constant.LIMIT_MEMORY = True
     clean_dir(TEST_TEMP_DIR)
     clf = ImageClassifier(path=TEST_TEMP_DIR, verbose=False)
@@ -113,9 +113,9 @@ def test_final_fit(_, _1):
     clean_dir(TEST_TEMP_DIR)
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_save_continue(_):
+def test_save_continue(_, _1):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 1
     Constant.SEARCH_MAX_ITER = 1
@@ -145,10 +145,10 @@ def test_save_continue(_):
     clean_dir(TEST_TEMP_DIR)
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_fit_csv_file(_, _1):
+def test_fit_csv_file(_, _1, _2):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 1
     Constant.SEARCH_MAX_ITER = 1
@@ -165,9 +165,9 @@ def test_fit_csv_file(_, _1):
     clean_dir(os.path.join(path, "temp"))
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_fit_predict_regression(_):
+def test_fit_predict_regression(_, _1):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
     Constant.SEARCH_MAX_ITER = 1
@@ -183,9 +183,9 @@ def test_fit_predict_regression(_):
     clean_dir(TEST_TEMP_DIR)
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_export_keras_model(_):
+def test_export_keras_model(_,_1):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 1
     Constant.SEARCH_MAX_ITER = 1

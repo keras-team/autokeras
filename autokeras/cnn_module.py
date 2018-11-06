@@ -76,7 +76,7 @@ class CnnModule(object):
 
         if retrain:
             graph.weighted = False
-        _, _1, graph = train((graph,
+        _, _1, graph = train(q=None, args=(graph,
                               train_data,
                               test_data,
                               trainer_args,

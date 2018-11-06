@@ -1,7 +1,6 @@
 import os
 import re
 import time
-
 import torch
 import torch.multiprocessing as mp
 
@@ -173,12 +172,12 @@ class Searcher:
             print('+' + '-' * 46 + '+')
             print('|' + 'Training model {}'.format(model_id).center(46) + '|')
             print('+' + '-' * 46 + '+')
-        mp.set_start_method('spawn', force=True)
-        pool = mp.Pool(1)
+        ctx = mp.get_context('fork')
+        q = ctx.Queue()
+        p = ctx.Process(target=train, args=(q,(graph, train_data, test_data, self.trainer_args,
+                                            self.metric, self.loss, self.verbose, self.path)))
         try:
-            train_results = pool.map_async(train, [(graph, train_data, test_data, self.trainer_args,
-                                                    self.metric, self.loss, self.verbose, self.path)])
-
+            p.start()
             # Do the search in current thread.
             searched = False
             new_graph = None
@@ -199,7 +198,7 @@ class Searcher:
             remaining_time = timeout - (time.time() - start_time)
             if remaining_time <= 0:
                 raise TimeoutError
-            metric_value, loss, graph = train_results.get(timeout=remaining_time)[0]
+            metric_value, loss, graph = q.get(timeout=remaining_time)
 
             if self.verbose and searched:
                 verbose_print(new_father_id, new_graph)
@@ -213,7 +212,7 @@ class Searcher:
             pickle_to_file(self, os.path.join(self.path, 'searcher'))
             self.export_json(os.path.join(self.path, 'history.json'))
 
-        except (mp.TimeoutError, TimeoutError) as e:
+        except TimeoutError as e:
             raise TimeoutError from e
         except RuntimeError as e:
             if not re.search('out of memory', str(e)):
@@ -224,9 +223,8 @@ class Searcher:
             return
         finally:
             # terminate and join the subprocess to prevent any resource leak
-            pool.terminate()
-            pool.close()
-            pool.join()
+            p.terminate()
+            p.join()
 
     def export_json(self, path):
         data = dict()
@@ -270,7 +268,7 @@ class SearchTree:
         return ret
 
 
-def train(args):
+def train(q, args):
     graph, train_data, test_data, trainer_args, metric, loss, verbose, path = args
     model = graph.produce_model()
     # if path is not None:
@@ -283,7 +281,11 @@ def train(args):
                                       loss_function=loss,
                                       verbose=verbose).train_model(**trainer_args)
     model.set_weight_to_graph()
-    return metric_value, loss, model.graph
+    if q:
+        q.put((metric_value, loss, model.graph))
+    else:
+        return metric_value, loss, model.graph
+    # return metric_value, loss, model.graph
 
 
 def same_graph(des1, des2):
