@@ -198,7 +198,6 @@ def resize_image_data(data, h, w):
     for im in data:
         if len(im.shape) != 3:
             return data
-        print(im.shape[0], im.shape[1])
         output_data.append(resize(image=im,
                                   output_shape=(h, w, im.shape[-1]),
                                   mode='edge',
