@@ -8,6 +8,7 @@ import zipfile
 import imageio
 import numpy
 import requests
+from skimage.transform import resize
 import torch
 
 from autokeras.constant import Constant
@@ -181,3 +182,26 @@ def compute_image_resize_params(data):
         median_width = median_width / reduction_factor
 
     return int(median_height), int(median_width)
+
+
+def resize_image_data(data, h, w):
+    """Resize all images in data to size (h, w, c) where h is the height, w is the width and c is the number of channels.
+    The number of channels c does not change from data. The function supports only 2-D image data.
+    """
+    if data is None or h is None or w is None:
+        return data
+
+    if len(data.shape) == 0:
+        return data
+
+    output_data = []
+    for im in data:
+        if len(im.shape) != 3:
+            return data
+        print(im.shape[0], im.shape[1])
+        output_data.append(resize(image=im,
+                                  output_shape=(h, w, im.shape[-1]),
+                                  mode='edge',
+                                  preserve_range=True))
+
+    return numpy.array(output_data)
