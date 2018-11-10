@@ -1,6 +1,7 @@
 import csv
 import os
 import pickle
+import platform
 import sys
 import tempfile
 import zipfile
@@ -8,6 +9,7 @@ import zipfile
 import imageio
 import requests
 import torch
+from autokeras.constant import Constant
 
 
 class NoImprovementError(Exception):
@@ -69,7 +71,6 @@ def get_device():
 
 
 def temp_folder_generator():
-    # return '/home/linyang/temp'
     sys_temp = tempfile.gettempdir()
     path = os.path.join(sys_temp, 'autokeras')
     ensure_dir(path)
@@ -162,3 +163,13 @@ def read_csv_file(csv_file_path):
 def read_image(img_path):
     img = imageio.imread(uri=img_path)
     return img
+
+
+def get_system():
+    if 'google.colab' in sys.modules:
+        return Constant.SYS_GOOGLE_COLAB
+    if os.name == 'posix':
+        return Constant.SYS_LINUX
+    if os.name == 'nt':
+        return Constant.SYS_WINDOWS
+    raise EnvironmentError('Unsupported environment')
