@@ -1,14 +1,15 @@
 import csv
 import os
 import pickle
-import platform
 import sys
 import tempfile
 import zipfile
 
+import warnings
 import imageio
 import requests
 import torch
+import subprocess
 from autokeras.constant import Constant
 
 
@@ -50,11 +51,16 @@ def get_device():
     # TODO: could use gputil in the future
     device = 'cpu'
     if torch.cuda.is_available():
-        smi_out = os.popen('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free').read()
-        # smi_out=
-        #       Free                 : xxxxxx MiB
-        #       Free                 : xxxxxx MiB
-        #                      ....
+        try:
+            # smi_out=
+            #       Free                 : xxxxxx MiB
+            #       Free                 : xxxxxx MiB
+            #                      ....
+            smi_out = subprocess.check_output('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free', shell=True)
+            print(smi_out)
+        except subprocess.SubprocessError:
+            warnings.warn('Cuda device successfully detected. However, nvidia-smi cannot be invoked')
+            return 'cpu'
         visible_devices = os.getenv('CUDA_VISIBLE_DEVICES', '').split(',')
         if len(visible_devices) == 1 and visible_devices[0] == '':
             visible_devices = []
@@ -166,6 +172,16 @@ def read_image(img_path):
 
 
 def get_system():
+    """
+    Get the current system environment. If the current system is not supported,
+    raise an exception.
+
+    Returns:
+         a string to represent the current os name
+         posix stands for Linux and Mac or Solaris architecture
+         nt stands for Windows system
+    """
+    print(os.name)
     if 'google.colab' in sys.modules:
         return Constant.SYS_GOOGLE_COLAB
     if os.name == 'posix':

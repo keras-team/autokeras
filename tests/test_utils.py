@@ -1,7 +1,9 @@
+import subprocess
 from unittest.mock import patch
 
-from autokeras.utils import temp_folder_generator, download_file
-from tests.common import clean_dir, TEST_TEMP_DIR
+from autokeras.constant import Constant
+from autokeras.utils import temp_folder_generator, download_file, get_system, get_device
+from tests.common import clean_dir, TEST_TEMP_DIR, mock_nvidia_smi_output
 
 
 # This method will be used by the mock to replace requests.get
@@ -43,3 +45,29 @@ def test_fetch(_):
     clean_dir(TEST_TEMP_DIR)
     mgc = download_file("dummy_url", TEST_TEMP_DIR + '/dummy_file')
     clean_dir(TEST_TEMP_DIR)
+
+
+def test_get_system():
+    sys_name = get_system()
+    assert \
+        sys_name == Constant.SYS_GOOGLE_COLAB or \
+        sys_name == Constant.SYS_LINUX or \
+        sys_name == Constant.SYS_WINDOWS
+
+
+@patch('torch.cuda.is_available')
+@patch('subprocess.check_output')
+def test_get_device(mock_check_output, mock_is_available):
+    mock_check_output.return_value = mock_nvidia_smi_output()
+    mock_is_available.return_value = True
+    device = get_device()
+    assert device == 'cuda:1'
+
+    mock_check_output.side_effect = subprocess.SubprocessError
+    device = get_device()
+    assert device == 'cpu'
+
+    mock_is_available.return_value = False
+    mock_check_output.return_value = ''
+    device = get_device()
+    assert device == 'cpu'
