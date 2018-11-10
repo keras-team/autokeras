@@ -5,11 +5,10 @@ import time
 from autokeras.constant import Constant
 from autokeras.search import Searcher, train
 from autokeras.utils import pickle_from_file
+from autokeras.nn.generator import CnnGenerator, MlpGenerator
 
 
-
-
-class CnnModule(object):
+class NetworkModule:
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         self.searcher_args = searcher_args
         self.searcher = None
@@ -17,6 +16,7 @@ class CnnModule(object):
         self.verbose = verbose
         self.loss = loss
         self.metric = metric
+        self.generator = None
 
     def fit(self, n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60):
         """ Search the best CnnModule.
@@ -37,6 +37,7 @@ class CnnModule(object):
             self.searcher_args['path'] = self.path
             self.searcher_args['metric'] = self.metric
             self.searcher_args['loss'] = self.loss
+            self.searcher_args['generator'] = self.generator
             self.searcher_args['verbose'] = self.verbose
             searcher = Searcher(**self.searcher_args)
             self._save_searcher(searcher)
@@ -95,3 +96,15 @@ class CnnModule(object):
 
     def _load_searcher(self):
         return pickle_from_file(os.path.join(self.path, 'searcher'))
+
+
+class CnnModule(NetworkModule):
+    def __init__(self, loss, metric, searcher_args, path, verbose=False):
+        super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose)
+        self.generator = CnnGenerator
+
+
+class MlpModule(NetworkModule):
+    def __init__(self, loss, metric, searcher_args, path, verbose=False):
+        super(NetworkModule, self).__init__(loss, metric, searcher_args, path, verbose)
+        self.generator = MlpGenerator
