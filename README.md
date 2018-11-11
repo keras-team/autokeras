@@ -74,4 +74,5 @@ appreciated.
 The authors gratefully acknowledge the D3M program of the Defense Advanced Research Projects Agency (DARPA) administered through AFRL contract FA8750-17-2-0116; the Texas A&M College of Engineering, and Texas A&M. 
 
 Thank every backer for supporting us!
-<object type="image/svg+xml" data="https://opencollective.com/autokeras/tiers/backer.svg?avatarHeight=36&width=600"></object>
+
+[![Backers](https://opencollective.com/autokeras/tiers/backer.svg?avatarHeight=36)](https://opencollective.com/autokeras)
