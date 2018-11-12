@@ -282,3 +282,11 @@ def simple_transform(graph):
 def mock_train(**kwargs):
     str(kwargs)
     return 1, 0
+
+
+def mock_nvidia_smi_output(*arg, **kwargs):
+    return \
+        '    Free                        : 1 MiB \n' \
+        '    Free                        : 11176 MiB \n' \
+        '    Free                        : 1 MiB \n' \
+        '    Free                        : 1 MiB'

@@ -1,4 +1,5 @@
 import os
+import queue
 import re
 import time
 import torch
@@ -6,10 +7,10 @@ import torch.multiprocessing as mp
 
 from autokeras.bayesian import edit_distance, BayesianOptimizer
 from autokeras.constant import Constant
+from autokeras.net_transformer import default_transform
 from autokeras.nn.generator import CnnGenerator
 from autokeras.nn.model_trainer import ModelTrainer
-from autokeras.net_transformer import default_transform
-from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print
+from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get_system
 
 
 class Searcher:
@@ -172,10 +173,14 @@ class Searcher:
             print('+' + '-' * 46 + '+')
             print('|' + 'Training model {}'.format(model_id).center(46) + '|')
             print('+' + '-' * 46 + '+')
-        ctx = mp.get_context('fork')
+        # Temporary solution to support GOOGLE Colab
+        if get_system() == Constant.SYS_GOOGLE_COLAB:
+            ctx = mp.get_context('fork')
+        else:
+            ctx = mp.get_context('spawn')
         q = ctx.Queue()
-        p = ctx.Process(target=train, args=(q,(graph, train_data, test_data, self.trainer_args,
-                                            self.metric, self.loss, self.verbose, self.path)))
+        p = ctx.Process(target=train, args=(q, (graph, train_data, test_data, self.trainer_args,
+                                                self.metric, self.loss, self.verbose, self.path)))
         try:
             p.start()
             # Do the search in current thread.
@@ -212,7 +217,7 @@ class Searcher:
             pickle_to_file(self, os.path.join(self.path, 'searcher'))
             self.export_json(os.path.join(self.path, 'history.json'))
 
-        except TimeoutError as e:
+        except (TimeoutError, queue.Empty) as e:
             raise TimeoutError from e
         except RuntimeError as e:
             if not re.search('out of memory', str(e)):
