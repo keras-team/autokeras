@@ -60,6 +60,13 @@ Biblatex entry:
       eprint       = {cs.LG/1806.10282},
     }
  
+## Support Auto-Keras
+
+We accept donations on [Open Collective](https://opencollective.com/autokeras).
+The money will be used to motivate the developers in the open-source community to contribute code to Auto-Keras.
+Thank every backer for supporting us!
+
+[![Backers](https://opencollective.com/autokeras/tiers/backer.svg?avatarHeight=36)](https://opencollective.com/autokeras)
 
 ## DISCLAIMER
 
@@ -72,4 +79,3 @@ appreciated.
 ## Acknowledgements
 
 The authors gratefully acknowledge the D3M program of the Defense Advanced Research Projects Agency (DARPA) administered through AFRL contract FA8750-17-2-0116; the Texas A&M College of Engineering, and Texas A&M. 
-
