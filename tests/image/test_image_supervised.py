@@ -44,16 +44,12 @@ def test_fit_predict(_, _1):
     results = clf.predict(train_x)
     assert all(map(lambda result: result in train_y, results))
 
-    clean_dir(TEST_TEMP_DIR)
-
     clf = ImageClassifier1D(path=TEST_TEMP_DIR, verbose=True)
     train_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y)
     results = clf.predict(train_x)
     assert all(map(lambda result: result in train_y, results))
-
-    clean_dir(TEST_TEMP_DIR)
 
     clf = ImageClassifier3D(path=TEST_TEMP_DIR, verbose=True)
     train_x = np.random.rand(100, 25, 25, 25, 1)
@@ -62,16 +58,12 @@ def test_fit_predict(_, _1):
     results = clf.predict(train_x)
     assert all(map(lambda result: result in train_y, results))
 
-    clean_dir(TEST_TEMP_DIR)
-
     clf = ImageRegressor1D(path=TEST_TEMP_DIR, verbose=True)
     train_x = np.random.rand(100, 25, 1)
     train_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y)
     results = clf.predict(train_x)
     assert len(results) == len(train_y)
-
-    clean_dir(TEST_TEMP_DIR)
 
     clf = ImageRegressor3D(path=TEST_TEMP_DIR, verbose=True)
     train_x = np.random.rand(100, 25, 25, 25, 1)
