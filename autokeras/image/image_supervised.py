@@ -102,8 +102,6 @@ class ImageSupervised(Supervised):
         if path is None:
             path = temp_folder_generator()
 
-        self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
-
         if augment is None:
             augment = Constant.DATA_AUGMENTATION
 
@@ -116,6 +114,7 @@ class ImageSupervised(Supervised):
             self.data_transformer = None
             self.verbose = verbose
             self.augment = augment
+            self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
 
     @property
     @abstractmethod
@@ -152,7 +151,6 @@ class ImageSupervised(Supervised):
         test_data = self.data_transformer.transform_test(x_test, y_test)
 
         # Save the classifier
-        pickle.dump(self, open(os.path.join(self.path, 'classifier'), 'wb'))
         pickle_to_file(self, os.path.join(self.path, 'classifier'))
 
         if time_limit is None:
