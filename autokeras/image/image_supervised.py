@@ -135,7 +135,7 @@ class ImageSupervised(Supervised):
         if len(x.shape) != 0 and len(x[0].shape) == 3:
             self.resize_height, self.resize_width = compute_image_resize_params(x)
             x = resize_image_data(x, self.resize_height, self.resize_width)
-            if x_test:
+            if x_test is not None:
                 x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
 
         y = np.array(y).flatten()
@@ -223,7 +223,7 @@ class ImageSupervised(Supervised):
 
         if len(x_train.shape) != 0 and len(x_train[0].shape) == 3:
             x_train = resize_image_data(x_train, self.resize_height, self.resize_width)
-            if x_test:
+            if x_test is not None:
                 x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
 
         y_train = self.transform_y(y_train)

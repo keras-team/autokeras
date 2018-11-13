@@ -50,16 +50,7 @@ def test_fetch(_):
 
 
 def test_compute_image_resize_params():
-    # Case-1: Resize not supported for images except 2-D, which has shape N x H x W x C.
-    data = numpy.random.randint(256, size=(1, 1, 3))
-    resize_height, resize_width = compute_image_resize_params(data)
-    assert resize_height is None
-    assert resize_width is None
-
-    modified_data = resize_image_data(data, resize_height, resize_width)
-    assert (modified_data == data).all()
-
-    # Case-2: Compute median height and width for smaller images.
+    # Case-1: Compute median height and width for smaller images.
     data = numpy.array([numpy.random.randint(256, size=(10, 10, 3)),
                         numpy.random.randint(256, size=(20, 20, 3)),
                         numpy.random.randint(256, size=(30, 30, 3)),
@@ -72,7 +63,7 @@ def test_compute_image_resize_params():
     for image in modified_data:
         assert image.shape == (25, 25, 3)
 
-    # Case-3: Resize to max size for larger images.
+    # Case-2: Resize to max size for larger images.
     data = numpy.array([numpy.random.randint(256, size=(int(numpy.sqrt(Constant.MAX_IMAGE_SIZE)+1),
                                                         int(numpy.sqrt(Constant.MAX_IMAGE_SIZE)+1),
                                                         3))])
