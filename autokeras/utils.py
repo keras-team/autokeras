@@ -178,6 +178,13 @@ def read_image(img_path):
 def compute_image_resize_params(data):
     """Compute median height and width of all images in data. These values are used to resize the images at later point.
     Number of channels do not change from the original images. Currently, only 2-D images are supported.
+
+    Args:
+        data: 2-D Image data with shape N x H x W x C.
+
+    Returns:
+        median height: Median height of all images in the data.
+        median width: Median width of all images in the data.
     """
     if len(data.shape) == 0 or len(data[0].shape) != 3:
         return None, None
@@ -194,6 +201,14 @@ def compute_image_resize_params(data):
 def resize_image_data(data, h, w):
     """Resize all images in data to size (h, w, c) where h is the height, w is the width and c is the number of channels.
     The number of channels c does not change from data. The function supports only 2-D image data.
+
+    Args:
+        data: 2-D Image data with shape N x H x W x C.
+        h: Image resize height.
+        w: Image resize width.
+
+    Returns:
+        data: Resize data.
     """
     if data is None or h is None or w is None:
         return data
