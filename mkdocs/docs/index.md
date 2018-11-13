@@ -66,10 +66,8 @@ We accept donations on [Open Collective](https://opencollective.com/autokeras).
 The money will be used to motivate the developers in the open-source community to contribute code to Auto-Keras.
 Thank every backer for supporting us!
 
-<a href="https://opencollective.com/autokeras/donate" target="_blank">
-  <img src="https://opencollective.com/autokeras/donate/button@2x.png?color=blue" width=300 />
-</a>
-
+<script src="https://opencollective.com/autokeras/banner.js">
+</script>
 
 ## DISCLAIMER
 

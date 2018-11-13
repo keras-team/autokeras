@@ -5,11 +5,14 @@ import sys
 import tempfile
 import zipfile
 
+import warnings
 import imageio
 import numpy
 import requests
 from skimage.transform import resize
 import torch
+import subprocess
+from autokeras.constant import Constant
 
 from autokeras.constant import Constant
 
@@ -52,11 +55,16 @@ def get_device():
     # TODO: could use gputil in the future
     device = 'cpu'
     if torch.cuda.is_available():
-        smi_out = os.popen('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free').read()
-        # smi_out=
-        #       Free                 : xxxxxx MiB
-        #       Free                 : xxxxxx MiB
-        #                      ....
+        try:
+            # smi_out=
+            #       Free                 : xxxxxx MiB
+            #       Free                 : xxxxxx MiB
+            #                      ....
+            smi_out = subprocess.check_output('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free', shell=True)
+            print(smi_out)
+        except subprocess.SubprocessError:
+            warnings.warn('Cuda device successfully detected. However, nvidia-smi cannot be invoked')
+            return 'cpu'
         visible_devices = os.getenv('CUDA_VISIBLE_DEVICES', '').split(',')
         if len(visible_devices) == 1 and visible_devices[0] == '':
             visible_devices = []
@@ -73,7 +81,6 @@ def get_device():
 
 
 def temp_folder_generator():
-    # return '/home/linyang/temp'
     sys_temp = tempfile.gettempdir()
     path = os.path.join(sys_temp, 'autokeras')
     ensure_dir(path)
@@ -204,3 +211,23 @@ def resize_image_data(data, h, w):
                                   preserve_range=True))
 
     return numpy.array(output_data)
+
+
+def get_system():
+    """
+    Get the current system environment. If the current system is not supported,
+    raise an exception.
+
+    Returns:
+         a string to represent the current os name
+         posix stands for Linux and Mac or Solaris architecture
+         nt stands for Windows system
+    """
+    print(os.name)
+    if 'google.colab' in sys.modules:
+        return Constant.SYS_GOOGLE_COLAB
+    if os.name == 'posix':
+        return Constant.SYS_LINUX
+    if os.name == 'nt':
+        return Constant.SYS_WINDOWS
+    raise EnvironmentError('Unsupported environment')
