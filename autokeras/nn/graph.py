@@ -1,9 +1,10 @@
+import collections
 from copy import deepcopy
-
 from queue import Queue
+
+import keras
 import numpy as np
 import torch
-import keras
 
 from autokeras.constant import Constant
 from autokeras.nn.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, \
@@ -102,7 +103,7 @@ class Graph:
         self._add_node(Node(input_shape))
 
     def add_layer(self, layer, input_node_id):
-        if isinstance(input_node_id, list):
+        if isinstance(input_node_id, collections.Iterable):
             layer.input = list(map(lambda x: self.node_list[x], input_node_id))
             output_node_id = self._add_node(Node(layer.output_shape))
             for node_id in input_node_id:

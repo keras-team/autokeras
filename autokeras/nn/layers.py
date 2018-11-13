@@ -8,7 +8,7 @@ from torch.nn import functional
 from autokeras.constant import Constant
 
 
-class GlobalAvgPool(nn.Module):
+class AvgPool(nn.Module):
     def __init__(self):
         super().__init__()
 
@@ -17,19 +17,34 @@ class GlobalAvgPool(nn.Module):
         pass
 
 
-class GlobalAvgPool1d(GlobalAvgPool):
+class GlobalAvgPool1d(AvgPool):
     def forward(self, input_tensor):
         return functional.avg_pool1d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
-class GlobalAvgPool2d(GlobalAvgPool):
+class GlobalAvgPool2d(AvgPool):
     def forward(self, input_tensor):
         return functional.avg_pool2d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
-class GlobalAvgPool3d(GlobalAvgPool):
+class GlobalAvgPool3d(AvgPool):
     def forward(self, input_tensor):
         return functional.avg_pool3d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
+
+
+class AdaptiveAvgPooling1d(AvgPool):
+    def forward(self, input_tensor):
+        return functional.adaptive_avg_pool1d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
+
+
+class AdaptiveAvgPooling2d(AvgPool):
+    def forward(self, input_tensor):
+        return functional.adaptive_avg_pool2d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
+
+
+class AdaptiveAvgPooling3d(AvgPool):
+    def forward(self, input_tensor):
+        return functional.adaptive_avg_pool3d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
 class StubLayer:
@@ -252,9 +267,11 @@ class StubSoftmax(StubLayer):
 
 
 class StubPooling(StubLayer):
-    def __init__(self, kernel_size=2, input_node=None, output_node=None):
+    def __init__(self, kernel_size=2, input_node=None, output_node=None, stride=None, padding=0):
         super().__init__(input_node, output_node)
         self.kernel_size = kernel_size
+        self.stride = stride or kernel_size
+        self.padding = padding
 
     @property
     def output_shape(self):
@@ -282,6 +299,34 @@ class StubPooling2d(StubPooling):
 class StubPooling3d(StubPooling):
     def to_real_layer(self):
         return torch.nn.MaxPool3d(Constant.POOLING_KERNEL_SIZE)
+
+
+class StubAdaptiveAvgPooling(StubLayer):
+    def __init__(self, input_node=None, output_node=None):
+        super(StubAdaptiveAvgPooling, self).__init__(input_node, output_node)
+
+    @property
+    def output_shape(self):
+        return self.input.shape[-1],
+
+    @abstractmethod
+    def to_real_layer(self):
+        pass
+
+
+class StubAdaptiveAvgPooling1d(StubAdaptiveAvgPooling):
+    def to_real_layer(self):
+        return AdaptiveAvgPooling1d()
+
+
+class StubAdaptiveAvgPooling2d(StubAdaptiveAvgPooling):
+    def to_real_layer(self):
+        return AdaptiveAvgPooling2d()
+
+
+class StubAdaptiveAvgPooling3d(StubAdaptiveAvgPooling):
+    def to_real_layer(self):
+        return AdaptiveAvgPooling3d()
 
 
 class StubGlobalPooling(StubLayer):
@@ -461,6 +506,11 @@ def get_dropout_class(n_dim):
 def get_global_avg_pooling_class(n_dim):
     global_avg_pooling_class_list = [StubGlobalPooling1d, StubGlobalPooling2d, StubGlobalPooling3d]
     return global_avg_pooling_class_list[n_dim - 1]
+
+
+def get_adaptive_avg_pooling_class(n_dim):
+    class_list = [StubAdaptiveAvgPooling1d, StubAdaptiveAvgPooling2d, StubAdaptiveAvgPooling3d]
+    return class_list[n_dim - 1]
 
 
 def get_pooling_class(n_dim):

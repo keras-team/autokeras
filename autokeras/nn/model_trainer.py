@@ -7,7 +7,6 @@ import numpy as np
 import torch
 from torchvision import utils as vutils
 from tqdm.autonotebook import tqdm
-
 from autokeras.constant import Constant
 from autokeras.utils import get_device
 
