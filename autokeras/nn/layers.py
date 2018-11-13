@@ -32,21 +32,6 @@ class GlobalAvgPool3d(AvgPool):
         return functional.avg_pool3d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
-class AdaptiveAvgPooling1d(AvgPool):
-    def forward(self, input_tensor):
-        return functional.adaptive_avg_pool1d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
-
-
-class AdaptiveAvgPooling2d(AvgPool):
-    def forward(self, input_tensor):
-        return functional.adaptive_avg_pool2d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
-
-
-class AdaptiveAvgPooling3d(AvgPool):
-    def forward(self, input_tensor):
-        return functional.adaptive_avg_pool3d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
-
-
 class StubLayer:
     def __init__(self, input_node=None, output_node=None):
         self.input = input_node
@@ -301,34 +286,6 @@ class StubPooling3d(StubPooling):
         return torch.nn.MaxPool3d(Constant.POOLING_KERNEL_SIZE)
 
 
-class StubAdaptiveAvgPooling(StubLayer):
-    def __init__(self, input_node=None, output_node=None):
-        super(StubAdaptiveAvgPooling, self).__init__(input_node, output_node)
-
-    @property
-    def output_shape(self):
-        return self.input.shape[-1],
-
-    @abstractmethod
-    def to_real_layer(self):
-        pass
-
-
-class StubAdaptiveAvgPooling1d(StubAdaptiveAvgPooling):
-    def to_real_layer(self):
-        return AdaptiveAvgPooling1d()
-
-
-class StubAdaptiveAvgPooling2d(StubAdaptiveAvgPooling):
-    def to_real_layer(self):
-        return AdaptiveAvgPooling2d()
-
-
-class StubAdaptiveAvgPooling3d(StubAdaptiveAvgPooling):
-    def to_real_layer(self):
-        return AdaptiveAvgPooling3d()
-
-
 class StubGlobalPooling(StubLayer):
     def __init__(self, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
@@ -506,11 +463,6 @@ def get_dropout_class(n_dim):
 def get_global_avg_pooling_class(n_dim):
     global_avg_pooling_class_list = [StubGlobalPooling1d, StubGlobalPooling2d, StubGlobalPooling3d]
     return global_avg_pooling_class_list[n_dim - 1]
-
-
-def get_adaptive_avg_pooling_class(n_dim):
-    class_list = [StubAdaptiveAvgPooling1d, StubAdaptiveAvgPooling2d, StubAdaptiveAvgPooling3d]
-    return class_list[n_dim - 1]
 
 
 def get_pooling_class(n_dim):

@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 from autokeras.constant import Constant
 from autokeras.nn.graph import Graph
-from autokeras.nn.layers import StubDense, StubReLU, get_conv_class, get_dropout_class, \
+from autokeras.nn.layers import StubAdd, StubDense, StubReLU, get_conv_class, get_dropout_class, \
     get_global_avg_pooling_class, get_pooling_class, get_batch_norm_class, StubDropout1d
 
 
@@ -106,7 +106,7 @@ class RnnGenerator(NetworkGenerator):
         for layer in self.layers:
             output_node_id = self._make_layer(graph, model_width, layer, output_node_id)
             model_width *= 2
-        output_node_id = graph.add_layer(self.adaptive_avg_pooling(), output_node_id)
+        output_node_id = graph.add_layer(self.global_avg_pooling(), output_node_id)
         graph.add_layer(StubDense(model_width * self.block_expansion, self.n_output_node), output_node_id)
         return graph
 
@@ -135,5 +135,5 @@ class RnnGenerator(NetworkGenerator):
             downsample_out = graph.add_layer(StubReLU(), node_id)
             downsample_out = graph.add_layer(downsample[0], downsample_out)
             residual_node_id = graph.add_layer(downsample[1], downsample_out)
-        out = graph.add_layer(StubReLU(), (residual_node_id, out))
+        out = graph.add_layer(StubAdd(), (out, residual_node_id))
         return out
