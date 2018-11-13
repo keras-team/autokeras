@@ -1,10 +1,10 @@
 import numpy
-
+import subprocess
 from unittest.mock import patch
 
 from autokeras.constant import Constant
-from autokeras.utils import temp_folder_generator, download_file, compute_image_resize_params, resize_image_data
-from tests.common import clean_dir, TEST_TEMP_DIR
+from autokeras.utils import temp_folder_generator, download_file, get_system, get_device, compute_image_resize_params, resize_image_data
+from tests.common import clean_dir, TEST_TEMP_DIR, mock_nvidia_smi_output
 
 
 # This method will be used by the mock to replace requests.get
@@ -82,3 +82,29 @@ def test_compute_image_resize_params():
     modified_data = resize_image_data(data, resize_height, resize_width)
     for image in modified_data:
         assert image.shape == (resize_height, resize_width, 3)
+
+
+def test_get_system():
+    sys_name = get_system()
+    assert \
+        sys_name == Constant.SYS_GOOGLE_COLAB or \
+        sys_name == Constant.SYS_LINUX or \
+        sys_name == Constant.SYS_WINDOWS
+
+
+@patch('torch.cuda.is_available')
+@patch('subprocess.check_output')
+def test_get_device(mock_check_output, mock_is_available):
+    mock_check_output.return_value = mock_nvidia_smi_output()
+    mock_is_available.return_value = True
+    device = get_device()
+    assert device == 'cuda:1'
+
+    mock_check_output.side_effect = subprocess.SubprocessError
+    device = get_device()
+    assert device == 'cpu'
+
+    mock_is_available.return_value = False
+    mock_check_output.return_value = ''
+    device = get_device()
+    assert device == 'cpu'

@@ -65,8 +65,6 @@ def test_fit_predict(_, _1):
     results = clf.predict(train_x)
     assert len(results) == len(train_y)
 
-    clean_dir(TEST_TEMP_DIR)
-
     clf = ImageRegressor3D(path=TEST_TEMP_DIR, verbose=True)
     train_x = np.random.rand(100, 25, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
