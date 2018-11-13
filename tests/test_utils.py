@@ -3,7 +3,8 @@ import subprocess
 from unittest.mock import patch
 
 from autokeras.constant import Constant
-from autokeras.utils import temp_folder_generator, download_file, get_system, get_device, compute_image_resize_params, resize_image_data
+from autokeras.utils import temp_folder_generator, download_file, get_system, get_device, compute_image_resize_params, \
+    resize_image_data
 from tests.common import clean_dir, TEST_TEMP_DIR, mock_nvidia_smi_output
 
 

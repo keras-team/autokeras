@@ -12,7 +12,6 @@ import requests
 from skimage.transform import resize
 import torch
 import subprocess
-from autokeras.constant import Constant
 
 from autokeras.constant import Constant
 
@@ -176,8 +175,10 @@ def read_image(img_path):
 
 
 def compute_image_resize_params(data):
-    """Compute median height and width of all images in data. These values are used to resize the images at later point.
-    Number of channels do not change from the original images. Currently, only 2-D images are supported.
+    """Compute median height and width of all images in data. These
+    values are used to resize the images at later point. Number of
+    channels do not change from the original images. Currently, only
+    2-D images are supported.
 
     Args:
         data: 2-D Image data with shape N x H x W x C.
@@ -186,10 +187,8 @@ def compute_image_resize_params(data):
         median height: Median height of all images in the data.
         median width: Median width of all images in the data.
     """
-    if len(data.shape) == 0 or len(data[0].shape) != 3:
-        return None, None
-
     median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
+
     if median_height * median_width > Constant.MAX_IMAGE_SIZE:
         reduction_factor = numpy.sqrt(median_height * median_width / Constant.MAX_IMAGE_SIZE)
         median_height = median_height / reduction_factor
@@ -199,8 +198,9 @@ def compute_image_resize_params(data):
 
 
 def resize_image_data(data, h, w):
-    """Resize all images in data to size (h, w, c) where h is the height, w is the width and c is the number of channels.
-    The number of channels c does not change from data. The function supports only 2-D image data.
+    """Resize all images in data to size h x w x c, where h is the height,
+    w is the width and c is the number of channels. The number of channels
+    c does not change from data. The function supports only 2-D image data.
 
     Args:
         data: 2-D Image data with shape N x H x W x C.
@@ -210,11 +210,6 @@ def resize_image_data(data, h, w):
     Returns:
         data: Resize data.
     """
-    if data is None or h is None or w is None:
-        return data
-
-    if len(data.shape) == 0:
-        return data
 
     output_data = []
     for im in data:
