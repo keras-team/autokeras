@@ -14,7 +14,7 @@ from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
 from autokeras.supervised import Supervised, PortableClass
 from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy, \
-    read_csv_file, read_image
+    read_csv_file, read_image, compute_image_resize_params, resize_image_data
 
 
 def read_images(img_file_names, images_dir_path):
@@ -116,6 +116,9 @@ class ImageSupervised(Supervised):
             self.augment = augment
             self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
 
+        self.resize_height = None
+        self.resize_width = None
+
     @property
     @abstractmethod
     def metric(self):
@@ -128,6 +131,13 @@ class ImageSupervised(Supervised):
 
     def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
         x = np.array(x)
+
+        if len(x.shape) != 0 and len(x[0].shape) == 3:
+            self.resize_height, self.resize_width = compute_image_resize_params(x)
+            x = resize_image_data(x, self.resize_height, self.resize_width)
+            if x_test is not None:
+                x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
+
         y = np.array(y).flatten()
         validate_xy(x, y)
         y = self.transform_y(y)
@@ -192,6 +202,8 @@ class ImageSupervised(Supervised):
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
+        if len(x_test.shape) != 0 and len(x_test[0].shape) == 3:
+            x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)
 
@@ -208,6 +220,11 @@ class ImageSupervised(Supervised):
         """
         if trainer_args is None:
             trainer_args = {'max_no_improvement_num': 30}
+
+        if len(x_train.shape) != 0 and len(x_train[0].shape) == 3:
+            x_train = resize_image_data(x_train, self.resize_height, self.resize_width)
+            if x_test is not None:
+                x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
 
         y_train = self.transform_y(y_train)
         y_test = self.transform_y(y_test)
@@ -230,7 +247,8 @@ class ImageSupervised(Supervised):
                                                  y_encoder=self.y_encoder,
                                                  data_transformer=self.data_transformer,
                                                  metric=self.metric,
-                                                 inverse_transform_y_method=self.inverse_transform_y)
+                                                 inverse_transform_y_method=self.inverse_transform_y,
+                                                 resize_params=(self.resize_height, self.resize_width))
         pickle_to_file(portable_model, model_file_name)
 
 
@@ -302,7 +320,7 @@ class ImageRegressor3D(ImageRegressor):
 
 
 class PortableImageSupervised(PortableClass):
-    def __init__(self, graph, data_transformer, y_encoder, metric, inverse_transform_y_method):
+    def __init__(self, graph, data_transformer, y_encoder, metric, inverse_transform_y_method, resize_params):
         """Initialize the instance.
         Args:
             graph: The graph form of the learned model
@@ -312,6 +330,8 @@ class PortableImageSupervised(PortableClass):
         self.y_encoder = y_encoder
         self.metric = metric
         self.inverse_transform_y_method = inverse_transform_y_method
+        self.resize_height = resize_params[0]
+        self.resize_width = resize_params[1]
 
     def predict(self, x_test):
         """Return predict results for the testing data.
@@ -324,6 +344,7 @@ class PortableImageSupervised(PortableClass):
         """
         if Constant.LIMIT_MEMORY:
             pass
+
         test_loader = self.data_transformer.transform_test(x_test)
         model = self.graph.produce_model()
         model.eval()
@@ -340,5 +361,7 @@ class PortableImageSupervised(PortableClass):
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
+        if len(x_test.shape) != 0 and len(x_test.shape) == 3:
+            x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)

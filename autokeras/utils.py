@@ -7,9 +7,12 @@ import zipfile
 
 import warnings
 import imageio
+import numpy
 import requests
+from skimage.transform import resize
 import torch
 import subprocess
+
 from autokeras.constant import Constant
 
 
@@ -169,6 +172,55 @@ def read_csv_file(csv_file_path):
 def read_image(img_path):
     img = imageio.imread(uri=img_path)
     return img
+
+
+def compute_image_resize_params(data):
+    """Compute median height and width of all images in data. These
+    values are used to resize the images at later point. Number of
+    channels do not change from the original images. Currently, only
+    2-D images are supported.
+
+    Args:
+        data: 2-D Image data with shape N x H x W x C.
+
+    Returns:
+        median height: Median height of all images in the data.
+        median width: Median width of all images in the data.
+    """
+    median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
+
+    if median_height * median_width > Constant.MAX_IMAGE_SIZE:
+        reduction_factor = numpy.sqrt(median_height * median_width / Constant.MAX_IMAGE_SIZE)
+        median_height = median_height / reduction_factor
+        median_width = median_width / reduction_factor
+
+    return int(median_height), int(median_width)
+
+
+def resize_image_data(data, h, w):
+    """Resize all images in data to size h x w x c, where h is the height,
+    w is the width and c is the number of channels. The number of channels
+    c does not change from data. The function supports only 2-D image data.
+
+    Args:
+        data: 2-D Image data with shape N x H x W x C.
+        h: Image resize height.
+        w: Image resize width.
+
+    Returns:
+        data: Resize data.
+    """
+
+    output_data = []
+    for im in data:
+        if len(im.shape) != 3:
+            return data
+        output_data.append(resize(image=im,
+                                  output_shape=(h, w, im.shape[-1]),
+                                  mode='edge',
+                                  preserve_range=True))
+
+    return numpy.array(output_data)
 
 
 def get_system():

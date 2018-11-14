@@ -52,6 +52,10 @@ class Constant:
     PRE_TRAIN_FILE_LINK = "http://nlp.stanford.edu/data/glove.6B.zip"
     PRE_TRAIN_FILE_NAME = "glove.6B.100d.txt"
 
+    # Image Resize
+
+    MAX_IMAGE_SIZE = 128 * 128
+
     # SYS Constant
 
     SYS_LINUX = 'linux'
