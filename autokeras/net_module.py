@@ -98,5 +98,5 @@ class CnnModule(NetworkModule):
 
 class MlpModule(NetworkModule):
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
-        super(NetworkModule, self).__init__(loss, metric, searcher_args, path, verbose)
+        super(MlpModule, self).__init__(loss, metric, searcher_args, path, verbose)
         self.generators.append(MlpGenerator)
