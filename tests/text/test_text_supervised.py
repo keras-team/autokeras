@@ -88,21 +88,21 @@ def test_save_continue(_, _1, _2):
     clf = TextClassifier(path=TEST_TEMP_DIR, verbose=False, resume=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y, time_limit=5)
-    assert len(clf.load_searcher().history) == 1
+    assert len(clf.cnn.searcher.history) == 1
 
     Constant.MAX_MODEL_NUM = 2
     clf = TextClassifier(verbose=False, path=TEST_TEMP_DIR, resume=True)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
-    assert len(clf.load_searcher().history) == 2
+    assert len(clf.cnn.searcher.history) == 2
 
     Constant.MAX_MODEL_NUM = 1
     clf = TextClassifier(verbose=False, path=TEST_TEMP_DIR, resume=False)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
-    assert len(clf.load_searcher().history) == 1
+    assert len(clf.cnn.searcher.history) == 1
     clean_dir(TEST_TEMP_DIR)
 
 
