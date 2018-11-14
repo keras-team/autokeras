@@ -420,7 +420,7 @@ class Graph:
         if self.weighted:
             filters_end = self.layer_list[end_id].filters
             filters_start = self.layer_list[start_id].filters
-            filter_shape = (1,) * (len(self.layer_list[end_id].get_weights()[0].shape) - 2)
+            filter_shape = (1,) * self.n_dim
             weights = np.zeros((filters_end, filters_start) + filter_shape)
             bias = np.zeros(filters_end)
             new_conv_layer.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
@@ -479,7 +479,7 @@ class Graph:
         if self.weighted:
             filters_end = self.layer_list[end_id].filters
             filters_start = self.layer_list[start_id].filters
-            filter_shape = (1,) * (len(self.layer_list[end_id].get_weights()[0].shape) - 2)
+            filter_shape = (1,) * self.n_dim
             weights = np.zeros((filters_end, filters_end) + filter_shape)
             for i in range(filters_end):
                 filter_weight = np.zeros((filters_end,) + filter_shape)

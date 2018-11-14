@@ -45,7 +45,19 @@ class Constant:
     MAX_SEQUENCE_LENGTH = 400
     MAX_NB_WORDS = 5000
     EXTRACT_PATH = "glove/"
+
     # Download file name
+
     FILE_PATH = "glove.zip"
     PRE_TRAIN_FILE_LINK = "http://nlp.stanford.edu/data/glove.6B.zip"
     PRE_TRAIN_FILE_NAME = "glove.6B.100d.txt"
+
+    # Image Resize
+
+    MAX_IMAGE_SIZE = 128 * 128
+
+    # SYS Constant
+
+    SYS_LINUX = 'linux'
+    SYS_WINDOWS = 'windows'
+    SYS_GOOGLE_COLAB = 'goog_colab'

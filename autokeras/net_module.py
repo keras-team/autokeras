@@ -1,10 +1,9 @@
 import os
-import pickle
 import time
 
 from autokeras.constant import Constant
 from autokeras.search import Searcher, train
-from autokeras.utils import pickle_from_file
+from autokeras.utils import pickle_to_file
 from autokeras.nn.generator import CnnGenerator, MlpGenerator
 
 
@@ -39,17 +38,16 @@ class NetworkModule:
             self.searcher_args['loss'] = self.loss
             self.searcher_args['generator'] = self.generator
             self.searcher_args['verbose'] = self.verbose
-            searcher = Searcher(**self.searcher_args)
-            self._save_searcher(searcher)
-            self.searcher = True
+            self.searcher = Searcher(**self.searcher_args)
+            pickle_to_file(self, os.path.join(self.path, 'module'))
 
         start_time = time.time()
         time_remain = time_limit
         try:
             while time_remain > 0:
-                searcher = pickle_from_file(os.path.join(self.path, 'searcher'))
-                searcher.search(train_data, test_data, int(time_remain))
-                if len(self._load_searcher().history) >= Constant.MAX_MODEL_NUM:
+                self.searcher.search(train_data, test_data, int(time_remain))
+                pickle_to_file(self, os.path.join(self.path, 'module'))
+                if len(self.searcher.history) >= Constant.MAX_MODEL_NUM:
                     break
                 time_elapsed = time.time() - start_time
                 time_remain = time_limit - time_elapsed
@@ -57,7 +55,7 @@ class NetworkModule:
             if time_remain <= 0:
                 raise TimeoutError
         except TimeoutError:
-            if len(self._load_searcher().history) == 0:
+            if len(self.searcher.history) == 0:
                 raise TimeoutError("Search Time too short. No model was found during the search time.")
             elif self.verbose:
                 print('Time is out.')
@@ -72,30 +70,24 @@ class NetworkModule:
             test_data: A DataLoader instance representing the testing data
 
         """
-        searcher = self._load_searcher()
-        graph = searcher.load_best_model()
+        graph = self.searcher.load_best_model()
 
         if retrain:
             graph.weighted = False
         _, _1, graph = train(q=None, args=(graph,
-                              train_data,
-                              test_data,
-                              trainer_args,
-                              self.metric,
-                              self.loss,
-                              self.verbose,
-                              self.path))
-        searcher.replace_model(graph, searcher.get_best_model_id())
+                                           train_data,
+                                           test_data,
+                                           trainer_args,
+                                           self.metric,
+                                           self.loss,
+                                           self.verbose,
+                                           self.path))
+        self.searcher.replace_model(graph, self.searcher.get_best_model_id())
+        pickle_to_file(self, os.path.join(self.path, 'module'))
 
     @property
     def best_model(self):
-        return self._load_searcher().load_best_model()
-
-    def _save_searcher(self, searcher):
-        pickle.dump(searcher, open(os.path.join(self.path, 'searcher'), 'wb'))
-
-    def _load_searcher(self):
-        return pickle_from_file(os.path.join(self.path, 'searcher'))
+        return self.searcher.load_best_model()
 
 
 class CnnModule(NetworkModule):
