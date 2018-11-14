@@ -109,6 +109,7 @@ class ImageSupervised(Supervised):
         if has_file(os.path.join(self.path, 'classifier')) and resume:
             classifier = pickle_from_file(os.path.join(self.path, 'classifier'))
             self.__dict__ = classifier.__dict__
+            self.cnn = pickle_from_file(os.path.join(self.path, 'module'))
         else:
             self.y_encoder = None
             self.data_transformer = None
@@ -233,9 +234,6 @@ class ImageSupervised(Supervised):
         test_data = self.data_transformer.transform_test(x_test, y_test)
 
         self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
-
-    def load_searcher(self):
-        return pickle_from_file(os.path.join(self.path, 'searcher'))
 
     def export_keras_model(self, model_file_name):
         """ Exports the best Keras model to the given filename. """
