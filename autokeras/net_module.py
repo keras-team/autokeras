@@ -15,7 +15,7 @@ class NetworkModule:
         self.verbose = verbose
         self.loss = loss
         self.metric = metric
-        self.generator = None
+        self.generators = []
 
     def fit(self, n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60):
         """ Search the best CnnModule.
@@ -36,7 +36,7 @@ class NetworkModule:
             self.searcher_args['path'] = self.path
             self.searcher_args['metric'] = self.metric
             self.searcher_args['loss'] = self.loss
-            self.searcher_args['generator'] = self.generator
+            self.searcher_args['generators'] = self.generators
             self.searcher_args['verbose'] = self.verbose
             self.searcher = Searcher(**self.searcher_args)
             pickle_to_file(self, os.path.join(self.path, 'module'))
@@ -93,10 +93,10 @@ class NetworkModule:
 class CnnModule(NetworkModule):
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose)
-        self.generator = CnnGenerator
+        self.generators.append(CnnGenerator)
 
 
 class MlpModule(NetworkModule):
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         super(NetworkModule, self).__init__(loss, metric, searcher_args, path, verbose)
-        self.generator = MlpGenerator
+        self.generators.append(MlpGenerator)

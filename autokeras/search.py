@@ -42,7 +42,7 @@ class Searcher:
         t_min: A float. The minimum temperature during simulated annealing.
     """
 
-    def __init__(self, n_output_node, input_shape, path, metric, loss, generator, verbose,
+    def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose,
                  trainer_args=None,
                  default_model_len=Constant.MODEL_LEN,
                  default_model_width=Constant.MODEL_WIDTH,
@@ -72,7 +72,7 @@ class Searcher:
         self.metric = metric
         self.loss = loss
         self.path = path
-        self.generator = generator
+        self.generators = generators
         self.model_count = 0
         self.descriptors = []
         self.trainer_args = trainer_args
@@ -146,17 +146,20 @@ class Searcher:
     def init_search(self):
         if self.verbose:
             print('\nInitializing search.')
-        graph = self.generator(self.n_classes, self.input_shape).\
-            generate(self.default_model_len, self.default_model_width)
-        model_id = self.model_count
-        self.model_count += 1
-        self.training_queue.append((graph, -1, model_id))
-        self.descriptors.append(graph.extract_descriptor())
-        for child_graph in default_transform(graph):
-            child_id = self.model_count
+        graph, model_id = None, None
+        for generator in self.generators:
+            graph = generator(self.n_classes, self.input_shape).\
+                generate(self.default_model_len, self.default_model_width)
+            model_id = self.model_count
             self.model_count += 1
-            self.training_queue.append((child_graph, model_id, child_id))
-            self.descriptors.append(child_graph.extract_descriptor())
+            self.training_queue.append((graph, -1, model_id))
+            self.descriptors.append(graph.extract_descriptor())
+        if graph is not None and model_id is not None:
+            for child_graph in default_transform(graph):
+                child_id = self.model_count
+                self.model_count += 1
+                self.training_queue.append((child_graph, model_id, child_id))
+                self.descriptors.append(child_graph.extract_descriptor())
         if self.verbose:
             print('Initialization finished.')
 
