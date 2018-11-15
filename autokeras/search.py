@@ -214,7 +214,6 @@ class Searcher:
             self.x_queue = []
             self.y_queue = []
 
-            pickle_to_file(self, os.path.join(self.path, 'searcher'))
             self.export_json(os.path.join(self.path, 'history.json'))
 
         except (TimeoutError, queue.Empty) as e:
