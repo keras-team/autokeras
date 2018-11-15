@@ -65,35 +65,23 @@ def load_image_dataset(csv_file_path, images_path):
 
 
 class ImageSupervised(Supervised):
-    """The image classifier class.
+    """Abstract image supervised class.
 
-    It is used for image classification. It searches convolutional neural network architectures
-    for the best configuration for the dataset.
-
-    Attributes:
-        path: A path to the directory to save the classifier.
-        y_encoder: An instance of OneHotEncoder for `y_train` (array of categorical labels).
-        verbose: A boolean value indicating the verbosity mode.
+    Parameters:
+        verbose: A boolean value indicating the verbosity mode which determines whether the search process
+                will be printed to stdout.
+        path: A path to the directory to save the classifier as well as intermediate results
+        resume: A boolean. If True, the classifier will continue to previous work saved in path.
+                Otherwise, the classifier will start a new search.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
         augment: A boolean value indicating whether the data needs augmentation.  If not define, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
+        y_encoder: Label encoder, used in transform_y or inverse_transform_y for encode the label. For example,
+                    if one hot encoder needed, y_encoder can be OneHotEncoder.
+
     """
 
     def __init__(self, verbose=False, path=None, resume=False, searcher_args=None, augment=None):
-        """Initialize the instance.
-
-        The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
-        Otherwise it would create a new one.
-
-        Args:
-            verbose: A boolean of whether the search process will be printed to stdout.
-            path: A string. The path to a directory, where the intermediate results are saved.
-            resume: A boolean. If True, the classifier will continue to previous work saved in path.
-                Otherwise, the classifier will start a new search.
-            augment: A boolean value indicating whether the data needs augmentation. If not define, then it
-                will use the value of Constant.DATA_AUGMENTATION which is True by default.
-
-        """
         super().__init__(verbose)
 
         if searcher_args is None:
@@ -235,6 +223,17 @@ class ImageSupervised(Supervised):
 
 
 class ImageClassifier(ImageSupervised):
+    """ ImageClassifier Class
+    It is used for image classification. It searches convolutional neural network architectures
+    for the best configuration for the image dataset.
+
+    Parameters:
+        y_encoder: An instance of OneHotEncoder for `y_train` (array of categorical labels).
+
+    Attributes:
+        loss: Cross Entropy loss defined by classification_loss method
+
+    """
     @property
     def loss(self):
         return classification_loss
@@ -259,18 +258,33 @@ class ImageClassifier(ImageSupervised):
 
 
 class ImageClassifier1D(ImageClassifier):
+    """ ImageClassifier1D Class
+    It is used for 1D image classification. It searches convolutional neural network architectures
+    for the best configuration for the 1D image dataset.
+    """
     def __init__(self, **kwargs):
         kwargs['augment'] = False
         super().__init__(**kwargs)
 
 
 class ImageClassifier3D(ImageClassifier):
+    """ ImageClassifier3D Class
+    It is used for 3D image classification. It searches convolutional neural network architectures
+    for the best configuration for the 1D image dataset.
+    """
     def __init__(self, **kwargs):
         kwargs['augment'] = False
         super().__init__(**kwargs)
 
 
 class ImageRegressor(ImageSupervised):
+    """ ImageClassifier Class
+    It is used for image classification. It searches convolutional neural network architectures
+    for the best configuration for the image dataset.
+
+    Attributes:
+        loss: mean squared error loss defined by regression_loss method
+    """
     @property
     def loss(self):
         return regression_loss
@@ -290,12 +304,20 @@ class ImageRegressor(ImageSupervised):
 
 
 class ImageRegressor1D(ImageRegressor):
+    """ ImageRegressor1D Class
+    It is used for 1D image classification. It searches convolutional neural network architectures
+    for the best configuration for the 1D image dataset.
+    """
     def __init__(self, **kwargs):
         kwargs['augment'] = False
         super().__init__(**kwargs)
 
 
 class ImageRegressor3D(ImageRegressor):
+    """ ImageRegressor3D Class
+    It is used for 3D image classification. It searches convolutional neural network architectures
+    for the best configuration for the 1D image dataset.
+    """
     def __init__(self, **kwargs):
         kwargs['augment'] = False
         super().__init__(**kwargs)
