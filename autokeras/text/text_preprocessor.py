@@ -16,6 +16,7 @@ from autokeras.utils import download_file_with_extract
 
 def download_pre_train(file_path, extract_path):
     """Download pre train file from link in constant.py
+
     :param file_path: a string contains download file path + file name
     :param extract_path: a string extract path name
     """
@@ -26,6 +27,7 @@ def download_pre_train(file_path, extract_path):
 
 def clean_str(string):
     """Tokenization/string cleaning for all string.
+
     Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
     """
     string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)

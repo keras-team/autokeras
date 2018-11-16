@@ -66,7 +66,7 @@ def load_image_dataset(csv_file_path, images_path):
 class ImageSupervised(Supervised):
     """Abstract image supervised class.
 
-    Parameters:
+    Attributes:
         verbose: A boolean value indicating the verbosity mode which determines whether the search process
                 will be printed to stdout.
         path: A path to the directory to save the classifier as well as intermediate results

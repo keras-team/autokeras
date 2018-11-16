@@ -22,7 +22,7 @@ class TextClassifier(Supervised):
     It is used for text classification. It searches convolutional neural network architectures
     for the best configuration for the text dataset.
 
-    Parameters:
+    Attributes:
         verbose: A boolean value indicating the verbosity mode which determines whether the search process
                 will be printed to stdout.
         path: A path to the directory to save the classifier as well as intermediate results
@@ -64,9 +64,10 @@ class TextClassifier(Supervised):
         Args:
             x: A numpy.ndarray instance containing the training data.
             y: A numpy.ndarray instance containing the label of the training data.
-            time_limit: The time limit for the search in seconds.
             y_test:
             x_test:
+            batch_size: int, define the batch size
+            time_limit: The time limit for the search in seconds.
         """
         x = text_preprocess(x, path=self.path)
 
