@@ -42,7 +42,7 @@ You can use Gitter to communicate with people who also interested in Auto-Keras.
 
 You can follow us on Twitter. We will constantly post our new features and releases. Moreover, we will post new feature request for the developers from the open-source community to contribute code and documentation.
 
-<a href="https://twitter.com/autokeras?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-show-count="false">Follow @autokeras</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<a href="https://twitter.com/autokeras" class="twitter-follow-button" data-show-count="false">Follow @autokeras</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 ## Citing this work
 
