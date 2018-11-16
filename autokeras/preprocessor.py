@@ -156,7 +156,7 @@ class TextDataTransformer(DataTransformer):
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     def _transform(self, compose_list, data, targets):
-        data = torch.Tensor(data.transpose(0, 3, 1, 2))
+        data = torch.Tensor(data.transpose(0, 2, 1))
         data_transforms = Compose(compose_list)
         return MultiTransformDataset(data, targets, data_transforms)
 

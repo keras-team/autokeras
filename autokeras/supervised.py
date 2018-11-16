@@ -9,7 +9,7 @@ import numpy as np
 
 from autokeras.constant import Constant
 from autokeras.net_module import CnnModule
-from autokeras.utils import temp_folder_generator, pickle_from_file, validate_xy, pickle_to_file
+from autokeras.utils import rand_temp_folder_generator, pickle_from_file, validate_xy, pickle_to_file
 
 
 class Supervised(ABC):
@@ -96,7 +96,7 @@ class DeepSupervised(Supervised):
             searcher_args = {}
 
         if path is None:
-            path = temp_folder_generator()
+            path = rand_temp_folder_generator()
 
         self.path = path
         if resume:

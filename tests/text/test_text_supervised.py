@@ -11,7 +11,7 @@ def mock_train(**kwargs):
     return 1, 0
 
 
-def mock_text_preprocess(x_train, path="dummy_path"):
+def mock_text_preprocess(x_train):
     return x_train
 
 
@@ -25,7 +25,7 @@ def test_fit_predict(_, _1, _2):
     Constant.T_MIN = 0.8
     clean_dir(TEST_TEMP_DIR)
     clf = TextClassifier(path=TEST_TEMP_DIR, verbose=True)
-    train_x = np.random.rand(100, 25, 25, 1)
+    train_x = np.random.rand(100, 25, 25)
     train_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y, )
     results = clf.predict(train_x)
@@ -42,7 +42,7 @@ def test_timeout(_, _1):
     Constant.DATA_AUGMENTATION = False
     clean_dir(TEST_TEMP_DIR)
     clf = TextClassifier(path=TEST_TEMP_DIR, verbose=False)
-    train_x = np.random.rand(100, 25, 25, 1)
+    train_x = np.random.rand(100, 25, 25)
     train_y = np.random.randint(0, 5, 100)
     with pytest.raises(TimeoutError):
         clf.fit(train_x, train_y, time_limit=0)
@@ -62,9 +62,9 @@ def test_final_fit(_, _1, _2, _3):
     Constant.SEARCH_MAX_ITER = 1
     Constant.N_NEIGHBOURS = 1
     Constant.T_MIN = 0.8
-    train_x = np.random.rand(100, 25, 25, 1)
+    train_x = np.random.rand(100, 25, 25)
     train_y = np.random.randint(0, 5, 100)
-    test_x = np.random.rand(100, 25, 25, 1)
+    test_x = np.random.rand(100, 25, 25)
     test_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y)
     clf.final_fit(train_x, train_y, test_x, test_y)
@@ -81,9 +81,9 @@ def test_save_continue(_, _1, _2):
     Constant.MAX_MODEL_NUM = 1
     Constant.SEARCH_MAX_ITER = 1
     Constant.T_MIN = 0.8
-    train_x = np.random.rand(100, 25, 25, 1)
+    train_x = np.random.rand(100, 25, 25)
     train_y = np.random.randint(0, 5, 100)
-    test_x = np.random.rand(100, 25, 25, 1)
+    test_x = np.random.rand(100, 25, 25)
     clean_dir(TEST_TEMP_DIR)
     clf = TextClassifier(path=TEST_TEMP_DIR, verbose=False, resume=False)
     clf.n_epochs = 100
@@ -106,7 +106,7 @@ def test_save_continue(_, _1, _2):
     clean_dir(TEST_TEMP_DIR)
 
 
-@patch('autokeras.text.text_supervised.temp_folder_generator', return_value=TEST_TEMP_DIR)
+@patch('autokeras.text.text_supervised.rand_temp_folder_generator', return_value=TEST_TEMP_DIR)
 def test_init_image_classifier_with_none_path(_):
     clf = TextClassifier()
     assert clf.path == TEST_TEMP_DIR
@@ -120,7 +120,7 @@ def test_evaluate(_, _1, _2):
     Constant.MAX_MODEL_NUM = 1
     Constant.SEARCH_MAX_ITER = 1
     Constant.T_MIN = 0.8
-    train_x = np.random.rand(100, 25, 25, 1)
+    train_x = np.random.rand(100, 25, 25)
     train_y = np.random.randint(0, 5, 100)
     clean_dir(TEST_TEMP_DIR)
     clf = TextClassifier(path=TEST_TEMP_DIR, verbose=False, resume=False)
@@ -131,7 +131,7 @@ def test_evaluate(_, _1, _2):
     assert score <= 1.0
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.get_context', new=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 @patch('autokeras.text.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
 def test_fit_predict_regression(_, _1):
@@ -140,12 +140,13 @@ def test_fit_predict_regression(_, _1):
     Constant.SEARCH_MAX_ITER = 1
     Constant.T_MIN = 0.8
     Constant.DATA_AUGMENTATION = False
-    path = 'tests/resources/temp'
-    for f in os.listdir(path):
-        print(f)
+    path = TEST_TEMP_DIR
+    print(os.getcwd())
+    # for f in os.listdir(path):
+    #     print(f)
     clean_dir(path)
     clf = TextRegressor(path=path, verbose=False)
-    train_x = np.random.rand(100, 25, 25, 1)
+    train_x = np.random.rand(100, 25, 25)
     train_y = np.random.randint(0, 5, 100)
     clf.fit(train_x, train_y)
     results = clf.predict(train_x)

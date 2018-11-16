@@ -51,7 +51,7 @@ class TextSupervised(DeepSupervised, ABC):
             batch_size: int, define the batch size.
             time_limit: The time limit for the search in seconds.
         """
-        x = text_preprocess(x, path=self.path)
+        x = text_preprocess(x)
 
         x = np.array(x)
         y = np.array(y).flatten()
@@ -64,7 +64,7 @@ class TextSupervised(DeepSupervised, ABC):
             self.data_transformer = TextDataTransformer()
 
     def preprocess(self, x):
-        return text_preprocess(x, path=self.path)
+        return text_preprocess(x)
 
 
 class TextClassifier(TextSupervised):

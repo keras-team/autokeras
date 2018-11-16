@@ -38,8 +38,8 @@ def mock_load_pretrain(path, word_index):
 @patch('autokeras.text.text_preprocessor.tokenlize_text', side_effect=mock_tokenlize_text)
 @patch('autokeras.text.text_preprocessor.clean_str', side_effect=mock_clean_str)
 def test_text_preprocess_class(_, _1, _2):
-    train_x = np.random.rand(100, 25, 25, 1)
-    train_x = text_preprocess(train_x, TEST_TEMP_DIR)
+    train_x = np.random.rand(100, 25, 25)
+    train_x = text_preprocess(train_x)
 
 
 def test_clean_str():
@@ -60,7 +60,6 @@ def test_load_pretrain(_, _1):
 def test_processing(_, _1):
     train_x = np.full((1, 2), 1)
     train_x = processing(TEST_TEMP_DIR, word_index, 2, train_x)
-    train_x = np.squeeze(train_x, axis=-1)
     assert np.allclose(train_x[0][0], embedding_matrix[1])
 
 
