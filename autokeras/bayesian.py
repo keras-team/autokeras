@@ -211,11 +211,13 @@ class BayesianOptimizer:
         self.metric = metric
         self.gpr = IncrementalGaussianProcess(kernel_lambda)
         self.beta = beta
+        self.search_tree = SearchTree()
 
     def fit(self, x_queue, y_queue):
         self.gpr.fit(x_queue, y_queue)
 
-    def optimize_acq(self, model_ids, descriptors, timeout):
+    def optimize_acq(self, descriptors, timeout):
+        model_ids = self.search_tree.adj_list.keys()
         start_time = time.time()
         target_graph = None
         father_id = None
@@ -292,6 +294,9 @@ class BayesianOptimizer:
             return True
         return False
 
+    def add_child(self, father_id, model_id):
+        self.search_tree.add_child(father_id, model_id)
+
 
 @total_ordering
 class Elem:
@@ -317,3 +322,28 @@ def contain(descriptors, target_descriptor):
         if edit_distance(descriptor, target_descriptor, 1) < 1e-5:
             return True
     return False
+
+
+class SearchTree:
+    def __init__(self):
+        self.root = None
+        self.adj_list = {}
+
+    def add_child(self, u, v):
+        if u == -1:
+            self.root = v
+            self.adj_list[v] = []
+            return
+        if v not in self.adj_list[u]:
+            self.adj_list[u].append(v)
+        if v not in self.adj_list:
+            self.adj_list[v] = []
+
+    def get_dict(self, u=None):
+        if u is None:
+            return self.get_dict(self.root)
+        children = []
+        for v in self.adj_list[u]:
+            children.append(self.get_dict(v))
+        ret = {'name': u, 'children': children}
+        return ret

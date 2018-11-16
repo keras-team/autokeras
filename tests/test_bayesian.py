@@ -49,3 +49,11 @@ def test_elem_queue():
     pq.put(elem2)
     assert pq.get() == elem2
     assert pq.get() == elem1
+
+
+def test_search_tree():
+    tree = SearchTree()
+    tree.add_child(-1, 0)
+    tree.add_child(0, 1)
+    tree.add_child(0, 2)
+    assert len(tree.adj_list) == 3

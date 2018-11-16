@@ -1,12 +1,12 @@
 from unittest.mock import patch
 
+from autokeras.bayesian import edit_distance
 from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
 from autokeras.search import *
 from autokeras.nn.generator import CnnGenerator
 
-from tests.common import clean_dir, MockProcess, get_classification_data_loaders, get_add_skip_model, \
-    get_concat_skip_model, simple_transform, MockMemoryOutProcess, TEST_TEMP_DIR
+from tests.common import clean_dir, MockProcess, get_classification_data_loaders, simple_transform, MockMemoryOutProcess, TEST_TEMP_DIR
 
 
 def mock_train(**_):
@@ -27,14 +27,6 @@ def test_bayesian_searcher(_, _1, _2):
         generator.search(train_data, test_data)
     clean_dir(TEST_TEMP_DIR)
     assert len(generator.history) == 2
-
-
-def test_search_tree():
-    tree = SearchTree()
-    tree.add_child(-1, 0)
-    tree.add_child(0, 1)
-    tree.add_child(0, 2)
-    assert len(tree.adj_list) == 3
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
@@ -58,11 +50,6 @@ def test_export_json(_, _1, _2):
     assert len(data['tree']['children']) == 2
     clean_dir(TEST_TEMP_DIR)
     assert len(generator.history) == 3
-
-
-def test_graph_duplicate():
-    assert same_graph(get_add_skip_model().extract_descriptor(), get_add_skip_model().extract_descriptor())
-    assert not same_graph(get_concat_skip_model().extract_descriptor(), get_add_skip_model().extract_descriptor())
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
