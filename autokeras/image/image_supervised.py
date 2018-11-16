@@ -77,10 +77,9 @@ class ImageSupervised(Supervised):
         augment: A boolean value indicating whether the data needs augmentation.  If not define, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
-        resize_height: resize image height
-        resize_width: resize image width
+        resize_height: resize image height.
+        resize_width: resize image width.
     """
-
     def __init__(self, verbose=False, path=None, resume=False, searcher_args=None, augment=None):
         """Initialize the instance.
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
@@ -255,7 +254,7 @@ class ImageSupervised(Supervised):
 
 
 class ImageClassifier(ImageSupervised):
-    """ImageClassifier Class.
+    """ImageClassifier class.
 
     It is used for image classification. It searches convolutional neural network architectures
     for the best configuration for the image dataset.
@@ -284,7 +283,7 @@ class ImageClassifier(ImageSupervised):
 
 
 class ImageClassifier1D(ImageClassifier):
-    """ ImageClassifier1D Class.
+    """ ImageClassifier1D class.
 
     It is used for 1D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
@@ -295,7 +294,7 @@ class ImageClassifier1D(ImageClassifier):
 
 
 class ImageClassifier3D(ImageClassifier):
-    """ ImageClassifier3D Class.
+    """ ImageClassifier3D class.
 
     It is used for 3D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
@@ -306,7 +305,7 @@ class ImageClassifier3D(ImageClassifier):
 
 
 class ImageRegressor(ImageSupervised):
-    """ImageRegressor Class.
+    """ImageRegressor class.
 
     It is used for image classification. It searches convolutional neural network architectures
     for the best configuration for the image dataset.
@@ -330,7 +329,7 @@ class ImageRegressor(ImageSupervised):
 
 
 class ImageRegressor1D(ImageRegressor):
-    """ ImageRegressor1D Class.
+    """ ImageRegressor1D class.
 
     It is used for 1D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
@@ -341,7 +340,7 @@ class ImageRegressor1D(ImageRegressor):
 
 
 class ImageRegressor3D(ImageRegressor):
-    """ ImageRegressor3D Class.
+    """ ImageRegressor3D class.
 
     It is used for 3D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
