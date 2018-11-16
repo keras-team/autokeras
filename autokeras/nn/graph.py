@@ -14,6 +14,10 @@ from autokeras.nn.layers import StubConcatenate, StubAdd, is_layer, layer_width,
 
 
 class NetworkDescriptor:
+    """A class describing the neural architecture for neural network kernel.
+
+    It only record the width of convolutional and dense layers, and the skip-connection types and positions.
+    """
     CONCAT_CONNECT = 'concat'
     ADD_CONNECT = 'add'
 
