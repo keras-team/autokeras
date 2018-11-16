@@ -56,12 +56,11 @@ def tokenlize_text(max_num_words, max_seq_length, x_train):
     Vectorize a text corpus by transform each text in texts to a sequence of integers.
 
     Args:
-        max_num_words: int, max number of words in the dictionary
-        max_seq_length: int, the length of each text sequence, padding if shorter, trim is longer
-        x_train: list contains text data
+        max_num_words: int, max number of words in the dictionary.
+        max_seq_length: int, the length of each text sequence, padding if shorter, trim is longer.
+        x_train: list contains text data.
 
-    Returns: tokenlized input data x_train and dictionary contains word with tokenlized index
-
+    Returns: tokenlized input data x_train and dictionary contains word with tokenlized index.
     """
     print("tokenlizing texts...")
     tokenizer = Tokenizer(num_words=max_num_words)
@@ -76,13 +75,12 @@ def tokenlize_text(max_num_words, max_seq_length, x_train):
 def read_embedding_index(extract_path):
     """Read pre train file convert to embedding vector.
 
-    Read the pre trained file into a dictionary where key is the word and value is embedding vector
+    Read the pre trained file into a dictionary where key is the word and value is embedding vector.
 
     Args:
-        extract_path: a string contains pre trained file path
+        extract_path: a string contains pre trained file path.
 
-    Returns: a dictionary contains word with pre trained index
-
+    Returns: a dictionary contains word with pre trained index.
     """
     embedding_index = {}
     f = open(os.path.join(extract_path, Constant.PRE_TRAIN_FILE_NAME))
@@ -98,15 +96,14 @@ def read_embedding_index(extract_path):
 def load_pretrain(path, word_index):
     """Load the pretrain file into embedding weights.
 
-    This method will first generate the embedding index
-    and then generate embedding matrix according to the word_index
+    This method will first generate the embedding index and then generate
+    embedding matrix according to the word_index.
 
     Args:
-        path: a string, path to store the pretrain files
-        word_index: a dictionary contains word with tokenlized index
+        path: a string, path to store the pretrain files.
+        word_index: a dictionary contains word with tokenlized index.
 
-    Returns: embedding_matrix as the pretrain model embedding layer weights
-
+    Returns: embedding_matrix as the pretrain model embedding layer weights.
     """
     print("loading pretrain weights...")
     file_path = os.path.join(path, Constant.FILE_PATH)
@@ -132,13 +129,12 @@ def processing(path, word_index, input_length, x_train):
     k will be pad and longer string will be cropped. m is defined by the pretrained file.
 
     Args:
-        path: string, store the pre trained files
+        path: string, store the pre trained files.
         word_index: dictionary, contains word with tokenlized index.
-        input_length: int, an upper bound of the string length
-        x_train: string array
+        input_length: int, an upper bound of the string length.
+        x_train: string array.
 
-    Returns: processed x_train as float numpy array
-
+    Returns: processed x_train as float numpy array.
     """
 
     embedding_matrix = load_pretrain(path=path, word_index=word_index)
@@ -173,9 +169,9 @@ def processing(path, word_index, input_length, x_train):
 
 
 def text_preprocess(x_train, path):
-    """This is the text preprocess main method
+    """This is the text preprocess main method.
 
-    It takes an raw string, clean it and processing it into tokenlized numpy array
+    It takes an raw string, clean it and processing it into tokenlized numpy array.
     """
     x_train = [clean_str(x) for x in x_train]
     x_train, word_index = tokenlize_text(max_seq_length=Constant.MAX_SEQUENCE_LENGTH,
