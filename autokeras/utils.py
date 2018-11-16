@@ -49,6 +49,7 @@ def pickle_to_file(obj, path):
 
 def get_device():
     """ If CUDA is available, use CUDA device, else use CPU device.
+
     When choosing from CUDA devices, this function will choose the one with max memory available.
 
     Returns: string device name.
@@ -182,10 +183,10 @@ def read_image(img_path):
 
 
 def compute_image_resize_params(data):
-    """Compute median height and width of all images in data. These
-    values are used to resize the images at later point. Number of
-    channels do not change from the original images. Currently, only
-    2-D images are supported.
+    """Compute median height and width of all images in data.
+
+    These values are used to resize the images at later point. Number of channels do not change from the original
+    images. Currently, only 2-D images are supported.
 
     Args:
         data: 2-D Image data with shape N x H x W x C.
@@ -204,10 +205,11 @@ def compute_image_resize_params(data):
     return int(median_height), int(median_width)
 
 
-def resize_image_data(data, h, w):
-    """Resize all images in data to size h x w x c, where h is the height,
-    w is the width and c is the number of channels. The number of channels
-    c does not change from data. The function supports only 2-D image data.
+def resize_image_data(data, height, weight):
+    """Resize images to provided height and width.
+
+    Resize all images in data to size h x w x c, where h is the height, w is the width and c is the number of channels.
+    The number of channels c does not change from data. The function supports only 2-D image data.
 
     Args:
         data: 2-D Image data with shape N x H x W x C.
@@ -223,7 +225,7 @@ def resize_image_data(data, h, w):
         if len(im.shape) != 3:
             return data
         output_data.append(resize(image=im,
-                                  output_shape=(h, w, im.shape[-1]),
+                                  output_shape=(height, weight, im.shape[-1]),
                                   mode='edge',
                                   preserve_range=True))
 
