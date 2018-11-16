@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from autokeras.cnn_module import CnnModule
+from autokeras.net_module import CnnModule
 from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
 from autokeras.preprocessor import *

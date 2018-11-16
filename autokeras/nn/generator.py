@@ -7,7 +7,23 @@ from autokeras.nn.layers import StubAdd, StubDense, StubReLU, get_conv_class, ge
 
 
 class NetworkGenerator:
+    """The base class for generating a network.
+
+    It can be used to generate a CNN or Multi-Layer Perceptron.
+
+    Attributes:
+        n_output_node: Number of output nodes in the network.
+        input_shape: A tuple to represent the input shape.
+    """
     def __init__(self, n_output_node, input_shape):
+        """Initialize the instance.
+
+        Sets the parameters `n_output_node` and `input_shape` for the instance.
+
+        Args:
+            n_output_node: An integer. Number of output nodes in the network.
+            input_shape: A tuple. Input shape of the network.
+        """
         self.n_output_node = n_output_node
         self.input_shape = input_shape
 
@@ -17,7 +33,24 @@ class NetworkGenerator:
 
 
 class CnnGenerator(NetworkGenerator):
+    """A class to generate CNN.
+
+    Attributes:
+          n_dim: `len(self.input_shape) - 1`
+          conv: A class that represents `(n_dim-1)` dimensional convolution.
+          dropout: A class that represents `(n_dim-1)` dimensional dropout.
+          global_avg_pooling: A class that represents `(n_dim-1)` dimensional Global Average Pooling.
+          pooling: A class that represents `(n_dim-1)` dimensional pooling.
+          batch_norm: A class that represents `(n_dim-1)` dimensional batch normalization.
+    """
+
     def __init__(self, n_output_node, input_shape):
+        """Initialize the instance.
+
+        Args:
+            n_output_node: An integer. Number of output nodes in the network.
+            input_shape: A tuple. Input shape of the network.
+        """
         super(CnnGenerator, self).__init__(n_output_node, input_shape)
         self.n_dim = len(self.input_shape) - 1
         if len(self.input_shape) > 4:
@@ -31,6 +64,15 @@ class CnnGenerator(NetworkGenerator):
         self.batch_norm = get_batch_norm_class(self.n_dim)
 
     def generate(self, model_len=Constant.MODEL_LEN, model_width=Constant.MODEL_WIDTH):
+        """Generates a CNN.
+
+        Args:
+            model_len: An integer. Number of convolutional layers.
+            model_width: An integer. Number of filters for the convolutional layers.
+
+        Returns:
+            An instance of the class Graph. Represents the neural architecture graph of the generated model.
+        """
         pooling_len = int(model_len / 4)
         graph = Graph(self.input_shape, False)
         temp_input_channel = self.input_shape[-1]
@@ -53,12 +95,33 @@ class CnnGenerator(NetworkGenerator):
 
 
 class MlpGenerator(NetworkGenerator):
+    """A class to generate Multi-Layer Perceptron.
+    """
+
     def __init__(self, n_output_node, input_shape):
+        """Initialize the instance.
+
+        Args:
+            n_output_node: An integer. Number of output nodes in the network.
+            input_shape: A tuple. Input shape of the network. If it is 1D, ensure the value is appended by a comma
+                in the tuple.
+        """
         super(MlpGenerator, self).__init__(n_output_node, input_shape)
         if len(self.input_shape) > 1:
             raise ValueError('The input dimension is too high.')
 
     def generate(self, model_len=Constant.MLP_MODEL_LEN, model_width=Constant.MLP_MODEL_WIDTH):
+        """Generates a Multi-Layer Perceptron.
+
+        Args:
+            model_len: An integer. Number of hidden layers.
+            model_width: An integer or a list of integers of length `model_len`. If it is a list, it represents the
+                number of nodes in each hidden layer. If it is an integer, all hidden layers have nodes equal to this
+                value.
+
+        Returns:
+            An instance of the class Graph. Represents the neural architecture graph of the generated model.
+        """
         if type(model_width) is list and not len(model_width) == model_len:
             raise ValueError('The length of \'model_width\' does not match \'model_len\'')
         elif type(model_width) is int:
