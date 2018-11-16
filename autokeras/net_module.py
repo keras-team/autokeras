@@ -74,14 +74,14 @@ class NetworkModule:
 
         if retrain:
             graph.weighted = False
-        _, _1, graph = train(q=None, args=(graph,
-                                           train_data,
-                                           test_data,
-                                           trainer_args,
-                                           self.metric,
-                                           self.loss,
-                                           self.verbose,
-                                           self.path))
+        _, _1, graph = train(None, graph,
+                             train_data,
+                             test_data,
+                             trainer_args,
+                             self.metric,
+                             self.loss,
+                             self.verbose,
+                             self.path)
         self.searcher.replace_model(graph, self.searcher.get_best_model_id())
         pickle_to_file(self, os.path.join(self.path, 'module'))
 
