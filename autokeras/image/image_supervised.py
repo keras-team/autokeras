@@ -13,7 +13,7 @@ from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
 from autokeras.supervised import Supervised, PortableClass
 from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy, \
-    read_csv_file, read_image, is_resize_needed, compute_image_resize_params, resize_image_data
+    read_csv_file, read_image, compute_image_resize_params, resize_image_data
 
 
 def read_images(img_file_names, images_dir_path):
