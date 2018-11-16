@@ -105,11 +105,11 @@ class CnnModule(NetworkModule):
     """ Class to create a CNN module."""
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose)
-        self.generators.append(CnnGenerator)
+        self.generators.extend([CnnGenerator] * 2)
 
 
 class MlpModule(NetworkModule):
     """ Class to create an MLP module."""
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         super(MlpModule, self).__init__(loss, metric, searcher_args, path, verbose)
-        self.generators.append(MlpGenerator)
+        self.generators.extend([MlpGenerator] * 2)

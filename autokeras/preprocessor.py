@@ -251,6 +251,33 @@ class ImageDataTransformer(DataTransformer):
         return MultiTransformDataset(data, targets, data_transforms)
 
 
+class DataTransformerMlp(DataTransformer):
+    def __init__(self, data):
+        self.max_val = data.max()
+        data = data / self.max_val
+        self.mean = np.mean(data, axis=0, keepdims=True).flatten()
+        self.std = np.std(data, axis=0, keepdims=True).flatten()
+
+    def transform_train(self, data, targets=None, batch_size=None):
+        dataset = self._transform([Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))], data, targets)
+
+        if batch_size is None:
+            batch_size = Constant.MAX_BATCH_SIZE
+        batch_size = min(len(data), batch_size)
+
+        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+    def transform_test(self, data, target=None, batch_size=None):
+        return self.transform_train(data, targets=target, batch_size=batch_size)
+
+    def _transform(self, compose_list, data, targets):
+        data = data / self.max_val
+        args = [0, len(data.shape) - 1] + list(range(1, len(data.shape) - 1))
+        data = torch.Tensor(data.transpose(*args))
+        data_transforms = Compose(compose_list)
+        return MultiTransformDataset(data, targets, data_transforms)
+
+
 class MultiTransformDataset(Dataset):
     """A class incorporate all transform method into a torch.Dataset class."""
 
