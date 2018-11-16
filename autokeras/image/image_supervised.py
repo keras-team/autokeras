@@ -12,7 +12,7 @@ from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
 from autokeras.supervised import Supervised, PortableClass
-from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy, \
+from autokeras.utils import has_file, pickle_from_file, pickle_to_file, rand_temp_folder_generator, validate_xy, \
     read_csv_file, read_image, compute_image_resize_params, resize_image_data
 
 
@@ -99,7 +99,7 @@ class ImageSupervised(Supervised):
             searcher_args = {}
 
         if path is None:
-            path = temp_folder_generator()
+            path = rand_temp_folder_generator()
 
         if augment is None:
             augment = Constant.DATA_AUGMENTATION

@@ -45,6 +45,7 @@ class Constant:
     MAX_SEQUENCE_LENGTH = 400
     MAX_NB_WORDS = 5000
     EXTRACT_PATH = "glove/"
+    STORE_PATH = ''
 
     # Download file name
 
