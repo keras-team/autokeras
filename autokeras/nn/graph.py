@@ -1,3 +1,4 @@
+from collections import Iterable
 from copy import deepcopy
 from queue import Queue
 
@@ -140,7 +141,7 @@ class Graph:
         Returns:
             output_node_id: An integer. The ID of the output node of the layer.
         """
-        if isinstance(input_node_id, list):
+        if isinstance(input_node_id, Iterable):
             layer.input = list(map(lambda x: self.node_list[x], input_node_id))
             output_node_id = self._add_node(Node(layer.output_shape))
             for node_id in input_node_id:

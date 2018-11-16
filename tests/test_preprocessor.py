@@ -7,9 +7,9 @@ from autokeras.preprocessor import *
 from tests.common import MockProcess, mock_train, clean_dir, TEST_TEMP_DIR
 
 
-@patch('torch.multiprocessing.Pool', new=MockProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_batch_dataset(_):
+def test_batch_dataset(_, _1):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
     Constant.SEARCH_MAX_ITER = 1
@@ -23,5 +23,5 @@ def test_batch_dataset(_):
     train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=False)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
     cnn = CnnModule(classification_loss, Accuracy, {}, TEST_TEMP_DIR, True)
-    cnn.fit(2, (4, 250, 250, 3), train_dataloader, test_dataloader, 12*60*60)
+    cnn.fit(2, (4, 250, 250, 3), train_dataloader, test_dataloader, 12 * 60 * 60)
     clean_dir(TEST_TEMP_DIR)
