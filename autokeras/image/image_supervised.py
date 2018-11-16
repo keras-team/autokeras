@@ -1,5 +1,4 @@
 import os
-import pickle
 from abc import abstractmethod
 from functools import reduce
 
@@ -240,6 +239,7 @@ class ImageSupervised(Supervised):
 
 class ImageClassifier(ImageSupervised):
     """ ImageClassifier Class
+
     It is used for image classification. It searches convolutional neural network architectures
     for the best configuration for the image dataset.
 
@@ -248,7 +248,6 @@ class ImageClassifier(ImageSupervised):
 
     Attributes:
         loss: Cross Entropy loss defined by classification_loss method
-
     """
     @property
     def loss(self):
@@ -275,6 +274,7 @@ class ImageClassifier(ImageSupervised):
 
 class ImageClassifier1D(ImageClassifier):
     """ ImageClassifier1D Class
+
     It is used for 1D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
     """
@@ -294,7 +294,7 @@ class ImageClassifier3D(ImageClassifier):
 
 
 class ImageRegressor(ImageSupervised):
-    """ ImageClassifier Class
+    """ ImageRegressor Class
     It is used for image classification. It searches convolutional neural network architectures
     for the best configuration for the image dataset.
 

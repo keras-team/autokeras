@@ -17,6 +17,23 @@ from autokeras.utils import pickle_to_file, validate_xy, temp_folder_generator, 
 
 
 class TextClassifier(Supervised):
+    """TextClassifier Class
+
+    It is used for text classification. It searches convolutional neural network architectures
+    for the best configuration for the text dataset.
+
+    Parameters:
+        verbose: A boolean value indicating the verbosity mode which determines whether the search process
+                will be printed to stdout.
+        path: A path to the directory to save the classifier as well as intermediate results
+        resume: A boolean. If True, the classifier will continue to previous work saved in path.
+                Otherwise, the classifier will start a new search.
+        searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
+        augment: A boolean value indicating whether the data needs augmentation.  If not define, then it
+                will use the value of Constant.DATA_AUGMENTATION which is True by default.
+        y_encoder: Label encoder, used in transform_y or inverse_transform_y for encode the label. For example,
+                    if one hot encoder needed, y_encoder can be OneHotEncoder.
+    """
     def __init__(self, verbose=False, path=None, resume=False, searcher_args=None):
         super().__init__(verbose)
 
@@ -172,6 +189,14 @@ class TextClassifier(Supervised):
 
 
 class TextRegressor(TextClassifier):
+    """ TextRegressor Class
+
+    It is used for text classification. It searches convolutional neural network architectures
+    for the best configuration for the text dataset.
+
+    Attributes:
+        loss: mean squared error loss defined by regression_loss method
+    """
     @property
     def loss(self):
         return regression_loss
