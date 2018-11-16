@@ -1,18 +1,12 @@
-import os
 from abc import ABC
-from functools import reduce
 
 import numpy as np
-import torch
-from sklearn.model_selection import train_test_split
 
-from autokeras.constant import Constant
 from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, TextDataTransformer
 from autokeras.supervised import DeepSupervised
 from autokeras.text.text_preprocessor import text_preprocess
-from autokeras.utils import pickle_to_file, validate_xy
 
 
 class TextSupervised(DeepSupervised, ABC):
@@ -69,59 +63,8 @@ class TextSupervised(DeepSupervised, ABC):
         if self.data_transformer is None:
             self.data_transformer = TextDataTransformer()
 
-    def final_fit(self, x_train=None, y_train=None, x_test=None, y_test=None, trainer_args=None, retrain=False):
-        """Final training after found the best architecture.
-
-        Args:
-            x_train: A numpy.ndarray of training data.
-            y_train: A numpy.ndarray of training targets.
-            x_test: A numpy.ndarray of testing data.
-            y_test: A numpy.ndarray of testing targets.
-            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
-            retrain: A boolean of whether reinitialize the weights of the model.
-        """
-        x_train = text_preprocess(x_train, path=self.path)
-        if x_test is not None:
-            x_test = text_preprocess(x_test, path=self.path)
-
-        if trainer_args is None:
-            trainer_args = {'max_no_improvement_num': 30}
-
-        y_train = self.transform_y(y_train)
-        y_test = self.transform_y(y_test)
-
-        train_data = self.data_transformer.transform_train(x_train, y_train)
-        test_data = self.data_transformer.transform_test(x_test, y_test)
-
-        self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
-
-    def predict(self, x_test):
-        """Return predict results for the testing data.
-
-        Args:
-            x_test: An instance of numpy.ndarray containing the testing data.
-
-        Returns:
-            A numpy.ndarray containing the results.
-        """
-        if Constant.LIMIT_MEMORY:
-            pass
-        test_loader = self.data_transformer.transform_test(x_test)
-        model = self.cnn.best_model.produce_model()
-        model.eval()
-
-        outputs = []
-        with torch.no_grad():
-            for index, inputs in enumerate(test_loader):
-                outputs.append(model(inputs).numpy())
-        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
-        return self.inverse_transform_y(output)
-
-    def evaluate(self, x_test, y_test):
-        x_test = text_preprocess(x_test, path=self.path)
-        """Return the accuracy score between predict value and `y_test`."""
-        y_predict = self.predict(x_test)
-        return self.metric().evaluate(y_test, y_predict)
+    def preprocess(self, x):
+        return text_preprocess(x, path=self.path)
 
 
 class TextClassifier(TextSupervised):

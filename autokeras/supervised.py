@@ -1,6 +1,11 @@
+import torch
+
+from functools import reduce
+
 import os
 from abc import ABC, abstractmethod
 from sklearn.model_selection import train_test_split
+import numpy as np
 
 from autokeras.constant import Constant
 from autokeras.net_module import CnnModule
@@ -134,6 +139,30 @@ class DeepSupervised(Supervised):
 
         self.cnn.fit(self.get_n_output_node(), x_train.shape, train_data, test_data, time_limit)
 
+    def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
+        """Final training after found the best architecture.
+
+        Args:
+            x_train: A numpy.ndarray of training data.
+            y_train: A numpy.ndarray of training targets.
+            x_test: A numpy.ndarray of testing data.
+            y_test: A numpy.ndarray of testing targets.
+            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
+            retrain: A boolean of whether reinitialize the weights of the model.
+        """
+        x_train = self.preprocess(x_train)
+        x_test = self.preprocess(x_test)
+        if trainer_args is None:
+            trainer_args = {'max_no_improvement_num': 30}
+
+        y_train = self.transform_y(y_train)
+        y_test = self.transform_y(y_test)
+
+        train_data = self.data_transformer.transform_train(x_train, y_train)
+        test_data = self.data_transformer.transform_test(x_test, y_test)
+
+        self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
+
     @property
     @abstractmethod
     def metric(self):
@@ -157,6 +186,40 @@ class DeepSupervised(Supervised):
     @abstractmethod
     def init_transformer(self, x):
         pass
+
+    @abstractmethod
+    def preprocess(self, x):
+        pass
+
+    def export_keras_model(self, model_file_name):
+        """ Exports the best Keras model to the given filename. """
+        self.cnn.best_model.produce_keras_model().save(model_file_name)
+
+    def predict(self, x_test):
+        """Return predict results for the testing data.
+
+        Args:
+            x_test: An instance of numpy.ndarray containing the testing data.
+
+        Returns:
+            A numpy.ndarray containing the results.
+        """
+        x_test = self.preprocess(x_test)
+        test_loader = self.data_transformer.transform_test(x_test)
+        model = self.cnn.best_model.produce_model()
+        model.eval()
+
+        outputs = []
+        with torch.no_grad():
+            for index, inputs in enumerate(test_loader):
+                outputs.append(model(inputs).numpy())
+        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
+        return self.inverse_transform_y(output)
+
+    def evaluate(self, x_test, y_test):
+        """Return the accuracy score between predict value and `y_test`."""
+        y_predict = self.predict(x_test)
+        return self.metric().evaluate(y_test, y_predict)
 
 
 class PortableClass(ABC):
