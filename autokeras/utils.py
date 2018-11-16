@@ -12,7 +12,8 @@ import requests
 from skimage.transform import resize
 import torch
 import subprocess
-
+import string
+import random
 from autokeras.constant import Constant
 
 
@@ -83,10 +84,19 @@ def get_device():
     return device
 
 
-def temp_folder_generator():
-    """Create and return a temporary directory with the path name '/temp_dir_name/autokeras' (E:g:- /tmp/autokeras)."""
+def temp_path_generator():
     sys_temp = tempfile.gettempdir()
     path = os.path.join(sys_temp, 'autokeras')
+    return path
+
+
+def rand_temp_folder_generator():
+    """Create and return a temporary directory with the path name '/temp_dir_name/autokeras' (E:g:- /tmp/autokeras)."""
+    chars = string.ascii_uppercase + string.digits
+    size = 6
+    random_suffix = ''.join(random.choice(chars) for _ in range(size))
+    sys_temp = temp_path_generator()
+    path = sys_temp + '_' + random_suffix
     ensure_dir(path)
     return path
 
@@ -196,6 +206,9 @@ def compute_image_resize_params(data):
         median height: Median height of all images in the data.
         median width: Median width of all images in the data.
     """
+    if len(data.shape) == 1 and len(data[0].shape) != 3:
+        return None, None
+
     median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
 
     if median_height * median_width > Constant.MAX_IMAGE_SIZE:
@@ -206,7 +219,7 @@ def compute_image_resize_params(data):
     return int(median_height), int(median_width)
 
 
-def resize_image_data(data, height, weight):
+def resize_image_data(data, height, width):
     """Resize images to provided height and width.
 
     Resize all images in data to size h x w x c, where h is the height, w is the width and c is the number of channels.
@@ -220,13 +233,18 @@ def resize_image_data(data, height, weight):
     Returns:
         data: Resize data.
     """
+    if data is None:
+        return data
+
+    if len(data.shape) == 4 and data[0].shape[0] == height and data[0].shape[1] == width:
+        return data
 
     output_data = []
     for im in data:
         if len(im.shape) != 3:
             return data
         output_data.append(resize(image=im,
-                                  output_shape=(height, weight, im.shape[-1]),
+                                  output_shape=(height, width, im.shape[-1]),
                                   mode='edge',
                                   preserve_range=True))
 
