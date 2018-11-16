@@ -196,7 +196,7 @@ class TextClassifier(Supervised):
 class TextRegressor(TextClassifier):
     """ TextRegressor class.
 
-    It is used for text classification. It searches convolutional neural network architectures
+    It is used for text regression. It searches convolutional neural network architectures
     for the best configuration for the text dataset.
     """
     @property

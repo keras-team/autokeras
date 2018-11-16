@@ -307,7 +307,7 @@ class ImageClassifier3D(ImageClassifier):
 class ImageRegressor(ImageSupervised):
     """ImageRegressor class.
 
-    It is used for image classification. It searches convolutional neural network architectures
+    It is used for image regression. It searches convolutional neural network architectures
     for the best configuration for the image dataset.
     """
     @property
@@ -331,7 +331,7 @@ class ImageRegressor(ImageSupervised):
 class ImageRegressor1D(ImageRegressor):
     """ ImageRegressor1D class.
 
-    It is used for 1D image classification. It searches convolutional neural network architectures
+    It is used for 1D image regression. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
     """
     def __init__(self, **kwargs):
@@ -342,7 +342,7 @@ class ImageRegressor1D(ImageRegressor):
 class ImageRegressor3D(ImageRegressor):
     """ ImageRegressor3D class.
 
-    It is used for 3D image classification. It searches convolutional neural network architectures
+    It is used for 3D image regression. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
     """
     def __init__(self, **kwargs):

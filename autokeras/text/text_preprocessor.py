@@ -5,7 +5,7 @@ import GPUtil
 import numpy as np
 import tensorflow as tf
 from keras import Input, Model
-from keras import backend as K
+from keras import backend
 from keras.layers import Embedding
 from keras_preprocessing.sequence import pad_sequences
 from keras_preprocessing.text import Tokenizer
@@ -18,8 +18,8 @@ def download_pre_train(file_path, extract_path):
     """Download pre train file from link in constant.py.
 
     Args:
-        file_path: a string contains download file path + file name.
-        extract_path: a string extract path name.
+        file_path: String, contains download file path + file name.
+        extract_path: String extract path name.
     """
     file_link = Constant.PRE_TRAIN_FILE_LINK
     print("try downloading pre train weights from link %s" % file_link)
@@ -53,11 +53,13 @@ def tokenlize_text(max_num_words, max_seq_length, x_train):
     Vectorize a text corpus by transform each text in texts to a sequence of integers.
 
     Args:
-        max_num_words: int, max number of words in the dictionary.
-        max_seq_length: int, the length of each text sequence, padding if shorter, trim is longer.
-        x_train: list contains text data.
+        max_num_words: Int, max number of words in the dictionary.
+        max_seq_length: Int, the length of each text sequence, padding if shorter, trim is longer.
+        x_train: List contains text data.
 
-    Returns: tokenlized input data x_train and dictionary contains word with tokenlized index.
+    Returns:
+        x_train: Tokenlized input data.
+        word_index: Dictionary contains word with tokenlized index.
     """
     print("tokenlizing texts...")
     tokenizer = Tokenizer(num_words=max_num_words)
@@ -75,9 +77,10 @@ def read_embedding_index(extract_path):
     Read the pre trained file into a dictionary where key is the word and value is embedding vector.
 
     Args:
-        extract_path: a string contains pre trained file path.
+        extract_path: String contains pre trained file path.
 
-    Returns: a dictionary contains word with pre trained index.
+    Returns:
+        embedding_index: Dictionary contains word with pre trained index.
     """
     embedding_index = {}
     f = open(os.path.join(extract_path, Constant.PRE_TRAIN_FILE_NAME))
@@ -97,10 +100,11 @@ def load_pretrain(path, word_index):
     embedding matrix according to the word_index.
 
     Args:
-        path: a string, path to store the pretrain files.
-        word_index: a dictionary contains word with tokenlized index.
+        path: String, path to store the pretrain files.
+        word_index: Dictionary contains word with tokenlized index.
 
-    Returns: embedding_matrix as the pretrain model embedding layer weights.
+    Returns:
+        embedding_matrix: Numpy array as the pretrain model embedding layer weights.
     """
     print("loading pretrain weights...")
     file_path = os.path.join(path, Constant.FILE_PATH)
@@ -126,12 +130,13 @@ def processing(path, word_index, input_length, x_train):
     k will be pad and longer string will be cropped. m is defined by the pretrained file.
 
     Args:
-        path: string, store the pre trained files.
-        word_index: dictionary, contains word with tokenlized index.
-        input_length: int, an upper bound of the string length.
-        x_train: string array.
+        path: String, path where the pre trained files stored.
+        word_index: Dictionary, contains word with tokenlized index.
+        input_length: Int, an upper bound of the string length.
+        x_train: String array.
 
-    Returns: processed x_train as float numpy array.
+    Returns:
+        x_train: Numpy array as processed x_train.
     """
 
     embedding_matrix = load_pretrain(path=path, word_index=word_index)
@@ -147,7 +152,7 @@ def processing(path, word_index, input_length, x_train):
         config = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
         config.gpu_options.allow_growth = True
         sess = tf.Session(config=config)
-        K.set_session(sess)
+        backend.set_session(sess)
         print("generating preprocessing model...")
         embedding_layer = Embedding(len(word_index) + 1,
                                     Constant.EMBEDDING_DIM,
