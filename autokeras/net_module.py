@@ -79,7 +79,6 @@ class NetworkModule:
             retrain: A boolean of whether reinitialize the weights of the model.
             train_data: A DataLoader instance representing the training data.
             test_data: A DataLoader instance representing the testing data.
-
         """
         graph = self.searcher.load_best_model()
 
@@ -102,16 +101,14 @@ class NetworkModule:
 
 
 class CnnModule(NetworkModule):
-    """ Class to create a CNN module.
-    """
+    """ Class to create a CNN module."""
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose)
         self.generators.append(CnnGenerator)
 
 
 class MlpModule(NetworkModule):
-    """ Class to create an MLP module.
-    """
+    """ Class to create an MLP module."""
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         super(MlpModule, self).__init__(loss, metric, searcher_args, path, verbose)
         self.generators.append(MlpGenerator)
