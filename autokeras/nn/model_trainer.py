@@ -13,6 +13,10 @@ from autokeras.utils import get_device
 
 
 class ModelTrainerBase(abc.ABC):
+    """
+    Base class for all ModelTrainer
+    """
+
     def __init__(self,
                  loss_function,
                  train_data,
@@ -30,6 +34,13 @@ class ModelTrainerBase(abc.ABC):
     def train_model(self,
                     max_iter_num=Constant.MAX_ITER_NUM,
                     max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM):
+        """
+        Train the model
+
+        Args:
+        max_iter_num: int, maximum numer of iteration
+        max_no_improvement_num: after max_no_improvement_num, if the model still makes no improvement, finish training
+        """
         pass
 
 

@@ -128,6 +128,14 @@ class TextDataTransformer(DataTransformer):
 
 
 class ImageDataTransformer(DataTransformer):
+    """ Perform basic image transformation and augmentation
+
+    Attributes:
+        max_val: the maximum value of all data
+        mean: the mean value
+        std: the standard deviation
+        augment: whether to perofrm augmentation on data
+    """
     def __init__(self, data, augment=Constant.DATA_AUGMENTATION):
         self.max_val = data.max()
         data = data / self.max_val
@@ -136,6 +144,13 @@ class ImageDataTransformer(DataTransformer):
         self.augment = augment
 
     def transform_train(self, data, targets=None, batch_size=None):
+        """ Transform the training data, perform random cropping data augmentation and basic random flip augmentation
+        Args:
+            batch_size: int batch_size
+            targets: the target of training set
+        Returns:
+            A DataLoader class instance
+        """
         short_edge_length = min(data.shape[1], data.shape[2])
         common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
         if self.augment:
@@ -160,6 +175,13 @@ class ImageDataTransformer(DataTransformer):
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     def transform_test(self, data, targets=None, batch_size=None):
+        """ Transform the test data, perform normalization
+        Args:
+            batch_size: int batch_size
+            targets: the target of test set
+        Returns:
+            A DataLoader instance
+        """
         common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
         compose_list = common_list
         if len(data.shape) != 4:
@@ -182,6 +204,7 @@ class ImageDataTransformer(DataTransformer):
 
 
 class MultiTransformDataset(Dataset):
+    """A class incorporate all transform method into a torch.Dataset class"""
     def __init__(self, dataset, target, compose):
         self.dataset = dataset
         self.target = target
