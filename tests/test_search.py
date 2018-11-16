@@ -4,7 +4,7 @@ from autokeras.bayesian import edit_distance
 from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
 from autokeras.search import *
-from autokeras.nn.generator import CnnGenerator, RnnGenerator
+from autokeras.nn.generator import CnnGenerator, ResNetGenerator
 
 from tests.common import clean_dir, MockProcess, get_classification_data_loaders, simple_transform, \
     MockMemoryOutProcess, TEST_TEMP_DIR
@@ -63,7 +63,7 @@ def test_max_acq(_, _2):
     Constant.T_MIN = 0.8
     Constant.BETA = 1
     generator = Searcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
-                         loss=classification_loss, generators=[CnnGenerator, RnnGenerator])
+                         loss=classification_loss, generators=[CnnGenerator, ResNetGenerator])
     for _ in range(3):
         generator.search(train_data, test_data)
     for index1, descriptor1 in enumerate(generator.descriptors):

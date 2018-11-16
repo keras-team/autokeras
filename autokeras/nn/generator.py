@@ -140,9 +140,9 @@ class MlpGenerator(NetworkGenerator):
         return graph
 
 
-class RnnGenerator(NetworkGenerator):
+class ResNetGenerator(NetworkGenerator):
     def __init__(self, n_output_node, input_shape):
-        super(RnnGenerator, self).__init__(n_output_node, input_shape)
+        super(ResNetGenerator, self).__init__(n_output_node, input_shape)
         self.layers = [3, 4, 6, 3]
         self.block_expansion = 1
         self.n_dim = len(self.input_shape) - 1
@@ -170,7 +170,7 @@ class RnnGenerator(NetworkGenerator):
             output_node_id = self._make_layer(graph, model_width, layer, output_node_id)
             model_width *= 2
         output_node_id = graph.add_layer(self.global_avg_pooling(), output_node_id)
-        graph.add_layer(StubDense(model_width * self.block_expansion, self.n_output_node), output_node_id)
+        graph.add_layer(StubDense(int(model_width / 2) * self.block_expansion, self.n_output_node), output_node_id)
         return graph
 
     def _make_layer(self, graph, planes, blocks, node_id):
