@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 from autokeras.constant import Constant
 from autokeras.nn.graph import Graph
-from autokeras.nn.layers import StubDense, StubReLU, get_conv_class, get_dropout_class, \
+from autokeras.nn.layers import StubAdd, StubDense, StubReLU, get_conv_class, get_dropout_class, \
     get_global_avg_pooling_class, get_pooling_class, get_batch_norm_class, StubDropout1d
 
 
@@ -138,3 +138,65 @@ class MlpGenerator(NetworkGenerator):
 
         graph.add_layer(StubDense(n_nodes_prev_layer, self.n_output_node), output_node_id)
         return graph
+
+
+class ResNetGenerator(NetworkGenerator):
+    def __init__(self, n_output_node, input_shape):
+        super(ResNetGenerator, self).__init__(n_output_node, input_shape)
+        self.layers = [3, 4, 6, 3]
+        self.block_expansion = 1
+        self.n_dim = len(self.input_shape) - 1
+        if len(self.input_shape) > 4:
+            raise ValueError('The input dimension is too high.')
+        elif len(self.input_shape) < 2:
+            raise ValueError('The input dimension is too low.')
+        self.inplanes = 64
+        self.conv = get_conv_class(self.n_dim)
+        self.dropout = get_dropout_class(self.n_dim)
+        self.global_avg_pooling = get_global_avg_pooling_class(self.n_dim)
+        self.adaptive_avg_pooling = get_global_avg_pooling_class(self.n_dim)
+        self.pooling = get_pooling_class(self.n_dim)
+        self.batch_norm = get_batch_norm_class(self.n_dim)
+
+    def generate(self, model_len, model_width):
+        graph = Graph(self.input_shape, False)
+        temp_input_channel = self.input_shape[-1]
+        output_node_id = 0
+        output_node_id = graph.add_layer(StubReLU(), output_node_id)
+        output_node_id = graph.add_layer(self.conv(temp_input_channel, model_width, kernel_size=7), output_node_id)
+        output_node_id = graph.add_layer(self.batch_norm(model_width), output_node_id)
+        output_node_id = graph.add_layer(self.pooling(kernel_size=3, stride=2, padding=1), output_node_id)
+        for layer in self.layers:
+            output_node_id = self._make_layer(graph, model_width, layer, output_node_id)
+            model_width *= 2
+        output_node_id = graph.add_layer(self.global_avg_pooling(), output_node_id)
+        graph.add_layer(StubDense(int(model_width / 2) * self.block_expansion, self.n_output_node), output_node_id)
+        return graph
+
+    def _make_layer(self, graph, planes, blocks, node_id):
+        downsample = None
+        if self.inplanes != planes * self.block_expansion:
+            downsample = [
+                self.conv(self.inplanes, planes * self.block_expansion, kernel_size=1),
+                self.batch_norm(planes * self.block_expansion),
+            ]
+        out = self._make_block(graph, self.inplanes, planes, node_id, downsample)
+        self.inplanes = planes * self.block_expansion
+        for _ in range(1, blocks):
+            out = self._make_block(graph, self.inplanes, planes, out)
+        return out
+
+    def _make_block(self, graph, inplanes, planes, node_id, downsample=None):
+        residual_node_id = node_id
+        out = graph.add_layer(StubReLU(), node_id)
+        out = graph.add_layer(self.conv(inplanes, planes, kernel_size=1), out)
+        out = graph.add_layer(self.batch_norm(planes), out)
+        out = graph.add_layer(StubReLU(), out)
+        out = graph.add_layer(self.conv(planes, planes, kernel_size=3), out)
+        out = graph.add_layer(self.batch_norm(planes), out)
+        if downsample is not None:
+            downsample_out = graph.add_layer(StubReLU(), node_id)
+            downsample_out = graph.add_layer(downsample[0], downsample_out)
+            residual_node_id = graph.add_layer(downsample[1], downsample_out)
+        out = graph.add_layer(StubAdd(), (out, residual_node_id))
+        return out

@@ -134,10 +134,10 @@ def test_evaluate(_, _1, _2):
     assert score <= 1.0
 
 
-@patch('torch.multiprocessing.get_context', new=MockProcess)
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 @patch('autokeras.text.text_supervised.text_preprocess', side_effect=mock_text_preprocess)
-def test_fit_predict_regression(_, _1):
+def test_fit_predict_regression(_, _1, _2):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
     Constant.SEARCH_MAX_ITER = 1

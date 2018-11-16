@@ -1,9 +1,7 @@
 from unittest.mock import patch
 
-import pytest
-
 from autokeras.image.image_supervised import *
-from tests.common import clean_dir, MockProcess, simple_transform, mock_train, TEST_TEMP_DIR
+from tests.common import MockProcess, mock_train, TEST_TEMP_DIR
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
@@ -14,7 +12,7 @@ def test_fit_predict(_, _1):
     Constant.SEARCH_MAX_ITER = 1
     Constant.T_MIN = 0.8
     Constant.DATA_AUGMENTATION = False
-	
+
     clf = ImageClassifier(path=TEST_TEMP_DIR, verbose=True)
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
