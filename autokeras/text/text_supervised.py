@@ -30,6 +30,7 @@ class TextClassifier(Supervised):
     """
     def __init__(self, verbose=False, path=None, resume=False, searcher_args=None):
         """Initialize the instance.
+
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
         Otherwise it would create a new one.
         Args:
