@@ -22,36 +22,36 @@ class NoImprovementError(Exception):
 
 
 def ensure_dir(directory):
-    """Create directory if it does not exist"""
+    """Create directory if it does not exist."""
     if not os.path.exists(directory):
         os.makedirs(directory)
 
 
 def ensure_file_dir(path):
-    """Create path if it does not exist"""
+    """Create path if it does not exist."""
     ensure_dir(os.path.dirname(path))
 
 
 def has_file(path):
-    """Check if the given path exists"""
+    """Check if the given path exists."""
     return os.path.exists(path)
 
 
 def pickle_from_file(path):
-    """Load the pickle file from the provided path and returns the object"""
+    """Load the pickle file from the provided path and returns the object."""
     return pickle.load(open(path, 'rb'))
 
 
 def pickle_to_file(obj, path):
-    """Save the pickle file to the specified path"""
+    """Save the pickle file to the specified path."""
     pickle.dump(obj, open(path, 'wb'))
 
 
 def get_device():
-    """ If Cuda is available, use Cuda device, else use CPU device
-    When choosing from Cuda devices, this function will choose the one with max memory available
+    """ If CUDA is available, use CUDA device, else use CPU device.
+    When choosing from CUDA devices, this function will choose the one with max memory available.
 
-    Returns: string device name
+    Returns: string device name.
     """
     # TODO: could use gputil in the future
     device = 'cpu'
@@ -82,7 +82,7 @@ def get_device():
 
 
 def temp_folder_generator():
-    """Create and return a temporary directory with the path name '/temp_dir_name/autokeras' (E:g:- /tmp/autokeras)"""
+    """Create and return a temporary directory with the path name '/temp_dir_name/autokeras' (E:g:- /tmp/autokeras)."""
     sys_temp = tempfile.gettempdir()
     path = os.path.join(sys_temp, 'autokeras')
     ensure_dir(path)
@@ -90,7 +90,7 @@ def temp_folder_generator():
 
 
 def download_file(file_link, file_path):
-    """Download the file specified in `file_link` and saves it in `file_path`"""
+    """Download the file specified in `file_link` and saves it in `file_path`."""
     if not os.path.exists(file_path):
         with open(file_path, "wb") as f:
             print("Downloading %s" % file_path)
@@ -111,7 +111,7 @@ def download_file(file_link, file_path):
 
 
 def download_file_with_extract(file_link, file_path, extract_path):
-    """Download the file specified in `file_link`, save to `file_path` and extract to the directory `extract_path`"""
+    """Download the file specified in `file_link`, save to `file_path` and extract to the directory `extract_path`."""
     if not os.path.exists(extract_path):
         download_file(file_link, file_path)
         zip_ref = zipfile.ZipFile(file_path, 'r')
@@ -123,7 +123,7 @@ def download_file_with_extract(file_link, file_path, extract_path):
 
 
 def verbose_print(new_father_id, new_graph):
-    """Print information about the operation performed on father model to obtain current model and father's id"""
+    """Print information about the operation performed on father model to obtain current model and father's id."""
     cell_size = [24, 49]
     header = ['Father Model ID', 'Added Operation']
     line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
@@ -176,7 +176,7 @@ def read_csv_file(csv_file_path):
 
 
 def read_image(img_path):
-    """Read the image contained in the provided path `image_path`"""
+    """Read the image contained in the provided path `image_path`."""
     img = imageio.imread(uri=img_path)
     return img
 
@@ -231,14 +231,12 @@ def resize_image_data(data, h, w):
 
 
 def get_system():
-    """
-    Get the current system environment. If the current system is not supported,
-    raise an exception.
+    """Get the current system environment. If the current system is not supported, raise an exception.
 
     Returns:
-         a string to represent the current os name
-         posix stands for Linux and Mac or Solaris architecture
-         nt stands for Windows system
+         A string to represent the current OS name.
+         "posix" stands for Linux, Mac or Solaris architecture.
+         "nt" stands for Windows system.
     """
     print(os.name)
     if 'google.colab' in sys.modules:
