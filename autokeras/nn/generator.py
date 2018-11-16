@@ -69,6 +69,9 @@ class CnnGenerator(NetworkGenerator):
         Args:
             model_len: An integer. Number of convolutional layers.
             model_width: An integer. Number of filters for the convolutional layers.
+
+        Returns:
+            An instance of the class Graph. Represents the neural architecture graph of the generated model.
         """
         pooling_len = int(model_len / 4)
         graph = Graph(self.input_shape, False)
@@ -115,6 +118,9 @@ class MlpGenerator(NetworkGenerator):
             model_width: An integer or a list of integers of length `model_len`. If it is a list, it represents the
                 number of nodes in each hidden layer. If it is an integer, all hidden layers have nodes equal to this
                 value.
+
+        Returns:
+            An instance of the class Graph. Represents the neural architecture graph of the generated model.
         """
         if type(model_width) is list and not len(model_width) == model_len:
             raise ValueError('The length of \'model_width\' does not match \'model_len\'')
