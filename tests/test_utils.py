@@ -3,9 +3,10 @@ import subprocess
 from unittest.mock import patch
 
 from autokeras.constant import Constant
-from autokeras.utils import temp_folder_generator, download_file, get_system, get_device, compute_image_resize_params, \
-    resize_image_data
-from tests.common import clean_dir, TEST_TEMP_DIR, mock_nvidia_smi_output
+from autokeras.utils import rand_temp_folder_generator, download_file, get_system, get_device, \
+    compute_image_resize_params, \
+    resize_image_data, temp_path_generator
+from tests.common import clean_dir, TEST_TEMP_DIR, mock_nvidia_smi_output, TEST_TEMP_KERAS_DIR
 
 
 # This method will be used by the mock to replace requests.get
@@ -34,11 +35,16 @@ def mocked_requests_get(*args, **kwargs):
 
 
 @patch('tempfile.gettempdir', return_value=TEST_TEMP_DIR)
-def test_temp_folder_generator(_):
-    clean_dir(TEST_TEMP_DIR)
-    path = temp_folder_generator()
-    assert path.find("tests/resources/temp/autokeras") != -1
-    clean_dir(TEST_TEMP_DIR)
+def test_temp_path_generator(_):
+    path = temp_path_generator()
+    assert path == TEST_TEMP_DIR + "/autokeras"
+
+
+@patch('autokeras.utils.temp_path_generator', return_value=TEST_TEMP_KERAS_DIR)
+def test_rand_temp_folder_generator(_):
+    path = rand_temp_folder_generator()
+    assert path.find("tests/resources/temp/autokeras_") != -1
+    clean_dir(path)
 
 
 @patch('requests.get', side_effect=mocked_requests_get)
@@ -64,8 +70,8 @@ def test_compute_image_resize_params():
         assert image.shape == (25, 25, 3)
 
     # Case-2: Resize to max size for larger images.
-    data = numpy.array([numpy.random.randint(256, size=(int(numpy.sqrt(Constant.MAX_IMAGE_SIZE)+1),
-                                                        int(numpy.sqrt(Constant.MAX_IMAGE_SIZE)+1),
+    data = numpy.array([numpy.random.randint(256, size=(int(numpy.sqrt(Constant.MAX_IMAGE_SIZE) + 1),
+                                                        int(numpy.sqrt(Constant.MAX_IMAGE_SIZE) + 1),
                                                         3))])
     resize_height, resize_width = compute_image_resize_params(data)
     assert resize_height == int(numpy.sqrt(Constant.MAX_IMAGE_SIZE))

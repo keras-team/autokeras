@@ -66,7 +66,6 @@ def get_device():
             smi_out = subprocess.check_output('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free', shell=True)
             if isinstance(smi_out, bytes):
                 smi_out = smi_out.decode('utf-8')
-            print(smi_out)
         except subprocess.SubprocessError:
             warnings.warn('Cuda device successfully detected. However, nvidia-smi cannot be invoked')
             return 'cpu'
@@ -85,13 +84,19 @@ def get_device():
     return device
 
 
-def temp_folder_generator():
+def temp_path_generator():
+    sys_temp = tempfile.gettempdir()
+    path = os.path.join(sys_temp, 'autokeras')
+    return path
+
+
+def rand_temp_folder_generator():
     """Create and return a temporary directory with the path name '/temp_dir_name/autokeras' (E:g:- /tmp/autokeras)."""
     chars = string.ascii_uppercase + string.digits
     size = 6
-    sys_temp = tempfile.gettempdir()
     random_suffix = ''.join(random.choice(chars) for _ in range(size))
-    path = os.path.join(sys_temp, 'autokeras_' + random_suffix)
+    sys_temp = temp_path_generator()
+    path = sys_temp + '_' + random_suffix
     ensure_dir(path)
     return path
 
@@ -254,7 +259,6 @@ def get_system():
          "posix" stands for Linux, Mac or Solaris architecture.
          "nt" stands for Windows system.
     """
-    print(os.name)
     if 'google.colab' in sys.modules:
         return Constant.SYS_GOOGLE_COLAB
     if os.name == 'posix':
