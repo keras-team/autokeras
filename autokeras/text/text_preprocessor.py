@@ -15,14 +15,11 @@ from autokeras.utils import download_file_with_extract
 
 
 def download_pre_train(file_path, extract_path):
-    """Download pre train file from link in constant.py
+    """Download pre train file from link in constant.py.
 
     Args:
-        file_path: a string contains download file path + file name
-        extract_path: a string extract path name
-
-    Returns:
-
+        file_path: a string contains download file path + file name.
+        extract_path: a string extract path name.
     """
     file_link = Constant.PRE_TRAIN_FILE_LINK
     print("try downloading pre train weights from link %s" % file_link)
