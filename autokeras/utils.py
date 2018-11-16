@@ -22,34 +22,37 @@ class NoImprovementError(Exception):
 
 
 def ensure_dir(directory):
-    """Create directory if it does not exist"""
+    """Create directory if it does not exist."""
     if not os.path.exists(directory):
         os.makedirs(directory)
 
 
 def ensure_file_dir(path):
-    """Create path if it does not exist"""
+    """Create path if it does not exist."""
     ensure_dir(os.path.dirname(path))
 
 
 def has_file(path):
+    """Check if the given path exists."""
     return os.path.exists(path)
 
 
 def pickle_from_file(path):
+    """Load the pickle file from the provided path and returns the object."""
     return pickle.load(open(path, 'rb'))
 
 
 def pickle_to_file(obj, path):
+    """Save the pickle file to the specified path."""
     pickle.dump(obj, open(path, 'wb'))
 
 
 def get_device():
-    """ If Cuda is available, use Cuda device, else use CPU device
-        When choosing from Cuda devices, this function will choose the one with max memory available
+    """ If CUDA is available, use CUDA device, else use CPU device.
 
-    Returns: string device name
+    When choosing from CUDA devices, this function will choose the one with max memory available.
 
+    Returns: string device name.
     """
     # TODO: could use gputil in the future
     device = 'cpu'
@@ -82,6 +85,7 @@ def get_device():
 
 
 def temp_folder_generator():
+    """Create and return a temporary directory with the path name '/temp_dir_name/autokeras' (E:g:- /tmp/autokeras)."""
     sys_temp = tempfile.gettempdir()
     path = os.path.join(sys_temp, 'autokeras')
     ensure_dir(path)
@@ -89,6 +93,7 @@ def temp_folder_generator():
 
 
 def download_file(file_link, file_path):
+    """Download the file specified in `file_link` and saves it in `file_path`."""
     if not os.path.exists(file_path):
         with open(file_path, "wb") as f:
             print("Downloading %s" % file_path)
@@ -109,6 +114,7 @@ def download_file(file_link, file_path):
 
 
 def download_file_with_extract(file_link, file_path, extract_path):
+    """Download the file specified in `file_link`, save to `file_path` and extract to the directory `extract_path`."""
     if not os.path.exists(extract_path):
         download_file(file_link, file_path)
         zip_ref = zipfile.ZipFile(file_path, 'r')
@@ -120,6 +126,7 @@ def download_file_with_extract(file_link, file_path, extract_path):
 
 
 def verbose_print(new_father_id, new_graph):
+    """Print information about the operation performed on father model to obtain current model and father's id."""
     cell_size = [24, 49]
     header = ['Father Model ID', 'Added Operation']
     line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
@@ -137,7 +144,7 @@ def verbose_print(new_father_id, new_graph):
 
 
 def validate_xy(x_train, y_train):
-    """Check `x_train`'s type and the shape of `x_train`, `y_train`."""
+    """Validate `x_train`'s type and the shape of `x_train`, `y_train`."""
     try:
         x_train = x_train.astype('float64')
     except ValueError:
@@ -151,7 +158,7 @@ def validate_xy(x_train, y_train):
 
 
 def read_csv_file(csv_file_path):
-    """Read the csv file and returns two separate list containing files name and their labels.
+    """Read the csv file and returns two separate list containing file names and their labels.
 
     Args:
         csv_file_path: Path to the CSV file.
@@ -172,15 +179,16 @@ def read_csv_file(csv_file_path):
 
 
 def read_image(img_path):
+    """Read the image contained in the provided path `image_path`."""
     img = imageio.imread(uri=img_path)
     return img
 
 
 def compute_image_resize_params(data):
-    """Compute median height and width of all images in data. These
-    values are used to resize the images at later point. Number of
-    channels do not change from the original images. Currently, only
-    2-D images are supported.
+    """Compute median height and width of all images in data.
+
+    These values are used to resize the images at later point. Number of channels do not change from the original
+    images. Currently, only 2-D images are supported.
 
     Args:
         data: 2-D Image data with shape N x H x W x C.
@@ -199,10 +207,11 @@ def compute_image_resize_params(data):
     return int(median_height), int(median_width)
 
 
-def resize_image_data(data, h, w):
-    """Resize all images in data to size h x w x c, where h is the height,
-    w is the width and c is the number of channels. The number of channels
-    c does not change from data. The function supports only 2-D image data.
+def resize_image_data(data, height, weight):
+    """Resize images to provided height and width.
+
+    Resize all images in data to size h x w x c, where h is the height, w is the width and c is the number of channels.
+    The number of channels c does not change from data. The function supports only 2-D image data.
 
     Args:
         data: 2-D Image data with shape N x H x W x C.
@@ -218,7 +227,7 @@ def resize_image_data(data, h, w):
         if len(im.shape) != 3:
             return data
         output_data.append(resize(image=im,
-                                  output_shape=(h, w, im.shape[-1]),
+                                  output_shape=(height, weight, im.shape[-1]),
                                   mode='edge',
                                   preserve_range=True))
 
@@ -226,14 +235,12 @@ def resize_image_data(data, h, w):
 
 
 def get_system():
-    """
-    Get the current system environment. If the current system is not supported,
-    raise an exception.
+    """Get the current system environment. If the current system is not supported, raise an exception.
 
     Returns:
-         a string to represent the current os name
-         posix stands for Linux and Mac or Solaris architecture
-         nt stands for Windows system
+         A string to represent the current OS name.
+         "posix" stands for Linux, Mac or Solaris architecture.
+         "nt" stands for Windows system.
     """
     print(os.name)
     if 'google.colab' in sys.modules:
