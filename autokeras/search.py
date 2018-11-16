@@ -47,7 +47,6 @@ class Searcher:
                  default_model_len=Constant.MODEL_LEN,
                  default_model_width=Constant.MODEL_WIDTH,
                  beta=Constant.BETA,
-                 kernel_lambda=Constant.KERNEL_LAMBDA,
                  t_min=None):
         """Initialize the Searcher.
 
@@ -63,7 +62,6 @@ class Searcher:
             default_model_len: An integer. Number of convolutional layers in the initial architecture.
             default_model_width: An integer. The number of filters in each layer in the initial architecture.
             beta: A float. The beta in the UCB acquisition function.
-            kernel_lambda: A float. The balance factor in the neural network kernel.
             t_min: A float. The minimum temperature during simulated annealing.
         """
         if trainer_args is None:
@@ -89,7 +87,7 @@ class Searcher:
         self.y_queue = []
         if t_min is None:
             t_min = Constant.T_MIN
-        self.bo = BayesianOptimizer(self, t_min, metric, kernel_lambda, beta)
+        self.bo = BayesianOptimizer(self, t_min, metric, beta)
 
     def load_model_by_id(self, model_id):
         return pickle_from_file(os.path.join(self.path, str(model_id) + '.graph'))
@@ -265,8 +263,8 @@ class Searcher:
             generated_graph: An instance of Graph.
 
         """
-        generated_graph, new_father_id = self.bo.optimize_acq(self.descriptors,
-                                                              remaining_time)
+        generated_graph, new_father_id = self.bo.generate(self.descriptors,
+                                                          remaining_time)
         if new_father_id is None:
             new_father_id = 0
             generated_graph = self.generators[0](self.n_classes, self.input_shape). \

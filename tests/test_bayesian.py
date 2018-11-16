@@ -5,7 +5,7 @@ from tests.common import get_add_skip_model, get_concat_skip_model, get_conv_den
 def test_edit_distance():
     descriptor1 = get_add_skip_model().extract_descriptor()
     descriptor2 = get_concat_skip_model().extract_descriptor()
-    assert edit_distance(descriptor1, descriptor2, 1.0) == 2.0
+    assert edit_distance(descriptor1, descriptor2) == 2.0
 
 
 def test_edit_distance2():
@@ -15,7 +15,7 @@ def test_edit_distance2():
     graph.to_wider_model(4, 6)
     graph.to_wider_model(14, 3)
     descriptor2 = graph.extract_descriptor()
-    assert edit_distance(descriptor1, descriptor2, 1.0) == 1.5
+    assert edit_distance(descriptor1, descriptor2) == 1.5
 
 
 def test_bourgain_embedding():
@@ -24,7 +24,7 @@ def test_bourgain_embedding():
 
 
 def test_gpr():
-    gpr = IncrementalGaussianProcess(1.0)
+    gpr = IncrementalGaussianProcess()
     gpr.first_fit([get_add_skip_model().extract_descriptor()], [0.5])
     assert gpr.first_fitted
 
