@@ -85,7 +85,6 @@ def get_device():
     return device
 
 
-<<<<<<< HEAD
 def temp_path_generator():
     sys_temp = tempfile.gettempdir()
     path = os.path.join(sys_temp, 'autokeras')
@@ -99,15 +98,6 @@ def rand_temp_folder_generator():
     random_suffix = ''.join(random.choice(chars) for _ in range(size))
     sys_temp = temp_path_generator()
     path = sys_temp + '_' + random_suffix
-=======
-def temp_folder_generator():
-    """Create and return a temporary directory with the path name '/temp_dir_name/autokeras' (E:g:- /tmp/autokeras)."""
-    chars = string.ascii_uppercase + string.digits
-    size = 6
-    sys_temp = tempfile.gettempdir()
-    random_suffix = ''.join(random.choice(chars) for _ in range(size))
-    path = os.path.join(sys_temp, 'autokeras_' + random_suffix)
->>>>>>> 407687eed2edb749b79ec2ba764b836eecf3f313
     ensure_dir(path)
     return path
 
