@@ -60,7 +60,9 @@ def get_device():
             #       Free                 : xxxxxx MiB
             #                      ....
             smi_out = subprocess.check_output('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free', shell=True)
-            print(smi_out.decode('utf-8'))
+            if isinstance(smi_out, bytes):
+                smi_out = smi_out.decode('utf-8')
+            print(smi_out)
         except subprocess.SubprocessError:
             warnings.warn('Cuda device successfully detected. However, nvidia-smi cannot be invoked')
             return 'cpu'
