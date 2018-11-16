@@ -100,7 +100,7 @@ class DeepSupervised(Supervised):
 
         self.path = path
         if resume:
-            classifier = pickle_from_file(os.path.join(self.path, 'text_classifier'))
+            classifier = pickle_from_file(os.path.join(self.path, 'classifier'))
             self.__dict__ = classifier.__dict__
             self.cnn = pickle_from_file(os.path.join(self.path, 'module'))
         else:

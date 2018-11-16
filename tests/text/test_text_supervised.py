@@ -1,7 +1,10 @@
+import os
+
 from unittest.mock import patch
 
 import pytest
 
+from autokeras.constant import Constant
 from autokeras.text.text_supervised import *
 from tests.common import clean_dir, MockProcess, simple_transform, TEST_TEMP_DIR
 
@@ -106,8 +109,8 @@ def test_save_continue(_, _1, _2):
     clean_dir(TEST_TEMP_DIR)
 
 
-@patch('autokeras.text.text_supervised.rand_temp_folder_generator', return_value=TEST_TEMP_DIR)
-def test_init_image_classifier_with_none_path(_):
+@patch('autokeras.supervised.rand_temp_folder_generator', return_value=TEST_TEMP_DIR)
+def test_init_text_classifier_with_none_path(_):
     clf = TextClassifier()
     assert clf.path == TEST_TEMP_DIR
 
