@@ -9,6 +9,17 @@ from autokeras.nn.generator import CnnGenerator, MlpGenerator
 
 
 class NetworkModule:
+    """ Class to create a network module.
+
+    Attributes:
+        loss: A function taking two parameters, the predictions and the ground truth.
+        metric: An instance of the Metric subclasses.
+        searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
+        searcher: An instance of the Searcher class.
+        path: A string. The path to the directory to save the searcher.
+        verbose: A boolean. Setting it to true prints to stdout.
+        generators: A list of instances of the NetworkGenerator class or its subclasses.
+    """
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         self.searcher_args = searcher_args
         self.searcher = None
@@ -19,14 +30,14 @@ class NetworkModule:
         self.generators = []
 
     def fit(self, n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60):
-        """ Search the best CnnModule.
+        """ Search the best network.
 
         Args:
             n_output_node: A integer value represent the number of output node in the final layer.
             input_shape: A tuple to express the shape of every train entry. For example,
-                MNIST dataset would be (28,28,1)
-            train_data: A PyTorch DataLoader instance represents the training data
-            test_data: A PyTorch DataLoader instance represents the testing data
+                MNIST dataset would be (28,28,1).
+            train_data: A PyTorch DataLoader instance representing the training data.
+            test_data: A PyTorch DataLoader instance representing the testing data.
             time_limit: A integer value represents the time limit on searching for models.
         """
         # Create the searcher and save on disk
@@ -67,9 +78,8 @@ class NetworkModule:
         Args:
             trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
             retrain: A boolean of whether reinitialize the weights of the model.
-            train_data: A DataLoader instance representing the training data
-            test_data: A DataLoader instance representing the testing data
-
+            train_data: A DataLoader instance representing the training data.
+            test_data: A DataLoader instance representing the testing data.
         """
         graph = self.searcher.load_best_model()
 
@@ -92,12 +102,14 @@ class NetworkModule:
 
 
 class CnnModule(NetworkModule):
+    """ Class to create a CNN module."""
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose)
         self.generators.append(CnnGenerator)
 
 
 class MlpModule(NetworkModule):
+    """ Class to create an MLP module."""
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         super(MlpModule, self).__init__(loss, metric, searcher_args, path, verbose)
         self.generators.append(MlpGenerator)
