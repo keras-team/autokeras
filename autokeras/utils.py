@@ -1,11 +1,17 @@
+import csv
 import os
 import pickle
 import sys
 import tempfile
 import zipfile
 
+import warnings
+import imageio
+import numpy
 import requests
+from skimage.transform import resize
 import torch
+import subprocess
 
 from autokeras.constant import Constant
 
@@ -13,39 +19,6 @@ from autokeras.constant import Constant
 class NoImprovementError(Exception):
     def __init__(self, message):
         self.message = message
-
-
-class EarlyStop:
-    def __init__(self, max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=Constant.MIN_LOSS_DEC):
-        super().__init__()
-        self.training_losses = []
-        self.minimum_loss = None
-        self._no_improvement_count = 0
-        self._max_no_improvement_num = max_no_improvement_num
-        self._done = False
-        self._min_loss_dec = min_loss_dec
-
-    def on_train_begin(self):
-        self.training_losses = []
-        self._no_improvement_count = 0
-        self._done = False
-        self.minimum_loss = float('inf')
-
-    def on_epoch_end(self, loss):
-        self.training_losses.append(loss)
-        if self._done and loss > (self.minimum_loss - self._min_loss_dec):
-            return False
-
-        if loss > (self.minimum_loss - self._min_loss_dec):
-            self._no_improvement_count += 1
-        else:
-            self._no_improvement_count = 0
-            self.minimum_loss = loss
-
-        if self._no_improvement_count > self._max_no_improvement_num:
-            self._done = True
-
-        return True
 
 
 def ensure_dir(directory):
@@ -81,11 +54,18 @@ def get_device():
     # TODO: could use gputil in the future
     device = 'cpu'
     if torch.cuda.is_available():
-        smi_out = os.popen('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free').read()
-        # smi_out=
-        #       Free                 : xxxxxx MiB
-        #       Free                 : xxxxxx MiB
-        #                      ....
+        try:
+            # smi_out=
+            #       Free                 : xxxxxx MiB
+            #       Free                 : xxxxxx MiB
+            #                      ....
+            smi_out = subprocess.check_output('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free', shell=True)
+            if isinstance(smi_out, bytes):
+                smi_out = smi_out.decode('utf-8')
+            print(smi_out)
+        except subprocess.SubprocessError:
+            warnings.warn('Cuda device successfully detected. However, nvidia-smi cannot be invoked')
+            return 'cpu'
         visible_devices = os.getenv('CUDA_VISIBLE_DEVICES', '').split(',')
         if len(visible_devices) == 1 and visible_devices[0] == '':
             visible_devices = []
@@ -102,7 +82,6 @@ def get_device():
 
 
 def temp_folder_generator():
-    # return '/home/linyang/temp'
     sys_temp = tempfile.gettempdir()
     path = os.path.join(sys_temp, 'autokeras')
     ensure_dir(path)
@@ -169,3 +148,98 @@ def validate_xy(x_train, y_train):
 
     if x_train.shape[0] != y_train.shape[0]:
         raise ValueError('x_train and y_train should have the same number of instances.')
+
+
+def read_csv_file(csv_file_path):
+    """Read the csv file and returns two separate list containing files name and their labels.
+
+    Args:
+        csv_file_path: Path to the CSV file.
+
+    Returns:
+        file_names: List containing files names.
+        file_label: List containing their respective labels.
+    """
+    file_names = []
+    file_labels = []
+    with open(csv_file_path, 'r') as files_path:
+        path_list = csv.DictReader(files_path)
+        fieldnames = path_list.fieldnames
+        for path in path_list:
+            file_names.append(path[fieldnames[0]])
+            file_labels.append(path[fieldnames[1]])
+    return file_names, file_labels
+
+
+def read_image(img_path):
+    img = imageio.imread(uri=img_path)
+    return img
+
+
+def compute_image_resize_params(data):
+    """Compute median height and width of all images in data. These
+    values are used to resize the images at later point. Number of
+    channels do not change from the original images. Currently, only
+    2-D images are supported.
+
+    Args:
+        data: 2-D Image data with shape N x H x W x C.
+
+    Returns:
+        median height: Median height of all images in the data.
+        median width: Median width of all images in the data.
+    """
+    median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
+
+    if median_height * median_width > Constant.MAX_IMAGE_SIZE:
+        reduction_factor = numpy.sqrt(median_height * median_width / Constant.MAX_IMAGE_SIZE)
+        median_height = median_height / reduction_factor
+        median_width = median_width / reduction_factor
+
+    return int(median_height), int(median_width)
+
+
+def resize_image_data(data, h, w):
+    """Resize all images in data to size h x w x c, where h is the height,
+    w is the width and c is the number of channels. The number of channels
+    c does not change from data. The function supports only 2-D image data.
+
+    Args:
+        data: 2-D Image data with shape N x H x W x C.
+        h: Image resize height.
+        w: Image resize width.
+
+    Returns:
+        data: Resize data.
+    """
+
+    output_data = []
+    for im in data:
+        if len(im.shape) != 3:
+            return data
+        output_data.append(resize(image=im,
+                                  output_shape=(h, w, im.shape[-1]),
+                                  mode='edge',
+                                  preserve_range=True))
+
+    return numpy.array(output_data)
+
+
+def get_system():
+    """
+    Get the current system environment. If the current system is not supported,
+    raise an exception.
+
+    Returns:
+         a string to represent the current os name
+         posix stands for Linux and Mac or Solaris architecture
+         nt stands for Windows system
+    """
+    print(os.name)
+    if 'google.colab' in sys.modules:
+        return Constant.SYS_GOOGLE_COLAB
+    if os.name == 'posix':
+        return Constant.SYS_LINUX
+    if os.name == 'nt':
+        return Constant.SYS_WINDOWS
+    raise EnvironmentError('Unsupported environment')

@@ -6,10 +6,10 @@ import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
 
-from autokeras.cnn_module import CnnModule
+from autokeras.net_module import CnnModule
 from autokeras.constant import Constant
-from autokeras.nn.loss_function import classification_loss
-from autokeras.nn.metric import Accuracy
+from autokeras.nn.loss_function import classification_loss, regression_loss
+from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, TextDataTransformer
 from autokeras.supervised import Supervised
 from autokeras.text.text_preprocessor import text_preprocess
@@ -169,3 +169,22 @@ class TextClassifier(Supervised):
 
     def get_n_output_node(self):
         return self.y_encoder.n_classes
+
+
+class TextRegressor(TextClassifier):
+    @property
+    def loss(self):
+        return regression_loss
+
+    @property
+    def metric(self):
+        return MSE
+
+    def get_n_output_node(self):
+        return 1
+
+    def transform_y(self, y_train):
+        return y_train.flatten().reshape(len(y_train), 1)
+
+    def inverse_transform_y(self, output):
+        return output.flatten()

@@ -1,4 +1,3 @@
-import csv
 import os
 import pickle
 from abc import abstractmethod
@@ -6,37 +5,16 @@ from functools import reduce
 
 import numpy as np
 import torch
-from scipy import ndimage
 from sklearn.model_selection import train_test_split
 
-from autokeras.cnn_module import CnnModule
+from autokeras.net_module import CnnModule
 from autokeras.constant import Constant
 from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
 from autokeras.supervised import Supervised, PortableClass
-from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy
-
-
-def read_csv_file(csv_file_path):
-    """Read the csv file and returns two separate list containing files name and their labels.
-
-    Args:
-        csv_file_path: Path to the CSV file.
-
-    Returns:
-        file_names: List containing files names.
-        file_label: List containing their respective labels.
-    """
-    file_names = []
-    file_labels = []
-    with open(csv_file_path, 'r') as files_path:
-        path_list = csv.DictReader(files_path)
-        fieldnames = path_list.fieldnames
-        for path in path_list:
-            file_names.append(path[fieldnames[0]])
-            file_labels.append(path[fieldnames[1]])
-    return file_names, file_labels
+from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy, \
+    read_csv_file, read_image, compute_image_resize_params, resize_image_data
 
 
 def read_images(img_file_names, images_dir_path):
@@ -52,7 +30,7 @@ def read_images(img_file_names, images_dir_path):
         for img_file in img_file_names:
             img_path = os.path.join(images_dir_path, img_file)
             if os.path.exists(img_path):
-                img = ndimage.imread(fname=img_path)
+                img = read_image(img_path)
                 if len(img.shape) < 3:
                     img = img[..., np.newaxis]
                 x_train.append(img)
@@ -96,8 +74,6 @@ class ImageSupervised(Supervised):
         path: A path to the directory to save the classifier.
         y_encoder: An instance of OneHotEncoder for `y_train` (array of categorical labels).
         verbose: A boolean value indicating the verbosity mode.
-        searcher: An instance of BayesianSearcher. It searches different
-            neural architecture to find the best model.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
         augment: A boolean value indicating whether the data needs augmentation.  If not define, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
@@ -126,8 +102,6 @@ class ImageSupervised(Supervised):
         if path is None:
             path = temp_folder_generator()
 
-        self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
-
         if augment is None:
             augment = Constant.DATA_AUGMENTATION
 
@@ -135,11 +109,16 @@ class ImageSupervised(Supervised):
         if has_file(os.path.join(self.path, 'classifier')) and resume:
             classifier = pickle_from_file(os.path.join(self.path, 'classifier'))
             self.__dict__ = classifier.__dict__
+            self.cnn = pickle_from_file(os.path.join(self.path, 'module'))
         else:
             self.y_encoder = None
             self.data_transformer = None
             self.verbose = verbose
             self.augment = augment
+            self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
+
+        self.resize_height = None
+        self.resize_width = None
 
     @property
     @abstractmethod
@@ -153,6 +132,17 @@ class ImageSupervised(Supervised):
 
     def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
         x = np.array(x)
+
+        if len(x.shape) != 0 and len(x[0].shape) == 3:
+            if self.verbose:
+                print("Preprocessing the images.")
+            self.resize_height, self.resize_width = compute_image_resize_params(x)
+            x = resize_image_data(x, self.resize_height, self.resize_width)
+            if x_test is not None:
+                x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
+            if self.verbose:
+                print("Preprocessing finished.")
+
         y = np.array(y).flatten()
         validate_xy(x, y)
         y = self.transform_y(y)
@@ -176,7 +166,6 @@ class ImageSupervised(Supervised):
         test_data = self.data_transformer.transform_test(x_test, y_test)
 
         # Save the classifier
-        pickle.dump(self, open(os.path.join(self.path, 'classifier'), 'wb'))
         pickle_to_file(self, os.path.join(self.path, 'classifier'))
 
         if time_limit is None:
@@ -218,6 +207,8 @@ class ImageSupervised(Supervised):
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
+        if len(x_test.shape) != 0 and len(x_test[0].shape) == 3:
+            x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)
 
@@ -235,6 +226,11 @@ class ImageSupervised(Supervised):
         if trainer_args is None:
             trainer_args = {'max_no_improvement_num': 30}
 
+        if len(x_train.shape) != 0 and len(x_train[0].shape) == 3:
+            x_train = resize_image_data(x_train, self.resize_height, self.resize_width)
+            if x_test is not None:
+                x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
+
         y_train = self.transform_y(y_train)
         y_test = self.transform_y(y_test)
 
@@ -242,9 +238,6 @@ class ImageSupervised(Supervised):
         test_data = self.data_transformer.transform_test(x_test, y_test)
 
         self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
-
-    def load_searcher(self):
-        return pickle_from_file(os.path.join(self.path, 'searcher'))
 
     def export_keras_model(self, model_file_name):
         """ Exports the best Keras model to the given filename. """
@@ -256,7 +249,8 @@ class ImageSupervised(Supervised):
                                                  y_encoder=self.y_encoder,
                                                  data_transformer=self.data_transformer,
                                                  metric=self.metric,
-                                                 inverse_transform_y_method=self.inverse_transform_y)
+                                                 inverse_transform_y_method=self.inverse_transform_y,
+                                                 resize_params=(self.resize_height, self.resize_width))
         pickle_to_file(portable_model, model_file_name)
 
 
@@ -284,6 +278,18 @@ class ImageClassifier(ImageSupervised):
         return Accuracy
 
 
+class ImageClassifier1D(ImageClassifier):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
+
+
+class ImageClassifier3D(ImageClassifier):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
+
+
 class ImageRegressor(ImageSupervised):
     @property
     def loss(self):
@@ -303,8 +309,20 @@ class ImageRegressor(ImageSupervised):
         return output.flatten()
 
 
+class ImageRegressor1D(ImageRegressor):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
+
+
+class ImageRegressor3D(ImageRegressor):
+    def __init__(self, **kwargs):
+        kwargs['augment'] = False
+        super().__init__(**kwargs)
+
+
 class PortableImageSupervised(PortableClass):
-    def __init__(self, graph, data_transformer, y_encoder, metric, inverse_transform_y_method):
+    def __init__(self, graph, data_transformer, y_encoder, metric, inverse_transform_y_method, resize_params):
         """Initialize the instance.
         Args:
             graph: The graph form of the learned model
@@ -314,6 +332,8 @@ class PortableImageSupervised(PortableClass):
         self.y_encoder = y_encoder
         self.metric = metric
         self.inverse_transform_y_method = inverse_transform_y_method
+        self.resize_height = resize_params[0]
+        self.resize_width = resize_params[1]
 
     def predict(self, x_test):
         """Return predict results for the testing data.
@@ -326,6 +346,7 @@ class PortableImageSupervised(PortableClass):
         """
         if Constant.LIMIT_MEMORY:
             pass
+
         test_loader = self.data_transformer.transform_test(x_test)
         model = self.graph.produce_model()
         model.eval()
@@ -342,5 +363,7 @@ class PortableImageSupervised(PortableClass):
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
+        if len(x_test.shape) != 0 and len(x_test.shape) == 3:
+            x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)

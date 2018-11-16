@@ -1,13 +1,17 @@
 import os
+import queue
 from copy import deepcopy
 
 import numpy as np
 
 from autokeras.constant import Constant
 from autokeras.nn.graph import Graph
-from autokeras.nn.layers import StubReLU, StubConv, StubBatchNormalization, StubDropout, StubFlatten, StubSoftmax, \
-    StubDense, StubConcatenate, StubAdd, StubPooling
+from autokeras.nn.layers import StubReLU, StubFlatten, StubSoftmax, StubDense, StubConcatenate, StubAdd, \
+    StubConv2d, StubBatchNormalization2d, StubDropout2d
+from autokeras.nn.layers import StubPooling2d
 from autokeras.preprocessor import ImageDataTransformer
+
+TEST_TEMP_DIR = 'tests/resources/temp'
 
 
 def get_concat_skip_model():
@@ -15,41 +19,41 @@ def get_concat_skip_model():
     output_node_id = 0
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     temp_node_id = output_node_id
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     output_node_id = graph.add_layer(StubConcatenate(), [output_node_id, temp_node_id])
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(6, 3, 1), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(6, 3, 1), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     temp_node_id = output_node_id
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     output_node_id = graph.add_layer(StubConcatenate(), [output_node_id, temp_node_id])
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(6, 3, 1), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(6, 3, 1), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     output_node_id = graph.add_layer(StubFlatten(), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
+    output_node_id = graph.add_layer(StubDropout2d(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
@@ -69,41 +73,41 @@ def get_add_skip_model():
     output_node_id = 0
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     temp_node_id = output_node_id
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     temp_node_id = graph.add_layer(StubReLU(), temp_node_id)
-    temp_node_id = graph.add_layer(StubConv(3, 3, 1), temp_node_id)
-    temp_node_id = graph.add_layer(StubBatchNormalization(3), temp_node_id)
+    temp_node_id = graph.add_layer(StubConv2d(3, 3, 1), temp_node_id)
+    temp_node_id = graph.add_layer(StubBatchNormalization2d(3), temp_node_id)
     output_node_id = graph.add_layer(StubAdd(), [output_node_id, temp_node_id])
 
     temp_node_id = output_node_id
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     temp_node_id = graph.add_layer(StubReLU(), temp_node_id)
-    temp_node_id = graph.add_layer(StubConv(3, 3, 1), temp_node_id)
-    temp_node_id = graph.add_layer(StubBatchNormalization(3), temp_node_id)
+    temp_node_id = graph.add_layer(StubConv2d(3, 3, 1), temp_node_id)
+    temp_node_id = graph.add_layer(StubBatchNormalization2d(3), temp_node_id)
     output_node_id = graph.add_layer(StubAdd(), [output_node_id, temp_node_id])
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     output_node_id = graph.add_layer(StubFlatten(), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
+    output_node_id = graph.add_layer(StubDropout2d(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
@@ -127,15 +131,15 @@ def get_conv_dense_model():
     output_node_id = 0
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     output_node_id = graph.add_layer(StubFlatten(), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.DENSE_DROPOUT_RATE), output_node_id)
+    output_node_id = graph.add_layer(StubDropout2d(Constant.DENSE_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
@@ -155,25 +159,25 @@ def get_pooling_model():
     output_node_id = 0
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
-    output_node_id = graph.add_layer(StubPooling(2), output_node_id)
-
-    output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubPooling2d(2), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
-    output_node_id = graph.add_layer(StubConv(3, 3, 3), output_node_id)
-    output_node_id = graph.add_layer(StubBatchNormalization(3), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
+
+    output_node_id = graph.add_layer(StubReLU(), output_node_id)
+    output_node_id = graph.add_layer(StubConv2d(3, 3, 3), output_node_id)
+    output_node_id = graph.add_layer(StubBatchNormalization2d(3), output_node_id)
 
     output_node_id = graph.add_layer(StubFlatten(), output_node_id)
-    output_node_id = graph.add_layer(StubDropout(Constant.CONV_DROPOUT_RATE), output_node_id)
+    output_node_id = graph.add_layer(StubDropout2d(Constant.CONV_DROPOUT_RATE), output_node_id)
 
     output_node_id = graph.add_layer(StubReLU(), output_node_id)
     output_node_id = graph.add_layer(StubDense(graph.node_list[output_node_id].shape[0], 5),
@@ -237,7 +241,7 @@ class MockProcess(object):
         pass
 
     def start(self):
-        self.target(*self.args)
+        self.result = self.target(*self.args)
 
     def map_async(self, a, b):
         self.result = a(b[0])
@@ -247,6 +251,17 @@ class MockProcess(object):
         str(timeout)
         return [self.result]
 
+    def get_context(self, start_method='fork'):
+        return self
+
+    def Queue(self):
+        return queue.Queue()
+
+    def Process(self, target, args):
+        self.target = target
+        self.args = args
+        return self
+
     def terminate(self):
         pass
 
@@ -255,10 +270,23 @@ class MockProcess(object):
 
 
 class MockMemoryOutProcess(MockProcess):
-    def map_async(self, a, b):
+    def start(self):
         raise RuntimeError('cuda: out of memory.')
 
 
 def simple_transform(graph):
     graph.to_wider_model(5, 64)
     return [deepcopy(graph)]
+
+
+def mock_train(**kwargs):
+    str(kwargs)
+    return 1, 0
+
+
+def mock_nvidia_smi_output(*arg, **kwargs):
+    return \
+        '    Free                        : 1 MiB \n' \
+        '    Free                        : 11176 MiB \n' \
+        '    Free                        : 1 MiB \n' \
+        '    Free                        : 1 MiB'

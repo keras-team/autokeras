@@ -1,6 +1,7 @@
 from autokeras.constant import Constant
 from autokeras.nn.generator import CnnGenerator
 from autokeras.nn.layer_transformer import *
+from autokeras.nn.layers import StubBatchNormalization2d, StubConv2d
 from tests.common import get_conv_dense_model
 
 
@@ -26,7 +27,7 @@ def test_dense_to_wider_layer():
 
 
 def test_wider_bn():
-    bn_layer = StubBatchNormalization(3)
+    bn_layer = StubBatchNormalization2d(3)
     bn_layer.set_weights([np.ones(3, dtype=np.float32),
                           np.zeros(3, dtype=np.float32),
                           np.zeros(3, dtype=np.float32),
@@ -48,6 +49,6 @@ def test_wider_conv():
     model.set_weight_to_graph()
     graph = model.graph
 
-    assert isinstance(wider_pre_conv(graph.layer_list[1], 3), StubConv)
-    assert isinstance(wider_bn(graph.layer_list[2], 3, 3, 3), StubBatchNormalization)
-    assert isinstance(wider_next_conv(graph.layer_list[5], 3, 3, 3), StubConv)
+    assert isinstance(wider_pre_conv(graph.layer_list[1], 3), StubConv2d)
+    assert isinstance(wider_bn(graph.layer_list[2], 3, 3, 3), StubBatchNormalization2d)
+    assert isinstance(wider_next_conv(graph.layer_list[5], 3, 3, 3), StubConv2d)

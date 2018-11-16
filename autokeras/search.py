@@ -1,4 +1,5 @@
 import os
+import queue
 import re
 import time
 import torch
@@ -6,10 +7,10 @@ import torch.multiprocessing as mp
 
 from autokeras.bayesian import edit_distance, BayesianOptimizer
 from autokeras.constant import Constant
-from autokeras.nn.generator import CnnGenerator
-from autokeras.nn.model_trainer import ModelTrainer
+from autokeras.nn.generator import CnnGenerator, MlpGenerator
 from autokeras.net_transformer import default_transform
-from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print
+from autokeras.nn.model_trainer import ModelTrainer
+from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get_system
 
 
 class Searcher:
@@ -41,7 +42,7 @@ class Searcher:
         t_min: A float. The minimum temperature during simulated annealing.
     """
 
-    def __init__(self, n_output_node, input_shape, path, metric, loss, verbose,
+    def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose,
                  trainer_args=None,
                  default_model_len=Constant.MODEL_LEN,
                  default_model_width=Constant.MODEL_WIDTH,
@@ -71,6 +72,7 @@ class Searcher:
         self.metric = metric
         self.loss = loss
         self.path = path
+        self.generators = generators
         self.model_count = 0
         self.descriptors = []
         self.trainer_args = trainer_args
@@ -88,7 +90,7 @@ class Searcher:
         self.bo = BayesianOptimizer(self, t_min, metric, kernel_lambda, beta)
 
     def load_model_by_id(self, model_id):
-        return pickle_from_file(os.path.join(self.path, str(model_id) + '.h5'))
+        return pickle_from_file(os.path.join(self.path, str(model_id) + '.graph'))
 
     def load_best_model(self):
         return self.load_model_by_id(self.get_best_model_id())
@@ -105,13 +107,13 @@ class Searcher:
         return min(self.history, key=lambda x: x['metric_value'])['model_id']
 
     def replace_model(self, graph, model_id):
-        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.h5'))
+        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.graph'))
 
     def add_model(self, metric_value, loss, graph, model_id):
         if self.verbose:
             print('\nSaving model.')
 
-        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.h5'))
+        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.graph'))
 
         # Update best_model text file
         ret = {'model_id': model_id, 'loss': loss, 'metric_value': metric_value}
@@ -144,18 +146,20 @@ class Searcher:
     def init_search(self):
         if self.verbose:
             print('\nInitializing search.')
-        graph = CnnGenerator(self.n_classes,
-                             self.input_shape).generate(self.default_model_len,
-                                                        self.default_model_width)
-        model_id = self.model_count
-        self.model_count += 1
-        self.training_queue.append((graph, -1, model_id))
-        self.descriptors.append(graph.extract_descriptor())
-        for child_graph in default_transform(graph):
-            child_id = self.model_count
+        graph, model_id = None, None
+        for generator in self.generators:
+            graph = generator(self.n_classes, self.input_shape).\
+                generate(self.default_model_len, self.default_model_width)
+            model_id = self.model_count
             self.model_count += 1
-            self.training_queue.append((child_graph, model_id, child_id))
-            self.descriptors.append(child_graph.extract_descriptor())
+            self.training_queue.append((graph, -1, model_id))
+            self.descriptors.append(graph.extract_descriptor())
+        if graph is not None and model_id is not None:
+            for child_graph in default_transform(graph):
+                child_id = self.model_count
+                self.model_count += 1
+                self.training_queue.append((child_graph, model_id, child_id))
+                self.descriptors.append(child_graph.extract_descriptor())
         if self.verbose:
             print('Initialization finished.')
 
@@ -172,11 +176,14 @@ class Searcher:
             print('+' + '-' * 46 + '+')
             print('|' + 'Training model {}'.format(model_id).center(46) + '|')
             print('+' + '-' * 46 + '+')
-        ctx = mp.get_context('fork')
+        # Temporary solution to support GOOGLE Colab
+        if get_system() == Constant.SYS_GOOGLE_COLAB:
+            ctx = mp.get_context('fork')
+        else:
+            ctx = mp.get_context('spawn')
         q = ctx.Queue()
-        p = ctx.Process(target=train, args=(q,(graph, train_data, test_data, self.trainer_args,
-                                            os.path.join(self.path, str(model_id) + '.png'),
-                                            self.metric, self.loss, self.verbose)))
+        p = ctx.Process(target=train, args=(q, (graph, train_data, test_data, self.trainer_args,
+                                                self.metric, self.loss, self.verbose, self.path)))
         try:
             p.start()
             # Do the search in current thread.
@@ -210,10 +217,9 @@ class Searcher:
             self.x_queue = []
             self.y_queue = []
 
-            pickle_to_file(self, os.path.join(self.path, 'searcher'))
             self.export_json(os.path.join(self.path, 'history.json'))
 
-        except (ctx.TimeoutError, TimeoutError) as e:
+        except (TimeoutError, queue.Empty) as e:
             raise TimeoutError from e
         except RuntimeError as e:
             if not re.search('out of memory', str(e)):
@@ -270,11 +276,12 @@ class SearchTree:
 
 
 def train(q, args):
-    graph, train_data, test_data, trainer_args, path, metric, loss, verbose = args
+    graph, train_data, test_data, trainer_args, metric, loss, verbose, path = args
     model = graph.produce_model()
     # if path is not None:
     #     plot_model(model, to_file=path, show_shapes=True)
     loss, metric_value = ModelTrainer(model=model,
+                                      path=path,
                                       train_data=train_data,
                                       test_data=test_data,
                                       metric=metric,

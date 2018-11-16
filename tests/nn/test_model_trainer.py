@@ -4,7 +4,7 @@ from autokeras.nn.loss_function import classification_loss, regression_loss, bin
 from autokeras.nn.metric import Accuracy, MSE
 from autokeras.nn.model_trainer import ModelTrainer, GANModelTrainer
 from tests.common import get_classification_data_loaders, get_regression_data_loaders, \
-    get_classification_train_data_loaders
+    get_classification_train_data_loaders, clean_dir, TEST_TEMP_DIR
 
 
 def test_model_trainer_classification():
@@ -15,7 +15,9 @@ def test_model_trainer_classification():
                  test_data=test_data,
                  metric=Accuracy,
                  loss_function=classification_loss,
-                 verbose=True).train_model(max_iter_num=3)
+                 verbose=True,
+                 path=TEST_TEMP_DIR).train_model(max_iter_num=3)
+    clean_dir(TEST_TEMP_DIR)
 
 
 def test_model_trainer_regression():
@@ -26,7 +28,9 @@ def test_model_trainer_regression():
                  test_data=test_data,
                  metric=MSE,
                  loss_function=regression_loss,
-                 verbose=False).train_model(max_iter_num=3)
+                 verbose=False,
+                 path=TEST_TEMP_DIR).train_model(max_iter_num=3)
+    clean_dir(TEST_TEMP_DIR)
 
 
 def test_gan_model_trainer():
