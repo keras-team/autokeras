@@ -99,24 +99,46 @@ class Cutout(object):
 
 
 class DataTransformer(ABC):
+    """A superclass for all the DataTransformer"""
     def __init__(self):
         pass
 
     @abstractmethod
     def transform_train(self, data, targets=None, batch_size=None):
+        """ Transform the training data and get the DataLoader class.
+
+        Args:
+            data: x.
+            targets: y.
+            batch_size: the batchsize.
+
+        Returns:
+            dataloader: A torch.DataLoader class to represent the transformed data.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def transform_test(self, data, target=None, batch_size=None):
+        """ Transform the training data and get the DataLoader class.
+
+        Args:
+            data: x.
+            targets: y.
+            batch_size: the batchsize.
+
+        Returns:
+            dataloader: A torch.DataLoader class to represent the transformed data.
+        """
         raise NotImplementedError
 
 
 class TextDataTransformer(DataTransformer):
+    """ A DataTransformer class for the text data."""
     def __init__(self):
         super().__init__()
 
     def transform_train(self, data, targets=None, batch_size=None):
-        """Transform the training dataset"""
+        """Transform the training dataset."""
         dataset = self._transform(compose_list=[], data=data, targets=targets)
         if batch_size is None:
             batch_size = Constant.MAX_BATCH_SIZE
@@ -125,7 +147,7 @@ class TextDataTransformer(DataTransformer):
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     def transform_test(self, data, targets=None, batch_size=None):
-        """Transform the testing dataset"""
+        """Transform the testing dataset."""
         dataset = self._transform(compose_list=[], data=data, targets=targets)
         if batch_size is None:
             batch_size = Constant.MAX_BATCH_SIZE
@@ -140,13 +162,13 @@ class TextDataTransformer(DataTransformer):
 
 
 class ImageDataTransformer(DataTransformer):
-    """ Perform basic image transformation and augmentation
+    """ Perform basic image transformation and augmentation.
 
     Attributes:
-        max_val: the maximum value of all data
-        mean: the mean value
-        std: the standard deviation
-        augment: whether to perofrm augmentation on data
+        max_val: the maximum value of all data.
+        mean: the mean value.
+        std: the standard deviation.
+        augment: whether to perform augmentation on data.
     """
 
     def __init__(self, data, augment=Constant.DATA_AUGMENTATION):
@@ -157,12 +179,14 @@ class ImageDataTransformer(DataTransformer):
         self.augment = augment
 
     def transform_train(self, data, targets=None, batch_size=None):
-        """ Transform the training data, perform random cropping data augmentation and basic random flip augmentation
+        """ Transform the training data, perform random cropping data augmentation and basic random flip augmentation.
+
         Args:
-            batch_size: int batch_size
-            targets: the target of training set
+            batch_size: int batch_size.
+            targets: the target of training set.
+
         Returns:
-            A DataLoader class instance
+            A DataLoader class instance.
         """
         short_edge_length = min(data.shape[1], data.shape[2])
         common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
@@ -188,12 +212,13 @@ class ImageDataTransformer(DataTransformer):
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     def transform_test(self, data, targets=None, batch_size=None):
-        """ Transform the test data, perform normalization
+        """ Transform the test data, perform normalization.
+
         Args:
-            batch_size: int batch_size
-            targets: the target of test set
+            batch_size: int batch_size.
+            targets: the target of test set.
         Returns:
-            A DataLoader instance
+            A DataLoader instance.
         """
         common_list = [Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))]
         compose_list = common_list
@@ -209,14 +234,15 @@ class ImageDataTransformer(DataTransformer):
         return DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
     def _transform(self, compose_list, data, targets):
-        """Perform the actual transformation
+        """Perform the actual transformation.
+
         Args:
-            compose_list: a list of transforming operation
-            data: x
-            targets: y
+            compose_list: a list of transforming operation.
+            data: x.
+            targets: y.
 
         Returns:
-            A MultiTransformDataset class to represent the dataset
+            A MultiTransformDataset class to represent the dataset.
         """
         data = data / self.max_val
         args = [0, len(data.shape) - 1] + list(range(1, len(data.shape) - 1))
@@ -226,7 +252,7 @@ class ImageDataTransformer(DataTransformer):
 
 
 class MultiTransformDataset(Dataset):
-    """A class incorporate all transform method into a torch.Dataset class"""
+    """A class incorporate all transform method into a torch.Dataset class."""
 
     def __init__(self, dataset, target, compose):
         self.dataset = dataset
@@ -244,7 +270,7 @@ class MultiTransformDataset(Dataset):
 
 
 class BatchDataset(Dataset):
-    """A torch.Dataset class that can read data batch by batch"""
+    """A torch.Dataset class that can read data batch by batch."""
     def __init__(self, csv_file_path, image_path, has_target=True):
         file_names, target = read_csv_file(csv_file_path)
 

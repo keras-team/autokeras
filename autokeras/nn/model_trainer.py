@@ -13,7 +13,7 @@ from autokeras.utils import get_device
 
 
 class ModelTrainerBase(abc.ABC):
-    """ A base class all model trainers will inherit from
+    """ A base class all model trainers will inherit from.
 
     Attributes:
         device: A string. Indicating the device to use. 'cuda' or 'cpu'.
@@ -25,7 +25,7 @@ class ModelTrainerBase(abc.ABC):
             The prediction should be the output of the model for a batch.
             The target should be a batch of targets packed in the data loaders.
         metric: It should be a subclass of class autokeras.metric.Metric.
-            In the compute(prediction, target) function, prediction and targets are
+            In the compute(prediction, target) function, prediction and targets are,
             all numpy arrays converted from the output of the model and the targets packed in the data loaders.
         verbose: Verbosity mode.
     """
@@ -48,11 +48,12 @@ class ModelTrainerBase(abc.ABC):
                     max_iter_num=Constant.MAX_ITER_NUM,
                     max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM):
         """
-        Train the model
+        Train the model.
 
         Args:
-        max_iter_num: int, maximum numer of iteration
-        max_no_improvement_num: after max_no_improvement_num, if the model still makes no improvement, finish training
+            max_iter_num: int, maximum numer of iteration
+            max_no_improvement_num: after max_no_improvement_num,
+                if the model still makes no improvement, finish training.
         """
         pass
 
@@ -88,6 +89,7 @@ class ModelTrainer(ModelTrainerBase):
         """Train the model.
 
         Train the model with max_iter_num or max_no_improvement_num is met.
+
         Args:
             max_iter_num: An integer. The maximum number of epochs to train the model.
                 The training will stop when this number is reached.
@@ -132,8 +134,7 @@ class ModelTrainer(ModelTrainerBase):
                 sum(test_metric_value_list[-last_num:]) / last_num)
 
     def _train(self):
-        """Where the actual train proceed.
-        """
+        """Where the actual train proceed."""
         self.model.train()
         loader = self.train_loader
         self.current_epoch += 1
@@ -166,7 +167,7 @@ class ModelTrainer(ModelTrainerBase):
             progress_bar.close()
 
     def _test(self):
-        """Function for evaluation"""
+        """Function for evaluation."""
         self.model.eval()
         test_loss = 0
         all_targets = []
@@ -193,6 +194,16 @@ class ModelTrainer(ModelTrainerBase):
 
 
 class GANModelTrainer(ModelTrainerBase):
+    """A ModelTrainer especially for the GAN.
+
+    Attributes:
+        d_model: A discriminator model.
+        g_model: A generator model.
+        out_f: Out file.
+        out_size: Size of the output image.
+        optimizer_d: Optimizer for discriminator.
+        optimizer_g: Optimizer for generator.
+    """
     def __init__(self,
                  g_model,
                  d_model,
@@ -200,7 +211,16 @@ class GANModelTrainer(ModelTrainerBase):
                  loss_function,
                  verbose,
                  gen_training_result=None):
-        """Init the ModelTrainer with `model`, `x_train`, `y_train`, `x_test`, `y_test`, `verbose`"""
+        """Constructor
+
+        Args:
+            g_model: The generator model to be trained.
+            d_model: The discriminator model to be trained.
+            train_data: the training data.
+            loss_function: The loss function for both discriminator and generator.
+            verbose: Whether to output the system output.
+            gen_training_result: Whether to generate the intermediate result while training.
+        """
         super().__init__(loss_function, train_data, verbose=verbose)
         self.d_model = d_model
         self.g_model = g_model
@@ -238,6 +258,7 @@ class GANModelTrainer(ModelTrainerBase):
             progress_bar.close()
 
     def _train(self, epoch):
+        """Perform the actual train"""
         # put model into train mode
         self.d_model.train()
         # TODO: why?
@@ -298,7 +319,6 @@ class GANModelTrainer(ModelTrainerBase):
 class EarlyStop:
     """A class check for early stop condition.
 
-
     Attributes:
         training_losses: Record all the training loss.
         minimum_loss: The minimum loss we achieve so far. Used to compared to determine no improvement condition.
@@ -317,7 +337,7 @@ class EarlyStop:
         self._min_loss_dec = min_loss_dec
 
     def on_train_begin(self):
-        """Initiate the early stop condition
+        """Initiate the early stop condition.
 
         Call on every time the training iteration begins.
         """
@@ -327,11 +347,12 @@ class EarlyStop:
         self.minimum_loss = float('inf')
 
     def on_epoch_end(self, loss):
-        """Check the early stop condition
+        """Check the early stop condition.
 
         Call on every time the training iteration end.
+
         Args:
-            loss: The loss function achieved by the epoch
+            loss: The loss function achieved by the epoch.
 
         Returns:
             True if condition met, otherwise False.
