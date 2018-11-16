@@ -4,10 +4,9 @@ from autokeras.bayesian import edit_distance
 from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
 from autokeras.search import *
-from autokeras.nn.generator import CnnGenerator, ResNetGenerator
-
-from tests.common import clean_dir, MockProcess, get_classification_data_loaders, simple_transform, \
-    MockMemoryOutProcess, TEST_TEMP_DIR
+from autokeras.nn.generator import CnnGenerator, MlpGenerator, ResNetGenerator
+from tests.common import clean_dir, MockProcess, get_classification_data_loaders, get_classification_data_loaders_mlp, \
+    simple_transform, MockMemoryOutProcess, TEST_TEMP_DIR, simple_transform_mlp
 
 
 def mock_train(**_):
@@ -21,7 +20,23 @@ def test_bayesian_searcher(_, _1, _2):
     train_data, test_data = get_classification_data_loaders()
     clean_dir(TEST_TEMP_DIR)
     generator = Searcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
-                         loss=classification_loss, generators=[CnnGenerator])
+                         loss=classification_loss, generators=[CnnGenerator, CnnGenerator])
+    Constant.N_NEIGHBOURS = 1
+    Constant.T_MIN = 0.8
+    for _ in range(2):
+        generator.search(train_data, test_data)
+    clean_dir(TEST_TEMP_DIR)
+    assert len(generator.history) == 2
+
+
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
+@patch('autokeras.bayesian.transform', side_effect=simple_transform_mlp)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+def test_bayesian_searcher_mlp(_, _1, _2):
+    train_data, test_data = get_classification_data_loaders_mlp()
+    clean_dir(TEST_TEMP_DIR)
+    generator = Searcher(3, (28,), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
+                         loss=classification_loss, generators=[MlpGenerator, MlpGenerator])
     Constant.N_NEIGHBOURS = 1
     Constant.T_MIN = 0.8
     for _ in range(2):

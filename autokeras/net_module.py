@@ -113,5 +113,4 @@ class MlpModule(NetworkModule):
     """ Class to create an MLP module."""
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         super(MlpModule, self).__init__(loss, metric, searcher_args, path, verbose)
-        self.generators.append(MlpGenerator)
-
+        self.generators.extend([MlpGenerator] * 2)

@@ -9,7 +9,7 @@ from autokeras.nn.graph import Graph
 from autokeras.nn.layers import StubReLU, StubFlatten, StubSoftmax, StubDense, StubConcatenate, StubAdd, \
     StubConv2d, StubBatchNormalization2d, StubDropout2d
 from autokeras.nn.layers import StubPooling2d
-from autokeras.preprocessor import ImageDataTransformer
+from autokeras.preprocessor import ImageDataTransformer, DataTransformerMlp
 
 TEST_TEMP_KERAS_DIR =  'tests/resources/temp/autokeras'
 TEST_TEMP_DIR = 'tests/resources/temp'
@@ -222,6 +222,17 @@ def get_classification_train_data_loaders():
     return train_data
 
 
+def get_classification_data_loaders_mlp():
+    x_train = np.random.rand(200, 28)
+    y_train = np.random.rand(200, 3)
+    x_test = np.random.rand(190, 28)
+    y_test = np.random.rand(190, 3)
+    data_transformer = DataTransformerMlp(x_train)
+    train_data = data_transformer.transform_train(x_train, y_train)
+    test_data = data_transformer.transform_test(x_test, y_test)
+    return train_data, test_data
+
+
 def clean_dir(path):
     for f in os.listdir(path):
         full_path = os.path.join(path, f)
@@ -277,6 +288,11 @@ class MockMemoryOutProcess(MockProcess):
 
 def simple_transform(graph):
     graph.to_wider_model(5, 64)
+    return [deepcopy(graph)]
+
+
+def simple_transform_mlp(graph):
+    graph.to_wider_model(3, 64)
     return [deepcopy(graph)]
 
 
