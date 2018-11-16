@@ -1,28 +1,34 @@
 import os
 import re
 
+import GPUtil
 import numpy as np
+import tensorflow as tf
 from keras import Input, Model
+from keras import backend
 from keras.layers import Embedding
 from keras_preprocessing.sequence import pad_sequences
 from keras_preprocessing.text import Tokenizer
-import tensorflow as tf
 
 from autokeras.constant import Constant
 from autokeras.utils import download_file_with_extract
-import GPUtil
-from keras import backend as K
 
 
 def download_pre_train(file_path, extract_path):
+    """Download pre train file from link in constant.py.
+
+    Args:
+        file_path: String, contains download file path + file name.
+        extract_path: String extract path name.
+    """
     file_link = Constant.PRE_TRAIN_FILE_LINK
     print("try downloading pre train weights from link %s" % file_link)
     download_file_with_extract(file_link, file_path=file_path, extract_path=extract_path)
 
 
 def clean_str(string):
-    """
-    Tokenization/string cleaning for all string.
+    """Tokenization/string cleaning for all string.
+
     Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
     """
     string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
@@ -42,15 +48,18 @@ def clean_str(string):
 
 
 def tokenlize_text(max_num_words, max_seq_length, x_train):
-    """Tokenlize text class.
+    """Tokenlize text.
 
     Vectorize a text corpus by transform each text in texts to a sequence of integers.
 
-    Attributes:
-        max_num_words: int, max number of words in the dictionary
-        max_seq_length: int, the length of each text sequence, padding if shorter, trim is longer
-        x_train: list contains text data
-        y_train: list contains label data
+    Args:
+        max_num_words: Int, max number of words in the dictionary.
+        max_seq_length: Int, the length of each text sequence, padding if shorter, trim is longer.
+        x_train: List contains text data.
+
+    Returns:
+        x_train: Tokenlized input data.
+        word_index: Dictionary contains word with tokenlized index.
     """
     print("tokenlizing texts...")
     tokenizer = Tokenizer(num_words=max_num_words)
@@ -63,6 +72,16 @@ def tokenlize_text(max_num_words, max_seq_length, x_train):
 
 
 def read_embedding_index(extract_path):
+    """Read pre train file convert to embedding vector.
+
+    Read the pre trained file into a dictionary where key is the word and value is embedding vector.
+
+    Args:
+        extract_path: String contains pre trained file path.
+
+    Returns:
+        embedding_index: Dictionary contains word with pre trained index.
+    """
     embedding_index = {}
     f = open(os.path.join(extract_path, Constant.PRE_TRAIN_FILE_NAME))
     for line in f:
@@ -75,6 +94,18 @@ def read_embedding_index(extract_path):
 
 
 def load_pretrain(path, word_index):
+    """Load the pretrain file into embedding weights.
+
+    This method will first generate the embedding index and then generate
+    embedding matrix according to the word_index.
+
+    Args:
+        path: String, path to store the pretrain files.
+        word_index: Dictionary contains word with tokenlized index.
+
+    Returns:
+        embedding_matrix: Numpy array as the pretrain model embedding layer weights.
+    """
     print("loading pretrain weights...")
     file_path = os.path.join(path, Constant.FILE_PATH)
     extract_path = os.path.join(path, Constant.EXTRACT_PATH)
@@ -92,6 +123,22 @@ def load_pretrain(path, word_index):
 
 
 def processing(path, word_index, input_length, x_train):
+    """Processing string array with pretrained vectors.
+
+    convert an n dimension string array into n * k * m dimension float numpy array. Each k * m array represents
+    a string. k is the input_length which means an upper bound of the string length, for string shorter than
+    k will be pad and longer string will be cropped. m is defined by the pretrained file.
+
+    Args:
+        path: String, path where the pre trained files stored.
+        word_index: Dictionary, contains word with tokenlized index.
+        input_length: Int, an upper bound of the string length.
+        x_train: String array.
+
+    Returns:
+        x_train: Numpy array as processed x_train.
+    """
+
     embedding_matrix = load_pretrain(path=path, word_index=word_index)
 
     # Get the first available GPU
@@ -105,7 +152,7 @@ def processing(path, word_index, input_length, x_train):
         config = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
         config.gpu_options.allow_growth = True
         sess = tf.Session(config=config)
-        K.set_session(sess)
+        backend.set_session(sess)
         print("generating preprocessing model...")
         embedding_layer = Embedding(len(word_index) + 1,
                                     Constant.EMBEDDING_DIM,
@@ -124,6 +171,10 @@ def processing(path, word_index, input_length, x_train):
 
 
 def text_preprocess(x_train, path):
+    """This is the text preprocess main method.
+
+    It takes an raw string, clean it and processing it into tokenlized numpy array.
+    """
     x_train = [clean_str(x) for x in x_train]
     x_train, word_index = tokenlize_text(max_seq_length=Constant.MAX_SEQUENCE_LENGTH,
                                          max_num_words=Constant.MAX_NB_WORDS,

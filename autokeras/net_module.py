@@ -3,6 +3,7 @@ import time
 
 from autokeras.constant import Constant
 from autokeras.search import Searcher, train
+
 from autokeras.utils import pickle_to_file
 from autokeras.nn.generator import CnnGenerator, MlpGenerator
 
