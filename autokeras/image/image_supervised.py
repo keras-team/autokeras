@@ -242,16 +242,10 @@ class ImageSupervised(Supervised):
 
 
 class ImageClassifier(ImageSupervised):
-    """ ImageClassifier Class
+    """ImageClassifier Class.
 
     It is used for image classification. It searches convolutional neural network architectures
     for the best configuration for the image dataset.
-
-    Parameters:
-        y_encoder: An instance of OneHotEncoder for `y_train` (array of categorical labels).
-
-    Attributes:
-        loss: Cross Entropy loss defined by classification_loss method
     """
     @property
     def loss(self):
@@ -277,7 +271,7 @@ class ImageClassifier(ImageSupervised):
 
 
 class ImageClassifier1D(ImageClassifier):
-    """ ImageClassifier1D Class
+    """ ImageClassifier1D Class.
 
     It is used for 1D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
@@ -288,7 +282,8 @@ class ImageClassifier1D(ImageClassifier):
 
 
 class ImageClassifier3D(ImageClassifier):
-    """ ImageClassifier3D Class
+    """ ImageClassifier3D Class.
+
     It is used for 3D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
     """
@@ -298,7 +293,8 @@ class ImageClassifier3D(ImageClassifier):
 
 
 class ImageRegressor(ImageSupervised):
-    """ ImageRegressor Class
+    """ImageRegressor Class.
+
     It is used for image classification. It searches convolutional neural network architectures
     for the best configuration for the image dataset.
 
@@ -324,7 +320,8 @@ class ImageRegressor(ImageSupervised):
 
 
 class ImageRegressor1D(ImageRegressor):
-    """ ImageRegressor1D Class
+    """ ImageRegressor1D Class.
+
     It is used for 1D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
     """
@@ -334,7 +331,8 @@ class ImageRegressor1D(ImageRegressor):
 
 
 class ImageRegressor3D(ImageRegressor):
-    """ ImageRegressor3D Class
+    """ ImageRegressor3D Class.
+
     It is used for 3D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
     """

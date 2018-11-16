@@ -17,8 +17,12 @@ from autokeras.utils import download_file_with_extract
 def download_pre_train(file_path, extract_path):
     """Download pre train file from link in constant.py
 
-    :param file_path: a string contains download file path + file name
-    :param extract_path: a string extract path name
+    Args:
+        file_path: a string contains download file path + file name
+        extract_path: a string extract path name
+
+    Returns:
+
     """
     file_link = Constant.PRE_TRAIN_FILE_LINK
     print("try downloading pre train weights from link %s" % file_link)
@@ -50,10 +54,14 @@ def tokenlize_text(max_num_words, max_seq_length, x_train):
     """Tokenlize text.
 
     Vectorize a text corpus by transform each text in texts to a sequence of integers.
-    :param max_num_words: int, max number of words in the dictionary
-    :param max_seq_length: int, the length of each text sequence, padding if shorter, trim is longer
-    :param x_train: list contains text data
-    :return: tokenlized input data x_train and dictionary contains word with tokenlized index
+
+    Args:
+        max_num_words: int, max number of words in the dictionary
+        max_seq_length: int, the length of each text sequence, padding if shorter, trim is longer
+        x_train: list contains text data
+
+    Returns: tokenlized input data x_train and dictionary contains word with tokenlized index
+
     """
     print("tokenlizing texts...")
     tokenizer = Tokenizer(num_words=max_num_words)
@@ -66,11 +74,15 @@ def tokenlize_text(max_num_words, max_seq_length, x_train):
 
 
 def read_embedding_index(extract_path):
-    """Read pre train file convert to embedding vector
+    """Read pre train file convert to embedding vector.
 
     Read the pre trained file into a dictionary where key is the word and value is embedding vector
-    :param extract_path: a string contains pre trained file path
-    :return: a dictionary contains word with pre trained index
+
+    Args:
+        extract_path: a string contains pre trained file path
+
+    Returns: a dictionary contains word with pre trained index
+
     """
     embedding_index = {}
     f = open(os.path.join(extract_path, Constant.PRE_TRAIN_FILE_NAME))
@@ -84,13 +96,17 @@ def read_embedding_index(extract_path):
 
 
 def load_pretrain(path, word_index):
-    """Load the pretrain file into embedding weights
+    """Load the pretrain file into embedding weights.
 
     This method will first generate the embedding index
     and then generate embedding matrix according to the word_index
-    :param path: a string, path to store the pretrain files
-    :param word_index: a dictionary contains word with tokenlized index
-    :return: embedding_matrix as the pretrain model embedding layer weights
+
+    Args:
+        path: a string, path to store the pretrain files
+        word_index: a dictionary contains word with tokenlized index
+
+    Returns: embedding_matrix as the pretrain model embedding layer weights
+
     """
     print("loading pretrain weights...")
     file_path = os.path.join(path, Constant.FILE_PATH)
@@ -109,18 +125,22 @@ def load_pretrain(path, word_index):
 
 
 def processing(path, word_index, input_length, x_train):
-    """ Processing string array with pretrained vectors
+    """Processing string array with pretrained vectors.
 
     convert an n dimension string array into n * k * m dimension float numpy array. Each k * m array represents
     a string. k is the input_length which means an upper bound of the string length, for string shorter than
     k will be pad and longer string will be cropped. m is defined by the pretrained file.
 
-    :param path: string, store the pre trained files
-    :param word_index: dictionary, contains word with tokenlized index.
-    :param input_length:  int, an upper bound of the string length
-    :param x_train: string array
-    :return: n * k * m float numpy array
+    Args:
+        path: string, store the pre trained files
+        word_index: dictionary, contains word with tokenlized index.
+        input_length: int, an upper bound of the string length
+        x_train: string array
+
+    Returns: processed x_train as float numpy array
+
     """
+
     embedding_matrix = load_pretrain(path=path, word_index=word_index)
 
     # Get the first available GPU
