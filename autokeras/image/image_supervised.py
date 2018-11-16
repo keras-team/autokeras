@@ -138,10 +138,11 @@ class ImageSupervised(Supervised):
         if x is not None and (len(x.shape) == 4 or len(x.shape) == 1 and len(x[0].shape) == 3):
             self.resize_height, self.resize_width = compute_image_resize_params(x)
 
-        if self.resize_height is not None and is_resize_needed(x):
+        if self.resize_height is not None:
             x = resize_image_data(x, self.resize_height, self.resize_width)
+            print("x is ", x.shape)
 
-        if self.resize_height is not None and is_resize_needed(x_test):
+        if self.resize_height is not None:
             x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
 
         if self.verbose:
@@ -211,7 +212,8 @@ class ImageSupervised(Supervised):
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
-        if self.resize_height is not None and is_resize_needed(x_test):
+        print("x test is ", x_test.shape)
+        if self.resize_height is not None:
             x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)
@@ -230,10 +232,10 @@ class ImageSupervised(Supervised):
         if trainer_args is None:
             trainer_args = {'max_no_improvement_num': 30}
 
-        if self.resize_height is not None and is_resize_needed(x_train):
+        if self.resize_height is not None:
             x_train = resize_image_data(x_train, self.resize_height, self.resize_width)
 
-        if self.resize_height is not None and is_resize_needed(x_test):
+        if self.resize_height is not None:
             x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
 
         y_train = self.transform_y(y_train)
@@ -368,7 +370,7 @@ class PortableImageSupervised(PortableClass):
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
-        if self.resize_height is not None and is_resize_needed(x_test):
+        if self.resize_height is not None:
             x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)

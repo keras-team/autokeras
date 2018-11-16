@@ -184,18 +184,6 @@ def read_image(img_path):
     return img
 
 
-def is_resize_needed(data):
-    """Check if resize is needed for the image data.
-
-    If the images are 2D and the images are large or of different size, return True. Otherwise, return False.
-    """
-    if data is not None and ((len(data.shape) == 4 and data[0].shape[0] * data[1].shape[1] > Constant.MAX_IMAGE_SIZE) or
-                             (len(data.shape) == 1 and len(data[0].shape) == 3)):
-        return True
-    else:
-        return False
-
-
 def compute_image_resize_params(data):
     """Compute median height and width of all images in data.
 
@@ -209,8 +197,8 @@ def compute_image_resize_params(data):
         median height: Median height of all images in the data.
         median width: Median width of all images in the data.
     """
-    if len(data.shape) == 4:
-        return data[0].shape[1], data[0].shape[2]
+    if len(data.shape) == 1 and len(data[0].shape) != 3:
+        return None, None
 
     median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
 
@@ -222,7 +210,7 @@ def compute_image_resize_params(data):
     return int(median_height), int(median_width)
 
 
-def resize_image_data(data, height, weight):
+def resize_image_data(data, height, width):
     """Resize images to provided height and width.
 
     Resize all images in data to size h x w x c, where h is the height, w is the width and c is the number of channels.
@@ -236,12 +224,18 @@ def resize_image_data(data, height, weight):
     Returns:
         data: Resize data.
     """
+    if data is None:
+        return data
+
+    if len(data.shape) == 4 and data[0].shape[0] == height and data[0].shape[1] == width:
+        return data
+
     output_data = []
     for im in data:
         if len(im.shape) != 3:
             return data
         output_data.append(resize(image=im,
-                                  output_shape=(height, weight, im.shape[-1]),
+                                  output_shape=(height, width, im.shape[-1]),
                                   mode='edge',
                                   preserve_range=True))
 
