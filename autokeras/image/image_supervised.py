@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
 
-from autokeras.cnn_module import CnnModule
+from autokeras.net_module import CnnModule
 from autokeras.constant import Constant
 from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
