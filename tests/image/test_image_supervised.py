@@ -127,21 +127,21 @@ def test_save_continue(_, _1):
     clf = ImageClassifier(path=TEST_TEMP_DIR, verbose=False, resume=False)
     clf.n_epochs = 100
     clf.fit(train_x, train_y)
-    assert len(clf.load_searcher().history) == 1
+    assert len(clf.cnn.searcher.history) == 1
 
     Constant.MAX_MODEL_NUM = 2
     clf = ImageClassifier(verbose=False, path=TEST_TEMP_DIR, resume=True)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
-    assert len(clf.load_searcher().history) == 2
+    assert len(clf.cnn.searcher.history) == 2
 
     Constant.MAX_MODEL_NUM = 1
     clf = ImageClassifier(verbose=False, path=TEST_TEMP_DIR, resume=False)
     clf.fit(train_x, train_y)
     results = clf.predict(test_x)
     assert len(results) == 100
-    assert len(clf.load_searcher().history) == 1
+    assert len(clf.cnn.searcher.history) == 1
     clean_dir(TEST_TEMP_DIR)
 
 
@@ -160,7 +160,7 @@ def test_fit_csv_file(_, _1, _2):
     x_test, y_test = load_image_dataset(csv_file_path=os.path.join(path, "images_test/images_name.csv"),
                                         images_path=os.path.join(path, "images_test/Color_images"))
     results = clf.predict(x_test)
-    assert len(clf.load_searcher().history) == 1
+    assert len(clf.cnn.searcher.history) == 1
     assert len(results) == 5
     clean_dir(os.path.join(path, "temp"))
 
@@ -185,7 +185,7 @@ def test_fit_predict_regression(_, _1):
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_export_keras_model(_,_1):
+def test_export_keras_model(_, _1):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 1
     Constant.SEARCH_MAX_ITER = 1

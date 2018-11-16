@@ -9,7 +9,7 @@ class Constant:
 
     MAX_MODEL_NUM = 1000
     BETA = 2.576
-    KERNEL_LAMBDA = 0.1
+    KERNEL_LAMBDA = 1.0
     T_MIN = 0.0001
     N_NEIGHBOURS = 8
     MAX_MODEL_SIZE = (1 << 25)
@@ -45,7 +45,19 @@ class Constant:
     MAX_SEQUENCE_LENGTH = 400
     MAX_NB_WORDS = 5000
     EXTRACT_PATH = "glove/"
+
     # Download file name
+
     FILE_PATH = "glove.zip"
     PRE_TRAIN_FILE_LINK = "http://nlp.stanford.edu/data/glove.6B.zip"
     PRE_TRAIN_FILE_NAME = "glove.6B.100d.txt"
+
+    # Image Resize
+
+    MAX_IMAGE_SIZE = 128 * 128
+
+    # SYS Constant
+
+    SYS_LINUX = 'linux'
+    SYS_WINDOWS = 'windows'
+    SYS_GOOGLE_COLAB = 'goog_colab'

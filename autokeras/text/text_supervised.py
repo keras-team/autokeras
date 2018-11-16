@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
 
-from autokeras.cnn_module import CnnModule
+from autokeras.net_module import CnnModule
 from autokeras.constant import Constant
 from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
@@ -17,7 +17,29 @@ from autokeras.utils import pickle_to_file, validate_xy, temp_folder_generator, 
 
 
 class TextClassifier(Supervised):
+    """TextClassifier class.
+
+    Attributes:
+        cnn: CNN module from net_module.py.
+        path: A path to the directory to save the classifier as well as intermediate results.
+        y_encoder: Label encoder, used in transform_y or inverse_transform_y for encode the label. For example,
+                    if one hot encoder needed, y_encoder can be OneHotEncoder.
+        data_transformer: A transformer class to process the data. See example as ImageDataTransformer.
+        verbose: A boolean value indicating the verbosity mode which determines whether the search process
+                will be printed to stdout.
+    """
     def __init__(self, verbose=False, path=None, resume=False, searcher_args=None):
+        """Initialize the instance.
+
+        The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
+        Otherwise it would create a new one.
+        Args:
+            verbose: A boolean of whether the search process will be printed to stdout.
+            path: A string. The path to a directory, where the intermediate results are saved.
+            resume: A boolean. If True, the classifier will continue to previous work saved in path.
+                Otherwise, the classifier will start a new search.
+            searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
+        """
         super().__init__(verbose)
 
         if searcher_args is None:
@@ -47,9 +69,10 @@ class TextClassifier(Supervised):
         Args:
             x: A numpy.ndarray instance containing the training data.
             y: A numpy.ndarray instance containing the label of the training data.
+            y_test: A numpy.ndarray instance containing the testing data.
+            x_test: A numpy.ndarray instance containing the label of the testing data.
+            batch_size: int, define the batch size.
             time_limit: The time limit for the search in seconds.
-            y_test:
-            x_test:
         """
         x = text_preprocess(x, path=self.path)
 
@@ -172,6 +195,11 @@ class TextClassifier(Supervised):
 
 
 class TextRegressor(TextClassifier):
+    """ TextRegressor class.
+
+    It is used for text regression. It searches convolutional neural network architectures
+    for the best configuration for the text dataset.
+    """
     @property
     def loss(self):
         return regression_loss
