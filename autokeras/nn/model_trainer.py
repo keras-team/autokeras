@@ -13,8 +13,21 @@ from autokeras.utils import get_device
 
 
 class ModelTrainerBase(abc.ABC):
-    """
-    Base class for all ModelTrainer
+    """ A base class all model trainers will inherit from
+
+    Attributes:
+        device: A string. Indicating the device to use. 'cuda' or 'cpu'.
+        train_loader: Training data wrapped in batches in Pytorch Dataloader.
+        test_loader: Testing data wrapped in batches in Pytorch Dataloader.
+        loss_function: A function with two parameters (prediction, target).
+            There is no specific requirement for the types of the parameters,
+            as long as they are compatible with the model and the data loaders.
+            The prediction should be the output of the model for a batch.
+            The target should be a batch of targets packed in the data loaders.
+        metric: It should be a subclass of class autokeras.metric.Metric.
+            In the compute(prediction, target) function, prediction and targets are
+            all numpy arrays converted from the output of the model and the targets packed in the data loaders.
+        verbose: Verbosity mode.
     """
 
     def __init__(self,
@@ -52,25 +65,14 @@ class ModelTrainer(ModelTrainerBase):
     Please see the details in the Attributes.
 
     Attributes:
-        device: A string. Indicating the device to use. 'cuda' or 'cpu'.
+        temp_model_path: Specify the path where temp model should be stored.
         model: An instance of Pytorch Module. The model that will be trained.
-        train_loader: Training data wrapped in batches in Pytorch Dataloader.
-        test_loader: Testing data wrapped in batches in Pytorch Dataloader.
-        loss_function: A function with two parameters (prediction, target).
-            There is no specific requirement for the types of the parameters,
-            as long as they are compatible with the model and the data loaders.
-            The prediction should be the output of the model for a batch.
-            The target should be a batch of targets packed in the data loaders.
-        optimizer: The optimizer is chosen to use the Pytorch Adam optimizer.
         early_stop: An instance of class EarlyStop.
-        metric: It should be a subclass of class autokeras.metric.Metric.
-            In the compute(prediction, target) function, prediction and targets are
-            all numpy arrays converted from the output of the model and the targets packed in the data loaders.
-        verbose: Verbosity mode.
+        optimizer: The optimizer is chosen to use the Pytorch Adam optimizer.
+        current_epoch: Record the current epoch.
     """
 
     def __init__(self, model, path, **kwargs):
-        """Init the ModelTrainer with `model`, `x_train`, `y_train`, `x_test`, `y_test`, `verbose`"""
         super().__init__(**kwargs)
         self.model = model
         self.model.to(self.device)
@@ -85,11 +87,15 @@ class ModelTrainer(ModelTrainerBase):
                     max_no_improvement_num=None):
         """Train the model.
 
+        Train the model with max_iter_num or max_no_improvement_num is met.
         Args:
             max_iter_num: An integer. The maximum number of epochs to train the model.
                 The training will stop when this number is reached.
             max_no_improvement_num: An integer. The maximum number of epochs when the loss value doesn't decrease.
                 The training will stop when this number is reached.
+
+        Returns:
+            A tuple of loss values and metric value.
         """
         if max_iter_num is None:
             max_iter_num = Constant.MAX_ITER_NUM
@@ -126,6 +132,8 @@ class ModelTrainer(ModelTrainerBase):
                 sum(test_metric_value_list[-last_num:]) / last_num)
 
     def _train(self):
+        """Where the actual train proceed.
+        """
         self.model.train()
         loader = self.train_loader
         self.current_epoch += 1
@@ -158,6 +166,7 @@ class ModelTrainer(ModelTrainerBase):
             progress_bar.close()
 
     def _test(self):
+        """Function for evaluation"""
         self.model.eval()
         test_loss = 0
         all_targets = []
@@ -287,6 +296,17 @@ class GANModelTrainer(ModelTrainerBase):
 
 
 class EarlyStop:
+    """A class check for early stop condition.
+
+
+    Attributes:
+        training_losses: Record all the training loss.
+        minimum_loss: The minimum loss we achieve so far. Used to compared to determine no improvement condition.
+        no_improvement_count: Current no improvement count.
+        _max_no_improvement_num: The maximum number specified.
+        _done: Whether condition met.
+        _min_loss_dec: A threshold for loss improvement.
+    """
     def __init__(self, max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=Constant.MIN_LOSS_DEC):
         super().__init__()
         self.training_losses = []
@@ -297,12 +317,25 @@ class EarlyStop:
         self._min_loss_dec = min_loss_dec
 
     def on_train_begin(self):
+        """Initiate the early stop condition
+
+        Call on every time the training iteration begins.
+        """
         self.training_losses = []
         self.no_improvement_count = 0
         self._done = False
         self.minimum_loss = float('inf')
 
     def on_epoch_end(self, loss):
+        """Check the early stop condition
+
+        Call on every time the training iteration end.
+        Args:
+            loss: The loss function achieved by the epoch
+
+        Returns:
+            True if condition met, otherwise False.
+        """
         self.training_losses.append(loss)
         if self._done and loss > (self.minimum_loss - self._min_loss_dec):
             return False

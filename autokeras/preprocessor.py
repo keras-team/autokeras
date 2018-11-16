@@ -1,9 +1,11 @@
 import os
+from abc import ABC, abstractmethod
+
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import ToPILImage, RandomCrop, RandomHorizontalFlip, ToTensor, Normalize, Compose
-from abc import ABC, abstractmethod
+
 from autokeras.constant import Constant
 from autokeras.utils import read_csv_file, read_image
 
@@ -54,6 +56,7 @@ class OneHotEncoder:
 
 class Cutout(object):
     """Randomly mask out one or more patches from an image.
+
     Args:
         n_holes (int): Number of patches to cut out of each image.
         length (int): The length (in pixels) of each square patch.
@@ -64,9 +67,11 @@ class Cutout(object):
         self.length = length
 
     def __call__(self, img):
-        """
+        """Perform the actual transformation
+
         Args:
             img (Tensor): Tensor image of size (C, H, W).
+
         Returns:
             Tensor: Image with n_holes of dimension length x length cut out of it.
         """
@@ -94,6 +99,9 @@ class Cutout(object):
 
 
 class DataTransformer(ABC):
+    def __init__(self):
+        pass
+
     @abstractmethod
     def transform_train(self, data, targets=None, batch_size=None):
         raise NotImplementedError
@@ -104,8 +112,11 @@ class DataTransformer(ABC):
 
 
 class TextDataTransformer(DataTransformer):
+    def __init__(self):
+        super().__init__()
 
     def transform_train(self, data, targets=None, batch_size=None):
+        """Transform the training dataset"""
         dataset = self._transform(compose_list=[], data=data, targets=targets)
         if batch_size is None:
             batch_size = Constant.MAX_BATCH_SIZE
@@ -114,6 +125,7 @@ class TextDataTransformer(DataTransformer):
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     def transform_test(self, data, targets=None, batch_size=None):
+        """Transform the testing dataset"""
         dataset = self._transform(compose_list=[], data=data, targets=targets)
         if batch_size is None:
             batch_size = Constant.MAX_BATCH_SIZE
@@ -136,6 +148,7 @@ class ImageDataTransformer(DataTransformer):
         std: the standard deviation
         augment: whether to perofrm augmentation on data
     """
+
     def __init__(self, data, augment=Constant.DATA_AUGMENTATION):
         self.max_val = data.max()
         data = data / self.max_val
@@ -196,6 +209,15 @@ class ImageDataTransformer(DataTransformer):
         return DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
     def _transform(self, compose_list, data, targets):
+        """Perform the actual transformation
+        Args:
+            compose_list: a list of transforming operation
+            data: x
+            targets: y
+
+        Returns:
+            A MultiTransformDataset class to represent the dataset
+        """
         data = data / self.max_val
         args = [0, len(data.shape) - 1] + list(range(1, len(data.shape) - 1))
         data = torch.Tensor(data.transpose(*args))
@@ -205,6 +227,7 @@ class ImageDataTransformer(DataTransformer):
 
 class MultiTransformDataset(Dataset):
     """A class incorporate all transform method into a torch.Dataset class"""
+
     def __init__(self, dataset, target, compose):
         self.dataset = dataset
         self.target = target
@@ -221,6 +244,7 @@ class MultiTransformDataset(Dataset):
 
 
 class BatchDataset(Dataset):
+    """A torch.Dataset class that can read data batch by batch"""
     def __init__(self, csv_file_path, image_path, has_target=True):
         file_names, target = read_csv_file(csv_file_path)
 
