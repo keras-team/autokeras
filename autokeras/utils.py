@@ -12,7 +12,8 @@ import requests
 from skimage.transform import resize
 import torch
 import subprocess
-
+import string
+import random
 from autokeras.constant import Constant
 
 
@@ -86,8 +87,11 @@ def get_device():
 
 def temp_folder_generator():
     """Create and return a temporary directory with the path name '/temp_dir_name/autokeras' (E:g:- /tmp/autokeras)."""
+    chars = string.ascii_uppercase + string.digits
+    size = 6
     sys_temp = tempfile.gettempdir()
-    path = os.path.join(sys_temp, 'autokeras')
+    random_suffix = ''.join(random.choice(chars) for _ in range(size))
+    path = os.path.join(sys_temp, 'autokeras_' + random_suffix)
     ensure_dir(path)
     return path
 

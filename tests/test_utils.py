@@ -37,7 +37,7 @@ def mocked_requests_get(*args, **kwargs):
 def test_temp_folder_generator(_):
     clean_dir(TEST_TEMP_DIR)
     path = temp_folder_generator()
-    assert path == "tests/resources/temp/autokeras"
+    assert path.find("tests/resources/temp/autokeras") != -1
     clean_dir(TEST_TEMP_DIR)
 
 
