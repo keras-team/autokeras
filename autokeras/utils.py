@@ -184,6 +184,18 @@ def read_image(img_path):
     return img
 
 
+def is_resize_needed(data):
+    """Check if resize is needed for the image data.
+
+    If the images are 2D and the images are large or of different size, return True. Otherwise, return False.
+    """
+    if data is not None and ((len(data.shape) == 4 and data[0].shape[0] * data[1].shape[1] > Constant.MAX_IMAGE_SIZE) or
+                             (len(data.shape) == 1 and len(data[0].shape) == 3)):
+        return True
+    else:
+        return False
+
+
 def compute_image_resize_params(data):
     """Compute median height and width of all images in data.
 
@@ -197,6 +209,9 @@ def compute_image_resize_params(data):
         median height: Median height of all images in the data.
         median width: Median width of all images in the data.
     """
+    if len(data.shape) == 4:
+        return data[0].shape[1], data[0].shape[2]
+
     median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
 
     if median_height * median_width > Constant.MAX_IMAGE_SIZE:
@@ -221,7 +236,6 @@ def resize_image_data(data, height, weight):
     Returns:
         data: Resize data.
     """
-
     output_data = []
     for im in data:
         if len(im.shape) != 3:
