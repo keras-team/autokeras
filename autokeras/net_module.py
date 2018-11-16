@@ -5,9 +5,10 @@ from autokeras.constant import Constant
 from autokeras.search import Searcher, train
 
 from autokeras.utils import pickle_to_file
+from autokeras.nn.generator import CnnGenerator, MlpGenerator
 
 
-class CnnModule(object):
+class NetworkModule:
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         self.searcher_args = searcher_args
         self.searcher = None
@@ -15,6 +16,7 @@ class CnnModule(object):
         self.verbose = verbose
         self.loss = loss
         self.metric = metric
+        self.generators = []
 
     def fit(self, n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60):
         """ Search the best CnnModule.
@@ -35,6 +37,7 @@ class CnnModule(object):
             self.searcher_args['path'] = self.path
             self.searcher_args['metric'] = self.metric
             self.searcher_args['loss'] = self.loss
+            self.searcher_args['generators'] = self.generators
             self.searcher_args['verbose'] = self.verbose
             self.searcher = Searcher(**self.searcher_args)
             pickle_to_file(self, os.path.join(self.path, 'module'))
@@ -72,18 +75,29 @@ class CnnModule(object):
 
         if retrain:
             graph.weighted = False
-        _, _1, graph = train(q=None, args=(graph,
-                                           train_data,
-                                           test_data,
-                                           trainer_args,
-                                           self.metric,
-                                           self.loss,
-                                           self.verbose,
-                                           self.path))
-
+        _, _1, graph = train(None, graph,
+                             train_data,
+                             test_data,
+                             trainer_args,
+                             self.metric,
+                             self.loss,
+                             self.verbose,
+                             self.path)
         self.searcher.replace_model(graph, self.searcher.get_best_model_id())
         pickle_to_file(self, os.path.join(self.path, 'module'))
 
     @property
     def best_model(self):
         return self.searcher.load_best_model()
+
+
+class CnnModule(NetworkModule):
+    def __init__(self, loss, metric, searcher_args, path, verbose=False):
+        super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose)
+        self.generators.append(CnnGenerator)
+
+
+class MlpModule(NetworkModule):
+    def __init__(self, loss, metric, searcher_args, path, verbose=False):
+        super(MlpModule, self).__init__(loss, metric, searcher_args, path, verbose)
+        self.generators.append(MlpGenerator)

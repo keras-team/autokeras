@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
 
-from autokeras.cnn_module import CnnModule
+from autokeras.net_module import CnnModule
 from autokeras.constant import Constant
 from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
@@ -121,10 +121,14 @@ class ImageSupervised(Supervised):
         x = np.array(x)
 
         if len(x.shape) != 0 and len(x[0].shape) == 3:
+            if self.verbose:
+                print("Preprocessing the images.")
             self.resize_height, self.resize_width = compute_image_resize_params(x)
             x = resize_image_data(x, self.resize_height, self.resize_width)
             if x_test is not None:
                 x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
+            if self.verbose:
+                print("Preprocessing finished.")
 
         y = np.array(y).flatten()
         validate_xy(x, y)
