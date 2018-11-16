@@ -118,7 +118,7 @@ class DataTransformer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def transform_test(self, data, target=None, batch_size=None):
+    def transform_test(self, data, targets=None, batch_size=None):
         """ Transform the training data and get the DataLoader class.
 
         Args:
@@ -172,6 +172,7 @@ class ImageDataTransformer(DataTransformer):
     """
 
     def __init__(self, data, augment=Constant.DATA_AUGMENTATION):
+        super().__init__()
         self.max_val = data.max()
         data = data / self.max_val
         self.mean = np.mean(data, axis=(0, 1, 2), keepdims=True).flatten()

@@ -1,4 +1,10 @@
+import os
 from abc import ABC, abstractmethod
+from sklearn.model_selection import train_test_split
+
+from autokeras.constant import Constant
+from autokeras.net_module import CnnModule
+from autokeras.utils import temp_folder_generator, pickle_from_file, validate_xy, pickle_to_file
 
 
 class Supervised(ABC):
@@ -62,6 +68,94 @@ class Supervised(ABC):
     @abstractmethod
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
+        pass
+
+
+class DeepSupervised(Supervised):
+
+    def __init__(self, verbose=False, path=None, resume=False, searcher_args=None):
+        """Initialize the instance.
+
+        The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
+        Otherwise it would create a new one.
+        Args:
+            verbose: A boolean of whether the search process will be printed to stdout.
+            path: A string. The path to a directory, where the intermediate results are saved.
+            resume: A boolean. If True, the classifier will continue to previous work saved in path.
+                Otherwise, the classifier will start a new search.
+            searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
+        """
+        super().__init__(verbose)
+
+        if searcher_args is None:
+            searcher_args = {}
+
+        if path is None:
+            path = temp_folder_generator()
+
+        self.path = path
+        if resume:
+            classifier = pickle_from_file(os.path.join(self.path, 'text_classifier'))
+            self.__dict__ = classifier.__dict__
+            self.cnn = pickle_from_file(os.path.join(self.path, 'module'))
+        else:
+            self.y_encoder = None
+            self.data_transformer = None
+            self.verbose = verbose
+            self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
+
+    def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
+        validate_xy(x, y)
+        y = self.transform_y(y)
+        if x_test is None or y_test is None:
+            # Divide training data into training and testing data.
+            validation_set_size = int(len(y) * Constant.VALIDATION_SET_SIZE)
+            validation_set_size = min(validation_set_size, 500)
+            validation_set_size = max(validation_set_size, 1)
+            x_train, x_test, y_train, y_test = train_test_split(x, y,
+                                                                test_size=validation_set_size,
+                                                                random_state=42)
+        else:
+            x_train = x
+            y_train = y
+
+        self.init_transformer(x)
+        # Transform x_train
+
+        # Wrap the data into DataLoaders
+        train_data = self.data_transformer.transform_train(x_train, y_train)
+        test_data = self.data_transformer.transform_test(x_test, y_test)
+
+        # Save the classifier
+        pickle_to_file(self, os.path.join(self.path, 'classifier'))
+
+        if time_limit is None:
+            time_limit = 24 * 60 * 60
+
+        self.cnn.fit(self.get_n_output_node(), x_train.shape, train_data, test_data, time_limit)
+
+    @property
+    @abstractmethod
+    def metric(self):
+        pass
+
+    @property
+    @abstractmethod
+    def loss(self):
+        pass
+
+    @abstractmethod
+    def get_n_output_node(self):
+        pass
+
+    def transform_y(self, y_train):
+        return y_train
+
+    def inverse_transform_y(self, output):
+        return output
+
+    @abstractmethod
+    def init_transformer(self, x):
         pass
 
 
