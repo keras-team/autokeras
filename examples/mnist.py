@@ -11,4 +11,5 @@ if __name__ == '__main__':
     clf.fit(x_train, y_train, time_limit=2 * 60)
     clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
     y = clf.evaluate(x_test, y_test)
+
     print(y * 100)
