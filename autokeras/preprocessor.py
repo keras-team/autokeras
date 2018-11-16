@@ -67,7 +67,7 @@ class Cutout(object):
         self.length = length
 
     def __call__(self, img):
-        """Perform the actual transformation
+        """Perform the actual transformation.
 
         Args:
             img (Tensor): Tensor image of size (C, H, W).
@@ -99,7 +99,7 @@ class Cutout(object):
 
 
 class DataTransformer(ABC):
-    """A superclass for all the DataTransformer"""
+    """A superclass for all the DataTransformer."""
     def __init__(self):
         pass
 

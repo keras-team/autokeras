@@ -47,8 +47,7 @@ class ModelTrainerBase(abc.ABC):
     def train_model(self,
                     max_iter_num=Constant.MAX_ITER_NUM,
                     max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM):
-        """
-        Train the model.
+        """Train the model.
 
         Args:
             max_iter_num: int, maximum numer of iteration
@@ -211,7 +210,7 @@ class GANModelTrainer(ModelTrainerBase):
                  loss_function,
                  verbose,
                  gen_training_result=None):
-        """Constructor
+        """Initialize the GANModelTrainer.
 
         Args:
             g_model: The generator model to be trained.
@@ -258,7 +257,7 @@ class GANModelTrainer(ModelTrainerBase):
             progress_bar.close()
 
     def _train(self, epoch):
-        """Perform the actual train"""
+        """Perform the actual train."""
         # put model into train mode
         self.d_model.train()
         # TODO: why?
