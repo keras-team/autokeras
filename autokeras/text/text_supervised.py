@@ -13,7 +13,7 @@ from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, TextDataTransformer
 from autokeras.supervised import Supervised
 from autokeras.text.text_preprocessor import text_preprocess
-from autokeras.utils import pickle_to_file, validate_xy, temp_folder_generator, has_file, pickle_from_file
+from autokeras.utils import pickle_to_file, validate_xy, rand_temp_folder_generator, has_file, pickle_from_file
 
 
 class TextClassifier(Supervised):
@@ -46,7 +46,7 @@ class TextClassifier(Supervised):
             searcher_args = {}
 
         if path is None:
-            path = temp_folder_generator()
+            path = rand_temp_folder_generator()
 
         self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
 
@@ -74,7 +74,7 @@ class TextClassifier(Supervised):
             batch_size: int, define the batch size.
             time_limit: The time limit for the search in seconds.
         """
-        x = text_preprocess(x, path=self.path)
+        x = text_preprocess(x)
 
         x = np.array(x)
         y = np.array(y)
@@ -106,7 +106,7 @@ class TextClassifier(Supervised):
 
         if time_limit is None:
             time_limit = 24 * 60 * 60
-
+        print(x_train.shape)
         self.cnn.fit(self.get_n_output_node(), x_train.shape, train_data, test_data, time_limit)
 
     def final_fit(self, x_train=None, y_train=None, x_test=None, y_test=None, trainer_args=None, retrain=False):
@@ -129,8 +129,8 @@ class TextClassifier(Supervised):
                                                                               int(len(y_train) * 0.2)),
                                                                 random_state=42)
 
-        x_train = text_preprocess(x_train, path=self.path)
-        x_test = text_preprocess(x_test, path=self.path)
+        x_train = text_preprocess(x_train)
+        x_test = text_preprocess(x_test)
 
         y_train = self.transform_y(y_train)
         y_test = self.transform_y(y_test)
@@ -163,7 +163,7 @@ class TextClassifier(Supervised):
         return self.inverse_transform_y(output)
 
     def evaluate(self, x_test, y_test):
-        x_test = text_preprocess(x_test, path=self.path)
+        x_test = text_preprocess(x_test)
         """Return the accuracy score between predict value and `y_test`."""
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)
