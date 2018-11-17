@@ -149,7 +149,7 @@ def processing(path, word_index, input_length, x_train):
     os.environ["CUDA_VISIBLE_DEVICES"] = str(device_id)
     device = '/gpu:0'
     with tf.device(device):
-        config = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
+        config = tf.ConfigProto(allow_soft_placement=True)
         config.gpu_options.allow_growth = True
         sess = tf.Session(config=config)
         backend.set_session(sess)
