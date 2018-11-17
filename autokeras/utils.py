@@ -227,8 +227,8 @@ def resize_image_data(data, height, width):
 
     Args:
         data: 2-D Image data with shape N x H x W x C.
-        h: Image resize height.
-        w: Image resize width.
+        height: Image resize height.
+        width: Image resize width.
 
     Returns:
         data: Resize data.

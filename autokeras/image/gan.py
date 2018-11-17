@@ -100,8 +100,8 @@ class Discriminator(nn.Module):
             nn.Sigmoid()
         )
 
-    def forward(self, input):
-        output = self.main(input)
+    def forward(self, input_tensor):
+        output = self.main(input_tensor)
         return output.view(-1, 1).squeeze(1)
 
 
@@ -130,6 +130,6 @@ class Generator(nn.Module):
             # state size. (nc) x 64 x 64
         )
 
-    def forward(self, input):
-        output = self.main(input)
+    def forward(self, input_tensor):
+        output = self.main(input_tensor)
         return output

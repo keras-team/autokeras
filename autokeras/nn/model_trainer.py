@@ -224,10 +224,10 @@ class GANModelTrainer(ModelTrainerBase):
         self.g_model = g_model
         self.d_model.to(self.device)
         self.g_model.to(self.device)
-        self.outf = None
+        self.out_f = None
         self.out_size = 0
         if gen_training_result is not None:
-            self.outf, self.out_size = gen_training_result
+            self.out_f, self.out_size = gen_training_result
             self.sample_noise = torch.randn(self.out_size,
                                             self.g_model.nz,
                                             1, 1, device=self.device)
@@ -304,11 +304,11 @@ class GANModelTrainer(ModelTrainerBase):
             if self.verbose:
                 if batch_idx % 10 == 0:
                     progress_bar.update(10)
-            if self.outf is not None and batch_idx % 100 == 0:
+            if self.out_f is not None and batch_idx % 100 == 0:
                 fake = self.g_model(self.sample_noise)
                 vutils.save_image(
                     fake.detach(),
-                    '%s/fake_samples_epoch_%03d.png' % (self.outf, epoch),
+                    '%s/fake_samples_epoch_%03d.png' % (self.out_f, epoch),
                     normalize=True)
         if self.verbose:
             progress_bar.close()

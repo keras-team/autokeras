@@ -142,11 +142,11 @@ def processing(path, word_index, input_length, x_train):
     embedding_matrix = load_pretrain(path=path, word_index=word_index)
 
     # Get the first available GPU
-    DEVICE_ID_LIST = GPUtil.getFirstAvailable()
-    DEVICE_ID = DEVICE_ID_LIST[0]  # grab first element from list
+    device_id_list = GPUtil.getFirstAvailable()
+    device_id = device_id_list[0]  # grab first element from list
 
     # Set CUDA_VISIBLE_DEVICES to mask out all other GPUs than the first available device id
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(DEVICE_ID)
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(device_id)
     device = '/gpu:0'
     with tf.device(device):
         config = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
