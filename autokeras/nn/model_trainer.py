@@ -103,6 +103,7 @@ class ModelTrainer(ModelTrainerBase):
         if max_no_improvement_num is None:
             max_no_improvement_num = Constant.MAX_NO_IMPROVEMENT_NUM
 
+        print(Constant.MAX_NO_IMPROVEMENT_NUM)
         self.early_stop = EarlyStop(max_no_improvement_num)
         self.early_stop.on_train_begin()
 
