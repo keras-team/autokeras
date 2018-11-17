@@ -1,5 +1,3 @@
-import sys
-sys.path.append('/content/drive/My Drive/autokeras_colab/autokeras')
 from keras.datasets import mnist
 from autokeras import ImageClassifier
 
