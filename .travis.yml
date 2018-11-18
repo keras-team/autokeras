@@ -5,6 +5,9 @@ before_install:
 - sudo apt-get install graphviz
 install:
 - pip install -r requirements.txt --quiet
+- pip install pytest
+- pip install pytest-cov
+- pip install coverage
 - pip install mkdocs
 - pip install mkdocs-material
 script:
