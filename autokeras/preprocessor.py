@@ -198,8 +198,8 @@ class ImageDataTransformer(DataTransformer):
                             RandomCrop(data.shape[1:3], padding=4),
                             RandomHorizontalFlip(),
                             ToTensor()
-                            ] + common_list + [Cutout(n_holes=Constant.CUTOUT_HOLES,
-                                                      length=int(short_edge_length * Constant.CUTOUT_RATIO))]
+                            ] + common_list # + [Cutout(n_holes=Constant.CUTOUT_HOLES,
+                                             #         length=int(short_edge_length * Constant.CUTOUT_RATIO))]
         else:
             compose_list = common_list
 
