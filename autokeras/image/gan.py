@@ -71,6 +71,7 @@ class DCGAN(Unsupervised):
             raise TypeError("Input should be a torch.tensor or a numpy.ndarray")
         self.net_g.eval()
         with torch.no_grad():
+            input_sample = input_sample.to(get_device())
             generated_fake = self.net_g(input_sample)
         vutils.save_image(generated_fake.detach(),
                           '%s/evaluation.png' % self.gen_training_result[0],
@@ -99,8 +100,8 @@ class Discriminator(nn.Module):
             nn.Sigmoid()
         )
 
-    def forward(self, input):
-        output = self.main(input)
+    def forward(self, input_tensor):
+        output = self.main(input_tensor)
         return output.view(-1, 1).squeeze(1)
 
 
@@ -129,6 +130,6 @@ class Generator(nn.Module):
             # state size. (nc) x 64 x 64
         )
 
-    def forward(self, input):
-        output = self.main(input)
+    def forward(self, input_tensor):
+        output = self.main(input_tensor)
         return output

@@ -9,7 +9,7 @@ class Constant:
 
     MAX_MODEL_NUM = 1000
     BETA = 2.576
-    KERNEL_LAMBDA = 0.1
+    KERNEL_LAMBDA = 1.0
     T_MIN = 0.0001
     N_NEIGHBOURS = 8
     MAX_MODEL_SIZE = (1 << 25)
@@ -45,6 +45,7 @@ class Constant:
     MAX_SEQUENCE_LENGTH = 400
     MAX_NB_WORDS = 5000
     EXTRACT_PATH = "glove/"
+    STORE_PATH = ''
 
     # Download file name
 

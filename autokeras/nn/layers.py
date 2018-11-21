@@ -8,7 +8,7 @@ from torch.nn import functional
 from autokeras.constant import Constant
 
 
-class GlobalAvgPool(nn.Module):
+class AvgPool(nn.Module):
     def __init__(self):
         super().__init__()
 
@@ -17,17 +17,17 @@ class GlobalAvgPool(nn.Module):
         pass
 
 
-class GlobalAvgPool1d(GlobalAvgPool):
+class GlobalAvgPool1d(AvgPool):
     def forward(self, input_tensor):
         return functional.avg_pool1d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
-class GlobalAvgPool2d(GlobalAvgPool):
+class GlobalAvgPool2d(AvgPool):
     def forward(self, input_tensor):
         return functional.avg_pool2d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
-class GlobalAvgPool3d(GlobalAvgPool):
+class GlobalAvgPool3d(AvgPool):
     def forward(self, input_tensor):
         return functional.avg_pool3d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
@@ -252,9 +252,11 @@ class StubSoftmax(StubLayer):
 
 
 class StubPooling(StubLayer):
-    def __init__(self, kernel_size=2, input_node=None, output_node=None):
+    def __init__(self, kernel_size=2, input_node=None, output_node=None, stride=None, padding=0):
         super().__init__(input_node, output_node)
         self.kernel_size = kernel_size
+        self.stride = stride or kernel_size
+        self.padding = padding
 
     @property
     def output_shape(self):

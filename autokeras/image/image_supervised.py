@@ -1,19 +1,16 @@
 import os
-import pickle
-from abc import abstractmethod
+from abc import ABC
 from functools import reduce
 
 import numpy as np
 import torch
-from sklearn.model_selection import train_test_split
 
-from autokeras.net_module import CnnModule
 from autokeras.constant import Constant
 from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
-from autokeras.supervised import Supervised, PortableClass
-from autokeras.utils import has_file, pickle_from_file, pickle_to_file, temp_folder_generator, validate_xy, \
+from autokeras.supervised import PortableClass, DeepSupervised
+from autokeras.utils import pickle_to_file, \
     read_csv_file, read_image, compute_image_resize_params, resize_image_data
 
 
@@ -64,184 +61,70 @@ def load_image_dataset(csv_file_path, images_path):
     return np.array(x), np.array(y)
 
 
-class ImageSupervised(Supervised):
-    """The image classifier class.
-
-    It is used for image classification. It searches convolutional neural network architectures
-    for the best configuration for the dataset.
+class ImageSupervised(DeepSupervised, ABC):
+    """Abstract image supervised class.
 
     Attributes:
-        path: A path to the directory to save the classifier.
-        y_encoder: An instance of OneHotEncoder for `y_train` (array of categorical labels).
-        verbose: A boolean value indicating the verbosity mode.
-        searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
+        path: A path to the directory to save the classifier as well as intermediate results.
+        cnn: CNN module from net_module.py.
+        y_encoder: Label encoder, used in transform_y or inverse_transform_y for encode the label. For example,
+                    if one hot encoder needed, y_encoder can be OneHotEncoder.
+        data_transformer: A transformer class to process the data. See example as ImageDataTransformer.
+        verbose: A boolean value indicating the verbosity mode which determines whether the search process
+                will be printed to stdout.
         augment: A boolean value indicating whether the data needs augmentation.  If not define, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
+        searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
+        resize_height: resize image height.
+        resize_width: resize image width.
     """
 
-    def __init__(self, verbose=False, path=None, resume=False, searcher_args=None, augment=None):
+    def __init__(self, augment=None, **kwargs):
         """Initialize the instance.
-
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
         Otherwise it would create a new one.
-
         Args:
             verbose: A boolean of whether the search process will be printed to stdout.
             path: A string. The path to a directory, where the intermediate results are saved.
             resume: A boolean. If True, the classifier will continue to previous work saved in path.
                 Otherwise, the classifier will start a new search.
+            searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
             augment: A boolean value indicating whether the data needs augmentation. If not define, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
-
         """
-        super().__init__(verbose)
-
-        if searcher_args is None:
-            searcher_args = {}
-
-        if path is None:
-            path = temp_folder_generator()
-
         if augment is None:
             augment = Constant.DATA_AUGMENTATION
-
-        self.path = path
-        if has_file(os.path.join(self.path, 'classifier')) and resume:
-            classifier = pickle_from_file(os.path.join(self.path, 'classifier'))
-            self.__dict__ = classifier.__dict__
-            self.cnn = pickle_from_file(os.path.join(self.path, 'module'))
-        else:
-            self.y_encoder = None
-            self.data_transformer = None
-            self.verbose = verbose
-            self.augment = augment
-            self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
-
+        self.augment = augment
         self.resize_height = None
         self.resize_width = None
 
-    @property
-    @abstractmethod
-    def metric(self):
-        pass
-
-    @property
-    @abstractmethod
-    def loss(self):
-        pass
+        super().__init__(**kwargs)
 
     def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
         x = np.array(x)
-
-        if len(x.shape) != 0 and len(x[0].shape) == 3:
-            if self.verbose:
-                print("Preprocessing the images.")
-            self.resize_height, self.resize_width = compute_image_resize_params(x)
-            x = resize_image_data(x, self.resize_height, self.resize_width)
-            if x_test is not None:
-                x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
-            if self.verbose:
-                print("Preprocessing finished.")
-
         y = np.array(y).flatten()
-        validate_xy(x, y)
-        y = self.transform_y(y)
-        if x_test is None or y_test is None:
-            # Divide training data into training and testing data.
-            validation_set_size = int(len(y) * Constant.VALIDATION_SET_SIZE)
-            validation_set_size = min(validation_set_size, 500)
-            validation_set_size = max(validation_set_size, 1)
-            x_train, x_test, y_train, y_test = train_test_split(x, y,
-                                                                test_size=validation_set_size,
-                                                                random_state=42)
-        else:
-            x_train = x
-            y_train = y
-        # Transform x_train
+
+        if self.verbose:
+            print("Preprocessing the images.")
+
+        if x is not None and (len(x.shape) == 4 or len(x.shape) == 1 and len(x[0].shape) == 3):
+            self.resize_height, self.resize_width = compute_image_resize_params(x)
+
+        if self.resize_height is not None:
+            x = resize_image_data(x, self.resize_height, self.resize_width)
+            print("x is ", x.shape)
+
+        if self.resize_height is not None:
+            x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
+
+        if self.verbose:
+            print("Preprocessing finished.")
+
+        super().fit(x, y, x_test, y_test, time_limit)
+
+    def init_transformer(self, x):
         if self.data_transformer is None:
             self.data_transformer = ImageDataTransformer(x, augment=self.augment)
-
-        # Wrap the data into DataLoaders
-        train_data = self.data_transformer.transform_train(x_train, y_train)
-        test_data = self.data_transformer.transform_test(x_test, y_test)
-
-        # Save the classifier
-        pickle_to_file(self, os.path.join(self.path, 'classifier'))
-
-        if time_limit is None:
-            time_limit = 24 * 60 * 60
-
-        self.cnn.fit(self.get_n_output_node(), x_train.shape, train_data, test_data, time_limit)
-
-    @abstractmethod
-    def get_n_output_node(self):
-        pass
-
-    def transform_y(self, y_train):
-        return y_train
-
-    def predict(self, x_test):
-        """Return predict results for the testing data.
-
-        Args:
-            x_test: An instance of numpy.ndarray containing the testing data.
-
-        Returns:
-            A numpy.ndarray containing the results.
-        """
-        if Constant.LIMIT_MEMORY:
-            pass
-        test_loader = self.data_transformer.transform_test(x_test)
-        model = self.cnn.best_model.produce_model()
-        model.eval()
-
-        outputs = []
-        with torch.no_grad():
-            for index, inputs in enumerate(test_loader):
-                outputs.append(model(inputs).numpy())
-        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
-        return self.inverse_transform_y(output)
-
-    def inverse_transform_y(self, output):
-        return output
-
-    def evaluate(self, x_test, y_test):
-        """Return the accuracy score between predict value and `y_test`."""
-        if len(x_test.shape) != 0 and len(x_test[0].shape) == 3:
-            x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
-        y_predict = self.predict(x_test)
-        return self.metric().evaluate(y_test, y_predict)
-
-    def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
-        """Final training after found the best architecture.
-
-        Args:
-            x_train: A numpy.ndarray of training data.
-            y_train: A numpy.ndarray of training targets.
-            x_test: A numpy.ndarray of testing data.
-            y_test: A numpy.ndarray of testing targets.
-            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
-            retrain: A boolean of whether reinitialize the weights of the model.
-        """
-        if trainer_args is None:
-            trainer_args = {'max_no_improvement_num': 30}
-
-        if len(x_train.shape) != 0 and len(x_train[0].shape) == 3:
-            x_train = resize_image_data(x_train, self.resize_height, self.resize_width)
-            if x_test is not None:
-                x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
-
-        y_train = self.transform_y(y_train)
-        y_test = self.transform_y(y_test)
-
-        train_data = self.data_transformer.transform_train(x_train, y_train)
-        test_data = self.data_transformer.transform_test(x_test, y_test)
-
-        self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
-
-    def export_keras_model(self, model_file_name):
-        """ Exports the best Keras model to the given filename. """
-        self.cnn.best_model.produce_keras_model().save(model_file_name)
 
     def export_autokeras_model(self, model_file_name):
         """ Creates and Exports the AutoKeras model to the given filename. """
@@ -253,8 +136,20 @@ class ImageSupervised(Supervised):
                                                  resize_params=(self.resize_height, self.resize_width))
         pickle_to_file(portable_model, model_file_name)
 
+    def preprocess(self, x):
+        if len(x.shape) != 0 and len(x[0].shape) == 3:
+            if self.resize_height is not None:
+                return resize_image_data(x, self.resize_height, self.resize_width)
+        return x
+
 
 class ImageClassifier(ImageSupervised):
+    """ImageClassifier class.
+
+    It is used for image classification. It searches convolutional neural network architectures
+    for the best configuration for the image dataset.
+    """
+
     @property
     def loss(self):
         return classification_loss
@@ -279,18 +174,36 @@ class ImageClassifier(ImageSupervised):
 
 
 class ImageClassifier1D(ImageClassifier):
+    """ ImageClassifier1D class.
+
+    It is used for 1D image classification. It searches convolutional neural network architectures
+    for the best configuration for the 1D image dataset.
+    """
+
     def __init__(self, **kwargs):
         kwargs['augment'] = False
         super().__init__(**kwargs)
 
 
 class ImageClassifier3D(ImageClassifier):
+    """ ImageClassifier3D class.
+
+    It is used for 3D image classification. It searches convolutional neural network architectures
+    for the best configuration for the 1D image dataset.
+    """
+
     def __init__(self, **kwargs):
         kwargs['augment'] = False
         super().__init__(**kwargs)
 
 
 class ImageRegressor(ImageSupervised):
+    """ImageRegressor class.
+
+    It is used for image regression. It searches convolutional neural network architectures
+    for the best configuration for the image dataset.
+    """
+
     @property
     def loss(self):
         return regression_loss
@@ -310,12 +223,24 @@ class ImageRegressor(ImageSupervised):
 
 
 class ImageRegressor1D(ImageRegressor):
+    """ ImageRegressor1D class.
+
+    It is used for 1D image regression. It searches convolutional neural network architectures
+    for the best configuration for the 1D image dataset.
+    """
+
     def __init__(self, **kwargs):
         kwargs['augment'] = False
         super().__init__(**kwargs)
 
 
 class ImageRegressor3D(ImageRegressor):
+    """ ImageRegressor3D class.
+
+    It is used for 3D image regression. It searches convolutional neural network architectures
+    for the best configuration for the 1D image dataset.
+    """
+
     def __init__(self, **kwargs):
         kwargs['augment'] = False
         super().__init__(**kwargs)
@@ -363,7 +288,7 @@ class PortableImageSupervised(PortableClass):
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
-        if len(x_test.shape) != 0 and len(x_test.shape) == 3:
+        if self.resize_height is not None:
             x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)
