@@ -73,17 +73,23 @@ class CnnGenerator(NetworkGenerator):
         Returns:
             An instance of the class Graph. Represents the neural architecture graph of the generated model.
         """
-        pooling_len = int(model_len / 4)
+        # pooling_len = int(model_len / 4)
         graph = Graph(self.input_shape, False)
         temp_input_channel = self.input_shape[-1]
         output_node_id = 0
+        stride = 1
         for i in range(model_len):
             output_node_id = graph.add_layer(StubReLU(), output_node_id)
-            output_node_id = graph.add_layer(self.conv(temp_input_channel, model_width, kernel_size=3), output_node_id)
-            output_node_id = graph.add_layer(self.batch_norm(model_width), output_node_id)
+            output_node_id = graph.add_layer(self.batch_norm(graph.node_list[output_node_id].shape[-1]), output_node_id)
+            output_node_id = graph.add_layer(self.conv(temp_input_channel,
+                                                       model_width,
+                                                       kernel_size=3,
+                                                       stride=stride), output_node_id)
+            if stride == 1:
+                stride = 2
             temp_input_channel = model_width
-            if pooling_len == 0 or ((i + 1) % pooling_len == 0 and i != model_len - 1):
-                output_node_id = graph.add_layer(self.pooling(), output_node_id)
+            # if pooling_len == 0 or ((i + 1) % pooling_len == 0 and i != model_len - 1):
+            #     output_node_id = graph.add_layer(self.pooling(), output_node_id)
 
         output_node_id = graph.add_layer(self.global_avg_pooling(), output_node_id)
         output_node_id = graph.add_layer(self.dropout(Constant.CONV_DROPOUT_RATE), output_node_id)
@@ -196,7 +202,7 @@ class ResNetGenerator(NetworkGenerator):
         out = graph.add_layer(StubReLU(), out)
         out = graph.add_layer(self.conv(planes, planes, kernel_size=3), out)
 
-        if stride != 1 or in_planes != planes * self.block_expansion:
+        if stride != 1 or in_planes != planes * self.block_expansion or True:
             residual_node_id = graph.add_layer(StubReLU(), residual_node_id)
             residual_node_id = graph.add_layer(self.conv(in_planes,
                                                          planes * self.block_expansion,

@@ -45,11 +45,3 @@ def test_legal_graph2():
     assert legal_graph(graph)
     graph.to_concat_skip_model(1, 4)
     assert not legal_graph(graph)
-
-
-def test_default_transform():
-    graphs = default_transform(CnnGenerator(10, (32, 32, 3)).generate())
-    model = graphs[0].produce_model()
-    model(torch.Tensor(get_conv_data()))
-    assert len(graphs) == 1
-    assert len(graphs[0].layer_list) == 43

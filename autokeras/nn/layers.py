@@ -156,12 +156,13 @@ class StubConv(StubWeightBiasLayer):
         self.filters = filters
         self.kernel_size = kernel_size
         self.stride = stride
+        self.padding = int(self.kernel_size / 2)
 
     @property
     def output_shape(self):
         ret = list(self.input.shape[:-1])
         for index, dim in enumerate(ret):
-            ret[index] = int((dim - self.kernel_size) / self.stride) + 1
+            ret[index] = int((dim + 2 * self.padding - self.kernel_size) / self.stride) + 1
         ret = ret + [self.filters]
         return tuple(ret)
 
@@ -185,7 +186,7 @@ class StubConv1d(StubConv):
                                self.filters,
                                self.kernel_size,
                                stride=self.stride,
-                               padding=int(self.kernel_size / 2))
+                               padding=self.padding)
 
 
 class StubConv2d(StubConv):
@@ -194,7 +195,7 @@ class StubConv2d(StubConv):
                                self.filters,
                                self.kernel_size,
                                stride=self.stride,
-                               padding=int(self.kernel_size / 2))
+                               padding=self.padding)
 
 
 class StubConv3d(StubConv):
@@ -203,7 +204,7 @@ class StubConv3d(StubConv):
                                self.filters,
                                self.kernel_size,
                                stride=self.stride,
-                               padding=int(self.kernel_size / 2))
+                               padding=self.padding)
 
 
 class StubAggregateLayer(StubLayer):
@@ -279,17 +280,17 @@ class StubPooling(StubLayer):
 
 class StubPooling1d(StubPooling):
     def to_real_layer(self):
-        return torch.nn.MaxPool1d(Constant.POOLING_KERNEL_SIZE)
+        return torch.nn.MaxPool1d(Constant.POOLING_KERNEL_SIZE, stride=self.stride)
 
 
 class StubPooling2d(StubPooling):
     def to_real_layer(self):
-        return torch.nn.MaxPool2d(Constant.POOLING_KERNEL_SIZE)
+        return torch.nn.MaxPool2d(Constant.POOLING_KERNEL_SIZE, stride=self.stride)
 
 
 class StubPooling3d(StubPooling):
     def to_real_layer(self):
-        return torch.nn.MaxPool3d(Constant.POOLING_KERNEL_SIZE)
+        return torch.nn.MaxPool3d(Constant.POOLING_KERNEL_SIZE, stride=self.stride)
 
 
 class StubGlobalPooling(StubLayer):
@@ -382,6 +383,7 @@ def layer_width(layer):
         return layer.units
     if is_layer(layer, 'Conv'):
         return layer.filters
+    print(layer)
     raise TypeError('The layer should be either Dense or Conv layer.')
 
 

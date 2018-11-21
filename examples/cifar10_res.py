@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 from keras.datasets import cifar10
 
 from autokeras.nn.generator import ResNetGenerator
@@ -25,15 +25,15 @@ def main():
 
     resnet = ResNetGenerator(10, (32, 32, 3)).generate(5, 64)
     model = resnet.produce_model()
-    mixup_main(model)
-    # loss, metric_value = ModelTrainer(model=model,
-    #                                   path=rand_temp_folder_generator(),
-    #                                   train_data=train_data,
-    #                                   test_data=test_data,
-    #                                   metric=Accuracy,
-    #                                   loss_function=classification_loss,
-    #                                   verbose=True).train_model(max_iter_num=200, max_no_improvement_num=200)
-    # print(loss, metric_value)
+    # mixup_main(model)
+    loss, metric_value = ModelTrainer(model=model,
+                                      path=rand_temp_folder_generator(),
+                                      train_data=train_data,
+                                      test_data=test_data,
+                                      metric=Accuracy,
+                                      loss_function=classification_loss,
+                                      verbose=True).train_model(max_iter_num=200, max_no_improvement_num=200)
+    print(loss, metric_value)
 
 
 if __name__ == '__main__':

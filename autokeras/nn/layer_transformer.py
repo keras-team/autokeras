@@ -17,7 +17,7 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
         filter_weight[index] = 1
         weight[i, ...] = filter_weight
     bias = np.zeros(n_filters)
-    new_conv_layer = get_conv_class(n_dim)(conv_layer.filters, n_filters, kernel_size=kernel_size)
+    new_conv_layer = get_conv_class(n_dim)(n_filters, n_filters, kernel_size=kernel_size)
     bn = get_batch_norm_class(n_dim)(n_filters)
 
     if weighted:
@@ -29,8 +29,8 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
         bn.set_weights(new_weights)
 
     return [StubReLU(),
-            new_conv_layer,
-            bn]
+            bn,
+            new_conv_layer]
 
 
 def dense_to_deeper_block(dense_layer, weighted=True):
@@ -71,7 +71,10 @@ def wider_pre_dense(layer, n_add, weighted=True):
 def wider_pre_conv(layer, n_add_filters, weighted=True):
     n_dim = get_n_dim(layer)
     if not weighted:
-        return get_conv_class(n_dim)(layer.input_channel, layer.filters + n_add_filters, kernel_size=layer.kernel_size)
+        return get_conv_class(n_dim)(layer.input_channel,
+                                     layer.filters + n_add_filters,
+                                     kernel_size=layer.kernel_size,
+                                     stride=layer.stride)
 
     n_pre_filters = layer.filters
     rand = np.random.randint(n_pre_filters, size=n_add_filters)
