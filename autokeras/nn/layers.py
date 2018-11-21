@@ -150,17 +150,20 @@ class StubDense(StubWeightBiasLayer):
 
 
 class StubConv(StubWeightBiasLayer):
-    def __init__(self, input_channel, filters, kernel_size, input_node=None, output_node=None):
+    def __init__(self, input_channel, filters, kernel_size, input_node=None, output_node=None, stride=1):
         super().__init__(input_node, output_node)
         self.input_channel = input_channel
         self.filters = filters
         self.kernel_size = kernel_size
+        self.stride = stride
 
     @property
     def output_shape(self):
-        ret = self.input.shape[:-1]
-        ret = ret + (self.filters,)
-        return ret
+        ret = list(self.input.shape[:-1])
+        for index, dim in enumerate(ret):
+            ret[index] = int((dim - self.kernel_size) / self.stride) + 1
+        ret = ret + [self.filters]
+        return tuple(ret)
 
     def import_weights_keras(self, keras_layer):
         self.set_weights((keras_layer.get_weights()[0].T, keras_layer.get_weights()[1]))
@@ -181,6 +184,7 @@ class StubConv1d(StubConv):
         return torch.nn.Conv1d(self.input_channel,
                                self.filters,
                                self.kernel_size,
+                               stride=self.stride,
                                padding=int(self.kernel_size / 2))
 
 
@@ -189,6 +193,7 @@ class StubConv2d(StubConv):
         return torch.nn.Conv2d(self.input_channel,
                                self.filters,
                                self.kernel_size,
+                               stride=self.stride,
                                padding=int(self.kernel_size / 2))
 
 
@@ -197,6 +202,7 @@ class StubConv3d(StubConv):
         return torch.nn.Conv3d(self.input_channel,
                                self.filters,
                                self.kernel_size,
+                               stride=self.stride,
                                padding=int(self.kernel_size / 2))
 
 

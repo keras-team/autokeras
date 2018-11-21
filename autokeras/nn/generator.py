@@ -143,14 +143,14 @@ class MlpGenerator(NetworkGenerator):
 class ResNetGenerator(NetworkGenerator):
     def __init__(self, n_output_node, input_shape):
         super(ResNetGenerator, self).__init__(n_output_node, input_shape)
-        self.layers = [2, 2, 2, 2]
+        # self.layers = [2, 2, 2, 2]
+        self.in_planes = 64
         self.block_expansion = 1
         self.n_dim = len(self.input_shape) - 1
         if len(self.input_shape) > 4:
             raise ValueError('The input dimension is too high.')
         elif len(self.input_shape) < 2:
             raise ValueError('The input dimension is too low.')
-        self.in_planes = 64
         self.conv = get_conv_class(self.n_dim)
         self.dropout = get_dropout_class(self.n_dim)
         self.global_avg_pooling = get_global_avg_pooling_class(self.n_dim)
@@ -162,41 +162,46 @@ class ResNetGenerator(NetworkGenerator):
         graph = Graph(self.input_shape, False)
         temp_input_channel = self.input_shape[-1]
         output_node_id = 0
-        output_node_id = graph.add_layer(StubReLU(), output_node_id)
-        output_node_id = graph.add_layer(self.conv(temp_input_channel, model_width, kernel_size=7), output_node_id)
+        # output_node_id = graph.add_layer(StubReLU(), output_node_id)
+        output_node_id = graph.add_layer(self.conv(temp_input_channel, model_width, kernel_size=3), output_node_id)
         output_node_id = graph.add_layer(self.batch_norm(model_width), output_node_id)
-        output_node_id = graph.add_layer(self.pooling(kernel_size=3, stride=2, padding=1), output_node_id)
-        for layer in self.layers:
-            output_node_id = self._make_layer(graph, model_width, layer, output_node_id)
-            model_width *= 2
+        # output_node_id = graph.add_layer(self.pooling(kernel_size=3, stride=2, padding=1), output_node_id)
+
+        output_node_id = self._make_layer(graph, model_width, 2, output_node_id, 1)
+        model_width *= 2
+        output_node_id = self._make_layer(graph, model_width, 2, output_node_id, 2)
+        model_width *= 2
+        output_node_id = self._make_layer(graph, model_width, 2, output_node_id, 2)
+        model_width *= 2
+        output_node_id = self._make_layer(graph, model_width, 2, output_node_id, 2)
+
         output_node_id = graph.add_layer(self.global_avg_pooling(), output_node_id)
-        graph.add_layer(StubDense(int(model_width / 2) * self.block_expansion, self.n_output_node), output_node_id)
+        graph.add_layer(StubDense(model_width * self.block_expansion, self.n_output_node), output_node_id)
         return graph
 
-    def _make_layer(self, graph, planes, blocks, node_id):
-        down_sample = None
-        if self.in_planes != planes * self.block_expansion:
-            down_sample = [
-                self.conv(self.in_planes, planes * self.block_expansion, kernel_size=1),
-                self.batch_norm(planes * self.block_expansion),
-            ]
-        out = self._make_block(graph, self.in_planes, planes, node_id, down_sample)
-        self.in_planes = planes * self.block_expansion
-        for _ in range(1, blocks):
-            out = self._make_block(graph, self.in_planes, planes, out)
+    def _make_layer(self, graph, planes, blocks, node_id, stride):
+        strides = [stride] + [1] * (blocks - 1)
+        out = node_id
+        for current_stride in strides:
+            out = self._make_block(graph, self.in_planes, planes, out, current_stride)
+            self.in_planes = planes * self.block_expansion
         return out
 
-    def _make_block(self, graph, in_planes, planes, node_id, down_sample=None):
-        residual_node_id = node_id
-        out = graph.add_layer(StubReLU(), node_id)
-        out = graph.add_layer(self.conv(in_planes, planes, kernel_size=1), out)
+    def _make_block(self, graph, in_planes, planes, node_id, stride=1):
+        out = graph.add_layer(self.batch_norm(in_planes), node_id)
+        out = graph.add_layer(StubReLU(), out)
+        residual_node_id = out
+        out = graph.add_layer(self.conv(in_planes, planes, kernel_size=3, stride=stride), out)
         out = graph.add_layer(self.batch_norm(planes), out)
         out = graph.add_layer(StubReLU(), out)
         out = graph.add_layer(self.conv(planes, planes, kernel_size=3), out)
-        out = graph.add_layer(self.batch_norm(planes), out)
-        if down_sample is not None:
-            down_sample_out = graph.add_layer(StubReLU(), node_id)
-            down_sample_out = graph.add_layer(down_sample[0], down_sample_out)
-            residual_node_id = graph.add_layer(down_sample[1], down_sample_out)
+
+        if stride != 1 or in_planes != planes * self.block_expansion:
+            residual_node_id = graph.add_layer(StubReLU(), residual_node_id)
+            residual_node_id = graph.add_layer(self.conv(in_planes,
+                                                         planes * self.block_expansion,
+                                                         kernel_size=1,
+                                                         stride=stride), residual_node_id)
+            # residual_node_id = graph.add_layer(down_sample[1], residual_node_id)
         out = graph.add_layer(StubAdd(), (out, residual_node_id))
         return out
