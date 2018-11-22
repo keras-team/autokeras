@@ -9,7 +9,7 @@ from autokeras.nn.model_trainer import ModelTrainer
 from autokeras.preprocessor import ImageDataTransformer, OneHotEncoder
 from autokeras.utils import temp_path_generator, rand_temp_folder_generator
 
-from examples.mixup import main as mixup_main
+# from examples.mixup import main as mixup_main
 
 
 def main():

@@ -114,6 +114,7 @@ class ModelTrainer(ModelTrainerBase):
             0.025,
             momentum=0.9,
             weight_decay=3e-4)
+        # self.optimizer = torch.optim.Adam(self.model.parameters())
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, max_iter_num)
 
         for epoch in range(max_iter_num):
