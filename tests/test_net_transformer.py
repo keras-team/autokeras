@@ -29,19 +29,3 @@ def test_skip():
 def test_transform():
     models = transform(get_pooling_model())
     assert len(models) == Constant.N_NEIGHBOURS
-
-
-def test_legal_graph():
-    graph = get_pooling_model()
-    graph.to_add_skip_model(1, 4)
-    assert legal_graph(graph)
-    graph.to_add_skip_model(1, 4)
-    assert not legal_graph(graph)
-
-
-def test_legal_graph2():
-    graph = get_pooling_model()
-    graph.to_concat_skip_model(1, 4)
-    assert legal_graph(graph)
-    graph.to_concat_skip_model(1, 4)
-    assert not legal_graph(graph)

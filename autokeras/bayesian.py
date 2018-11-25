@@ -13,11 +13,34 @@ from sklearn.metrics.pairwise import rbf_kernel
 
 from autokeras.constant import Constant
 from autokeras.net_transformer import transform
+from autokeras.nn.layers import is_layer
 
 
 def layer_distance(a, b):
     """The distance between two layers."""
-    return abs(a - b) * 1.0 / max(a, b)
+    if type(a) != type(b):
+        return 1.0
+    if is_layer(a, 'Conv'):
+        att_diff = [(a.filters, b.filters),
+                    (a.kernel_size, b.kernel_size),
+                    (a.stride, b.stride)]
+        return attribute_difference(att_diff)
+    if is_layer(a, 'Pooling'):
+        att_diff = [(a.padding, b.padding),
+                    (a.kernel_size, b.kernel_size),
+                    (a.stride, b.stride)]
+        return attribute_difference(att_diff)
+    return 0.0
+
+
+def attribute_difference(att_diff):
+    ret = 0
+    for a_value, b_value in att_diff:
+        if max(a_value, b_value) == 0:
+            ret += 0
+        else:
+            ret += abs(a_value - b_value) * 1.0 / max(a_value, b_value)
+    return ret * 1.0 / len(att_diff)
 
 
 def layers_distance(list_a, list_b):
@@ -64,9 +87,7 @@ def edit_distance(x, y):
         The edit-distance between x and y.
     """
 
-    ret = 0
-    ret += layers_distance(x.conv_widths, y.conv_widths)
-    ret += layers_distance(x.dense_widths, y.dense_widths)
+    ret = layers_distance(x.layers, y.layers)
     ret += Constant.KERNEL_LAMBDA * skip_connections_distance(x.skip_connections, y.skip_connections)
     return ret
 
@@ -77,6 +98,7 @@ class IncrementalGaussianProcess:
     Attributes:
         alpha: A hyperparameter.
     """
+
     def __init__(self):
         self.alpha = 1e-10
         self._distance_matrix = None
@@ -266,6 +288,7 @@ class BayesianOptimizer:
         beta: The beta in acquisition function. (refer to our paper)
         search_tree: The network morphism search tree.
     """
+
     def __init__(self, searcher, t_min, metric, beta):
         self.searcher = searcher
         self.t_min = t_min
@@ -379,6 +402,7 @@ class BayesianOptimizer:
 @total_ordering
 class Elem:
     """Elements to be sorted according to metric value."""
+
     def __init__(self, metric_value, father_id, graph):
         self.father_id = father_id
         self.graph = graph
@@ -393,6 +417,7 @@ class Elem:
 
 class ReverseElem(Elem):
     """Elements to be reversely sorted according to metric value."""
+
     def __lt__(self, other):
         return self.metric_value > other.metric_value
 
@@ -407,6 +432,7 @@ def contain(descriptors, target_descriptor):
 
 class SearchTree:
     """The network morphism search tree."""
+
     def __init__(self):
         self.root = None
         self.adj_list = {}

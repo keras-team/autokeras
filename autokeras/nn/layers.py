@@ -150,7 +150,7 @@ class StubDense(StubWeightBiasLayer):
 
 
 class StubConv(StubWeightBiasLayer):
-    def __init__(self, input_channel, filters, kernel_size, input_node=None, output_node=None, stride=1):
+    def __init__(self, input_channel, filters, kernel_size, stride=1, output_node=None, input_node=None):
         super().__init__(input_node, output_node)
         self.input_channel = input_channel
         self.filters = filters
@@ -259,7 +259,12 @@ class StubSoftmax(StubLayer):
 
 
 class StubPooling(StubLayer):
-    def __init__(self, kernel_size=2, input_node=None, output_node=None, stride=None, padding=0):
+    def __init__(self,
+                 kernel_size=Constant.POOLING_KERNEL_SIZE,
+                 input_node=None,
+                 output_node=None,
+                 stride=None,
+                 padding=0):
         super().__init__(input_node, output_node)
         self.kernel_size = kernel_size
         self.stride = stride or kernel_size
@@ -280,17 +285,17 @@ class StubPooling(StubLayer):
 
 class StubPooling1d(StubPooling):
     def to_real_layer(self):
-        return torch.nn.MaxPool1d(Constant.POOLING_KERNEL_SIZE, stride=self.stride)
+        return torch.nn.MaxPool1d(self.kernel_size, stride=self.stride)
 
 
 class StubPooling2d(StubPooling):
     def to_real_layer(self):
-        return torch.nn.MaxPool2d(Constant.POOLING_KERNEL_SIZE, stride=self.stride)
+        return torch.nn.MaxPool2d(self.kernel_size, stride=self.stride)
 
 
 class StubPooling3d(StubPooling):
     def to_real_layer(self):
-        return torch.nn.MaxPool3d(Constant.POOLING_KERNEL_SIZE, stride=self.stride)
+        return torch.nn.MaxPool3d(self.kernel_size, stride=self.stride)
 
 
 class StubGlobalPooling(StubLayer):

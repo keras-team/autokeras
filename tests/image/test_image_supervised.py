@@ -35,7 +35,6 @@ def test_fit_predict(_, _1):
     Constant.SEARCH_MAX_ITER = 1
     Constant.T_MIN = 0.8
     Constant.DATA_AUGMENTATION = False
-    clean_dir(TEST_TEMP_DIR)
 
     clf = ImageClassifier(path=TEST_TEMP_DIR, verbose=True)
     train_x = np.random.rand(100, 25, 25, 1)

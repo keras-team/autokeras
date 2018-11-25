@@ -287,7 +287,7 @@ class MockMemoryOutProcess(MockProcess):
 
 
 def simple_transform(graph):
-    graph.to_wider_model(5, 64)
+    graph.to_wider_model(6, 64)
     return [deepcopy(graph)]
 
 

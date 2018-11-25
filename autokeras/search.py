@@ -151,12 +151,6 @@ class Searcher:
             self.model_count += 1
             self.training_queue.append((graph, -1, model_id))
             self.descriptors.append(graph.extract_descriptor())
-        # if graph is not None and model_id is not None:
-        #     for child_graph in default_transform(graph):
-        #         child_id = self.model_count
-        #         self.model_count += 1
-        #         self.training_queue.append((child_graph, model_id, child_id))
-        #         self.descriptors.append(child_graph.extract_descriptor())
 
         if self.verbose:
             print('Initialization finished.')
@@ -282,7 +276,7 @@ class Searcher:
         tree = self.bo.search_tree.get_dict()
 
         # Saving the data to file.
-        data['networks'] = networks
+        # data['networks'] = networks
         data['tree'] = tree
         import json
         with open(path, 'w') as fp:

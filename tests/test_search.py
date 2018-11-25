@@ -19,14 +19,14 @@ def mock_train(**_):
 def test_bayesian_searcher(_, _1, _2):
     train_data, test_data = get_classification_data_loaders()
     clean_dir(TEST_TEMP_DIR)
-    generator = Searcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
-                         loss=classification_loss, generators=[CnnGenerator, CnnGenerator])
+    searcher = Searcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
+                        loss=classification_loss, generators=[CnnGenerator, CnnGenerator])
     Constant.N_NEIGHBOURS = 1
     Constant.T_MIN = 0.8
     for _ in range(2):
-        generator.search(train_data, test_data)
+        searcher.search(train_data, test_data)
     clean_dir(TEST_TEMP_DIR)
-    assert len(generator.history) == 2
+    assert len(searcher.history) == 2
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
@@ -62,7 +62,6 @@ def test_export_json(_, _1, _2):
     generator.export_json(file_path)
     import json
     data = json.load(open(file_path, 'r'))
-    assert len(data['networks']) == 3
     assert len(data['tree']['children']) == 2
     clean_dir(TEST_TEMP_DIR)
     assert len(generator.history) == 3
