@@ -110,7 +110,7 @@ class DataTransformer(ABC):
         Args:
             data: x.
             targets: y.
-            batch_size: the batchsize.
+            batch_size: the batch size.
 
         Returns:
             dataloader: A torch.DataLoader class to represent the transformed data.
@@ -118,18 +118,24 @@ class DataTransformer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def transform_test(self, data, target=None, batch_size=None):
+    def transform_test(self, data, targets=None, batch_size=None):
         """ Transform the training data and get the DataLoader class.
 
         Args:
             data: x.
             targets: y.
-            batch_size: the batchsize.
+            batch_size: the batch size.
 
         Returns:
             dataloader: A torch.DataLoader class to represent the transformed data.
         """
         raise NotImplementedError
+
+
+def text_transform(compose_list, data, targets):
+    data = torch.Tensor(data.transpose(0, 2, 1))
+    data_transforms = Compose(compose_list)
+    return MultiTransformDataset(data, targets, data_transforms)
 
 
 class TextDataTransformer(DataTransformer):
@@ -139,7 +145,7 @@ class TextDataTransformer(DataTransformer):
 
     def transform_train(self, data, targets=None, batch_size=None):
         """Transform the training dataset."""
-        dataset = self._transform(compose_list=[], data=data, targets=targets)
+        dataset = text_transform(compose_list=[], data=data, targets=targets)
         if batch_size is None:
             batch_size = Constant.MAX_BATCH_SIZE
         batch_size = min(len(data), batch_size)
@@ -148,17 +154,12 @@ class TextDataTransformer(DataTransformer):
 
     def transform_test(self, data, targets=None, batch_size=None):
         """Transform the testing dataset."""
-        dataset = self._transform(compose_list=[], data=data, targets=targets)
+        dataset = text_transform(compose_list=[], data=data, targets=targets)
         if batch_size is None:
             batch_size = Constant.MAX_BATCH_SIZE
         batch_size = min(len(data), batch_size)
 
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
-
-    def _transform(self, compose_list, data, targets):
-        data = torch.Tensor(data.transpose(0, 3, 1, 2))
-        data_transforms = Compose(compose_list)
-        return MultiTransformDataset(data, targets, data_transforms)
 
 
 class ImageDataTransformer(DataTransformer):
@@ -172,6 +173,7 @@ class ImageDataTransformer(DataTransformer):
     """
 
     def __init__(self, data, augment=Constant.DATA_AUGMENTATION):
+        super().__init__()
         self.max_val = data.max()
         data = data / self.max_val
         self.mean = np.mean(data, axis=(0, 1, 2), keepdims=True).flatten()
@@ -182,6 +184,7 @@ class ImageDataTransformer(DataTransformer):
         """ Transform the training data, perform random cropping data augmentation and basic random flip augmentation.
 
         Args:
+            data: Numpy array. The data to be transformed.
             batch_size: int batch_size.
             targets: the target of training set.
 
@@ -215,6 +218,7 @@ class ImageDataTransformer(DataTransformer):
         """ Transform the test data, perform normalization.
 
         Args:
+            data: Numpy array. The data to be transformed.
             batch_size: int batch_size.
             targets: the target of test set.
         Returns:
@@ -244,6 +248,34 @@ class ImageDataTransformer(DataTransformer):
         Returns:
             A MultiTransformDataset class to represent the dataset.
         """
+        data = data / self.max_val
+        args = [0, len(data.shape) - 1] + list(range(1, len(data.shape) - 1))
+        data = torch.Tensor(data.transpose(*args))
+        data_transforms = Compose(compose_list)
+        return MultiTransformDataset(data, targets, data_transforms)
+
+
+class DataTransformerMlp(DataTransformer):
+    def __init__(self, data):
+        super().__init__()
+        self.max_val = data.max()
+        data = data / self.max_val
+        self.mean = np.mean(data, axis=0, keepdims=True).flatten()
+        self.std = np.std(data, axis=0, keepdims=True).flatten()
+
+    def transform_train(self, data, targets=None, batch_size=None):
+        dataset = self._transform([Normalize(torch.Tensor(self.mean), torch.Tensor(self.std))], data, targets)
+
+        if batch_size is None:
+            batch_size = Constant.MAX_BATCH_SIZE
+        batch_size = min(len(data), batch_size)
+
+        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+    def transform_test(self, data, target=None, batch_size=None):
+        return self.transform_train(data, targets=target, batch_size=batch_size)
+
+    def _transform(self, compose_list, data, targets):
         data = data / self.max_val
         args = [0, len(data.shape) - 1] + list(range(1, len(data.shape) - 1))
         data = torch.Tensor(data.transpose(*args))

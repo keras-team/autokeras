@@ -5,7 +5,7 @@ from autokeras.constant import Constant
 from autokeras.search import Searcher, train
 
 from autokeras.utils import pickle_to_file
-from autokeras.nn.generator import CnnGenerator, MlpGenerator
+from autokeras.nn.generator import CnnGenerator, MlpGenerator, ResNetGenerator
 
 
 class NetworkModule:
@@ -106,10 +106,11 @@ class CnnModule(NetworkModule):
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose)
         self.generators.append(CnnGenerator)
+        self.generators.append(ResNetGenerator)
 
 
 class MlpModule(NetworkModule):
     """ Class to create an MLP module."""
     def __init__(self, loss, metric, searcher_args, path, verbose=False):
         super(MlpModule, self).__init__(loss, metric, searcher_args, path, verbose)
-        self.generators.append(MlpGenerator)
+        self.generators.extend([MlpGenerator] * 2)

@@ -11,7 +11,7 @@ from keras_preprocessing.sequence import pad_sequences
 from keras_preprocessing.text import Tokenizer
 
 from autokeras.constant import Constant
-from autokeras.utils import download_file_with_extract
+from autokeras.utils import download_file_with_extract, temp_path_generator, ensure_dir
 
 
 def download_pre_train(file_path, extract_path):
@@ -142,14 +142,14 @@ def processing(path, word_index, input_length, x_train):
     embedding_matrix = load_pretrain(path=path, word_index=word_index)
 
     # Get the first available GPU
-    DEVICE_ID_LIST = GPUtil.getFirstAvailable()
-    DEVICE_ID = DEVICE_ID_LIST[0]  # grab first element from list
+    device_id_list = GPUtil.getFirstAvailable()
+    device_id = device_id_list[0]  # grab first element from list
 
     # Set CUDA_VISIBLE_DEVICES to mask out all other GPUs than the first available device id
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(DEVICE_ID)
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(device_id)
     device = '/gpu:0'
     with tf.device(device):
-        config = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
+        config = tf.ConfigProto(allow_soft_placement=True)
         config.gpu_options.allow_growth = True
         sess = tf.Session(config=config)
         backend.set_session(sess)
@@ -166,15 +166,23 @@ def processing(path, word_index, input_length, x_train):
         print("converting text to vector...")
         x_train = model.predict(x_train)
         del model
-    x_train = np.expand_dims(x_train, -1)
+
     return x_train
 
 
-def text_preprocess(x_train, path):
+def text_preprocess(x_train):
     """This is the text preprocess main method.
 
     It takes an raw string, clean it and processing it into tokenlized numpy array.
     """
+    if Constant.STORE_PATH == '':
+        temp_path = temp_path_generator()
+        path = temp_path + '_store'
+    else:
+        path = Constant.STORE_PATH
+
+    ensure_dir(path)
+
     x_train = [clean_str(x) for x in x_train]
     x_train, word_index = tokenlize_text(max_seq_length=Constant.MAX_SEQUENCE_LENGTH,
                                          max_num_words=Constant.MAX_NB_WORDS,
@@ -182,5 +190,4 @@ def text_preprocess(x_train, path):
 
     print("generating preprocessing model...")
     x_train = processing(path=path, word_index=word_index, input_length=Constant.MAX_SEQUENCE_LENGTH, x_train=x_train)
-
     return x_train

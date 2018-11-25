@@ -4,9 +4,8 @@ from lightgbm import LGBMRegressor
 import multiprocessing as mp
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import roc_auc_score
 import pickle
-import numpy as np  # We recommend to use numpy arrays
+import numpy as np
 from os.path import isfile
 import random
 import time
@@ -104,15 +103,12 @@ def search(search_space, search_iter, n_estimators, x, y):
         'num_leaves': [70],
         'learning_rate': [0.04],
     }
-    # pdb.set_trace()
+
     params.update(search_space)
     print(params)
     xgb = LGBMRegressor(silent=False,
                         verbose=-1,
-                        n_jobs=4,
-                        # max_depth=6,
-                        # n_estimators=500,
-                        # tree_method='hist',
+                        n_jobs=1,
                         objective='binary')
     folds = 3
     skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1001)
@@ -126,7 +122,7 @@ def search(search_space, search_iter, n_estimators, x, y):
 
 
 class Model(Supervised):
-    def __init__(self, datainfo, timeinfo):
+    def __init__(self, datainfo):
         """
         This constructor is supposed to initialize data members.
         Use triple quotes for function documentation.
@@ -140,13 +136,10 @@ class Model(Supervised):
               "%d categorical features and %d multi valued categorical variables" % (
                 datainfo['loaded_feat_types'][0], datainfo['loaded_feat_types'][1], datainfo['loaded_feat_types'][2],
                 datainfo['loaded_feat_types'][3]))
-        overall_spenttime = time.time() - timeinfo[0]
-        dataset_spenttime = time.time() - timeinfo[1]
-        print("[***] Overall time spent %5.2f sec" % overall_spenttime)
-        print("[***] Dataset time spent %5.2f sec" % dataset_spenttime)
+
         self.total_samples = 0
         self.is_trained = False
-        # Here you may have parameters and hyper-parameters
+
         self.cat_to_int_label = {}
         self.n_first_batch_keys = {}
         self.high_level_cat_keys = []
@@ -156,7 +149,6 @@ class Model(Supervised):
         self.save_predict = None
 
         self.batch_calculate = -1
-        self.former_batch_time = 0
         self.lag_results = []
         self.former_lag_results = []
         self.feature_add_high_cat = 0
@@ -172,12 +164,10 @@ class Model(Supervised):
             if file.endswith("_lgb.txt") or file.endswith("_lgb.npy"):
                 os.remove(file)
 
-    def extract_data(self, F, ncat, nmvc, use_mark):
+    def extract_data(self, F, ncat, nmvc):
         # only get numerical variables
         n_rows = F['numerical'].shape[0]
         n_num_col = F['numerical'].shape[1]
-        if use_mark:
-            return np.concatenate((F['numerical'], self.engineered_data), axis=1).astype(np.float64)
 
         data_list = [F['numerical']]
         if ncat > 0:
@@ -226,7 +216,7 @@ class Model(Supervised):
                                     'train_cat_cat'))
                     mark_1 += 1
 
-            pool = mp.Pool(processes=4)
+            pool = mp.Pool()
             results = [pool.apply_async(parallel_function, t) for t in tasks_1]
             all_results = [result.get() for result in results]
             pool.close()
@@ -255,7 +245,7 @@ class Model(Supervised):
                                     'train_num_cat'))
                     mark_2 += 1
 
-            pool = mp.Pool(processes=4)
+            pool = mp.Pool()
             results = [pool.apply_async(parallel_function, t) for t in tasks_2]
             all_results = [result.get() for result in results]
             pool.close()
@@ -292,7 +282,7 @@ class Model(Supervised):
                 (num_col_index, cat_col_index, mu, a) = self.num_cat_pair[key]
                 tasks.append((X[:, (num_col_index, cat_col_index)], self.n_first_batch_keys[cat_col_index], 'num_cat'))
 
-        pool = mp.Pool(processes=4)
+        pool = mp.Pool()
         results = [pool.apply_async(parallel_function, t) for t in tasks]
         results = [X[:, :ntime + nnum]] + [result.get() for result in results]
 
@@ -301,14 +291,19 @@ class Model(Supervised):
         pool.join()
         return ret, ret.shape[1] - ntime - nnum, 0
 
-    def fit(self, F, y, datainfo, timeinfo):
+    def fit(self, F, y, datainfo):
         """
         This function should train the model parameters.
-        Here we do nothing in this example...
+
         Args:
-            X: Training data matrix of dim num_train_samples * num_feat.
+            F: Training data. Could be either a numpy array or a pandas DataFrame.
             y: Training label matrix of dim num_train_samples * num_labels.
-        Both inputs are numpy arrays.
+            datainfo: Meta-features of the dataset, which describe:
+                     (i) the number of four different features including:
+                        time, numerical, categorical, and multi-value categorical.
+                     (ii) time budget.
+                     (iii) specific problem: classification/multi-class classification/regression
+        Both inputs X and y are numpy arrays.
         If fit is called multiple times on incremental data (train, test1, test2, etc.)
         you should warm-start your training from the pre-trained model. Past data will
         NOT be available for re-training.
@@ -319,13 +314,17 @@ class Model(Supervised):
 
         # Get Meta-Feature
         [ntime, nnum, ncat, nmvc] = datainfo['loaded_feat_types']
-
-        budget = datainfo['time_budget'] - 50
+        budget = datainfo['budget']
+        problem = datainfo['problem']
 
         if not self.is_trained:
             for col_index in range(nnum + ntime, nnum + ntime + ncat + nmvc):
                 self.cat_to_int_label[col_index] = {}
-        X = self.extract_data(F, ncat, nmvc, self.is_trained)
+
+        if type(F) == np.ndarray:
+            X = F
+        else:
+            X = self.extract_data(F, ncat, nmvc, self.is_trained)
 
         d_size = X.shape[0] * X.shape[1] / budget
         if d_size > 35000:
@@ -346,105 +345,26 @@ class Model(Supervised):
         if d_size > 35000:
             self.feature_add_cat_num = 0
             self.feature_add_cat_cat = 0
-        elif d_size > 23000:
+        else:
             self.feature_add_cat_num = 10
             self.feature_add_cat_cat = 10
-        elif d_size > 15000:
-            self.feature_add_cat_num = 15
-            self.feature_add_cat_cat = 15
-        else:
-            self.feature_add_cat_num = 50
-            self.feature_add_cat_cat = 50
 
-        overall_spenttime = time.time() - timeinfo[0]
-        dataset_spenttime = time.time() - timeinfo[1]
-
-        print("[***] Overall time spent %5.2f sec" % overall_spenttime)
-        print("[***] Dataset time spent %5.2f sec" % dataset_spenttime)
-
-        ###################
-        # Time Controller #
-        ###################
-        if self.is_trained:
-            print(budget - dataset_spenttime)
-            print(9 - self.batch_calculate)
-            tt = dataset_spenttime - self.former_batch_time
-            if self.batch_calculate == 1:
-                tt -= self.cv_time
-                tt -= self.FE_time
-            print(tt)
-            print((9 - self.batch_calculate) * tt)
-            if (budget - dataset_spenttime) < tt * (9 - self.batch_calculate):
-                print('No!')
-                self.max_lag -= 1
-                if self.max_lag < 1:
-                    print('No!!!')
-                    self.max_lag = 1
-            else:
-                print('Yes')
-                self.max_lag += 1
-
-        if self.lag > self.max_lag:
-            self.lag = self.max_lag
-
-        self.former_batch_time = dataset_spenttime
-
-        ############################
-        # Lag and Weight Selection #
-        ############################
-        if self.is_trained:
-            if self.batch_calculate > 1:
-                print('QQ')
-                print(self.lag_results)
-                self.former_lag_results = np.array([self.lag_results[0] * 1.1] + list(self.lag_results))
-            self.lag_results = []
-            for i in range(self.lag):
-                self.lag_results.append(roc_auc_score(y, self.save_predict[:, i]))
-            self.lag_results = np.array(self.lag_results)
-            print(self.lag_results)
-            self.lag_results = 2 * self.lag_results - 1
-            print(self.lag_results)
-
-        if self.batch_calculate > 1:
-            self.former_lag_results = self.former_lag_results[0:self.save_predict.shape[1]]
-            cum_results = np.cumsum(self.former_lag_results * self.save_predict, axis=1)
-            tmp_auc = []
-            for i in range(cum_results.shape[1]):
-                tmp_auc.append(roc_auc_score(y, cum_results[:, i]))
-            print(np.array(tmp_auc) * 2 - 1)
-            tmp_lag = tmp_auc.index(max(tmp_auc))
-            if tmp_lag < self.lag - 1:
-                self.lag = tmp_lag
-            if self.lag < 1:
-                self.lag = 1
-            print('Current Lag!')
-            print(self.lag)
-            print('Tmp Lag!')
-            print(tmp_lag)
-
-        # convert NaN to zeros
+        # Convert NaN to zeros
         X = np.nan_to_num(X)
 
+        # Encode high-order categorical data to numerical with frequency
         start = time.time()
-        if not self.is_trained:
-            X, ncat, nmvc = self.cat_to_num(X, ncat, nmvc, nnum, ntime, np.ravel(y))
+        X, ncat, nmvc = self.cat_to_num(X, ncat, nmvc, nnum, ntime, np.ravel(y))
         end = time.time()
         self.FE_time = end - start
-        print('Feature Engineering time: {}'.format(self.FE_time))
+        print('Categorical feature engineering time: {}'.format(self.FE_time))
 
         print('X.shape before remove_useless', X.shape)
-
         feature = feature_model(X)
         feature.time(range(ntime))
         feature.remove_useless()
         X = feature.X
-
         print('X.shape after remove_useless', X.shape)
-
-        num_train_samples = y.shape[0]
-
-        overall_spenttime = time.time() - timeinfo[0]
-        dataset_spenttime = time.time() - timeinfo[1]
 
         y0 = np.where(y == 0)[0]
         y1 = np.where(y == 1)[0]
@@ -493,13 +413,17 @@ class Model(Supervised):
         # subsample the data for efficient processing
         if not self.is_trained:
 
-            # if sum(y) / len(y) < 0.005:
-            #     self.lag_bound = 2
-
             if response_rate < 0.005:
                 depth_choice = [5]
             else:
                 depth_choice = [8, 10]
+
+            if problem == 'binary':
+                self.objective = 'binary'
+            elif problem == 'multiclass':
+                self.objective = 'multiclass'
+            elif problem == 'regression':
+
 
             params = {
                 'min_split_gain': [0.1],
@@ -510,6 +434,8 @@ class Model(Supervised):
                 # 'n_estimators': [100],
                 'subsample': [0.8],
                 'num_leaves': [80],
+                'objective': self.objective,
+
             }
 
             cv_start = time.time()
@@ -561,37 +487,25 @@ class Model(Supervised):
         print('Feature Importance:')
         print(self.clf.feature_importances_)
 
-    def predict(self, F, datainfo, timeinfo):
+    def predict(self, F, datainfo):
         """
         This function should provide predictions of labels on (test) data.
-        Here we just return random values...
-        Make sure that the predicted values are in the correct format for the scoring
-        metric. For example, binary classification problems often expect predictions
-        in the form of a discriminant value (if the area under the ROC curve it the metric)
-        rather that predictions of the class labels themselves.
         The function predict eventually casdn return probabilities or continuous values.
         """
 
         # Get Meta-Feature
         [ntime, nnum, ncat, nmvc] = datainfo['loaded_feat_types']
-        budget = datainfo['time_budget']
 
-        X = self.extract_data(F, ncat, nmvc, False)
+        if type(F) == np.ndarray:
+            X = F
+        else:
+            X = self.extract_data(F, ncat, nmvc, False)
 
-        overall_spenttime = time.time() - timeinfo[0]
-        dataset_spenttime = time.time() - timeinfo[1]
-
-        print("[***] Overall time spent %5.2f sec" % overall_spenttime)
-        print("[***] Dataset time spent %5.2f sec" % dataset_spenttime)
-
-        # convert NaN to zeros
+        # Convert NaN to zeros
         X = np.nan_to_num(X)
 
-        num_test_samples = X.shape[0]
-
+        # Encode high-order categorical data to numerical with frequency.
         X, ncat, nmvc = self.cat_to_num(X, ncat, nmvc, nnum, ntime)
-        subtt_cols = range(ntime + nnum, ntime + nnum + ncat + nmvc)
-        self.engineered_data = X[:, subtt_cols]
 
         feature = feature_model(X)
         feature.time(range(ntime))
@@ -604,29 +518,15 @@ class Model(Supervised):
                 pre_model_name.append(file)
 
         total_model = len(pre_model_name)
-
-        self.save_predict = np.zeros([num_test_samples, self.lag + 1])
         for name in pre_model_name:
-
             if int(name[0]) < total_model - self.lag:
                 continue
-
             booster = lgb.Booster(model_file=name)
             selected_feature_file = name[0] + '_lgb.npy'
             tmp_y = booster.predict(
                 X[:, np.load(selected_feature_file)]
             )
             y += tmp_y
-            print(name)
-            self.save_predict[:, total_model - int(name[0])] = tmp_y
-
-        if total_model > 1:
-            y = self.save_predict[:, 0] * np.max(self.lag_results[0]) * 1.1
-
-            for i in range(1, self.save_predict.shape[1]):
-                y += self.lag_results[i - 1] * self.save_predict[:, i]
-
-        self.lag += 1
         return y
 
     def save(self, path="./"):

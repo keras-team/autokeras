@@ -7,7 +7,6 @@ import torch.multiprocessing as mp
 
 from autokeras.bayesian import BayesianOptimizer
 from autokeras.constant import Constant
-from autokeras.net_transformer import default_transform
 from autokeras.nn.model_trainer import ModelTrainer
 from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get_system
 
@@ -145,7 +144,6 @@ class Searcher:
         """Call the generators to generate the initial architectures for the search."""
         if self.verbose:
             print('\nInitializing search.')
-        graph, model_id = None, None
         for generator in self.generators:
             graph = generator(self.n_classes, self.input_shape). \
                 generate(self.default_model_len, self.default_model_width)
@@ -153,12 +151,13 @@ class Searcher:
             self.model_count += 1
             self.training_queue.append((graph, -1, model_id))
             self.descriptors.append(graph.extract_descriptor())
-        if graph is not None and model_id is not None:
-            for child_graph in default_transform(graph):
-                child_id = self.model_count
-                self.model_count += 1
-                self.training_queue.append((child_graph, model_id, child_id))
-                self.descriptors.append(child_graph.extract_descriptor())
+        # if graph is not None and model_id is not None:
+        #     for child_graph in default_transform(graph):
+        #         child_id = self.model_count
+        #         self.model_count += 1
+        #         self.training_queue.append((child_graph, model_id, child_id))
+        #         self.descriptors.append(child_graph.extract_descriptor())
+
         if self.verbose:
             print('Initialization finished.')
 
