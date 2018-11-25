@@ -199,7 +199,7 @@ class Searcher:
                 searched = True
 
                 remaining_time = timeout - (time.time() - start_time)
-                generated_other_info, generated_graph = self.generate(remaining_time)
+                generated_other_info, generated_graph = self.generate(remaining_time, p)
                 new_model_id = self.model_count
                 self.model_count += 1
                 self.training_queue.append((generated_graph, generated_other_info, new_model_id))
@@ -245,7 +245,7 @@ class Searcher:
         self.bo.fit([graph.extract_descriptor()], [metric_value])
         self.bo.add_child(father_id, model_id)
 
-    def generate(self, remaining_time):
+    def generate(self, remaining_time, process):
         """Generate the next neural architecture.
 
         Args:
@@ -257,7 +257,7 @@ class Searcher:
 
         """
         generated_graph, new_father_id = self.bo.generate(self.descriptors,
-                                                          remaining_time)
+                                                          remaining_time, process)
         if new_father_id is None:
             new_father_id = 0
             generated_graph = self.generators[0](self.n_classes, self.input_shape). \

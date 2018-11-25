@@ -248,6 +248,7 @@ class MockProcess(object):
         self.target = target
         self.args = args
         self.result = None
+        self.count = 0
 
     def join(self):
         pass
@@ -279,6 +280,10 @@ class MockProcess(object):
 
     def close(self):
         pass
+
+    def is_alive(self):
+        self.count += 1
+        return self.count <= 8
 
 
 class MockMemoryOutProcess(MockProcess):

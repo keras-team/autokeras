@@ -82,7 +82,7 @@ def test_max_acq(_, _2):
         generator.search(train_data, test_data)
     for index1, descriptor1 in enumerate(generator.descriptors):
         for descriptor2 in generator.descriptors[index1 + 1:]:
-            assert edit_distance(descriptor1, descriptor2) != 0
+            assert edit_distance(descriptor1, descriptor2) != 0.0
 
     clean_dir(TEST_TEMP_DIR)
 

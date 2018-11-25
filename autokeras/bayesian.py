@@ -307,7 +307,7 @@ class BayesianOptimizer:
         """
         self.gpr.fit(x_queue, y_queue)
 
-    def generate(self, descriptors, timeout):
+    def generate(self, descriptors, timeout, process):
         """Generate new architecture.
 
         Args:
@@ -341,11 +341,13 @@ class BayesianOptimizer:
             pq.put(elem_class(metric_value, model_id, graph))
 
         t = 1.0
-        t_min = self.t_min
+        # t_min = self.t_min
         alpha = 0.9
         opt_acq = self._get_init_opt_acq_value()
         remaining_time = timeout
-        while not pq.empty() and t > t_min and remaining_time > 0:
+        while not pq.empty() and remaining_time > 0:
+            if not process.is_alive():
+                break
             elem = pq.get()
             if self.metric.higher_better():
                 temp_exp = min((elem.metric_value - opt_acq) / t, 1.0)
