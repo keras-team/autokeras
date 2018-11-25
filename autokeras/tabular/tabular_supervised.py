@@ -10,7 +10,7 @@ import random
 import time
 
 from autokeras.supervised import Supervised
-
+from autokeras.tabular.tabular_preprocessor import TabularPreprocessor
 
 def search(lgbm, search_space, search_iter, n_estimators, x, y):
     if 'n_estimators' in search_space:
@@ -53,8 +53,9 @@ class TabularSupervised(Supervised):
                                    verbose=-1,
                                    n_jobs=1,
                                    objective=self.objective)
+        self.tabular_preprocessor = None
 
-    def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
+    def fit(self, x, y, x_test=None, y_test=None, time_limit=None, datainfo=None):
         """
         This function should train the model parameters.
 
@@ -66,6 +67,9 @@ class TabularSupervised(Supervised):
         you should warm-start your training from the pre-trained model. Past data will
         NOT be available for re-training.
         """
+
+        self.tabular_preprocessor = TabularPreprocessor()
+        x = self.tabular_preprocessor.fit(x, y, time_limit, datainfo)
 
         y0 = np.where(y == 0)[0]
         y1 = np.where(y == 1)[0]
@@ -114,7 +118,6 @@ class TabularSupervised(Supervised):
         if not self.is_trained:
             # Two-step cross-validation for hyperparameter selection
             print('-----------------Search Regularization Params---------------------')
-            print(_)
             if response_rate < 0.005:
                 depth_choice = [5]
             else:
@@ -128,7 +131,7 @@ class TabularSupervised(Supervised):
                 'learning_rate': [0.3],
                 'subsample': [0.8],
                 'num_leaves': [80],
-                'objective': self.objective
+                'objective': self.objective,
             }
 
             cv_start = time.time()
@@ -141,7 +144,6 @@ class TabularSupervised(Supervised):
                                    grid_train_x, grid_train_y)
 
             print('-----------------Search Learning Rate---------------------')
-            print(_)
             for key, value in best_param.items():
                 best_param[key] = [value]
             best_param['learning_rate'] = [0.03, 0.045, 0.06, 0.075, 0.85, 0.95, 0.105, 0.12]
@@ -180,6 +182,7 @@ class TabularSupervised(Supervised):
         This function should provide predictions of labels on (test) data.
         The function predict eventually casdn return probabilities or continuous values.
         """
+        x_test = self.tabular_preprocessor.encode(x_test)
         y = None
         if self.clf is not None:
             y = self.clf.predict(x_test)

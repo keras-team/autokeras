@@ -6,30 +6,6 @@ import multiprocessing as mp
 
 LEVEL_HIGH = 32
 
-class feature_model:
-    def __init__(self, X):
-        self.X = X
-
-    def remove_useless(self):
-        rest = np.where(np.max(self.X, 0) - np.min(self.X, 0) != 0)[0]
-        self.X = self.X[:, rest]
-        pre_model_name = []
-        for file in os.listdir(os.getcwd()):
-            if file.endswith("_lgb.npy"):
-                pre_model_name.append(file)
-        newname = str(len(pre_model_name) + 1) + '_lgb'
-        np.save(newname, rest)
-
-    def time(self, cols):
-        if len(cols) > 10:
-            cols = cols[:10]
-        X_time = self.X[:, cols]
-        for i in cols:
-            for j in range(i+1, len(cols)):
-                self.X = np.append(self.X, np.expand_dims(X_time[:, i]-X_time[:, j], 1), 1)
-
-
-
 def parallel_function(labels, first_batch_keys, task):
     if task == 'label':
         if min(labels) > first_batch_keys:
@@ -100,49 +76,40 @@ def parallel_function(labels, first_batch_keys, task):
     return None
 
 
-class tabular_preprocess():
-    def __init__(self, datainfo):
+class TabularPreprocessor():
+    def __init__(self):
         """
         This constructor is supposed to initialize data members.
         Use triple quotes for function documentation.
         """
-        # Just print some info from the datainfo variable
         self.num_cat_pair = {}
-        print("The Budget for this data set is: %d seconds" % datainfo['time_budget'])
-
-        print("Loaded %d time features, "
-              "%d numerical Features, "
-              "%d categorical features and %d multi valued categorical variables" % (
-                  datainfo['loaded_feat_types'][0], datainfo['loaded_feat_types'][1], datainfo['loaded_feat_types'][2],
-                  datainfo['loaded_feat_types'][3]))
 
         self.total_samples = 0
-        self.is_trained = False
 
         self.cat_to_int_label = {}
         self.n_first_batch_keys = {}
         self.high_level_cat_keys = []
 
-        self.lag = 0
-        self.max_lag = 0
-        self.save_predict = None
-
-        self.batch_calculate = -1
-        self.lag_results = []
-        self.former_lag_results = []
         self.feature_add_high_cat = 0
         self.feature_add_cat_num = 0
         self.feature_add_cat_cat = 0
         self.order_num_cat_pair = None
 
-        self.lag_bound = 10
-        self.clf = None
+        self.rest = None
 
-        # Remove Previously Generated lgb results
-        for file in os.listdir(os.getcwd()):
-            if file.endswith("_lgb.txt") or file.endswith("_lgb.npy"):
-                os.remove(file)
+    def remove_useless(self, x):
+        self.rest = np.where(np.max(x, 0) - np.min(x, 0) != 0)[0]
+        return x[:, self.rest]
 
+    def process_time(self, x):
+        cols = range(self.ntime)
+        if len(cols) > 10:
+            cols = cols[:10]
+        x_time = x[:, cols]
+        for i in cols:
+            for j in range(i+1, len(cols)):
+                x = np.append(x, np.expand_dims(x_time[:, i]-x_time[:, j], 1), 1)
+        return x
 
     def extract_data(self, F, ncat, nmvc):
         # only get numerical variables
@@ -175,7 +142,7 @@ class tabular_preprocess():
 
 
     def cat_to_num(self, X, ncat, nmvc, nnum, ntime, y=None):
-        if not self.is_trained:
+        if y is not None:
             mark = ntime + nnum
 
             for col_index in range(ntime + nnum, ntime + nnum + ncat + nmvc):
@@ -244,7 +211,6 @@ class tabular_preprocess():
             self.num_cat_pair.update(num_cat_pair_2)
             self.order_num_cat_pair = sorted(list(self.num_cat_pair.keys()))
             print(self.num_cat_pair)
-
             print('num_cat_pair_2: ', num_cat_pair_2)
 
         tasks = []
@@ -272,7 +238,7 @@ class tabular_preprocess():
         pool.join()
         return ret, ret.shape[1] - ntime - nnum, 0
 
-    def fit(self, F, y, datainfo):
+    def fit(self, F, y=None, time_limit=None, datainfo=None):
         """
         This function should train the model parameters.
 
@@ -280,45 +246,40 @@ class tabular_preprocess():
             x: A numpy.ndarray instance containing the training data.
             y: Training label matrix of dim num_train_samples * num_labels.
             datainfo: Meta-features of the dataset, which describe:
-                     (i) the number of four different features including:
-                        time, numerical, categorical, and multi-value categorical.
-                     (ii) time budget.
+                     the number of four different features including:
+                     time, numerical, categorical, and multi-value categorical.
         Both inputs X and y are numpy arrays.
         If fit is called multiple times on incremental data (train, test1, test2, etc.)
         you should warm-start your training from the pre-trained model. Past data will
         NOT be available for re-training.
         """
-
-        # Mark the number of batches
-        self.batch_calculate += 1
-
         # Get Meta-Feature
-        [ntime, nnum, ncat, nmvc] = datainfo['loaded_feat_types']
-        budget = datainfo['budget']
+        if time_limit is not None:
+            self.budget = time_limit
+        if datainfo is not None:
+            [self.ntime, self.nnum, self.ncat, self.nmvc] = datainfo['loaded_feat_types']
 
-        if not self.is_trained:
-            for col_index in range(nnum + ntime, nnum + ntime + ncat + nmvc):
-                self.cat_to_int_label[col_index] = {}
+        for col_index in range(self.nnum + self.ntime, self.nnum + self.ntime + self.ncat + self.nmvc):
+            self.cat_to_int_label[col_index] = {}
 
         if type(F) == np.ndarray:
-            X = F
+            x = F
         else:
-            X = self.extract_data(F, ncat, nmvc, self.is_trained)
+            x = self.extract_data(F, self.ncat, self.nmvc)
 
-        d_size = X.shape[0] * X.shape[1] / budget
+        d_size = x.shape[0] * x.shape[1] / self.budget
         if d_size > 35000:
             self.feature_add_high_cat = 0
         else:
             self.feature_add_high_cat = 10
 
-        if not self.is_trained:
-            for col_index in range(nnum + ntime, nnum + ntime + ncat + nmvc):
-                self.n_first_batch_keys[col_index] = len(self.cat_to_int_label[col_index])
-            high_level_cat_keys_tmp = sorted(self.n_first_batch_keys, key=self.n_first_batch_keys.get, reverse=True)[
-                                      :self.feature_add_high_cat]
-            for i in high_level_cat_keys_tmp:
-                if self.n_first_batch_keys[i] > 1e2:
-                    self.high_level_cat_keys.append(i)
+        for col_index in range(self.nnum + self.ntime, self.nnum + self.ntime + self.ncat + self.nmvc):
+            self.n_first_batch_keys[col_index] = len(self.cat_to_int_label[col_index])
+        high_level_cat_keys_tmp = sorted(self.n_first_batch_keys, key=self.n_first_batch_keys.get, reverse=True)[
+                                  :self.feature_add_high_cat]
+        for i in high_level_cat_keys_tmp:
+            if self.n_first_batch_keys[i] > 1e2:
+                self.high_level_cat_keys.append(i)
 
         print('d_size', d_size)
         if d_size > 35000:
@@ -329,16 +290,53 @@ class tabular_preprocess():
             self.feature_add_cat_cat = 10
 
         # Convert NaN to zeros
-        X = np.nan_to_num(X)
+        x = np.nan_to_num(x)
 
         # Encode high-order categorical data to numerical with frequency
-        X, ncat, nmvc = self.cat_to_num(X, ncat, nmvc, nnum, ntime, np.ravel(y))
+        x, self.ncat, self.nmvc = self.cat_to_num(x, self.ncat, self.nmvc, self.nnum, self.ntime, np.ravel(y))
 
-        print('X.shape before remove_useless', X.shape)
-        feature = feature_model(X)
-        feature.time(range(ntime))
-        feature.remove_useless()
-        X = feature.X
-        print('X.shape after remove_useless', X.shape)
+        print('X.shape before remove_useless', x.shape)
+        x = self.process_time(x)
+        x = self.remove_useless(x)
+        print('X.shape after remove_useless', x.shape)
 
-        return X
+        return x
+
+    def encode(self, F, time_limit=None, datainfo=None):
+        """
+        This function should train the model parameters.
+
+        Args:
+            x: A numpy.ndarray instance containing the training data.
+            y: Training label matrix of dim num_train_samples * num_labels.
+            datainfo: Meta-features of the dataset, which describe:
+                     the number of four different features including:
+                     time, numerical, categorical, and multi-value categorical.
+        Both inputs X and y are numpy arrays.
+        If fit is called multiple times on incremental data (train, test1, test2, etc.)
+        you should warm-start your training from the pre-trained model. Past data will
+        NOT be available for re-training.
+        """
+        # Get Meta-Feature
+        if time_limit is not None:
+            self.budget = time_limit
+        if datainfo is not None:
+            [self.ntime, self.nnum, self.ncat, self.nmvc] = datainfo['loaded_feat_types']
+
+        if type(F) == np.ndarray:
+            x = F
+        else:
+            x = self.extract_data(F, self.ncat, self.nmvc)
+
+        # Convert NaN to zeros
+        x = np.nan_to_num(x)
+
+        # Encode high-order categorical data to numerical with frequency
+        x, self.ncat, self.nmvc = self.cat_to_num(x, self.ncat, self.nmvc, self.nnum, self.ntime)
+
+        print('X.shape before remove_useless', x.shape)
+        x = self.process_time(x)
+        x = x[:, self.rest]
+        print('X.shape after remove_useless', x.shape)
+
+        return x
