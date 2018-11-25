@@ -180,8 +180,28 @@ class TabularSupervised(Supervised):
         This function should provide predictions of labels on (test) data.
         The function predict eventually casdn return probabilities or continuous values.
         """
-        booster = lgb.Booster(model_file=self.save_filename)
-        y = booster.predict(x_test)
+        y = None
+        if self.clf is not None:
+            y = self.clf.predict(x_test)
+        elif self.save_filename is not None:
+            booster = lgb.Booster(model_file=self.save_filename)
+            y = booster.predict(x_test)
+        else:
+            pre_model_name = []
+            for file in os.listdir(os.getcwd()):
+                if file.endswith("_lgb.txt"):
+                    pre_model_name.append(int(file))
+            total_model = len(pre_model_name)
+            if total_model == 0:
+                raise ValueError("Tabular predictor does not exist")
+            else:
+                # Use the latest predictor
+                name = max(pre_model_name)
+                booster = lgb.Booster(model_file=name)
+                y = booster.predict(x_test)
+
+        if y is None:
+            raise ValueError("Tabular predictor does not exist")
         return y
 
     def save(self, path="./"):
