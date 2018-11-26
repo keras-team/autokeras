@@ -1,3 +1,6 @@
+# vim swp files
+*.swp
+
 # Mkdocs
 /docs/
 /mkdocs/docs/index.md
