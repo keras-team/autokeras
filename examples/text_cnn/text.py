@@ -1,6 +1,6 @@
 import pandas as pd
 
-from autokeras.text.text_supervised import TextClassifier
+from autokeras import TextClassifier
 
 
 def read_csv(file_path):
