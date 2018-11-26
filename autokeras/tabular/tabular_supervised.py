@@ -3,6 +3,7 @@ import lightgbm as lgb
 from lightgbm import LGBMClassifier, LGBMRegressor
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import roc_auc_score
 import pickle
 import numpy as np
 from os.path import isfile
@@ -207,6 +208,14 @@ class TabularSupervised(Supervised):
             raise ValueError("Tabular predictor does not exist")
         return y
 
+    def evaluate(self, x_test, y_test):
+        y_pred = self.predict(x_test)
+        AUC = roc_auc_score(y_test, y_pred)
+        return AUC
+
+    def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
+        pass
+
     def save(self, path="./"):
         pickle.dump(self, open(path + '_model.pickle', "w"))
 
@@ -228,7 +237,7 @@ class TabularRegressor(TabularSupervised):
         super().__init__()
         self.objective = 'regression'
         self.lgbm = LGBMRegressor(silent=False,
-                                  verbose=-1,
+                                  # verbose=-1,
                                   n_jobs=1,
                                   objective=self.objective)
 

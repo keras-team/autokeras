@@ -16,7 +16,7 @@ setup(
                       'imageio==2.4.1',
                       'requests==2.20.1',
                       'GPUtil==1.3.0',
-                      'lightgbm==2.1.2'],
+                      'lightgbm==2.2.2'],
     version='0.3.1',
     description='AutoML for deep learning',
     author='DATA Lab at Texas A&M University',

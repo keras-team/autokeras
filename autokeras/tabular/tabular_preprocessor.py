@@ -258,6 +258,8 @@ class TabularPreprocessor():
             self.budget = time_limit
         if datainfo is not None:
             [self.ntime, self.nnum, self.ncat, self.nmvc] = datainfo['loaded_feat_types']
+        else:
+            [self.ntime, self.nnum, self.ncat, self.nmvc] = [0, 0, 0, 0]
 
         for col_index in range(self.nnum + self.ntime, self.nnum + self.ntime + self.ncat + self.nmvc):
             self.cat_to_int_label[col_index] = {}
@@ -292,6 +294,9 @@ class TabularPreprocessor():
         # Convert NaN to zeros
         x = np.nan_to_num(x)
 
+        if datainfo is None:
+            self.nnum = x.shape[1]
+
         # Encode high-order categorical data to numerical with frequency
         x, self.ncat, self.nmvc = self.cat_to_num(x, self.ncat, self.nmvc, self.nnum, self.ntime, np.ravel(y))
 
@@ -322,6 +327,8 @@ class TabularPreprocessor():
             self.budget = time_limit
         if datainfo is not None:
             [self.ntime, self.nnum, self.ncat, self.nmvc] = datainfo['loaded_feat_types']
+        else:
+            [self.ntime, self.nnum, self.ncat, self.nmvc] = [0, 0, 0, 0]
 
         if type(F) == np.ndarray:
             x = F
@@ -330,6 +337,8 @@ class TabularPreprocessor():
 
         # Convert NaN to zeros
         x = np.nan_to_num(x)
+        if datainfo is None:
+            self.nnum = x.shape[1]
 
         # Encode high-order categorical data to numerical with frequency
         x, self.ncat, self.nmvc = self.cat_to_num(x, self.ncat, self.nmvc, self.nnum, self.ntime)
