@@ -100,6 +100,7 @@ class Cutout(object):
 
 class DataTransformer(ABC):
     """A superclass for all the DataTransformer."""
+
     def __init__(self):
         pass
 
@@ -140,6 +141,7 @@ def text_transform(compose_list, data, targets):
 
 class TextDataTransformer(DataTransformer):
     """ A DataTransformer class for the text data."""
+
     def __init__(self):
         super().__init__()
 
@@ -303,6 +305,7 @@ class MultiTransformDataset(Dataset):
 
 class BatchDataset(Dataset):
     """A torch.Dataset class that can read data batch by batch."""
+
     def __init__(self, csv_file_path, image_path, has_target=True):
         file_names, target = read_csv_file(csv_file_path)
 
