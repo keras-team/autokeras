@@ -194,26 +194,24 @@ def read_image(img_path):
 
 
 def compute_image_resize_params(data):
-    """Compute median height and width of all images in data.
+    """Compute median dimension of all images in data.
 
-    These values are used to resize the images at later point. Number of channels do not change from the original
-    images. Currently, only 2-D images are supported.
+    It used to resize the images later. Number of channels do not change from the original data.
 
     Args:
-        data: 2-D Image data with shape N x H x W x C.
+        data: 1-D, 2-D or 3-D images. The Images are expected to have channel last configuration.
 
     Returns:
-        median height: Median height of all images in the data.
-        median width: Median width of all images in the data.
+        median shape.
     """
     if data is None or len(data.shape) == 0:
         return []
 
-    image_shapes = []
+    data_shapes = []
     for x in data:
-        image_shapes.append(x.shape)
+        data_shapes.append(x.shape)
 
-    median_shape = np.median(np.array(image_shapes), axis=0)
+    median_shape = np.median(np.array(data_shapes), axis=0)
     median_size = np.prod(median_shape[:-1])
 
     if median_size > Constant.MAX_IMAGE_SIZE:
@@ -224,18 +222,14 @@ def compute_image_resize_params(data):
 
 
 def resize_image_data(data, resize_shape):
-    """Resize images to provided height and width.
-
-    Resize all images in data to size h x w x c, where h is the height, w is the width and c is the number of channels.
-    The number of channels c does not change from data. The function supports only 2-D image data.
+    """Resize images to given dimension.
 
     Args:
-        data: 2-D Image data with shape N x H x W x C.
-        height: Image resize height.
-        width: Image resize width.
+        data: 1-D, 2-D or 3-D images. The Images are expected to have channel last configuration.
+        resize_shape: Image resize dimension.
 
     Returns:
-        data: Resize data.
+        data: Reshaped data.
     """
     if data is None or len(resize_shape) == 0:
         return data
@@ -245,7 +239,7 @@ def resize_image_data(data, resize_shape):
 
     output_data = []
     for im in data:
-        output_data.append(zoom(im, np.divide(resize_shape, im.shape)))
+        output_data.append(zoom(input=im, zoom=np.divide(resize_shape, im.shape)))
 
     return np.array(output_data)
 
