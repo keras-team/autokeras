@@ -5,12 +5,13 @@
 # ----------------------------------
 
 from __future__ import print_function
-from object_detection.data import *
-from object_detection.data import VOC_CLASSES as labelmap
-from object_detection.data import base_transform
-from object_detection.utils.augmentations import SSDAugmentation
-from object_detection.layers.modules import MultiBoxLoss
-from object_detection.ssd import build_ssd
+from autokeras.object_detection.data import *
+from autokeras.object_detection.data import VOC_CLASSES as labelmap
+from autokeras.object_detection.data import base_transform
+from autokeras.object_detection.utils.augmentations import SSDAugmentation
+from autokeras.object_detection.layers.modules import MultiBoxLoss
+from autokeras.object_detection.ssd import build_ssd
+from autokeras.utils import download_file
 import os
 import sys
 import time
@@ -85,6 +86,12 @@ class ObjectDetector():
             torch.set_default_tensor_type('torch.FloatTensor')
 
     def load(self, trained_model=os.getcwd()+'/object_detection/weights/ssd300_mAP_77.43_v2.pth', trained_model_device='gpu'):
+        # https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth
+        if trained_model is None:
+            file_link = "https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth"
+            file_path = "./" + file_link.split('/')[-1]
+            trained_model = os.getcwd() + "/" + file_link.split('/')[-1]
+            download_file(file_link, file_path)
         # load net
         num_classes = len(labelmap) + 1                      # +1 for background
         self.net = build_ssd('test', 300, num_classes)            # initialize SSD

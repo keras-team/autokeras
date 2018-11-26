@@ -1,7 +1,7 @@
 import torch
 from torch.autograd import Function
 from ..box_utils import decode, nms
-from object_detection.data import voc as cfg
+from autokeras.object_detection.data import voc as cfg
 
 
 class Detect(Function):
