@@ -2,14 +2,15 @@ from copy import deepcopy
 from operator import itemgetter
 from random import randrange, sample
 
-from autokeras.graph import NetworkDescriptor
+from autokeras.nn.graph import NetworkDescriptor
 
 from autokeras.constant import Constant
-from autokeras.layers import is_layer
+from autokeras.nn.layers import is_layer
 
 
 def to_wider_graph(graph):
     weighted_layer_ids = graph.wide_layer_ids()
+    weighted_layer_ids = list(filter(lambda x: graph.layer_list[x].output.shape[-1], weighted_layer_ids))
     wider_layers = sample(weighted_layer_ids, 1)
 
     for layer_id in wider_layers:
@@ -54,6 +55,8 @@ def to_skip_connection_graph(graph):
 
 def to_deeper_graph(graph):
     weighted_layer_ids = graph.deep_layer_ids()
+    if len(weighted_layer_ids) >= Constant.MAX_LAYERS:
+        return None
 
     deeper_layer_ids = sample(weighted_layer_ids, 1)
 

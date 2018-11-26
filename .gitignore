@@ -3,7 +3,6 @@
 
 # Mkdocs
 /docs/
-/mkdocs/docs/index.md
 /mkdocs/docs/temp
 
 .DS_Store
@@ -119,3 +118,5 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+examples/text_cnn/glove_embedding/

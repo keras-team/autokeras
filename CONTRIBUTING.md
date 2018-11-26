@@ -80,21 +80,22 @@ to ensure your merge request meet our requirements.
 ## Pull Request Guide
 Before you submit a pull request, check that it meets these guidelines:
 
-1. Submit the pull request from the first day when you started your development and prefix the title of the pull request with **[WIP]**
+1. Fork the repository. Create a new branch from the master branch. Give your new branch a **meaningful** name.
 
-2. Give your pull request title and branch name should contain **helpful** information summarizing your contribution.
+2. Pull request from your new branch to the master branch of the original autokeras repo. Give your pull request a **meaningful** name.
 
-3. Include "resolves #issue_number" in the title and the description of the pull request.
+3. Include "resolves #issue_number" in the description of the pull request and briefly describe your contribution.
 
-4. For the case of bug fixes, at the time of the PR,
-the test case should fail for the code base in the master branch and pass for the PR code.
+4. Submit the pull request from the first day of your development (after your first commit) and prefix the title of the pull request with **[WIP]**.
 
-5. The contribution is complete, change the **[WIP]** to **[MRG]**,
-set the reviewer to 
+5. When the contribution is complete, make sure the pull request passed the CI tests. Change the **[WIP]** to **[MRG]**.
+Set the reviewer to 
 [@jhfjhfj1](https://github.com/jhfjhfj1).
 
-6. Checkout from and pull request to the develop branch. 
-If it is a very urgent bug fix, checkout from master and pull request to both master and develop.
+6. For the case of bug fixes, add new test cases which would fail before your bug fix.
+
+7. If you are a collaborator of the autokeras repo, you don't need to fork the repository. Just create a new branch directly. You also need to change the assignee to the reviewer when request for code review. The reviewer will change the assignee back to you when finished the review. The assignee always means who should push the progress of the pull request now.
+
 
 ## Code Style Guide
 This project tries to closely follow the official Python Style Guide detailed in [PEP8](https://www.python.org/dev/peps/pep-0008/).
@@ -151,6 +152,7 @@ Use pycharm to select the
 [virtualenv as interpreter](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html).
 
 ## Reusable Code Guide
+You may checkout this code review [video](https://youtu.be/PWdfY0DmjCo) to get familiar with the code structure.
 Other than the base classes you have to extend,
 there are some other classes you can extend.
 

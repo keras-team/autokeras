@@ -52,7 +52,7 @@ Biblatex entry:
 
     @online{jin2018efficient,
       author       = {Haifeng Jin and Qingquan Song and Xia Hu},
-      title        = {Efficient Neural Architecture Search with Network Morphism},
+      title        = {Auto-Keras: Efficient Neural Architecture Search with Network Morphism},
       date         = {2018-06-27},
       year         = {2018},
       eprintclass  = {cs.LG},
@@ -60,6 +60,16 @@ Biblatex entry:
       eprint       = {cs.LG/1806.10282},
     }
  
+## Support Auto-Keras
+
+We accept donations on [Open Collective](https://opencollective.com/autokeras).
+The money will be used to motivate the developers in the open-source community to contribute code to Auto-Keras.
+Thank every backer for supporting us!
+
+<a href="https://opencollective.com/autokeras/donate" target="_blank">
+  <img src="https://opencollective.com/autokeras/donate/button@2x.png?color=blue" width=300 />
+</a>
+
 
 ## DISCLAIMER
 
@@ -72,4 +82,3 @@ appreciated.
 ## Acknowledgements
 
 The authors gratefully acknowledge the D3M program of the Defense Advanced Research Projects Agency (DARPA) administered through AFRL contract FA8750-17-2-0116; the Texas A&M College of Engineering, and Texas A&M. 
-
