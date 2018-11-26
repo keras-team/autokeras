@@ -7,6 +7,7 @@
 from __future__ import print_function
 from object_detection.data import *
 from object_detection.data import VOC_CLASSES as labelmap
+from object_detection.data import base_transform
 from object_detection.utils.augmentations import SSDAugmentation
 from object_detection.layers.modules import MultiBoxLoss
 from object_detection.ssd import build_ssd
@@ -23,6 +24,7 @@ import torch.utils.data as data
 import numpy as np
 import pickle
 import cv2
+from matplotlib import pyplot as plt
 
 if sys.version_info[0] == 2:
     import xml.etree.cElementTree as ET
@@ -70,6 +72,7 @@ class Timer(object):
 class ObjectDetector():
     def __init__(self, cuda=False):
         self.cuda = cuda
+        self.net = None
 
         if torch.cuda.is_available():
             if self.cuda:
@@ -80,6 +83,24 @@ class ObjectDetector():
                 torch.set_default_tensor_type('torch.FloatTensor')
         else:
             torch.set_default_tensor_type('torch.FloatTensor')
+
+    def load(self, trained_model=os.getcwd()+'/object_detection/weights/ssd300_mAP_77.43_v2.pth', trained_model_device='gpu'):
+        # load net
+        num_classes = len(labelmap) + 1                      # +1 for background
+        self.net = build_ssd('test', 300, num_classes)            # initialize SSD
+        if trained_model_device not in ['cpu', 'gpu']:
+            raise ValueError("trained_model_device must be either 'cpu' or 'gpu'!")
+            exit(0)
+        if trained_model_device == 'gpu' and self.cuda is False:
+            self.net.load_state_dict(torch.load(trained_model, map_location=lambda storage, loc: storage))
+        else:
+            self.net.load_state_dict(torch.load(trained_model))
+        self.net.eval()
+        print('Finished loading model!')
+
+        if self.cuda:
+            self.net = self.net.cuda()
+            cudnn.benchmark = True
         
     def fit(self, num_classes=1, dataset_format='VOC', dataset=None, dataset_root=VOC_ROOT, train_test_split=True, basenet='vgg16_reducedfc.pth', batch_size=32, resume=None, start_iter=0, num_workers=4, lr=1e-4, momentum=0.9, weight_decay=5e-4, gamma=0.1, save_folder=os.getcwd() + '/object_detection/weights/'):
 
@@ -209,6 +230,52 @@ class ObjectDetector():
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
 
+    def predict(self, path=None, top_k=10):
+        from matplotlib.ticker import NullLocator
+
+        dataset_mean = (104, 117, 123)
+
+        image = cv2.imread(path, cv2.IMREAD_COLOR)
+        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        x = base_transform(rgb_image, 300, dataset_mean)
+        x = x.astype(np.float32)
+        x = torch.from_numpy(x).permute(2, 0, 1)
+        xx = Variable(x.unsqueeze(0))     # wrap tensor in Variable
+        if torch.cuda.is_available():
+            xx = xx.cuda()
+        y = self.net(xx)
+
+        # plt.figure(figsize=(10,10))
+        colors = plt.cm.hsv(np.linspace(0, 1, 21)).tolist()
+        plt.imshow(rgb_image) # plot the image for matplotlib
+        currentAxis = plt.gca()
+        currentAxis.set_axis_off()
+        currentAxis.xaxis.set_major_locator(NullLocator())
+        currentAxis.yaxis.set_major_locator(NullLocator())
+        
+        detections = y.data
+        # scale each detection back up to the image
+        scale = torch.Tensor(rgb_image.shape[1::-1]).repeat(2)
+        for i in range(detections.size(1)):
+            j = 0
+            while detections[0,i,j,0] >= 0.6:
+                score = detections[0,i,j,0]
+                label_name = labelmap[i-1]
+                display_txt = '%s: %.2f'%(label_name, score)
+                pt = (detections[0,i,j,1:]*scale).cpu().numpy()
+                coords = (pt[0], pt[1]), pt[2]-pt[0]+1, pt[3]-pt[1]+1
+                color = colors[i]
+                currentAxis.add_patch(plt.Rectangle(*coords, fill=False, edgecolor=color, linewidth=2))
+                currentAxis.text(pt[0], pt[1], display_txt, bbox={'facecolor':color, 'alpha':0.5})
+                j+=1
+        save_name = path.split('.')
+        save_name = '.'.join(save_name[:-1]) + "_prediction." + save_name[-1]
+        plt.axis('off')
+        plt.tight_layout()
+        plt.savefig(save_name, bbox_inches='tight', pad_inches=0)
+        plt.clf()
+
+    
     def evaluate(self, trained_model=os.getcwd()+'/object_detection/weights/ssd300_mAP_77.43_v2.pth', trained_model_device='cpu', save_folder=os.getcwd()+'/object_detection/eval/', confidence_threshold=0.01, top_k=5, voc_root=VOC_ROOT, cleanup=False):
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
