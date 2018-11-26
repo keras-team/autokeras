@@ -69,6 +69,9 @@ class StubLayer:
     def to_real_layer(self):
         pass
 
+    def __str__(self):
+        return type(self).__name__[4:]
+
 
 class StubWeightBiasLayer(StubLayer):
     def import_weights(self, torch_layer):
