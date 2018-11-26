@@ -76,10 +76,10 @@ class NetworkModule:
         """Final training after found the best architecture.
 
         Args:
-            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
-            retrain: A boolean of whether reinitialize the weights of the model.
             train_data: A DataLoader instance representing the training data.
             test_data: A DataLoader instance representing the testing data.
+            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
+            retrain: A boolean of whether reinitialize the weights of the model.
         """
         graph = self.searcher.load_best_model()
 
