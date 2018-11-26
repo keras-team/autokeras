@@ -7,14 +7,14 @@ import zipfile
 
 import warnings
 import imageio
-import numpy
+import numpy as np
 import requests
-from skimage.transform import resize
 import torch
 import subprocess
 import string
 import random
 from autokeras.constant import Constant
+from scipy.ndimage import zoom
 
 
 class NoImprovementError(Exception):
@@ -206,20 +206,24 @@ def compute_image_resize_params(data):
         median height: Median height of all images in the data.
         median width: Median width of all images in the data.
     """
-    if len(data.shape) == 1 and len(data[0].shape) != 3:
-        return None, None
+    if data is None or len(data.shape) == 0:
+        return []
 
-    median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
+    image_shapes = []
+    for x in data:
+        image_shapes.append(x.shape)
 
-    if median_height * median_width > Constant.MAX_IMAGE_SIZE:
-        reduction_factor = numpy.sqrt(median_height * median_width / Constant.MAX_IMAGE_SIZE)
-        median_height = median_height / reduction_factor
-        median_width = median_width / reduction_factor
+    median_shape = np.median(np.array(image_shapes), axis=0)
+    median_size = np.prod(median_shape[:-1])
 
-    return int(median_height), int(median_width)
+    if median_size > Constant.MAX_IMAGE_SIZE:
+        reduction_factor = np.power(Constant.MAX_IMAGE_SIZE / median_size, 1 / (len(median_shape) - 1))
+        median_shape[:-1] = median_shape[:-1] * reduction_factor
+
+    return median_shape.astype(int)
 
 
-def resize_image_data(data, height, width):
+def resize_image_data(data, resize_shape):
     """Resize images to provided height and width.
 
     Resize all images in data to size h x w x c, where h is the height, w is the width and c is the number of channels.
@@ -233,22 +237,17 @@ def resize_image_data(data, height, width):
     Returns:
         data: Resize data.
     """
-    if data is None:
+    if data is None or len(resize_shape) == 0:
         return data
 
-    if len(data.shape) == 4 and data[0].shape[0] == height and data[0].shape[1] == width:
+    if len(data.shape) > 1 and np.array_equal(data[0].shape, resize_shape):
         return data
 
     output_data = []
     for im in data:
-        if len(im.shape) != 3:
-            return data
-        output_data.append(resize(image=im,
-                                  output_shape=(height, width, im.shape[-1]),
-                                  mode='edge',
-                                  preserve_range=True))
+        output_data.append(zoom(im, np.divide(resize_shape, im.shape)))
 
-    return numpy.array(output_data)
+    return np.array(output_data)
 
 
 def get_system():

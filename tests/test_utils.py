@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import subprocess
 from unittest.mock import patch
 
@@ -56,30 +56,30 @@ def test_fetch(_):
 
 
 def test_compute_image_resize_params():
-    # Case-1: Compute median height and width for smaller images.
-    data = numpy.array([numpy.random.randint(256, size=(10, 10, 3)),
-                        numpy.random.randint(256, size=(20, 20, 3)),
-                        numpy.random.randint(256, size=(30, 30, 3)),
-                        numpy.random.randint(256, size=(40, 40, 3))])
-    resize_height, resize_width = compute_image_resize_params(data)
-    assert resize_height == 25
-    assert resize_width == 25
+    # Case-1: Compute median shape for smaller (3-D) images.
+    data = np.array([np.random.randint(256, size=(5, 5, 5, 3)),
+                     np.random.randint(256, size=(6, 6, 6, 3)),
+                     np.random.randint(256, size=(7, 7, 7, 3)),
+                     np.random.randint(256, size=(8, 8, 8, 3))])
+    resize_shape = compute_image_resize_params(data)
+    assert np.array_equal(resize_shape, [6, 6, 6, 3])
 
-    modified_data = resize_image_data(data, resize_height, resize_width)
+    modified_data = resize_image_data(data, resize_shape)
     for image in modified_data:
-        assert image.shape == (25, 25, 3)
+        assert np.array_equal(image.shape, [6, 6, 6, 3])
 
-    # Case-2: Resize to max size for larger images.
-    data = numpy.array([numpy.random.randint(256, size=(int(numpy.sqrt(Constant.MAX_IMAGE_SIZE) + 1),
-                                                        int(numpy.sqrt(Constant.MAX_IMAGE_SIZE) + 1),
-                                                        3))])
-    resize_height, resize_width = compute_image_resize_params(data)
-    assert resize_height == int(numpy.sqrt(Constant.MAX_IMAGE_SIZE))
-    assert resize_width == int(numpy.sqrt(Constant.MAX_IMAGE_SIZE))
+    # Case-2: Resize to max size for larger (2-D) images.
+    data = np.array([np.random.randint(256, size=(int(np.sqrt(Constant.MAX_IMAGE_SIZE) + 1),
+                                                  int(np.sqrt(Constant.MAX_IMAGE_SIZE) + 1),
+                                                  3))])
+    resize_shape = compute_image_resize_params(data)
+    assert np.array_equal(resize_shape, (int(np.sqrt(Constant.MAX_IMAGE_SIZE)),
+                                         int(np.sqrt(Constant.MAX_IMAGE_SIZE)),
+                                         3))
 
-    modified_data = resize_image_data(data, resize_height, resize_width)
+    modified_data = resize_image_data(data, resize_shape)
     for image in modified_data:
-        assert image.shape == (resize_height, resize_width, 3)
+        assert np.array_equal(image.shape, resize_shape)
 
 
 def test_get_system():
