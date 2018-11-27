@@ -5,7 +5,9 @@ from random import randrange, sample
 from autokeras.nn.graph import NetworkDescriptor
 
 from autokeras.constant import Constant
-from autokeras.nn.layers import is_layer
+from autokeras.nn.layer_transformer import init_dense_weight, init_conv_weight, init_bn_weight
+from autokeras.nn.layers import is_layer, StubDense, get_dropout_class, StubReLU, get_conv_class, \
+    get_batch_norm_class, get_pooling_class
 
 
 def to_wider_graph(graph):
@@ -53,6 +55,37 @@ def to_skip_connection_graph(graph):
     return graph
 
 
+def create_new_layer(input_shape, n_dim):
+    dense_deeper_classes = [StubDense, get_dropout_class(n_dim), StubReLU]
+    conv_deeper_classes = [get_conv_class(n_dim), get_batch_norm_class(n_dim), StubReLU]
+    if len(input_shape) == 1:
+        # It is in the dense layer part.
+        layer_class = sample(dense_deeper_classes, 1)[0]
+    else:
+        # It is in the conv layer part.
+        layer_class = sample(conv_deeper_classes, 1)[0]
+
+    if layer_class == StubDense:
+        new_layer = StubDense(input_shape[0], input_shape[0])
+
+    elif layer_class == get_dropout_class(n_dim):
+        new_layer = layer_class(Constant.DENSE_DROPOUT_RATE)
+
+    elif layer_class == get_conv_class(n_dim):
+        new_layer = layer_class(input_shape[-1], input_shape[-1], sample((1, 3, 5), 1)[0], stride=1)
+
+    elif layer_class == get_batch_norm_class(n_dim):
+        new_layer = layer_class(input_shape[-1])
+
+    elif layer_class == get_pooling_class(n_dim):
+        new_layer = layer_class(sample((1, 3, 5), 1)[0])
+
+    else:
+        new_layer = layer_class()
+
+    return new_layer
+
+
 def to_deeper_graph(graph):
     weighted_layer_ids = graph.deep_layer_ids()
     if len(weighted_layer_ids) >= Constant.MAX_LAYERS:
@@ -62,19 +95,9 @@ def to_deeper_graph(graph):
 
     for layer_id in deeper_layer_ids:
         layer = graph.layer_list[layer_id]
-        if is_layer(layer, 'Conv'):
-            graph.to_conv_deeper_model(layer_id, 3)
-        else:
-            graph.to_dense_deeper_model(layer_id)
+        new_layer = create_new_layer(layer.output.shape, graph.n_dim)
+        graph.to_deeper_model(layer_id, new_layer)
     return graph
-
-
-def legal_graph(graph):
-    descriptor = graph.extract_descriptor()
-    skips = descriptor.skip_connections
-    if len(skips) != len(set(skips)):
-        return False
-    return True
 
 
 def transform(graph):
@@ -95,16 +118,4 @@ def transform(graph):
         if len(graphs) >= Constant.N_NEIGHBOURS:
             break
 
-    return list(filter(lambda x: legal_graph(x), graphs))
-
-
-def default_transform(graph):
-    graph = deepcopy(graph)
-    graph.to_conv_deeper_model(1, 3)
-    graph.to_conv_deeper_model(1, 3)
-    graph.to_conv_deeper_model(5, 3)
-    graph.to_conv_deeper_model(9, 3)
-    graph.to_add_skip_model(1, 18)
-    graph.to_add_skip_model(18, 24)
-    graph.to_add_skip_model(24, 27)
-    return [graph]
+    return graphs

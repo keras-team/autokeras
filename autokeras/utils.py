@@ -144,9 +144,9 @@ def verbose_print(new_father_id, new_graph):
     print('+' + '-' * len(line) + '+')
     for i in range(len(new_graph.operation_history)):
         if i == len(new_graph.operation_history) // 2:
-            r = [new_father_id, new_graph.operation_history[i]]
+            r = [new_father_id, ' '.join(str(item) for item in new_graph.operation_history[i])]
         else:
-            r = [' ', new_graph.operation_history[i]]
+            r = [' ', ' '.join(str(item) for item in new_graph.operation_history[i])]
         line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
         print('|' + line + '|')
     print('+' + '-' * len(line) + '+')

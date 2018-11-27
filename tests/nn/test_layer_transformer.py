@@ -5,17 +5,6 @@ from autokeras.nn.layers import StubBatchNormalization2d, StubConv2d
 from tests.common import get_conv_dense_model
 
 
-def test_deeper_conv_block():
-    graph = CnnGenerator(10, (28, 28, 3)).generate()
-    layers = deeper_conv_block(graph.layer_list[1], 3)
-    assert len(layers) == Constant.CONV_BLOCK_DISTANCE + 1
-
-
-def test_dense_to_deeper_layer():
-    a = StubDense(100, 100)
-    assert len(dense_to_deeper_block(a)) == 2
-
-
 def test_dense_to_wider_layer():
     a = StubDense(10, 5)
     a.set_weights((np.random.rand(10, 5), np.random.rand(5)))
@@ -49,6 +38,6 @@ def test_wider_conv():
     model.set_weight_to_graph()
     graph = model.graph
 
-    assert isinstance(wider_pre_conv(graph.layer_list[1], 3), StubConv2d)
-    assert isinstance(wider_bn(graph.layer_list[2], 3, 3, 3), StubBatchNormalization2d)
-    assert isinstance(wider_next_conv(graph.layer_list[5], 3, 3, 3), StubConv2d)
+    assert isinstance(wider_pre_conv(graph.layer_list[2], 3), StubConv2d)
+    assert isinstance(wider_bn(graph.layer_list[5], 3, 3, 3), StubBatchNormalization2d)
+    assert isinstance(wider_next_conv(graph.layer_list[6], 3, 3, 3), StubConv2d)
