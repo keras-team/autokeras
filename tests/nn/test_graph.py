@@ -1,5 +1,6 @@
-from autokeras.nn.generator import CnnGenerator
+from autokeras.nn.generator import CnnGenerator, ResNetGenerator
 from autokeras.nn.graph import *
+from autokeras.nn.layers import StubBatchNormalization
 from tests.common import get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model, \
     get_concat_skip_model
 
@@ -62,7 +63,7 @@ def test_skip_add_over_pooling_stub():
     layer_num = graph.n_layers
     graph.to_add_skip_model(1, 8)
 
-    assert graph.n_layers == layer_num + 3
+    assert graph.n_layers == layer_num + 4
 
 
 def test_skip_add_over_pooling():
@@ -88,7 +89,7 @@ def test_skip_concat_over_pooling_stub():
     layer_num = graph.n_layers
     graph.to_concat_skip_model(1, 11)
 
-    assert graph.n_layers == layer_num + 3
+    assert graph.n_layers == layer_num + 4
 
 
 def test_skip_concat_over_pooling():
@@ -184,3 +185,13 @@ def test_keras_model():
 def test_graph_size():
     graph = CnnGenerator(10, (32, 32, 3)).generate()
     assert graph.size() == 7254
+
+
+def test_long_transform():
+    graph = ResNetGenerator(10, (28, 28, 1)).generate()
+    graph.to_deeper_model(16, StubReLU())
+    graph.to_deeper_model(16, StubReLU())
+    graph.to_add_skip_model(13, 47)
+    model = graph.produce_model()
+    model(torch.Tensor(np.random.random((10, 1, 28, 28))))
+

@@ -10,7 +10,7 @@ from autokeras.nn.layer_transformer import wider_bn, wider_next_conv, wider_next
     wider_pre_conv, add_noise, init_dense_weight, init_conv_weight, init_bn_weight
 from autokeras.nn.layers import StubConcatenate, StubAdd, is_layer, layer_width, \
     to_real_keras_layer, set_torch_weight_to_stub, set_stub_weight_to_torch, set_stub_weight_to_keras, \
-    set_keras_weight_to_stub, get_conv_class, get_pooling_class
+    set_keras_weight_to_stub, get_conv_class, get_pooling_class, StubReLU
 
 
 class NetworkDescriptor:
@@ -260,8 +260,10 @@ class Graph:
         ret = []
         for layer_id in layer_list:
             layer = self.layer_list[layer_id]
-            if is_layer(layer, 'Pooling') or (is_layer(layer, 'Conv') and layer.stride != 1):
-                ret.append((layer.kernel_size, layer.stride))
+            if is_layer(layer, 'Pooling'):
+                ret.append((layer.kernel_size, layer.stride, layer.padding))
+            elif is_layer(layer, 'Conv') and layer.stride != 1:
+                ret.append((int((layer.kernel_size + 1) / 2), layer.stride, 0))
         return ret
 
     def _depth_first_search(self, target_id, layer_id_list, node_list):
@@ -420,10 +422,7 @@ class Graph:
         block_last_layer_input_id = self.layer_id_to_input_node_ids[end_id][0]
         block_last_layer_output_id = self.layer_id_to_output_node_ids[end_id][0]
 
-        # Add the pooling layer chain.
-        skip_output_id = conv_block_input_id
-        for kernel_size, stride in self._get_pooling_layers(conv_block_input_id, block_last_layer_input_id):
-            skip_output_id = self.add_layer(get_pooling_class(self.n_dim)(kernel_size, stride=stride), skip_output_id)
+        skip_output_id = self._insert_pooling_layer_chain(block_last_layer_input_id, conv_block_input_id)
 
         # Add the conv layer
         new_conv_layer = get_conv_class(self.n_dim)(filters_start,
@@ -464,10 +463,7 @@ class Graph:
         block_last_layer_input_id = self.layer_id_to_input_node_ids[end_id][0]
         block_last_layer_output_id = self.layer_id_to_output_node_ids[end_id][0]
 
-        # Add the pooling layer chain.
-        skip_output_id = conv_block_input_id
-        for kernel_size, stride in self._get_pooling_layers(conv_block_input_id, block_last_layer_input_id):
-            skip_output_id = self.add_layer(get_pooling_class(self.n_dim)(kernel_size, stride=stride), skip_output_id)
+        skip_output_id = self._insert_pooling_layer_chain(block_last_layer_input_id, conv_block_input_id)
 
         concat_input_node_id = self._add_node(deepcopy(self.node_list[block_last_layer_output_id]))
         self._redirect_edge(block_last_layer_input_id, block_last_layer_output_id, concat_input_node_id)
@@ -500,6 +496,15 @@ class Graph:
                                       np.zeros((filters_end, filters_start) + filter_shape)), axis=1)
             bias = np.zeros(filters_end)
             new_conv_layer.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
+
+    def _insert_pooling_layer_chain(self, block_last_layer_input_id, conv_block_input_id):
+        skip_output_id = conv_block_input_id
+        for kernel_size, stride, padding in self._get_pooling_layers(conv_block_input_id, block_last_layer_input_id):
+            skip_output_id = self.add_layer(get_pooling_class(self.n_dim)(kernel_size,
+                                                                          stride=stride,
+                                                                          padding=padding), skip_output_id)
+        skip_output_id = self.add_layer(StubReLU(), skip_output_id)
+        return skip_output_id
 
     def extract_descriptor(self):
         """Extract the the description of the Graph as an instance of NetworkDescriptor."""

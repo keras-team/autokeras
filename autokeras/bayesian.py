@@ -307,12 +307,13 @@ class BayesianOptimizer:
         """
         self.gpr.fit(x_queue, y_queue)
 
-    def generate(self, descriptors, timeout, process):
+    def generate(self, descriptors, timeout, multiprocessing_queue):
         """Generate new architecture.
 
         Args:
             descriptors: All the searched neural architectures.
             timeout: An integer. The time limit in seconds.
+            multiprocessing_queue: the Queue for multiprocessing return value.
 
         Returns:
             graph: An instance of Graph. A morphed neural network with weights.
@@ -346,7 +347,7 @@ class BayesianOptimizer:
         opt_acq = self._get_init_opt_acq_value()
         remaining_time = timeout
         while not pq.empty() and remaining_time > 0:
-            if not process.is_alive():
+            if multiprocessing_queue.qsize() != 0:
                 break
             elem = pq.get()
             if self.metric.higher_better():

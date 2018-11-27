@@ -15,6 +15,7 @@ class NetworkGenerator:
         n_output_node: Number of output nodes in the network.
         input_shape: A tuple to represent the input shape.
     """
+
     def __init__(self, n_output_node, input_shape):
         """Initialize the instance.
 
@@ -164,7 +165,7 @@ class ResNetGenerator(NetworkGenerator):
         self.pooling = get_pooling_class(self.n_dim)
         self.batch_norm = get_batch_norm_class(self.n_dim)
 
-    def generate(self, model_len, model_width):
+    def generate(self, model_len=Constant.MODEL_LEN, model_width=Constant.MODEL_WIDTH):
         graph = Graph(self.input_shape, False)
         temp_input_channel = self.input_shape[-1]
         output_node_id = 0
@@ -202,12 +203,10 @@ class ResNetGenerator(NetworkGenerator):
         out = graph.add_layer(StubReLU(), out)
         out = graph.add_layer(self.conv(planes, planes, kernel_size=3), out)
 
-        if stride != 1 or in_planes != planes * self.block_expansion or True:
-            residual_node_id = graph.add_layer(StubReLU(), residual_node_id)
-            residual_node_id = graph.add_layer(self.conv(in_planes,
-                                                         planes * self.block_expansion,
-                                                         kernel_size=1,
-                                                         stride=stride), residual_node_id)
-            # residual_node_id = graph.add_layer(down_sample[1], residual_node_id)
+        residual_node_id = graph.add_layer(StubReLU(), residual_node_id)
+        residual_node_id = graph.add_layer(self.conv(in_planes,
+                                                     planes * self.block_expansion,
+                                                     kernel_size=1,
+                                                     stride=stride), residual_node_id)
         out = graph.add_layer(StubAdd(), (out, residual_node_id))
         return out

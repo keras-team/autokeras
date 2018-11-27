@@ -268,7 +268,18 @@ class MockProcess(object):
         return self
 
     def Queue(self):
-        return queue.Queue()
+        class MockQueue(queue.Queue):
+            def __init__(self):
+                super().__init__()
+                self.count = 0
+
+            def qsize(self):
+                self.count += 1
+                if self.count > 8:
+                    return 1
+                return 0
+        # (0.5, 0.8, get_pooling_model())
+        return MockQueue()
 
     def Process(self, target, args):
         self.target = target
@@ -280,10 +291,6 @@ class MockProcess(object):
 
     def close(self):
         pass
-
-    def is_alive(self):
-        self.count += 1
-        return self.count <= 8
 
 
 class MockMemoryOutProcess(MockProcess):

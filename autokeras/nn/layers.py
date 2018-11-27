@@ -182,6 +182,12 @@ class StubConv(StubWeightBiasLayer):
     def to_real_layer(self):
         pass
 
+    def __str__(self):
+        return super().__str__() + '(' + ', '.join(str(item) for item in [self.input_channel,
+                                                                          self.filters,
+                                                                          self.kernel_size,
+                                                                          self.stride]) + ')'
+
 
 class StubConv1d(StubConv):
     def to_real_layer(self):
