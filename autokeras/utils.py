@@ -207,6 +207,9 @@ def compute_image_resize_params(data):
     if data is None or len(data.shape) == 0:
         return []
 
+    if len(data.shape) == len(data[0].shape) + 1:
+        return data[0].shape
+
     data_shapes = []
     for x in data:
         data_shapes.append(x.shape)
