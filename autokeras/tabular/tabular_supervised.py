@@ -1,4 +1,5 @@
 import os
+import re
 import lightgbm as lgb
 from lightgbm import LGBMClassifier, LGBMRegressor
 from sklearn.model_selection import RandomizedSearchCV
@@ -12,6 +13,8 @@ import time
 
 from autokeras.supervised import Supervised
 from autokeras.tabular.tabular_preprocessor import TabularPreprocessor
+from autokeras.utils import rand_temp_folder_generator
+
 
 def search(lgbm, search_space, search_iter, n_estimators, x, y):
     if 'n_estimators' in search_space:
@@ -49,16 +52,24 @@ def search(lgbm, search_space, search_iter, n_estimators, x, y):
 
 
 class TabularSupervised(Supervised):
-    def __init__(self):
+    def __init__(self, path=None):
         """
         This constructor is supposed to initialize data members.
         Use triple quotes for function documentation.
         """
+        super().__init__()
         self.is_trained = False
         self.clf = None
         self.save_filename = None
         self.objective = 'multiclass'
         self.tabular_preprocessor = None
+        if path is None:
+            path = rand_temp_folder_generator()
+            print('Path:', path)
+
+        self.path = path
+        self.time_limit = None
+        self.datainfo = None
 
     def fit(self, x, y, x_test=None, y_test=None, time_limit=None, datainfo=None):
         """
@@ -73,8 +84,15 @@ class TabularSupervised(Supervised):
         NOT be available for re-training.
         """
 
-        if self.objective == 'multiclass':
-            n_classes = len(set(y[:, 0]))
+        if time_limit is None:
+            time_limit = 24 * 60 * 60
+        if datainfo is None:
+            datainfo = {'loaded_feat_types': [0] * 4}
+        self.time_limit = time_limit
+        self.datainfo = datainfo
+
+        if self.objective == 'multiclass' or self.objective == 'binary':
+            n_classes = len(set(y))
             if n_classes == 2:
                 self.objective = 'binary'
                 self.lgbm = LGBMClassifier(silent=False,
@@ -82,6 +100,7 @@ class TabularSupervised(Supervised):
                                            n_jobs=1,
                                            objective=self.objective)
             else:
+                self.objective = 'multiclass'
                 self.lgbm = LGBMClassifier(silent=False,
                                            verbose=-1,
                                            n_jobs=1,
@@ -93,8 +112,12 @@ class TabularSupervised(Supervised):
                                        verbose=-1,
                                        n_jobs=1,
                                        objective=self.objective)
+
         self.tabular_preprocessor = TabularPreprocessor()
-        x = self.tabular_preprocessor.fit(x, y, time_limit, datainfo)
+        x = self.tabular_preprocessor.fit(x, y, self.time_limit, self.datainfo)
+
+        if x.shape[1] == 0:
+            raise ValueError("No feature exist!")
 
         if x.shape[0] > 6000:
             grid_train_perentage = 0.1
@@ -104,9 +127,7 @@ class TabularSupervised(Supervised):
         idx = random.sample(list(range(x.shape[0])), grid_N)
 
         grid_train_x = x[idx, :]
-        grid_train_y = y[idx, :]
-
-        grid_train_y = np.ravel(grid_train_y)
+        grid_train_y = y[idx]
 
         while x.shape[0] < 60:
             x = np.concatenate([x, x], axis=0)
@@ -161,13 +182,15 @@ class TabularSupervised(Supervised):
             self.is_trained = True
 
         # Fit Model
-        self.clf.fit(x, np.ravel(y))
+        self.clf.fit(x, y)
 
         pre_model_name = []
-        for file in os.listdir(os.getcwd()):
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+        for file in os.listdir(self.path):
             if file.endswith("_lgb.txt"):
                 pre_model_name.append(file)
-        self.save_filename = str(len(pre_model_name) + 1) + '_lgb.txt'
+        self.save_filename = self.path + '/' + str(len(pre_model_name) + 1) + '_lgb.txt'
         self.clf.booster_.save_model(self.save_filename)
 
         print("The whole available data is: ")
@@ -182,7 +205,6 @@ class TabularSupervised(Supervised):
         The function predict eventually casdn return probabilities or continuous values.
         """
         x_test = self.tabular_preprocessor.encode(x_test)
-        y = None
         if self.clf is not None:
             y = self.clf.predict(x_test)
         elif self.save_filename is not None:
@@ -190,16 +212,18 @@ class TabularSupervised(Supervised):
             y = booster.predict(x_test)
         else:
             pre_model_name = []
-            for file in os.listdir(os.getcwd()):
+            for file in os.listdir(self.path):
                 if file.endswith("_lgb.txt"):
-                    pre_model_name.append(int(file))
+                    file_ind_pat = re.compile("(\d+)")
+                    tmp_filename = int(file_ind_pat.findall(file)[0])
+                    pre_model_name.append(tmp_filename)
             total_model = len(pre_model_name)
             if total_model == 0:
                 raise ValueError("Tabular predictor does not exist")
             else:
                 # Use the latest predictor
-                name = max(pre_model_name)
-                booster = lgb.Booster(model_file=name)
+                self.save_filename = self.path + '/' + str(max(pre_model_name)) + '_lgb.txt'
+                booster = lgb.Booster(model_file=self.save_filename)
                 y = booster.predict(x_test)
 
         if y is None:
@@ -207,8 +231,8 @@ class TabularSupervised(Supervised):
         return y
 
     def evaluate(self, x_test, y_test):
+        print('objective:', self.objective)
         y_pred = self.predict(x_test)
-        y_test = np.ravel(y_test)
         if self.objective == 'binary':
             results = roc_auc_score(y_test, y_pred)
         elif self.objective == 'multiclass':
@@ -217,19 +241,9 @@ class TabularSupervised(Supervised):
             results = mean_squared_error(y_test, y_pred)
         return results
 
-    def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
-        pass
-
-    def save(self, path="./"):
-        pickle.dump(self, open(path + '_model.pickle', "w"))
-
-    def load(self, path="./"):
-        modelfile = path + '_model.pickle'
-        if isfile(modelfile):
-            with open(modelfile) as f:
-                self = pickle.load(f)
-            print("Model reloaded from: " + modelfile)
-        return self
+    def final_fit(self, x_train, y_train, x_test=None, y_test=None, trainer_args=None, retrain=False):
+        x_train = self.tabular_preprocessor.encode(x_train)
+        self.clf.fit(x_train, y_train)
 
 
 class TabularRegressor(TabularSupervised):
@@ -237,10 +251,9 @@ class TabularRegressor(TabularSupervised):
 
     It is used for tabular data regression with lightgbm regressor.
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, path=None):
+        super().__init__(path)
         self.objective = 'regression'
-
 
 class TabularClassifier(TabularSupervised):
     """TabularClassifier class.

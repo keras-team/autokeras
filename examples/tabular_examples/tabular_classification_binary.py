@@ -13,9 +13,9 @@ if __name__ == '__main__':
     x_train = x_all[:int(nsample*0.8), :]
     x_test = x_all[int(nsample * 0.8):, :]
 
-    y_all = np.random.randint(0, 2, [nsample, 1])
-    y_train = y_all[:int(nsample*0.8), :]
-    y_test = y_all[int(nsample * 0.8):, :]
+    y_all = np.random.randint(0, 2, nsample)
+    y_train = y_all[:int(nsample*0.8)]
+    y_test = y_all[int(nsample * 0.8):]
 
     clf = TabularClassifier()
     datainfo = {'loaded_feat_types': [ntime, nnum, ncat, nmvc]}
