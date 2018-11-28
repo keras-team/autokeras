@@ -1,11 +1,9 @@
 from copy import deepcopy
-from operator import itemgetter
 from random import randrange, sample
 
 from autokeras.nn.graph import NetworkDescriptor
 
 from autokeras.constant import Constant
-from autokeras.nn.layer_transformer import init_dense_weight, init_conv_weight, init_bn_weight
 from autokeras.nn.layers import is_layer, StubDense, get_dropout_class, StubReLU, get_conv_class, \
     get_batch_norm_class, get_pooling_class
 
@@ -29,22 +27,14 @@ def to_wider_graph(graph):
 def to_skip_connection_graph(graph):
     # The last conv layer cannot be widen since wider operator cannot be done over the two sides of flatten.
     weighted_layer_ids = graph.skip_connection_layer_ids()
-    descriptor = graph.extract_descriptor()
-    sorted_skips = sorted(descriptor.skip_connections, key=itemgetter(2, 0, 1))
-    p = 0
     valid_connection = []
     for skip_type in sorted([NetworkDescriptor.ADD_CONNECT, NetworkDescriptor.CONCAT_CONNECT]):
         for index_a in range(len(weighted_layer_ids)):
             for index_b in range(len(weighted_layer_ids))[index_a + 1:]:
-                if p < len(sorted_skips) and sorted_skips[p] == (index_a + 1, index_b + 1, skip_type):
-                    p += 1
-                else:
-                    valid_connection.append((index_a, index_b, skip_type))
+                valid_connection.append((index_a, index_b, skip_type))
 
     if len(valid_connection) < 1:
         return graph
-    # n_skip_connection = randint(1, len(valid_connection))
-    # for index_a, index_b, skip_type in sample(valid_connection, n_skip_connection):
     for index_a, index_b, skip_type in sample(valid_connection, 1):
         a_id = weighted_layer_ids[index_a]
         b_id = weighted_layer_ids[index_b]

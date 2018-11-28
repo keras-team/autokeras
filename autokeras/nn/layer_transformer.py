@@ -1,6 +1,6 @@
 import numpy as np
 
-from autokeras.nn.layers import StubDense, StubReLU, get_n_dim, get_conv_class, get_batch_norm_class
+from autokeras.nn.layers import StubDense, get_n_dim, get_conv_class, get_batch_norm_class
 
 NOISE_RATIO = 1e-4
 
@@ -51,7 +51,10 @@ def wider_pre_conv(layer, n_add_filters, weighted=True):
         new_weight = new_weight[np.newaxis, ...]
         student_w = np.concatenate((student_w, new_weight), axis=0)
         student_b = np.append(student_b, teacher_b[teacher_index])
-    new_pre_layer = get_conv_class(n_dim)(layer.input_channel, n_pre_filters + n_add_filters, layer.kernel_size)
+    new_pre_layer = get_conv_class(n_dim)(layer.input_channel,
+                                          n_pre_filters + n_add_filters,
+                                          kernel_size=layer.kernel_size,
+                                          stride=layer.stride)
     new_pre_layer.set_weights((add_noise(student_w, teacher_w), add_noise(student_b, teacher_b)))
     return new_pre_layer
 
@@ -59,7 +62,10 @@ def wider_pre_conv(layer, n_add_filters, weighted=True):
 def wider_next_conv(layer, start_dim, total_dim, n_add, weighted=True):
     n_dim = get_n_dim(layer)
     if not weighted:
-        return get_conv_class(n_dim)(layer.input_channel + n_add, layer.filters, kernel_size=layer.kernel_size)
+        return get_conv_class(n_dim)(layer.input_channel + n_add,
+                                     layer.filters,
+                                     kernel_size=layer.kernel_size,
+                                     stride=layer.stride)
     n_filters = layer.filters
     teacher_w, teacher_b = layer.get_weights()
 
@@ -70,7 +76,10 @@ def wider_next_conv(layer, start_dim, total_dim, n_add, weighted=True):
     student_w = np.concatenate((teacher_w[:, :start_dim, ...].copy(),
                                 add_noise(new_weight, teacher_w),
                                 teacher_w[:, start_dim:total_dim, ...].copy()), axis=1)
-    new_layer = get_conv_class(n_dim)(layer.input_channel + n_add, n_filters, layer.kernel_size)
+    new_layer = get_conv_class(n_dim)(layer.input_channel + n_add,
+                                      n_filters,
+                                      kernel_size=layer.kernel_size,
+                                      stride=layer.stride)
     new_layer.set_weights((student_w, teacher_b))
     return new_layer
 

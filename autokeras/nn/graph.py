@@ -10,7 +10,7 @@ from autokeras.nn.layer_transformer import wider_bn, wider_next_conv, wider_next
     wider_pre_conv, add_noise, init_dense_weight, init_conv_weight, init_bn_weight
 from autokeras.nn.layers import StubConcatenate, StubAdd, is_layer, layer_width, \
     to_real_keras_layer, set_torch_weight_to_stub, set_stub_weight_to_torch, set_stub_weight_to_keras, \
-    set_keras_weight_to_stub, get_conv_class, get_pooling_class, StubReLU
+    set_keras_weight_to_stub, get_conv_class, StubReLU
 
 
 class NetworkDescriptor:
@@ -205,6 +205,7 @@ class Graph:
             if edge_tuple[0] == v_id:
                 layer_id = edge_tuple[1]
                 self.adj_list[u_id][index] = (new_v_id, layer_id)
+                self.layer_list[layer_id].output = self.node_list[new_v_id]
                 break
 
         for index, edge_tuple in enumerate(self.reverse_adj_list[v_id]):
@@ -261,9 +262,9 @@ class Graph:
         for layer_id in layer_list:
             layer = self.layer_list[layer_id]
             if is_layer(layer, 'Pooling'):
-                ret.append((layer.kernel_size, layer.stride, layer.padding))
+                ret.append(layer)
             elif is_layer(layer, 'Conv') and layer.stride != 1:
-                ret.append((int((layer.kernel_size + 1) / 2), layer.stride, 0))
+                ret.append(layer)
         return ret
 
     def _depth_first_search(self, target_id, layer_id_list, node_list):
@@ -417,12 +418,12 @@ class Graph:
         self.operation_history.append(('to_add_skip_model', start_id, end_id))
         filters_end = self.layer_list[end_id].output.shape[-1]
         filters_start = self.layer_list[start_id].output.shape[-1]
-        conv_block_input_id = self.layer_id_to_output_node_ids[start_id][0]
+        start_node_id = self.layer_id_to_output_node_ids[start_id][0]
 
-        block_last_layer_input_id = self.layer_id_to_input_node_ids[end_id][0]
-        block_last_layer_output_id = self.layer_id_to_output_node_ids[end_id][0]
+        pre_end_node_id = self.layer_id_to_input_node_ids[end_id][0]
+        end_node_id = self.layer_id_to_output_node_ids[end_id][0]
 
-        skip_output_id = self._insert_pooling_layer_chain(block_last_layer_input_id, conv_block_input_id)
+        skip_output_id = self._insert_pooling_layer_chain(start_node_id, end_node_id)
 
         # Add the conv layer
         new_conv_layer = get_conv_class(self.n_dim)(filters_start,
@@ -431,15 +432,15 @@ class Graph:
         skip_output_id = self.add_layer(new_conv_layer, skip_output_id)
 
         # Add the add layer.
-        add_input_node_id = self._add_node(deepcopy(self.node_list[block_last_layer_output_id]))
+        add_input_node_id = self._add_node(deepcopy(self.node_list[end_node_id]))
         add_layer = StubAdd()
 
-        self._redirect_edge(block_last_layer_input_id, block_last_layer_output_id, add_input_node_id)
-        self._add_edge(add_layer, add_input_node_id, block_last_layer_output_id)
-        self._add_edge(add_layer, skip_output_id, block_last_layer_output_id)
+        self._redirect_edge(pre_end_node_id, end_node_id, add_input_node_id)
+        self._add_edge(add_layer, add_input_node_id, end_node_id)
+        self._add_edge(add_layer, skip_output_id, end_node_id)
         add_layer.input = [self.node_list[add_input_node_id], self.node_list[skip_output_id]]
-        add_layer.output = self.node_list[block_last_layer_output_id]
-        self.node_list[block_last_layer_output_id].shape = add_layer.output_shape
+        add_layer.output = self.node_list[end_node_id]
+        self.node_list[end_node_id].shape = add_layer.output_shape
 
         # Set weights to the additional conv layer.
         if self.weighted:
@@ -458,15 +459,15 @@ class Graph:
         self.operation_history.append(('to_concat_skip_model', start_id, end_id))
         filters_end = self.layer_list[end_id].output.shape[-1]
         filters_start = self.layer_list[start_id].output.shape[-1]
-        conv_block_input_id = self.layer_id_to_output_node_ids[start_id][0]
+        start_node_id = self.layer_id_to_output_node_ids[start_id][0]
 
-        block_last_layer_input_id = self.layer_id_to_input_node_ids[end_id][0]
-        block_last_layer_output_id = self.layer_id_to_output_node_ids[end_id][0]
+        pre_end_node_id = self.layer_id_to_input_node_ids[end_id][0]
+        end_node_id = self.layer_id_to_output_node_ids[end_id][0]
 
-        skip_output_id = self._insert_pooling_layer_chain(block_last_layer_input_id, conv_block_input_id)
+        skip_output_id = self._insert_pooling_layer_chain(start_node_id, end_node_id)
 
-        concat_input_node_id = self._add_node(deepcopy(self.node_list[block_last_layer_output_id]))
-        self._redirect_edge(block_last_layer_input_id, block_last_layer_output_id, concat_input_node_id)
+        concat_input_node_id = self._add_node(deepcopy(self.node_list[end_node_id]))
+        self._redirect_edge(pre_end_node_id, end_node_id, concat_input_node_id)
 
         concat_layer = StubConcatenate()
         concat_layer.input = [self.node_list[concat_input_node_id], self.node_list[skip_output_id]]
@@ -479,10 +480,10 @@ class Graph:
         # Add the concatenate layer.
         new_conv_layer = get_conv_class(self.n_dim)(filters_start + filters_end,
                                                     filters_end, 1)
-        self._add_edge(new_conv_layer, concat_output_node_id, block_last_layer_output_id)
+        self._add_edge(new_conv_layer, concat_output_node_id, end_node_id)
         new_conv_layer.input = self.node_list[concat_output_node_id]
-        new_conv_layer.output = self.node_list[block_last_layer_output_id]
-        self.node_list[block_last_layer_output_id].shape = new_conv_layer.output_shape
+        new_conv_layer.output = self.node_list[end_node_id]
+        self.node_list[end_node_id].shape = new_conv_layer.output_shape
 
         if self.weighted:
             filter_shape = (1,) * self.n_dim
@@ -497,12 +498,16 @@ class Graph:
             bias = np.zeros(filters_end)
             new_conv_layer.set_weights((add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1]))))
 
-    def _insert_pooling_layer_chain(self, block_last_layer_input_id, conv_block_input_id):
-        skip_output_id = conv_block_input_id
-        for kernel_size, stride, padding in self._get_pooling_layers(conv_block_input_id, block_last_layer_input_id):
-            skip_output_id = self.add_layer(get_pooling_class(self.n_dim)(kernel_size,
-                                                                          stride=stride,
-                                                                          padding=padding), skip_output_id)
+    def _insert_pooling_layer_chain(self, start_node_id, end_node_id):
+        skip_output_id = start_node_id
+        for layer in self._get_pooling_layers(start_node_id, end_node_id):
+            new_layer = deepcopy(layer)
+            if is_layer(new_layer, 'Conv'):
+                filters = self.node_list[start_node_id].shape[-1]
+                new_layer = get_conv_class(self.n_dim)(filters, filters, 1, layer.stride)
+            else:
+                new_layer = deepcopy(layer)
+            skip_output_id = self.add_layer(new_layer, skip_output_id)
         skip_output_id = self.add_layer(StubReLU(), skip_output_id)
         return skip_output_id
 
@@ -577,7 +582,7 @@ class Graph:
         """Return a list of layer IDs in the main chain."""
         main_chain = self.get_main_chain()
         ret = []
-        for u in range(self.n_nodes):
+        for u in main_chain:
             for v, layer_id in self.adj_list[u]:
                 if v in main_chain and u in main_chain:
                     ret.append(layer_id)
@@ -592,8 +597,11 @@ class Graph:
     def deep_layer_ids(self):
         ret = []
         for layer_id in self.get_main_chain_layers():
-            if is_layer(self.layer_list[layer_id], 'GlobalAveragePooling'):
+            layer = self.layer_list[layer_id]
+            if is_layer(layer, 'GlobalAveragePooling'):
                 break
+            if is_layer(layer, 'Add') or is_layer(layer, 'Concatenate'):
+                continue
             ret.append(layer_id)
         return ret
 

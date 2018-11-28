@@ -1,6 +1,5 @@
 from autokeras.nn.generator import CnnGenerator, ResNetGenerator
 from autokeras.nn.graph import *
-from autokeras.nn.layers import StubBatchNormalization
 from tests.common import get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model, \
     get_concat_skip_model
 
@@ -195,3 +194,25 @@ def test_long_transform():
     model = graph.produce_model()
     model(torch.Tensor(np.random.random((10, 1, 28, 28))))
 
+
+def test_long_transform2():
+    graph = CnnGenerator(10, (28, 28, 1)).generate()
+    graph.to_add_skip_model(2, 3)
+    graph.to_concat_skip_model(2, 3)
+    model = graph.produce_model()
+    model(torch.Tensor(np.random.random((10, 1, 28, 28))))
+
+
+def test_long_transform4():
+    graph = ResNetGenerator(10, (28, 28, 1)).generate()
+    graph.to_concat_skip_model(57, 68)
+    model = graph.produce_model()
+    model(torch.Tensor(np.random.random((10, 1, 28, 28))))
+
+
+def test_long_transform5():
+    graph = ResNetGenerator(10, (28, 28, 1)).generate()
+    graph.to_concat_skip_model(19, 60)
+    graph.to_wider_model(52, 256)
+    model = graph.produce_model()
+    model(torch.Tensor(np.random.random((10, 1, 28, 28))))
