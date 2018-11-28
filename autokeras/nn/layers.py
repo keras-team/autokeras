@@ -2,7 +2,6 @@ from abc import abstractmethod
 
 import torch
 from torch import nn
-from keras import layers
 from torch.nn import functional
 
 from autokeras.constant import Constant
@@ -417,6 +416,7 @@ class TorchFlatten(nn.Module):
 
 
 def keras_dropout(layer, rate):
+    from keras import layers
     input_dim = len(layer.input.shape)
     if input_dim == 2:
         return layers.SpatialDropout1D(rate)
@@ -429,6 +429,7 @@ def keras_dropout(layer, rate):
 
 
 def to_real_keras_layer(layer):
+    from keras import layers
     if is_layer(layer, 'Dense'):
         return layers.Dense(layer.units, input_shape=(layer.input_units,))
     if is_layer(layer, 'Conv'):
