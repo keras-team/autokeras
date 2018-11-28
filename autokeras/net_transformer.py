@@ -45,9 +45,18 @@ def to_skip_connection_graph(graph):
     return graph
 
 
-def create_new_layer(input_shape, n_dim):
+def create_new_layer(layer, n_dim):
+    input_shape = layer.output.shape
     dense_deeper_classes = [StubDense, get_dropout_class(n_dim), StubReLU]
     conv_deeper_classes = [get_conv_class(n_dim), get_batch_norm_class(n_dim), StubReLU]
+    if is_layer(layer, 'ReLU'):
+        conv_deeper_classes = [get_conv_class(n_dim), get_batch_norm_class(n_dim)]
+        dense_deeper_classes = [StubDense, get_dropout_class(n_dim)]
+    elif is_layer(layer, 'Dropout'):
+        dense_deeper_classes = [StubDense, StubReLU]
+    elif is_layer(layer, 'BatchNormalization'):
+        conv_deeper_classes = [get_conv_class(n_dim), StubReLU]
+
     if len(input_shape) == 1:
         # It is in the dense layer part.
         layer_class = sample(dense_deeper_classes, 1)[0]
@@ -85,7 +94,7 @@ def to_deeper_graph(graph):
 
     for layer_id in deeper_layer_ids:
         layer = graph.layer_list[layer_id]
-        new_layer = create_new_layer(layer.output.shape, graph.n_dim)
+        new_layer = create_new_layer(layer, graph.n_dim)
         graph.to_deeper_model(layer_id, new_layer)
     return graph
 

@@ -113,6 +113,7 @@ class Searcher:
         if self.verbose:
             print('\nSaving model.')
 
+        graph.clear_operation_history()
         pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.graph'))
 
         ret = {'model_id': model_id, 'loss': loss, 'metric_value': metric_value}

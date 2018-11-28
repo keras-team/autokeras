@@ -2,7 +2,6 @@ from collections import Iterable
 from copy import deepcopy, copy
 from queue import Queue
 
-import keras
 import numpy as np
 import torch
 
@@ -505,6 +504,8 @@ class Graph:
             if is_layer(new_layer, 'Conv'):
                 filters = self.node_list[start_node_id].shape[-1]
                 new_layer = get_conv_class(self.n_dim)(filters, filters, 1, layer.stride)
+                if self.weighted:
+                    init_conv_weight(new_layer)
             else:
                 new_layer = deepcopy(layer)
             skip_output_id = self.add_layer(new_layer, skip_output_id)
@@ -685,6 +686,7 @@ class TorchModel(torch.nn.Module):
 
 class KerasModel:
     def __init__(self, graph):
+        import keras
         self.graph = graph
         self.layers = []
         for layer in graph.layer_list:

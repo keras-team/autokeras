@@ -163,6 +163,7 @@ def test_node_consistency():
 
 
 def test_produce_keras_model():
+    import keras
     for graph in [get_conv_dense_model(),
                   get_add_skip_model(),
                   get_pooling_model(),
