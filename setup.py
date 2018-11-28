@@ -15,12 +15,12 @@ setup(
                       'imageio==2.4.1',
                       'requests==2.20.1',
                       'GPUtil==1.3.0'],
-    version='0.3.3',
+    version='0.3.4',
     description='AutoML for deep learning',
     author='DATA Lab at Texas A&M University',
     author_email='jhfjhfj1@gmail.com',
     url='http://autokeras.com',
-    download_url='https://github.com/jhfjhfj1/autokeras/archive/0.3.3.tar.gz',
+    download_url='https://github.com/jhfjhfj1/autokeras/archive/0.3.4.tar.gz',
     keywords=['AutoML', 'keras'],  # arbitrary keywords
     classifiers=[]
 )
