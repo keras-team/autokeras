@@ -148,11 +148,9 @@ class TabularPreprocessor():
             for col_index in range(ntime + nnum, ntime + nnum + ncat + nmvc):
                 if self.n_first_batch_keys[col_index] <= LEVEL_HIGH:
                     self.num_cat_pair[mark] = (col_index,)
-                    print(self.num_cat_pair[mark])
                     mark += 1
                 else:
                     self.num_cat_pair[mark] = (col_index, col_index)
-                    print(self.num_cat_pair[mark])
                     mark += 1
 
             mark_1 = 0
@@ -182,8 +180,6 @@ class TabularPreprocessor():
             self.num_cat_pair.update(num_cat_pair_1)
             mark += len(pearsonr_high_1)
 
-            print('num_cat_pair_1: ', num_cat_pair_1)
-
             mark_2 = 0
             tasks_2 = []
             for cat_col_index in self.high_level_cat_keys:
@@ -210,8 +206,6 @@ class TabularPreprocessor():
             num_cat_pair_2 = {i + mark: num_cat_pair_2[key] for i, key in enumerate(num_cat_pair_2)}
             self.num_cat_pair.update(num_cat_pair_2)
             self.order_num_cat_pair = sorted(list(self.num_cat_pair.keys()))
-            print(self.num_cat_pair)
-            print('num_cat_pair_2: ', num_cat_pair_2)
 
         tasks = []
         for key in self.order_num_cat_pair:

@@ -2,8 +2,8 @@ import os
 import lightgbm as lgb
 from lightgbm import LGBMClassifier, LGBMRegressor
 from sklearn.model_selection import RandomizedSearchCV
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import StratifiedKFold, KFold
+from sklearn.metrics import roc_auc_score, f1_score, mean_squared_error
 import pickle
 import numpy as np
 from os.path import isfile
@@ -27,12 +27,20 @@ def search(lgbm, search_space, search_iter, n_estimators, x, y):
         'num_leaves': [70],
         'learning_rate': [0.04],
     }
-
     params.update(search_space)
     print(params)
     folds = 3
-    skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1001)
-    random_search = RandomizedSearchCV(lgbm, param_distributions=params, n_iter=search_iter, scoring='roc_auc',
+    if lgbm.objective == 'binary':
+        score_metric = 'roc_auc'
+        skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1001)
+    elif lgbm.objective == 'multiclass':
+        score_metric = 'f1_weighted'
+        skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1001)
+    elif lgbm.objective == 'regression':
+        score_metric = 'neg_mean_squared_error'
+        skf = KFold(n_splits=folds, shuffle=True, random_state=1001)
+
+    random_search = RandomizedSearchCV(lgbm, param_distributions=params, n_iter=search_iter, scoring=score_metric,
                                        n_jobs=1, cv=skf, verbose=0, random_state=1001)
 
     random_search.fit(x, y)
@@ -50,10 +58,6 @@ class TabularSupervised(Supervised):
         self.clf = None
         self.save_filename = None
         self.objective = 'multiclass'
-        self.lgbm = LGBMClassifier(silent=False,
-                                   verbose=-1,
-                                   n_jobs=1,
-                                   objective=self.objective)
         self.tabular_preprocessor = None
 
     def fit(self, x, y, x_test=None, y_test=None, time_limit=None, datainfo=None):
@@ -69,49 +73,44 @@ class TabularSupervised(Supervised):
         NOT be available for re-training.
         """
 
+        if self.objective == 'multiclass':
+            n_classes = len(set(y[:, 0]))
+            if n_classes == 2:
+                self.objective = 'binary'
+                self.lgbm = LGBMClassifier(silent=False,
+                                           verbose=-1,
+                                           n_jobs=1,
+                                           objective=self.objective)
+            else:
+                self.lgbm = LGBMClassifier(silent=False,
+                                           verbose=-1,
+                                           n_jobs=1,
+                                           num_class=n_classes,
+                                           objective=self.objective)
+
+        elif self.objective == 'regression':
+            self.lgbm = LGBMRegressor(silent=False,
+                                       verbose=-1,
+                                       n_jobs=1,
+                                       objective=self.objective)
         self.tabular_preprocessor = TabularPreprocessor()
         x = self.tabular_preprocessor.fit(x, y, time_limit, datainfo)
 
-        y0 = np.where(y == 0)[0]
-        y1 = np.where(y == 1)[0]
-        N0 = len(y0)
-        N1 = len(y1)
-
-        if x.shape[0] > 600:
+        if x.shape[0] > 6000:
             grid_train_perentage = 0.1
         else:
             grid_train_perentage = 1
         grid_N = int(x.shape[0] * grid_train_perentage)
-        grid_half_N = int(grid_N * 0.5)
-        if N0 > N1:
-            if N1 <= grid_half_N:
-                idx1 = list(y1)
-                idx0 = random.sample(list(y0), grid_N - N1)
-            else:
-                idx1 = random.sample(list(y1), grid_half_N)
-                idx0 = random.sample(list(y0), grid_half_N)
-        else:
-            if N0 <= grid_half_N:
-                idx0 = list(y0)
-                idx1 = random.sample(list(y1), grid_N - N0)
-            else:
-                idx1 = random.sample(list(y1), grid_half_N)
-                idx0 = random.sample(list(y0), grid_half_N)
+        idx = random.sample(list(range(x.shape[0])), grid_N)
 
-        grid_train_samples = sorted(idx0 + idx1)
+        grid_train_x = x[idx, :]
+        grid_train_y = y[idx, :]
 
-        grid_train_x = x[grid_train_samples, :]
-        grid_train_y = y[grid_train_samples, :]
-
-        while grid_train_x.shape[0] < 60:
-            grid_train_x = np.concatenate([grid_train_x, grid_train_x], axis=0)
-            grid_train_y = np.concatenate([grid_train_y, grid_train_y], axis=0)
+        grid_train_y = np.ravel(grid_train_y)
 
         while x.shape[0] < 60:
             x = np.concatenate([x, x], axis=0)
             y = np.concatenate([y, y], axis=0)
-
-        grid_train_y = np.ravel(grid_train_y)
 
         response_rate = sum(y) / len(y)
         print('Response Rate', response_rate)
@@ -132,7 +131,6 @@ class TabularSupervised(Supervised):
                 'learning_rate': [0.3],
                 'subsample': [0.8],
                 'num_leaves': [80],
-                'objective': self.objective,
             }
 
             cv_start = time.time()
@@ -210,8 +208,14 @@ class TabularSupervised(Supervised):
 
     def evaluate(self, x_test, y_test):
         y_pred = self.predict(x_test)
-        AUC = roc_auc_score(y_test, y_pred)
-        return AUC
+        y_test = np.ravel(y_test)
+        if self.objective == 'binary':
+            results = roc_auc_score(y_test, y_pred)
+        elif self.objective == 'multiclass':
+            results = f1_score(y_test, y_pred, average='weighted')
+        elif self.objective == 'regression':
+            results = mean_squared_error(y_test, y_pred)
+        return results
 
     def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
         pass
@@ -236,10 +240,6 @@ class TabularRegressor(TabularSupervised):
     def __init__(self):
         super().__init__()
         self.objective = 'regression'
-        self.lgbm = LGBMRegressor(silent=False,
-                                  # verbose=-1,
-                                  n_jobs=1,
-                                  objective=self.objective)
 
 
 class TabularClassifier(TabularSupervised):

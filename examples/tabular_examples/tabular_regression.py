@@ -1,5 +1,5 @@
 import numpy as np
-from autokeras import TabularClassifier
+from autokeras import TabularRegressor
 
 if __name__ == '__main__':
     ntime, nnum, ncat, nmvc = 4, 10, 8, 2
@@ -13,14 +13,14 @@ if __name__ == '__main__':
     x_train = x_all[:int(nsample*0.8), :]
     x_test = x_all[int(nsample * 0.8):, :]
 
-    y_all = np.random.randint(0, 2, [nsample, 1])
+    y_all = np.random.random([nsample, 1])
     y_train = y_all[:int(nsample*0.8), :]
     y_test = y_all[int(nsample * 0.8):, :]
 
-    clf = TabularClassifier()
+    clf = TabularRegressor()
     datainfo = {'loaded_feat_types': [ntime, nnum, ncat, nmvc]}
     # clf.fit(x_train, y_train, time_limit=12 * 60 * 60, datainfo=None)
     clf.fit(x_train, y_train, time_limit=12 * 60 * 60, datainfo=datainfo)
 
-    results = clf.evaluate(x_test, y_test)
-    print(results)
+    AUC = clf.evaluate(x_test, y_test)
+    print(AUC)

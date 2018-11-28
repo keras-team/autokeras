@@ -9,7 +9,7 @@ setup(
                       'torchvision==0.2.1',
                       'numpy==1.14.5',
                       'keras==2.2.2',
-                      'scikit-learn==0.19.1',
+                      'scikit-learn==0.20.1',
                       'scikit-image==0.13.1',
                       'tqdm==4.25.0',
                       'tensorflow==1.10.0',
