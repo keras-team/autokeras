@@ -37,7 +37,7 @@ class Constant:
     MAX_NO_IMPROVEMENT_NUM = 5
     MAX_BATCH_SIZE = 128
     LIMIT_MEMORY = False
-    SEARCH_MAX_ITER = 1
+    SEARCH_MAX_ITER = 200
 
     # text preprocessor
 
