@@ -113,6 +113,7 @@ class Searcher:
         if self.verbose:
             print('\nSaving model.')
 
+        graph.clear_operation_history()
         pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.graph'))
 
         ret = {'model_id': model_id, 'loss': loss, 'metric_value': metric_value}
@@ -151,12 +152,6 @@ class Searcher:
             self.model_count += 1
             self.training_queue.append((graph, -1, model_id))
             self.descriptors.append(graph.extract_descriptor())
-        # if graph is not None and model_id is not None:
-        #     for child_graph in default_transform(graph):
-        #         child_id = self.model_count
-        #         self.model_count += 1
-        #         self.training_queue.append((child_graph, model_id, child_id))
-        #         self.descriptors.append(child_graph.extract_descriptor())
 
         if self.verbose:
             print('Initialization finished.')
@@ -205,7 +200,7 @@ class Searcher:
                 searched = True
 
                 remaining_time = timeout - (time.time() - start_time)
-                generated_other_info, generated_graph = self.generate(remaining_time)
+                generated_other_info, generated_graph = self.generate(remaining_time, q)
                 new_model_id = self.model_count
                 self.model_count += 1
                 self.training_queue.append((generated_graph, generated_other_info, new_model_id))
@@ -251,11 +246,12 @@ class Searcher:
         self.bo.fit([graph.extract_descriptor()], [metric_value])
         self.bo.add_child(father_id, model_id)
 
-    def generate(self, remaining_time):
+    def generate(self, remaining_time, multiprocessing_queue):
         """Generate the next neural architecture.
 
         Args:
             remaining_time: The remaining time in seconds.
+            multiprocessing_queue: the Queue for multiprocessing return value.
 
         Returns:
             other_info: Anything to be saved in the training queue together with the architecture.
@@ -263,7 +259,7 @@ class Searcher:
 
         """
         generated_graph, new_father_id = self.bo.generate(self.descriptors,
-                                                          remaining_time)
+                                                          remaining_time, multiprocessing_queue)
         if new_father_id is None:
             new_father_id = 0
             generated_graph = self.generators[0](self.n_classes, self.input_shape). \
@@ -282,7 +278,7 @@ class Searcher:
         tree = self.bo.search_tree.get_dict()
 
         # Saving the data to file.
-        data['networks'] = networks
+        # data['networks'] = networks
         data['tree'] = tree
         import json
         with open(path, 'w') as fp:
