@@ -293,11 +293,6 @@ class MockProcess(object):
         pass
 
 
-class MockMemoryOutProcess(MockProcess):
-    def start(self):
-        raise RuntimeError('cuda: out of memory.')
-
-
 def simple_transform(graph):
     graph.to_wider_model(6, 64)
     return [deepcopy(graph)]
@@ -311,6 +306,11 @@ def simple_transform_mlp(graph):
 def mock_train(**kwargs):
     str(kwargs)
     return 1, 0
+
+
+def mock_out_of_memory_train(**kwargs):
+    str(kwargs)
+    raise RuntimeError('CUDA: out of memory.')
 
 
 def mock_nvidia_smi_output(*arg, **kwargs):

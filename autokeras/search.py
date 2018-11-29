@@ -36,7 +36,6 @@ class Searcher:
         training_queue: A list of the generated architectures to be trained.
         x_queue: A list of trained architectures not updated to the gpr.
         y_queue: A list of trained architecture performances not updated to the gpr.
-        beta: A float. The beta in the UCB acquisition function.
         t_min: A float. The minimum temperature during simulated annealing.
         bo: An instance of BayesianOptimizer.
     """
@@ -212,20 +211,12 @@ class Searcher:
             if self.verbose and searched:
                 verbose_print(generated_other_info, generated_graph)
 
-            self.add_model(metric_value, loss, graph, model_id)
-            self.update(other_info, graph, metric_value, model_id)
-
-            self.export_json(os.path.join(self.path, 'history.json'))
+            if metric_value is not None:
+                self.add_model(metric_value, loss, graph, model_id)
+                self.update(other_info, graph, metric_value, model_id)
 
         except (TimeoutError, queue.Empty) as e:
             raise TimeoutError from e
-        except RuntimeError as e:
-            if not re.search('out of memory', str(e)):
-                raise e
-            if self.verbose:
-                print('\nCurrent model size is too big. Discontinuing training this model to search for other models.')
-            Constant.MAX_MODEL_SIZE = graph.size() - 1
-            return
         finally:
             # terminate and join the subprocess to prevent any resource leak
             p.terminate()
@@ -265,35 +256,28 @@ class Searcher:
 
         return new_father_id, generated_graph
 
-    def export_json(self, path):
-        """Export a json file of the search process."""
-        data = dict()
-
-        networks = []
-        for model_id in range(self.model_count - len(self.training_queue)):
-            networks.append(self.load_model_by_id(model_id).extract_descriptor().to_json())
-
-        tree = self.bo.search_tree.get_dict()
-
-        # Saving the data to file.
-        # data['networks'] = networks
-        data['tree'] = tree
-        import json
-        with open(path, 'w') as fp:
-            json.dump(data, fp)
-
 
 def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, path):
     """Train the neural architecture."""
-    model = graph.produce_model()
-    loss, metric_value = ModelTrainer(model=model,
-                                      path=path,
-                                      train_data=train_data,
-                                      test_data=test_data,
-                                      metric=metric,
-                                      loss_function=loss,
-                                      verbose=verbose).train_model(**trainer_args)
-    model.set_weight_to_graph()
-    if q:
-        q.put((metric_value, loss, model.graph))
-    return metric_value, loss, model.graph
+    try:
+        model = graph.produce_model()
+        loss, metric_value = ModelTrainer(model=model,
+                                          path=path,
+                                          train_data=train_data,
+                                          test_data=test_data,
+                                          metric=metric,
+                                          loss_function=loss,
+                                          verbose=verbose).train_model(**trainer_args)
+        model.set_weight_to_graph()
+        if q:
+            q.put((metric_value, loss, model.graph))
+        return metric_value, loss, model.graph
+    except RuntimeError as e:
+        if not re.search('out of memory', str(e)):
+            raise e
+        if verbose:
+            print('\nCurrent model size is too big. Discontinuing training this model to search for other models.')
+        Constant.MAX_MODEL_SIZE = graph.size() - 1
+        if q:
+            q.put((None, None, None))
+        return None, None, None
