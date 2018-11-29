@@ -76,6 +76,13 @@ def parallel_function(labels, first_batch_keys, task):
     return None
 
 
+def call_parallel(tasks):
+    results = []
+    for t in tasks:
+        results.append(parallel_function(t[0], t[1], t[2]))
+    return results
+
+
 class TabularPreprocessor():
     def __init__(self):
         """
@@ -93,7 +100,7 @@ class TabularPreprocessor():
         self.feature_add_high_cat = 0
         self.feature_add_cat_num = 0
         self.feature_add_cat_cat = 0
-        self.order_num_cat_pair = None
+        self.order_num_cat_pair = {}
 
         self.rest = None
         self.budget = None
@@ -126,9 +133,9 @@ class TabularPreprocessor():
 
             data_list = [F['numerical']]
             if ncat > 0:
-                data_list.append(F['CAT'].values)
+                data_list.append(F['CAT'])
             if nmvc > 0:
-                data_list.append(F['MV'].values)
+                data_list.append(F['MV'])
             ret = np.concatenate(data_list, axis=1)
 
         n_cat_col = nmvc + ncat
@@ -170,11 +177,12 @@ class TabularPreprocessor():
                                     'train_cat_cat'))
                     mark_1 += 1
 
-            pool = mp.Pool()
-            results = [pool.apply_async(parallel_function, t) for t in tasks_1]
-            all_results = [result.get() for result in results]
-            pool.close()
-            pool.join()
+            # pool = mp.Pool()
+            # results = [pool.apply_async(parallel_function, t) for t in tasks_1]
+            # all_results = [result.get() for result in results]
+            # pool.close()
+            # pool.join()
+            all_results = call_parallel(tasks_1)
 
             num_cat_pair_1 = {}
             pearsonr_dict_1 = {}
@@ -198,11 +206,12 @@ class TabularPreprocessor():
                                     'train_num_cat'))
                     mark_2 += 1
 
-            pool = mp.Pool()
-            results = [pool.apply_async(parallel_function, t) for t in tasks_2]
-            all_results = [result.get() for result in results]
-            pool.close()
-            pool.join()
+            # pool = mp.Pool()
+            # results = [pool.apply_async(parallel_function, t) for t in tasks_2]
+            # all_results = [result.get() for result in results]
+            # pool.close()
+            # pool.join()
+            all_results = call_parallel(tasks_2)
 
             num_cat_pair_2 = {}
             pearsonr_dict_2 = {}
@@ -233,14 +242,20 @@ class TabularPreprocessor():
                 (num_col_index, cat_col_index, mu, a) = self.num_cat_pair[key]
                 tasks.append((X[:, (num_col_index, cat_col_index)], self.n_first_batch_keys[cat_col_index], 'num_cat'))
 
-        pool = mp.Pool()
-        results = [pool.apply_async(parallel_function, t) for t in tasks]
-        all_num = X.shape[1] - ncat - nmvc
-        results = [X[:, :all_num]] + [result.get() for result in results]
+        # pool = mp.Pool()
+        # results = [pool.apply_async(parallel_function, t) for t in tasks]
+        # all_num = X.shape[1] - ncat - nmvc
+        # results = [X[:, :all_num]] + [result.get() for result in results]
+        #
+        # ret = np.concatenate(results, axis=1)
+        # pool.close()
+        # pool.join()
 
+        results = call_parallel(tasks)
+        all_num = X.shape[1] - ncat - nmvc
+        results = [X[:, :all_num]] + results
         ret = np.concatenate(results, axis=1)
-        pool.close()
-        pool.join()
+
         return ret #, ret.shape[1] - all_num, 0
 
     def fit(self, F, y=None, time_limit=None, datainfo=None):
@@ -347,7 +362,8 @@ class TabularPreprocessor():
 
         print('X.shape before remove_useless', x.shape)
         x = self.process_time(x)
-        x = x[:, self.rest]
+        if self.rest is not None:
+            x = x[:, self.rest]
         print('X.shape after remove_useless', x.shape)
 
         return x
