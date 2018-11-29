@@ -43,9 +43,8 @@ class Searcher:
 
     def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose,
                  trainer_args=None,
-                 default_model_len=Constant.MODEL_LEN,
-                 default_model_width=Constant.MODEL_WIDTH,
-                 beta=Constant.BETA,
+                 default_model_len=None,
+                 default_model_width=None,
                  t_min=None):
         """Initialize the Searcher.
 
@@ -60,7 +59,6 @@ class Searcher:
             trainer_args: A dictionary. The params for the constructor of ModelTrainer.
             default_model_len: An integer. Number of convolutional layers in the initial architecture.
             default_model_width: An integer. The number of filters in each layer in the initial architecture.
-            beta: A float. The beta in the UCB acquisition function.
             t_min: A float. The minimum temperature during simulated annealing.
         """
         if trainer_args is None:
@@ -76,8 +74,8 @@ class Searcher:
         self.model_count = 0
         self.descriptors = []
         self.trainer_args = trainer_args
-        self.default_model_len = default_model_len
-        self.default_model_width = default_model_width
+        self.default_model_len = default_model_len if default_model_len is not None else Constant.MODEL_LEN
+        self.default_model_width = default_model_width if default_model_width is not None else Constant.MODEL_WIDTH
         if 'max_iter_num' not in self.trainer_args:
             self.trainer_args['max_iter_num'] = Constant.SEARCH_MAX_ITER
 
@@ -86,7 +84,7 @@ class Searcher:
         self.y_queue = []
         if t_min is None:
             t_min = Constant.T_MIN
-        self.bo = BayesianOptimizer(self, t_min, metric, beta)
+        self.bo = BayesianOptimizer(self, t_min, metric)
 
     def load_model_by_id(self, model_id):
         return pickle_from_file(os.path.join(self.path, str(model_id) + '.graph'))

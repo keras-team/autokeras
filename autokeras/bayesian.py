@@ -289,12 +289,12 @@ class BayesianOptimizer:
         search_tree: The network morphism search tree.
     """
 
-    def __init__(self, searcher, t_min, metric, beta):
+    def __init__(self, searcher, t_min, metric, beta=None):
         self.searcher = searcher
         self.t_min = t_min
         self.metric = metric
         self.gpr = IncrementalGaussianProcess()
-        self.beta = beta
+        self.beta = beta if beta is not None else Constant.BETA
         self.search_tree = SearchTree()
 
     def fit(self, x_queue, y_queue):

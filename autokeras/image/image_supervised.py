@@ -92,9 +92,7 @@ class ImageSupervised(DeepSupervised, ABC):
             augment: A boolean value indicating whether the data needs augmentation. If not define, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
         """
-        if augment is None:
-            augment = Constant.DATA_AUGMENTATION
-        self.augment = augment
+        self.augment = augment if augment is not None else Constant.DATA_AUGMENTATION
         self.resize_shape = []
 
         super().__init__(**kwargs)
