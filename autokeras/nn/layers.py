@@ -268,14 +268,14 @@ class StubSoftmax(StubLayer):
 
 class StubPooling(StubLayer):
     def __init__(self,
-                 kernel_size=Constant.POOLING_KERNEL_SIZE,
+                 kernel_size=None,
                  input_node=None,
                  output_node=None,
                  stride=None,
                  padding=0):
         super().__init__(input_node, output_node)
-        self.kernel_size = kernel_size
-        self.stride = stride or kernel_size
+        self.kernel_size = kernel_size if kernel_size is not None else Constant.POOLING_KERNEL_SIZE
+        self.stride = stride if stride is not None else self.kernel_size
         self.padding = padding
 
     @property

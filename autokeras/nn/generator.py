@@ -64,7 +64,7 @@ class CnnGenerator(NetworkGenerator):
         self.pooling = get_pooling_class(self.n_dim)
         self.batch_norm = get_batch_norm_class(self.n_dim)
 
-    def generate(self, model_len=Constant.MODEL_LEN, model_width=Constant.MODEL_WIDTH):
+    def generate(self, model_len=None, model_width=None):
         """Generates a CNN.
 
         Args:
@@ -74,6 +74,10 @@ class CnnGenerator(NetworkGenerator):
         Returns:
             An instance of the class Graph. Represents the neural architecture graph of the generated model.
         """
+        if model_len is None:
+            model_len = Constant.MODEL_LEN
+        if model_width is None:
+            model_width = Constant.MODEL_WIDTH
         pooling_len = int(model_len / 4)
         graph = Graph(self.input_shape, False)
         temp_input_channel = self.input_shape[-1]
@@ -117,7 +121,7 @@ class MlpGenerator(NetworkGenerator):
         if len(self.input_shape) > 1:
             raise ValueError('The input dimension is too high.')
 
-    def generate(self, model_len=Constant.MLP_MODEL_LEN, model_width=Constant.MLP_MODEL_WIDTH):
+    def generate(self, model_len=None, model_width=None):
         """Generates a Multi-Layer Perceptron.
 
         Args:
@@ -129,6 +133,10 @@ class MlpGenerator(NetworkGenerator):
         Returns:
             An instance of the class Graph. Represents the neural architecture graph of the generated model.
         """
+        if model_len is None:
+            model_len = Constant.MODEL_LEN
+        if model_width is None:
+            model_width = Constant.MODEL_WIDTH
         if type(model_width) is list and not len(model_width) == model_len:
             raise ValueError('The length of \'model_width\' does not match \'model_len\'')
         elif type(model_width) is int:
@@ -165,7 +173,9 @@ class ResNetGenerator(NetworkGenerator):
         self.pooling = get_pooling_class(self.n_dim)
         self.batch_norm = get_batch_norm_class(self.n_dim)
 
-    def generate(self, model_len=Constant.MODEL_LEN, model_width=Constant.MODEL_WIDTH):
+    def generate(self, model_len=None, model_width=None):
+        if model_width is None:
+            model_width = Constant.MODEL_WIDTH
         graph = Graph(self.input_shape, False)
         temp_input_channel = self.input_shape[-1]
         output_node_id = 0

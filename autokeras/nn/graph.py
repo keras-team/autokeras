@@ -256,7 +256,7 @@ class Graph:
         """Given two node IDs, return all the pooling layers between them."""
         layer_list = []
         node_list = [start_node_id]
-        self._depth_first_search(end_node_id, layer_list, node_list)
+        assert self._depth_first_search(end_node_id, layer_list, node_list)
         ret = []
         for layer_id in layer_list:
             layer = self.layer_list[layer_id]
@@ -271,6 +271,7 @@ class Graph:
 
         A recursive function to search all the layers and nodes between the node in the node_list
             and the node with target_id."""
+        assert len(node_list) <= self.n_nodes
         u = node_list[-1]
         if u == target_id:
             return True
@@ -632,10 +633,13 @@ class Graph:
         for i in range(self.n_nodes):
             if distance[i] > distance[temp_id]:
                 temp_id = i
-        ret = [temp_id]
-        while pre_node[temp_id] != temp_id:
-            temp_id = pre_node[temp_id]
+        ret = []
+        for i in range(self.n_nodes + 5):
             ret.append(temp_id)
+            if pre_node[temp_id] == temp_id:
+                break
+            temp_id = pre_node[temp_id]
+        assert temp_id == pre_node[temp_id]
         ret.reverse()
         return ret
 
