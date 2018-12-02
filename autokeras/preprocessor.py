@@ -174,12 +174,14 @@ class ImageDataTransformer(DataTransformer):
         augment: whether to perform augmentation on data.
     """
 
-    def __init__(self, data, augment=Constant.DATA_AUGMENTATION):
+    def __init__(self, data, augment=None):
         super().__init__()
         self.max_val = data.max()
         data = data / self.max_val
         self.mean = np.mean(data, axis=(0, 1, 2), keepdims=True).flatten()
         self.std = np.std(data, axis=(0, 1, 2), keepdims=True).flatten()
+        if augment is None:
+            self.augment = Constant.DATA_AUGMENTATION
         self.augment = augment
 
     def transform_train(self, data, targets=None, batch_size=None):
