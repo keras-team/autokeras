@@ -306,6 +306,21 @@ class StubPooling3d(StubPooling):
         return torch.nn.MaxPool3d(self.kernel_size, stride=self.stride)
 
 
+class StubAvgPooling1d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.AvgPool1d(self.kernel_size, stride=self.stride)
+
+
+class StubAvgPooling2d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.AvgPool2d(self.kernel_size, stride=self.stride)
+
+
+class StubAvgPooling3d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.AvgPool3d(self.kernel_size, stride=self.stride)
+
+
 class StubGlobalPooling(StubLayer):
     def __init__(self, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
@@ -486,6 +501,11 @@ def get_dropout_class(n_dim):
 def get_global_avg_pooling_class(n_dim):
     global_avg_pooling_class_list = [StubGlobalPooling1d, StubGlobalPooling2d, StubGlobalPooling3d]
     return global_avg_pooling_class_list[n_dim - 1]
+
+
+def get_avg_pooling_class(n_dim):
+    class_list = [StubAvgPooling1d, StubAvgPooling2d, StubAvgPooling3d]
+    return class_list[n_dim - 1]
 
 
 def get_pooling_class(n_dim):
