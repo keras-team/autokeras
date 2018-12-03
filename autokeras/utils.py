@@ -7,14 +7,14 @@ import zipfile
 
 import warnings
 import imageio
-import numpy
+import numpy as np
 import requests
-from skimage.transform import resize
 import torch
 import subprocess
 import string
 import random
 from autokeras.constant import Constant
+from scipy.ndimage import zoom
 
 
 class NoImprovementError(Exception):
@@ -47,7 +47,7 @@ def pickle_to_file(obj, path):
     """Save the pickle file to the specified path."""
     pickle.dump(obj, open(path, 'wb'))
 
-
+# TODO cannot detect nvidia-smi in Windows normally. We need a fall back for windows
 def get_device():
     """ If CUDA is available, use CUDA device, else use CPU device.
 
@@ -144,9 +144,9 @@ def verbose_print(new_father_id, new_graph):
     print('+' + '-' * len(line) + '+')
     for i in range(len(new_graph.operation_history)):
         if i == len(new_graph.operation_history) // 2:
-            r = [new_father_id, new_graph.operation_history[i]]
+            r = [new_father_id, ' '.join(str(item) for item in new_graph.operation_history[i])]
         else:
-            r = [' ', new_graph.operation_history[i]]
+            r = [' ', ' '.join(str(item) for item in new_graph.operation_history[i])]
         line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
         print('|' + line + '|')
     print('+' + '-' * len(line) + '+')
@@ -194,61 +194,57 @@ def read_image(img_path):
 
 
 def compute_image_resize_params(data):
-    """Compute median height and width of all images in data.
+    """Compute median dimension of all images in data.
 
-    These values are used to resize the images at later point. Number of channels do not change from the original
-    images. Currently, only 2-D images are supported.
-
-    Args:
-        data: 2-D Image data with shape N x H x W x C.
-
-    Returns:
-        median height: Median height of all images in the data.
-        median width: Median width of all images in the data.
-    """
-    if len(data.shape) == 1 and len(data[0].shape) != 3:
-        return None, None
-
-    median_height, median_width = numpy.median(numpy.array(list(map(lambda x: x.shape, data))), axis=0)[:2]
-
-    if median_height * median_width > Constant.MAX_IMAGE_SIZE:
-        reduction_factor = numpy.sqrt(median_height * median_width / Constant.MAX_IMAGE_SIZE)
-        median_height = median_height / reduction_factor
-        median_width = median_width / reduction_factor
-
-    return int(median_height), int(median_width)
-
-
-def resize_image_data(data, height, width):
-    """Resize images to provided height and width.
-
-    Resize all images in data to size h x w x c, where h is the height, w is the width and c is the number of channels.
-    The number of channels c does not change from data. The function supports only 2-D image data.
+    It used to resize the images later. Number of channels do not change from the original data.
 
     Args:
-        data: 2-D Image data with shape N x H x W x C.
-        height: Image resize height.
-        width: Image resize width.
+        data: 1-D, 2-D or 3-D images. The Images are expected to have channel last configuration.
 
     Returns:
-        data: Resize data.
+        median shape.
     """
-    if data is None:
+    if data is None or len(data.shape) == 0:
+        return []
+
+    if len(data.shape) == len(data[0].shape) + 1 and np.prod(data[0].shape[:-1]) <= Constant.MAX_IMAGE_SIZE:
+        return data[0].shape
+
+    data_shapes = []
+    for x in data:
+        data_shapes.append(x.shape)
+
+    median_shape = np.median(np.array(data_shapes), axis=0)
+    median_size = np.prod(median_shape[:-1])
+
+    if median_size > Constant.MAX_IMAGE_SIZE:
+        reduction_factor = np.power(Constant.MAX_IMAGE_SIZE / median_size, 1 / (len(median_shape) - 1))
+        median_shape[:-1] = median_shape[:-1] * reduction_factor
+
+    return median_shape.astype(int)
+
+
+def resize_image_data(data, resize_shape):
+    """Resize images to given dimension.
+
+    Args:
+        data: 1-D, 2-D or 3-D images. The Images are expected to have channel last configuration.
+        resize_shape: Image resize dimension.
+
+    Returns:
+        data: Reshaped data.
+    """
+    if data is None or len(resize_shape) == 0:
         return data
 
-    if len(data.shape) == 4 and data[0].shape[0] == height and data[0].shape[1] == width:
+    if len(data.shape) > 1 and np.array_equal(data[0].shape, resize_shape):
         return data
 
     output_data = []
     for im in data:
-        if len(im.shape) != 3:
-            return data
-        output_data.append(resize(image=im,
-                                  output_shape=(height, width, im.shape[-1]),
-                                  mode='edge',
-                                  preserve_range=True))
+        output_data.append(zoom(input=im, zoom=np.divide(resize_shape, im.shape)))
 
-    return numpy.array(output_data)
+    return np.array(output_data)
 
 
 def get_system():

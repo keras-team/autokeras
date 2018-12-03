@@ -14,7 +14,7 @@ class Constant:
     N_NEIGHBOURS = 8
     MAX_MODEL_SIZE = (1 << 25)
     MAX_LAYER_WIDTH = 4096
-    MAX_LAYERS = 100
+    MAX_LAYERS = 200
 
     # Model Defaults
 

@@ -6,7 +6,7 @@ from functools import reduce
 import numpy as np
 import torch
 from torchvision import utils as vutils
-from tqdm.autonotebook import tqdm
+from tqdm import tqdm
 from autokeras.constant import Constant
 from autokeras.utils import get_device
 
@@ -34,8 +34,12 @@ class ModelTrainerBase(abc.ABC):
                  train_data,
                  test_data=None,
                  metric=None,
-                 verbose=False):
-        self.device = get_device()
+                 verbose=False,
+                 device=None):
+        if device is not None:
+            self.device = device
+        else:
+            self.device = get_device()
         self.metric = metric
         self.verbose = verbose
         self.loss_function = loss_function
@@ -44,8 +48,8 @@ class ModelTrainerBase(abc.ABC):
 
     @abc.abstractmethod
     def train_model(self,
-                    max_iter_num=Constant.MAX_ITER_NUM,
-                    max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM):
+                    max_iter_num=None,
+                    max_no_improvement_num=None):
         """Train the model.
 
         Args:
@@ -77,6 +81,7 @@ class ModelTrainer(ModelTrainerBase):
         self.model.to(self.device)
         self.optimizer = None
         self.early_stop = None
+        self.scheduler = None
         self.current_epoch = 0
         self.current_metric_value = 0
         self.temp_model_path = os.path.join(path, 'temp_model')
@@ -108,9 +113,16 @@ class ModelTrainer(ModelTrainerBase):
 
         test_metric_value_list = []
         test_loss_list = []
-        self.optimizer = torch.optim.Adam(self.model.parameters())
+        self.optimizer = torch.optim.SGD(
+            self.model.parameters(),
+            0.025,
+            momentum=0.9,
+            weight_decay=3e-4)
+        # self.optimizer = torch.optim.Adam(self.model.parameters())
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, max_iter_num)
 
         for epoch in range(max_iter_num):
+            self.scheduler.step()
             self._train()
             test_loss, metric_value = self._test()
             self.current_metric_value = metric_value
@@ -138,16 +150,7 @@ class ModelTrainer(ModelTrainerBase):
         self.current_epoch += 1
 
         if self.verbose:
-            progress_bar = tqdm(total=len(loader),
-                                desc='Epoch-'
-                                     + str(self.current_epoch)
-                                     + ', Current Metric - '
-                                     + str(self.current_metric_value),
-                                file=sys.stdout,
-                                leave=False,
-                                ncols=100,
-                                position=0,
-                                unit=' batch')
+            progress_bar = self.init_progress_bar(len(loader))
         else:
             progress_bar = None
 
@@ -171,6 +174,12 @@ class ModelTrainer(ModelTrainerBase):
         all_targets = []
         all_predicted = []
         loader = self.test_loader
+
+        if self.verbose:
+            progress_bar = self.init_progress_bar(len(loader))
+        else:
+            progress_bar = None
+
         with torch.no_grad():
             for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
@@ -180,6 +189,13 @@ class ModelTrainer(ModelTrainerBase):
 
                 all_predicted.append(outputs.cpu().numpy())
                 all_targets.append(targets.cpu().numpy())
+                if self.verbose:
+                    if batch_idx % 10 == 0:
+                        progress_bar.update(10)
+
+        if self.verbose:
+            progress_bar.close()
+
         all_predicted = reduce(lambda x, y: np.concatenate((x, y)), all_predicted)
         all_targets = reduce(lambda x, y: np.concatenate((x, y)), all_targets)
         return test_loss, self.metric.compute(all_predicted, all_targets)
@@ -189,6 +205,18 @@ class ModelTrainer(ModelTrainerBase):
 
     def _load_model(self):
         self.model.load_state_dict(torch.load(self.temp_model_path))
+
+    def init_progress_bar(self, loader_len):
+        return tqdm(total=loader_len,
+                    desc='Epoch-'
+                         + str(self.current_epoch)
+                         + ', Current Metric - '
+                         + str(self.current_metric_value),
+                    file=sys.stdout,
+                    leave=False,
+                    ncols=100,
+                    position=0,
+                    unit=' batch')
 
 
 class GANModelTrainer(ModelTrainerBase):
@@ -202,13 +230,15 @@ class GANModelTrainer(ModelTrainerBase):
         optimizer_d: Optimizer for discriminator.
         optimizer_g: Optimizer for generator.
     """
+
     def __init__(self,
                  g_model,
                  d_model,
                  train_data,
                  loss_function,
                  verbose,
-                 gen_training_result=None):
+                 gen_training_result=None,
+                 device=None):
         """Initialize the GANModelTrainer.
 
         Args:
@@ -219,7 +249,7 @@ class GANModelTrainer(ModelTrainerBase):
             verbose: Whether to output the system output.
             gen_training_result: Whether to generate the intermediate result while training.
         """
-        super().__init__(loss_function, train_data, verbose=verbose)
+        super().__init__(loss_function, train_data, verbose=verbose, device=device)
         self.d_model = d_model
         self.g_model = g_model
         self.d_model.to(self.device)
@@ -235,8 +265,10 @@ class GANModelTrainer(ModelTrainerBase):
         self.optimizer_g = None
 
     def train_model(self,
-                    max_iter_num=Constant.MAX_ITER_NUM,
-                    max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM):
+                    max_iter_num=None,
+                    max_no_improvement_num=None):
+        if max_iter_num is None:
+            max_iter_num = Constant.MAX_ITER_NUM
         self.optimizer_d = torch.optim.Adam(self.d_model.parameters())
         self.optimizer_g = torch.optim.Adam(self.g_model.parameters())
         if self.verbose:
@@ -325,14 +357,16 @@ class EarlyStop:
         _done: Whether condition met.
         _min_loss_dec: A threshold for loss improvement.
     """
-    def __init__(self, max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=Constant.MIN_LOSS_DEC):
+
+    def __init__(self, max_no_improvement_num=None, min_loss_dec=None):
         super().__init__()
         self.training_losses = []
         self.minimum_loss = None
         self.no_improvement_count = 0
-        self._max_no_improvement_num = max_no_improvement_num
+        self._max_no_improvement_num = max_no_improvement_num if max_no_improvement_num is not None \
+            else Constant.MAX_NO_IMPROVEMENT_NUM
         self._done = False
-        self._min_loss_dec = min_loss_dec
+        self._min_loss_dec = min_loss_dec if min_loss_dec is not None else Constant.MIN_LOSS_DEC
 
     def on_train_begin(self):
         """Initiate the early stop condition.

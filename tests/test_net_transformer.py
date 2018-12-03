@@ -29,27 +29,3 @@ def test_skip():
 def test_transform():
     models = transform(get_pooling_model())
     assert len(models) == Constant.N_NEIGHBOURS
-
-
-def test_legal_graph():
-    graph = get_pooling_model()
-    graph.to_add_skip_model(1, 4)
-    assert legal_graph(graph)
-    graph.to_add_skip_model(1, 4)
-    assert not legal_graph(graph)
-
-
-def test_legal_graph2():
-    graph = get_pooling_model()
-    graph.to_concat_skip_model(1, 4)
-    assert legal_graph(graph)
-    graph.to_concat_skip_model(1, 4)
-    assert not legal_graph(graph)
-
-
-def test_default_transform():
-    graphs = default_transform(CnnGenerator(10, (32, 32, 3)).generate())
-    model = graphs[0].produce_model()
-    model(torch.Tensor(get_conv_data()))
-    assert len(graphs) == 1
-    assert len(graphs[0].layer_list) == 43
