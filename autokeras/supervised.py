@@ -1,11 +1,6 @@
-import torch
-
-from functools import reduce
-
 import os
 from abc import ABC, abstractmethod
 from sklearn.model_selection import train_test_split
-import numpy as np
 
 from autokeras.constant import Constant
 from autokeras.net_module import CnnModule
