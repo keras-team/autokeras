@@ -17,7 +17,7 @@ class DCGAN(Unsupervised):
     """
 
     def __init__(self, nz=100, ngf=32, ndf=32, nc=3, verbose=False, gen_training_result=None,
-                 augment=Constant.DATA_AUGMENTATION):
+                 augment=None):
         """
        Args:
             nz: size of the latent z vector
@@ -35,7 +35,7 @@ class DCGAN(Unsupervised):
         self.nc = nc
         self.verbose = verbose
         self.gen_training_result = gen_training_result
-        self.augment = augment
+        self.augment = augment if augment is not None else Constant.DATA_AUGMENTATION
         self.data_transformer = None
         self.net_d = Discriminator(self.nc, self.ndf)
         self.net_g = Generator(self.nc, self.nz, self.ngf)

@@ -35,7 +35,6 @@ def test_fit_predict(_, _1):
     Constant.SEARCH_MAX_ITER = 1
     Constant.T_MIN = 0.8
     Constant.DATA_AUGMENTATION = False
-    clean_dir(TEST_TEMP_DIR)
 
     clf = ImageClassifier(path=TEST_TEMP_DIR, verbose=True)
     train_x = np.random.rand(100, 25, 25, 1)
@@ -91,9 +90,9 @@ def test_timeout(_):
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
-@patch('autokeras.bayesian.transform', side_effect=simple_transform)
+# @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
-def test_final_fit(_, _1, _2):
+def test_final_fit(_, _2):
     Constant.LIMIT_MEMORY = True
     clean_dir(TEST_TEMP_DIR)
     clf = ImageClassifier(path=TEST_TEMP_DIR, verbose=False)

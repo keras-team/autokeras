@@ -1,21 +1,27 @@
 from autokeras.bayesian import *
+from autokeras.nn.layers import StubConv
 from tests.common import get_add_skip_model, get_concat_skip_model, get_conv_dense_model
+
+
+def test_layer_distance():
+    layer1 = StubConv(5, 5, 3, 2)
+    layer2 = StubConv(5, 1, 1, 1)
+    assert layer_distance(layer1, layer2) == 5.9 / 9
 
 
 def test_edit_distance():
     descriptor1 = get_add_skip_model().extract_descriptor()
     descriptor2 = get_concat_skip_model().extract_descriptor()
-    assert edit_distance(descriptor1, descriptor2) == 2.0
+    assert edit_distance(descriptor1, descriptor2) == 12.0
 
 
 def test_edit_distance2():
     descriptor1 = get_conv_dense_model().extract_descriptor()
     graph = get_conv_dense_model()
-    graph.to_conv_deeper_model(1, 3)
     graph.to_wider_model(4, 6)
-    graph.to_wider_model(14, 3)
+    graph.to_wider_model(9, 3)
     descriptor2 = graph.extract_descriptor()
-    assert edit_distance(descriptor1, descriptor2) == 1.5
+    assert edit_distance(descriptor1, descriptor2) == 2.0 / 9
 
 
 def test_bourgain_embedding():
