@@ -16,7 +16,7 @@ def test_fit__evalute_predict_classification():
             for ncat in feat_exist_ind:
                 for nmvc in feat_exist_ind:
                     datainfo = {'loaded_feat_types': [ntime, nnum, ncat, nmvc]}
-                    num_feat = ntime+nnum+ncat+nmvc
+                    num_feat = ntime + nnum + ncat + nmvc
                     x_num = np.random.random([nsample, nnum])
                     x_time = np.random.random([nsample, ntime])
                     x_cat = np.random.randint(0, 40, [nsample, ncat])

@@ -71,7 +71,7 @@ class TabularSupervised(Supervised):
         self.time_limit = None
         self.datainfo = None
 
-    def fit(self, x, y, x_test=None, y_test=None, time_limit=None, datainfo=None):
+    def fit(self, x, y, time_limit=None, datainfo=None):
         """
         This function should train the model parameters.
 
@@ -109,9 +109,9 @@ class TabularSupervised(Supervised):
 
         elif self.objective == 'regression':
             self.lgbm = LGBMRegressor(silent=False,
-                                       verbose=-1,
-                                       n_jobs=1,
-                                       objective=self.objective)
+                                      verbose=-1,
+                                      n_jobs=1,
+                                      objective=self.objective)
 
         self.tabular_preprocessor = TabularPreprocessor()
         x = self.tabular_preprocessor.fit(x, y, self.time_limit, self.datainfo)
@@ -251,9 +251,11 @@ class TabularRegressor(TabularSupervised):
 
     It is used for tabular data regression with lightgbm regressor.
     """
+
     def __init__(self, path=None):
         super().__init__(path)
         self.objective = 'regression'
+
 
 class TabularClassifier(TabularSupervised):
     """TabularClassifier class.
