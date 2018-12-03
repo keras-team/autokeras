@@ -30,6 +30,8 @@ class NetworkModule:
         self.searcher_args = searcher_args if searcher_args is not None else {}
         self.searcher = None
         self.path = path if path is not None else rand_temp_folder_generator()
+        if verbose:
+            print('Saving Directory:', self.path)
         self.verbose = verbose
         self.loss = loss
         self.metric = metric
