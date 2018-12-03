@@ -6,6 +6,8 @@
 <a href="https://coveralls.io/github/jhfjhfj1/autokeras?branch=master"><img alt="Coverage Status" src="https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg?branch=master" style="width: 99px"/></a>
 <a href="https://badge.fury.io/py/autokeras"><img src="https://badge.fury.io/py/autokeras.svg" alt="PyPI version" style="width: 125px"></a>
 <a href="https://autokeras.com"><img src="https://readthedocs.org/projects/pip/badge/?version=latest&style=flat" alt="AutoKeras Official Website" style="width: 86px"></a>
+<a href="#backers"><img src="https://opencollective.com/autokeras/backers/badge.svg" alt="Backers on Open Collective"></a>
+<a href="#sponsors"><img src="https://opencollective.com/autokeras/sponsors/badge.svg" alt="Sponsors on Open Collective"></a>
 </p>
 </div>
 
@@ -82,3 +84,33 @@ appreciated.
 ## Acknowledgements
 
 The authors gratefully acknowledge the D3M program of the Defense Advanced Research Projects Agency (DARPA) administered through AFRL contract FA8750-17-2-0116; the Texas A&M College of Engineering, and Texas A&M. 
+
+## Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+<a href="https://github.com/jhfjhfj1/autokeras/graphs/contributors"><img src="https://opencollective.com/autokeras/contributors.svg?width=890&button=false" /></a>
+
+
+## Backers
+
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/autokeras#backer)]
+
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backers.svg?width=890"></a>
+
+
+## Sponsors
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/autokeras#sponsor)]
+
+<a href="https://opencollective.com/autokeras/sponsor/0/website" target="_blank"><img src="https://opencollective.com/autokeras/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/autokeras/sponsor/1/website" target="_blank"><img src="https://opencollective.com/autokeras/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/autokeras/sponsor/2/website" target="_blank"><img src="https://opencollective.com/autokeras/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/autokeras/sponsor/3/website" target="_blank"><img src="https://opencollective.com/autokeras/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/autokeras/sponsor/4/website" target="_blank"><img src="https://opencollective.com/autokeras/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/autokeras/sponsor/5/website" target="_blank"><img src="https://opencollective.com/autokeras/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/autokeras/sponsor/6/website" target="_blank"><img src="https://opencollective.com/autokeras/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/autokeras/sponsor/7/website" target="_blank"><img src="https://opencollective.com/autokeras/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/autokeras/sponsor/8/website" target="_blank"><img src="https://opencollective.com/autokeras/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/autokeras/sponsor/9/website" target="_blank"><img src="https://opencollective.com/autokeras/sponsor/9/avatar.svg"></a>
+
+
