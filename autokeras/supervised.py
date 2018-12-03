@@ -28,7 +28,7 @@ class Supervised(ABC):
         self.verbose = verbose
 
     @abstractmethod
-    def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
+    def fit(self, x, y, time_limit=None):
         """Find the best neural architecture and train it.
 
         Based on the given dataset, the function will find the best neural architecture for it.
@@ -40,8 +40,6 @@ class Supervised(ABC):
                validation data.
             y: A numpy.ndarray instance containing the label of the training data. or the label of the training data
                combined with the validation label.
-            x_test: A numpy.ndarray instance containing the testing data
-            y_test: A numpy.ndarray instance containing the label of the testing data.
             time_limit: The time limit for the search in seconds.
         """
 
@@ -109,21 +107,16 @@ class DeepSupervised(Supervised):
             self.verbose = verbose
             self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
 
-    def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
+    def fit(self, x, y, time_limit=None):
         validate_xy(x, y)
         y = self.transform_y(y)
-        if x_test is None or y_test is None:
-            # Divide training data into training and testing data.
-            validation_set_size = int(len(y) * Constant.VALIDATION_SET_SIZE)
-            validation_set_size = min(validation_set_size, 500)
-            validation_set_size = max(validation_set_size, 1)
-            x_train, x_test, y_train, y_test = train_test_split(x, y,
-                                                                test_size=validation_set_size,
-                                                                random_state=42)
-        else:
-            x_train = x
-            y_train = y
-
+        # Divide training data into training and testing data.
+        validation_set_size = int(len(y) * Constant.VALIDATION_SET_SIZE)
+        validation_set_size = min(validation_set_size, 500)
+        validation_set_size = max(validation_set_size, 1)
+        x_train, x_test, y_train, y_test = train_test_split(x, y,
+                                                            test_size=validation_set_size,
+                                                            random_state=42)
         self.init_transformer(x)
         # Transform x_train
 
