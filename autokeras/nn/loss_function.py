@@ -11,4 +11,4 @@ def regression_loss(prediction, target):
 
 
 def binary_classification_loss(prediction, label):
-    return torch.nn.BCELoss()(prediction, label)
+    return torch.nn.BCEWithLogitsLoss()(prediction.double(), label)
