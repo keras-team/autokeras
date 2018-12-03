@@ -1,10 +1,15 @@
+from functools import reduce
+
+import torch
+import numpy as np
+
 import os
 import time
 
 from autokeras.constant import Constant
 from autokeras.search import Searcher, train
 
-from autokeras.utils import pickle_to_file
+from autokeras.utils import pickle_to_file, rand_temp_folder_generator
 from autokeras.nn.generator import CnnGenerator, MlpGenerator, ResNetGenerator, DenseNetGenerator
 
 
@@ -21,10 +26,10 @@ class NetworkModule:
         generators: A list of instances of the NetworkGenerator class or its subclasses.
     """
 
-    def __init__(self, loss, metric, searcher_args, path, verbose=False):
-        self.searcher_args = searcher_args
+    def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False):
+        self.searcher_args = searcher_args if searcher_args is not None else {}
         self.searcher = None
-        self.path = path
+        self.path = path if path is not None else rand_temp_folder_generator()
         self.verbose = verbose
         self.loss = loss
         self.metric = metric
@@ -101,11 +106,22 @@ class NetworkModule:
     def best_model(self):
         return self.searcher.load_best_model()
 
+    def predict(self, test_loader):
+        model = self.best_model.produce_model()
+        model.eval()
+
+        outputs = []
+        with torch.no_grad():
+            for index, inputs in enumerate(test_loader):
+                outputs.append(model(inputs).numpy())
+        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
+        return output
+
 
 class CnnModule(NetworkModule):
     """ Class to create a CNN module."""
 
-    def __init__(self, loss, metric, searcher_args, path, verbose=False):
+    def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False):
         super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose)
         self.generators.append(CnnGenerator)
         self.generators.append(ResNetGenerator)
@@ -115,6 +131,6 @@ class CnnModule(NetworkModule):
 class MlpModule(NetworkModule):
     """ Class to create an MLP module."""
 
-    def __init__(self, loss, metric, searcher_args, path, verbose=False):
+    def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False):
         super(MlpModule, self).__init__(loss, metric, searcher_args, path, verbose)
         self.generators.extend([MlpGenerator] * 2)
