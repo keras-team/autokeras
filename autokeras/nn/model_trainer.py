@@ -34,8 +34,12 @@ class ModelTrainerBase(abc.ABC):
                  train_data,
                  test_data=None,
                  metric=None,
-                 verbose=False):
-        self.device = get_device()
+                 verbose=False,
+                 device=None):
+        if device is not None:
+            self.device = device
+        else:
+            self.device = get_device()
         self.metric = metric
         self.verbose = verbose
         self.loss_function = loss_function
@@ -233,7 +237,8 @@ class GANModelTrainer(ModelTrainerBase):
                  train_data,
                  loss_function,
                  verbose,
-                 gen_training_result=None):
+                 gen_training_result=None,
+                 device=None):
         """Initialize the GANModelTrainer.
 
         Args:
@@ -244,7 +249,7 @@ class GANModelTrainer(ModelTrainerBase):
             verbose: Whether to output the system output.
             gen_training_result: Whether to generate the intermediate result while training.
         """
-        super().__init__(loss_function, train_data, verbose=verbose)
+        super().__init__(loss_function, train_data, verbose=verbose, device=device)
         self.d_model = d_model
         self.g_model = g_model
         self.d_model.to(self.device)
