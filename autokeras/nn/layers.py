@@ -152,13 +152,13 @@ class StubDense(StubWeightBiasLayer):
 
 
 class StubConv(StubWeightBiasLayer):
-    def __init__(self, input_channel, filters, kernel_size, stride=1, output_node=None, input_node=None):
+    def __init__(self, input_channel, filters, kernel_size, stride=1, padding=None, output_node=None, input_node=None):
         super().__init__(input_node, output_node)
         self.input_channel = input_channel
         self.filters = filters
         self.kernel_size = kernel_size
         self.stride = stride
-        self.padding = int(self.kernel_size / 2)
+        self.padding = padding if padding is not None else int(self.kernel_size / 2)
 
     @property
     def output_shape(self):
@@ -276,13 +276,14 @@ class StubPooling(StubLayer):
         super().__init__(input_node, output_node)
         self.kernel_size = kernel_size if kernel_size is not None else Constant.POOLING_KERNEL_SIZE
         self.stride = stride if stride is not None else self.kernel_size
+        # TODO
         self.padding = padding
 
     @property
     def output_shape(self):
         ret = tuple()
         for dim in self.input.shape[:-1]:
-            ret = ret + (max(int(dim / self.kernel_size), 1),)
+            ret = ret + (max(int((dim + 2 * self.padding) / self.kernel_size), 1),)
         ret = ret + (self.input.shape[-1],)
         return ret
 

@@ -241,12 +241,16 @@ class DenseNetGenerator(NetworkGenerator):
         self.avg_pooling = get_avg_pooling_class(self.n_dim)
         self.batch_norm = get_batch_norm_class(self.n_dim)
 
-    def generate(self, model_len, model_width=Constant.MODEL_WIDTH):
+    def generate(self, model_len=None, model_width=None):
+        if model_len is None:
+            model_len = Constant.MODEL_LEN
+        if model_width is None:
+            model_width = Constant.MODEL_WIDTH
         graph = Graph(self.input_shape, False)
         temp_input_channel = self.input_shape[-1]
         # First convolution
         output_node_id = 0
-        output_node_id = graph.add_layer(self.conv(temp_input_channel, self.num_init_features, kernel_size=7),
+        output_node_id = graph.add_layer(self.conv(temp_input_channel, model_width, kernel_size=7),
                                          output_node_id)
         output_node_id = graph.add_layer(self.batch_norm(num_features=self.num_init_features), output_node_id)
         output_node_id = graph.add_layer(StubReLU(), output_node_id)
@@ -287,8 +291,7 @@ class DenseNetGenerator(NetworkGenerator):
         out = graph.add_layer(self.conv(num_input_features, bn_size * growth_rate, kernel_size=1, stride=1), out)
         out = graph.add_layer(self.batch_norm(bn_size * growth_rate), out)
         out = graph.add_layer(StubReLU(), out)
-        # TODO: padding 1
-        out = graph.add_layer(self.conv(bn_size * growth_rate, growth_rate, kernel_size=3, stride=1), out)
+        out = graph.add_layer(self.conv(bn_size * growth_rate, growth_rate, kernel_size=3, stride=1, padding=1), out)
         out = graph.add_layer(self.dropout(rate=drop_rate), out)
         out = graph.add_layer(StubConcatenate(), (input_node_id, out))
         return out

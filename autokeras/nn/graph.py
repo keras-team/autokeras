@@ -262,7 +262,7 @@ class Graph:
             layer = self.layer_list[layer_id]
             if is_layer(layer, 'Pooling'):
                 ret.append(layer)
-            elif is_layer(layer, 'Conv') and layer.stride != 1:
+            elif is_layer(layer, 'Conv') and (layer.stride != 1 or layer.padding != int(layer.kernel_size / 2)):
                 ret.append(layer)
         return ret
 
@@ -504,7 +504,7 @@ class Graph:
             new_layer = deepcopy(layer)
             if is_layer(new_layer, 'Conv'):
                 filters = self.node_list[start_node_id].shape[-1]
-                new_layer = get_conv_class(self.n_dim)(filters, filters, 1, layer.stride)
+                new_layer = get_conv_class(self.n_dim)(filters, filters, 1, layer.stride, padding=layer.padding)
                 if self.weighted:
                     init_conv_weight(new_layer)
             else:
