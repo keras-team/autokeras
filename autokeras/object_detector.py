@@ -297,11 +297,12 @@ class ObjectDetector(Pretrained):
                     currentAxis.add_patch(plt.Rectangle(*coords, fill=False, edgecolor=color, linewidth=2))
                     currentAxis.text(pt[0], pt[1], display_txt, bbox={'facecolor':color, 'alpha':0.5})
                     j+=1
-            save_name = img_path.split('.')
-            save_name = '.'.join(save_name[:-1]) + "_prediction." + save_name[-1]
             plt.axis('off')
             plt.tight_layout()
-            plt.savefig(save_name, bbox_inches='tight', pad_inches=0)
+            save_name = img_path.split('/')[-1]
+            save_name = save_name.split('.')
+            save_name = '.'.join(save_name[:-1]) + "_prediction." + save_name[-1]
+            plt.savefig(os.path.join(output_file_path, save_name), bbox_inches='tight', pad_inches=0)
             plt.clf()
 
         return results
