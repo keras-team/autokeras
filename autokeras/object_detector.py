@@ -250,7 +250,7 @@ class ObjectDetector(Pretrained):
 
         dataset_mean = (104, 117, 123)
 
-        image = cv2.imread(path, cv2.IMREAD_COLOR)
+        image = cv2.imread(img_path, cv2.IMREAD_COLOR)
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         x = base_transform(rgb_image, 300, dataset_mean)
         x = x.astype(np.float32)
@@ -268,7 +268,7 @@ class ObjectDetector(Pretrained):
         for i in range(detections.size(1)):
             j = 0
             while detections[0,i,j,0] >= 0.6:
-                score = detections[0,i,j,0]
+                score = detections[0,i,j,0].item()
                 label_name = labelmap[i-1]
                 pt = (detections[0,i,j,1:]*scale).cpu().numpy()
                 result = ((pt[0], pt[1]), (pt[2]-pt[0]+1, pt[3]-pt[1]+1), label_name, score)
@@ -297,11 +297,12 @@ class ObjectDetector(Pretrained):
                     currentAxis.add_patch(plt.Rectangle(*coords, fill=False, edgecolor=color, linewidth=2))
                     currentAxis.text(pt[0], pt[1], display_txt, bbox={'facecolor':color, 'alpha':0.5})
                     j+=1
-            save_name = path.split('.')
-            save_name = '.'.join(save_name[:-1]) + "_prediction." + save_name[-1]
             plt.axis('off')
             plt.tight_layout()
-            plt.savefig(save_name, bbox_inches='tight', pad_inches=0)
+            save_name = img_path.split('/')[-1]
+            save_name = save_name.split('.')
+            save_name = '.'.join(save_name[:-1]) + "_prediction." + save_name[-1]
+            plt.savefig(os.path.join(output_file_path, save_name), bbox_inches='tight', pad_inches=0)
             plt.clf()
 
         return results
