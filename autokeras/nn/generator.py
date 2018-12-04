@@ -3,7 +3,8 @@ from abc import abstractmethod
 from autokeras.constant import Constant
 from autokeras.nn.graph import Graph
 from autokeras.nn.layers import StubAdd, StubDense, StubReLU, get_conv_class, get_dropout_class, \
-    get_global_avg_pooling_class, get_pooling_class, get_batch_norm_class, StubDropout1d
+    get_global_avg_pooling_class, get_pooling_class, get_avg_pooling_class, get_batch_norm_class, StubDropout1d, \
+    StubConcatenate
 
 
 class NetworkGenerator:
@@ -170,7 +171,6 @@ class ResNetGenerator(NetworkGenerator):
         self.dropout = get_dropout_class(self.n_dim)
         self.global_avg_pooling = get_global_avg_pooling_class(self.n_dim)
         self.adaptive_avg_pooling = get_global_avg_pooling_class(self.n_dim)
-        self.pooling = get_pooling_class(self.n_dim)
         self.batch_norm = get_batch_norm_class(self.n_dim)
 
     def generate(self, model_len=None, model_width=None):
@@ -219,4 +219,86 @@ class ResNetGenerator(NetworkGenerator):
                                                      kernel_size=1,
                                                      stride=stride), residual_node_id)
         out = graph.add_layer(StubAdd(), (out, residual_node_id))
+        return out
+
+
+class DenseNetGenerator(NetworkGenerator):
+    def __init__(self, n_output_node, input_shape):
+        super().__init__(n_output_node, input_shape)
+        # DenseNet Constant
+        self.num_init_features = 64
+        self.growth_rate = 32
+        self.block_config = (6, 12, 24, 16)
+        self.bn_size = 4
+        self.drop_rate = 0
+        # Stub layers
+        self.n_dim = len(self.input_shape) - 1
+        self.conv = get_conv_class(self.n_dim)
+        self.dropout = get_dropout_class(self.n_dim)
+        self.global_avg_pooling = get_global_avg_pooling_class(self.n_dim)
+        self.adaptive_avg_pooling = get_global_avg_pooling_class(self.n_dim)
+        self.max_pooling = get_pooling_class(self.n_dim)
+        self.avg_pooling = get_avg_pooling_class(self.n_dim)
+        self.batch_norm = get_batch_norm_class(self.n_dim)
+
+    def generate(self, model_len=None, model_width=None):
+        if model_len is None:
+            model_len = Constant.MODEL_LEN
+        if model_width is None:
+            model_width = Constant.MODEL_WIDTH
+        graph = Graph(self.input_shape, False)
+        temp_input_channel = self.input_shape[-1]
+        # First convolution
+        output_node_id = 0
+        output_node_id = graph.add_layer(self.conv(temp_input_channel, model_width, kernel_size=7),
+                                         output_node_id)
+        output_node_id = graph.add_layer(self.batch_norm(num_features=self.num_init_features), output_node_id)
+        output_node_id = graph.add_layer(StubReLU(), output_node_id)
+        db_input_node_id = graph.add_layer(self.max_pooling(kernel_size=3, stride=2, padding=1), output_node_id)
+        # Each DensebLock
+        num_features = self.num_init_features
+        for i, num_layers in enumerate(self.block_config):
+            db_input_node_id = self._dense_block(num_layers=num_layers, num_input_features=num_features,
+                                                 bn_size=self.bn_size, growth_rate=self.growth_rate,
+                                                 drop_rate=self.drop_rate,
+                                                 graph=graph, input_node_id=db_input_node_id)
+            num_features = num_features + num_layers * self.growth_rate
+            if i != len(self.block_config) - 1:
+                db_input_node_id = self._transition(num_input_features=num_features,
+                                                    num_output_features=num_features // 2,
+                                                    graph=graph, input_node_id=db_input_node_id)
+                num_features = num_features // 2
+        # Final batch norm
+        out = graph.add_layer(self.batch_norm(num_features), db_input_node_id)
+
+        out = graph.add_layer(StubReLU(), out)
+        out = graph.add_layer(self.adaptive_avg_pooling(), out)
+        # Linear layer
+        graph.add_layer(StubDense(num_features, self.n_output_node), out)
+        return graph
+
+    def _dense_block(self, num_layers, num_input_features, bn_size, growth_rate, drop_rate, graph, input_node_id):
+        block_input_node = input_node_id
+        for i in range(num_layers):
+            block_input_node = self._dense_layer(num_input_features + i * growth_rate, growth_rate,
+                                                 bn_size, drop_rate,
+                                                 graph, block_input_node)
+        return block_input_node
+
+    def _dense_layer(self, num_input_features, growth_rate, bn_size, drop_rate, graph, input_node_id):
+        out = graph.add_layer(self.batch_norm(num_features=num_input_features), input_node_id)
+        out = graph.add_layer(StubReLU(), out)
+        out = graph.add_layer(self.conv(num_input_features, bn_size * growth_rate, kernel_size=1, stride=1), out)
+        out = graph.add_layer(self.batch_norm(bn_size * growth_rate), out)
+        out = graph.add_layer(StubReLU(), out)
+        out = graph.add_layer(self.conv(bn_size * growth_rate, growth_rate, kernel_size=3, stride=1, padding=1), out)
+        out = graph.add_layer(self.dropout(rate=drop_rate), out)
+        out = graph.add_layer(StubConcatenate(), (input_node_id, out))
+        return out
+
+    def _transition(self, num_input_features, num_output_features, graph, input_node_id):
+        out = graph.add_layer(self.batch_norm(num_features=num_input_features), input_node_id)
+        out = graph.add_layer(StubReLU(), out)
+        out = graph.add_layer(self.conv(num_input_features, num_output_features, kernel_size=1, stride=1), out)
+        out = graph.add_layer(self.avg_pooling(kernel_size=2, stride=2), out)
         return out

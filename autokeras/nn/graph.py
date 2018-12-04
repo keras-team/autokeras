@@ -262,8 +262,9 @@ class Graph:
             layer = self.layer_list[layer_id]
             if is_layer(layer, 'Pooling'):
                 ret.append(layer)
-            elif is_layer(layer, 'Conv') and layer.stride != 1:
+            elif is_layer(layer, 'Conv') and (layer.stride != 1 or layer.padding != int(layer.kernel_size / 2)):
                 ret.append(layer)
+
         return ret
 
     def _depth_first_search(self, target_id, layer_id_list, node_list):
@@ -504,7 +505,10 @@ class Graph:
             new_layer = deepcopy(layer)
             if is_layer(new_layer, 'Conv'):
                 filters = self.node_list[start_node_id].shape[-1]
-                new_layer = get_conv_class(self.n_dim)(filters, filters, 1, layer.stride)
+                kernel_size = layer.kernel_size if layer.padding != int(
+                    layer.kernel_size / 2) or layer.stride != 1 else 1
+                new_layer = get_conv_class(self.n_dim)(filters, filters, kernel_size, layer.stride,
+                                                       padding=layer.padding)
                 if self.weighted:
                     init_conv_weight(new_layer)
             else:

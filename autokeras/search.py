@@ -209,7 +209,7 @@ class Searcher:
             metric_value, loss, graph = q.get(timeout=remaining_time)
 
             if self.verbose and searched:
-                verbose_print(generated_other_info, generated_graph)
+                verbose_print(generated_other_info, generated_graph, new_model_id)
 
             if metric_value is not None:
                 self.add_model(metric_value, loss, graph, model_id)

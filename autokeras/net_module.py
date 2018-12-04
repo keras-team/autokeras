@@ -10,7 +10,7 @@ from autokeras.constant import Constant
 from autokeras.search import Searcher, train
 
 from autokeras.utils import pickle_to_file, rand_temp_folder_generator
-from autokeras.nn.generator import CnnGenerator, MlpGenerator, ResNetGenerator
+from autokeras.nn.generator import CnnGenerator, MlpGenerator, ResNetGenerator, DenseNetGenerator
 
 
 class NetworkModule:
@@ -25,10 +25,13 @@ class NetworkModule:
         verbose: A boolean. Setting it to true prints to stdout.
         generators: A list of instances of the NetworkGenerator class or its subclasses.
     """
+
     def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False):
         self.searcher_args = searcher_args if searcher_args is not None else {}
         self.searcher = None
         self.path = path if path is not None else rand_temp_folder_generator()
+        if verbose:
+            print('Saving Directory:', self.path)
         self.verbose = verbose
         self.loss = loss
         self.metric = metric
@@ -119,14 +122,17 @@ class NetworkModule:
 
 class CnnModule(NetworkModule):
     """ Class to create a CNN module."""
+
     def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False):
         super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose)
         self.generators.append(CnnGenerator)
         self.generators.append(ResNetGenerator)
+        self.generators.append(DenseNetGenerator)
 
 
 class MlpModule(NetworkModule):
     """ Class to create an MLP module."""
+
     def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False):
         super(MlpModule, self).__init__(loss, metric, searcher_args, path, verbose)
         self.generators.extend([MlpGenerator] * 2)

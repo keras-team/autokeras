@@ -152,13 +152,13 @@ class StubDense(StubWeightBiasLayer):
 
 
 class StubConv(StubWeightBiasLayer):
-    def __init__(self, input_channel, filters, kernel_size, stride=1, output_node=None, input_node=None):
+    def __init__(self, input_channel, filters, kernel_size, stride=1, padding=None, output_node=None, input_node=None):
         super().__init__(input_node, output_node)
         self.input_channel = input_channel
         self.filters = filters
         self.kernel_size = kernel_size
         self.stride = stride
-        self.padding = int(self.kernel_size / 2)
+        self.padding = padding if padding is not None else int(self.kernel_size / 2)
 
     @property
     def output_shape(self):
@@ -276,13 +276,14 @@ class StubPooling(StubLayer):
         super().__init__(input_node, output_node)
         self.kernel_size = kernel_size if kernel_size is not None else Constant.POOLING_KERNEL_SIZE
         self.stride = stride if stride is not None else self.kernel_size
+        # TODO
         self.padding = padding
 
     @property
     def output_shape(self):
         ret = tuple()
         for dim in self.input.shape[:-1]:
-            ret = ret + (max(int(dim / self.kernel_size), 1),)
+            ret = ret + (max(int((dim + 2 * self.padding) / self.kernel_size), 1),)
         ret = ret + (self.input.shape[-1],)
         return ret
 
@@ -304,6 +305,21 @@ class StubPooling2d(StubPooling):
 class StubPooling3d(StubPooling):
     def to_real_layer(self):
         return torch.nn.MaxPool3d(self.kernel_size, stride=self.stride)
+
+
+class StubAvgPooling1d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.AvgPool1d(self.kernel_size, stride=self.stride)
+
+
+class StubAvgPooling2d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.AvgPool2d(self.kernel_size, stride=self.stride)
+
+
+class StubAvgPooling3d(StubPooling):
+    def to_real_layer(self):
+        return torch.nn.AvgPool3d(self.kernel_size, stride=self.stride)
 
 
 class StubGlobalPooling(StubLayer):
@@ -486,6 +502,11 @@ def get_dropout_class(n_dim):
 def get_global_avg_pooling_class(n_dim):
     global_avg_pooling_class_list = [StubGlobalPooling1d, StubGlobalPooling2d, StubGlobalPooling3d]
     return global_avg_pooling_class_list[n_dim - 1]
+
+
+def get_avg_pooling_class(n_dim):
+    class_list = [StubAvgPooling1d, StubAvgPooling2d, StubAvgPooling3d]
+    return class_list[n_dim - 1]
 
 
 def get_pooling_class(n_dim):
