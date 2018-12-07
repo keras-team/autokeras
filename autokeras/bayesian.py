@@ -13,19 +13,19 @@ from sklearn.metrics.pairwise import rbf_kernel
 
 from autokeras.constant import Constant
 from autokeras.net_transformer import transform
-from autokeras.nn.layers import is_layer
+from autokeras.nn.layers import is_layer, LayerType
 
 
 def layer_distance(a, b):
     """The distance between two layers."""
     if type(a) != type(b):
         return 1.0
-    if is_layer(a, 'Conv'):
+    if is_layer(a, LayerType.CONV):
         att_diff = [(a.filters, b.filters),
                     (a.kernel_size, b.kernel_size),
                     (a.stride, b.stride)]
         return attribute_difference(att_diff)
-    if is_layer(a, 'Pooling'):
+    if is_layer(a, LayerType.POOL):
         att_diff = [(a.padding, b.padding),
                     (a.kernel_size, b.kernel_size),
                     (a.stride, b.stride)]
