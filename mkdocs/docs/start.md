@@ -94,3 +94,20 @@ This is not specific to AutoKeras, however, the following will generate a .PNG v
     model = load_model('my_model.h5') #See 'How to export keras models?' to generate this file before loading it.
     from keras.utils import plot_model
     plot_model(model, to_file='my_model.png')
+    
+#### How to visualize the best selected architecture ?
+
+While running a model, let's say Image classifier, the following steps can create a .PDF depiction of the best architecture that was chosen to run that model. 
+
+Step 1 : Specify a path before starting your model training
+
+    clf = ImageClassifier(path="~/automodels/",verbose=True, augment=False) # Give a custom path of your choice
+    clf.fit(x_train, y_train, time_limit=30 * 60)
+    clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
+
+Step 2 : Pass the same path in examples/visualize.py
+
+    if __name__ == '__main__':
+        visualize('~/automodels/')
+
+
