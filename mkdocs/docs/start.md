@@ -107,7 +107,7 @@ pip : pip install graphviz
 
 conda : conda install -c conda-forge python-graphviz
 
-If the above installations are complete proceed with the following steps :
+If the above installations are complete, proceed with the following steps :
 
 Step 1 : Specify a *path* before starting your model training
 
@@ -115,7 +115,7 @@ Step 1 : Specify a *path* before starting your model training
     clf.fit(x_train, y_train, time_limit=30 * 60)
     clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
 
-Step 2 : After teh model training is complete, run *examples/visualize.py* whilst passing the same *path* as parameter
+Step 2 : After the model training is complete, run *examples/visualize.py*, whilst passing the same *path* as parameter
 
     if __name__ == '__main__':
         visualize('~/automodels/')
