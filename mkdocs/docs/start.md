@@ -94,3 +94,114 @@ This is not specific to AutoKeras, however, the following will generate a .PNG v
     model = load_model('my_model.h5') #See 'How to export keras models?' to generate this file before loading it.
     from keras.utils import plot_model
     plot_model(model, to_file='my_model.png')
+
+# CnnModule tutorial
+
+`CnnModule` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with basic cnn modules
+and the ResNet module. 
+
+### Examples
+Normally, there's two place to call the CnnModule, one is call `CnnModule.fit` while the other is `CnnModule.final_fit`.
+
+For example, in a image classification class `ImageClassifier`, one can initialize the cnn module as:
+
+```python
+self.cnn = CnnModule(loss, metric, searcher_args, path, verbose)
+```
+Where:
+* `loss` and `metric` determines by the type of training model(classification or regression or others)
+* `search_args` can be referred in `search.py`
+* `path` is the path to store the whole searching process and generated model.
+* `verbose` is a boolean. Setting it to true prints to stdout.
+
+Then, for the searching part, one can call:
+```python
+self.cnn.fit(n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60)
+```
+where:
+* n_output_node: A integer value represent the number of output node in the final layer.
+* input_shape: A tuple to express the shape of every train entry. For example,
+                MNIST dataset would be (28,28,1).
+* train_data: A PyTorch DataLoader instance representing the training data.
+* test_data: A PyTorch DataLoader instance representing the testing data.
+* time_limit: A integer value represents the time limit on searching for models.
+
+And for final testing(testing the best searched model), one can call:
+```python
+self.cnn.final_fit(train_data, test_data, trainer_args=None, retrain=False)
+```
+where:
+* train_data: A DataLoader instance representing the training data.
+* test_data: A DataLoader instance representing the testing data.
+* trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
+* retrain: A boolean of whether reinitialize the weights of the model.
+
+
+# Automated text classifier tutorial
+
+### Introduction
+Class `TextClassifier` and `TextRegressor` is designed for automated generate best performance cnn neural architecture
+for a given text dataset. 
+
+### Example
+```python
+    clf = TextClassifier(verbose=True)
+    clf.fit(x=x_train, y=y_train, batch_size=10, time_limit=12 * 60 * 60)
+```
+After searching the best model, one can call `clf.final_fit` to test the best model found in searching.
+
+### Arguments
+
+* x_train: string format text data
+* y_train: int format text label
+
+
+### Notes:
+
+Preprocessing of the text data:
+* Class `TextClassifier` and `TextRegressor` contains a pre-process of the text data. Which means the input data
+should be in string format. 
+* The default pre-process model uses the [glove6B model](https://nlp.stanford.edu/projects/glove/) from Stanford NLP. 
+* To change the default setting of the pre-process model, one need to change the corresponding variable:
+`EMBEDDING_DIM`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_NAME` in `constant.py`.
+
+
+# MlpModule tutorial
+
+`MlpModule` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with MLP modules 
+
+### Examples
+Normally, there's two place to call the MlpModule, one is call `MlpModule.fit` while the other is `MlpModule.final_fit`.
+
+For example, in a image classification class `ImageClassifier`, one can initialize the cnn module as:
+
+```python
+self.mlp = MlpModule(loss, metric, searcher_args, path, verbose)
+```
+Where:
+* `loss` and `metric` determines by the type of training model(classification or regression or others)
+* `search_args` can be referred in `search.py`
+* `path` is the path to store the whole searching process and generated model.
+* `verbose` is a boolean. Setting it to true prints to stdout.
+
+Then, for the searching part, one can call:
+```python
+self.mlp.fit(n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60)
+```
+where:
+* n_output_node: A integer value represent the number of output node in the final layer.
+* input_shape: A tuple to express the shape of every train entry. For example,
+                MNIST dataset would be (28,28,1).
+* train_data: A PyTorch DataLoader instance representing the training data.
+* test_data: A PyTorch DataLoader instance representing the testing data.
+* time_limit: A integer value represents the time limit on searching for models.
+
+And for final testing(testing the best searched model), one can call:
+```python
+self.mlp.final_fit(train_data, test_data, trainer_args=None, retrain=False)
+```
+where:
+* train_data: A DataLoader instance representing the training data.
+* test_data: A DataLoader instance representing the testing data.
+* trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
+* retrain: A boolean of whether reinitialize the weights of the model.
