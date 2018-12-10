@@ -1,15 +1,10 @@
-import torch
-
-from functools import reduce
-
 import os
 from abc import ABC, abstractmethod
 from sklearn.model_selection import train_test_split
-import numpy as np
 
 from autokeras.constant import Constant
 from autokeras.net_module import CnnModule
-from autokeras.utils import rand_temp_folder_generator, pickle_from_file, validate_xy, pickle_to_file
+from autokeras.utils import rand_temp_folder_generator, pickle_from_file, validate_xy, pickle_to_file, ensure_dir
 
 
 class Supervised(ABC):
@@ -97,6 +92,7 @@ class DeepSupervised(Supervised):
             path = rand_temp_folder_generator()
 
         self.path = path
+        ensure_dir(path)
         if resume:
             classifier = pickle_from_file(os.path.join(self.path, 'classifier'))
             self.__dict__ = classifier.__dict__
@@ -199,15 +195,7 @@ class DeepSupervised(Supervised):
         """
         x_test = self.preprocess(x_test)
         test_loader = self.data_transformer.transform_test(x_test)
-        model = self.cnn.best_model.produce_model()
-        model.eval()
-
-        outputs = []
-        with torch.no_grad():
-            for index, inputs in enumerate(test_loader):
-                outputs.append(model(inputs).numpy())
-        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
-        return self.inverse_transform_y(output)
+        return self.inverse_transform_y(self.cnn.predict(test_loader))
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""

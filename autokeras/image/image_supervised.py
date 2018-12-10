@@ -99,7 +99,7 @@ class ImageSupervised(DeepSupervised, ABC):
 
     def fit(self, x, y, time_limit=None):
         x = np.array(x)
-        y = np.array(y).flatten()
+        y = np.array(y)
 
         if self.verbose:
             print("Preprocessing the images.")

@@ -5,7 +5,7 @@ from autokeras.nn.graph import NetworkDescriptor
 
 from autokeras.constant import Constant
 from autokeras.nn.layers import is_layer, StubDense, get_dropout_class, StubReLU, get_conv_class, \
-    get_batch_norm_class, get_pooling_class
+    get_batch_norm_class, get_pooling_class, LayerType
 
 
 def to_wider_graph(graph):
@@ -15,7 +15,7 @@ def to_wider_graph(graph):
 
     for layer_id in wider_layers:
         layer = graph.layer_list[layer_id]
-        if is_layer(layer, 'Conv'):
+        if is_layer(layer, LayerType.CONV):
             n_add = layer.filters
         else:
             n_add = layer.units
@@ -49,12 +49,12 @@ def create_new_layer(layer, n_dim):
     input_shape = layer.output.shape
     dense_deeper_classes = [StubDense, get_dropout_class(n_dim), StubReLU]
     conv_deeper_classes = [get_conv_class(n_dim), get_batch_norm_class(n_dim), StubReLU]
-    if is_layer(layer, 'ReLU'):
+    if is_layer(layer, LayerType.RELU):
         conv_deeper_classes = [get_conv_class(n_dim), get_batch_norm_class(n_dim)]
         dense_deeper_classes = [StubDense, get_dropout_class(n_dim)]
-    elif is_layer(layer, 'Dropout'):
+    elif is_layer(layer, LayerType.DROPOUT):
         dense_deeper_classes = [StubDense, StubReLU]
-    elif is_layer(layer, 'BatchNormalization'):
+    elif is_layer(layer, LayerType.BATCH_NORM):
         conv_deeper_classes = [get_conv_class(n_dim), StubReLU]
 
     if len(input_shape) == 1:
