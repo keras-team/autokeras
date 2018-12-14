@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     clf = TabularClassifier()
     datainfo = {'loaded_feat_types': [ntime, nnum, ncat, nmvc]}
-    clf.fit(x_train, y_train, time_limit=12 * 60 * 60, datainfo=datainfo)
+    clf.fit(x_train, y_train, time_limit=12 * 60 * 60, data_info=datainfo)
 
     results = clf.evaluate(x_test, y_test)
     print(results)

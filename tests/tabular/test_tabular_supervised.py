@@ -27,9 +27,9 @@ def test_fit__evalute_predict_classification():
                     print(datainfo)
                     if num_feat == 0:
                         with pytest.raises(ValueError):
-                            clf.fit(train_x, train_y, datainfo=datainfo)
+                            clf.fit(train_x, train_y, data_info=datainfo)
                     else:
-                        clf.fit(train_x, train_y, datainfo=datainfo)
+                        clf.fit(train_x, train_y, data_info=datainfo)
                         results = clf.predict(train_x)
                         assert all(map(lambda result: result in train_y, results))
     score = clf.evaluate(train_x, train_y)
@@ -45,7 +45,7 @@ def test_fit__evalute_predict_classification():
     x_mvc = np.random.randint(0, 10, [nsample, nmvc])
     train_x = np.concatenate([x_num, x_time, x_cat, x_mvc], axis=1)
     train_y = np.random.randint(0, 3, nsample)
-    clf.fit(train_x, train_y, datainfo=datainfo)
+    clf.fit(train_x, train_y, data_info=datainfo)
     results = clf.predict(train_x)
     assert all(map(lambda result: result in train_y, results))
     score = clf.evaluate(train_x, train_y)
@@ -65,7 +65,7 @@ def test_fit_predict_evalute_regression():
     x_mvc = np.random.randint(0, 10, [nsample, nmvc])
     train_x = np.concatenate([x_num, x_time, x_cat, x_mvc], axis=1)
     train_y = train_x[:, 5]
-    clf.fit(train_x, train_y, datainfo=datainfo)
+    clf.fit(train_x, train_y, data_info=datainfo)
     results = clf.predict(train_x)
     assert len(results) == len(train_x)
     score = clf.evaluate(train_x, train_y)
