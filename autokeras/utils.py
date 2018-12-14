@@ -105,7 +105,7 @@ def download_file(file_link, file_path):
     """Download the file specified in `file_link` and saves it in `file_path`."""
     if not os.path.exists(file_path):
         with open(file_path, "wb") as f:
-            print("Downloading %s" % file_path)
+            print("\nDownloading %s" % file_path)
             response = requests.get(file_link, stream=True)
             total_length = response.headers.get('content-length')
 
