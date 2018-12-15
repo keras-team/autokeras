@@ -53,6 +53,20 @@ class Constant:
     PRE_TRAIN_FILE_LINK = "http://nlp.stanford.edu/data/glove.6B.zip"
     PRE_TRAIN_FILE_NAME = "glove.6B.100d.txt"
 
+    # constants for pretrained model of face detection
+    FACE_DETECTION_PRETRAINED = {
+        'PRETRAINED_MODEL_LINKS': [
+            'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/pnet_epoch.pt',
+            'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/rnet_epoch.pt',
+            'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/onet_epoch.pt'
+        ],
+        'FILE_PATHS': [
+            'pnet.pt',
+            'rnet.pt',
+            'onet.pt'
+        ]
+    }
+
     # Image Resize
 
     MAX_IMAGE_SIZE = 128 * 128
