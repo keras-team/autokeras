@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from autokeras.constant import Constant
 from autokeras.image.face_detection_pretrained import detect_faces
 from autokeras.utils import download_file
+import os
 
 
 class Pretrained(ABC):
@@ -46,4 +47,6 @@ class FaceDetectionPretrained(Pretrained):
         self.pnet, self.rnet, self.onet = Constant.face_detection_pretrained['FILE_PATHS']
 
     def predict(self, img_path, output_file_path=None):
+        if not os.path.exists(img_path):
+            raise ValueError('Image does not exist')
         return detect_faces(self.pnet, self.rnet, self.onet, img_path, output_file_path)
