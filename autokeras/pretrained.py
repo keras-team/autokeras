@@ -37,14 +37,13 @@ class FaceDetectionPretrained(Pretrained):
 
     def __init__(self):
         super(FaceDetectionPretrained, self).__init__()
-        self.pnet, self.rnet, self.onet = None, None, None
-        for model_link, file_path in zip(Constant.face_detection_pretrained['PRETRAINED_MODEL_LINKS'],
-                                         Constant.face_detection_pretrained['FILE_PATHS']):
-            download_file(model_link, file_path)
         self.load()
 
     def load(self, model_path=None):
-        self.pnet, self.rnet, self.onet = Constant.face_detection_pretrained['FILE_PATHS']
+        for model_link, file_path in zip(Constant.FACE_DETECTION_PRETRAINED['PRETRAINED_MODEL_LINKS'],
+                                         Constant.FACE_DETECTION_PRETRAINED['FILE_PATHS']):
+            download_file(model_link, file_path)
+        self.pnet, self.rnet, self.onet = Constant.FACE_DETECTION_PRETRAINED['FILE_PATHS']
 
     def predict(self, img_path, output_file_path=None):
         if not os.path.exists(img_path):
