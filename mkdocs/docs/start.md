@@ -83,13 +83,13 @@ This uses the keras function model.save() to export a single HDF5 file containin
 
 Note: This is being built into AutoKeras as ImageClassifier().export_keras_model() 
 
-#### how to export Auto-Keras model
+#### how to export Portable model
     from autokeras import ImageClassifier
     clf = ImageClassifier(verbose=True, augment=False)
     clf.export_autokeras_model(model_file_name)
 The model will be stored into the path `model_file_name`. 
 
-#### How to load exported Auto-Keras model?
+#### How to load exported Portable model?
     from autokeras.utils import pickle_from_file
     model = pickle_from_file(model_file_name)
     results = model.evaluate(x_test, y_test)
