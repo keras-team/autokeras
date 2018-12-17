@@ -81,10 +81,18 @@ which can be directly feed into the `fit` function of `ImageClassifier`.
 
     from autokeras import ImageClassifier
     clf = ImageClassifier(verbose=True, augment=False)
-    clf.load_searcher().load_best_model().produce_keras_model().save('my_model.h5')
+    clf.export_autokeras_model(model_file_name)
+The model will be stored in the path `model_file_name`. 
 
-This uses the keras function model.save() to export a single HDF5 file containing the architecture of the model, the weights of the model, the training configuration, and the state of the optimizer. See https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
-Note: This is being built into AutoKeras as ImageClassifier().export_keras_model() 
+#### How to load exported keras model?
+    from autokeras.utils import pickle_from_file
+    
+    model = pickle_from_file(model_file_name)
+    results = model.evaluate(x_test, y_test)
+    print(results)
+    
+The model will be loaded from the path `model_file_name` and then you can use the functions list in `PortableImageSupervised`.
+
 	
 #### How to visualize keras models?
 
@@ -119,5 +127,7 @@ Step 2 : After the model training is complete, run *examples/visualize.py*, whil
 
     if __name__ == '__main__':
         visualize('~/automodels/')
+        
+        
 
 

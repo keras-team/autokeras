@@ -47,6 +47,7 @@ def pickle_to_file(obj, path):
     """Save the pickle file to the specified path."""
     pickle.dump(obj, open(path, 'wb'))
 
+
 # TODO cannot detect nvidia-smi in Windows normally. We need a fall back for windows
 def get_device():
     """ If CUDA is available, use CUDA device, else use CPU device.
@@ -151,7 +152,6 @@ def verbose_print(new_father_id, new_graph, new_model_id):
         line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
         print('|' + line + '|')
     print('+' + '-' * len(line) + '+')
-
 
 
 def validate_xy(x_train, y_train):
