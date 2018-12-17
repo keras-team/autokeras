@@ -97,15 +97,25 @@ This is not specific to AutoKeras, however, the following will generate a .PNG v
     
 #### How to visualize the best selected architecture ?
 
-While running a model, let's say Image classifier, the following steps can create a .PDF depiction of the best architecture that was chosen to run that model. 
+While trying to create a model, let's say an Image classifier on MNIST, there is a facility for the user to visualize a .PDF depiction of the best architecture that was chosen by autokeras, after model training is complete. 
 
-Step 1 : Specify a path before starting your model training
+Prerequisites : 
+1) graphviz must be installed in your system. Refer [Installation Guide](https://graphviz.gitlab.io/download/)  
+2) Additionally, also install "graphviz" python package using pip / conda
+
+pip : pip install graphviz
+
+conda : conda install -c conda-forge python-graphviz
+
+If the above installations are complete, proceed with the following steps :
+
+Step 1 : Specify a *path* before starting your model training
 
     clf = ImageClassifier(path="~/automodels/",verbose=True, augment=False) # Give a custom path of your choice
     clf.fit(x_train, y_train, time_limit=30 * 60)
     clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
 
-Step 2 : Pass the same path in examples/visualize.py
+Step 2 : After the model training is complete, run *examples/visualize.py*, whilst passing the same *path* as parameter
 
     if __name__ == '__main__':
         visualize('~/automodels/')
