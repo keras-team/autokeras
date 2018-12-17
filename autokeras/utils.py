@@ -256,5 +256,4 @@ def get_system():
     if os.name == 'nt':
         return Constant.SYS_WINDOWS
 
-
-raise EnvironmentError('Unsupported environment')
+    raise EnvironmentError('Unsupported environment')
