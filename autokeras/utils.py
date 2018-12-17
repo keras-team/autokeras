@@ -18,7 +18,6 @@ from autokeras.constant import Constant
 from scipy.ndimage import zoom
 
 
-
 class NoImprovementError(Exception):
     def __init__(self, message):
         self.message = message
@@ -53,9 +52,7 @@ def pickle_to_file(obj, path):
 # TODO cannot detect nvidia-smi in Windows normally. We need a fall back for windows
 def get_device():
     """ If CUDA is available, use CUDA device, else use CPU device.
-
     When choosing from CUDA devices, this function will choose the one with max memory available.
-
     Returns: string device name.
     """
     # TODO: could use gputil in the future
@@ -141,7 +138,7 @@ def verbose_print(new_father_id, new_graph, new_model_id):
     """Print information about the operation performed on father model to obtain current model and father's id."""
     cell_size = [24, 49]
 
-    logging.info('New Model Id - '+str(new_model_id))
+    logging.info('New Model Id - ' + str(new_model_id))
     header = ['Father Model ID', 'Added Operation']
     line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
     logging.info('\n' + '+' + '-' * len(line) + '+')
@@ -157,12 +154,24 @@ def verbose_print(new_father_id, new_graph, new_model_id):
     logging.info('+' + '-' * len(line) + '+')
 
 
+def validate_xy(x_train, y_train):
+    """Validate `x_train`'s type and the shape of `x_train`, `y_train`."""
+    try:
+        x_train = x_train.astype('float64')
+    except ValueError:
+        raise ValueError('x_train should only contain numerical data.')
+
+    if len(x_train.shape) < 2:
+        raise ValueError('x_train should at least has 2 dimensions.')
+
+    if x_train.shape[0] != y_train.shape[0]:
+        raise ValueError('x_train and y_train should have the same number of instances.')
+
+
 def read_csv_file(csv_file_path):
     """Read the csv file and returns two separate list containing file names and their labels.
-
     Args:
         csv_file_path: Path to the CSV file.
-
     Returns:
         file_names: List containing files names.
         file_label: List containing their respective labels.
@@ -186,12 +195,9 @@ def read_image(img_path):
 
 def compute_image_resize_params(data):
     """Compute median dimension of all images in data.
-
     It used to resize the images later. Number of channels do not change from the original data.
-
     Args:
         data: 1-D, 2-D or 3-D images. The Images are expected to have channel last configuration.
-
     Returns:
         median shape.
     """
@@ -217,11 +223,9 @@ def compute_image_resize_params(data):
 
 def resize_image_data(data, resize_shape):
     """Resize images to given dimension.
-
     Args:
         data: 1-D, 2-D or 3-D images. The Images are expected to have channel last configuration.
         resize_shape: Image resize dimension.
-
     Returns:
         data: Reshaped data.
     """
@@ -240,7 +244,6 @@ def resize_image_data(data, resize_shape):
 
 def get_system():
     """Get the current system environment. If the current system is not supported, raise an exception.
-
     Returns:
          A string to represent the current OS name.
          "posix" stands for Linux, Mac or Solaris architecture.
@@ -252,4 +255,6 @@ def get_system():
         return Constant.SYS_LINUX
     if os.name == 'nt':
         return Constant.SYS_WINDOWS
-    raise EnvironmentError('Unsupported environment')
+
+
+raise EnvironmentError('Unsupported environment')
