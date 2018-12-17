@@ -17,6 +17,33 @@ You need to download the code from the GitHub repo and run the following command
     pip install -r requirements.txt
     python setup.py install
     
+=======
+    
+#### How to visualize the best selected architecture ?
+
+While trying to create a model, let's say an Image classifier on MNIST, there is a facility for the user to visualize a .PDF depiction of the best architecture that was chosen by autokeras, after model training is complete. 
+
+Prerequisites : 
+1) graphviz must be installed in your system. Refer [Installation Guide](https://graphviz.gitlab.io/download/)  
+2) Additionally, also install "graphviz" python package using pip / conda
+
+pip : pip install graphviz
+
+conda : conda install -c conda-forge python-graphviz
+
+If the above installations are complete, proceed with the following steps :
+
+Step 1 : Specify a *path* before starting your model training
+
+    clf = ImageClassifier(path="~/automodels/",verbose=True, augment=False) # Give a custom path of your choice
+    clf.fit(x_train, y_train, time_limit=30 * 60)
+    clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
+
+Step 2 : After the model training is complete, run *examples/visualize.py*, whilst passing the same *path* as parameter
+
+    if __name__ == '__main__':
+        visualize('~/automodels/')
+
 
 ## Example
 
@@ -94,30 +121,122 @@ This is not specific to AutoKeras, however, the following will generate a .PNG v
     model = load_model('my_model.h5') #See 'How to export keras models?' to generate this file before loading it.
     from keras.utils import plot_model
     plot_model(model, to_file='my_model.png')
-    
-#### How to visualize the best selected architecture ?
 
-While trying to create a model, let's say an Image classifier on MNIST, there is a facility for the user to visualize a .PDF depiction of the best architecture that was chosen by autokeras, after model training is complete. 
+# CnnGenerator tutorial
 
-Prerequisites : 
-1) graphviz must be installed in your system. Refer [Installation Guide](https://graphviz.gitlab.io/download/)  
-2) Additionally, also install "graphviz" python package using pip / conda
+`CnnGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with basic cnn modules
+and the ResNet module. 
 
-pip : pip install graphviz
+### Examples
+Normally, there's two place to call the CnnGenerator, one is call `CnnGenerator.fit` while the other is `CnnGenerator.final_fit`.
 
-conda : conda install -c conda-forge python-graphviz
+For example, in a image classification class `ImageClassifier`, one can initialize the cnn module as:
 
-If the above installations are complete, proceed with the following steps :
+```python
+from autokeras import CnnModule
+from autokeras.nn.loss_function import classification_loss
+from autokeras.nn.metric import Accuracy
 
-Step 1 : Specify a *path* before starting your model training
+TEST_FOLDER = "test"
+cnnModule = CnnModule(loss=classification_loss, metric=Accuracy, searcher_args={}, path=TEST_FOLDER, verbose=False)
+```
+Where:
+* `loss` and `metric` determines by the type of training model(classification or regression or others)
+* `search_args` can be referred in `search.py`
+* `path` is the path to store the whole searching process and generated model.
+* `verbose` is a boolean. Setting it to true prints to stdout.
 
-    clf = ImageClassifier(path="~/automodels/",verbose=True, augment=False) # Give a custom path of your choice
-    clf.fit(x_train, y_train, time_limit=30 * 60)
-    clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
+Then, for the searching part, one can call:
+```python
+cnnModule.fit(n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60)
+```
+where:
+* n_output_node: A integer value represent the number of output node in the final layer.
+* input_shape: A tuple to express the shape of every train entry. For example,
+                MNIST dataset would be (28,28,1).
+* train_data: A PyTorch DataLoader instance representing the training data.
+* test_data: A PyTorch DataLoader instance representing the testing data.
+* time_limit: A integer value represents the time limit on searching for models.
 
-Step 2 : After the model training is complete, run *examples/visualize.py*, whilst passing the same *path* as parameter
+And for final testing(testing the best searched model), one can call:
+```python
+cnnModule.final_fit(train_data, test_data, trainer_args=None, retrain=False)
+```
+where:
+* train_data: A DataLoader instance representing the training data.
+* test_data: A DataLoader instance representing the testing data.
+* trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
+* retrain: A boolean of whether reinitialize the weights of the model.
 
-    if __name__ == '__main__':
-        visualize('~/automodels/')
+
+# Automated text classifier tutorial
+
+### Introduction
+Class `TextClassifier` and `TextRegressor` is designed for automated generate best performance cnn neural architecture
+for a given text dataset. 
+
+### Example
+```python
+    clf = TextClassifier(verbose=True)
+    clf.fit(x=x_train, y=y_train, batch_size=10, time_limit=12 * 60 * 60)
+```
+After searching the best model, one can call `clf.final_fit` to test the best model found in searching.
+
+### Arguments
+
+* x_train: string format text data
+* y_train: int format text label
+
+
+### Notes:
+
+Preprocessing of the text data:
+* Class `TextClassifier` and `TextRegressor` contains a pre-process of the text data. Which means the input data
+should be in string format. 
+* The default pre-process model uses the [glove6B model](https://nlp.stanford.edu/projects/glove/) from Stanford NLP. 
+* To change the default setting of the pre-process model, one need to change the corresponding variable:
+`EMBEDDING_DIM`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_NAME` in `constant.py`.
+
+
+# MlpGenerator tutorial
+
+`MlpGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with MLP modules 
+
+### Examples
+Normally, there's two place to call the MlpGenerator, one is call `MlpGenerator.fit` while the other is `MlpGenerator.final_fit`.
+
+For example, in a image classification class `ImageClassifier`, one can initialize the cnn module as:
+
+```python
+self.mlp = MlpGenerator(loss, metric, searcher_args, path, verbose)
+```
+Where:
+* `loss` and `metric` determines by the type of training model(classification or regression or others)
+* `search_args` can be referred in `search.py`
+* `path` is the path to store the whole searching process and generated model.
+* `verbose` is a boolean. Setting it to true prints to stdout.
+
+Then, for the searching part, one can call:
+```python
+self.mlp.fit(n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60)
+```
+where:
+* n_output_node: A integer value represent the number of output node in the final layer.
+* input_shape: A tuple to express the shape of every train entry. For example,
+                MNIST dataset would be (28,28,1).
+* train_data: A PyTorch DataLoader instance representing the training data.
+* test_data: A PyTorch DataLoader instance representing the testing data.
+* time_limit: A integer value represents the time limit on searching for models.
+
+And for final testing(testing the best searched model), one can call:
+```python
+self.mlp.final_fit(train_data, test_data, trainer_args=None, retrain=False)
+```
+where:
+* train_data: A DataLoader instance representing the training data.
+* test_data: A DataLoader instance representing the testing data.
+* trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
+* retrain: A boolean of whether reinitialize the weights of the model.
+
 
 
