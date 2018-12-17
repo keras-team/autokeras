@@ -6,7 +6,6 @@ import torch
 import torch.multiprocessing as mp
 import logging
 
-
 from datetime import datetime
 from autokeras.bayesian import BayesianOptimizer
 from autokeras.constant import Constant
@@ -87,7 +86,7 @@ class Searcher:
         if t_min is None:
             t_min = Constant.T_MIN
         self.bo = BayesianOptimizer(self, t_min, metric)
-        logging.basicConfig(filename=os.path.join(self.path,datetime.now().strftime('run_%d_%m_%Y : _%H_%M.log')),
+        logging.basicConfig(filename=os.path.join(self.path, datetime.now().strftime('run_%d_%m_%Y : _%H_%M.log')),
                             format='%(asctime)s - %(filename)s - %(message)s', level=logging.DEBUG)
 
     def load_model_by_id(self, model_id):
@@ -173,7 +172,6 @@ class Searcher:
             timeout: An integer, time limit in seconds.
         """
 
-        start_time = time.time()
         torch.cuda.empty_cache()
         if not self.history:
             self.init_search()
