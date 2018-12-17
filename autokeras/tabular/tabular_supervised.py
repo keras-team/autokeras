@@ -133,7 +133,10 @@ class TabularSupervised(Supervised):
             x = np.concatenate([x, x], axis=0)
             y = np.concatenate([y, y], axis=0)
 
-        response_rate = sum(y) / len(y)
+        if self.objective == 'multiclass' or self.objective == 'binary':
+            response_rate = sum(y) / len(y)
+        else:
+            response_rate = 1.0
         print('Response Rate', response_rate)
 
         if not self.is_trained:
