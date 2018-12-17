@@ -199,6 +199,7 @@ def compute_image_resize_params(data):
     """Compute median dimension of all images in data.
 
     It used to resize the images later. Number of channels do not change from the original data.
+
     Args:
         data: 1-D, 2-D or 3-D images. The Images are expected to have channel last configuration.
 
