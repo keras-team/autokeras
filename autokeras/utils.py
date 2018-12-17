@@ -4,6 +4,7 @@ import pickle
 import sys
 import tempfile
 import zipfile
+import logging
 
 import warnings
 import imageio
@@ -15,6 +16,7 @@ import string
 import random
 from autokeras.constant import Constant
 from scipy.ndimage import zoom
+
 
 
 class NoImprovementError(Exception):
@@ -137,22 +139,21 @@ def download_file_with_extract(file_link, file_path, extract_path):
 def verbose_print(new_father_id, new_graph, new_model_id):
     """Print information about the operation performed on father model to obtain current model and father's id."""
     cell_size = [24, 49]
-    print('New Model Id', new_model_id)
+
+    logging.info('New Model Id - '+str(new_model_id))
     header = ['Father Model ID', 'Added Operation']
     line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
-    print('\n' + '+' + '-' * len(line) + '+')
-    print('|' + line + '|')
-    print('+' + '-' * len(line) + '+')
+    logging.info('\n' + '+' + '-' * len(line) + '+')
+    logging.info('|' + line + '|')
+    logging.info('+' + '-' * len(line) + '+')
     for i in range(len(new_graph.operation_history)):
         if i == len(new_graph.operation_history) // 2:
-            r = [new_father_id, ' '.join(str(item) for item in new_graph.operation_history[i])]
+            r = [str(new_father_id), ' '.join(str(item) for item in new_graph.operation_history[i])]
         else:
             r = [' ', ' '.join(str(item) for item in new_graph.operation_history[i])]
         line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
-        print('|' + line + '|')
-    print('+' + '-' * len(line) + '+')
-
-
+        logging.info('|' + line + '|')
+    logging.info('+' + '-' * len(line) + '+')
 
 def validate_xy(x_train, y_train):
     """Validate `x_train`'s type and the shape of `x_train`, `y_train`."""
