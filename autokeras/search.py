@@ -191,7 +191,7 @@ class Searcher:
         ctx = mp.get_context()
         q = ctx.Queue()
         p = ctx.Process(target=train, args=(q, graph, train_data, test_data, self.trainer_args,
-                                            self.metric, self.loss, self.verbose, self.path))
+                                            self.metric, self.loss, self.verbose, self.path, timeout))
         try:
             p.start()
             # Do the search in current thread.
@@ -230,7 +230,7 @@ class Searcher:
     def sp_search(self, graph, other_info, model_id, train_data, test_data, timeout):
         start_time = time.time()
         metric_value, loss, graph = train(None, graph, train_data, test_data, self.trainer_args,
-                                          self.metric, self.loss, self.verbose, self.path)
+                                          self.metric, self.loss, self.verbose, self.path, timeout)
         try:
             # Do the search in current thread.
             searched = False
@@ -256,7 +256,7 @@ class Searcher:
                 self.add_model(metric_value, loss, graph, model_id)
                 self.update(other_info, graph, metric_value, model_id)
 
-        except (TimeoutError, queue.Empty) as e:
+        except TimeoutError as e:
             raise TimeoutError from e
 
     def update(self, other_info, graph, metric_value, model_id):
@@ -293,7 +293,7 @@ class Searcher:
         return new_father_id, generated_graph
 
 
-def train(q, timeout, graph, train_data, test_data, trainer_args, metric, loss, verbose, path):
+def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, path, timeout=0):
     """Train the neural architecture."""
     try:
         model = graph.produce_model()
@@ -303,7 +303,8 @@ def train(q, timeout, graph, train_data, test_data, trainer_args, metric, loss, 
                                           test_data=test_data,
                                           metric=metric,
                                           loss_function=loss,
-                                          verbose=verbose).train_model(**trainer_args)
+                                          verbose=verbose,
+                                          timeout=timeout).train_model(**trainer_args)
         model.set_weight_to_graph()
         if q:
             q.put((metric_value, loss, model.graph))

@@ -347,7 +347,7 @@ class BayesianOptimizer:
         opt_acq = self._get_init_opt_acq_value()
         remaining_time = timeout
         while not pq.empty() and remaining_time > 0 and t > t_min:
-            if isinstance(sync_message, mp.Queue) and sync_message.qsize() != 0:
+            if isinstance(sync_message, type(mp.Queue)) and sync_message.qsize() != 0:
                 break
             elem = pq.get()
             if self.metric.higher_better():
