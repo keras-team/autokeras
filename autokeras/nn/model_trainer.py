@@ -34,8 +34,12 @@ class ModelTrainerBase(abc.ABC):
                  train_data,
                  test_data=None,
                  metric=None,
-                 verbose=False):
-        self.device = get_device()
+                 verbose=False,
+                 device=None):
+        if device is not None:
+            self.device = device
+        else:
+            self.device = get_device()
         self.metric = metric
         self.verbose = verbose
         self.loss_function = loss_function
@@ -44,8 +48,8 @@ class ModelTrainerBase(abc.ABC):
 
     @abc.abstractmethod
     def train_model(self,
-                    max_iter_num=Constant.MAX_ITER_NUM,
-                    max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM):
+                    max_iter_num=None,
+                    max_no_improvement_num=None):
         """Train the model.
 
         Args:
@@ -233,7 +237,8 @@ class GANModelTrainer(ModelTrainerBase):
                  train_data,
                  loss_function,
                  verbose,
-                 gen_training_result=None):
+                 gen_training_result=None,
+                 device=None):
         """Initialize the GANModelTrainer.
 
         Args:
@@ -244,7 +249,7 @@ class GANModelTrainer(ModelTrainerBase):
             verbose: Whether to output the system output.
             gen_training_result: Whether to generate the intermediate result while training.
         """
-        super().__init__(loss_function, train_data, verbose=verbose)
+        super().__init__(loss_function, train_data, verbose=verbose, device=device)
         self.d_model = d_model
         self.g_model = g_model
         self.d_model.to(self.device)
@@ -260,8 +265,10 @@ class GANModelTrainer(ModelTrainerBase):
         self.optimizer_g = None
 
     def train_model(self,
-                    max_iter_num=Constant.MAX_ITER_NUM,
-                    max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM):
+                    max_iter_num=None,
+                    max_no_improvement_num=None):
+        if max_iter_num is None:
+            max_iter_num = Constant.MAX_ITER_NUM
         self.optimizer_d = torch.optim.Adam(self.d_model.parameters())
         self.optimizer_g = torch.optim.Adam(self.g_model.parameters())
         if self.verbose:
@@ -351,14 +358,15 @@ class EarlyStop:
         _min_loss_dec: A threshold for loss improvement.
     """
 
-    def __init__(self, max_no_improvement_num=Constant.MAX_NO_IMPROVEMENT_NUM, min_loss_dec=Constant.MIN_LOSS_DEC):
+    def __init__(self, max_no_improvement_num=None, min_loss_dec=None):
         super().__init__()
         self.training_losses = []
         self.minimum_loss = None
         self.no_improvement_count = 0
-        self._max_no_improvement_num = max_no_improvement_num
+        self._max_no_improvement_num = max_no_improvement_num if max_no_improvement_num is not None \
+            else Constant.MAX_NO_IMPROVEMENT_NUM
         self._done = False
-        self._min_loss_dec = min_loss_dec
+        self._min_loss_dec = min_loss_dec if min_loss_dec is not None else Constant.MIN_LOSS_DEC
 
     def on_train_begin(self):
         """Initiate the early stop condition.

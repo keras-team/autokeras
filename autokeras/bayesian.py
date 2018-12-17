@@ -13,19 +13,19 @@ from sklearn.metrics.pairwise import rbf_kernel
 
 from autokeras.constant import Constant
 from autokeras.net_transformer import transform
-from autokeras.nn.layers import is_layer
+from autokeras.nn.layers import is_layer, LayerType
 
 
 def layer_distance(a, b):
     """The distance between two layers."""
     if type(a) != type(b):
         return 1.0
-    if is_layer(a, 'Conv'):
+    if is_layer(a, LayerType.CONV):
         att_diff = [(a.filters, b.filters),
                     (a.kernel_size, b.kernel_size),
                     (a.stride, b.stride)]
         return attribute_difference(att_diff)
-    if is_layer(a, 'Pooling'):
+    if is_layer(a, LayerType.POOL):
         att_diff = [(a.padding, b.padding),
                     (a.kernel_size, b.kernel_size),
                     (a.stride, b.stride)]
@@ -289,12 +289,12 @@ class BayesianOptimizer:
         search_tree: The network morphism search tree.
     """
 
-    def __init__(self, searcher, t_min, metric, beta):
+    def __init__(self, searcher, t_min, metric, beta=None):
         self.searcher = searcher
         self.t_min = t_min
         self.metric = metric
         self.gpr = IncrementalGaussianProcess()
-        self.beta = beta
+        self.beta = beta if beta is not None else Constant.BETA
         self.search_tree = SearchTree()
 
     def fit(self, x_queue, y_queue):

@@ -1,4 +1,5 @@
-from autokeras.nn.generator import CnnGenerator, ResNetGenerator
+from autokeras.net_transformer import transform
+from autokeras.nn.generator import CnnGenerator, ResNetGenerator, DenseNetGenerator
 from autokeras.nn.graph import *
 from tests.common import get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model, \
     get_concat_skip_model
@@ -204,6 +205,15 @@ def test_long_transform2():
     model(torch.Tensor(np.random.random((10, 1, 28, 28))))
 
 
+# def test_long_transform3():
+#     graph = DenseNetGenerator(10, (28, 28, 1)).generate()
+#     for i in range(20):
+#         graph = transform(graph)[3]
+#     print(graph.operation_history)
+#     model = graph.produce_model()
+#     model(torch.Tensor(np.random.random((10, 1, 28, 28))))
+
+
 def test_long_transform4():
     graph = ResNetGenerator(10, (28, 28, 1)).generate()
     graph.to_concat_skip_model(57, 68)
@@ -215,5 +225,12 @@ def test_long_transform5():
     graph = ResNetGenerator(10, (28, 28, 1)).generate()
     graph.to_concat_skip_model(19, 60)
     graph.to_wider_model(52, 256)
+    model = graph.produce_model()
+    model(torch.Tensor(np.random.random((10, 1, 28, 28))))
+
+
+def test_long_transform6():
+    graph = DenseNetGenerator(10, (28, 28, 1)).generate()
+    graph.to_concat_skip_model(126, 457)
     model = graph.produce_model()
     model(torch.Tensor(np.random.random((10, 1, 28, 28))))

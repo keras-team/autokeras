@@ -92,16 +92,14 @@ class ImageSupervised(DeepSupervised, ABC):
             augment: A boolean value indicating whether the data needs augmentation. If not define, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
         """
-        if augment is None:
-            augment = Constant.DATA_AUGMENTATION
-        self.augment = augment
+        self.augment = augment if augment is not None else Constant.DATA_AUGMENTATION
         self.resize_shape = []
 
         super().__init__(**kwargs)
 
-    def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
+    def fit(self, x, y, time_limit=None):
         x = np.array(x)
-        y = np.array(y).flatten()
+        y = np.array(y)
 
         if self.verbose:
             print("Preprocessing the images.")
@@ -109,12 +107,11 @@ class ImageSupervised(DeepSupervised, ABC):
         self.resize_shape = compute_image_resize_params(x)
 
         x = resize_image_data(x, self.resize_shape)
-        x_test = resize_image_data(x_test, self.resize_shape)
 
         if self.verbose:
             print("Preprocessing finished.")
 
-        super().fit(x, y, x_test, y_test, time_limit)
+        super().fit(x, y, time_limit)
 
     def init_transformer(self, x):
         if self.data_transformer is None:

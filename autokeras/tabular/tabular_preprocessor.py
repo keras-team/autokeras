@@ -1,10 +1,9 @@
-import os
 import numpy as np
 from pandas import DataFrame
 from scipy.stats import pearsonr
-import multiprocessing as mp
 
 LEVEL_HIGH = 32
+
 
 def parallel_function(labels, first_batch_keys, task):
     if task == 'label':
@@ -83,7 +82,7 @@ def call_parallel(tasks):
     return results
 
 
-class TabularPreprocessor():
+class TabularPreprocessor:
     def __init__(self):
         """
         This constructor is supposed to initialize data members.
@@ -104,41 +103,35 @@ class TabularPreprocessor():
 
         self.rest = None
         self.budget = None
-        self.datainfo = None
+        self.data_info = None
+        self.n_time = None
+        self.n_num = None
+        self.n_cat = None
 
     def remove_useless(self, x):
         self.rest = np.where(np.max(x, 0) - np.min(x, 0) != 0)[0]
         return x[:, self.rest]
 
     def process_time(self, x):
-        cols = range(self.ntime)
+        cols = range(self.n_time)
         if len(cols) > 10:
             cols = cols[:10]
         x_time = x[:, cols]
         for i in cols:
-            for j in range(i+1, len(cols)):
-                x = np.append(x, np.expand_dims(x_time[:, i]-x_time[:, j], 1), 1)
+            for j in range(i + 1, len(cols)):
+                x = np.append(x, np.expand_dims(x_time[:, i] - x_time[:, j], 1), 1)
         return x
 
-    def extract_data(self, F, ncat, nmvc):
+    def extract_data(self, raw_x):
         # only get numerical variables
 
-        if type(F) == np.ndarray:
-            ret = F
-            n_rows = ret.shape[0]
-            n_num_col = ret.shape[1] - ncat - nmvc
-        else:
-            n_rows = F['numerical'].shape[0]
-            n_num_col = F['numerical'].shape[1]
+        # TODO: give values to the n_time ..., put the values from raw_x to ret according to data_info.
 
-            data_list = [F['numerical']]
-            if ncat > 0:
-                data_list.append(F['CAT'])
-            if nmvc > 0:
-                data_list.append(F['MV'])
-            ret = np.concatenate(data_list, axis=1)
+        ret = raw_x
+        n_rows = ret.shape[0]
+        n_num_col = ret.shape[1] - self.n_cat
 
-        n_cat_col = nmvc + ncat
+        n_cat_col = self.n_cat
         if n_cat_col <= 0:
             return ret.astype(np.float64)
 
@@ -155,12 +148,11 @@ class TabularPreprocessor():
 
         return ret.astype(np.float64)
 
-
-    def cat_to_num(self, X, ncat, nmvc, nnum, ntime, y=None):
+    def cat_to_num(self, x, y=None):
         if y is not None:
-            mark = ntime + nnum
+            mark = self.n_time + self.n_num
 
-            for col_index in range(ntime + nnum, ntime + nnum + ncat + nmvc):
+            for col_index in range(self.n_time + self.n_num, self.n_time + self.n_num + self.n_cat):
                 if self.n_first_batch_keys[col_index] <= LEVEL_HIGH:
                     self.num_cat_pair[mark] = (col_index,)
                     mark += 1
@@ -169,20 +161,15 @@ class TabularPreprocessor():
                     mark += 1
 
             mark_1 = 0
-            tasks_1 = []
+            tasks = []
             for i, cat_col_index1 in enumerate(self.high_level_cat_keys):
                 for cat_col_index2 in self.high_level_cat_keys[i + 1:]:
-                    tasks_1.append((X[:, (cat_col_index1, cat_col_index2)],
-                                    [y, cat_col_index1, cat_col_index2, mark_1],
-                                    'train_cat_cat'))
+                    tasks.append((x[:, (cat_col_index1, cat_col_index2)],
+                                  [y, cat_col_index1, cat_col_index2, mark_1],
+                                  'train_cat_cat'))
                     mark_1 += 1
 
-            # pool = mp.Pool()
-            # results = [pool.apply_async(parallel_function, t) for t in tasks_1]
-            # all_results = [result.get() for result in results]
-            # pool.close()
-            # pool.join()
-            all_results = call_parallel(tasks_1)
+            all_results = call_parallel(tasks)
 
             num_cat_pair_1 = {}
             pearsonr_dict_1 = {}
@@ -195,22 +182,16 @@ class TabularPreprocessor():
             num_cat_pair_1 = {i + mark: num_cat_pair_1[key] for i, key in enumerate(num_cat_pair_1)}
             self.num_cat_pair.update(num_cat_pair_1)
             mark += len(pearsonr_high_1)
-            print('num_cat_pair_1:', num_cat_pair_1)
 
             mark_2 = 0
             tasks_2 = []
             for cat_col_index in self.high_level_cat_keys:
-                for num_col_index in range(ntime, ntime + nnum):
-                    tasks_2.append((X[:, (num_col_index, cat_col_index)],
+                for num_col_index in range(self.n_time, self.n_time + self.n_num):
+                    tasks_2.append((x[:, (num_col_index, cat_col_index)],
                                     [y, num_col_index, cat_col_index, mark_2],
                                     'train_num_cat'))
                     mark_2 += 1
 
-            # pool = mp.Pool()
-            # results = [pool.apply_async(parallel_function, t) for t in tasks_2]
-            # all_results = [result.get() for result in results]
-            # pool.close()
-            # pool.join()
             all_results = call_parallel(tasks_2)
 
             num_cat_pair_2 = {}
@@ -230,42 +211,34 @@ class TabularPreprocessor():
         for key in self.order_num_cat_pair:
             if len(self.num_cat_pair[key]) == 1:
                 (col_index,) = self.num_cat_pair[key]
-                tasks.append((X[:, col_index], self.n_first_batch_keys[col_index], 'label'))
+                tasks.append((x[:, col_index], self.n_first_batch_keys[col_index], 'label'))
             if len(self.num_cat_pair[key]) == 2:
                 (col_index, col_index) = self.num_cat_pair[key]
-                tasks.append((X[:, col_index], self.n_first_batch_keys[col_index], 'frequency'))
+                tasks.append((x[:, col_index], self.n_first_batch_keys[col_index], 'frequency'))
             if len(self.num_cat_pair[key]) == 3:
                 (cat_col_index1, cat_col_index2, mu) = self.num_cat_pair[key]
-                tasks.append((X[:, (cat_col_index1,
+                tasks.append((x[:, (cat_col_index1,
                                     cat_col_index2)], self.n_first_batch_keys[cat_col_index1], 'cat_cat'))
             elif len(self.num_cat_pair[key]) == 4:
                 (num_col_index, cat_col_index, mu, a) = self.num_cat_pair[key]
-                tasks.append((X[:, (num_col_index, cat_col_index)], self.n_first_batch_keys[cat_col_index], 'num_cat'))
-
-        # pool = mp.Pool()
-        # results = [pool.apply_async(parallel_function, t) for t in tasks]
-        # all_num = X.shape[1] - ncat - nmvc
-        # results = [X[:, :all_num]] + [result.get() for result in results]
-        #
-        # ret = np.concatenate(results, axis=1)
-        # pool.close()
-        # pool.join()
+                tasks.append((x[:, (num_col_index, cat_col_index)], self.n_first_batch_keys[cat_col_index], 'num_cat'))
 
         results = call_parallel(tasks)
-        all_num = X.shape[1] - ncat - nmvc
-        results = [X[:, :all_num]] + results
+        all_num = x.shape[1] - self.n_cat
+        results = [x[:, :all_num]] + results
         ret = np.concatenate(results, axis=1)
 
-        return ret #, ret.shape[1] - all_num, 0
+        return ret
 
-    def fit(self, F, y=None, time_limit=None, datainfo=None):
+    def fit(self, raw_x, y, time_limit, data_info):
         """
         This function should train the model parameters.
 
         Args:
-            x: A numpy.ndarray instance containing the training data.
+            time_limit:
+            raw_x: A numpy.ndarray instance containing the training data.
             y: Training label matrix of dim num_train_samples * num_labels.
-            datainfo: Meta-features of the dataset, which describe:
+            data_info: Meta-features of the dataset, which describe:
                      the number of four different features including:
                      time, numerical, categorical, and multi-value categorical.
         Both inputs X and y are numpy arrays.
@@ -275,22 +248,21 @@ class TabularPreprocessor():
         """
         # Get Meta-Feature
         self.budget = time_limit
-        self.datainfo = datainfo
-        [self.ntime, self.nnum, self.ncat, self.nmvc] = self.datainfo['loaded_feat_types']
+        self.data_info = data_info if data_info is not None else self.extract_data_info(raw_x)
 
-        for col_index in range(self.nnum + self.ntime, self.nnum + self.ntime + self.ncat + self.nmvc):
+        for col_index in range(self.n_num + self.n_time, self.n_num + self.n_time + self.n_cat):
             self.cat_to_int_label[col_index] = {}
 
-        x = self.extract_data(F, self.ncat, self.nmvc)
+        x = self.extract_data(raw_x)
 
         d_size = x.shape[0] * x.shape[1] / self.budget
-        print('d_size', d_size)
         if d_size > 35000:
             self.feature_add_high_cat = 0
         else:
             self.feature_add_high_cat = 10
 
-        for col_index in range(self.nnum + self.ntime, self.nnum + self.ntime + self.ncat + self.nmvc):
+        # Iterate cat features
+        for col_index in range(self.n_num + self.n_time, self.n_num + self.n_time + self.n_cat):
             self.n_first_batch_keys[col_index] = len(self.cat_to_int_label[col_index])
         high_level_cat_keys_tmp = sorted(self.n_first_batch_keys, key=self.n_first_batch_keys.get, reverse=True)[
                                   :self.feature_add_high_cat]
@@ -298,36 +270,24 @@ class TabularPreprocessor():
             if self.n_first_batch_keys[i] > 1e2:
                 self.high_level_cat_keys.append(i)
 
-        print('hig_order_cat_pair:', self.high_level_cat_keys)
-        print('n_first_batch_keys:', self.n_first_batch_keys)
-
-
         # Convert NaN to zeros
         x = np.nan_to_num(x)
 
-        if datainfo is None:
-            self.nnum = x.shape[1]
-
         # Encode high-order categorical data to numerical with frequency
-        x = self.cat_to_num(x, self.ncat, self.nmvc, self.nnum, self.ntime, y)
+        x = self.cat_to_num(x, y)
 
-        print('X.shape before remove_useless', x.shape)
         x = self.process_time(x)
         x = self.remove_useless(x)
-        print('X.shape after remove_useless', x.shape)
 
         return x
 
-    def encode(self, F, time_limit=None, datainfo=None):
+    def encode(self, raw_x, time_limit=None):
         """
         This function should train the model parameters.
 
         Args:
-            x: A numpy.ndarray instance containing the training data.
-            y: Training label matrix of dim num_train_samples * num_labels.
-            datainfo: Meta-features of the dataset, which describe:
-                     the number of four different features including:
-                     time, numerical, categorical, and multi-value categorical.
+            raw_x:
+            time_limit:
         Both inputs X and y are numpy arrays.
         If fit is called multiple times on incremental data (train, test1, test2, etc.)
         you should warm-start your training from the pre-trained model. Past data will
@@ -341,29 +301,20 @@ class TabularPreprocessor():
         else:
             self.budget = time_limit
 
-        if datainfo is None:
-            if self.datainfo is None:
-                datainfo = {'loaded_feat_types': [0] * 4}
-                self.datainfo = datainfo
-                [self.ntime, self.nnum, self.ncat, self.nmvc] = self.datainfo['loaded_feat_types']
-        else:
-            self.datainfo = datainfo
-
-
-        x = self.extract_data(F, self.ncat, self.nmvc)
+        x = self.extract_data(raw_x)
 
         # Convert NaN to zeros
         x = np.nan_to_num(x)
-        if datainfo is None:
-            self.nnum = x.shape[1]
 
         # Encode high-order categorical data to numerical with frequency
-        x = self.cat_to_num(x, self.ncat, self.nmvc, self.nnum, self.ntime)
+        x = self.cat_to_num(x)
 
-        print('X.shape before remove_useless', x.shape)
         x = self.process_time(x)
         if self.rest is not None:
             x = x[:, self.rest]
-        print('X.shape after remove_useless', x.shape)
 
         return x
+
+    def extract_data_info(self, raw_x):
+        # TODO:
+        pass

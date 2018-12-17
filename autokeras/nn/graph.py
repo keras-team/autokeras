@@ -9,7 +9,7 @@ from autokeras.nn.layer_transformer import wider_bn, wider_next_conv, wider_next
     wider_pre_conv, add_noise, init_dense_weight, init_conv_weight, init_bn_weight
 from autokeras.nn.layers import StubConcatenate, StubAdd, is_layer, layer_width, \
     to_real_keras_layer, set_torch_weight_to_stub, set_stub_weight_to_torch, set_stub_weight_to_keras, \
-    set_keras_weight_to_stub, get_conv_class, StubReLU
+    set_keras_weight_to_stub, get_conv_class, StubReLU, LayerType
 
 
 class NetworkDescriptor:
@@ -256,14 +256,15 @@ class Graph:
         """Given two node IDs, return all the pooling layers between them."""
         layer_list = []
         node_list = [start_node_id]
-        self._depth_first_search(end_node_id, layer_list, node_list)
+        assert self._depth_first_search(end_node_id, layer_list, node_list)
         ret = []
         for layer_id in layer_list:
             layer = self.layer_list[layer_id]
-            if is_layer(layer, 'Pooling'):
+            if is_layer(layer, LayerType.POOL):
                 ret.append(layer)
-            elif is_layer(layer, 'Conv') and layer.stride != 1:
+            elif is_layer(layer, LayerType.CONV) and (layer.stride != 1 or layer.padding != int(layer.kernel_size / 2)):
                 ret.append(layer)
+
         return ret
 
     def _depth_first_search(self, target_id, layer_id_list, node_list):
@@ -271,6 +272,7 @@ class Graph:
 
         A recursive function to search all the layers and nodes between the node in the node_list
             and the node with target_id."""
+        assert len(node_list) <= self.n_nodes
         u = node_list[-1]
         if u == target_id:
             return True
@@ -303,20 +305,20 @@ class Graph:
         for v, layer_id in self.adj_list[u]:
             layer = self.layer_list[layer_id]
 
-            if is_layer(layer, 'Conv'):
+            if is_layer(layer, LayerType.CONV):
                 new_layer = wider_next_conv(layer, start_dim, total_dim, n_add, self.weighted)
                 self._replace_layer(layer_id, new_layer)
 
-            elif is_layer(layer, 'Dense'):
+            elif is_layer(layer, LayerType.DENSE):
                 new_layer = wider_next_dense(layer, start_dim, total_dim, n_add, self.weighted)
                 self._replace_layer(layer_id, new_layer)
 
-            elif is_layer(layer, 'BatchNormalization'):
+            elif is_layer(layer, LayerType.BATCH_NORM):
                 new_layer = wider_bn(layer, start_dim, total_dim, n_add, self.weighted)
                 self._replace_layer(layer_id, new_layer)
                 self._search(v, start_dim, total_dim, n_add)
 
-            elif is_layer(layer, 'Concatenate'):
+            elif is_layer(layer, LayerType.CONCAT):
                 if self.layer_id_to_input_node_ids[layer_id][1] == u:
                     # u is on the right of the concat
                     # next_start_dim += next_total_dim - total_dim
@@ -333,13 +335,13 @@ class Graph:
 
         for v, layer_id in self.reverse_adj_list[u]:
             layer = self.layer_list[layer_id]
-            if is_layer(layer, 'Conv'):
+            if is_layer(layer, LayerType.CONV):
                 new_layer = wider_pre_conv(layer, n_add, self.weighted)
                 self._replace_layer(layer_id, new_layer)
-            elif is_layer(layer, 'Dense'):
+            elif is_layer(layer, LayerType.DENSE):
                 new_layer = wider_pre_dense(layer, n_add, self.weighted)
                 self._replace_layer(layer_id, new_layer)
-            elif is_layer(layer, 'Concatenate'):
+            elif is_layer(layer, LayerType.CONCAT):
                 continue
             else:
                 self._search(v, start_dim, total_dim, n_add)
@@ -347,9 +349,9 @@ class Graph:
     def _upper_layer_width(self, u):
         for v, layer_id in self.reverse_adj_list[u]:
             layer = self.layer_list[layer_id]
-            if is_layer(layer, 'Conv') or is_layer(layer, 'Dense'):
+            if is_layer(layer, LayerType.CONV) or is_layer(layer, LayerType.DENSE):
                 return layer_width(layer)
-            elif is_layer(layer, 'Concatenate'):
+            elif is_layer(layer, LayerType.CONCAT):
                 a = self.layer_id_to_input_node_ids[layer_id][0]
                 b = self.layer_id_to_input_node_ids[layer_id][1]
                 return self._upper_layer_width(a) + self._upper_layer_width(b)
@@ -368,11 +370,11 @@ class Graph:
         input_id = self.layer_id_to_input_node_ids[target_id][0]
         output_id = self.layer_id_to_output_node_ids[target_id][0]
         if self.weighted:
-            if is_layer(new_layer, 'Dense'):
+            if is_layer(new_layer, LayerType.DENSE):
                 init_dense_weight(new_layer)
-            elif is_layer(new_layer, 'Conv'):
+            elif is_layer(new_layer, LayerType.CONV):
                 init_conv_weight(new_layer)
-            elif is_layer(new_layer, 'BatchNormalization'):
+            elif is_layer(new_layer, LayerType.BATCH_NORM):
                 init_bn_weight(new_layer)
 
         self._insert_new_layers([new_layer], input_id, output_id)
@@ -501,9 +503,12 @@ class Graph:
         skip_output_id = start_node_id
         for layer in self._get_pooling_layers(start_node_id, end_node_id):
             new_layer = deepcopy(layer)
-            if is_layer(new_layer, 'Conv'):
+            if is_layer(new_layer, LayerType.CONV):
                 filters = self.node_list[start_node_id].shape[-1]
-                new_layer = get_conv_class(self.n_dim)(filters, filters, 1, layer.stride)
+                kernel_size = layer.kernel_size if layer.padding != int(
+                    layer.kernel_size / 2) or layer.stride != 1 else 1
+                new_layer = get_conv_class(self.n_dim)(filters, filters, kernel_size, layer.stride,
+                                                       padding=layer.padding)
                 if self.weighted:
                     init_conv_weight(new_layer)
             else:
@@ -537,9 +542,9 @@ class Graph:
                     temp_layer_id = layer_id
                     skip_type = None
                     while not (temp_v in index_in_main_chain and temp_u in index_in_main_chain):
-                        if is_layer(self.layer_list[temp_layer_id], 'Concatenate'):
+                        if is_layer(self.layer_list[temp_layer_id], LayerType.CONCAT):
                             skip_type = NetworkDescriptor.CONCAT_CONNECT
-                        if is_layer(self.layer_list[temp_layer_id], 'Add'):
+                        if is_layer(self.layer_list[temp_layer_id], LayerType.ADD):
                             skip_type = NetworkDescriptor.ADD_CONNECT
                         temp_u = temp_v
                         temp_v, temp_layer_id = self.adj_list[temp_v][0]
@@ -547,9 +552,9 @@ class Graph:
 
                 elif index_in_main_chain[v] - index_in_main_chain[u] != 1:
                     skip_type = None
-                    if is_layer(self.layer_list[layer_id], 'Concatenate'):
+                    if is_layer(self.layer_list[layer_id], LayerType.CONCAT):
                         skip_type = NetworkDescriptor.CONCAT_CONNECT
-                    if is_layer(self.layer_list[layer_id], 'Add'):
+                    if is_layer(self.layer_list[layer_id], LayerType.ADD):
                         skip_type = NetworkDescriptor.ADD_CONNECT
                     ret.add_skip_connection(index_in_main_chain[u], index_in_main_chain[v], skip_type)
 
@@ -590,18 +595,19 @@ class Graph:
         return ret
 
     def _conv_layer_ids_in_order(self):
-        return list(filter(lambda layer_id: is_layer(self.layer_list[layer_id], 'Conv'), self.get_main_chain_layers()))
+        return list(filter(lambda layer_id: is_layer(self.layer_list[layer_id], LayerType.CONV),
+                           self.get_main_chain_layers()))
 
     def _dense_layer_ids_in_order(self):
-        return self._layer_ids_in_order(self._layer_ids_by_type('Dense'))
+        return self._layer_ids_in_order(self._layer_ids_by_type(LayerType.DENSE))
 
     def deep_layer_ids(self):
         ret = []
         for layer_id in self.get_main_chain_layers():
             layer = self.layer_list[layer_id]
-            if is_layer(layer, 'GlobalAveragePooling'):
+            if is_layer(layer, LayerType.GLOBAL_POOL):
                 break
-            if is_layer(layer, 'Add') or is_layer(layer, 'Concatenate'):
+            if is_layer(layer, LayerType.ADD) or is_layer(layer, LayerType.CONCAT):
                 continue
             ret.append(layer_id)
         return ret
@@ -632,10 +638,13 @@ class Graph:
         for i in range(self.n_nodes):
             if distance[i] > distance[temp_id]:
                 temp_id = i
-        ret = [temp_id]
-        while pre_node[temp_id] != temp_id:
-            temp_id = pre_node[temp_id]
+        ret = []
+        for i in range(self.n_nodes + 5):
             ret.append(temp_id)
+            if pre_node[temp_id] == temp_id:
+                break
+            temp_id = pre_node[temp_id]
+        assert temp_id == pre_node[temp_id]
         ret.reverse()
         return ret
 

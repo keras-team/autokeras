@@ -1,15 +1,10 @@
-import torch
-
-from functools import reduce
-
 import os
 from abc import ABC, abstractmethod
 from sklearn.model_selection import train_test_split
-import numpy as np
 
 from autokeras.constant import Constant
 from autokeras.net_module import CnnModule
-from autokeras.utils import rand_temp_folder_generator, pickle_from_file, validate_xy, pickle_to_file
+from autokeras.utils import rand_temp_folder_generator, pickle_from_file, validate_xy, pickle_to_file, ensure_dir
 
 
 class Supervised(ABC):
@@ -28,7 +23,7 @@ class Supervised(ABC):
         self.verbose = verbose
 
     @abstractmethod
-    def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
+    def fit(self, x, y, time_limit=None):
         """Find the best neural architecture and train it.
 
         Based on the given dataset, the function will find the best neural architecture for it.
@@ -40,8 +35,6 @@ class Supervised(ABC):
                validation data.
             y: A numpy.ndarray instance containing the label of the training data. or the label of the training data
                combined with the validation label.
-            x_test: A numpy.ndarray instance containing the testing data
-            y_test: A numpy.ndarray instance containing the label of the testing data.
             time_limit: The time limit for the search in seconds.
         """
 
@@ -99,6 +92,7 @@ class DeepSupervised(Supervised):
             path = rand_temp_folder_generator()
 
         self.path = path
+        ensure_dir(path)
         if resume:
             classifier = pickle_from_file(os.path.join(self.path, 'classifier'))
             self.__dict__ = classifier.__dict__
@@ -109,21 +103,16 @@ class DeepSupervised(Supervised):
             self.verbose = verbose
             self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
 
-    def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
+    def fit(self, x, y, time_limit=None):
         validate_xy(x, y)
         y = self.transform_y(y)
-        if x_test is None or y_test is None:
-            # Divide training data into training and testing data.
-            validation_set_size = int(len(y) * Constant.VALIDATION_SET_SIZE)
-            validation_set_size = min(validation_set_size, 500)
-            validation_set_size = max(validation_set_size, 1)
-            x_train, x_test, y_train, y_test = train_test_split(x, y,
-                                                                test_size=validation_set_size,
-                                                                random_state=42)
-        else:
-            x_train = x
-            y_train = y
-
+        # Divide training data into training and testing data.
+        validation_set_size = int(len(y) * Constant.VALIDATION_SET_SIZE)
+        validation_set_size = min(validation_set_size, 500)
+        validation_set_size = max(validation_set_size, 1)
+        x_train, x_test, y_train, y_test = train_test_split(x, y,
+                                                            test_size=validation_set_size,
+                                                            random_state=42)
         self.init_transformer(x)
         # Transform x_train
 
@@ -206,15 +195,7 @@ class DeepSupervised(Supervised):
         """
         x_test = self.preprocess(x_test)
         test_loader = self.data_transformer.transform_test(x_test)
-        model = self.cnn.best_model.produce_model()
-        model.eval()
-
-        outputs = []
-        with torch.no_grad():
-            for index, inputs in enumerate(test_loader):
-                outputs.append(model(inputs).numpy())
-        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
-        return self.inverse_transform_y(output)
+        return self.inverse_transform_y(self.cnn.predict(test_loader))
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""

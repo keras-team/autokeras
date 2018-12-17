@@ -134,9 +134,10 @@ def download_file_with_extract(file_link, file_path, extract_path):
     print("file already extracted in the path %s" % extract_path)
 
 
-def verbose_print(new_father_id, new_graph):
+def verbose_print(new_father_id, new_graph, new_model_id):
     """Print information about the operation performed on father model to obtain current model and father's id."""
     cell_size = [24, 49]
+    print('New Model Id', new_model_id)
     header = ['Father Model ID', 'Added Operation']
     line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
     print('\n' + '+' + '-' * len(line) + '+')
@@ -150,6 +151,7 @@ def verbose_print(new_father_id, new_graph):
         line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
         print('|' + line + '|')
     print('+' + '-' * len(line) + '+')
+
 
 
 def validate_xy(x_train, y_train):
