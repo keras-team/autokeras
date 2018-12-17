@@ -170,8 +170,10 @@ def validate_xy(x_train, y_train):
 
 def read_csv_file(csv_file_path):
     """Read the csv file and returns two separate list containing file names and their labels.
+
     Args:
         csv_file_path: Path to the CSV file.
+
     Returns:
         file_names: List containing files names.
         file_label: List containing their respective labels.
@@ -195,9 +197,11 @@ def read_image(img_path):
 
 def compute_image_resize_params(data):
     """Compute median dimension of all images in data.
+
     It used to resize the images later. Number of channels do not change from the original data.
     Args:
         data: 1-D, 2-D or 3-D images. The Images are expected to have channel last configuration.
+
     Returns:
         median shape.
     """
@@ -223,9 +227,11 @@ def compute_image_resize_params(data):
 
 def resize_image_data(data, resize_shape):
     """Resize images to given dimension.
+
     Args:
         data: 1-D, 2-D or 3-D images. The Images are expected to have channel last configuration.
         resize_shape: Image resize dimension.
+
     Returns:
         data: Reshaped data.
     """
@@ -244,6 +250,7 @@ def resize_image_data(data, resize_shape):
 
 def get_system():
     """Get the current system environment. If the current system is not supported, raise an exception.
+
     Returns:
          A string to represent the current OS name.
          "posix" stands for Linux, Mac or Solaris architecture.
