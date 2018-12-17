@@ -1,5 +1,3 @@
-import torch
-
 from keras.datasets import mnist
 from autokeras import CnnModule
 from autokeras.nn.loss_function import classification_loss
