@@ -9,7 +9,7 @@ import time
 from autokeras.constant import Constant
 from autokeras.search import Searcher, train
 
-from autokeras.utils import pickle_to_file, rand_temp_folder_generator
+from autokeras.utils import pickle_to_file, rand_temp_folder_generator, ensure_dir
 from autokeras.nn.generator import CnnGenerator, MlpGenerator, ResNetGenerator, DenseNetGenerator
 
 
@@ -30,6 +30,7 @@ class NetworkModule:
         self.searcher_args = searcher_args if searcher_args is not None else {}
         self.searcher = None
         self.path = path if path is not None else rand_temp_folder_generator()
+        ensure_dir(self.path)
         if verbose:
             print('Saving Directory:', self.path)
         self.verbose = verbose

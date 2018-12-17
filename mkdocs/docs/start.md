@@ -122,18 +122,23 @@ This is not specific to AutoKeras, however, the following will generate a .PNG v
     from keras.utils import plot_model
     plot_model(model, to_file='my_model.png')
 
-# CnnModule tutorial
+# CnnGenerator tutorial
 
-`CnnModule` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with basic cnn modules
+`CnnGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with basic cnn modules
 and the ResNet module. 
 
 ### Examples
-Normally, there's two place to call the CnnModule, one is call `CnnModule.fit` while the other is `CnnModule.final_fit`.
+Normally, there's two place to call the CnnGenerator, one is call `CnnGenerator.fit` while the other is `CnnGenerator.final_fit`.
 
 For example, in a image classification class `ImageClassifier`, one can initialize the cnn module as:
 
 ```python
-self.cnn = CnnModule(loss, metric, searcher_args, path, verbose)
+from autokeras import CnnModule
+from autokeras.nn.loss_function import classification_loss
+from autokeras.nn.metric import Accuracy
+
+TEST_FOLDER = "test"
+cnnModule = CnnModule(loss=classification_loss, metric=Accuracy, searcher_args={}, path=TEST_FOLDER, verbose=False)
 ```
 Where:
 * `loss` and `metric` determines by the type of training model(classification or regression or others)
@@ -143,7 +148,7 @@ Where:
 
 Then, for the searching part, one can call:
 ```python
-self.cnn.fit(n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60)
+cnnModule.fit(n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60)
 ```
 where:
 * n_output_node: A integer value represent the number of output node in the final layer.
@@ -155,7 +160,7 @@ where:
 
 And for final testing(testing the best searched model), one can call:
 ```python
-self.cnn.final_fit(train_data, test_data, trainer_args=None, retrain=False)
+cnnModule.final_fit(train_data, test_data, trainer_args=None, retrain=False)
 ```
 where:
 * train_data: A DataLoader instance representing the training data.
@@ -193,17 +198,17 @@ should be in string format.
 `EMBEDDING_DIM`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_NAME` in `constant.py`.
 
 
-# MlpModule tutorial
+# MlpGenerator tutorial
 
-`MlpModule` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with MLP modules 
+`MlpGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with MLP modules 
 
 ### Examples
-Normally, there's two place to call the MlpModule, one is call `MlpModule.fit` while the other is `MlpModule.final_fit`.
+Normally, there's two place to call the MlpGenerator, one is call `MlpGenerator.fit` while the other is `MlpGenerator.final_fit`.
 
 For example, in a image classification class `ImageClassifier`, one can initialize the cnn module as:
 
 ```python
-self.mlp = MlpModule(loss, metric, searcher_args, path, verbose)
+self.mlp = MlpGenerator(loss, metric, searcher_args, path, verbose)
 ```
 Where:
 * `loss` and `metric` determines by the type of training model(classification or regression or others)
