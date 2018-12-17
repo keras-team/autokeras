@@ -596,5 +596,6 @@ def detect_faces(pnet_path, rnet_path, onet_path, img_path, output_file_path):
     img = cv2.imread(img_path)
     img_bg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     bboxs, landmarks = mtcnn_detector.detect_face(img)
-    vis_face(img_bg, bboxs, output_file_path, landmarks)
+    if output_file_path is not None:
+        vis_face(img_bg, bboxs, output_file_path, landmarks)
     return bboxs, landmarks
