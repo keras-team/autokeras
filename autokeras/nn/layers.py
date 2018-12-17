@@ -7,6 +7,21 @@ from torch.nn import functional
 from autokeras.constant import Constant
 
 
+class TorchConcatenate(nn.Module):
+    def forward(self, input_list):
+        return torch.cat(input_list, dim=1)
+
+
+class TorchAdd(nn.Module):
+    def forward(self, input_list):
+        return input_list[0] + input_list[1]
+
+
+class TorchFlatten(nn.Module):
+    def forward(self, input_tensor):
+        return input_tensor.view(input_tensor.size(0), -1)
+
+
 class AvgPool(nn.Module):
     def __init__(self):
         super().__init__()
@@ -32,6 +47,7 @@ class GlobalAvgPool3d(AvgPool):
 
 
 class StubLayer:
+
     def __init__(self, input_node=None, output_node=None):
         self.input = input_node
         self.output = output_node
@@ -73,6 +89,7 @@ class StubLayer:
 
 
 class StubWeightBiasLayer(StubLayer):
+
     def import_weights(self, torch_layer):
         self.set_weights((torch_layer.weight.data.cpu().numpy(), torch_layer.bias.data.cpu().numpy()))
 
@@ -88,6 +105,7 @@ class StubWeightBiasLayer(StubLayer):
 
 
 class StubBatchNormalization(StubWeightBiasLayer):
+
     def __init__(self, num_features, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
         self.num_features = num_features
@@ -129,6 +147,7 @@ class StubBatchNormalization3d(StubBatchNormalization):
 
 
 class StubDense(StubWeightBiasLayer):
+
     def __init__(self, input_units, units, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
         self.input_units = input_units
@@ -152,6 +171,7 @@ class StubDense(StubWeightBiasLayer):
 
 
 class StubConv(StubWeightBiasLayer):
+
     def __init__(self, input_channel, filters, kernel_size, stride=1, padding=None, output_node=None, input_node=None):
         super().__init__(input_node, output_node)
         self.input_channel = input_channel
@@ -223,6 +243,7 @@ class StubAggregateLayer(StubLayer):
 
 
 class StubConcatenate(StubAggregateLayer):
+
     @property
     def output_shape(self):
         ret = 0
@@ -236,6 +257,7 @@ class StubConcatenate(StubAggregateLayer):
 
 
 class StubAdd(StubAggregateLayer):
+
     @property
     def output_shape(self):
         return self.input[0].shape
@@ -245,6 +267,7 @@ class StubAdd(StubAggregateLayer):
 
 
 class StubFlatten(StubLayer):
+
     @property
     def output_shape(self):
         ret = 1
@@ -267,6 +290,7 @@ class StubSoftmax(StubLayer):
 
 
 class StubPooling(StubLayer):
+
     def __init__(self,
                  kernel_size=None,
                  input_node=None,
@@ -323,6 +347,7 @@ class StubAvgPooling3d(StubPooling):
 
 
 class StubGlobalPooling(StubLayer):
+
     def __init__(self, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
 
@@ -351,6 +376,7 @@ class StubGlobalPooling3d(StubGlobalPooling):
 
 
 class StubDropout(StubLayer):
+
     def __init__(self, rate, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
         self.rate = rate
@@ -380,55 +406,13 @@ class StubInput(StubLayer):
         super().__init__(input_node, output_node)
 
 
-def is_layer(layer, layer_type):
-    if layer_type == 'Input':
-        return isinstance(layer, StubInput)
-    if layer_type == 'Conv':
-        return isinstance(layer, StubConv)
-    if layer_type == 'Dense':
-        return isinstance(layer, (StubDense,))
-    if layer_type == 'BatchNormalization':
-        return isinstance(layer, (StubBatchNormalization,))
-    if layer_type == 'Concatenate':
-        return isinstance(layer, (StubConcatenate,))
-    if layer_type == 'Add':
-        return isinstance(layer, (StubAdd,))
-    if layer_type == 'Pooling':
-        return isinstance(layer, StubPooling)
-    if layer_type == 'Dropout':
-        return isinstance(layer, (StubDropout,))
-    if layer_type == 'Softmax':
-        return isinstance(layer, (StubSoftmax,))
-    if layer_type == 'ReLU':
-        return isinstance(layer, (StubReLU,))
-    if layer_type == 'Flatten':
-        return isinstance(layer, (StubFlatten,))
-    if layer_type == 'GlobalAveragePooling':
-        return isinstance(layer, StubGlobalPooling)
-
-
 def layer_width(layer):
-    if is_layer(layer, 'Dense'):
+    if is_layer(layer, LayerType.DENSE):
         return layer.units
-    if is_layer(layer, 'Conv'):
+    if is_layer(layer, LayerType.CONV):
         return layer.filters
     print(layer)
     raise TypeError('The layer should be either Dense or Conv layer.')
-
-
-class TorchConcatenate(nn.Module):
-    def forward(self, input_list):
-        return torch.cat(input_list, dim=1)
-
-
-class TorchAdd(nn.Module):
-    def forward(self, input_list):
-        return input_list[0] + input_list[1]
-
-
-class TorchFlatten(nn.Module):
-    def forward(self, input_tensor):
-        return input_tensor.view(input_tensor.size(0), -1)
 
 
 def keras_dropout(layer, rate):
@@ -446,30 +430,30 @@ def keras_dropout(layer, rate):
 
 def to_real_keras_layer(layer):
     from keras import layers
-    if is_layer(layer, 'Dense'):
+    if is_layer(layer, LayerType.DENSE):
         return layers.Dense(layer.units, input_shape=(layer.input_units,))
-    if is_layer(layer, 'Conv'):
+    if is_layer(layer, LayerType.CONV):
         return layers.Conv2D(layer.filters,
                              layer.kernel_size,
                              input_shape=layer.input.shape,
                              padding='same')  # padding
-    if is_layer(layer, 'Pooling'):
+    if is_layer(layer, LayerType.POOL):
         return layers.MaxPool2D(2)
-    if is_layer(layer, 'BatchNormalization'):
+    if is_layer(layer, LayerType.BATCH_NORM):
         return layers.BatchNormalization(input_shape=layer.input.shape)
-    if is_layer(layer, 'Concatenate'):
+    if is_layer(layer, LayerType.CONCAT):
         return layers.Concatenate()
-    if is_layer(layer, 'Add'):
+    if is_layer(layer, LayerType.ADD):
         return layers.Add()
-    if is_layer(layer, 'Dropout'):
+    if is_layer(layer, LayerType.DROPOUT):
         return keras_dropout(layer, layer.rate)
-    if is_layer(layer, 'ReLU'):
+    if is_layer(layer, LayerType.RELU):
         return layers.Activation('relu')
-    if is_layer(layer, 'Softmax'):
+    if is_layer(layer, LayerType.SOFTMAX):
         return layers.Activation('softmax')
-    if is_layer(layer, 'Flatten'):
+    if is_layer(layer, LayerType.FLATTEN):
         return layers.Flatten()
-    if is_layer(layer, 'GlobalAveragePooling'):
+    if is_layer(layer, LayerType.GLOBAL_POOL):
         return layers.GlobalAveragePooling2D()
 
 
@@ -527,3 +511,22 @@ def get_n_dim(layer):
     if isinstance(layer, (StubConv3d, StubDropout3d, StubGlobalPooling3d, StubPooling3d, StubBatchNormalization3d)):
         return 3
     return -1
+
+
+class LayerType:
+    INPUT = (StubInput,)
+    CONV = (StubConv,)
+    DENSE = (StubDense,)
+    BATCH_NORM = (StubBatchNormalization,)
+    CONCAT = (StubConcatenate,)
+    ADD = (StubAdd,)
+    POOL = (StubPooling,)
+    DROPOUT = (StubDropout,)
+    SOFTMAX = (StubSoftmax,)
+    RELU = (StubReLU,)
+    FLATTEN = (StubFlatten,)
+    GLOBAL_POOL = (StubGlobalPooling,)
+
+
+def is_layer(layer, layer_type):
+    return isinstance(layer, layer_type)

@@ -35,8 +35,8 @@ class ModelTrainerBase(abc.ABC):
     def __init__(self,
                  loss_function,
                  train_data,
-                 timeout,
                  test_data=None,
+                 timeout=0,
                  metric=None,
                  verbose=False,
                  device=None):
@@ -49,8 +49,8 @@ class ModelTrainerBase(abc.ABC):
         self.loss_function = loss_function
         self.train_loader = train_data
         self.test_loader = test_data
-        self.timeout = timeout if timeout > 0 else sys.maxsize
-        self._remaining_time = timeout
+        self.timeout = time.time() + timeout if timeout > 0 else sys.maxsize
+        self._remaining_time = self.timeout
 
     @abc.abstractmethod
     def train_model(self,
@@ -161,9 +161,8 @@ class ModelTrainer(ModelTrainerBase):
             progress_bar = None
 
         for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
-            if self._remaining_time <= 0:
+            if time.time() > self.timeout:
                 raise TimeoutError
-            start_time = time.time()
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
@@ -173,7 +172,6 @@ class ModelTrainer(ModelTrainerBase):
             if self.verbose:
                 if batch_idx % 10 == 0:
                     progress_bar.update(10)
-            self._remaining_time -= time.time() - start_time
         if self.verbose:
             progress_bar.close()
 
@@ -192,9 +190,8 @@ class ModelTrainer(ModelTrainerBase):
 
         with torch.no_grad():
             for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
-                if self._remaining_time <= 0:
+                if time.time() > self.timeout:
                     raise TimeoutError
-                start_time = time.time()
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 outputs = self.model(inputs)
                 # cast tensor to float
@@ -205,7 +202,6 @@ class ModelTrainer(ModelTrainerBase):
                 if self.verbose:
                     if batch_idx % 10 == 0:
                         progress_bar.update(10)
-                self._remaining_time -= time.time() - start_time
 
         if self.verbose:
             progress_bar.close()

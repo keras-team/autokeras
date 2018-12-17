@@ -4,6 +4,7 @@ import pickle
 import sys
 import tempfile
 import zipfile
+import logging
 
 import warnings
 import imageio
@@ -46,6 +47,7 @@ def pickle_from_file(path):
 def pickle_to_file(obj, path):
     """Save the pickle file to the specified path."""
     pickle.dump(obj, open(path, 'wb'))
+
 
 # TODO cannot detect nvidia-smi in Windows normally. We need a fall back for windows
 def get_device():
@@ -105,7 +107,7 @@ def download_file(file_link, file_path):
     """Download the file specified in `file_link` and saves it in `file_path`."""
     if not os.path.exists(file_path):
         with open(file_path, "wb") as f:
-            print("Downloading %s" % file_path)
+            print("\nDownloading %s" % file_path)
             response = requests.get(file_link, stream=True)
             total_length = response.headers.get('content-length')
 
@@ -136,22 +138,22 @@ def download_file_with_extract(file_link, file_path, extract_path):
 
 def verbose_print(new_father_id, new_graph, new_model_id):
     """Print information about the operation performed on father model to obtain current model and father's id."""
+
     cell_size = [24, 49]
-    print('New Model Id', new_model_id)
+    logging.info('New Model Id - ' + str(new_model_id))
     header = ['Father Model ID', 'Added Operation']
     line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
-    print('\n' + '+' + '-' * len(line) + '+')
-    print('|' + line + '|')
-    print('+' + '-' * len(line) + '+')
+    logging.info('\n' + '+' + '-' * len(line) + '+')
+    logging.info('|' + line + '|')
+    logging.info('+' + '-' * len(line) + '+')
     for i in range(len(new_graph.operation_history)):
         if i == len(new_graph.operation_history) // 2:
-            r = [new_father_id, ' '.join(str(item) for item in new_graph.operation_history[i])]
+            r = [str(new_father_id), ' '.join(str(item) for item in new_graph.operation_history[i])]
         else:
             r = [' ', ' '.join(str(item) for item in new_graph.operation_history[i])]
         line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
-        print('|' + line + '|')
-    print('+' + '-' * len(line) + '+')
-
+        logging.info('|' + line + '|')
+    logging.info('+' + '-' * len(line) + '+')
 
 
 def validate_xy(x_train, y_train):
