@@ -249,9 +249,3 @@ where:
 * test_data: A DataLoader instance representing the testing data.
 * trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
 * retrain: A boolean of whether reinitialize the weights of the model.
-
-
-        
-        
-
-
