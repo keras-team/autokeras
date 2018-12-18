@@ -17,7 +17,6 @@ You need to download the code from the GitHub repo and run the following command
     pip install -r requirements.txt
     python setup.py install
     
-=======
     
 #### How to visualize the best selected architecture ?
 
@@ -105,13 +104,25 @@ The returned values `x_train` and `y_train` are the numpy arrays,
 which can be directly feed into the `fit` function of `ImageClassifier`.
 
 #### How to export keras models?
+    clf.load_searcher().load_best_model().produce_keras_model().save('my_model.h5')
+This uses the keras function model.save() to export a single HDF5 file containing the architecture of the model, the weights of the model, the training configuration, and the state of the optimizer. See https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
 
+Note: This is being built into AutoKeras as ImageClassifier().export_keras_model() 
+
+#### how to export Portable model
     from autokeras import ImageClassifier
     clf = ImageClassifier(verbose=True, augment=False)
-    clf.load_searcher().load_best_model().produce_keras_model().save('my_model.h5')
+    clf.export_autokeras_model(model_file_name)
+The model will be stored into the path `model_file_name`. 
 
-This uses the keras function model.save() to export a single HDF5 file containing the architecture of the model, the weights of the model, the training configuration, and the state of the optimizer. See https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
-Note: This is being built into AutoKeras as ImageClassifier().export_keras_model() 
+#### How to load exported Portable model?
+    from autokeras.utils import pickle_from_file
+    model = pickle_from_file(model_file_name)
+    results = model.evaluate(x_test, y_test)
+    print(results)
+    
+The model will be loaded from the path `model_file_name` and then you can use the functions listed in `PortableImageSupervised`.
+
 	
 #### How to visualize keras models?
 
@@ -122,7 +133,8 @@ This is not specific to AutoKeras, however, the following will generate a .PNG v
     from keras.utils import plot_model
     plot_model(model, to_file='my_model.png')
 
-# CnnGenerator tutorial
+        
+# CnnModule tutorial
 
 `CnnGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with basic cnn modules
 and the ResNet module. 
@@ -198,7 +210,7 @@ should be in string format.
 `EMBEDDING_DIM`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_NAME` in `constant.py`.
 
 
-# MlpGenerator tutorial
+# MlpModule tutorial
 
 `MlpGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with MLP modules 
 
@@ -208,7 +220,7 @@ Normally, there's two place to call the MlpGenerator, one is call `MlpGenerator.
 For example, in a image classification class `ImageClassifier`, one can initialize the cnn module as:
 
 ```python
-self.mlp = MlpGenerator(loss, metric, searcher_args, path, verbose)
+mlpModule = MlpModule(loss, metric, searcher_args, path, verbose)
 ```
 Where:
 * `loss` and `metric` determines by the type of training model(classification or regression or others)
@@ -218,7 +230,7 @@ Where:
 
 Then, for the searching part, one can call:
 ```python
-self.mlp.fit(n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60)
+mlpModule.fit(n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60)
 ```
 where:
 * n_output_node: A integer value represent the number of output node in the final layer.
@@ -230,13 +242,10 @@ where:
 
 And for final testing(testing the best searched model), one can call:
 ```python
-self.mlp.final_fit(train_data, test_data, trainer_args=None, retrain=False)
+mlpModule.final_fit(train_data, test_data, trainer_args=None, retrain=False)
 ```
 where:
 * train_data: A DataLoader instance representing the training data.
 * test_data: A DataLoader instance representing the testing data.
 * trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
 * retrain: A boolean of whether reinitialize the weights of the model.
-
-
-
