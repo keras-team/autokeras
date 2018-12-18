@@ -134,7 +134,7 @@ This is not specific to AutoKeras, however, the following will generate a .PNG v
     plot_model(model, to_file='my_model.png')
 
         
-# CnnGenerator tutorial
+# CnnModule tutorial
 
 `CnnGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with basic cnn modules
 and the ResNet module. 
@@ -210,7 +210,7 @@ should be in string format.
 `EMBEDDING_DIM`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_NAME` in `constant.py`.
 
 
-# MlpGenerator tutorial
+# MlpModule tutorial
 
 `MlpGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with MLP modules 
 
