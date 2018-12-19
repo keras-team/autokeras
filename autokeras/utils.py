@@ -52,9 +52,7 @@ def pickle_to_file(obj, path):
 # TODO cannot detect nvidia-smi in Windows normally. We need a fall back for windows
 def get_device():
     """ If CUDA is available, use CUDA device, else use CPU device.
-
     When choosing from CUDA devices, this function will choose the one with max memory available.
-
     Returns: string device name.
     """
     # TODO: could use gputil in the future
@@ -138,8 +136,8 @@ def download_file_with_extract(file_link, file_path, extract_path):
 
 def verbose_print(new_father_id, new_graph, new_model_id):
     """Print information about the operation performed on father model to obtain current model and father's id."""
-
     cell_size = [24, 49]
+
     logging.info('New Model Id - ' + str(new_model_id))
     header = ['Father Model ID', 'Added Operation']
     line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
@@ -265,4 +263,5 @@ def get_system():
         return Constant.SYS_LINUX
     if os.name == 'nt':
         return Constant.SYS_WINDOWS
+
     raise EnvironmentError('Unsupported environment')
