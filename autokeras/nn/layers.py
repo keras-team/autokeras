@@ -300,7 +300,6 @@ class StubPooling(StubLayer):
         super().__init__(input_node, output_node)
         self.kernel_size = kernel_size if kernel_size is not None else Constant.POOLING_KERNEL_SIZE
         self.stride = stride if stride is not None else self.kernel_size
-        # TODO
         self.padding = padding
 
     @property

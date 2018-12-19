@@ -36,7 +36,7 @@ class ModelTrainerBase(abc.ABC):
                  loss_function,
                  train_data,
                  test_data=None,
-                 timeout=0,
+                 timeout=None,
                  metric=None,
                  verbose=False,
                  device=None):
@@ -49,7 +49,7 @@ class ModelTrainerBase(abc.ABC):
         self.loss_function = loss_function
         self.train_loader = train_data
         self.test_loader = test_data
-        self.timeout = time.time() + timeout if timeout > 0 else sys.maxsize
+        self.timeout = time.time() + timeout if timeout is not None else sys.maxsize
         self._remaining_time = self.timeout
 
     @abc.abstractmethod
