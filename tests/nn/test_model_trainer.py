@@ -52,6 +52,5 @@ def test_model_trainer_timout():
                      metric=Accuracy,
                      loss_function=classification_loss,
                      verbose=True,
-                     path=TEST_TEMP_DIR,
-                     timeout=timeout).train_model(max_iter_num=300)
+                     path=TEST_TEMP_DIR).train_model(max_iter_num=300, timeout=timeout)
     clean_dir(TEST_TEMP_DIR)
