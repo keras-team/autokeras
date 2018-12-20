@@ -197,14 +197,13 @@ class Searcher:
             self.mp_search(graph, other_info, model_id, train_data, test_data, timeout)
 
     def mp_search(self, graph, other_info, model_id, train_data, test_data, timeout):
-        start_time = time.time()
         ctx = mp.get_context()
         q = ctx.Queue()
         p = ctx.Process(target=train, args=(q, graph, train_data, test_data, self.trainer_args,
                                             self.metric, self.loss, self.verbose, self.path, timeout))
         try:
             p.start()
-            generated_other_info, generated_graph, new_model_id = self._search_common(other_info, model_id, q)
+            generated_other_info, generated_graph, new_model_id = self._search_common(q)
             #
             # # Do the search in current thread.
             # searched = False
@@ -243,7 +242,7 @@ class Searcher:
             metric_value, loss, graph = train(None, graph, train_data, test_data, self.trainer_args,
                                               self.metric, self.loss, self.verbose, self.path, timeout)
             # Do the search in current thread.
-            generated_other_info, generated_graph, new_model_id = self._search_common(other_info, model_id)
+            generated_other_info, generated_graph, new_model_id = self._search_common()
             # searched = False
             # generated_graph = None
             # generated_other_info = None
@@ -304,7 +303,7 @@ class Searcher:
 
         return new_father_id, generated_graph
 
-    def _search_common(self, other_info, model_id, mp_queue=None):
+    def _search_common(self, mp_queue=None):
         generated_graph = None
         generated_other_info = None
         new_model_id = -1
