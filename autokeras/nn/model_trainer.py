@@ -164,7 +164,7 @@ class ModelTrainer(ModelTrainerBase):
             progress_bar = None
 
         for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
-            if time.time() > self._timeout:
+            if time.time() >= self._timeout:
                 raise TimeoutError
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
@@ -193,7 +193,7 @@ class ModelTrainer(ModelTrainerBase):
 
         with torch.no_grad():
             for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
-                if time.time() > self._timeout:
+                if time.time() >= self._timeout:
                     raise TimeoutError
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 outputs = self.model(inputs)
