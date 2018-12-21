@@ -5,6 +5,7 @@ import sys
 import tempfile
 import zipfile
 import logging
+import itertools
 
 import warnings
 import imageio
@@ -134,6 +135,27 @@ def download_file_with_extract(file_link, file_path, extract_path):
         os.remove(file_path)
         print("extracted and removed downloaded zip file")
     print("file already extracted in the path %s" % extract_path)
+
+def assert_search_space(search_space):
+    grid = search_space
+    listofiterators = []
+    if Constant.LENGTH_DIM not in list(grid.keys()):
+        print('No length dimension found in search Space. Using default values')
+        grid[Constant.LENGTH_DIM] = Constant.DEFAULT_LENGTH_SEARCH
+
+    if Constant.WIDTH_DIM not in list(grid.keys()):
+        print('No width dimension found in search Space. Using default values')
+        grid[Constant.WIDTH_DIM] = Constant.DEFAULT_WIDTH_SEARCH
+
+    grid_key_list = list(grid.keys())
+    grid_key_list.sort()
+    for key in grid_key_list:
+        listofiterators.append(grid[key])
+
+    dimension = list(itertools.product(*listofiterators))
+    print(dimension)
+    return grid, dimension
+
 
 
 def verbose_print(new_father_id, new_graph, new_model_id):
