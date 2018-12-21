@@ -71,7 +71,7 @@ class Supervised(ABC):
 
 class DeepSupervised(Supervised):
 
-    def __init__(self, verbose=False, path=None, resume=False, searcher_args=None):
+    def __init__(self, verbose=False, path=None, resume=False, searcher_args=None, search_type=Constant.BAYESIAN_SEARCH):
         """Initialize the instance.
 
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
@@ -101,7 +101,7 @@ class DeepSupervised(Supervised):
             self.y_encoder = None
             self.data_transformer = None
             self.verbose = verbose
-            self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose)
+            self.cnn = CnnModule(self.loss, self.metric, searcher_args, path, verbose, search_type)
 
     def fit(self, x, y, time_limit=None):
         validate_xy(x, y)

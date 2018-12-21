@@ -26,11 +26,11 @@ from autokeras.search import Searcher
 from autokeras.bayesian import BayesianOptimizer
 from autokeras.constant import Constant
 from autokeras.nn.model_trainer import ModelTrainer
-from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get_system
+from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get_system, assert_search_space
 
 
 class Grid_Searcher(Searcher):
-    def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose, model_length_range ,model_width_range,
+    def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose, search_space,
                  trainer_args=None,
                  t_min=None):
         """Initialize the Searcher.
@@ -61,18 +61,21 @@ class Grid_Searcher(Searcher):
         self.model_count = 0
         self.descriptors = []
         self.trainer_args = trainer_args
-        self.model_length_range = model_length_range #default_model_len if default_model_len is not None else Constant.MODEL_LEN
-        self.model_width_range = model_width_range #default_model_width if default_model_width is not None else Constant.MODEL_WIDTH
+
+        self.search_space, self.search_dimensions = assert_search_space(search_space)
+        self.search_space_counter = 0
+        #self.length_range = model_length_range #default_model_len if default_model_len is not None else Constant.MODEL_LEN
+        #self.width_range = model_width_range #default_model_width if default_model_width is not None else Constant.MODEL_WIDTH
         if 'max_iter_num' not in self.trainer_args:
             self.trainer_args['max_iter_num'] = Constant.SEARCH_MAX_ITER
-        self.length_counter = 0
-        self.width_counter = 0
+        #self.search_dimensions = 0
+        #self.width_counter = 0
         self.training_queue = []
         self.x_queue = []
         self.y_queue = []
         # if t_min is None:
         #     t_min = Constant.T_MIN
-        #self.gs = GridSearcher(self, self.model_width, self.model_width, t_min, metric)
+
 
         logging.basicConfig(filename=self.path+datetime.now().strftime('run_%d_%m_%Y : _%H_%M.log'),
                             format='%(asctime)s - %(filename)s - %(message)s', level=logging.DEBUG)
@@ -135,7 +138,7 @@ class Grid_Searcher(Searcher):
             print('\nInitializing search.')
         for generator in self.generators:
             graph = generator(self.n_classes, self.input_shape). \
-                generate(self.model_length_range[0], self.model_width_range[0])
+                generate(self.search_space['length'][0], self.search_space['width'][0])
             model_id = self.model_count
             self.model_count += 1
             self.training_queue.append((graph, -1, model_id))
@@ -143,6 +146,12 @@ class Grid_Searcher(Searcher):
 
         if self.verbose:
             print('Initialization finished.')
+
+    def search_space_exhausted(self):
+        for i in range(len(self.search_space)):
+            if self.search_dimensions[0][i] != self.search_dimensions[1][i]:
+                return False
+        return True
 
     def search(self, train_data, test_data, timeout=60 * 60 * 24):
         """Run the search loop of training, generating and updating once.
@@ -164,8 +173,7 @@ class Grid_Searcher(Searcher):
         if not self.history:
             self.init_search()
 
-        if (self.length_counter == len(self.model_length_range) - 1) & (
-                self.width_counter == len(self.model_width_range) - 1):
+        if self.search_space_exhausted():
             return
         # Start the new process for training.
         graph, other_info, model_id = self.training_queue.pop(0)
@@ -190,7 +198,7 @@ class Grid_Searcher(Searcher):
             generated_other_info = None
             if not self.training_queue:
                 searched = True
-                print("Update .. " + str(self.length_counter) + " ~ " + str(self.width_counter))
+                #print("Update .. " + str(self.length_counter) + " ~ " + str(self.width_counter))
                 remaining_time = timeout - (time.time() - start_time)
                 generated_other_info, generated_graph = self.generate(remaining_time, q)
                 new_model_id = self.model_count
@@ -217,18 +225,6 @@ class Grid_Searcher(Searcher):
             p.terminate()
             p.join()
 
-    # def update(self, other_info, graph, metric_value, model_id):
-    #     """ Update the controller with evaluation result of a neural architecture.
-    #
-    #     Args:
-    #         other_info: Anything. In our case it is the father ID in the search tree.
-    #         graph: An instance of Graph. The trained neural architecture.
-    #         metric_value: The final evaluated metric value.
-    #         model_id: An integer.
-    #     """
-    #     father_id = other_info
-    #     self.gs.fit([graph.extract_descriptor()], [metric_value])
-    #     self.gs.add_child(father_id, model_id)
 
     def generate(self, remaining_time, multiprocessing_queue):
         """Generate the next neural architecture.
@@ -242,27 +238,16 @@ class Grid_Searcher(Searcher):
             generated_graph: An instance of Graph.
 
         """
-
-        # instead of bo.generate .. use cnngenerator.generate
-        length, width = self.update_grid()
-        print("Update .. " + str(self.length_counter) + " ~ " + str(self.width_counter))
+        grid = self.get_grid()
         generated_graph = self.generators[0](self.n_classes, self.input_shape). \
-            generate(self.model_length_range[length], self.model_width_range[width])
-        # if new_father_id is None:
-        #     new_father_id = 0
-        #     generated_graph = self.generators[0](self.n_classes, self.input_shape). \
-        #         generate(self.default_model_len, self.default_model_width)
-
+            generate(grid[0], grid[1])
         return 0, generated_graph
 
-    def update_grid(self):
-        #print("Update .. " + str(self.length_counter) + " ~ " + str(self.width_counter))
-        if self.width_counter == len(self.model_width_range)-1:
-            self.width_counter = 0
-            self.length_counter += 1
-        else:
-            self.width_counter += 1
-        return self.length_counter, self.width_counter
+    def get_grid(self):
+        self.search_space_counter += 1
+        if self.search_space_counter < len(self.search_dimensions):
+            return self.search_dimensions[self.search_space_counter]
+        return None
 
 def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, path):
     """Train the neural architecture."""
