@@ -19,25 +19,23 @@ class Pretrained(ABC):
         verbose: A boolean value indicating the verbosity mode.
     """
 
-    def __init__(self, cuda=False):
+    def __init__(self):
         """Initialize the instance.
 
         Args:
-            cuda: A boolean of whether to use gpu or not
         """
-        self.cuda = cuda
         self.model = None
 
     @abstractmethod
-    def load(self, model_path=None, trained_device='gpu'):
+    def load(self, model_path=None):
         """load pretrained model into self.model
 
         if model_path is None, a .pth model file will be downloaded
+        By default, the pretrained model was trained on a gpu device.
 
 
         Args:
             model_path: path to the .pth file to be loaded. if is None, auto-download will be triggered.
-            trained_device: 'gpu' or 'cpu', on gpu or cpu the pretrained model was trained
         """
         pass
 

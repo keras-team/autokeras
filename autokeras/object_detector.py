@@ -13,7 +13,7 @@ from autokeras.object_detection.data import base_transform
 from autokeras.object_detection.utils.augmentations import SSDAugmentation
 from autokeras.object_detection.layers.modules import MultiBoxLoss
 from autokeras.object_detection.ssd import build_ssd
-from autokeras.utils import download_file, temp_path_generator
+from autokeras.utils import download_file, temp_path_generator, get_device
 from autokeras.constant import Constant
 import os
 import sys
@@ -74,17 +74,12 @@ class Timer(object):
 
 
 class ObjectDetector(Pretrained):
-    def __init__(self, cuda=False):
-        self.cuda = cuda
+    def __init__(self):
         self.model = None
+        self.device = get_device()
 
-        if torch.cuda.is_available():
-            if self.cuda:
-                torch.set_default_tensor_type('torch.cuda.FloatTensor')
-            if not self.cuda:
-                print("WARNING: It looks like you have a CUDA device, but aren't " +
-                      "using CUDA.\nRun with --cuda for optimal training speed.")
-                torch.set_default_tensor_type('torch.FloatTensor')
+        if self.device.startswith("cuda"):
+            torch.set_default_tensor_type('torch.cuda.FloatTensor')
         else:
             torch.set_default_tensor_type('torch.FloatTensor')
 
