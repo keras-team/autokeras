@@ -10,8 +10,6 @@ from autokeras.pretrained import Pretrained
 from autokeras.object_detection.data import *
 from autokeras.object_detection.data import VOC_CLASSES as labelmap
 from autokeras.object_detection.data import base_transform
-from autokeras.object_detection.utils.augmentations import SSDAugmentation
-from autokeras.object_detection.layers.modules import MultiBoxLoss
 from autokeras.object_detection.ssd import build_ssd
 from autokeras.utils import download_file, temp_path_generator, get_device
 from autokeras.constant import Constant
