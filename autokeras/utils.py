@@ -136,9 +136,10 @@ def download_file_with_extract(file_link, file_path, extract_path):
         print("extracted and removed downloaded zip file")
     print("file already extracted in the path %s" % extract_path)
 
+
 def assert_search_space(search_space):
     grid = search_space
-    listofiterators = []
+    value_list = []
     if Constant.LENGTH_DIM not in list(grid.keys()):
         print('No length dimension found in search Space. Using default values')
         grid[Constant.LENGTH_DIM] = Constant.DEFAULT_LENGTH_SEARCH
@@ -150,10 +151,10 @@ def assert_search_space(search_space):
     grid_key_list = list(grid.keys())
     grid_key_list.sort()
     for key in grid_key_list:
-        listofiterators.append(grid[key])
+        value_list.append(grid[key])
 
-    dimension = list(itertools.product(*listofiterators))
-    print(dimension)
+    dimension = list(itertools.product(*value_list))
+    #print(dimension)
     return grid, dimension
 
 

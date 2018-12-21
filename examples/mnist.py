@@ -7,9 +7,9 @@ if __name__ == '__main__':
     x_train = x_train.reshape(x_train.shape+(1,))
     x_test = x_test.reshape(x_test.shape+(1,))
     # Pass Grid search space as searcher_args
-    searcher_args = {}
-    searcher_args['search_space'] = { Constant.LENGTH_DIM : [20, 30, 40], Constant.WIDTH_DIM :  [64, 128, 256] }
-    clf = ImageClassifier(path= '/home/venugopal/Documents/autotester', verbose=True, augment=False, searcher_args=searcher_args, search_type=Constant.GRID_SEARCH)
+    # searcher_args = {}
+    # searcher_args['search_space'] = { Constant.LENGTH_DIM : [20, 30, 40], Constant.WIDTH_DIM :  [64, 128, 256] }
+    clf = ImageClassifier(path= '/home/venugopal/Documents/autotester', verbose=True, augment=False)
     clf.fit(x_train, y_train, time_limit=40 * 60)
     clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
     y = clf.evaluate(x_test, y_test)

@@ -25,6 +25,7 @@ class NetworkModule:
         path: A string. The path to the directory to save the searcher.
         verbose: A boolean. Setting it to true prints to stdout.
         generators: A list of instances of the NetworkGenerator class or its subclasses.
+        search_type: A constant denoting the type of hyperparameter search algorithm that must be used.
     """
 
     def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False, search_type=Constant.BAYESIAN_SEARCH):
@@ -63,8 +64,6 @@ class NetworkModule:
             self.searcher_args['verbose'] = self.verbose
             pickle_to_file(self, os.path.join(self.path, 'module'))
             if self.search_type == Constant.GRID_SEARCH:
-                #print('No Search Space provided. Taking Default search Space ')
-                #self.searcher_args['search_space'] = {}
                 self.searcher = Grid_Searcher(**self.searcher_args)
             else:
                 self.searcher = Searcher(**self.searcher_args)
