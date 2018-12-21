@@ -138,7 +138,7 @@ class Grid_Searcher(Searcher):
             print('\nInitializing search.')
         for generator in self.generators:
             graph = generator(self.n_classes, self.input_shape). \
-                generate(self.search_space['length'][0], self.search_space['width'][0])
+                generate(self.search_space[Constant.LENGTH_DIM][0], self.search_space[Constant.WIDTH_DIM][0])
             model_id = self.model_count
             self.model_count += 1
             self.training_queue.append((graph, -1, model_id))
@@ -240,7 +240,7 @@ class Grid_Searcher(Searcher):
         """
         grid = self.get_grid()
         generated_graph = self.generators[0](self.n_classes, self.input_shape). \
-            generate(grid[0], grid[1])
+            generate(grid[Constant.LENGTH_DIM], grid[Constant.WIDTH_DIM])
         return 0, generated_graph
 
     def get_grid(self):

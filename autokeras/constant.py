@@ -18,6 +18,10 @@ class Constant:
     GRID_SEARCH = 'grid'
     BAYESIAN_SEARCH = 'bo'
 
+    # Grid Dimensions
+    LENGTH_DIM = 0
+    WIDTH_DIM = 1
+
     # Default Search Space
     DEFAULT_LENGTH_SEARCH = [50,75,100]
     DEFAULT_WIDTH_SEARCH = [64,128,256]

@@ -138,16 +138,18 @@ def download_file_with_extract(file_link, file_path, extract_path):
 
 def assert_search_space(search_space):
     grid = search_space
-    print(grid)
-    print(type(grid))
     listofiterators = []
-    if 'length' not in list(grid.keys()):
+    if Constant.LENGTH_DIM not in list(grid.keys()):
         print('No length dimension found in search Space. Using default values')
-        grid['length'] = Constant.DEFAULT_LENGTH_SEARCH
-    if 'width' not in list(grid.keys()):
+        grid[Constant.LENGTH_DIM] = Constant.DEFAULT_LENGTH_SEARCH
+
+    if Constant.WIDTH_DIM not in list(grid.keys()):
         print('No width dimension found in search Space. Using default values')
-        grid['width'] = Constant.DEFAULT_WIDTH_SEARCH
-    for key,value in grid.items():
+        grid[Constant.WIDTH_DIM] = Constant.DEFAULT_WIDTH_SEARCH
+
+    grid_key_list = list(grid.keys())
+    grid_key_list.sort()
+    for key in grid_key_list:
         listofiterators.append(grid[key])
 
     dimension = list(itertools.product(*listofiterators))
