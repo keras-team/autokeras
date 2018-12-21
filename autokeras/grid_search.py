@@ -30,7 +30,7 @@ from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get
 
 
 class Grid_Searcher(Searcher):
-    def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose, search_space,
+    def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose, search_space={},
                  trainer_args=None,
                  t_min=None):
         """Initialize the Searcher.
