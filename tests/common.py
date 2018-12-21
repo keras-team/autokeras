@@ -248,6 +248,7 @@ class MockProcess(object):
         self.target = target
         self.args = args
         self.result = None
+        self.count = 0
 
     def join(self):
         pass
@@ -267,7 +268,18 @@ class MockProcess(object):
         return self
 
     def Queue(self):
-        return queue.Queue()
+        class MockQueue(queue.Queue):
+            def __init__(self):
+                super().__init__()
+                self.count = 0
+
+            def qsize(self):
+                self.count += 1
+                if self.count > 8:
+                    return 1
+                return 0
+        # (0.5, 0.8, get_pooling_model())
+        return MockQueue()
 
     def Process(self, target, args):
         self.target = target
@@ -281,13 +293,8 @@ class MockProcess(object):
         pass
 
 
-class MockMemoryOutProcess(MockProcess):
-    def start(self):
-        raise RuntimeError('cuda: out of memory.')
-
-
 def simple_transform(graph):
-    graph.to_wider_model(5, 64)
+    graph.to_wider_model(6, 64)
     return [deepcopy(graph)]
 
 
@@ -299,6 +306,11 @@ def simple_transform_mlp(graph):
 def mock_train(**kwargs):
     str(kwargs)
     return 1, 0
+
+
+def mock_out_of_memory_train(**kwargs):
+    str(kwargs)
+    raise RuntimeError('CUDA: out of memory.')
 
 
 def mock_nvidia_smi_output(*arg, **kwargs):

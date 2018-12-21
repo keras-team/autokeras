@@ -9,7 +9,10 @@ import numpy as np
 
 from autokeras.constant import Constant
 from autokeras.net_module import CnnModule
-from autokeras.utils import rand_temp_folder_generator, pickle_from_file, validate_xy, pickle_to_file
+from autokeras.utils import rand_temp_folder_generator, pickle_from_file, validate_xy, pickle_to_file, download_file
+from autokeras.image.face_detection_pretrained import detect_faces
+from autokeras.utils import download_file
+import os
 
 
 class Pretrained(ABC):
@@ -20,34 +23,53 @@ class Pretrained(ABC):
     """
 
     def __init__(self):
-        """Initialize the instance.
-
-        Args:
-        """
+        """Initialize the instance."""
         self.model = None
 
     @abstractmethod
-    def load(self, model_path=None):
+    def load(self):
         """load pretrained model into self.model
-
-        if model_path is None, a .pth model file will be downloaded
-        By default, the pretrained model was trained on a gpu device.
-
-
-        Args:
-            model_path: path to the .pth file to be loaded. if is None, auto-download will be triggered.
         """
         pass
 
     @abstractmethod
-    def predict(self, img_path, output_file_path=None):
+    def predict(self, x_predict):
         """Return predict results for the given image
-
         Args:
-            img_path: path to the image to be predicted
-            output_file_path: if None: will only numerical results; else will also save the output image to the given path
-
+            x_predict: An instance of numpy.ndarray containing the testing data.
         Returns:
-            prediction results.
+            A numpy.ndarray containing the results.
         """
         pass
+
+
+class FaceDetectionPretrained(Pretrained):
+    """A class to predict faces using the MTCNN pre-trained model.
+    """
+
+    def __init__(self):
+        super(FaceDetectionPretrained, self).__init__()
+        self.load()
+
+    def load(self, model_path=None):
+        for model_link, file_path in zip(Constant.FACE_DETECTION_PRETRAINED['PRETRAINED_MODEL_LINKS'],
+                                         Constant.FACE_DETECTION_PRETRAINED['FILE_PATHS']):
+            download_file(model_link, file_path)
+        self.pnet, self.rnet, self.onet = Constant.FACE_DETECTION_PRETRAINED['FILE_PATHS']
+
+    def predict(self, img_path, output_file_path=None):
+        """Predicts faces in an image.
+
+        Args:
+            img_path: A string. The path to the image on which the prediction is to be done.
+            output_file_path: A string. The path where the output image is to be saved after the prediction. `None` by default.
+
+        Returns:
+            A tuple containing numpy arrays of bounding boxes and landmarks. Bounding boxes are of shape `(n, 5)` and
+            landmarks are of shape `(n, 10)` where `n` is the number of faces predicted. Each bounding box is of length
+            5 and the corresponding rectangle is defined by the first four values. Each bounding box has five landmarks
+            represented by 10 coordinates.
+        """
+        if not os.path.exists(img_path):
+            raise ValueError('Image does not exist')
+        return detect_faces(self.pnet, self.rnet, self.onet, img_path, output_file_path)

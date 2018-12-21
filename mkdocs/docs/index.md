@@ -5,7 +5,6 @@
 <a href="https://travis-ci.org/jhfjhfj1/autokeras"><img alt="Build Status" src="https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master" style="width: 90px"/></a>
 <a href="https://coveralls.io/github/jhfjhfj1/autokeras?branch=master"><img alt="Coverage Status" src="https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg?branch=master" style="width: 99px"/></a>
 <a href="https://badge.fury.io/py/autokeras"><img src="https://badge.fury.io/py/autokeras.svg" alt="PyPI version" style="width: 125px"></a>
-<a href="https://autokeras.com"><img src="https://readthedocs.org/projects/pip/badge/?version=latest&style=flat" alt="AutoKeras Official Website" style="width: 86px"></a>
 </p>
 </div>
 

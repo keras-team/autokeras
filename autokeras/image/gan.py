@@ -17,7 +17,7 @@ class DCGAN(Unsupervised):
     """
 
     def __init__(self, nz=100, ngf=32, ndf=32, nc=3, verbose=False, gen_training_result=None,
-                 augment=Constant.DATA_AUGMENTATION):
+                 augment=None):
         """
        Args:
             nz: size of the latent z vector
@@ -34,8 +34,9 @@ class DCGAN(Unsupervised):
         self.ndf = ndf
         self.nc = nc
         self.verbose = verbose
+        self.device = get_device()
         self.gen_training_result = gen_training_result
-        self.augment = augment
+        self.augment = augment if augment is not None else Constant.DATA_AUGMENTATION
         self.data_transformer = None
         self.net_d = Discriminator(self.nc, self.ndf)
         self.net_g = Generator(self.nc, self.nz, self.ngf)
@@ -58,11 +59,12 @@ class DCGAN(Unsupervised):
                         train_dataloader,
                         binary_classification_loss,
                         self.verbose,
-                        self.gen_training_result).train_model()
+                        self.gen_training_result,
+                        device=get_device()).train_model()
 
     def generate(self, input_sample=None):
         if input_sample is None:
-            input_sample = torch.randn(self.gen_training_result[1], self.nz, 1, 1, device=get_device())
+            input_sample = torch.randn(self.gen_training_result[1], self.nz, 1, 1, device=self.device)
         if not isinstance(input_sample, torch.Tensor) and \
                 isinstance(input_sample, np.ndarray):
             input_sample = torch.from_numpy(input_sample)
@@ -71,7 +73,7 @@ class DCGAN(Unsupervised):
             raise TypeError("Input should be a torch.tensor or a numpy.ndarray")
         self.net_g.eval()
         with torch.no_grad():
-            input_sample = input_sample.to(get_device())
+            input_sample = input_sample.to(self.device)
             generated_fake = self.net_g(input_sample)
         vutils.save_image(generated_fake.detach(),
                           '%s/evaluation.png' % self.gen_training_result[0],
