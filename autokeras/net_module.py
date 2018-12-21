@@ -66,6 +66,8 @@ class NetworkModule:
             if self.search_type == Constant.GRID_SEARCH:
                 self.searcher = Grid_Searcher(**self.searcher_args)
             else:
+                if 'search_space' in list(self.searcher_args.keys()):
+                    del self.searcher_args['search_space']
                 self.searcher = Searcher(**self.searcher_args)
 
         start_time = time.time()
