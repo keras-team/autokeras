@@ -513,18 +513,18 @@ def get_n_dim(layer):
 
 
 class LayerType:
-    INPUT = (StubInput, )
-    CONV = (StubConv, )
-    DENSE = (StubDense, )
-    BATCH_NORM = (StubBatchNormalization, )
-    CONCAT = (StubConcatenate, )
-    ADD = (StubAdd, )
-    POOL = (StubPooling, )
-    DROPOUT = (StubDropout, )
-    SOFTMAX = (StubSoftmax, )
-    RELU = (StubReLU, )
-    FLATTEN = (StubFlatten, )
-    GLOBAL_POOL = (StubGlobalPooling, )
+    INPUT = (StubInput,)
+    CONV = (StubConv,)
+    DENSE = (StubDense,)
+    BATCH_NORM = (StubBatchNormalization,)
+    CONCAT = (StubConcatenate,)
+    ADD = (StubAdd,)
+    POOL = (StubPooling,)
+    DROPOUT = (StubDropout,)
+    SOFTMAX = (StubSoftmax,)
+    RELU = (StubReLU,)
+    FLATTEN = (StubFlatten,)
+    GLOBAL_POOL = (StubGlobalPooling,)
 
 
 def is_layer(layer, layer_type):

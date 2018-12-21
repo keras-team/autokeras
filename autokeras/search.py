@@ -1,7 +1,11 @@
+import logging
 import os
 import queue
 import re
+import sys
 import time
+from datetime import datetime
+
 import torch
 import torch.multiprocessing as mp
 import logging
@@ -87,8 +91,12 @@ class Searcher:
         if t_min is None:
             t_min = Constant.T_MIN
         self.bo = BayesianOptimizer(self, t_min, metric)
-        logging.basicConfig(filename=os.path.join(self.path,datetime.now().strftime('run_%d_%m_%Y : _%H_%M.log')),
+
+        logging.basicConfig(filename=os.path.join(self.path, datetime.now().strftime('run_%d_%m_%Y : _%H_%M.log')),
                             format='%(asctime)s - %(filename)s - %(message)s', level=logging.DEBUG)
+
+        self._timeout = None
+
 
     def load_model_by_id(self, model_id):
         return pickle_from_file(os.path.join(self.path, str(model_id) + '.graph'))
@@ -173,11 +181,11 @@ class Searcher:
             timeout: An integer, time limit in seconds.
         """
 
-        start_time = time.time()
         torch.cuda.empty_cache()
         if not self.history:
             self.init_search()
 
+        self._timeout = time.time() + timeout if timeout is not None else sys.maxsize
         # Start the new process for training.
         graph, other_info, model_id = self.training_queue.pop(0)
         if self.verbose:
@@ -187,34 +195,40 @@ class Searcher:
             print('+' + '-' * 46 + '+')
         # Temporary solution to support GOOGLE Colab
         if get_system() == Constant.SYS_GOOGLE_COLAB:
-            ctx = mp.get_context('fork')
+            # When using Google Colab, use single process for searching and training.
+            self.sp_search(graph, other_info, model_id, train_data, test_data, timeout)
         else:
-            ctx = mp.get_context('spawn')
+            # Use two processes
+            self.mp_search(graph, other_info, model_id, train_data, test_data, timeout)
+
+    def mp_search(self, graph, other_info, model_id, train_data, test_data, timeout):
+        ctx = mp.get_context()
         q = ctx.Queue()
         p = ctx.Process(target=train, args=(q, graph, train_data, test_data, self.trainer_args,
-                                            self.metric, self.loss, self.verbose, self.path))
+                                            self.metric, self.loss, self.verbose, self.path, timeout))
         try:
             p.start()
-            # Do the search in current thread.
-            searched = False
-            generated_graph = None
-            generated_other_info = None
-            if not self.training_queue:
-                searched = True
-
-                remaining_time = timeout - (time.time() - start_time)
-                generated_other_info, generated_graph = self.generate(remaining_time, q)
-                new_model_id = self.model_count
-                self.model_count += 1
-                self.training_queue.append((generated_graph, generated_other_info, new_model_id))
-                self.descriptors.append(generated_graph.extract_descriptor())
-
-            remaining_time = timeout - (time.time() - start_time)
-            if remaining_time <= 0:
-                raise TimeoutError
-            metric_value, loss, graph = q.get(timeout=remaining_time)
-
-            if self.verbose and searched:
+            generated_other_info, generated_graph, new_model_id = self._search_common(q)
+            #
+            # # Do the search in current thread.
+            # searched = False
+            # generated_graph = None
+            # generated_other_info = None
+            # if not self.training_queue:
+            #     searched = True
+            #
+            #     remaining_time = timeout - (time.time() - start_time)
+            #     generated_other_info, generated_graph = self.generate(remaining_time, q)
+            #     new_model_id = self.model_count
+            #     self.model_count += 1
+            #     self.training_queue.append((generated_graph, generated_other_info, new_model_id))
+            #     self.descriptors.append(generated_graph.extract_descriptor())
+            #
+            # remaining_time = timeout - (time.time() - start_time)
+            # if remaining_time <= 0:
+            #     raise TimeoutError
+            metric_value, loss, graph = q.get(block=False)
+            if self.verbose and new_model_id != -1:
                 verbose_print(generated_other_info, generated_graph, new_model_id)
 
             if metric_value is not None:
@@ -227,6 +241,38 @@ class Searcher:
             # terminate and join the subprocess to prevent any resource leak
             p.terminate()
             p.join()
+
+    def sp_search(self, graph, other_info, model_id, train_data, test_data, timeout):
+        try:
+            metric_value, loss, graph = train(None, graph, train_data, test_data, self.trainer_args,
+                                              self.metric, self.loss, self.verbose, self.path, timeout)
+            # Do the search in current thread.
+            generated_other_info, generated_graph, new_model_id = self._search_common()
+            # searched = False
+            # generated_graph = None
+            # generated_other_info = None
+            # if not self.training_queue:
+            #     searched = True
+            #     remaining_time = timeout - (time.time() - start_time)
+            #     generated_other_info, generated_graph = self.generate(remaining_time)
+            #     new_model_id = self.model_count
+            #     self.model_count += 1
+            #     self.training_queue.append((generated_graph, generated_other_info, new_model_id))
+            #     self.descriptors.append(generated_graph.extract_descriptor())
+            #
+            # remaining_time = timeout - (time.time() - start_time)
+            # if remaining_time <= 0:
+            #     raise TimeoutError
+            #
+            if self.verbose and new_model_id != -1:
+                verbose_print(generated_other_info, generated_graph, new_model_id)
+
+            if metric_value is not None:
+                self.add_model(metric_value, loss, graph, model_id)
+                self.update(other_info, graph, metric_value, model_id)
+
+        except TimeoutError as e:
+            raise TimeoutError from e
 
     def update(self, other_info, graph, metric_value, model_id):
         """ Update the controller with evaluation result of a neural architecture.
@@ -241,18 +287,18 @@ class Searcher:
         self.bo.fit([graph.extract_descriptor()], [metric_value])
         self.bo.add_child(father_id, model_id)
 
-    def generate(self, remaining_time, multiprocessing_queue):
+    def generate(self, multiprocessing_queue=None):
         """Generate the next neural architecture.
 
-        Args:
-            remaining_time: The remaining time in seconds.
-            multiprocessing_queue: the Queue for multiprocessing return value.
+        Args: remaining_time: The remaining time in seconds. multiprocessing_queue: the Queue for multiprocessing
+        return value. pass into the search algorithm for synchronizing
 
         Returns:
             other_info: Anything to be saved in the training queue together with the architecture.
             generated_graph: An instance of Graph.
 
         """
+        remaining_time = self._timeout - time.time()
         generated_graph, new_father_id = self.bo.generate(self.descriptors,
                                                           remaining_time, multiprocessing_queue)
         if new_father_id is None:
@@ -262,8 +308,21 @@ class Searcher:
 
         return new_father_id, generated_graph
 
+    def _search_common(self, mp_queue=None):
+        generated_graph = None
+        generated_other_info = None
+        new_model_id = -1
+        if not self.training_queue:
+            generated_other_info, generated_graph = self.generate(mp_queue)
+            new_model_id = self.model_count
+            self.model_count += 1
+            self.training_queue.append((generated_graph, generated_other_info, new_model_id))
+            self.descriptors.append(generated_graph.extract_descriptor())
 
-def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, path):
+        return generated_other_info, generated_graph, new_model_id
+
+
+def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, path, timeout=0):
     """Train the neural architecture."""
     try:
         model = graph.produce_model()
@@ -284,6 +343,10 @@ def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, 
         if verbose:
             print('\nCurrent model size is too big. Discontinuing training this model to search for other models.')
         Constant.MAX_MODEL_SIZE = graph.size() - 1
+        if q:
+            q.put((None, None, None))
+        return None, None, None
+    except TimeoutError:
         if q:
             q.put((None, None, None))
         return None, None, None
