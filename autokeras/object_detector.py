@@ -46,8 +46,8 @@ class ObjectDetector(Pretrained):
         # https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth
         if model_path is None:
             file_link = Constant.PRE_TRAIN_DETECTION_FILE_LINK
-            # temp_path_generator() + '_object_detection_pretrained'
-            model_path = os.path.join(temp_path_generator(), "object_detection_pretrained.pth")
+            # model_path = os.path.join(temp_path_generator(), "object_detection_pretrained.pth")
+            model_path = temp_path_generator() + '_object_detection_pretrained.pth'
             download_file(file_link, model_path)
         # load net
         num_classes = len(labelmap) + 1                      # +1 for background
