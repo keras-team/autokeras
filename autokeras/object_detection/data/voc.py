@@ -14,10 +14,6 @@ import torch.utils.data as data
 import cv2
 import numpy as np
 from sklearn import model_selection
-if sys.version_info[0] == 2:
-    import xml.etree.cElementTree as ET
-else:
-    import xml.etree.ElementTree as ET
 
 VOC_CLASSES = ( # always index 0
     'aeroplane', 'bicycle', 'bird', 'boat',
@@ -29,8 +25,6 @@ VOC_CLASSES = ( # always index 0
 # note: if you used our download scripts, this should be right
 VOC_ROOT = osp.join(HOME, "object_detection/data/VOCdevkit/")
 
-def is_image_file(filename):
-    return any(filename.endswith(extension) for extension in [".png", ".jpg", ".jpeg"])
 
 class VOCAnnotationTransform(object):
     """Transforms a VOC annotation into a Tensor of bbox coords and label index
