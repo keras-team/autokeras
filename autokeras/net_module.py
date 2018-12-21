@@ -63,8 +63,8 @@ class NetworkModule:
             self.searcher_args['verbose'] = self.verbose
             pickle_to_file(self, os.path.join(self.path, 'module'))
             if self.search_type == Constant.GRID_SEARCH:
-                print('No Search Space provided. Taking Default search Space ')
-                self.searcher_args['search_space'] = {}
+                #print('No Search Space provided. Taking Default search Space ')
+                #self.searcher_args['search_space'] = {}
                 self.searcher = Grid_Searcher(**self.searcher_args)
             else:
                 self.searcher = Searcher(**self.searcher_args)
