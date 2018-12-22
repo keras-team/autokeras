@@ -50,10 +50,10 @@ class ObjectDetector(Pretrained):
         # load net
         num_classes = len(labelmap) + 1                      # +1 for background
         self.model = build_ssd('test', 300, num_classes)            # initialize SSD
-        if self.device == 'gpu':
-            self.model.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
-        else:
+        if self.device.startswith("cuda"):
             self.model.load_state_dict(torch.load(model_path))
+        else:
+            self.model.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
         self.model.eval()
         print('Finished loading model!')
 
