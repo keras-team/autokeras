@@ -181,6 +181,7 @@ class Searcher:
             self.init_search()
 
         self._timeout = time.time() + timeout if timeout is not None else sys.maxsize
+        self.trainer_args['timeout'] = timeout
         # Start the new process for training.
         graph, other_info, model_id = self.training_queue.pop(0)
         if self.verbose:
@@ -191,38 +192,22 @@ class Searcher:
         # Temporary solution to support GOOGLE Colab
         if get_system() == Constant.SYS_GOOGLE_COLAB:
             # When using Google Colab, use single process for searching and training.
-            self.sp_search(graph, other_info, model_id, train_data, test_data, timeout)
+            self.sp_search(graph, other_info, model_id, train_data, test_data)
         else:
             # Use two processes
-            self.mp_search(graph, other_info, model_id, train_data, test_data, timeout)
+            self.mp_search(graph, other_info, model_id, train_data, test_data)
 
-    def mp_search(self, graph, other_info, model_id, train_data, test_data, timeout):
+    def mp_search(self, graph, other_info, model_id, train_data, test_data):
         ctx = mp.get_context()
         q = ctx.Queue()
         p = ctx.Process(target=train, args=(q, graph, train_data, test_data, self.trainer_args,
-                                            self.metric, self.loss, self.verbose, self.path, timeout))
+                                            self.metric, self.loss, self.verbose, self.path))
         try:
             p.start()
             generated_other_info, generated_graph, new_model_id = self._search_common(q)
-            #
-            # # Do the search in current thread.
-            # searched = False
-            # generated_graph = None
-            # generated_other_info = None
-            # if not self.training_queue:
-            #     searched = True
-            #
-            #     remaining_time = timeout - (time.time() - start_time)
-            #     generated_other_info, generated_graph = self.generate(remaining_time, q)
-            #     new_model_id = self.model_count
-            #     self.model_count += 1
-            #     self.training_queue.append((generated_graph, generated_other_info, new_model_id))
-            #     self.descriptors.append(generated_graph.extract_descriptor())
-            #
-            # remaining_time = timeout - (time.time() - start_time)
-            # if remaining_time <= 0:
-            #     raise TimeoutError
-            metric_value, loss, graph = q.get(block=False)
+            metric_value, loss, graph = q.get(block=True)
+            if time.time() >= self._timeout:
+                raise TimeoutError
             if self.verbose and new_model_id != -1:
                 verbose_print(generated_other_info, generated_graph, new_model_id)
 
@@ -237,28 +222,12 @@ class Searcher:
             p.terminate()
             p.join()
 
-    def sp_search(self, graph, other_info, model_id, train_data, test_data, timeout):
+    def sp_search(self, graph, other_info, model_id, train_data, test_data):
         try:
             metric_value, loss, graph = train(None, graph, train_data, test_data, self.trainer_args,
-                                              self.metric, self.loss, self.verbose, self.path, timeout)
+                                              self.metric, self.loss, self.verbose, self.path)
             # Do the search in current thread.
             generated_other_info, generated_graph, new_model_id = self._search_common()
-            # searched = False
-            # generated_graph = None
-            # generated_other_info = None
-            # if not self.training_queue:
-            #     searched = True
-            #     remaining_time = timeout - (time.time() - start_time)
-            #     generated_other_info, generated_graph = self.generate(remaining_time)
-            #     new_model_id = self.model_count
-            #     self.model_count += 1
-            #     self.training_queue.append((generated_graph, generated_other_info, new_model_id))
-            #     self.descriptors.append(generated_graph.extract_descriptor())
-            #
-            # remaining_time = timeout - (time.time() - start_time)
-            # if remaining_time <= 0:
-            #     raise TimeoutError
-            #
             if self.verbose and new_model_id != -1:
                 verbose_print(generated_other_info, generated_graph, new_model_id)
 
@@ -317,7 +286,7 @@ class Searcher:
         return generated_other_info, generated_graph, new_model_id
 
 
-def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, path, timeout=0):
+def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, path):
     """Train the neural architecture."""
     try:
         model = graph.produce_model()
