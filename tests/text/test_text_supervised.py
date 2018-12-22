@@ -30,7 +30,7 @@ def test_fit_predict(_, _1, _2):
     clf = TextClassifier(path=TEST_TEMP_DIR, verbose=True)
     train_x = np.random.rand(100, 25, 25)
     train_y = np.random.randint(0, 5, 100)
-    clf.fit(train_x, train_y, )
+    clf.fit(train_x, train_y)
     results = clf.predict(train_x)
     assert all(map(lambda result: result in train_y, results))
     clean_dir(TEST_TEMP_DIR)

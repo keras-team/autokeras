@@ -92,35 +92,26 @@ class ImageSupervised(DeepSupervised, ABC):
             augment: A boolean value indicating whether the data needs augmentation. If not define, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
         """
-        if augment is None:
-            augment = Constant.DATA_AUGMENTATION
-        self.augment = augment
-        self.resize_height = None
-        self.resize_width = None
+        self.augment = augment if augment is not None else Constant.DATA_AUGMENTATION
+        self.resize_shape = []
 
         super().__init__(**kwargs)
 
-    def fit(self, x, y, x_test=None, y_test=None, time_limit=None):
+    def fit(self, x, y, time_limit=None):
         x = np.array(x)
-        y = np.array(y).flatten()
+        y = np.array(y)
 
         if self.verbose:
             print("Preprocessing the images.")
 
-        if x is not None and (len(x.shape) == 4 or len(x.shape) == 1 and len(x[0].shape) == 3):
-            self.resize_height, self.resize_width = compute_image_resize_params(x)
+        self.resize_shape = compute_image_resize_params(x)
 
-        if self.resize_height is not None:
-            x = resize_image_data(x, self.resize_height, self.resize_width)
-            print("x is ", x.shape)
-
-        if self.resize_height is not None:
-            x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
+        x = resize_image_data(x, self.resize_shape)
 
         if self.verbose:
             print("Preprocessing finished.")
 
-        super().fit(x, y, x_test, y_test, time_limit)
+        super().fit(x, y, time_limit)
 
     def init_transformer(self, x):
         if self.data_transformer is None:
@@ -133,14 +124,11 @@ class ImageSupervised(DeepSupervised, ABC):
                                                  data_transformer=self.data_transformer,
                                                  metric=self.metric,
                                                  inverse_transform_y_method=self.inverse_transform_y,
-                                                 resize_params=(self.resize_height, self.resize_width))
+                                                 resize_params=self.resize_shape)
         pickle_to_file(portable_model, model_file_name)
 
     def preprocess(self, x):
-        if len(x.shape) != 0 and len(x[0].shape) == 3:
-            if self.resize_height is not None:
-                return resize_image_data(x, self.resize_height, self.resize_width)
-        return x
+        return resize_image_data(x, self.resize_shape)
 
 
 class ImageClassifier(ImageSupervised):
@@ -257,8 +245,7 @@ class PortableImageSupervised(PortableClass):
         self.y_encoder = y_encoder
         self.metric = metric
         self.inverse_transform_y_method = inverse_transform_y_method
-        self.resize_height = resize_params[0]
-        self.resize_width = resize_params[1]
+        self.resize_shape = resize_params
 
     def predict(self, x_test):
         """Return predict results for the testing data.
@@ -288,7 +275,6 @@ class PortableImageSupervised(PortableClass):
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
-        if self.resize_height is not None:
-            x_test = resize_image_data(x_test, self.resize_height, self.resize_width)
+        x_test = resize_image_data(x_test, self.resize_shape)
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)

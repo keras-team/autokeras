@@ -100,6 +100,7 @@ class Cutout(object):
 
 class DataTransformer(ABC):
     """A superclass for all the DataTransformer."""
+
     def __init__(self):
         pass
 
@@ -140,6 +141,7 @@ def text_transform(compose_list, data, targets):
 
 class TextDataTransformer(DataTransformer):
     """ A DataTransformer class for the text data."""
+
     def __init__(self):
         super().__init__()
 
@@ -172,12 +174,14 @@ class ImageDataTransformer(DataTransformer):
         augment: whether to perform augmentation on data.
     """
 
-    def __init__(self, data, augment=Constant.DATA_AUGMENTATION):
+    def __init__(self, data, augment=None):
         super().__init__()
         self.max_val = data.max()
         data = data / self.max_val
         self.mean = np.mean(data, axis=(0, 1, 2), keepdims=True).flatten()
         self.std = np.std(data, axis=(0, 1, 2), keepdims=True).flatten()
+        if augment is None:
+            self.augment = Constant.DATA_AUGMENTATION
         self.augment = augment
 
     def transform_train(self, data, targets=None, batch_size=None):
@@ -303,6 +307,7 @@ class MultiTransformDataset(Dataset):
 
 class BatchDataset(Dataset):
     """A torch.Dataset class that can read data batch by batch."""
+
     def __init__(self, csv_file_path, image_path, has_target=True):
         file_names, target = read_csv_file(csv_file_path)
 

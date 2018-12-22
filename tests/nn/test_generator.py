@@ -9,7 +9,7 @@ def test_default_cnn_generator():
     graph = generator.generate()
     model = graph.produce_model()
     inputs = torch.Tensor(np.ones((100, 1, 28, 28)))
-    print(model(inputs).size())
+    model(inputs).size()
     assert isinstance(model, TorchModel)
 
 

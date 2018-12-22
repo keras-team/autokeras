@@ -1,57 +1,8 @@
-from autokeras.nn.generator import CnnGenerator
+from autokeras.net_transformer import transform
+from autokeras.nn.generator import CnnGenerator, ResNetGenerator, DenseNetGenerator
 from autokeras.nn.graph import *
-from autokeras.net_transformer import legal_graph
 from tests.common import get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model, \
     get_concat_skip_model
-
-
-def test_conv_deeper_stub():
-    graph = get_conv_dense_model()
-    layer_num = graph.n_layers
-    graph.to_conv_deeper_model(4, 3)
-
-    assert graph.n_layers == layer_num + 3
-
-
-def test_conv_deeper():
-    graph = get_conv_dense_model()
-    model = graph.produce_model()
-    graph = deepcopy(graph)
-    graph.to_conv_deeper_model(4, 3)
-    new_model = graph.produce_model()
-    input_data = torch.Tensor(get_conv_data())
-
-    model.eval()
-    new_model.eval()
-    output1 = model(input_data)
-    output2 = new_model(input_data)
-
-    assert (output1 - output2).abs().sum() < 1e-1
-
-
-def test_dense_deeper_stub():
-    graph = get_conv_dense_model()
-    graph.weighted = False
-    layer_num = graph.n_layers
-    graph.to_dense_deeper_model(9)
-
-    assert graph.n_layers == layer_num + 2
-
-
-def test_dense_deeper():
-    graph = get_conv_dense_model()
-    model = graph.produce_model()
-    graph = deepcopy(graph)
-    graph.to_dense_deeper_model(9)
-    new_model = graph.produce_model()
-    input_data = torch.Tensor(get_conv_data())
-
-    model.eval()
-    new_model.eval()
-    output1 = model(input_data)
-    output2 = new_model(input_data)
-
-    assert (output1 - output2).abs().sum() < 1e-3
 
 
 def test_conv_wider_stub():
@@ -112,7 +63,7 @@ def test_skip_add_over_pooling_stub():
     layer_num = graph.n_layers
     graph.to_add_skip_model(1, 8)
 
-    assert graph.n_layers == layer_num + 5
+    assert graph.n_layers == layer_num + 4
 
 
 def test_skip_add_over_pooling():
@@ -138,7 +89,7 @@ def test_skip_concat_over_pooling_stub():
     layer_num = graph.n_layers
     graph.to_concat_skip_model(1, 11)
 
-    assert graph.n_layers == layer_num + 5
+    assert graph.n_layers == layer_num + 4
 
 
 def test_skip_concat_over_pooling():
@@ -161,22 +112,21 @@ def test_skip_concat_over_pooling():
 
 def test_extract_descriptor_add():
     descriptor = get_add_skip_model().extract_descriptor()
-    assert descriptor.n_conv == 5
-    assert descriptor.n_dense == 2
-    assert descriptor.skip_connections == [(2, 3, NetworkDescriptor.ADD_CONNECT), (3, 4, NetworkDescriptor.ADD_CONNECT)]
+    assert len(descriptor.layers) == 24
+    assert descriptor.skip_connections == [(6, 10, NetworkDescriptor.ADD_CONNECT),
+                                           (10, 14, NetworkDescriptor.ADD_CONNECT)]
 
 
 def test_extract_descriptor_concat():
     descriptor = get_concat_skip_model().extract_descriptor()
-    assert descriptor.n_conv == 5
-    assert descriptor.n_dense == 2
-    assert descriptor.skip_connections == [(2, 3, NetworkDescriptor.CONCAT_CONNECT),
-                                           (3, 4, NetworkDescriptor.CONCAT_CONNECT)]
+    assert len(descriptor.layers) == 32
+    assert descriptor.skip_connections == [(6, 10, NetworkDescriptor.CONCAT_CONNECT),
+                                           (13, 17, NetworkDescriptor.CONCAT_CONNECT)]
 
 
 def test_deep_layer_ids():
     graph = get_conv_dense_model()
-    assert len(graph.deep_layer_ids()) == 3
+    assert len(graph.deep_layer_ids()) == 13
 
 
 def test_wide_layer_ids():
@@ -186,7 +136,7 @@ def test_wide_layer_ids():
 
 def test_skip_connection_layer_ids():
     graph = get_conv_dense_model()
-    assert len(graph.skip_connection_layer_ids()) == 1
+    assert len(graph.skip_connection_layer_ids()) == 12
 
 
 def test_wider_dense():
@@ -196,17 +146,7 @@ def test_wider_dense():
     for args in history:
         getattr(graph, args[0])(*list(args[1:]))
         graph.produce_model()
-    assert legal_graph(graph)
-
-
-def test_long_transform():
-    graph = CnnGenerator(10, (32, 32, 3)).generate()
-    history = [('to_wider_model', 1, 256), ('to_conv_deeper_model', 1, 3),
-               ('to_concat_skip_model', 5, 9)]
-    for args in history:
-        getattr(graph, args[0])(*list(args[1:]))
-        graph.produce_model()
-    assert legal_graph(graph)
+    assert graph.layer_list[14].output.shape[-1] == 128
 
 
 def test_node_consistency():
@@ -216,32 +156,15 @@ def test_node_consistency():
     for layer in graph.layer_list:
         assert layer.output.shape == layer.output_shape
 
-    graph.to_wider_model(5, 64)
-    assert graph.layer_list[5].output.shape == (16, 16, 128)
-
-    for layer in graph.layer_list:
-        assert layer.output.shape == layer.output_shape
-
-    graph.to_conv_deeper_model(5, 3)
-    assert graph.layer_list[19].output.shape == (16, 16, 128)
-
-    for layer in graph.layer_list:
-        assert layer.output.shape == layer.output_shape
-
-    graph.to_add_skip_model(5, 18)
-    assert graph.layer_list[23].output.shape == (16, 16, 128)
-
-    for layer in graph.layer_list:
-        assert layer.output.shape == layer.output_shape
-
-    graph.to_concat_skip_model(5, 18)
-    assert graph.layer_list[25].output.shape == (16, 16, 256)
+    graph.to_wider_model(6, 64)
+    assert graph.layer_list[6].output.shape == (16, 16, 128)
 
     for layer in graph.layer_list:
         assert layer.output.shape == layer.output_shape
 
 
 def test_produce_keras_model():
+    import keras
     for graph in [get_conv_dense_model(),
                   get_add_skip_model(),
                   get_pooling_model(),
@@ -262,4 +185,52 @@ def test_keras_model():
 
 def test_graph_size():
     graph = CnnGenerator(10, (32, 32, 3)).generate()
-    assert graph.size() == 7498
+    assert graph.size() == 7254
+
+
+def test_long_transform():
+    graph = ResNetGenerator(10, (28, 28, 1)).generate()
+    graph.to_deeper_model(16, StubReLU())
+    graph.to_deeper_model(16, StubReLU())
+    graph.to_add_skip_model(13, 47)
+    model = graph.produce_model()
+    model(torch.Tensor(np.random.random((10, 1, 28, 28))))
+
+
+def test_long_transform2():
+    graph = CnnGenerator(10, (28, 28, 1)).generate()
+    graph.to_add_skip_model(2, 3)
+    graph.to_concat_skip_model(2, 3)
+    model = graph.produce_model()
+    model(torch.Tensor(np.random.random((10, 1, 28, 28))))
+
+
+# def test_long_transform3():
+#     graph = DenseNetGenerator(10, (28, 28, 1)).generate()
+#     for i in range(20):
+#         graph = transform(graph)[3]
+#     print(graph.operation_history)
+#     model = graph.produce_model()
+#     model(torch.Tensor(np.random.random((10, 1, 28, 28))))
+
+
+def test_long_transform4():
+    graph = ResNetGenerator(10, (28, 28, 1)).generate()
+    graph.to_concat_skip_model(57, 68)
+    model = graph.produce_model()
+    model(torch.Tensor(np.random.random((10, 1, 28, 28))))
+
+
+def test_long_transform5():
+    graph = ResNetGenerator(10, (28, 28, 1)).generate()
+    graph.to_concat_skip_model(19, 60)
+    graph.to_wider_model(52, 256)
+    model = graph.produce_model()
+    model(torch.Tensor(np.random.random((10, 1, 28, 28))))
+
+
+def test_long_transform6():
+    graph = DenseNetGenerator(10, (28, 28, 1)).generate()
+    graph.to_concat_skip_model(126, 457)
+    model = graph.produce_model()
+    model(torch.Tensor(np.random.random((10, 1, 28, 28))))
