@@ -1,3 +1,5 @@
+from time import sleep
+
 import os
 import queue
 from copy import deepcopy
@@ -305,6 +307,7 @@ def simple_transform_mlp(graph):
 
 def mock_train(**kwargs):
     str(kwargs)
+    sleep(0.1)
     return 1, 0
 
 
