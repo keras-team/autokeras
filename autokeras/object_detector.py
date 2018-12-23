@@ -59,7 +59,7 @@ class ObjectDetector(Pretrained):
 
         if self.device.startswith("cuda"):
             self.model = self.model.cuda()
-            cudnn.benchmark = True
+            # cudnn.benchmark = True
         
 
     def predict(self, img_path, output_file_path=None):
