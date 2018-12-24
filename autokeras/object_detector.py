@@ -35,10 +35,10 @@ class ObjectDetector(Pretrained):
         self.model = None
         self.device = get_device()
 
-        if self.device.startswith("cuda"):
-            torch.set_default_tensor_type('torch.cuda.FloatTensor')
-        else:
-            torch.set_default_tensor_type('torch.FloatTensor')
+        # if self.device.startswith("cuda"):
+        #     torch.set_default_tensor_type('torch.cuda.FloatTensor')
+        # else:
+        #     torch.set_default_tensor_type('torch.FloatTensor')
 
     def load(self, model_path=None):
         # https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth
@@ -57,8 +57,9 @@ class ObjectDetector(Pretrained):
         self.model.eval()
         print('Finished loading model!')
 
-        if self.device.startswith("cuda"):
-            self.model = self.model.cuda()
+        self.model = self.model.to(device=self.device)
+        # if self.device.startswith("cuda"):
+            # self.model = self.model.cuda()
             # cudnn.benchmark = True
         
 
@@ -78,8 +79,9 @@ class ObjectDetector(Pretrained):
         x = x.astype(np.float32)
         x = torch.from_numpy(x).permute(2, 0, 1)
         xx = Variable(x.unsqueeze(0)) # wrap tensor in Variable
-        if self.device.startswith("cuda"):
-            xx = xx.cuda()
+        xx = xx.to(device=self.device)
+        # if self.device.startswith("cuda"):
+        #     xx = xx.cuda()
         y = self.model(xx)
 
         # (batch, num_classes, top_k, 5), 5 means (confidence, )
