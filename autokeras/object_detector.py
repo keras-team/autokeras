@@ -10,7 +10,7 @@ from autokeras.pretrained import Pretrained
 from autokeras.object_detection.data import *
 from autokeras.object_detection.data import VOC_CLASSES as labelmap
 from autokeras.object_detection.data import base_transform
-from autokeras.object_detection.ssd import build_ssd
+from autokeras.object_detection.ssd import multibox, vgg, add_extras, SSD
 from autokeras.utils import download_file, temp_path_generator, get_device
 from autokeras.constant import Constant
 import os
@@ -27,6 +27,8 @@ import numpy as np
 import pickle
 import cv2
 from matplotlib import pyplot as plt
+from autokeras.object_detection.layers import *
+from autokeras.object_detection.data import voc, coco
 
 
 class ObjectDetector(Pretrained):
@@ -35,10 +37,37 @@ class ObjectDetector(Pretrained):
         self.model = None
         self.device = get_device()
 
-        if self.device.startswith("cuda"):
-            torch.set_default_tensor_type('torch.cuda.FloatTensor')
-        else:
-            torch.set_default_tensor_type('torch.FloatTensor')
+        # if self.device.startswith("cuda"):
+        #     torch.set_default_tensor_type('torch.cuda.FloatTensor')
+        # else:
+        #     torch.set_default_tensor_type('torch.FloatTensor')
+
+    def _build_ssd(self,phase, size=300, num_classes=21):
+        if phase != "test" and phase != "train":
+            print("ERROR: Phase: " + phase + " not recognized")
+            return
+        if size != 300:
+            print("ERROR: You specified size " + repr(size) + ". However, " +
+                  "currently only SSD300 (size=300) is supported!")
+            return
+        base = {
+            '300': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'C', 512, 512, 512, 'M',
+                    512, 512, 512],
+            '512': [],
+        }
+        extras = {
+            '300': [256, 'S', 512, 128, 'S', 256, 128, 256, 128, 256],
+            '512': [],
+        }
+        mbox = {
+            '300': [4, 6, 6, 6, 4, 4],  # number of boxes per feature map location
+            '512': [],
+        }
+
+        base_, extras_, head_ = multibox(vgg(base[str(size)], 3),
+                                         add_extras(extras[str(size)], 1024),
+                                         mbox[str(size)], num_classes)
+        return SSD(phase, size, base_, extras_, head_, num_classes, self.device)
 
     def load(self, model_path=None):
         # https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth
@@ -49,7 +78,7 @@ class ObjectDetector(Pretrained):
             download_file(file_link, model_path)
         # load net
         num_classes = len(labelmap) + 1                      # +1 for background
-        self.model = build_ssd('test', 300, num_classes)            # initialize SSD
+        self.model = self._build_ssd('test', 300, num_classes)            # initialize SSD
         if self.device.startswith("cuda"):
             self.model.load_state_dict(torch.load(model_path))
         else:
@@ -57,9 +86,10 @@ class ObjectDetector(Pretrained):
         self.model.eval()
         print('Finished loading model!')
 
-        if self.device.startswith("cuda"):
-            self.model = self.model.cuda()
-            cudnn.benchmark = True
+        self.model = self.model.to(self.device)
+        # if self.device.startswith("cuda"):
+        #     self.model = self.model.cuda()
+            # cudnn.benchmark = True
         
 
     def predict(self, img_path, output_file_path=None):
@@ -78,8 +108,8 @@ class ObjectDetector(Pretrained):
         x = x.astype(np.float32)
         x = torch.from_numpy(x).permute(2, 0, 1)
         xx = Variable(x.unsqueeze(0)) # wrap tensor in Variable
-        if self.device.startswith("cuda"):
-            xx = xx.cuda()
+        # if self.device.startswith("cuda"):
+        xx = xx.to(self.device)
         y = self.model(xx)
 
         # (batch, num_classes, top_k, 5), 5 means (confidence, )
