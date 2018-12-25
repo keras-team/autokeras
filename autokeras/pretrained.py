@@ -1,15 +1,5 @@
-import torch
-
-from functools import reduce
-
-import os
 from abc import ABC, abstractmethod
-from sklearn.model_selection import train_test_split
-import numpy as np
-
 from autokeras.constant import Constant
-from autokeras.net_module import CnnModule
-from autokeras.utils import rand_temp_folder_generator, pickle_from_file, validate_xy, pickle_to_file, download_file
 from autokeras.image.face_detection_pretrained import detect_faces
 from autokeras.utils import download_file
 import os

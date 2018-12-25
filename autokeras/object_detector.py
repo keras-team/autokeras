@@ -8,27 +8,17 @@ from __future__ import print_function
 from autokeras.pretrained import Pretrained
 
 from autokeras.object_detection.data import *
-from autokeras.object_detection.data import VOC_CLASSES as labelmap
+from autokeras.object_detection.data import VOC_CLASSES
 from autokeras.object_detection.data import base_transform
 from autokeras.object_detection.ssd import multibox, vgg, add_extras, SSD
 from autokeras.utils import download_file, temp_path_generator, get_device
 from autokeras.constant import Constant
 import os
-import sys
-import time
 import torch
 from torch.autograd import Variable
-import torch.nn as nn
-import torch.optim as optim
-import torch.backends.cudnn as cudnn
-import torch.nn.init as init
-import torch.utils.data as data
 import numpy as np
-import pickle
 import cv2
 from matplotlib import pyplot as plt
-from autokeras.object_detection.layers import *
-from autokeras.object_detection.data import voc, coco
 
 
 class ObjectDetector(Pretrained):
@@ -37,12 +27,7 @@ class ObjectDetector(Pretrained):
         self.model = None
         self.device = get_device()
 
-        # if self.device.startswith("cuda"):
-        #     torch.set_default_tensor_type('torch.cuda.FloatTensor')
-        # else:
-        #     torch.set_default_tensor_type('torch.FloatTensor')
-
-    def _build_ssd(self,phase, size=300, num_classes=21):
+    def _build_ssd(self, phase, size=300, num_classes=21):
         if phase != "test" and phase != "train":
             print("ERROR: Phase: " + phase + " not recognized")
             return
@@ -77,8 +62,8 @@ class ObjectDetector(Pretrained):
             model_path = temp_path_generator() + '_object_detection_pretrained.pth'
             download_file(file_link, model_path)
         # load net
-        num_classes = len(labelmap) + 1                      # +1 for background
-        self.model = self._build_ssd('test', 300, num_classes)            # initialize SSD
+        num_classes = len(VOC_CLASSES) + 1  # +1 for background
+        self.model = self._build_ssd('test', 300, num_classes)  # initialize SSD
         if self.device.startswith("cuda"):
             self.model.load_state_dict(torch.load(model_path))
         else:
@@ -87,10 +72,6 @@ class ObjectDetector(Pretrained):
         print('Finished loading model!')
 
         self.model = self.model.to(self.device)
-        # if self.device.startswith("cuda"):
-        #     self.model = self.model.cuda()
-            # cudnn.benchmark = True
-        
 
     def predict(self, img_path, output_file_path=None):
         """
@@ -107,7 +88,7 @@ class ObjectDetector(Pretrained):
         x = base_transform(rgb_image, 300, dataset_mean)
         x = x.astype(np.float32)
         x = torch.from_numpy(x).permute(2, 0, 1)
-        xx = Variable(x.unsqueeze(0)) # wrap tensor in Variable
+        xx = Variable(x.unsqueeze(0))  # wrap tensor in Variable
         # if self.device.startswith("cuda"):
         xx = xx.to(self.device)
         y = self.model(xx)
@@ -119,36 +100,36 @@ class ObjectDetector(Pretrained):
         scale = torch.Tensor(rgb_image.shape[1::-1]).repeat(2)
         for i in range(detections.size(1)):
             j = 0
-            while detections[0,i,j,0] >= 0.6:
-                score = detections[0,i,j,0].item()
-                label_name = labelmap[i-1]
-                pt = (detections[0,i,j,1:]*scale).cpu().numpy()
-                result = ((pt[0], pt[1]), (pt[2]-pt[0]+1, pt[3]-pt[1]+1), label_name, score)
+            while detections[0, i, j, 0] >= 0.6:
+                score = detections[0, i, j, 0].item()
+                label_name = VOC_CLASSES[i - 1]
+                pt = (detections[0, i, j, 1:] * scale).cpu().numpy()
+                result = ((pt[0], pt[1]), (pt[2] - pt[0] + 1, pt[3] - pt[1] + 1), label_name, score)
                 results.append(set(result))
                 j += 1
 
         if output_file_path is not None:
             # plt.figure(figsize=(10,10))
             colors = plt.cm.hsv(np.linspace(0, 1, 21)).tolist()
-            plt.imshow(rgb_image) # plot the image for matplotlib
-            currentAxis = plt.gca()
-            currentAxis.set_axis_off()
-            currentAxis.xaxis.set_major_locator(NullLocator())
-            currentAxis.yaxis.set_major_locator(NullLocator())
-            
+            plt.imshow(rgb_image)  # plot the image for matplotlib
+            current_axis = plt.gca()
+            current_axis.set_axis_off()
+            current_axis.xaxis.set_major_locator(NullLocator())
+            current_axis.yaxis.set_major_locator(NullLocator())
+
             # scale each detection back up to the image
             for i in range(detections.size(1)):
                 j = 0
-                while detections[0,i,j,0] >= 0.6:
-                    score = detections[0,i,j,0]
-                    label_name = labelmap[i-1]
-                    display_txt = '%s: %.2f'%(label_name, score)
-                    pt = (detections[0,i,j,1:]*scale).cpu().numpy()
-                    coords = (pt[0], pt[1]), pt[2]-pt[0]+1, pt[3]-pt[1]+1
+                while detections[0, i, j, 0] >= 0.6:
+                    score = detections[0, i, j, 0]
+                    label_name = VOC_CLASSES[i - 1]
+                    display_txt = '%s: %.2f' % (label_name, score)
+                    pt = (detections[0, i, j, 1:] * scale).cpu().numpy()
+                    coords = (pt[0], pt[1]), pt[2] - pt[0] + 1, pt[3] - pt[1] + 1
                     color = colors[i]
-                    currentAxis.add_patch(plt.Rectangle(*coords, fill=False, edgecolor=color, linewidth=2))
-                    currentAxis.text(pt[0], pt[1], display_txt, bbox={'facecolor':color, 'alpha':0.5})
-                    j+=1
+                    current_axis.add_patch(plt.Rectangle(*coords, fill=False, edgecolor=color, linewidth=2))
+                    current_axis.text(pt[0], pt[1], display_txt, bbox={'facecolor': color, 'alpha': 0.5})
+                    j += 1
             plt.axis('off')
             plt.tight_layout()
             save_name = img_path.split('/')[-1]
@@ -158,4 +139,3 @@ class ObjectDetector(Pretrained):
             plt.clf()
 
         return results
-
