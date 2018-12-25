@@ -15,7 +15,6 @@ from tests.common import clean_dir, MockProcess, get_classification_data_loaders
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_bayesian_searcher(_, _1, _2):
     train_data, test_data = get_classification_data_loaders()
-    TEST_TEMP_DIR = '/home/venugopal/Documents/autotester'
     clean_dir(TEST_TEMP_DIR)
     searcher = Grid_Searcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
                         loss=classification_loss, generators=[CnnGenerator, CnnGenerator])
