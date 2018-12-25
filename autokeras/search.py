@@ -8,7 +8,10 @@ from datetime import datetime
 
 import torch
 import torch.multiprocessing as mp
+import logging
 
+
+from datetime import datetime
 from autokeras.bayesian import BayesianOptimizer
 from autokeras.constant import Constant
 from autokeras.nn.model_trainer import ModelTrainer
@@ -88,10 +91,12 @@ class Searcher:
         if t_min is None:
             t_min = Constant.T_MIN
         self.bo = BayesianOptimizer(self, t_min, metric)
+
         logging.basicConfig(filename=os.path.join(self.path, datetime.now().strftime('run_%d_%m_%Y : _%H_%M.log')),
                             format='%(asctime)s - %(filename)s - %(message)s', level=logging.DEBUG)
 
         self._timeout = None
+
 
     def load_model_by_id(self, model_id):
         return pickle_from_file(os.path.join(self.path, str(model_id) + '.graph'))
