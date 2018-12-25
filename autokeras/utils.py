@@ -5,6 +5,8 @@ import sys
 import tempfile
 import zipfile
 import logging
+import itertools
+
 
 import warnings
 import imageio
@@ -16,6 +18,7 @@ import string
 import random
 from autokeras.constant import Constant
 from scipy.ndimage import zoom
+
 
 
 class NoImprovementError(Exception):
@@ -134,10 +137,37 @@ def download_file_with_extract(file_link, file_path, extract_path):
     print("file already extracted in the path %s" % extract_path)
 
 
+def assert_search_space(search_space):
+    grid = search_space
+    value_list = []
+    if Constant.LENGTH_DIM not in list(grid.keys()):
+        print('No length dimension found in search Space. Using default values')
+        grid[Constant.LENGTH_DIM] = Constant.DEFAULT_LENGTH_SEARCH
+    elif not isinstance(grid[Constant.LENGTH_DIM][0], int):
+        print('Converting String to integers. Next time please make sure to enter integer values for Length Dimension')
+        grid[Constant.LENGTH_DIM] = list(map(int, grid[Constant.LENGTH_DIM]))
+
+    if Constant.WIDTH_DIM not in list(grid.keys()):
+        print('No width dimension found in search Space. Using default values')
+        grid[Constant.WIDTH_DIM] = Constant.DEFAULT_WIDTH_SEARCH
+    elif not isinstance(grid[Constant.WIDTH_DIM][0], int):
+        print('Converting String to integers. Next time please make sure to enter integer values for Width Dimension')
+        grid[Constant.WIDTH_DIM] = list(map(int, grid[Constant.WIDTH_DIM]))
+
+    grid_key_list = list(grid.keys())
+    grid_key_list.sort()
+    for key in grid_key_list:
+        value_list.append(grid[key])
+
+    dimension = list(itertools.product(*value_list))
+    #print(dimension)
+    return grid, dimension
+
+
+
 def verbose_print(new_father_id, new_graph, new_model_id):
     """Print information about the operation performed on father model to obtain current model and father's id."""
     cell_size = [24, 49]
-
     logging.info('New Model Id - ' + str(new_model_id))
     header = ['Father Model ID', 'Added Operation']
     line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
@@ -152,6 +182,7 @@ def verbose_print(new_father_id, new_graph, new_model_id):
         line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
         logging.info('|' + line + '|')
     logging.info('+' + '-' * len(line) + '+')
+
 
 
 def validate_xy(x_train, y_train):

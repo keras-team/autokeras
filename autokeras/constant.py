@@ -15,6 +15,16 @@ class Constant:
     MAX_MODEL_SIZE = (1 << 25)
     MAX_LAYER_WIDTH = 4096
     MAX_LAYERS = 200
+    GRID_SEARCH = 'grid'
+    BAYESIAN_SEARCH = 'bo'
+
+    # Grid Dimensions
+    LENGTH_DIM = 0
+    WIDTH_DIM = 1
+
+    # Default Search Space
+    DEFAULT_LENGTH_SEARCH = [50,75,100]
+    DEFAULT_WIDTH_SEARCH = [64,128,256]
 
     # Model Defaults
 
