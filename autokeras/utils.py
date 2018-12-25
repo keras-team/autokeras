@@ -143,10 +143,16 @@ def assert_search_space(search_space):
     if Constant.LENGTH_DIM not in list(grid.keys()):
         print('No length dimension found in search Space. Using default values')
         grid[Constant.LENGTH_DIM] = Constant.DEFAULT_LENGTH_SEARCH
+    elif not isinstance(grid[Constant.LENGTH_DIM][0], int):
+        print('Converting String to integers. Next time please make sure to enter integer values for Length Dimension')
+        grid[Constant.LENGTH_DIM] = list(map(int, grid[Constant.LENGTH_DIM]))
 
     if Constant.WIDTH_DIM not in list(grid.keys()):
         print('No width dimension found in search Space. Using default values')
         grid[Constant.WIDTH_DIM] = Constant.DEFAULT_WIDTH_SEARCH
+    elif not isinstance(grid[Constant.WIDTH_DIM][0], int):
+        print('Converting String to integers. Next time please make sure to enter integer values for Width Dimension')
+        grid[Constant.WIDTH_DIM] = list(map(int, grid[Constant.WIDTH_DIM]))
 
     grid_key_list = list(grid.keys())
     grid_key_list.sort()
