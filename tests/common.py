@@ -316,9 +316,9 @@ def mock_out_of_memory_train(**kwargs):
     raise RuntimeError('CUDA: out of memory.')
 
 
-def mock_nvidia_smi_output(*arg, **kwargs):
-    return \
-        '    Free                        : 1 MiB \n' \
-        '    Free                        : 11176 MiB \n' \
-        '    Free                        : 1 MiB \n' \
-        '    Free                        : 1 MiB'
+# def mock_nvidia_smi_output(*arg, **kwargs):
+#     return \
+#         '    Free                        : 1 MiB \n' \
+#         '    Free                        : 11176 MiB \n' \
+#         '    Free                        : 1 MiB \n' \
+#         '    Free                        : 1 MiB'

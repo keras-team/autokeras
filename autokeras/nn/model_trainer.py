@@ -39,7 +39,7 @@ class ModelTrainerBase(abc.ABC):
                  metric=None,
                  verbose=False,
                  device=None):
-        if device is not None:
+        if device:
             self.device = device
         else:
             self.device = get_device()
@@ -84,6 +84,8 @@ class ModelTrainer(ModelTrainerBase):
     def __init__(self, model, path, **kwargs):
         super().__init__(**kwargs)
         self.model = model
+        if torch.cuda.device_count() > 1:
+            self.model = torch.nn.DataParallel(self.model)
         self.model.to(self.device)
         self.optimizer = None
         self.early_stop = None
