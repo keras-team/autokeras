@@ -4,8 +4,7 @@
 # A huge thank you to the authors: Max deGroot and Ellis Brown
 # ----------------------------------
 
-from autokeras.pretrained import Pretrained
-
+from autokeras.pretrained.base import Pretrained
 from autokeras.utils import download_file, temp_path_generator, get_device
 from autokeras.constant import Constant
 import numpy as np
