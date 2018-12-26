@@ -1,4 +1,4 @@
-from autokeras.object_detector import ObjectDetector
+from autokeras.pretrained.object_detector import ObjectDetector
 from tests.common import TEST_TEMP_DIR, clean_dir
 
 
