@@ -63,6 +63,8 @@ class Constant:
     PRE_TRAIN_FILE_LINK = "http://nlp.stanford.edu/data/glove.6B.zip"
     PRE_TRAIN_FILE_NAME = "glove.6B.100d.txt"
 
+    PRE_TRAIN_DETECTION_FILE_LINK = "https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth"
+
     # constants for pretrained model of face detection
     FACE_DETECTION_PRETRAINED = {
         'PRETRAINED_MODEL_LINKS': [

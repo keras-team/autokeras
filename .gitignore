@@ -1,3 +1,8 @@
+# vim swp files
+*.swp
+# caffe/pytorch model files
+*.pth
+
 # Mkdocs
 /docs/
 /mkdocs/docs/temp
