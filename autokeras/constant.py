@@ -16,7 +16,8 @@ class Constant:
     MAX_LAYER_WIDTH = 4096
     MAX_LAYERS = 200
     GRID_SEARCH = 'grid'
-    BAYESIAN_SEARCH = 'bo'
+    BAYESIAN_SEARCH = 'bayesian'
+    GREEDY_SEARCH = 'greedy'
 
     # Grid Dimensions
     LENGTH_DIM = 0
