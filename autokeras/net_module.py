@@ -7,8 +7,7 @@ import os
 import time
 
 from autokeras.constant import Constant
-from autokeras.grid_search import Grid_Searcher #, train
-from autokeras.search import Searcher, train
+from autokeras.search import BayesianSearcher,  GreedySearcher, GridSearcher, train
 
 from autokeras.utils import pickle_to_file, rand_temp_folder_generator, ensure_dir
 from autokeras.nn.generator import CnnGenerator, MlpGenerator, ResNetGenerator, DenseNetGenerator
@@ -64,12 +63,12 @@ class NetworkModule:
             self.searcher_args['generators'] = self.generators
             self.searcher_args['verbose'] = self.verbose
             pickle_to_file(self, os.path.join(self.path, 'module'))
-            if self.search_type == Constant.GRID_SEARCH:
-                self.searcher = Grid_Searcher(**self.searcher_args)
+            if self.search_type == Constant.BAYESIAN_SEARCH:
+                self.searcher = BayesianSearcher(**self.searcher_args)
+            elif self.search_type == Constant.GRID_SEARCH:
+                self.searcher = GridSearcher(**self.searcher_args)
             else:
-                if 'search_space' in list(self.searcher_args.keys()):
-                    del self.searcher_args['search_space']
-                self.searcher = Searcher(**self.searcher_args)
+                self.searcher = GreedySearcher(**self.searcher_args)
 
         start_time = time.time()
         time_remain = time_limit
@@ -134,7 +133,7 @@ class CnnModule(NetworkModule):
     """ Class to create a CNN module."""
 
     def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False, search_type=Constant.BAYESIAN_SEARCH):
-        super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose,search_type)
+        super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose, search_type)
         self.generators.append(CnnGenerator)
         self.generators.append(ResNetGenerator)
         self.generators.append(DenseNetGenerator)

@@ -5,23 +5,22 @@ import re
 import sys
 import time
 from datetime import datetime
+from abc import abstractmethod
 
 import torch
 import torch.multiprocessing as mp
-import logging
 
-
-from datetime import datetime
 from autokeras.bayesian import BayesianOptimizer
+from autokeras.greedy import GreedyOptimizer
 from autokeras.constant import Constant
 from autokeras.nn.model_trainer import ModelTrainer
-from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get_system
+from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get_system, assert_search_space
 
 
 class Searcher:
-    """Class to search for neural architectures.
+    """The base class to search for neural architectures.
 
-    This class generate new architectures, call the trainer to train it, and update the Bayesian optimizer.
+    This class generate new architectures, call the trainer to train it, and update the optimizer.
 
     Attributes:
         n_classes: Number of classes in the target classification task.
@@ -31,6 +30,8 @@ class Searcher:
         verbose: Verbosity mode.
         history: A list that stores the performance of model. Each element in it is a dictionary of 'model_id',
             'loss', and 'metric_value'.
+        neighbour_history: A list that stores the performance of neighbor of the best model.
+            Each element in it is a dictionary of 'model_id', 'loss', and 'metric_value'.
         path: A string. The path to the directory for saving the searcher.
         metric: An instance of the Metric subclasses.
         loss: A function taking two parameters, the predictions and the ground truth.
@@ -43,15 +44,12 @@ class Searcher:
         training_queue: A list of the generated architectures to be trained.
         x_queue: A list of trained architectures not updated to the gpr.
         y_queue: A list of trained architecture performances not updated to the gpr.
-        t_min: A float. The minimum temperature during simulated annealing.
-        bo: An instance of BayesianOptimizer.
     """
 
     def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose,
                  trainer_args=None,
                  default_model_len=None,
-                 default_model_width=None,
-                 t_min=None):
+                 default_model_width=None):
         """Initialize the Searcher.
 
         Args:
@@ -65,7 +63,6 @@ class Searcher:
             trainer_args: A dictionary. The params for the constructor of ModelTrainer.
             default_model_len: An integer. Number of convolutional layers in the initial architecture.
             default_model_width: An integer. The number of filters in each layer in the initial architecture.
-            t_min: A float. The minimum temperature during simulated annealing.
         """
         if trainer_args is None:
             trainer_args = {}
@@ -73,6 +70,7 @@ class Searcher:
         self.input_shape = input_shape
         self.verbose = verbose
         self.history = []
+        self.neighbour_history = []
         self.path = path
         self.metric = metric
         self.loss = loss
@@ -88,15 +86,10 @@ class Searcher:
         self.training_queue = []
         self.x_queue = []
         self.y_queue = []
-        if t_min is None:
-            t_min = Constant.T_MIN
-        self.bo = BayesianOptimizer(self, t_min, metric)
-
         logging.basicConfig(filename=os.path.join(self.path, datetime.now().strftime('run_%d_%m_%Y : _%H_%M.log')),
                             format='%(asctime)s - %(filename)s - %(message)s', level=logging.DEBUG)
 
         self._timeout = None
-
 
     def load_model_by_id(self, model_id):
         return pickle_from_file(os.path.join(self.path, str(model_id) + '.graph'))
@@ -117,39 +110,6 @@ class Searcher:
 
     def replace_model(self, graph, model_id):
         pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.graph'))
-
-    def add_model(self, metric_value, loss, graph, model_id):
-        """Append the information of evaluated architecture to history."""
-        if self.verbose:
-            print('\nSaving model.')
-
-        graph.clear_operation_history()
-        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.graph'))
-
-        ret = {'model_id': model_id, 'loss': loss, 'metric_value': metric_value}
-        self.history.append(ret)
-
-        # Update best_model text file
-        if model_id == self.get_best_model_id():
-            file = open(os.path.join(self.path, 'best_model.txt'), 'w')
-            file.write('best model: ' + str(model_id))
-            file.close()
-
-        if self.verbose:
-            idx = ['model_id', 'loss', 'metric_value']
-            header = ['Model ID', 'Loss', 'Metric Value']
-            line = '|'.join(x.center(24) for x in header)
-            print('+' + '-' * len(line) + '+')
-            print('|' + line + '|')
-
-            if self.history:
-                r = self.history[-1]
-                print('+' + '-' * len(line) + '+')
-                line = '|'.join(str(r[x]).center(24) for x in idx)
-                print('|' + line + '|')
-            print('+' + '-' * len(line) + '+')
-
-        return ret
 
     def init_search(self):
         """Call the generators to generate the initial architectures for the search."""
@@ -172,7 +132,7 @@ class Searcher:
         The function will run the training and generate in parallel.
         Then it will update the controller.
         The training is just pop out a graph from the training_queue and train it.
-        The generate will call teh self.generate function.
+        The generate will call the self.generate function.
         The update will call the self.update function.
 
         Args:
@@ -180,7 +140,6 @@ class Searcher:
             test_data: An instance of Dataloader.
             timeout: An integer, time limit in seconds.
         """
-
         torch.cuda.empty_cache()
         if not self.history:
             self.init_search()
@@ -209,16 +168,17 @@ class Searcher:
                                             self.metric, self.loss, self.verbose, self.path))
         try:
             p.start()
-            generated_other_info, generated_graph, new_model_id = self._search_common(q)
+            search_results = self._search_common(q)
             metric_value, loss, graph = q.get(block=True)
             if time.time() >= self._timeout:
                 raise TimeoutError
-            if self.verbose and new_model_id != -1:
-                verbose_print(generated_other_info, generated_graph, new_model_id)
+            if self.verbose and search_results:
+                for (generated_graph, generated_other_info, new_model_id) in search_results:
+                    verbose_print(generated_other_info, generated_graph, new_model_id)
 
             if metric_value is not None:
                 self.add_model(metric_value, loss, graph, model_id)
-                self.update(other_info, graph, metric_value, model_id)
+                self.update(other_info, model_id, graph, metric_value)
 
         except (TimeoutError, queue.Empty) as e:
             raise TimeoutError from e
@@ -232,63 +192,265 @@ class Searcher:
             metric_value, loss, graph = train(None, graph, train_data, test_data, self.trainer_args,
                                               self.metric, self.loss, self.verbose, self.path)
             # Do the search in current thread.
-            generated_other_info, generated_graph, new_model_id = self._search_common()
-            if self.verbose and new_model_id != -1:
-                verbose_print(generated_other_info, generated_graph, new_model_id)
+            search_results = self._search_common()
+            if self.verbose and search_results:
+                for (generated_graph, generated_other_info, new_model_id) in search_results:
+                    verbose_print(generated_other_info, generated_graph, new_model_id)
 
             if metric_value is not None:
                 self.add_model(metric_value, loss, graph, model_id)
-                self.update(other_info, graph, metric_value, model_id)
+                self.update(other_info, model_id, graph, metric_value)
 
         except TimeoutError as e:
             raise TimeoutError from e
 
-    def update(self, other_info, graph, metric_value, model_id):
-        """ Update the controller with evaluation result of a neural architecture.
+    def _search_common(self, mp_queue=None):
+        search_results = []
+        if not self.training_queue:
+            results = self.generate(mp_queue)
+            for (generated_graph, generated_other_info) in results:
+                new_model_id = self.model_count
+                self.model_count += 1
+                self.training_queue.append((generated_graph, generated_other_info, new_model_id))
+                self.descriptors.append(generated_graph.extract_descriptor())
+                search_results.append((generated_graph, generated_other_info, new_model_id))
+            self.neighbour_history = []
 
-        Args:
-            other_info: Anything. In our case it is the father ID in the search tree.
-            graph: An instance of Graph. The trained neural architecture.
-            metric_value: The final evaluated metric value.
-            model_id: An integer.
-        """
-        father_id = other_info
-        self.bo.fit([graph.extract_descriptor()], [metric_value])
-        self.bo.add_child(father_id, model_id)
+        return search_results
 
-    def generate(self, multiprocessing_queue=None):
+    @abstractmethod
+    def generate(self, multiprocessing_queue):
         """Generate the next neural architecture.
 
-        Args: remaining_time: The remaining time in seconds. multiprocessing_queue: the Queue for multiprocessing
-        return value. pass into the search algorithm for synchronizing
+        Args:
+            multiprocessing_queue: the Queue for multiprocessing return value.
 
         Returns:
-            other_info: Anything to be saved in the training queue together with the architecture.
+            list of 2-element tuples: generated_graph and other_info,
             generated_graph: An instance of Graph.
+            other_info: Anything to be saved in the training queue together
+            with the architecture.
+        """
+        pass
+
+    @abstractmethod
+    def update(self, *args):
+        pass
+
+    def add_model(self, metric_value, loss, graph, model_id):
+        """Append the information of evaluated architecture to history."""
+        if self.verbose:
+            print('\nSaving model.')
+
+        graph.clear_operation_history()
+        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.graph'))
+
+        ret = {'model_id': model_id, 'loss': loss, 'metric_value': metric_value}
+        self.neighbour_history.append(ret)
+        self.history.append(ret)
+
+        # Update best_model text file
+        if model_id == self.get_best_model_id():
+            file = open(os.path.join(self.path, 'best_model.txt'), 'w')
+            file.write('best model: ' + str(model_id))
+            file.close()
+
+        if self.verbose:
+            idx = ['model_id', 'loss', 'metric_value']
+            header = ['Model ID', 'Loss', 'Metric Value']
+            line = '|'.join(x.center(24) for x in header)
+            print('+' + '-' * len(line) + '+')
+            print('|' + line + '|')
+
+            if self.history:
+                r = self.history[-1]
+                print('+' + '-' * len(line) + '+')
+                line = '|'.join(str(r[x]).center(24) for x in idx)
+                print('|' + line + '|')
+            print('+' + '-' * len(line) + '+')
+
+        return ret
+
+
+class BayesianSearcher(Searcher):
+    """ Class to search for neural architectures using Bayesian search strategy.
+
+    Attribute:
+        optimizer: An instance of BayesianOptimizer.
+        t_min: A float. The minimum temperature during simulated annealing.
+    """
+
+    def __init__(self, n_output_node, input_shape, path, metric, loss,
+                 generators, verbose, trainer_args=None,
+                 default_model_len=None, default_model_width=None,
+                 t_min=None):
+        super(BayesianSearcher, self).__init__(n_output_node, input_shape,
+                                               path, metric, loss,
+                                               generators, verbose,
+                                               trainer_args,
+                                               default_model_len,
+                                               default_model_width)
+        if t_min is None:
+            t_min = Constant.T_MIN
+        self.optimizer = BayesianOptimizer(self, t_min, metric)
+
+    def generate(self, multiprocessing_queue):
+        """Generate the next neural architecture.
+
+        Args:
+            multiprocessing_queue: the Queue for multiprocessing return value.
+
+        Returns:
+            list of 2-element tuples: generated_graph and other_info,
+            for bayesian searcher the length of list is 1.
+            generated_graph: An instance of Graph.
+            other_info: Anything to be saved in the training queue together with the architecture.
 
         """
         remaining_time = self._timeout - time.time()
-        generated_graph, new_father_id = self.bo.generate(self.descriptors,
-                                                          remaining_time, multiprocessing_queue)
+        generated_graph, new_father_id = self.optimizer.generate(self.descriptors,
+                                                                 remaining_time, multiprocessing_queue)
         if new_father_id is None:
             new_father_id = 0
             generated_graph = self.generators[0](self.n_classes, self.input_shape). \
                 generate(self.default_model_len, self.default_model_width)
 
-        return new_father_id, generated_graph
+        return [(generated_graph, new_father_id)]
 
-    def _search_common(self, mp_queue=None):
-        generated_graph = None
-        generated_other_info = None
-        new_model_id = -1
-        if not self.training_queue:
-            generated_other_info, generated_graph = self.generate(mp_queue)
-            new_model_id = self.model_count
-            self.model_count += 1
-            self.training_queue.append((generated_graph, generated_other_info, new_model_id))
-            self.descriptors.append(generated_graph.extract_descriptor())
+    def update(self, other_info, model_id, graph, metric_value):
+        """ Update the controller with evaluation result of a neural architecture.
 
-        return generated_other_info, generated_graph, new_model_id
+        Args:
+            other_info: Anything. In our case it is the father ID in the search tree.
+            model_id: An integer.
+            graph: An instance of Graph. The trained neural architecture.
+            metric_value: The final evaluated metric value.
+        """
+        father_id = other_info
+        self.optimizer.fit([graph.extract_descriptor()], [metric_value])
+        self.optimizer.add_child(father_id, model_id)
+
+
+class GreedySearcher(Searcher):
+    """ Class to search for neural architectures using Greedy search strategy.
+
+    Attribute:
+        optimizer: An instance of BayesianOptimizer.
+    """
+
+    def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose,
+                 trainer_args=None,
+                 default_model_len=None,
+                 default_model_width=None):
+        super(GreedySearcher, self).__init__(n_output_node, input_shape,
+                                             path, metric, loss, generators,
+                                             verbose, trainer_args, default_model_len,
+                                             default_model_width)
+        self.optimizer = GreedyOptimizer(self, metric)
+
+    def generate(self, multiprocessing_queue):
+        """Generate the next neural architecture.
+
+        Args:
+            multiprocessing_queue: the Queue for multiprocessing return value.
+                pass into the search algorithm for synchronizing
+
+        Returns:
+            results: A list of 2-element tuples. Each tuple contains an instance of Graph,
+                and anything to be saved in the training queue together with the architecture
+
+        """
+        remaining_time = self._timeout - time.time()
+        results = self.optimizer.generate(self.descriptors, remaining_time,
+                                          multiprocessing_queue)
+        if not results:
+            new_father_id = 0
+            generated_graph = self.generators[0](self.n_classes, self.input_shape). \
+                generate(self.default_model_len, self.default_model_width)
+            results.append((generated_graph, new_father_id))
+
+        return results
+
+    def update(self, other_info, model_id, *args):
+        """ Update the controller with evaluation result of a neural architecture.
+
+        Args:
+            other_info: Anything. In our case it is the father ID in the search tree.
+            model_id: An integer.
+        """
+        father_id = other_info
+        self.optimizer.add_child(father_id, model_id)
+
+    def load_neighbour_best_model(self):
+        return self.load_model_by_id(self.get_neighbour_best_model_id())
+
+    def get_neighbour_best_model_id(self):
+        if self.metric.higher_better():
+            return max(self.neighbour_history, key=lambda x: x['metric_value'])['model_id']
+        return min(self.neighbour_history, key=lambda x: x['metric_value'])['model_id']
+
+
+class GridSearcher(Searcher):
+    """ Class to search for neural architectures using Greedy search strategy.
+
+    Attribute:
+        search_space: A dictionary. Specifies the search dimensions and their possible values
+    """
+    def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose, search_space={},
+                 trainer_args=None, default_model_len=None, default_model_width=None):
+        super(GridSearcher, self).__init__(n_output_node, input_shape, path, metric, loss, generators, verbose,
+                                           trainer_args, default_model_len, default_model_width)
+        self.search_space, self.search_dimensions = assert_search_space(search_space)
+        self.search_space_counter = 0
+
+    def get_search_dimensions(self):
+        return self.search_dimensions
+
+    def search_space_exhausted(self):
+        """ Check if Grid search has exhausted the search space """
+        if self.search_space_counter == len(self.search_dimensions):
+            return True
+        return False
+
+    def search(self, train_data, test_data, timeout=60 * 60 * 24):
+        """Run the search loop of training, generating and updating once.
+
+        Call the base class implementation for search with
+
+        Args:
+            train_data: An instance of DataLoader.
+            test_data: An instance of Dataloader.
+            timeout: An integer, time limit in seconds.
+        """
+        if self.search_space_exhausted():
+            return
+        else:
+            super().search(train_data, test_data, timeout)
+
+    def update(self, other_info, graph, metric_value, model_len):
+        return
+
+    def generate(self, multiprocessing_queue):
+        """Generate the next neural architecture.
+
+        Args:
+            multiprocessing_queue: the Queue for multiprocessing return value.
+
+        Returns:
+            generated_graph: An instance of Graph.
+            other_info: Always 0.
+        """
+        grid = self.get_grid()
+        self.search_space_counter += 1
+        generated_graph = self.generators[0](self.n_classes, self.input_shape). \
+            generate(grid[Constant.LENGTH_DIM], grid[Constant.WIDTH_DIM])
+        return [(generated_graph, 0)]
+
+    def get_grid(self):
+        """ Return the next grid to be searched """
+        if self.search_space_counter < len(self.search_dimensions):
+            return self.search_dimensions[self.search_space_counter]
+        return None
 
 
 def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, path):
