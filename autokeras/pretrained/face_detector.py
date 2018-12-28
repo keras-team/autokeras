@@ -1,5 +1,7 @@
 # This is DFace's implementation of MTCNN modified for AutoKeras
 # Link to DFace: https://github.com/kuaikuaikim/DFace
+import os
+
 import cv2
 import torch
 import torch.nn as nn
@@ -9,6 +11,10 @@ from torch.autograd.variable import Variable
 import time
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
+from autokeras.constant import Constant
+from autokeras.pretrained.base import Pretrained
+from autokeras.utils import download_file
 
 
 def weights_init(m):
@@ -599,3 +605,35 @@ def detect_faces(pnet_path, rnet_path, onet_path, img_path, output_file_path):
     if output_file_path is not None:
         vis_face(img_bg, bboxs, output_file_path, landmarks)
     return bboxs, landmarks
+
+
+class FaceDetector(Pretrained):
+    """A class to predict faces using the MTCNN pre-trained model.
+    """
+
+    def __init__(self):
+        super(FaceDetector, self).__init__()
+        self.load()
+
+    def load(self, model_path=None):
+        for model_link, file_path in zip(Constant.FACE_DETECTION_PRETRAINED['PRETRAINED_MODEL_LINKS'],
+                                         Constant.FACE_DETECTION_PRETRAINED['FILE_PATHS']):
+            download_file(model_link, file_path)
+        self.pnet, self.rnet, self.onet = Constant.FACE_DETECTION_PRETRAINED['FILE_PATHS']
+
+    def predict(self, img_path, output_file_path=None):
+        """Predicts faces in an image.
+
+        Args:
+            img_path: A string. The path to the image on which the prediction is to be done.
+            output_file_path: A string. The path where the output image is to be saved after the prediction. `None` by default.
+
+        Returns:
+            A tuple containing numpy arrays of bounding boxes and landmarks. Bounding boxes are of shape `(n, 5)` and
+            landmarks are of shape `(n, 10)` where `n` is the number of faces predicted. Each bounding box is of length
+            5 and the corresponding rectangle is defined by the first four values. Each bounding box has five landmarks
+            represented by 10 coordinates.
+        """
+        if not os.path.exists(img_path):
+            raise ValueError('Image does not exist')
+        return detect_faces(self.pnet, self.rnet, self.onet, img_path, output_file_path)

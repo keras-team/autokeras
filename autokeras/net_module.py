@@ -7,7 +7,7 @@ import os
 import time
 
 from autokeras.constant import Constant
-from autokeras.search import Searcher, train
+from autokeras.search import BayesianSearcher,  GreedySearcher, GridSearcher, train
 
 from autokeras.utils import pickle_to_file, rand_temp_folder_generator, ensure_dir
 from autokeras.nn.generator import CnnGenerator, MlpGenerator, ResNetGenerator, DenseNetGenerator
@@ -24,9 +24,10 @@ class NetworkModule:
         path: A string. The path to the directory to save the searcher.
         verbose: A boolean. Setting it to true prints to stdout.
         generators: A list of instances of the NetworkGenerator class or its subclasses.
+        search_type: A constant denoting the type of hyperparameter search algorithm that must be used.
     """
 
-    def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False):
+    def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False, search_type=Constant.BAYESIAN_SEARCH):
         self.searcher_args = searcher_args if searcher_args is not None else {}
         self.searcher = None
         self.path = path if path is not None else rand_temp_folder_generator()
@@ -37,6 +38,7 @@ class NetworkModule:
         self.loss = loss
         self.metric = metric
         self.generators = []
+        self.search_type = search_type
 
     def fit(self, n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60):
         """ Search the best network.
@@ -50,6 +52,7 @@ class NetworkModule:
             time_limit: A integer value represents the time limit on searching for models.
         """
         # Create the searcher and save on disk
+
         if not self.searcher:
             input_shape = input_shape[1:]
             self.searcher_args['n_output_node'] = n_output_node
@@ -59,8 +62,13 @@ class NetworkModule:
             self.searcher_args['loss'] = self.loss
             self.searcher_args['generators'] = self.generators
             self.searcher_args['verbose'] = self.verbose
-            self.searcher = Searcher(**self.searcher_args)
             pickle_to_file(self, os.path.join(self.path, 'module'))
+            if self.search_type == Constant.BAYESIAN_SEARCH:
+                self.searcher = BayesianSearcher(**self.searcher_args)
+            elif self.search_type == Constant.GRID_SEARCH:
+                self.searcher = GridSearcher(**self.searcher_args)
+            else:
+                self.searcher = GreedySearcher(**self.searcher_args)
 
         start_time = time.time()
         time_remain = time_limit
@@ -124,8 +132,8 @@ class NetworkModule:
 class CnnModule(NetworkModule):
     """ Class to create a CNN module."""
 
-    def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False):
-        super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose)
+    def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False, search_type=Constant.BAYESIAN_SEARCH):
+        super(CnnModule, self).__init__(loss, metric, searcher_args, path, verbose, search_type)
         self.generators.append(CnnGenerator)
         self.generators.append(ResNetGenerator)
         self.generators.append(DenseNetGenerator)

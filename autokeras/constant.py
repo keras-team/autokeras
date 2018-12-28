@@ -15,6 +15,17 @@ class Constant:
     MAX_MODEL_SIZE = (1 << 25)
     MAX_LAYER_WIDTH = 4096
     MAX_LAYERS = 200
+    GRID_SEARCH = 'grid'
+    BAYESIAN_SEARCH = 'bayesian'
+    GREEDY_SEARCH = 'greedy'
+
+    # Grid Dimensions
+    LENGTH_DIM = 0
+    WIDTH_DIM = 1
+
+    # Default Search Space
+    DEFAULT_LENGTH_SEARCH = [50,75,100]
+    DEFAULT_WIDTH_SEARCH = [64,128,256]
 
     # Model Defaults
 
@@ -52,6 +63,8 @@ class Constant:
     FILE_PATH = "glove.zip"
     PRE_TRAIN_FILE_LINK = "http://nlp.stanford.edu/data/glove.6B.zip"
     PRE_TRAIN_FILE_NAME = "glove.6B.100d.txt"
+
+    PRE_TRAIN_DETECTION_FILE_LINK = "https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth"
 
     # constants for pretrained model of face detection
     FACE_DETECTION_PRETRAINED = {
