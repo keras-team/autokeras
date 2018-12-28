@@ -278,3 +278,25 @@ where:
 * trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
 * retrain: A boolean of whether reinitialize the weights of the model.
 
+# Object Detection tutorial
+
+`ObjectDetector` in `object_detector.py` is a child class of `Pretrained`. Currently it can load a pretrained SSD model ([Liu, Wei, et al. "Ssd: Single shot multibox detector." European conference on computer vision. Springer, Cham, 2016.](https://arxiv.org/abs/1512.02325)) and find object(s) in a given image.
+
+Let's first import the ObjectDetector and create a detection model (```detector```) with
+```python
+from autokeras.pretrained.object_detector import ObjectDetector
+detector = ObjectDetector()
+```
+Note that the ```ObjectDetector``` class can automatically detect the existance of available cuda device(s), and use the device if exists.
+
+Second, you will want to load the pretrained weights for your model:
+```python
+detector.load()
+```
+This line will automatically download and load the weights into ```detector```.
+Finally you can make predictions against an image:
+```python
+    results = detector.predict("/path/to/images/000001.jpg", output_file_path="/path/to/images/")
+```
+Function ```detector.predict()``` requires the path to the image. If the ```output_file_path``` is not given, the ```detector``` will just return the numerical results as a list of dictionaries. Each dictionary is like {"left": int, "top": int, "width": int, "height": int: "category": str, "confidence": float}, where ```left``` and ```top``` is the (left, top) coordinates of the bounding box of the object and ```width``` and ```height``` are width and height of the box. ```category``` is a string representing the class the object belongs to, and the confidence can be regarded as the probability that the model believes its prediction is correct. If the ```output_file_path``` is given, then the results mentioned above will be plotted and saved in a new image file with suffix "_prediction" into the given ```output_file_path```. If you run the example/object_detection/object_detection_example.py, you will get result
+```[{'category': 'person', 'width': 331, 'height': 500, 'left': 17, 'confidence': 0.9741123914718628, 'top': 0}]```

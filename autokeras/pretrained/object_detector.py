@@ -539,13 +539,15 @@ class ObjectDetector(Pretrained):
         """
         
         Returns:
-            List of tuples. Each tuple is like ((x1, y1), (h, w), category, confidence).
+            List of dictionaries. Each dictionary is like
+            {"left": int, "top": int, "width": int, "height": int: "category": str, "confidence": float}
         """
         from matplotlib.ticker import NullLocator
 
         dataset_mean = (104, 117, 123)
 
         image = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        height, width, _ = image.shape
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         x = base_transform(rgb_image, 300, dataset_mean)
         x = x.astype(np.float32)
@@ -566,8 +568,16 @@ class ObjectDetector(Pretrained):
                 score = detections[0, i, j, 0].item()
                 label_name = VOC_CLASSES[i - 1]
                 pt = (detections[0, i, j, 1:] * scale).cpu().numpy()
-                result = ((pt[0], pt[1]), (pt[2] - pt[0] + 1, pt[3] - pt[1] + 1), label_name, score)
-                results.append(set(result))
+                # result = ((pt[0], pt[1]), (pt[2] - pt[0] + 1, pt[3] - pt[1] + 1), label_name, score)
+                result = {
+                          "left": max(int(np.round(pt[0])), 0),
+                          "top": max(int(np.round(pt[1])), 0),
+                          "width": min(int(np.round(pt[2] - pt[0] + 1)), width),
+                          "height": min(int(np.round(pt[3] - pt[1] + 1)), height),
+                          "category": label_name,
+                          "confidence": score
+                         }
+                results.append(result)
                 j += 1
 
         if output_file_path is not None:
