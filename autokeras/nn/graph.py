@@ -675,14 +675,13 @@ class TorchModel(torch.nn.Module):
         for v in topo_node_list:
             for u, layer_id in self.graph.reverse_adj_list[v]:
                 layer = self.graph.layer_list[layer_id]
-                torch_layer = self.layers[layer_id]
+                torch_layer = list(self.modules())[layer_id + 1]
 
                 if isinstance(layer, (StubAdd, StubConcatenate)):
                     edge_input_tensor = list(map(lambda x: node_list[x],
                                                  self.graph.layer_id_to_input_node_ids[layer_id]))
                 else:
                     edge_input_tensor = node_list[u]
-
                 temp_tensor = torch_layer(edge_input_tensor)
                 node_list[v] = temp_tensor
         return node_list[output_id]
