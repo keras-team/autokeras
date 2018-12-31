@@ -1,4 +1,5 @@
 import tensorflow as tf
+
 # NOTE: If you want full control for model architecture. please take a look
 # at the code and change whatever you want. Some hyper parameters are hardcoded.
 
@@ -122,7 +123,7 @@ hparams = tf.contrib.training.HParams(
     # GC:
     # Forced garbage collection probability
     # Use only when MemoryError continues in Windows (Disabled by default)
-    #gc_probability = 0.001,
+    # gc_probability = 0.001,
 
     # json_meta mode only
     # 0: "use all",
@@ -134,9 +135,3 @@ hparams = tf.contrib.training.HParams(
     # if true, data without phoneme alignment file(.lab) will be ignored
     process_only_htk_aligned=False,
 )
-
-
-def hparams_debug_string():
-    values = hparams.values()
-    hp = ['  %s: %s' % (name, values[name]) for name in sorted(values)]
-    return 'Hyperparameters:\n' + '\n'.join(hp)

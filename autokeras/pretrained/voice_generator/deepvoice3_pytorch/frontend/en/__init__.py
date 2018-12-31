@@ -32,4 +32,3 @@ def text_to_sequence(text, p=0.0):
     return text
 
 
-from deepvoice3_pytorch.frontend.text import sequence_to_text

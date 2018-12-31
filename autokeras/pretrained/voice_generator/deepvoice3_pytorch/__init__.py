@@ -28,11 +28,6 @@ class MultiSpeakerTTSModel(nn.Module):
         self.use_decoder_state_for_postnet_input = use_decoder_state_for_postnet_input
         self.freeze_embedding = freeze_embedding
 
-        # Speaker embedding
-        if n_speakers > 1:
-            self.embed_speakers = Embedding(
-                n_speakers, speaker_embed_dim, padding_idx=None,
-                std=speaker_embedding_weight_std)
         self.n_speakers = n_speakers
         self.speaker_embed_dim = speaker_embed_dim
 
@@ -45,32 +40,11 @@ class MultiSpeakerTTSModel(nn.Module):
                 return
         self.apply(remove_weight_norm)
 
-    def get_trainable_parameters(self):
-        freezed_param_ids = set()
-
-        encoder, decoder = self.seq2seq.encoder, self.seq2seq.decoder
-
-        # Avoid updating the position encoding
-        if not self.trainable_positional_encodings:
-            pe_query_param_ids = set(map(id, decoder.embed_query_positions.parameters()))
-            pe_keys_param_ids = set(map(id, decoder.embed_keys_positions.parameters()))
-            freezed_param_ids |= (pe_query_param_ids | pe_keys_param_ids)
-        # Avoid updating the text embedding
-        if self.freeze_embedding:
-            embed_param_ids = set(map(id, encoder.embed_tokens.parameters()))
-            freezed_param_ids |= embed_param_ids
-
-        return (p for p in self.parameters() if id(p) not in freezed_param_ids)
-
     def forward(self, text_sequences, mel_targets=None, speaker_ids=None,
                 text_positions=None, frame_positions=None, input_lengths=None):
         B = text_sequences.size(0)
 
-        if speaker_ids is not None:
-            assert self.n_speakers > 1
-            speaker_embed = self.embed_speakers(speaker_ids)
-        else:
-            speaker_embed = None
+        speaker_embed = None
 
         # Apply seq2seq
         # (B, T//r, mel_dim*r)
@@ -83,10 +57,7 @@ class MultiSpeakerTTSModel(nn.Module):
         mel_outputs = mel_outputs.view(B, -1, self.mel_dim)
 
         # Prepare postnet inputs
-        if self.use_decoder_state_for_postnet_input:
-            postnet_inputs = decoder_states.view(B, mel_outputs.size(1), -1)
-        else:
-            postnet_inputs = mel_outputs
+        postnet_inputs = decoder_states.view(B, mel_outputs.size(1), -1)
 
         # (B, T, linear_dim)
         # Convert coarse mel-spectrogram (or decoder hidden states) to

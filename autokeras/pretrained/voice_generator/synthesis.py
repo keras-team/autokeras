@@ -45,12 +45,3 @@ def tts(model, text, p=0, speaker_id=None, fast=False):
     waveform = audio.inv_spectrogram(linear_output.T)
 
     return waveform, alignment, spectrogram, mel
-
-
-def _load(checkpoint_path):
-    if use_cuda:
-        checkpoint = torch.load(checkpoint_path)
-    else:
-        checkpoint = torch.load(checkpoint_path,
-                                map_location=lambda storage, loc: storage)
-    return checkpoint

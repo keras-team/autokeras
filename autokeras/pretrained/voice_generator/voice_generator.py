@@ -11,6 +11,8 @@ from model_helper import build_model
 from model_helper import load_checkpoint
 from synthesis import tts
 
+synthesis._frontend = getattr(frontend, "en")
+model_helper._frontend = getattr(frontend, "en")
 
 class VoiceGenerator(Pretrained):
     def __init__(self, model_path=None):
@@ -35,4 +37,7 @@ class VoiceGenerator(Pretrained):
         download_file(hyperparameter_link, self.hyperparameter_path)
 
     def generate(self, text, path=None):
+        pass
+
+    def predict(self, x_predict):
         pass

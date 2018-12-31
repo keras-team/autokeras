@@ -65,10 +65,8 @@ def deepvoice3(n_vocab, embed_dim=256, mel_dim=80, linear_dim=513, r=4,
     seq2seq = AttentionSeq2Seq(encoder, decoder)
 
     # Post net
-    if use_decoder_state_for_postnet_input:
-        in_dim = h // r
-    else:
-        in_dim = mel_dim
+    in_dim = h // r
+
     h = converter_channels
     converter = Converter(
         n_speakers=n_speakers, speaker_embed_dim=speaker_embed_dim,
