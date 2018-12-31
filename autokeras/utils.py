@@ -7,7 +7,6 @@ import zipfile
 import logging
 import itertools
 
-
 import warnings
 import imageio
 import numpy as np
@@ -18,7 +17,6 @@ import string
 import random
 from autokeras.constant import Constant
 from scipy.ndimage import zoom
-
 
 
 class NoImprovementError(Exception):
@@ -169,9 +167,8 @@ def assert_search_space(search_space):
         value_list.append(grid[key])
 
     dimension = list(itertools.product(*value_list))
-    #print(dimension)
+    # print(dimension)
     return grid, dimension
-
 
 
 def verbose_print(new_father_id, new_graph, new_model_id):
@@ -191,7 +188,6 @@ def verbose_print(new_father_id, new_graph, new_model_id):
         line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
         logging.info('|' + line + '|')
     logging.info('+' + '-' * len(line) + '+')
-
 
 
 def validate_xy(x_train, y_train):

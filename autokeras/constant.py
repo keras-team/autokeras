@@ -24,8 +24,8 @@ class Constant:
     WIDTH_DIM = 1
 
     # Default Search Space
-    DEFAULT_LENGTH_SEARCH = [50,75,100]
-    DEFAULT_WIDTH_SEARCH = [64,128,256]
+    DEFAULT_LENGTH_SEARCH = [50, 75, 100]
+    DEFAULT_WIDTH_SEARCH = [64, 128, 256]
 
     # Model Defaults
 
@@ -65,6 +65,11 @@ class Constant:
     PRE_TRAIN_FILE_NAME = "glove.6B.100d.txt"
 
     PRE_TRAIN_DETECTION_FILE_LINK = "https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth"
+
+    PRE_TRAIN_VOICE_GENERATOR_MODEL_LINK = \
+        "https://www.dropbox.com/s/5ucl9remrwy5oeg/20180505_deepvoice3_checkpoint_step000640000.pth"
+    PRE_TRAIN_VOICE_GENERATOR_HYPERPARAMETER_LINK = \
+        "https://www.dropbox.com/s/0ck82unm0bo0rxd/20180505_deepvoice3_ljspeech.json"
 
     # constants for pretrained model of face detection
     FACE_DETECTION_PRETRAINED = {
