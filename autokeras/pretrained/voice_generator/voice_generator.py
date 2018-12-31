@@ -14,20 +14,27 @@ from synthesis import tts
 synthesis._frontend = getattr(frontend, "en")
 model_helper._frontend = getattr(frontend, "en")
 
+
 class VoiceGenerator(Pretrained):
     def __init__(self, model_path=None):
         super(VoiceGenerator, self).__init__()
         if model_path is None:
             model_path = temp_path_generator()
         self.model_path = model_path
-        self.hyperparameter_path = self.model_path + "20180505_deepvoice3_ljspeech.json"
-        self.checkpoint_path = self.model_path + "20180505_deepvoice3_checkpoint_step000640000.pth"
+        self.hyperparameter_path = self.model_path + Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_NAME
+        self.checkpoint_path = self.model_path + Constant.PRE_TRAIN_VOICE_GENERATOR_HYPERPARAMETER_NAME
+        self.sample_rate = 0
+        self.hop_length = 0
         self.load()
 
     def load(self):
         self._maybe_download()
-
-        pass
+        with open(self.hyperparameter_path) as f:
+            hparams.hparams.parse_json(f.read())
+        self.sample_rate = hparams.hparams.sample_rate
+        self.hop_length = hparams.hparams.hop_size
+        model = build_model()
+        self.model = load_checkpoint(self.checkpoint_path, model)
 
     def _maybe_download(self):
         checkpoint_link = Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_LINK
@@ -37,7 +44,10 @@ class VoiceGenerator(Pretrained):
         download_file(hyperparameter_link, self.hyperparameter_path)
 
     def generate(self, text, path=None):
-        pass
+        waveform, alignment, spectrogram, mel = tts(self.model, text)
+        if path is None:
+            path = Constant.PRE_TRAIN_VOICE_GENERATOR_SAVE_FILE_NAME
+        librosa.output.write_wav(path, waveform, self.sample_rate)
 
     def predict(self, x_predict):
         pass

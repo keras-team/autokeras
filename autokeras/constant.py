@@ -70,6 +70,9 @@ class Constant:
         "https://www.dropbox.com/s/5ucl9remrwy5oeg/20180505_deepvoice3_checkpoint_step000640000.pth"
     PRE_TRAIN_VOICE_GENERATOR_HYPERPARAMETER_LINK = \
         "https://www.dropbox.com/s/0ck82unm0bo0rxd/20180505_deepvoice3_ljspeech.json"
+    PRE_TRAIN_VOICE_GENERATOR_MODEL_NAME = "20180505_deepvoice3_ljspeech.json"
+    PRE_TRAIN_VOICE_GENERATOR_HYPERPARAMETER_NAME = "20180505_deepvoice3_checkpoint_step000640000.pth"
+    PRE_TRAIN_VOICE_GENERATOR_SAVE_FILE_NAME = "test.wav"
 
     # constants for pretrained model of face detection
     FACE_DETECTION_PRETRAINED = {

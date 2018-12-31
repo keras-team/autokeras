@@ -13,7 +13,7 @@ device = torch.device("cuda" if use_cuda else "cpu")
 _frontend = None  # to be set later
 
 
-def tts(model, text, p=0, speaker_id=None, fast=False):
+def tts(model, text, p=0, speaker_id=None, fast=True):
     """Convert text to speech waveform given a deepvoice3 model.
 
     Args:
