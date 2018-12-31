@@ -18,14 +18,40 @@ def save_wav(wav, path):
     wavfile.write(path, hparams.sample_rate, wav.astype(np.int16))
 
 
-def preemphasis(x):
-    from nnmnkwii.preprocessing import preemphasis
-    return preemphasis(x, hparams.preemphasis)
+def preemphasis(x, coef=hparams.preemphasis):
+    """Pre-emphasis
+
+    Args:
+        x (1d-array): Input signal.
+        coef (float): Pre-emphasis coefficient.
+
+    Returns:
+        array: Output filtered signal.
+
+    See also:
+        :func:`inv_preemphasis`
+    """
+    b = np.array([1., -coef], x.dtype)
+    a = np.array([1.], x.dtype)
+    return signal.lfilter(b, a, x)
 
 
-def inv_preemphasis(x):
-    from nnmnkwii.preprocessing import inv_preemphasis
-    return inv_preemphasis(x, hparams.preemphasis)
+def inv_preemphasis(x, coef=hparams.preemphasis):
+    """Inverse operation of pre-emphasis
+
+    Args:
+        x (1d-array): Input signal.
+        coef (float): Pre-emphasis coefficient.
+
+    Returns:
+        array: Output filtered signal.
+
+    See also:
+        :func:`preemphasis`
+    """
+    b = np.array([1.], x.dtype)
+    a = np.array([1., -coef], x.dtype)
+    return signal.lfilter(b, a, x)
 
 
 def spectrogram(y):
