@@ -6,7 +6,12 @@ from random import random
 
 n_vocab = len(symbols)
 
-_arphabet = nltk.corpus.cmudict.dict()
+try:
+    _arphabet = nltk.corpus.cmudict.dict()
+except:
+    import nltk
+    nltk.download("cmudict")
+    _arphabet = nltk.corpus.cmudict.dict()
 
 
 def _maybe_get_arpabet(word, p):
@@ -30,5 +35,3 @@ def text_to_sequence(text, p=0.0):
     from deepvoice3_pytorch.frontend.text import text_to_sequence
     text = text_to_sequence(text, ["english_cleaners"])
     return text
-
-

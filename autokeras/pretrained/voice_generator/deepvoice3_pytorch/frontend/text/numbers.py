@@ -37,8 +37,6 @@ def _expand_dollars(m):
     elif cents:
         cent_unit = 'cent' if cents == 1 else 'cents'
         return '%s %s' % (cents, cent_unit)
-    else:
-        return 'zero dollars'
 
 
 def _expand_ordinal(m):
@@ -47,7 +45,7 @@ def _expand_ordinal(m):
 
 def _expand_number(m):
     num = int(m.group(0))
-    if num > 1000 and num < 10000:
+    if 10000 > num > 1000:
         if num % 100 == 0:
             return _inflect.number_to_words(num // 100) + ' hundred'
         else:

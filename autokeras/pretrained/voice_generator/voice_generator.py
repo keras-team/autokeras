@@ -1,3 +1,5 @@
+import os
+
 from autokeras.pretrained.base import Pretrained
 from autokeras.constant import Constant
 from autokeras.utils import temp_path_generator, download_file
@@ -21,32 +23,35 @@ class VoiceGenerator(Pretrained):
         if model_path is None:
             model_path = temp_path_generator()
         self.model_path = model_path
-        self.hyperparameter_path = self.model_path + Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_NAME
-        self.checkpoint_path = self.model_path + Constant.PRE_TRAIN_VOICE_GENERATOR_HYPERPARAMETER_NAME
+        self.checkpoint_path = os.path.join(self.model_path, Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_NAME)
         self.sample_rate = 0
         self.hop_length = 0
         self.load()
 
     def load(self):
         self._maybe_download()
-        with open(self.hyperparameter_path) as f:
-            hparams.hparams.parse_json(f.read())
         self.sample_rate = hparams.hparams.sample_rate
         self.hop_length = hparams.hparams.hop_size
         model = build_model()
+
         self.model = load_checkpoint(self.checkpoint_path, model)
 
     def _maybe_download(self):
-        checkpoint_link = Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_LINK
-        download_file(checkpoint_link, self.checkpoint_path)
-
-        hyperparameter_link = Constant.PRE_TRAIN_VOICE_GENERATOR_HYPERPARAMETER_LINK
-        download_file(hyperparameter_link, self.hyperparameter_path)
+        # For files in dropbox or google drive, cannot directly use request to download
+        # This can be changed directly use download_file method when the file is stored in server
+        if not os.path.exists(self.checkpoint_path):
+            print("Downloading " + self.checkpoint_path + " from " + Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_LINK)
+            checkpoint_link = Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_LINK
+            current_path = os.getcwd()
+            os.chdir(self.model_path)
+            cmd = "curl -O -L " + checkpoint_link
+            os.system(cmd)
+            os.chdir(current_path)
 
     def generate(self, text, path=None):
         waveform, alignment, spectrogram, mel = tts(self.model, text)
         if path is None:
-            path = Constant.PRE_TRAIN_VOICE_GENERATOR_SAVE_FILE_NAME
+            path = Constant.PRE_TRAIN_VOICE_GENERATOR_SAVE_FILE_DEFAULT_NAME
         librosa.output.write_wav(path, waveform, self.sample_rate)
 
     def predict(self, x_predict):

@@ -11,16 +11,8 @@ class Conv1d(nn.Conv1d):
         super().__init__(*args, **kwargs)
         self.clear_buffer()
         self._linearized_weight = None
-        self.register_backward_hook(self._clear_linearized_weight)
 
     def incremental_forward(self, input):
-        # input: (B, T, C)
-        if self.training:
-            raise RuntimeError('incremental_forward only supports eval mode')
-
-        # run forward pre hooks (e.g., weight norm)
-        for hook in self._forward_pre_hooks.values():
-            hook(self, input)
 
         # reshape weight
         weight = self._get_linearized_weight()
@@ -51,14 +43,8 @@ class Conv1d(nn.Conv1d):
         if self._linearized_weight is None:
             kw = self.kernel_size[0]
             # nn.Conv1d
-            if self.weight.size() == (self.out_channels, self.in_channels, kw):
-                weight = self.weight.transpose(1, 2).contiguous()
-            else:
-                # fairseq.modules.conv_tbc.ConvTBC
-                weight = self.weight.transpose(2, 1).transpose(1, 0).contiguous()
+            weight = self.weight.transpose(1, 2).contiguous()
+
             assert weight.size() == (self.out_channels, kw, self.in_channels)
             self._linearized_weight = weight.view(self.out_channels, -1)
         return self._linearized_weight
-
-    def _clear_linearized_weight(self, *args):
-        self._linearized_weight = None
