@@ -18,6 +18,7 @@ setup(
                       'GPUtil==1.3.0',
                       'lightgbm==2.2.2',
                       'pandas==0.23.4',
+                      'librosa=0.6.2',
                       'opencv-python==3.4.4.19'],
     version='0.3.5',
     description='AutoML for deep learning',
