@@ -3,10 +3,10 @@ import lws
 import numpy as np
 from scipy import signal
 
-from autokeras.pretrained.voice_generator.hparams import hparams
+from autokeras.pretrained.voice_generator.hparams import Hparams
 
 
-def inv_preemphasis(x, coef=hparams.preemphasis):
+def inv_preemphasis(x, coef=Hparams.preemphasis):
     """Inverse operation of pre-emphasis
 
     Args:
@@ -26,15 +26,15 @@ def inv_preemphasis(x, coef=hparams.preemphasis):
 
 def inv_spectrogram(spectrogram):
     '''Converts spectrogram to waveform using librosa'''
-    S = _db_to_amp(_denormalize(spectrogram) + hparams.ref_level_db)  # Convert back to linear
+    S = _db_to_amp(_denormalize(spectrogram) + Hparams.ref_level_db)  # Convert back to linear
     processor = _lws_processor()
-    D = processor.run_lws(S.astype(np.float64).T ** hparams.power)
+    D = processor.run_lws(S.astype(np.float64).T ** Hparams.power)
     y = processor.istft(D).astype(np.float32)
     return inv_preemphasis(y)
 
 
 def _lws_processor():
-    return lws.lws(hparams.fft_size, hparams.hop_size, mode="speech")
+    return lws.lws(Hparams.fft_size, Hparams.hop_size, mode="speech")
 
 
 # Conversions:
@@ -48,4 +48,4 @@ def _db_to_amp(x):
 
 
 def _denormalize(S):
-    return (np.clip(S, 0, 1) * -hparams.min_level_db) + hparams.min_level_db
+    return (np.clip(S, 0, 1) * -Hparams.min_level_db) + Hparams.min_level_db

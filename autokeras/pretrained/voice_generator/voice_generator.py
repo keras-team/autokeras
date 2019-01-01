@@ -29,8 +29,8 @@ class VoiceGenerator(Pretrained):
 
     def load(self):
         self._maybe_download()
-        self.sample_rate = hparams.hparams.sample_rate
-        self.hop_length = hparams.hparams.hop_size
+        self.sample_rate = hparams.Hparams.sample_rate
+        self.hop_length = hparams.Hparams.hop_size
         model = build_model()
 
         self.model = load_checkpoint(self.checkpoint_path, model)
