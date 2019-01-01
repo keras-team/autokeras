@@ -2,7 +2,7 @@ import os
 
 from autokeras.pretrained.base import Pretrained
 from autokeras.constant import Constant
-from autokeras.utils import temp_path_generator
+from autokeras.utils import temp_path_generator, ensure_dir
 import librosa
 
 from autokeras.pretrained.voice_generator import hparams
@@ -22,6 +22,7 @@ class VoiceGenerator(Pretrained):
         if model_path is None:
             model_path = temp_path_generator()
         self.model_path = model_path
+        ensure_dir(self.model_path)
         self.checkpoint_path = os.path.join(self.model_path, Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_NAME)
         self.sample_rate = 0
         self.hop_length = 0
