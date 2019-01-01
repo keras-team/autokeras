@@ -1,5 +1,5 @@
 from autokeras import VoiceGenerator
-from common import TEST_TEMP_DIR, clean_dir
+from tests.common import TEST_TEMP_DIR, clean_dir
 import os
 
 

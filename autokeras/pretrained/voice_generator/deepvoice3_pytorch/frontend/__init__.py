@@ -12,16 +12,16 @@ and the property:
 - n_vocab
 
 """
-from deepvoice3_pytorch.frontend import en
+from autokeras.pretrained.voice_generator.deepvoice3_pytorch.frontend import en
 
 # optinoal Japanese frontend
 try:
-    from deepvoice3_pytorch.frontend import jp
+    from autokeras.pretrained.voice_generator.deepvoice3_pytorch.frontend import jp
 except ImportError:
     jp = None
 
 try:
-    from deepvoice3_pytorch.frontend import ko
+    from autokeras.pretrained.voice_generator.deepvoice3_pytorch.frontend import ko
 except ImportError:
     ko = None
 

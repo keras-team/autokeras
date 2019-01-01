@@ -1,4 +1,4 @@
-from deepvoice3_pytorch import MultiSpeakerTTSModel, AttentionSeq2Seq
+from autokeras.pretrained.voice_generator.deepvoice3_pytorch import MultiSpeakerTTSModel, AttentionSeq2Seq
 
 
 def deepvoice3(n_vocab, embed_dim=256, mel_dim=80, linear_dim=513, r=4,
@@ -25,7 +25,7 @@ def deepvoice3(n_vocab, embed_dim=256, mel_dim=80, linear_dim=513, r=4,
                ):
     """Build deepvoice3
     """
-    from deepvoice3_pytorch.deepvoice3 import Encoder, Decoder, Converter
+    from autokeras.pretrained.voice_generator.deepvoice3_pytorch.deepvoice3 import Encoder, Decoder, Converter
 
     time_upsampling = max(downsample_step // r, 1)
 

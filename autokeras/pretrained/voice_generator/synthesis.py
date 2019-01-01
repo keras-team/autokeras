@@ -6,7 +6,7 @@ Synthesis waveform from trained model.
 import numpy as np
 import torch
 
-import audio
+from autokeras.pretrained.voice_generator import audio
 
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")

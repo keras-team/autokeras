@@ -7,8 +7,8 @@ import torch
 import torch.backends.cudnn as cudnn
 
 # The deepvoice3 model
-from deepvoice3_pytorch import builder
-from hparams import hparams
+from autokeras.pretrained.voice_generator.deepvoice3_pytorch import builder
+from autokeras.pretrained.voice_generator.hparams import hparams
 
 fs = hparams.sample_rate
 

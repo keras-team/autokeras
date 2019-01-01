@@ -3,7 +3,7 @@ import lws
 import numpy as np
 from scipy import signal
 
-from hparams import hparams
+from autokeras.pretrained.voice_generator.hparams import hparams
 
 
 def inv_preemphasis(x, coef=hparams.preemphasis):
