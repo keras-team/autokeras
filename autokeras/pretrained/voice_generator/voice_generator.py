@@ -2,16 +2,15 @@ import os
 
 from autokeras.pretrained.base import Pretrained
 from autokeras.constant import Constant
-from autokeras.utils import temp_path_generator, download_file
+from autokeras.utils import temp_path_generator
 import librosa
 
-import hparams
-import synthesis
-import model_helper
-from deepvoice3_pytorch import frontend
-from model_helper import build_model
-from model_helper import load_checkpoint
-from synthesis import tts
+from autokeras.pretrained.voice_generator import hparams
+from autokeras.pretrained.voice_generator import synthesis
+from autokeras.pretrained.voice_generator import model_helper
+from autokeras.pretrained.voice_generator.deepvoice3_pytorch import frontend
+from autokeras.pretrained.voice_generator.model_helper import build_model, load_checkpoint
+from autokeras.pretrained.voice_generator.synthesis import tts
 
 synthesis._frontend = getattr(frontend, "en")
 model_helper._frontend = getattr(frontend, "en")
