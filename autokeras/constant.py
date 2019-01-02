@@ -66,8 +66,7 @@ class Constant:
 
     PRE_TRAIN_DETECTION_FILE_LINK = "https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth"
 
-    PRE_TRAIN_VOICE_GENERATOR_MODEL_LINK = \
-        "https://www.dropbox.com/s/5ucl9remrwy5oeg/20180505_deepvoice3_checkpoint_step000640000.pth"
+    PRE_TRAIN_VOICE_GENERATOR_MODEL_GOOGLE_DRIVE_ID = "1E-B92LZz4dgg8DU81D6pyhOzM9yvvBTj"
     PRE_TRAIN_VOICE_GENERATOR_MODEL_NAME = "20180505_deepvoice3_checkpoint_step000640000.pth"
     PRE_TRAIN_VOICE_GENERATOR_SAVE_FILE_DEFAULT_NAME = "test.wav"
 

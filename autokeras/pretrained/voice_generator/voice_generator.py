@@ -12,6 +12,8 @@ from autokeras.pretrained.voice_generator.deepvoice3_pytorch import frontend
 from autokeras.pretrained.voice_generator.model_helper import build_model, load_checkpoint
 from autokeras.pretrained.voice_generator.synthesis import tts
 
+from autokeras.pretrained.voice_generator.google_drive_download import GoogleDriveDownloader as gdd
+
 synthesis._frontend = getattr(frontend, "en")
 model_helper._frontend = getattr(frontend, "en")
 
@@ -36,17 +38,12 @@ class VoiceGenerator(Pretrained):
 
         self.model = load_checkpoint(self.checkpoint_path, model)
 
-    def _maybe_download(self):
+    def _maybe_download(self, overwrite=True):
         # For files in dropbox or google drive, cannot directly use request to download
         # This can be changed directly use download_file method when the file is stored in server
-        if not os.path.exists(self.checkpoint_path):
-            print("Downloading " + self.checkpoint_path + " from " + Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_LINK)
-            checkpoint_link = Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_LINK
-            current_path = os.getcwd()
-            os.chdir(self.model_path)
-            cmd = "curl -O -L " + checkpoint_link
-            os.system(cmd)
-            os.chdir(current_path)
+        if not os.path.exists(self.checkpoint_path) or overwrite:
+            checkpoint_google_id = Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_GOOGLE_DRIVE_ID
+            gdd.download_file_from_google_drive(file_id=checkpoint_google_id, dest_path=self.checkpoint_path, overwrite=overwrite)
 
     def generate(self, text, path=None):
         waveform, alignment, spectrogram, mel = tts(self.model, text)
