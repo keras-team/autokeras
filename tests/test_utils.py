@@ -1,12 +1,11 @@
-import numpy as np
-import subprocess
 from unittest.mock import patch
 
+import numpy as np
+
 from autokeras.constant import Constant
-from autokeras.utils import rand_temp_folder_generator, download_file, get_system, get_device, \
-    compute_image_resize_params, \
+from autokeras.utils import rand_temp_folder_generator, download_file, get_system, compute_image_resize_params, \
     resize_image_data, temp_path_generator
-from tests.common import clean_dir, TEST_TEMP_DIR, mock_nvidia_smi_output, TEST_TEMP_KERAS_DIR
+from tests.common import clean_dir, TEST_TEMP_DIR, TEST_TEMP_KERAS_DIR
 
 
 # This method will be used by the mock to replace requests.get
@@ -90,19 +89,19 @@ def test_get_system():
         sys_name == Constant.SYS_WINDOWS
 
 
-@patch('torch.cuda.is_available')
-@patch('subprocess.check_output')
-def test_get_device(mock_check_output, mock_is_available):
-    mock_check_output.return_value = mock_nvidia_smi_output()
-    mock_is_available.return_value = True
-    device = get_device()
-    assert device == 'cuda:1'
-
-    mock_check_output.side_effect = subprocess.SubprocessError
-    device = get_device()
-    assert device == 'cpu'
-
-    mock_is_available.return_value = False
-    mock_check_output.return_value = ''
-    device = get_device()
-    assert device == 'cpu'
+# @patch('torch.cuda.is_available')
+# @patch('subprocess.check_output')
+# def test_get_device(mock_check_output, mock_is_available):
+#     mock_check_output.return_value = mock_nvidia_smi_output()
+#     mock_is_available.return_value = True
+#     device = get_device()
+#     assert device == 'cuda:1'
+#
+#     mock_check_output.side_effect = subprocess.SubprocessError
+#     device = get_device()
+#     assert device == 'cpu'
+#
+#     mock_is_available.return_value = False
+#     mock_check_output.return_value = ''
+#     device = get_device()
+#     assert device == 'cpu'

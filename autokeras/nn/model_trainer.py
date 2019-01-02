@@ -1,12 +1,15 @@
-import os
 import abc
+import os
 import sys
+import time
 from copy import deepcopy
 from functools import reduce
+
 import numpy as np
 import torch
 from torchvision import utils as vutils
 from tqdm import tqdm
+
 from autokeras.constant import Constant
 from autokeras.utils import get_device
 
@@ -36,7 +39,7 @@ class ModelTrainerBase(abc.ABC):
                  metric=None,
                  verbose=False,
                  device=None):
-        if device is not None:
+        if device:
             self.device = device
         else:
             self.device = get_device()
@@ -45,14 +48,17 @@ class ModelTrainerBase(abc.ABC):
         self.loss_function = loss_function
         self.train_loader = train_data
         self.test_loader = test_data
+        self._timeout = None
 
     @abc.abstractmethod
     def train_model(self,
                     max_iter_num=None,
-                    max_no_improvement_num=None):
+                    max_no_improvement_num=None,
+                    timeout=None):
         """Train the model.
 
         Args:
+            timeout: timeout in seconds
             max_iter_num: int, maximum numer of iteration
             max_no_improvement_num: after max_no_improvement_num,
                 if the model still makes no improvement, finish training.
@@ -78,6 +84,8 @@ class ModelTrainer(ModelTrainerBase):
     def __init__(self, model, path, **kwargs):
         super().__init__(**kwargs)
         self.model = model
+        if torch.cuda.device_count() > 1:
+            self.model = torch.nn.DataParallel(self.model)
         self.model.to(self.device)
         self.optimizer = None
         self.early_stop = None
@@ -88,12 +96,14 @@ class ModelTrainer(ModelTrainerBase):
 
     def train_model(self,
                     max_iter_num=None,
-                    max_no_improvement_num=None):
+                    max_no_improvement_num=None,
+                    timeout=None):
         """Train the model.
 
         Train the model with max_iter_num or max_no_improvement_num is met.
 
         Args:
+            timeout: timeout in seconds
             max_iter_num: An integer. The maximum number of epochs to train the model.
                 The training will stop when this number is reached.
             max_no_improvement_num: An integer. The maximum number of epochs when the loss value doesn't decrease.
@@ -110,6 +120,7 @@ class ModelTrainer(ModelTrainerBase):
 
         self.early_stop = EarlyStop(max_no_improvement_num)
         self.early_stop.on_train_begin()
+        self._timeout = time.time() + timeout if timeout is not None else sys.maxsize
 
         test_metric_value_list = []
         test_loss_list = []
@@ -155,6 +166,8 @@ class ModelTrainer(ModelTrainerBase):
             progress_bar = None
 
         for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
+            if time.time() >= self._timeout:
+                raise TimeoutError
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
@@ -182,6 +195,8 @@ class ModelTrainer(ModelTrainerBase):
 
         with torch.no_grad():
             for batch_idx, (inputs, targets) in enumerate(deepcopy(loader)):
+                if time.time() >= self._timeout:
+                    raise TimeoutError
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 outputs = self.model(inputs)
                 # cast tensor to float
@@ -266,7 +281,8 @@ class GANModelTrainer(ModelTrainerBase):
 
     def train_model(self,
                     max_iter_num=None,
-                    max_no_improvement_num=None):
+                    max_no_improvement_num=None,
+                    timeout=None):
         if max_iter_num is None:
             max_iter_num = Constant.MAX_ITER_NUM
         self.optimizer_d = torch.optim.Adam(self.d_model.parameters())

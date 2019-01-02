@@ -3,38 +3,8 @@
 Contributions are welcome, and greatly appreciated! Every little bit helps, and credit will always be given.
 We recommend you to check our [Developer Tools Guide](#developer-tools-guide) 
 to make the development process easier and standard.
-**The type of contribution we would be most happy to see is new task modules, e.g. TextClassifier, VideoClassifier.**
 
-## Implement New Task Modules
-A task module is a comparatively separate module which can handle a specify task.
-For example, ImageClassifier is the only task module we have for now.
-The list of task modules we are seeking is all the issues with label
-"[new task module](https://github.com/jhfjhfj1/autokeras/issues?q=is%3Aissue+is%3Aopen+label%3A%22new+task+module%22)".
-
-The new task module should be submitted by pull request from the first day you start to develop the module.
-Make sure your pull request follow the [Pull Request Guideline](#pull-request-guide).
-You can pick any one of them which has not been assigned to anybody yet.
-If you pick some of the modules which has already been assigned to someone,
-then we will conduct a thorough evaluation on the benchmark datasets and some preserved datasets.
-The one performs better in the evaluation will be merged.
-
-In general, all new task module should inherit their objects from the `Supervised` class in [`autokeras/supervised.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/supervised.py).
-Reach out to us if you feel there is a special requirement.
-For every new feature, a new directory should be created inside the /autokeras directory, e.g. text_classifier.
-All the code contributed should be within the directory.
-You may put a README.md file in your directory to describe your work. 
-The details of the functions to inherit is in the documentation of [`autokeras/supervised.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/supervised.py)
-
-Please also read
-[Code Style Guide](#code-style-guide),
-[Documentation Guide](#documentation-guide),
-[Reusable Code Guide](#reusable-code-guide),
-and
-[Testing Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#testing-guide)
-to ensure your merge request meet our requirements.
-
-## Other Contributions
-There are many other ways to contribute to Auto-Keras,
+There are many ways to contribute to Auto-Keras,
 including submit feedback, fix bugs, implement features, and write documentation.
 The guide for each type of contribution is as follows.
 

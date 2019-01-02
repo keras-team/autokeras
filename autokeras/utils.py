@@ -4,6 +4,9 @@ import pickle
 import sys
 import tempfile
 import zipfile
+import logging
+import itertools
+
 
 import warnings
 import imageio
@@ -15,6 +18,7 @@ import string
 import random
 from autokeras.constant import Constant
 from scipy.ndimage import zoom
+
 
 
 class NoImprovementError(Exception):
@@ -47,41 +51,49 @@ def pickle_to_file(obj, path):
     """Save the pickle file to the specified path."""
     pickle.dump(obj, open(path, 'wb'))
 
-# TODO cannot detect nvidia-smi in Windows normally. We need a fall back for windows
+
 def get_device():
     """ If CUDA is available, use CUDA device, else use CPU device.
-
-    When choosing from CUDA devices, this function will choose the one with max memory available.
-
-    Returns: string device name.
+    Returns: string device name
     """
-    # TODO: could use gputil in the future
-    device = 'cpu'
-    if torch.cuda.is_available():
-        try:
-            # smi_out=
-            #       Free                 : xxxxxx MiB
-            #       Free                 : xxxxxx MiB
-            #                      ....
-            smi_out = subprocess.check_output('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free', shell=True)
-            if isinstance(smi_out, bytes):
-                smi_out = smi_out.decode('utf-8')
-        except subprocess.SubprocessError:
-            warnings.warn('Cuda device successfully detected. However, nvidia-smi cannot be invoked')
-            return 'cpu'
-        visible_devices = os.getenv('CUDA_VISIBLE_DEVICES', '').split(',')
-        if len(visible_devices) == 1 and visible_devices[0] == '':
-            visible_devices = []
-        visible_devices = [int(x) for x in visible_devices]
-        memory_available = [int(x.split()[2]) for x in smi_out.splitlines()]
-        for cuda_index, _ in enumerate(memory_available):
-            if cuda_index not in visible_devices and visible_devices:
-                memory_available[cuda_index] = 0
+    return 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        if memory_available:
-            if max(memory_available) != 0:
-                device = 'cuda:' + str(memory_available.index(max(memory_available)))
-    return device
+
+# # TODO cannot detect nvidia-smi in Windows normally. We need a fall back for windows
+# def get_device():
+#     """ If CUDA is available, use CUDA device, else use CPU device.
+#     When choosing from CUDA devices, this function will choose the one with max memory available.
+#     Returns: string device name.
+#     """
+#     # TODO: could use gputil in the future
+#     device = 'cpu'
+#     if torch.cuda.is_available():
+#         try:
+#             # smi_out=
+#             #       Free                 : xxxxxx MiB
+#             #       Free                 : xxxxxx MiB
+#             #                      ....
+#             smi_out = subprocess.check_output('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free', shell=True)
+#             if isinstance(smi_out, bytes):
+#                 smi_out = smi_out.decode('utf-8')
+#         except subprocess.SubprocessError:
+#             warnings.warn('Cuda device successfully detected. However, nvidia-smi cannot be invoked')
+#             return 'cpu'
+#         visible_devices = os.getenv('CUDA_VISIBLE_DEVICES', '').split(',')
+#         if len(visible_devices) == 1 and visible_devices[0] == '':
+#             visible_devices = []
+#         visible_devices = [int(x) for x in visible_devices]
+#         memory_available = [int(x.split()[2]) for x in smi_out.splitlines()]
+#         for cuda_index, _ in enumerate(memory_available):
+#             if cuda_index not in visible_devices and visible_devices:
+#                 memory_available[cuda_index] = 0
+#         memory_available = list(filter(lambda a: a != 2, memory_available))
+#         if memory_available:
+#             if max(memory_available) != 0 and torch.cuda.device_count() == 1:
+#                 device = 'cuda:' + str(memory_available.index(max(memory_available)))
+#             elif max(memory_available) != 0 and torch.cuda.device_count() > 1:
+#                 device = 'cuda:0'
+#     return device
 
 
 def temp_path_generator():
@@ -105,7 +117,7 @@ def download_file(file_link, file_path):
     """Download the file specified in `file_link` and saves it in `file_path`."""
     if not os.path.exists(file_path):
         with open(file_path, "wb") as f:
-            print("Downloading %s" % file_path)
+            print("\nDownloading %s" % file_path)
             response = requests.get(file_link, stream=True)
             total_length = response.headers.get('content-length')
 
@@ -134,23 +146,51 @@ def download_file_with_extract(file_link, file_path, extract_path):
     print("file already extracted in the path %s" % extract_path)
 
 
+def assert_search_space(search_space):
+    grid = search_space
+    value_list = []
+    if Constant.LENGTH_DIM not in list(grid.keys()):
+        print('No length dimension found in search Space. Using default values')
+        grid[Constant.LENGTH_DIM] = Constant.DEFAULT_LENGTH_SEARCH
+    elif not isinstance(grid[Constant.LENGTH_DIM][0], int):
+        print('Converting String to integers. Next time please make sure to enter integer values for Length Dimension')
+        grid[Constant.LENGTH_DIM] = list(map(int, grid[Constant.LENGTH_DIM]))
+
+    if Constant.WIDTH_DIM not in list(grid.keys()):
+        print('No width dimension found in search Space. Using default values')
+        grid[Constant.WIDTH_DIM] = Constant.DEFAULT_WIDTH_SEARCH
+    elif not isinstance(grid[Constant.WIDTH_DIM][0], int):
+        print('Converting String to integers. Next time please make sure to enter integer values for Width Dimension')
+        grid[Constant.WIDTH_DIM] = list(map(int, grid[Constant.WIDTH_DIM]))
+
+    grid_key_list = list(grid.keys())
+    grid_key_list.sort()
+    for key in grid_key_list:
+        value_list.append(grid[key])
+
+    dimension = list(itertools.product(*value_list))
+    #print(dimension)
+    return grid, dimension
+
+
+
 def verbose_print(new_father_id, new_graph, new_model_id):
     """Print information about the operation performed on father model to obtain current model and father's id."""
     cell_size = [24, 49]
-    print('New Model Id', new_model_id)
+    logging.info('New Model Id - ' + str(new_model_id))
     header = ['Father Model ID', 'Added Operation']
     line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(header))
-    print('\n' + '+' + '-' * len(line) + '+')
-    print('|' + line + '|')
-    print('+' + '-' * len(line) + '+')
+    logging.info('\n' + '+' + '-' * len(line) + '+')
+    logging.info('|' + line + '|')
+    logging.info('+' + '-' * len(line) + '+')
     for i in range(len(new_graph.operation_history)):
         if i == len(new_graph.operation_history) // 2:
-            r = [new_father_id, ' '.join(str(item) for item in new_graph.operation_history[i])]
+            r = [str(new_father_id), ' '.join(str(item) for item in new_graph.operation_history[i])]
         else:
             r = [' ', ' '.join(str(item) for item in new_graph.operation_history[i])]
         line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
-        print('|' + line + '|')
-    print('+' + '-' * len(line) + '+')
+        logging.info('|' + line + '|')
+    logging.info('+' + '-' * len(line) + '+')
 
 
 
@@ -263,4 +303,5 @@ def get_system():
         return Constant.SYS_LINUX
     if os.name == 'nt':
         return Constant.SYS_WINDOWS
+
     raise EnvironmentError('Unsupported environment')
