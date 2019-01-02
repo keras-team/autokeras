@@ -16,8 +16,7 @@ from autokeras.utils import rand_temp_folder_generator, ensure_dir
 class TabularSupervised(Supervised):
     def __init__(self, path=None, **kwargs):
         """
-        This constructor is supposed to initialize data members.
-        Use triple quotes for function documentation.
+        Initialization function for tabular supervised learner.
         """
         super().__init__(**kwargs)
         self.is_trained = False
@@ -70,10 +69,13 @@ class TabularSupervised(Supervised):
         This function should train the model parameters.
 
         Args:
-            time_limit:
-            data_info: 'time', 'categorical', 'numerical'
             x: A numpy.ndarray instance containing the training data.
-            y: Training label matrix of dim num_train_samples * num_labels.
+            y: training label vector.
+            time_limit: remaining time budget.
+            data_info: meta-features of the dataset, which is an numpy.ndarray describing the
+             feature type of each column in raw_x. The feature type include:
+                     'TIME' for temporal feature, 'NUM' for other numerical feature,
+                     and 'CAT' for categorical feature.
         Both inputs X and y are numpy arrays.
         If fit is called multiple times on incremental data (train, test1, test2, etc.)
         you should warm-start your training from the pre-trained model. Past data will
@@ -190,7 +192,6 @@ class TabularSupervised(Supervised):
 
 class TabularRegressor(TabularSupervised):
     """TabularRegressor class.
-
     It is used for tabular data regression with lightgbm regressor.
     """
     def __init__(self, path=None):

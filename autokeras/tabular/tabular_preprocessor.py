@@ -85,8 +85,7 @@ def call_parallel(tasks):
 class TabularPreprocessor:
     def __init__(self):
         """
-        This constructor is supposed to initialize data members.
-        Use triple quotes for function documentation.
+        Initialization function for tabular preprocessor.
         """
         self.num_cat_pair = {}
 
@@ -232,16 +231,13 @@ class TabularPreprocessor:
         This function should train the model parameters.
 
         Args:
-            time_limit:
-            raw_x: A numpy.ndarray instance containing the training data.
-            y: Training label matrix of dim num_train_samples * num_labels.
-            data_info: Meta-features of the dataset, which describe:
-                     the number of four different features including:
-                     time, numerical, categorical, and multi-value categorical.
-        Both inputs X and y are numpy arrays.
-        If fit is called multiple times on incremental data (train, test1, test2, etc.)
-        you should warm-start your training from the pre-trained model. Past data will
-        NOT be available for re-training.
+            raw_x: a numpy.ndarray instance containing the training data.
+            y: training label vector.
+            time_limit: remaining time budget.
+            data_info: meta-features of the dataset, which is an numpy.ndarray describing the
+             feature type of each column in raw_x. The feature type include:
+                     'TIME' for temporal feature, 'NUM' for other numerical feature,
+                     and 'CAT' for categorical feature.
         """
         # Get Meta-Feature
         self.budget = time_limit
@@ -290,8 +286,8 @@ class TabularPreprocessor:
         This function should train the model parameters.
 
         Args:
-            raw_x:
-            time_limit:
+            raw_x: a numpy.ndarray instance containing the training/testing data.
+            time_limit: remaining time budget.
         Both inputs X and y are numpy arrays.
         If fit is called multiple times on incremental data (train, test1, test2, etc.)
         you should warm-start your training from the pre-trained model. Past data will
@@ -319,10 +315,10 @@ class TabularPreprocessor:
         x = self.process_time(x)
         if self.rest is not None:
             x = x[:, self.rest]
-
         return x
 
     def extract_data_info(self, raw_x):
+
         data_info = []
         row_num, col_num = raw_x.shape
         for col_idx in range(col_num):
