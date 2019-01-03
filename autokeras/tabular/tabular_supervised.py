@@ -89,10 +89,11 @@ class TabularSupervised(Supervised):
         self.init_lgbm(y)
 
         self.tabular_preprocessor = TabularPreprocessor()
-        x = self.tabular_preprocessor.fit(x, y, self.time_limit, data_info)
 
         if x.shape[1] == 0:
             raise ValueError("No feature exist!")
+
+        x = self.tabular_preprocessor.fit(x, y, self.time_limit, data_info)
 
         if x.shape[0] > 600:
             grid_train_percentage = max(600.0 / x.shape[0], 0.1)

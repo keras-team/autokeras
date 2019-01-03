@@ -123,7 +123,7 @@ class TabularPreprocessor:
 
     def extract_data(self, raw_x):
         # only get numerical variables
-        ret = np.concatenate([raw_x['Time'], raw_x['Num'], raw_x['CAT']], axis=1)
+        ret = np.concatenate([raw_x['TIME'], raw_x['NUM'], raw_x['CAT']], axis=1)
         n_rows = ret.shape[0]
         n_num_col = ret.shape[1] - self.n_cat
 
@@ -241,14 +241,22 @@ class TabularPreprocessor:
         """
         # Get Meta-Feature
         self.budget = time_limit
-        self.data_info, raw_x = data_info if data_info is not None else self.extract_data_info(raw_x)
-        raw_x = {'TIME': np.concatenate(raw_x[:, self.data_info == 'TIME'], axis=1),
-                 'NUM': np.concatenate(raw_x[:, self.data_info == 'NUM'], axis=1),
-                 'CAT': np.concatenate(raw_x[:, self.data_info == 'CAT'], axis=1)}
+        self.data_info = data_info if data_info is not None else self.extract_data_info(raw_x)
+        print('QQ: {}'.format(self.data_info))
 
         self.n_time = sum(self.data_info == 'TIME')
         self.n_num = sum(self.data_info == 'NUM')
-        self.n_cat =sum(self.data_info == 'CAT')
+        self.n_cat = sum(self.data_info == 'CAT')
+
+        self.total_samples = raw_x.shape[0]
+
+        print('QQ1: {}'.format(self.n_time))
+        print('QQ2: {}'.format(self.n_num))
+        print('QQ3: {}'.format(self.n_cat))
+        raw_x = {'TIME': raw_x[:, self.data_info == 'TIME'],
+                 'NUM': raw_x[:, self.data_info == 'NUM'],
+                 'CAT': raw_x[:, self.data_info == 'CAT']}
+
 
         for col_index in range(self.n_num + self.n_time, self.n_num + self.n_time + self.n_cat):
             self.cat_to_int_label[col_index] = {}
@@ -301,9 +309,9 @@ class TabularPreprocessor:
         else:
             self.budget = time_limit
 
-        raw_x = {'TIME': np.concatenate(raw_x[:, self.data_info == 'TIME'], axis=1),
-                 'NUM': np.concatenate(raw_x[:, self.data_info == 'NUM'], axis=1),
-                 'CAT': np.concatenate(raw_x[:, self.data_info == 'CAT'], axis=1)}
+        raw_x = {'TIME': raw_x[:, self.data_info == 'TIME'],
+                 'NUM': raw_x[:, self.data_info == 'NUM'],
+                 'CAT': raw_x[:, self.data_info == 'CAT']}
         x = self.extract_data(raw_x)
 
         # Convert NaN to zeros
@@ -317,8 +325,14 @@ class TabularPreprocessor:
             x = x[:, self.rest]
         return x
 
-    def extract_data_info(self, raw_x):
 
+    def extract_data_info(self, raw_x):
+        """
+        This function extracts the data info automatically based on the type of each feature in raw_x.
+
+        Args:
+            raw_x: a numpy.ndarray instance containing the training data.
+        """
         data_info = []
         row_num, col_num = raw_x.shape
         for col_idx in range(col_num):
@@ -326,6 +340,5 @@ class TabularPreprocessor:
                 raw_x[:, col_idx].astype(np.float)
                 data_info.append('NUM')
             except:
-                raw_x[:, col_idx].astype(np.float)
                 data_info.append('CAT')
         return np.array(data_info)
