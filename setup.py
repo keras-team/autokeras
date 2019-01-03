@@ -15,7 +15,6 @@ setup(
                       'tensorflow==1.10.0',
                       'imageio==2.4.1',
                       'requests==2.20.1',
-                      'GPUtil==1.3.0',
                       'lightgbm==2.2.2',
                       'pandas==0.23.4',
                       'opencv-python==3.4.4.19'],

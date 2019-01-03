@@ -57,14 +57,9 @@ def test_load_pretrain(_, _1):
 
 @patch('autokeras.text.text_preprocessor.load_pretrain', side_effect=mock_load_pretrain)
 def test_processing(_):
-    results = [[0], Exception("Foo")]
-    with patch('autokeras.text.text_preprocessor.GPUtil.getFirstAvailable', side_effect=results):
-        train_x = np.full((1, 2), 1)
-        train_x = processing(TEST_TEMP_DIR, word_index, 2, train_x)
-        assert np.allclose(train_x[0][0], embedding_matrix[1])
-        train_x = np.full((1, 2), 1)
-        train_x = processing(TEST_TEMP_DIR, word_index, 2, train_x)
-        assert np.allclose(train_x[0][0], embedding_matrix[1])
+    train_x = np.full((1, 2), 1)
+    train_x = processing(TEST_TEMP_DIR, word_index, 2, train_x)
+    assert np.allclose(train_x[0][0], embedding_matrix[1])
 
 
 def test_tokenlize_text():

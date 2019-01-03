@@ -138,37 +138,26 @@ def processing(path, word_index, input_length, x_train):
 
     embedding_matrix = load_pretrain(path=path, word_index=word_index)
 
-    # Get the first available GPU
-    try:
-        device_id_list = GPUtil.getFirstAvailable()
-        device_id = device_id_list[0]  # grab first element from list
-        # Set CUDA_VISIBLE_DEVICES to mask out all other GPUs than the first available device id
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(device_id)
-        device = '/gpu:0'
-    except:
-        device = '/cpu:0'
+    from keras import Input, Model
+    from keras import backend
+    from keras.layers import Embedding
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    sess = tf.Session(config=config)
+    backend.set_session(sess)
+    print("generating preprocessing model...")
+    embedding_layer = Embedding(len(word_index) + 1,
+                                Constant.EMBEDDING_DIM,
+                                weights=[embedding_matrix],
+                                input_length=input_length,
+                                trainable=False)
 
-    with tf.device(device):
-        from keras import Input, Model
-        from keras import backend
-        from keras.layers import Embedding
-        config = tf.ConfigProto(allow_soft_placement=True)
-        config.gpu_options.allow_growth = True
-        sess = tf.Session(config=config)
-        backend.set_session(sess)
-        print("generating preprocessing model...")
-        embedding_layer = Embedding(len(word_index) + 1,
-                                    Constant.EMBEDDING_DIM,
-                                    weights=[embedding_matrix],
-                                    input_length=input_length,
-                                    trainable=False)
-
-        sequence_input = Input(shape=(input_length,), dtype='int32')
-        embedded_sequences = embedding_layer(sequence_input)
-        model = Model(sequence_input, embedded_sequences)
-        print("converting text to vector...")
-        x_train = model.predict(x_train)
-        del model
+    sequence_input = Input(shape=(input_length,), dtype='int32')
+    embedded_sequences = embedding_layer(sequence_input)
+    model = Model(sequence_input, embedded_sequences)
+    print("converting text to vector...")
+    x_train = model.predict(x_train)
+    del model
 
     return x_train
 
