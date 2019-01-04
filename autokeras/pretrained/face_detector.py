@@ -8,7 +8,6 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 import numpy as np
 from torch.autograd.variable import Variable
-import time
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
@@ -57,7 +56,7 @@ class PNet(nn.Module):
 
 class RNet(nn.Module):
 
-    def __init__(self,is_train=False, use_cuda=True):
+    def __init__(self, is_train=False, use_cuda=True):
         super(RNet, self).__init__()
         self.is_train = is_train
         self.use_cuda = use_cuda
@@ -72,7 +71,7 @@ class RNet(nn.Module):
             nn.PReLU()
 
         )
-        self.conv4 = nn.Linear(64*2*2, 128)
+        self.conv4 = nn.Linear(64 * 2 * 2, 128)
         self.prelu4 = nn.PReLU()
         self.conv5_1 = nn.Linear(128, 1)
         self.conv5_2 = nn.Linear(128, 4)
@@ -94,7 +93,7 @@ class RNet(nn.Module):
 
 class ONet(nn.Module):
 
-    def __init__(self,is_train=False, use_cuda=True):
+    def __init__(self, is_train=False, use_cuda=True):
         super(ONet, self).__init__()
         self.is_train = is_train
         self.use_cuda = use_cuda
@@ -107,11 +106,11 @@ class ONet(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.Conv2d(64, 64, kernel_size=3, stride=1),
             nn.PReLU(),
-            nn.MaxPool2d(kernel_size=2,stride=2),
-            nn.Conv2d(64,128,kernel_size=2,stride=1),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(64, 128, kernel_size=2, stride=1),
             nn.PReLU()
         )
-        self.conv5 = nn.Linear(128*2*2, 256)
+        self.conv5 = nn.Linear(128 * 2 * 2, 256)
         self.prelu5 = nn.PReLU()
         self.conv6_1 = nn.Linear(256, 1)
         self.conv6_2 = nn.Linear(256, 4)
@@ -131,398 +130,84 @@ class ONet(nn.Module):
         return det, box, landmark
 
 
-class MtcnnDetector(object):
+def get_square_bbox(bbox):
+    square_bbox = bbox.copy()
 
-    def __init__(self,
-                 pnet = None,
-                 rnet = None,
-                 onet = None,
-                 min_face_size=12,
-                 stride=2,
-                 threshold=[0.6, 0.7, 0.7],
-                 scale_factor=0.709,
-                 ):
+    h = bbox[:, 3] - bbox[:, 1] + 1
+    w = bbox[:, 2] - bbox[:, 0] + 1
+    l = np.maximum(h, w)
+    square_bbox[:, 0] = bbox[:, 0] + w * 0.5 - l * 0.5
+    square_bbox[:, 1] = bbox[:, 1] + h * 0.5 - l * 0.5
 
-        self.pnet_detector = pnet
-        self.rnet_detector = rnet
-        self.onet_detector = onet
-        self.min_face_size = min_face_size
-        self.stride = stride
-        self.thresh = threshold
-        self.scale_factor = scale_factor
+    square_bbox[:, 2] = square_bbox[:, 0] + l - 1
+    square_bbox[:, 3] = square_bbox[:, 1] + l - 1
+    return square_bbox
 
-    def square_bbox(self, bbox):
-        square_bbox = bbox.copy()
 
-        h = bbox[:, 3] - bbox[:, 1] + 1
-        w = bbox[:, 2] - bbox[:, 0] + 1
-        l = np.maximum(h,w)
-        square_bbox[:, 0] = bbox[:, 0] + w*0.5 - l*0.5
-        square_bbox[:, 1] = bbox[:, 1] + h*0.5 - l*0.5
+def generate_bounding_box(map, reg, scale, threshold):
+    stride = 2
+    cellsize = 12
 
-        square_bbox[:, 2] = square_bbox[:, 0] + l - 1
-        square_bbox[:, 3] = square_bbox[:, 1] + l - 1
-        return square_bbox
+    t_index = np.where(map > threshold)
 
-    def generate_bounding_box(self, map, reg, scale, threshold):
-        stride = 2
-        cellsize = 12
+    if t_index[0].size == 0:
+        return np.array([])
 
-        t_index = np.where(map > threshold)
+    dx1, dy1, dx2, dy2 = [reg[0, t_index[0], t_index[1], i] for i in range(4)]
+    reg = np.array([dx1, dy1, dx2, dy2])
 
-        if t_index[0].size == 0:
-            return np.array([])
-
-        dx1, dy1, dx2, dy2 = [reg[0, t_index[0], t_index[1], i] for i in range(4)]
-        reg = np.array([dx1, dy1, dx2, dy2])
-
-        score = map[t_index[0], t_index[1], 0]
-        boundingbox = np.vstack([np.round((stride * t_index[1]) / scale),
-                                 np.round((stride * t_index[0]) / scale),
-                                 np.round((stride * t_index[1] + cellsize) / scale),
-                                 np.round((stride * t_index[0] + cellsize) / scale),
-                                 score,
-                                 reg
-                                 ])
-
-        return boundingbox.T
-
-    def resize_image(self, img, scale):
-        height, width, channels = img.shape
-        new_height = int(height * scale)
-        new_width = int(width * scale)
-        new_dim = (new_width, new_height)
-        img_resized = cv2.resize(img, new_dim, interpolation=cv2.INTER_LINEAR)
-        return img_resized
-
-    def pad(self, bboxes, w, h):
-        tmpw = (bboxes[:, 2] - bboxes[:, 0] + 1).astype(np.int32)
-        tmph = (bboxes[:, 3] - bboxes[:, 1] + 1).astype(np.int32)
-        numbox = bboxes.shape[0]
-
-        dx = np.zeros((numbox, ))
-        dy = np.zeros((numbox, ))
-        edx, edy = tmpw.copy()-1, tmph.copy()-1
-
-        x, y, ex, ey = bboxes[:, 0], bboxes[:, 1], bboxes[:, 2], bboxes[:, 3]
-
-        tmp_index = np.where(ex > w-1)
-        edx[tmp_index] = tmpw[tmp_index] + w - 2 - ex[tmp_index]
-        ex[tmp_index] = w - 1
-
-        tmp_index = np.where(ey > h-1)
-        edy[tmp_index] = tmph[tmp_index] + h - 2 - ey[tmp_index]
-        ey[tmp_index] = h - 1
-
-        tmp_index = np.where(x < 0)
-        dx[tmp_index] = 0 - x[tmp_index]
-        x[tmp_index] = 0
-
-        tmp_index = np.where(y < 0)
-        dy[tmp_index] = 0 - y[tmp_index]
-        y[tmp_index] = 0
-
-        return_list = [dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph]
-        return_list = [item.astype(np.int32) for item in return_list]
-
-        return return_list
-
-    def detect_pnet(self, im):
-        h, w, c = im.shape
-        net_size = 12
-
-        current_scale = float(net_size) / self.min_face_size
-        im_resized = self.resize_image(im, current_scale)
-        current_height, current_width, _ = im_resized.shape
-
-        all_boxes = list()
-        while min(current_height, current_width) > net_size:
-            feed_imgs = []
-            image_tensor = convert_image_to_tensor(im_resized)
-            feed_imgs.append(image_tensor)
-            feed_imgs = torch.stack(feed_imgs)
-            feed_imgs = Variable(feed_imgs)
-
-            if self.pnet_detector.use_cuda:
-                feed_imgs = feed_imgs.cuda()
-
-            cls_map, reg = self.pnet_detector(feed_imgs)
-
-            cls_map_np = convert_chwTensor_to_hwcNumpy(cls_map.cpu())
-            reg_np = convert_chwTensor_to_hwcNumpy(reg.cpu())
-
-            boxes = self.generate_bounding_box(cls_map_np[ 0, :, :], reg_np, current_scale, self.thresh[0])
-
-            current_scale *= self.scale_factor
-            im_resized = self.resize_image(im, current_scale)
-            current_height, current_width, _ = im_resized.shape
-
-            if boxes.size == 0:
-                continue
-            keep = nms(boxes[:, :5], 0.5, 'Union')
-            boxes = boxes[keep]
-            all_boxes.append(boxes)
-
-        if len(all_boxes) == 0:
-            return None, None
-
-        all_boxes = np.vstack(all_boxes)
-
-        keep = nms(all_boxes[:, 0:5], 0.7, 'Union')
-        all_boxes = all_boxes[keep]
-
-        bw = all_boxes[:, 2] - all_boxes[:, 0] + 1
-        bh = all_boxes[:, 3] - all_boxes[:, 1] + 1
-
-        boxes = np.vstack([all_boxes[:,0],
-                   all_boxes[:,1],
-                   all_boxes[:,2],
-                   all_boxes[:,3],
-                   all_boxes[:,4]
-                  ])
-
-        boxes = boxes.T
-
-        align_topx = all_boxes[:, 0] + all_boxes[:, 5] * bw
-        align_topy = all_boxes[:, 1] + all_boxes[:, 6] * bh
-        align_bottomx = all_boxes[:, 2] + all_boxes[:, 7] * bw
-        align_bottomy = all_boxes[:, 3] + all_boxes[:, 8] * bh
-
-        boxes_align = np.vstack([ align_topx,
-                              align_topy,
-                              align_bottomx,
-                              align_bottomy,
-                              all_boxes[:, 4]
-                              ])
-        boxes_align = boxes_align.T
-
-        return boxes, boxes_align
-
-    def detect_rnet(self, im, dets):
-        h, w, c = im.shape
-
-        if dets is None:
-            return None,None
-
-        dets = self.square_bbox(dets)
-        dets[:, 0:4] = np.round(dets[:, 0:4])
-
-        [dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph] = self.pad(dets, w, h)
-        num_boxes = dets.shape[0]
-
-        cropped_ims_tensors = []
-        for i in range(num_boxes):
-            tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
-            tmp[dy[i]:edy[i]+1, dx[i]:edx[i]+1, :] = im[y[i]:ey[i]+1, x[i]:ex[i]+1, :]
-            crop_im = cv2.resize(tmp, (24, 24))
-            crop_im_tensor = convert_image_to_tensor(crop_im)
-            cropped_ims_tensors.append(crop_im_tensor)
-        feed_imgs = Variable(torch.stack(cropped_ims_tensors))
-
-        if self.rnet_detector.use_cuda:
-            feed_imgs = feed_imgs.cuda()
-
-        cls_map, reg = self.rnet_detector(feed_imgs)
-
-        cls_map = cls_map.cpu().data.numpy()
-        reg = reg.cpu().data.numpy()
-
-        keep_inds = np.where(cls_map > self.thresh[1])[0]
-
-        if len(keep_inds) > 0:
-            boxes = dets[keep_inds]
-            cls = cls_map[keep_inds]
-            reg = reg[keep_inds]
-        else:
-            return None, None
-
-        keep = nms(boxes, 0.7)
-
-        if len(keep) == 0:
-            return None, None
-
-        keep_cls = cls[keep]
-        keep_boxes = boxes[keep]
-        keep_reg = reg[keep]
-
-        bw = keep_boxes[:, 2] - keep_boxes[:, 0] + 1
-        bh = keep_boxes[:, 3] - keep_boxes[:, 1] + 1
-
-        boxes = np.vstack([ keep_boxes[:,0],
-                              keep_boxes[:,1],
-                              keep_boxes[:,2],
-                              keep_boxes[:,3],
-                              keep_cls[:,0]
-                            ])
-
-        align_topx = keep_boxes[:,0] + keep_reg[:,0] * bw
-        align_topy = keep_boxes[:,1] + keep_reg[:,1] * bh
-        align_bottomx = keep_boxes[:,2] + keep_reg[:,2] * bw
-        align_bottomy = keep_boxes[:,3] + keep_reg[:,3] * bh
-
-        boxes_align = np.vstack([align_topx,
-                               align_topy,
-                               align_bottomx,
-                               align_bottomy,
-                               keep_cls[:, 0]
+    score = map[t_index[0], t_index[1], 0]
+    boundingbox = np.vstack([np.round((stride * t_index[1]) / scale),
+                             np.round((stride * t_index[0]) / scale),
+                             np.round((stride * t_index[1] + cellsize) / scale),
+                             np.round((stride * t_index[0] + cellsize) / scale),
+                             score,
+                             reg
                              ])
 
-        boxes = boxes.T
-        boxes_align = boxes_align.T
-
-        return boxes, boxes_align
-
-    def detect_onet(self, im, dets):
-        h, w, c = im.shape
-
-        if dets is None:
-            return None, None
-
-        dets = self.square_bbox(dets)
-        dets[:, 0:4] = np.round(dets[:, 0:4])
-
-        [dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph] = self.pad(dets, w, h)
-        num_boxes = dets.shape[0]
-
-        cropped_ims_tensors = []
-        for i in range(num_boxes):
-            tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
-            tmp[dy[i]:edy[i] + 1, dx[i]:edx[i] + 1, :] = im[y[i]:ey[i] + 1, x[i]:ex[i] + 1, :]
-            crop_im = cv2.resize(tmp, (48, 48))
-            crop_im_tensor = convert_image_to_tensor(crop_im)
-            cropped_ims_tensors.append(crop_im_tensor)
-        feed_imgs = Variable(torch.stack(cropped_ims_tensors))
-
-        if self.rnet_detector.use_cuda:
-            feed_imgs = feed_imgs.cuda()
-
-        cls_map, reg, landmark = self.onet_detector(feed_imgs)
-
-        cls_map = cls_map.cpu().data.numpy()
-        reg = reg.cpu().data.numpy()
-        landmark = landmark.cpu().data.numpy()
-
-        keep_inds = np.where(cls_map > self.thresh[2])[0]
-
-        if len(keep_inds) > 0:
-            boxes = dets[keep_inds]
-            cls = cls_map[keep_inds]
-            reg = reg[keep_inds]
-            landmark = landmark[keep_inds]
-        else:
-            return None, None
-
-        keep = nms(boxes, 0.7, mode="Minimum")
-
-        if len(keep) == 0:
-            return None, None
-
-        keep_cls = cls[keep]
-        keep_boxes = boxes[keep]
-        keep_reg = reg[keep]
-        keep_landmark = landmark[keep]
-
-        bw = keep_boxes[:, 2] - keep_boxes[:, 0] + 1
-        bh = keep_boxes[:, 3] - keep_boxes[:, 1] + 1
-
-        align_topx = keep_boxes[:, 0] + keep_reg[:, 0] * bw
-        align_topy = keep_boxes[:, 1] + keep_reg[:, 1] * bh
-        align_bottomx = keep_boxes[:, 2] + keep_reg[:, 2] * bw
-        align_bottomy = keep_boxes[:, 3] + keep_reg[:, 3] * bh
-
-        align_landmark_topx = keep_boxes[:, 0]
-        align_landmark_topy = keep_boxes[:, 1]
-
-        boxes_align = np.vstack([align_topx,
-                                 align_topy,
-                                 align_bottomx,
-                                 align_bottomy,
-                                 keep_cls[:, 0]
-                                 ])
-
-        boxes_align = boxes_align.T
-
-        landmark = np.vstack([
-                                 align_landmark_topx + keep_landmark[:, 0] * bw,
-                                 align_landmark_topy + keep_landmark[:, 1] * bh,
-                                 align_landmark_topx + keep_landmark[:, 2] * bw,
-                                 align_landmark_topy + keep_landmark[:, 3] * bh,
-                                 align_landmark_topx + keep_landmark[:, 4] * bw,
-                                 align_landmark_topy + keep_landmark[:, 5] * bh,
-                                 align_landmark_topx + keep_landmark[:, 6] * bw,
-                                 align_landmark_topy + keep_landmark[:, 7] * bh,
-                                 align_landmark_topx + keep_landmark[:, 8] * bw,
-                                 align_landmark_topy + keep_landmark[:, 9] * bh,
-                                 ])
-
-        landmark_align = landmark.T
-
-        return boxes_align, landmark_align
-
-    def detect_face(self, img):
-        boxes_align = np.array([])
-        landmark_align = np.array([])
-
-        t = time.time()
-
-        if self.pnet_detector:
-            boxes, boxes_align = self.detect_pnet(img)
-            if boxes_align is None:
-                return np.array([]), np.array([])
-
-            t1 = time.time() - t
-            t = time.time()
-
-        if self.rnet_detector:
-            boxes, boxes_align = self.detect_rnet(img, boxes_align)
-            if boxes_align is None:
-                return np.array([]), np.array([])
-
-            t2 = time.time() - t
-            t = time.time()
-
-        if self.onet_detector:
-            boxes_align, landmark_align = self.detect_onet(img, boxes_align)
-            if boxes_align is None:
-                return np.array([]), np.array([])
-
-            t3 = time.time() - t
-            t = time.time()
-
-        return boxes_align, landmark_align
+    return boundingbox.T
 
 
-def create_mtcnn_net(p_model_path=None, r_model_path=None, o_model_path=None, use_cuda=True):
-    pnet, rnet, onet = None, None, None
+def resize_image(img, scale):
+    height, width, channels = img.shape
+    new_height = int(height * scale)
+    new_width = int(width * scale)
+    new_dim = (new_width, new_height)
+    img_resized = cv2.resize(img, new_dim, interpolation=cv2.INTER_LINEAR)
+    return img_resized
 
-    if p_model_path is not None:
-        pnet = PNet(use_cuda=use_cuda)
-        if use_cuda:
-            pnet.load_state_dict(torch.load(p_model_path))
-            pnet.cuda()
-        else:
-            pnet.load_state_dict(torch.load(p_model_path, map_location=lambda storage, loc: storage))
-        pnet.eval()
 
-    if r_model_path is not None:
-        rnet = RNet(use_cuda=use_cuda)
-        if (use_cuda):
-            rnet.load_state_dict(torch.load(r_model_path))
-            rnet.cuda()
-        else:
-            rnet.load_state_dict(torch.load(r_model_path, map_location=lambda storage, loc: storage))
-        rnet.eval()
+def pad(bboxes, w, h):
+    tmpw = (bboxes[:, 2] - bboxes[:, 0] + 1).astype(np.int32)
+    tmph = (bboxes[:, 3] - bboxes[:, 1] + 1).astype(np.int32)
+    numbox = bboxes.shape[0]
 
-    if o_model_path is not None:
-        onet = ONet(use_cuda=use_cuda)
-        if (use_cuda):
-            onet.load_state_dict(torch.load(o_model_path))
-            onet.cuda()
-        else:
-            onet.load_state_dict(torch.load(o_model_path, map_location=lambda storage, loc: storage))
-        onet.eval()
+    dx = np.zeros((numbox,))
+    dy = np.zeros((numbox,))
+    edx, edy = tmpw.copy() - 1, tmph.copy() - 1
 
-    return pnet, rnet, onet
+    x, y, ex, ey = bboxes[:, 0], bboxes[:, 1], bboxes[:, 2], bboxes[:, 3]
+
+    tmp_index = np.where(ex > w - 1)
+    edx[tmp_index] = tmpw[tmp_index] + w - 2 - ex[tmp_index]
+    ex[tmp_index] = w - 1
+
+    tmp_index = np.where(ey > h - 1)
+    edy[tmp_index] = tmph[tmp_index] + h - 2 - ey[tmp_index]
+    ey[tmp_index] = h - 1
+
+    tmp_index = np.where(x < 0)
+    dx[tmp_index] = 0 - x[tmp_index]
+    x[tmp_index] = 0
+
+    tmp_index = np.where(y < 0)
+    dy[tmp_index] = 0 - y[tmp_index]
+    y[tmp_index] = 0
+
+    return_list = [dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph]
+    return_list = [item.astype(np.int32) for item in return_list]
+
+    return return_list
 
 
 def nms(dets, thresh, mode="Union"):
@@ -563,11 +248,11 @@ def convert_image_to_tensor(image):
     return transform(image)
 
 
-def convert_chwTensor_to_hwcNumpy(tensor):
+def convert_chw_tensor_to_hwc_numpy(tensor):
     if isinstance(tensor, Variable):
-        return np.transpose(tensor.data.numpy(), (0,2,3,1))
+        return np.transpose(tensor.data.numpy(), (0, 2, 3, 1))
     elif isinstance(tensor, torch.FloatTensor):
-        return np.transpose(tensor.numpy(), (0,2,3,1))
+        return np.transpose(tensor.numpy(), (0, 2, 3, 1))
     else:
         raise Exception("covert b*c*h*w tensor to b*h*w*c numpy error.This tensor must have 4 dimension.")
 
@@ -596,17 +281,6 @@ def vis_face(im_array, dets, output_file_path, landmarks=None):
         fig.savefig(output_file_path, bbox_inches='tight', pad_inches=0)
 
 
-def detect_faces(pnet_path, rnet_path, onet_path, img_path, output_file_path):
-    pnet, rnet, onet = create_mtcnn_net(pnet_path, rnet_path, onet_path, use_cuda=False)
-    mtcnn_detector = MtcnnDetector(pnet=pnet, rnet=rnet, onet=onet, min_face_size=24)
-    img = cv2.imread(img_path)
-    img_bg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    bboxs, landmarks = mtcnn_detector.detect_face(img)
-    if output_file_path is not None:
-        vis_face(img_bg, bboxs, output_file_path, landmarks)
-    return bboxs, landmarks
-
-
 class FaceDetector(Pretrained):
     """A class to predict faces using the MTCNN pre-trained model.
     """
@@ -614,12 +288,46 @@ class FaceDetector(Pretrained):
     def __init__(self):
         super(FaceDetector, self).__init__()
         self.load()
+        pnet, rnet, onet = Constant.FACE_DETECTION_PRETRAINED['FILE_PATHS']
+
+        # TODO: support with and without CUDA.
+        use_cuda = False
+        self.pnet_detector = PNet(use_cuda=use_cuda)
+        if use_cuda:
+            self.pnet_detector.load_state_dict(torch.load(pnet))
+            # TODO: maybe use .to()
+            self.pnet_detector.cuda()
+        else:
+            self.pnet_detector.load_state_dict(torch.load(pnet, map_location=lambda storage, loc: storage))
+        self.pnet_detector.eval()
+
+        self.rnet_detector = RNet(use_cuda=use_cuda)
+        if use_cuda:
+            self.rnet_detector.load_state_dict(torch.load(rnet))
+            self.rnet_detector.cuda()
+        else:
+            self.rnet_detector.load_state_dict(torch.load(rnet, map_location=lambda storage, loc: storage))
+        self.rnet_detector.eval()
+
+        self.onet_detector = ONet(use_cuda=use_cuda)
+        if use_cuda:
+            self.onet_detector.load_state_dict(torch.load(onet))
+            self.onet_detector.cuda()
+        else:
+            self.onet_detector.load_state_dict(torch.load(onet, map_location=lambda storage, loc: storage))
+        self.onet_detector.eval()
+
+        self.min_face_size = 24
+        self.stride = 2
+        self.threshold = [0.6, 0.7, 0.7]
+        self.scale_factor = 0.709
 
     def load(self, model_path=None):
+        # TODO: use a unified download model function. down_load_model(name). Should be downloaded somewhere in the
+        #  temp folder.
         for model_link, file_path in zip(Constant.FACE_DETECTION_PRETRAINED['PRETRAINED_MODEL_LINKS'],
                                          Constant.FACE_DETECTION_PRETRAINED['FILE_PATHS']):
             download_file(model_link, file_path)
-        self.pnet, self.rnet, self.onet = Constant.FACE_DETECTION_PRETRAINED['FILE_PATHS']
 
     def predict(self, img_path, output_file_path=None):
         """Predicts faces in an image.
@@ -636,4 +344,264 @@ class FaceDetector(Pretrained):
         """
         if not os.path.exists(img_path):
             raise ValueError('Image does not exist')
-        return detect_faces(self.pnet, self.rnet, self.onet, img_path, output_file_path)
+        img = cv2.imread(img_path)
+        img_bg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        bounding_boxes, landmarks = self.detect_face(img)
+        if output_file_path is not None:
+            vis_face(img_bg, bounding_boxes, output_file_path, landmarks)
+        return bounding_boxes, landmarks
+
+    def detect_pnet(self, im):
+        h, w, c = im.shape
+        net_size = 12
+
+        current_scale = float(net_size) / self.min_face_size
+        im_resized = resize_image(im, current_scale)
+        current_height, current_width, _ = im_resized.shape
+
+        all_boxes = list()
+        while min(current_height, current_width) > net_size:
+            feed_imgs = []
+            image_tensor = convert_image_to_tensor(im_resized)
+            feed_imgs.append(image_tensor)
+            feed_imgs = torch.stack(feed_imgs)
+            feed_imgs = Variable(feed_imgs)
+
+            if self.pnet_detector.use_cuda:
+                feed_imgs = feed_imgs.cuda()
+
+            cls_map, reg = self.pnet_detector(feed_imgs)
+
+            cls_map_np = convert_chw_tensor_to_hwc_numpy(cls_map.cpu())
+            reg_np = convert_chw_tensor_to_hwc_numpy(reg.cpu())
+
+            boxes = generate_bounding_box(cls_map_np[0, :, :], reg_np, current_scale, self.threshold[0])
+
+            current_scale *= self.scale_factor
+            im_resized = resize_image(im, current_scale)
+            current_height, current_width, _ = im_resized.shape
+
+            if boxes.size == 0:
+                continue
+            keep = nms(boxes[:, :5], 0.5, 'Union')
+            boxes = boxes[keep]
+            all_boxes.append(boxes)
+
+        if len(all_boxes) == 0:
+            return None, None
+
+        all_boxes = np.vstack(all_boxes)
+
+        keep = nms(all_boxes[:, 0:5], 0.7, 'Union')
+        all_boxes = all_boxes[keep]
+
+        bw = all_boxes[:, 2] - all_boxes[:, 0] + 1
+        bh = all_boxes[:, 3] - all_boxes[:, 1] + 1
+
+        boxes = np.vstack([all_boxes[:, 0],
+                           all_boxes[:, 1],
+                           all_boxes[:, 2],
+                           all_boxes[:, 3],
+                           all_boxes[:, 4]
+                           ])
+
+        boxes = boxes.T
+
+        align_topx = all_boxes[:, 0] + all_boxes[:, 5] * bw
+        align_topy = all_boxes[:, 1] + all_boxes[:, 6] * bh
+        align_bottomx = all_boxes[:, 2] + all_boxes[:, 7] * bw
+        align_bottomy = all_boxes[:, 3] + all_boxes[:, 8] * bh
+
+        boxes_align = np.vstack([align_topx,
+                                 align_topy,
+                                 align_bottomx,
+                                 align_bottomy,
+                                 all_boxes[:, 4]
+                                 ])
+        boxes_align = boxes_align.T
+
+        return boxes, boxes_align
+
+    def detect_rnet(self, im, dets):
+        h, w, c = im.shape
+
+        if dets is None:
+            return None, None
+
+        dets = get_square_bbox(dets)
+        dets[:, 0:4] = np.round(dets[:, 0:4])
+
+        [dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph] = pad(dets, w, h)
+        num_boxes = dets.shape[0]
+
+        cropped_ims_tensors = []
+        for i in range(num_boxes):
+            tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
+            tmp[dy[i]:edy[i] + 1, dx[i]:edx[i] + 1, :] = im[y[i]:ey[i] + 1, x[i]:ex[i] + 1, :]
+            crop_im = cv2.resize(tmp, (24, 24))
+            crop_im_tensor = convert_image_to_tensor(crop_im)
+            cropped_ims_tensors.append(crop_im_tensor)
+        feed_imgs = Variable(torch.stack(cropped_ims_tensors))
+
+        if self.rnet_detector.use_cuda:
+            feed_imgs = feed_imgs.cuda()
+
+        cls_map, reg = self.rnet_detector(feed_imgs)
+
+        cls_map = cls_map.cpu().data.numpy()
+        reg = reg.cpu().data.numpy()
+
+        keep_inds = np.where(cls_map > self.threshold[1])[0]
+
+        if len(keep_inds) > 0:
+            boxes = dets[keep_inds]
+            cls = cls_map[keep_inds]
+            reg = reg[keep_inds]
+        else:
+            return None, None
+
+        keep = nms(boxes, 0.7)
+
+        if len(keep) == 0:
+            return None, None
+
+        keep_cls = cls[keep]
+        keep_boxes = boxes[keep]
+        keep_reg = reg[keep]
+
+        bw = keep_boxes[:, 2] - keep_boxes[:, 0] + 1
+        bh = keep_boxes[:, 3] - keep_boxes[:, 1] + 1
+
+        boxes = np.vstack([keep_boxes[:, 0],
+                           keep_boxes[:, 1],
+                           keep_boxes[:, 2],
+                           keep_boxes[:, 3],
+                           keep_cls[:, 0]
+                           ])
+
+        align_topx = keep_boxes[:, 0] + keep_reg[:, 0] * bw
+        align_topy = keep_boxes[:, 1] + keep_reg[:, 1] * bh
+        align_bottomx = keep_boxes[:, 2] + keep_reg[:, 2] * bw
+        align_bottomy = keep_boxes[:, 3] + keep_reg[:, 3] * bh
+
+        boxes_align = np.vstack([align_topx,
+                                 align_topy,
+                                 align_bottomx,
+                                 align_bottomy,
+                                 keep_cls[:, 0]
+                                 ])
+
+        boxes = boxes.T
+        boxes_align = boxes_align.T
+
+        return boxes, boxes_align
+
+    def detect_onet(self, im, dets):
+        h, w, c = im.shape
+
+        if dets is None:
+            return None, None
+
+        dets = get_square_bbox(dets)
+        dets[:, 0:4] = np.round(dets[:, 0:4])
+
+        [dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph] = pad(dets, w, h)
+        num_boxes = dets.shape[0]
+
+        cropped_ims_tensors = []
+        for i in range(num_boxes):
+            tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
+            tmp[dy[i]:edy[i] + 1, dx[i]:edx[i] + 1, :] = im[y[i]:ey[i] + 1, x[i]:ex[i] + 1, :]
+            crop_im = cv2.resize(tmp, (48, 48))
+            crop_im_tensor = convert_image_to_tensor(crop_im)
+            cropped_ims_tensors.append(crop_im_tensor)
+        feed_imgs = Variable(torch.stack(cropped_ims_tensors))
+
+        if self.rnet_detector.use_cuda:
+            feed_imgs = feed_imgs.cuda()
+
+        cls_map, reg, landmark = self.onet_detector(feed_imgs)
+
+        cls_map = cls_map.cpu().data.numpy()
+        reg = reg.cpu().data.numpy()
+        landmark = landmark.cpu().data.numpy()
+
+        keep_inds = np.where(cls_map > self.threshold[2])[0]
+
+        if len(keep_inds) > 0:
+            boxes = dets[keep_inds]
+            cls = cls_map[keep_inds]
+            reg = reg[keep_inds]
+            landmark = landmark[keep_inds]
+        else:
+            return None, None
+
+        keep = nms(boxes, 0.7, mode="Minimum")
+
+        if len(keep) == 0:
+            return None, None
+
+        keep_cls = cls[keep]
+        keep_boxes = boxes[keep]
+        keep_reg = reg[keep]
+        keep_landmark = landmark[keep]
+
+        bw = keep_boxes[:, 2] - keep_boxes[:, 0] + 1
+        bh = keep_boxes[:, 3] - keep_boxes[:, 1] + 1
+
+        align_topx = keep_boxes[:, 0] + keep_reg[:, 0] * bw
+        align_topy = keep_boxes[:, 1] + keep_reg[:, 1] * bh
+        align_bottomx = keep_boxes[:, 2] + keep_reg[:, 2] * bw
+        align_bottomy = keep_boxes[:, 3] + keep_reg[:, 3] * bh
+
+        align_landmark_topx = keep_boxes[:, 0]
+        align_landmark_topy = keep_boxes[:, 1]
+
+        boxes_align = np.vstack([align_topx,
+                                 align_topy,
+                                 align_bottomx,
+                                 align_bottomy,
+                                 keep_cls[:, 0]
+                                 ])
+
+        boxes_align = boxes_align.T
+
+        landmark = np.vstack([
+            align_landmark_topx + keep_landmark[:, 0] * bw,
+            align_landmark_topy + keep_landmark[:, 1] * bh,
+            align_landmark_topx + keep_landmark[:, 2] * bw,
+            align_landmark_topy + keep_landmark[:, 3] * bh,
+            align_landmark_topx + keep_landmark[:, 4] * bw,
+            align_landmark_topy + keep_landmark[:, 5] * bh,
+            align_landmark_topx + keep_landmark[:, 6] * bw,
+            align_landmark_topy + keep_landmark[:, 7] * bh,
+            align_landmark_topx + keep_landmark[:, 8] * bw,
+            align_landmark_topy + keep_landmark[:, 9] * bh,
+            ])
+
+        landmark_align = landmark.T
+
+        return boxes_align, landmark_align
+
+    def detect_face(self, img):
+        boxes_align = np.array([])
+        landmark_align = np.array([])
+
+        if self.pnet_detector:
+            boxes, boxes_align = self.detect_pnet(img)
+            if boxes_align is None:
+                return np.array([]), np.array([])
+
+        if self.rnet_detector:
+            boxes, boxes_align = self.detect_rnet(img, boxes_align)
+            if boxes_align is None:
+                return np.array([]), np.array([])
+
+        if self.onet_detector:
+            boxes_align, landmark_align = self.detect_onet(img, boxes_align)
+            if boxes_align is None:
+                return np.array([]), np.array([])
+
+        return boxes_align, landmark_align
+
+
