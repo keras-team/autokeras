@@ -1,7 +1,6 @@
 import os
 import re
 
-import GPUtil
 import numpy as np
 
 from autokeras.constant import Constant
