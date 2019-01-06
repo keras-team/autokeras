@@ -13,7 +13,7 @@ import matplotlib.patches as patches
 
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
-from autokeras.utils import download_file
+from autokeras.utils import download_file, temp_path_generator, ensure_dir, get_device
 
 
 def weights_init(m):
@@ -24,10 +24,8 @@ def weights_init(m):
 
 class PNet(nn.Module):
 
-    def __init__(self, is_train=False, use_cuda=True):
+    def __init__(self):
         super(PNet, self).__init__()
-        self.is_train = is_train
-        self.use_cuda = use_cuda
 
         self.pre_layer = nn.Sequential(
             nn.Conv2d(3, 10, kernel_size=3, stride=1),
@@ -48,18 +46,14 @@ class PNet(nn.Module):
         x = self.pre_layer(x)
         label = torch.sigmoid(self.conv4_1(x))
         offset = self.conv4_2(x)
-
-        if self.is_train is True:
-            return label, offset
         return label, offset
 
 
 class RNet(nn.Module):
 
-    def __init__(self, is_train=False, use_cuda=True):
+    def __init__(self):
         super(RNet, self).__init__()
-        self.is_train = is_train
-        self.use_cuda = use_cuda
+
         self.pre_layer = nn.Sequential(
             nn.Conv2d(3, 28, kernel_size=3, stride=1),
             nn.PReLU(),
@@ -85,18 +79,14 @@ class RNet(nn.Module):
         x = self.prelu4(x)
         det = torch.sigmoid(self.conv5_1(x))
         box = self.conv5_2(x)
-
-        if self.is_train is True:
-            return det, box
         return det, box
 
 
 class ONet(nn.Module):
 
-    def __init__(self, is_train=False, use_cuda=True):
+    def __init__(self):
         super(ONet, self).__init__()
-        self.is_train = is_train
-        self.use_cuda = use_cuda
+
         self.pre_layer = nn.Sequential(
             nn.Conv2d(3, 32, kernel_size=3, stride=1),
             nn.PReLU(),
@@ -125,8 +115,6 @@ class ONet(nn.Module):
         det = torch.sigmoid(self.conv6_1(x))
         box = self.conv6_2(x)
         landmark = self.conv6_3(x)
-        if self.is_train is True:
-            return det, box, landmark
         return det, box, landmark
 
 
@@ -287,34 +275,34 @@ class FaceDetector(Pretrained):
 
     def __init__(self):
         super(FaceDetector, self).__init__()
-        self.load()
-        pnet, rnet, onet = Constant.FACE_DETECTION_PRETRAINED['FILE_PATHS']
 
-        # TODO: support with and without CUDA.
-        use_cuda = False
-        self.pnet_detector = PNet(use_cuda=use_cuda)
-        if use_cuda:
+        self.load()
+        self.device = get_device()
+        pnet, rnet, onet = list(map(lambda file_name: f'{temp_path_generator()}/{file_name}',
+                                    Constant.FACE_DETECTION_PRETRAINED['FILE_NAMES']))
+
+        self.pnet_detector = PNet()
+        if torch.cuda.is_available():
             self.pnet_detector.load_state_dict(torch.load(pnet))
-            # TODO: maybe use .to()
-            self.pnet_detector.cuda()
         else:
             self.pnet_detector.load_state_dict(torch.load(pnet, map_location=lambda storage, loc: storage))
+        self.pnet_detector = self.pnet_detector.to(self.device)
         self.pnet_detector.eval()
 
-        self.rnet_detector = RNet(use_cuda=use_cuda)
-        if use_cuda:
+        self.rnet_detector = RNet()
+        if torch.cuda.is_available():
             self.rnet_detector.load_state_dict(torch.load(rnet))
-            self.rnet_detector.cuda()
         else:
             self.rnet_detector.load_state_dict(torch.load(rnet, map_location=lambda storage, loc: storage))
+        self.rnet_detector = self.rnet_detector.to(self.device)
         self.rnet_detector.eval()
 
-        self.onet_detector = ONet(use_cuda=use_cuda)
-        if use_cuda:
+        self.onet_detector = ONet()
+        if torch.cuda.is_available():
             self.onet_detector.load_state_dict(torch.load(onet))
-            self.onet_detector.cuda()
         else:
             self.onet_detector.load_state_dict(torch.load(onet, map_location=lambda storage, loc: storage))
+        self.onet_detector = self.onet_detector.to(self.device)
         self.onet_detector.eval()
 
         self.min_face_size = 24
@@ -323,11 +311,11 @@ class FaceDetector(Pretrained):
         self.scale_factor = 0.709
 
     def load(self, model_path=None):
-        # TODO: use a unified download model function. down_load_model(name). Should be downloaded somewhere in the
-        #  temp folder.
+        temp_path = temp_path_generator()
+        ensure_dir(temp_path)
         for model_link, file_path in zip(Constant.FACE_DETECTION_PRETRAINED['PRETRAINED_MODEL_LINKS'],
-                                         Constant.FACE_DETECTION_PRETRAINED['FILE_PATHS']):
-            download_file(model_link, file_path)
+                                         Constant.FACE_DETECTION_PRETRAINED['FILE_NAMES']):
+            download_file(model_link, f'{temp_path}/{file_path}')
 
     def predict(self, img_path, output_file_path=None):
         """Predicts faces in an image.
@@ -367,7 +355,7 @@ class FaceDetector(Pretrained):
             feed_imgs = torch.stack(feed_imgs)
             feed_imgs = Variable(feed_imgs)
 
-            if self.pnet_detector.use_cuda:
+            if torch.cuda.is_available():
                 feed_imgs = feed_imgs.cuda()
 
             cls_map, reg = self.pnet_detector(feed_imgs)
@@ -443,8 +431,8 @@ class FaceDetector(Pretrained):
             cropped_ims_tensors.append(crop_im_tensor)
         feed_imgs = Variable(torch.stack(cropped_ims_tensors))
 
-        if self.rnet_detector.use_cuda:
-            feed_imgs = feed_imgs.cuda()
+        if torch.cuda.is_available():
+            feed_imgs = feed_imgs.to(self.device)
 
         cls_map, reg = self.rnet_detector(feed_imgs)
 
@@ -517,8 +505,8 @@ class FaceDetector(Pretrained):
             cropped_ims_tensors.append(crop_im_tensor)
         feed_imgs = Variable(torch.stack(cropped_ims_tensors))
 
-        if self.rnet_detector.use_cuda:
-            feed_imgs = feed_imgs.cuda()
+        if torch.cuda.is_available():
+            feed_imgs = feed_imgs.to(self.device)
 
         cls_map, reg, landmark = self.onet_detector(feed_imgs)
 
@@ -603,5 +591,3 @@ class FaceDetector(Pretrained):
                 return np.array([]), np.array([])
 
         return boxes_align, landmark_align
-
-

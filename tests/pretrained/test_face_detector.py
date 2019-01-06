@@ -3,7 +3,7 @@ import os
 import urllib.request
 
 
-def test_face_detection():
+def test_face_detector():
     img_file, out_file = 'test.jpg', 'output.jpg'
     urllib.request.urlretrieve('https://raw.githubusercontent.com/kuaikuaikim/DFace/master/test.jpg', img_file)
     if os.path.exists(out_file):
