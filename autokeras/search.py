@@ -6,17 +6,14 @@ import sys
 import time
 from datetime import datetime
 from abc import abstractmethod
-from random import randrange
 
 import torch
 import torch.multiprocessing as mp
 
-from autokeras.bayesian import BayesianOptimizer, SearchTree, contain
-from autokeras.greedy import GreedyOptimizer
+from autokeras.bayesian import BayesianOptimizer
 from autokeras.constant import Constant
 from autokeras.nn.model_trainer import ModelTrainer
-from autokeras.net_transformer import transform
-from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get_system, assert_search_space
+from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get_system
 
 
 class Searcher:
@@ -331,187 +328,6 @@ class BayesianSearcher(Searcher):
         father_id = other_info
         self.optimizer.fit([graph.extract_descriptor()], [metric_value])
         self.optimizer.add_child(father_id, model_id)
-
-
-class GreedySearcher(Searcher):
-    """ Class to search for neural architectures using Greedy search strategy.
-
-    Attribute:
-        optimizer: An instance of BayesianOptimizer.
-    """
-
-    def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose,
-                 trainer_args=None,
-                 default_model_len=None,
-                 default_model_width=None):
-        super(GreedySearcher, self).__init__(n_output_node, input_shape,
-                                             path, metric, loss, generators,
-                                             verbose, trainer_args, default_model_len,
-                                             default_model_width)
-        self.optimizer = GreedyOptimizer(self, metric)
-
-    def generate(self, multiprocessing_queue):
-        """Generate the next neural architecture.
-
-        Args:
-            multiprocessing_queue: the Queue for multiprocessing return value.
-                pass into the search algorithm for synchronizing
-
-        Returns:
-            results: A list of 2-element tuples. Each tuple contains an instance of Graph,
-                and anything to be saved in the training queue together with the architecture
-
-        """
-        remaining_time = self._timeout - time.time()
-        results = self.optimizer.generate(self.descriptors, remaining_time,
-                                          multiprocessing_queue)
-        if not results:
-            new_father_id = 0
-            generated_graph = self.generators[0](self.n_classes, self.input_shape). \
-                generate(self.default_model_len, self.default_model_width)
-            results.append((generated_graph, new_father_id))
-
-        return results
-
-    def update(self, other_info, model_id, *args):
-        """ Update the controller with evaluation result of a neural architecture.
-
-        Args:
-            other_info: Anything. In our case it is the father ID in the search tree.
-            model_id: An integer.
-        """
-        father_id = other_info
-        self.optimizer.add_child(father_id, model_id)
-
-    def load_neighbour_best_model(self):
-        return self.load_model_by_id(self.get_neighbour_best_model_id())
-
-    def get_neighbour_best_model_id(self):
-        if self.metric.higher_better():
-            return max(self.neighbour_history, key=lambda x: x['metric_value'])['model_id']
-        return min(self.neighbour_history, key=lambda x: x['metric_value'])['model_id']
-
-
-class GridSearcher(Searcher):
-    """ Class to search for neural architectures using Greedy search strategy.
-
-    Attribute:
-        search_space: A dictionary. Specifies the search dimensions and their possible values
-    """
-    def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose, search_space={},
-                 trainer_args=None, default_model_len=None, default_model_width=None):
-        super(GridSearcher, self).__init__(n_output_node, input_shape, path, metric, loss, generators, verbose,
-                                           trainer_args, default_model_len, default_model_width)
-        self.search_space, self.search_dimensions = assert_search_space(search_space)
-        self.search_space_counter = 0
-
-    def get_search_dimensions(self):
-        return self.search_dimensions
-
-    def search_space_exhausted(self):
-        """ Check if Grid search has exhausted the search space """
-        if self.search_space_counter == len(self.search_dimensions):
-            return True
-        return False
-
-    def search(self, train_data, test_data, timeout=60 * 60 * 24):
-        """Run the search loop of training, generating and updating once.
-
-        Call the base class implementation for search with
-
-        Args:
-            train_data: An instance of DataLoader.
-            test_data: An instance of Dataloader.
-            timeout: An integer, time limit in seconds.
-        """
-        if self.search_space_exhausted():
-            return
-        else:
-            super().search(train_data, test_data, timeout)
-
-    def update(self, other_info, model_id, graph, metric_value):
-        return
-
-    def generate(self, multiprocessing_queue):
-        """Generate the next neural architecture.
-
-        Args:
-            multiprocessing_queue: the Queue for multiprocessing return value.
-
-        Returns:
-            list of 2-element tuples: generated_graph and other_info,
-            for grid searcher the length of list is 1.
-            generated_graph: An instance of Graph.
-            other_info: Always 0.
-        """
-        grid = self.get_grid()
-        self.search_space_counter += 1
-        generated_graph = self.generators[0](self.n_classes, self.input_shape). \
-            generate(grid[Constant.LENGTH_DIM], grid[Constant.WIDTH_DIM])
-        return [(generated_graph, 0)]
-
-    def get_grid(self):
-        """ Return the next grid to be searched """
-        if self.search_space_counter < len(self.search_dimensions):
-            return self.search_dimensions[self.search_space_counter]
-        return None
-
-
-class RandomSearcher(Searcher):
-    """ Class to search for neural architectures using Random search strategy.
-    Attributes:
-        search_tree: The network morphism search tree
-    """
-
-    def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose,
-                 trainer_args=None,
-                 default_model_len=None,
-                 default_model_width=None):
-        super(RandomSearcher, self).__init__(n_output_node, input_shape,
-                                             path, metric, loss, generators,
-                                             verbose, trainer_args, default_model_len,
-                                             default_model_width)
-        self.search_tree = SearchTree()
-
-    def generate(self, multiprocessing_queue):
-        """Generate the next neural architecture.
-
-        Args:
-            multiprocessing_queue: the Queue for multiprocessing return value.
-
-        Returns:
-            list of 2-element tuples: generated_graph and other_info,
-            for random searcher the length of list is 1.
-            generated_graph: An instance of Graph.
-            other_info: Anything to be saved in the training queue together with the architecture.
-
-        """
-        random_index = randrange(len(self.history))
-        model_id = self.history[random_index]['model_id']
-        graph = self.load_model_by_id(model_id)
-        new_father_id = None
-        generated_graph = None
-        for temp_graph in transform(graph):
-            if not contain(self.descriptors, temp_graph.extract_descriptor()):
-                new_father_id = model_id
-                generated_graph = temp_graph
-                break
-        if new_father_id is None:
-            new_father_id = 0
-            generated_graph = self.generators[0](self.n_classes, self.input_shape). \
-                generate(self.default_model_len, self.default_model_width)
-
-        return [(generated_graph, new_father_id)]
-
-    def update(self, other_info, model_id, *args):
-        """ Update the controller with evaluation result of a neural architecture.
-
-        Args:
-            other_info: Anything. In our case it is the father ID in the search tree.
-            model_id: An integer.
-        """
-        father_id = other_info
-        self.search_tree.add_child(father_id, model_id)
 
 
 def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, path):
