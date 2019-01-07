@@ -104,6 +104,35 @@ def test_greedy_searcher_mlp(_, _1, _2):
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
 @patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+def test_random_searcher(_, _1, _2):
+    train_data, test_data = get_classification_data_loaders()
+    clean_dir(TEST_TEMP_DIR)
+    searcher = RandomSearcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
+                        loss=classification_loss, generators=[CnnGenerator, CnnGenerator])
+    for _ in range(2):
+        searcher.search(train_data, test_data)
+    clean_dir(TEST_TEMP_DIR)
+    assert len(searcher.history) == 2
+
+
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
+@patch('autokeras.bayesian.transform', side_effect=simple_transform)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+@patch('autokeras.search.get_system', return_value=Constant.SYS_GOOGLE_COLAB)
+def test_random_searcher_sp(_, _1, _2, _3):
+    train_data, test_data = get_classification_data_loaders()
+    clean_dir(TEST_TEMP_DIR)
+    searcher = RandomSearcher(3, (28, 28, 3), verbose=False, path=TEST_TEMP_DIR, metric=Accuracy,
+                        loss=classification_loss, generators=[CnnGenerator, CnnGenerator])
+    for _ in range(2):
+        searcher.search(train_data, test_data)
+    clean_dir(TEST_TEMP_DIR)
+    assert len(searcher.history) == 2
+
+
+@patch('torch.multiprocessing.get_context', side_effect=MockProcess)
+@patch('autokeras.bayesian.transform', side_effect=simple_transform)
+@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
 def test_grid_searcher(_, _1, _2):
     train_data, test_data = get_classification_data_loaders()
     clean_dir(TEST_TEMP_DIR)

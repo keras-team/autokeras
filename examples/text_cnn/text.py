@@ -27,4 +27,4 @@ if __name__ == '__main__':
     file_path = "labeledTrainData.tsv"
     x_train, y_train = read_csv(file_path=file_path)
     clf = TextClassifier(verbose=True)
-    clf.fit(x=x_train, y=y_train, batch_size=10, time_limit=12 * 60 * 60)
+    clf.fit(x=x_train, y=y_train, time_limit=12 * 60 * 60)

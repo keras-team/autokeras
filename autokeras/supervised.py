@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 
 from autokeras.constant import Constant
 from autokeras.net_module import CnnModule
+from autokeras.search import BayesianSearcher
 from autokeras.utils import rand_temp_folder_generator, pickle_from_file, validate_xy, pickle_to_file, ensure_dir
 
 
@@ -72,7 +73,7 @@ class Supervised(ABC):
 class DeepSupervised(Supervised):
 
     def __init__(self, verbose=False, path=None, resume=False, searcher_args=None,
-                 search_type=Constant.BAYESIAN_SEARCH):
+                 search_type=BayesianSearcher):
         """Initialize the instance.
 
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.

@@ -4,6 +4,10 @@ Contributions are welcome, and greatly appreciated! Every little bit helps, and 
 We recommend you to check our [Developer Tools Guide](#developer-tools-guide) 
 to make the development process easier and standard.
 
+Notably, you can follow the tag of [call for contributors](https://github.com/jhfjhfj1/autokeras/labels/call%20for%20contributors) in the issues.
+Those issues are designed for the external contributors to solve.
+The pull requests solving these issues are most likely to be merged.
+
 There are many ways to contribute to Auto-Keras,
 including submit feedback, fix bugs, implement features, and write documentation.
 The guide for each type of contribution is as follows.

@@ -259,6 +259,7 @@ class PortableImageSupervised(PortableClass):
         if Constant.LIMIT_MEMORY:
             pass
 
+        x_test = resize_image_data(x_test, self.resize_shape)
         test_loader = self.data_transformer.transform_test(x_test)
         model = self.graph.produce_model()
         model.eval()
@@ -275,6 +276,5 @@ class PortableImageSupervised(PortableClass):
 
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`."""
-        x_test = resize_image_data(x_test, self.resize_shape)
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_test, y_predict)
