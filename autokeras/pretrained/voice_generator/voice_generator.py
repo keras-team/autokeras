@@ -19,7 +19,7 @@ model_helper._frontend = frontend
 
 
 class VoiceGenerator(Pretrained):
-    def __init__(self, model_path=None):
+    def __init__(self, model_path=None, overwrite=False):
         super(VoiceGenerator, self).__init__()
         if model_path is None:
             model_path = temp_path_generator()
@@ -28,6 +28,7 @@ class VoiceGenerator(Pretrained):
         self.checkpoint_path = os.path.join(self.model_path, Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_NAME)
         self.sample_rate = 0
         self.hop_length = 0
+        self.overwrite = overwrite
         self.load()
 
     def load(self):
@@ -38,12 +39,13 @@ class VoiceGenerator(Pretrained):
 
         self.model = load_checkpoint(self.checkpoint_path, model)
 
-    def _maybe_download(self, overwrite=True):
+    def _maybe_download(self):
         # For files in dropbox or google drive, cannot directly use request to download
         # This can be changed directly use download_file method when the file is stored in server
-        if not os.path.exists(self.checkpoint_path) or overwrite:
+        if not os.path.exists(self.checkpoint_path) or self.overwrite:
             checkpoint_google_id = Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_GOOGLE_DRIVE_ID
-            gdd.download_file_from_google_drive(file_id=checkpoint_google_id, dest_path=self.checkpoint_path, overwrite=overwrite)
+            gdd.download_file_from_google_drive(file_id=checkpoint_google_id, dest_path=self.checkpoint_path,
+                                                overwrite=self.overwrite)
 
     def generate(self, text, path=None):
         waveform, alignment, spectrogram, mel = tts(self.model, text)

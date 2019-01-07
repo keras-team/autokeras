@@ -1,4 +1,4 @@
-from autokeras.pretrained.voice_generator.voice_generator import VoiceGenerator
+from autokeras.pretrained import VoiceGenerator
 from tests.common import TEST_TEMP_DIR, clean_dir
 import os
 
@@ -6,7 +6,6 @@ import os
 def test_voice_generator():
     voice_generator = VoiceGenerator()
     clean_dir(TEST_TEMP_DIR)
-    voice_generator._maybe_download(overwrite=True)
     texts = [
         "Generative adversarial network or variational auto-encoder.",
         "The tuition of the coming semster is 6300 dollars.",
