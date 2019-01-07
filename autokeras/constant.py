@@ -74,7 +74,7 @@ class Constant:
             'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/rnet_epoch.pt',
             'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/onet_epoch.pt'
         ],
-        'FILE_PATHS': [
+        'FILE_NAMES': [
             'pnet.pt',
             'rnet.pt',
             'onet.pt'
