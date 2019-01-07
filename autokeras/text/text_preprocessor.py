@@ -2,6 +2,10 @@ import os
 import re
 
 import numpy as np
+import tensorflow as tf
+from keras import Input, Model
+from keras import backend
+from keras.layers import Embedding
 
 from autokeras.constant import Constant
 from autokeras.utils import download_file_with_extract, temp_path_generator, ensure_dir
@@ -133,13 +137,9 @@ def processing(path, word_index, input_length, x_train):
     Returns:
         x_train: Numpy array as processed x_train.
     """
-    import tensorflow as tf
 
     embedding_matrix = load_pretrain(path=path, word_index=word_index)
 
-    from keras import Input, Model
-    from keras import backend
-    from keras.layers import Embedding
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
