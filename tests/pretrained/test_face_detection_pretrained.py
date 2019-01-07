@@ -1,4 +1,4 @@
-from autokeras import FaceDetector
+from autokeras.pretrained.face_detector import FaceDetector
 import os
 import urllib.request
 
