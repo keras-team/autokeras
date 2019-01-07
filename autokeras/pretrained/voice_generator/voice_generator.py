@@ -14,8 +14,8 @@ from autokeras.pretrained.voice_generator.synthesis import tts
 
 from autokeras.pretrained.voice_generator.google_drive_download import GoogleDriveDownloader as gdd
 
-synthesis._frontend = getattr(frontend, "en")
-model_helper._frontend = getattr(frontend, "en")
+synthesis._frontend = frontend
+model_helper._frontend = frontend
 
 
 class VoiceGenerator(Pretrained):

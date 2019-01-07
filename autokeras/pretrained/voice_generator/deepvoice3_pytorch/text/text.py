@@ -1,6 +1,7 @@
 import re
-from autokeras.pretrained.voice_generator.deepvoice3_pytorch.frontend.text import cleaners
-from autokeras.pretrained.voice_generator.deepvoice3_pytorch.frontend.text.symbols import symbols
+
+from autokeras.pretrained.voice_generator.deepvoice3_pytorch.text import cleaners
+from autokeras.pretrained.voice_generator.deepvoice3_pytorch.text.symbols import symbols
 
 # Mappings from symbol to numeric ID and vice versa:
 _symbol_to_id = {s: i for i, s in enumerate(symbols)}

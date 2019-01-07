@@ -1,4 +1,4 @@
-from autokeras.pretrained.voice_generator.deepvoice3_pytorch import MultiSpeakerTTSModel, AttentionSeq2Seq
+from autokeras.pretrained.voice_generator.deepvoice3_pytorch.model import MultiSpeakerTTSModel, AttentionSeq2Seq
 
 
 def deepvoice3(n_vocab, embed_dim=256, mel_dim=80, linear_dim=513, r=4,
