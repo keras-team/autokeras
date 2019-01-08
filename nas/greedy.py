@@ -1,6 +1,6 @@
 import time
 from copy import deepcopy
-import multiprocessing as mp
+from multiprocessing.queues import Queue
 
 from autokeras.bayesian import contain, SearchTree
 from autokeras.net_transformer import transform
@@ -31,7 +31,7 @@ class GreedyOptimizer:
         start_time = time.time()
         descriptors = deepcopy(descriptors)
 
-        if isinstance(sync_message, mp.queues.Queue) and sync_message.qsize() != 0:
+        if isinstance(sync_message, Queue) and sync_message.qsize() != 0:
             return out
         model_id = self.searcher.get_neighbour_best_model_id()
         graph = self.searcher.load_model_by_id(model_id)
