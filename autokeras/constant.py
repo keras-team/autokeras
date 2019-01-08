@@ -63,18 +63,22 @@ class Constant:
 
     PRE_TRAIN_DETECTION_FILE_LINK = "https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth"
 
-    # constants for pretrained model of face detection
-    FACE_DETECTION_PRETRAINED = {
-        'PRETRAINED_MODEL_LINKS': [
+    FACE_DETECTOR = {
+        'MODEL_LINKS': [
             'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/pnet_epoch.pt',
             'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/rnet_epoch.pt',
             'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/onet_epoch.pt'
         ],
-        'FILE_NAMES': [
+        'MODEL_NAMES': [
             'pnet.pt',
             'rnet.pt',
             'onet.pt'
         ]
+    }
+
+    OBJECT_DETECTOR = {
+        'MODEL_LINK': 'https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth',
+        'MODEL_NAME': 'object_detection_pretrained.pth'
     }
 
     # Image Resize

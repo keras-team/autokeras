@@ -518,7 +518,7 @@ class ObjectDetector(Pretrained):
 
     def load(self, model_path=None):
         if model_path is None:
-            model_path = download_model(Constant.PRE_TRAIN_DETECTION_FILE_LINK, 'object_detection_pretrained.pth')
+            model_path = download_model(Constant.OBJECT_DETECTOR['MODEL_LINK'], Constant.OBJECT_DETECTOR['MODEL_NAME'])
         # load net
         num_classes = len(VOC_CLASSES) + 1  # +1 for background
         self.model = self._build_ssd('test', 300, num_classes)  # initialize SSD

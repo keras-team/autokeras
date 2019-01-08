@@ -310,7 +310,7 @@ class FaceDetector(Pretrained):
 
     def load(self, model_path=None):
         model_paths = [download_model(model_link, file_name) for model_link, file_name in zip(
-            Constant.FACE_DETECTION_PRETRAINED['PRETRAINED_MODEL_LINKS'], Constant.FACE_DETECTION_PRETRAINED['FILE_NAMES'])]
+            Constant.FACE_DETECTOR['MODEL_LINKS'], Constant.FACE_DETECTOR['MODEL_NAMES'])]
         return model_paths
 
     def predict(self, img_path, output_file_path=None):
