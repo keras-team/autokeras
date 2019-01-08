@@ -1,15 +1,16 @@
 from unittest.mock import patch
 
 from autokeras.bayesian import edit_distance
-from nas.greedy import GreedySearcher
-from nas.grid import GridSearcher
 from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
-from nas.random import RandomSearcher
 from autokeras.search import *
 from autokeras.nn.generator import CnnGenerator, MlpGenerator, ResNetGenerator
 from tests.common import clean_dir, MockProcess, get_classification_data_loaders, get_classification_data_loaders_mlp, \
     simple_transform, TEST_TEMP_DIR, simple_transform_mlp, mock_train, mock_out_of_memory_train
+
+from nas.greedy import GreedySearcher
+from nas.grid import GridSearcher
+from nas.random import RandomSearcher
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
