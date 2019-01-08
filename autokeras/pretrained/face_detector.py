@@ -13,7 +13,7 @@ import matplotlib.patches as patches
 
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
-from autokeras.utils import download_file, temp_path_generator, ensure_dir, get_device
+from autokeras.utils import download_model, get_device
 
 
 def weights_init(m):
@@ -276,10 +276,8 @@ class FaceDetector(Pretrained):
     def __init__(self):
         super(FaceDetector, self).__init__()
 
-        self.load()
+        pnet, rnet, onet = self.load()
         self.device = get_device()
-        pnet, rnet, onet = list(map(lambda file_name: f'{temp_path_generator()}/{file_name}',
-                                    Constant.FACE_DETECTION_PRETRAINED['FILE_NAMES']))
 
         self.pnet_detector = PNet()
         if torch.cuda.is_available():
@@ -311,11 +309,9 @@ class FaceDetector(Pretrained):
         self.scale_factor = 0.709
 
     def load(self, model_path=None):
-        temp_path = temp_path_generator()
-        ensure_dir(temp_path)
-        for model_link, file_path in zip(Constant.FACE_DETECTION_PRETRAINED['PRETRAINED_MODEL_LINKS'],
-                                         Constant.FACE_DETECTION_PRETRAINED['FILE_NAMES']):
-            download_file(model_link, f'{temp_path}/{file_path}')
+        model_paths = [download_model(model_link, file_name) for model_link, file_name in zip(
+            Constant.FACE_DETECTION_PRETRAINED['PRETRAINED_MODEL_LINKS'], Constant.FACE_DETECTION_PRETRAINED['FILE_NAMES'])]
+        return model_paths
 
     def predict(self, img_path, output_file_path=None):
         """Predicts faces in an image.
