@@ -21,8 +21,8 @@ class Constant:
     WIDTH_DIM = 1
 
     # Default Search Space
-    DEFAULT_LENGTH_SEARCH = [50,75,100]
-    DEFAULT_WIDTH_SEARCH = [64,128,256]
+    DEFAULT_LENGTH_SEARCH = [50, 75, 100]
+    DEFAULT_WIDTH_SEARCH = [64, 128, 256]
 
     # Model Defaults
 
@@ -63,6 +63,11 @@ class Constant:
 
     PRE_TRAIN_DETECTION_FILE_LINK = "https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth"
 
+    PRE_TRAIN_VOICE_GENERATOR_MODEL_GOOGLE_DRIVE_ID = "1E-B92LZz4dgg8DU81D6pyhOzM9yvvBTj"
+    PRE_TRAIN_VOICE_GENERATOR_MODEL_NAME = "20180505_deepvoice3_checkpoint_step000640000.pth"
+    PRE_TRAIN_VOICE_GENERATOR_SAVE_FILE_DEFAULT_NAME = "test.wav"
+
+    # constants for pretrained model of face detection
     FACE_DETECTOR = {
         'MODEL_LINKS': [
             'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/pnet_epoch.pt',

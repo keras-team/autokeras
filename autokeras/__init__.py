@@ -4,5 +4,5 @@ from autokeras.tabular.tabular_supervised import TabularClassifier, TabularRegre
 
 from autokeras.net_module import CnnModule, MlpModule
 
-from autokeras.pretrained.object_detector import ObjectDetector
-from autokeras.pretrained.face_detector import FaceDetector
+# from autokeras.pretrained.object_detector import ObjectDetector
+# from autokeras.pretrained.face_detector import FaceDetector
