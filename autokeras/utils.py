@@ -130,6 +130,14 @@ def download_file(file_link, file_path):
                     sys.stdout.flush()
 
 
+def download_model(model_link, model_file_name):
+    temp_path = temp_path_generator()
+    ensure_dir(temp_path)
+    model_path = f'{temp_path}/{model_file_name}'
+    download_file(model_link, model_path)
+    return model_path
+
+
 def download_file_with_extract(file_link, file_path, extract_path):
     """Download the file specified in `file_link`, save to `file_path` and extract to the directory `extract_path`."""
     if not os.path.exists(extract_path):

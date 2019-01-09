@@ -5,7 +5,7 @@
 # ----------------------------------
 
 from autokeras.pretrained.base import Pretrained
-from autokeras.utils import download_file, temp_path_generator, get_device
+from autokeras.utils import download_model, get_device
 from autokeras.constant import Constant
 import numpy as np
 import cv2
@@ -517,12 +517,8 @@ class ObjectDetector(Pretrained):
         return SSD(phase, size, base_, extras_, head_, num_classes, self.device)
 
     def load(self, model_path=None):
-        # https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth
         if model_path is None:
-            file_link = Constant.PRE_TRAIN_DETECTION_FILE_LINK
-            # model_path = os.path.join(temp_path_generator(), "object_detection_pretrained.pth")
-            model_path = temp_path_generator() + '_object_detection_pretrained.pth'
-            download_file(file_link, model_path)
+            model_path = download_model(Constant.OBJECT_DETECTOR['MODEL_LINK'], Constant.OBJECT_DETECTOR['MODEL_NAME'])
         # load net
         num_classes = len(VOC_CLASSES) + 1  # +1 for background
         self.model = self._build_ssd('test', 300, num_classes)  # initialize SSD
