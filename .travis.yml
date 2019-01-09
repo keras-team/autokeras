@@ -5,7 +5,7 @@ install:
 - pip install -r requirements.txt --quiet
 - pip install pytest
 - pip install pytest-cov
-- pip install coverage
+- pip install coverage==4.0
 - pip install codeclimate-test-reporter
 - pip install mkdocs
 - pip install mkdocs-material
