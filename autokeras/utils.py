@@ -7,12 +7,10 @@ import zipfile
 import logging
 import itertools
 
-import warnings
 import imageio
 import numpy as np
 import requests
 import torch
-import subprocess
 import string
 import random
 from autokeras.constant import Constant

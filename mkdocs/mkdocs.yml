@@ -14,6 +14,7 @@ nav:
     - Getting Started: start.md
     - Docker: docker.md
     - Contributing Guide: temp/contribute.md
+    - Neural Architecture Search: temp/nas.md
     - Documentation:
       - supervised: temp/supervised.md
       - image_supervised: temp/image_supervised.md
