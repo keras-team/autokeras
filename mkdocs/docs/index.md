@@ -39,15 +39,13 @@ You can use Gitter to communicate with people who also interested in Auto-Keras.
 
 <a href="https://gitter.im/autokeras/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/autokeras/Lobby.svg" alt="Join the chat at https://gitter.im/autokeras/Lobby" style="width: 92px"></a>
 
-You can follow us on Twitter. We will constantly post our new features and releases. Moreover, we will post new feature request for the developers from the open-source community to contribute code and documentation.
+You can follow us on Twitter.
 
 <a href="https://twitter.com/autokeras" class="twitter-follow-button" data-show-count="false">Follow @autokeras</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
-## Citing this work
+## Cite this work
 
-If you use Auto-Keras in a scientific publication, you are highly encouraged (though not required) to cite the following paper:
-
-Efficient Neural Architecture Search with Network Morphism.
+Auto-Keras: Efficient Neural Architecture Search with Network Morphism.
 Haifeng Jin, Qingquan Song, and Xia Hu.
 [arXiv:1806.10282](https://arxiv.org/abs/1806.10282).
 
@@ -66,7 +64,6 @@ Biblatex entry:
 ## Support Auto-Keras
 
 We accept donations on [Open Collective](https://opencollective.com/autokeras).
-The money will be used to motivate the developers in the open-source community to contribute code to Auto-Keras.
 Thank every backer for supporting us!
 
 <script src="https://opencollective.com/autokeras/banner.js">
