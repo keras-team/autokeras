@@ -10,7 +10,7 @@ setup(
                       'numpy==1.14.5',
                       'keras==2.2.4',
                       'scikit-learn==0.20.1',
-                      'scikit-image==0.13.1',
+                      'scikit-image==0.14.1',
                       'tqdm==4.29.0',
                       'tensorflow==1.10.0',
                       'imageio==2.4.1',
