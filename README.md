@@ -17,6 +17,8 @@ Auto-Keras provides functions to automatically search for architecture and hyper
 
 ## Example
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/2a3b9e38e4904bd9a20554146c626b4a)](https://app.codacy.com/app/jhfjhfj1/autokeras?utm_source=github.com&utm_medium=referral&utm_content=jhfjhfj1/autokeras&utm_campaign=Badge_Grade_Settings)
+
 Here is a short example of using the package.
 
 
