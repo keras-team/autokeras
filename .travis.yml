@@ -5,14 +5,18 @@ install:
 - pip install -r requirements.txt --quiet
 - pip install pytest
 - pip install pytest-cov
-- pip install coverage==4.0
-- pip install codeclimate-test-reporter
+- pip install coverage
 - pip install mkdocs
 - pip install mkdocs-material
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 script:
 - pytest tests --cov=autokeras
-- codeclimate-test-reporter --file .coverage
 - sh docs.sh
+after_script:
+- if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi
 deploy:
 - provider: pypi
   user: jhfjhfj1
