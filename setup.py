@@ -8,7 +8,7 @@ setup(
                       'torch==0.4.1',
                       'torchvision==0.2.1',
                       'numpy==1.14.5',
-                      'keras==2.2.2',
+                      'keras==2.2.4',
                       'scikit-learn==0.20.1',
                       'scikit-image==0.13.1',
                       'tqdm==4.25.0',
