@@ -22,7 +22,7 @@ setup(
                       'inflect',
                       'unidecode',
                       'nltk==3.3',
-                      'lws==1.0',
+                      'lws==1.2',
                       'opencv-python==3.4.4.19'],
     version='0.3.5',
     description='AutoML for deep learning',
