@@ -1,12 +1,9 @@
 <img src="https://github.com/jhfjhfj1/autokeras/blob/master/logo.png?raw=true" alt="drawing" width="400px" style="display: block; margin-left: auto; margin-right: auto"/>
 
-<div style="text-align: center">
-<p>
-<a href="https://travis-ci.org/jhfjhfj1/autokeras"><img alt="Build Status" src="https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master" style="width: 90px"/></a>
-<a href="https://coveralls.io/github/jhfjhfj1/autokeras?branch=master"><img alt="Coverage Status" src="https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg?branch=master" style="width: 99px"/></a>
+[![Build Status](https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master)](https://travis-ci.org/jhfjhfj1/autokeras)
+[![Coverage Status](https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg?branch=master)](https://coveralls.io/github/jhfjhfj1/autokeras?branch=master)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/2a3b9e38e4904bd9a20554146c626b4a)](https://app.codacy.com/app/jhfjhfj1/autokeras?utm_source=github.com&utm_medium=referral&utm_content=jhfjhfj1/autokeras&utm_campaign=Badge_Grade_Settings)
 <a href="https://badge.fury.io/py/autokeras"><img src="https://badge.fury.io/py/autokeras.svg" alt="PyPI version" style="width: 125px"></a>
-</p>
-</div>
 
 Official Website: [autokeras.com](https://autokeras.com)
 
@@ -16,8 +13,6 @@ The ultimate goal of AutoML is to provide easily accessible deep learning tools 
 Auto-Keras provides functions to automatically search for architecture and hyperparameters of deep learning models.
 
 ## Example
-
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/2a3b9e38e4904bd9a20554146c626b4a)](https://app.codacy.com/app/jhfjhfj1/autokeras?utm_source=github.com&utm_medium=referral&utm_content=jhfjhfj1/autokeras&utm_campaign=Badge_Grade_Settings)
 
 Here is a short example of using the package.
 
