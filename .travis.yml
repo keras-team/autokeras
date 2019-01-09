@@ -6,17 +6,14 @@ install:
 - pip install pytest
 - pip install pytest-cov
 - pip install coverage
+- pip install codacy-coverage
 - pip install mkdocs
 - pip install mkdocs-material
-before_script:
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
 script:
-- pytest tests --cov=autokeras
+- pytest tests --cov=autokeras --cov-report xml:coverage.xml
 - sh docs.sh
 after_script:
-- if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi
+- python-codacy-coverage -r coverage.xml
 deploy:
 - provider: pypi
   user: jhfjhfj1
@@ -35,4 +32,4 @@ deploy:
     branch: master
 env:
   global:
-  - secure: fzJRkNh/KFGWot6O9CmhRUxD/b+4l30oydcrhptwggYk2EYWO7j13Cr3e/xO8QArkaFDMKuWGuwYROFvs0zwSCE/4JKb0WwdZvyZ8kVETkwt2J1scdntuBegIJIHss2SZEt3bWnr0VZTBtYbFELtBLNxVDrCLVNvwsa4KVQbIK6vzIlScHw4LQWEYN3bDzYZbHyVuxaX6E6uHaWwK63ALnExYToYJ/DHQ+RhOVLoBjNB+LMRqJkZvf9okdoq+wF7zRmTlJbkHuss2DlAdo8DhHu5CzugADRRvyd+/SBHRBu11fbw65CtDJ0AzTGu+i/sJ+6OVgT47Wyt3CgtROFCRQIRS2IWVS61Nd78G6obUT78eyEvHKCv1dfub8Qviw+mfi05+1u/mEiPyKjEXVO/Pu5Dfi7/qeefTTCneyFL/DvWw2puG33wlZoNY3dbltDIADVcaGH9YJF2JJNkaund3joz7gQAG9+F2BJVqsQe7ura4dJXY3dJhYkgzLh0jFSNH7Yx/BJoXNq1Zpcdm0TtvMumxGIBafTSV/s2B/sB+evrAff9nRdavpXLtS9IGGCx8cledGqMNwpNSBKnjVC0uGH3KPGlAGVv0o3EO7X2mZ/pAz9GQGAnlkZZRcYN3uXnTotJm8F+dro21k1diiNZxPCguInVjxg+EE3J/joVBog=
+    secure: iiD1urajfg1L3LqDvKZmHfJrwlEGpFQzoDU3ZJdu11f9yJ68pyC2o1xu8eALdwirX91+nftfnmsJFsnXDF90RM1I90u/6Exl2/vWQXeCvIirFqe3IhbQB893lh8nCK/Yz5ZxPyII8oOEfpiiwWZJJlJL4ydKJtSsIhmH06t84EwygXbms+JN0vZvm5Ct6ap98pu4Kj7uGZYjxA9uFz37z1KL+ZGtthW7f8pVdKgsKxcqtn6qIg+y0o//A+MKitsy/oABd2oCbrUNoAEQtS02FN5+SMB1hN0s1RUHK00IE2c6yVS5qEzN4hFEkM7lvSPogxSkmZy51gwmDC8IGLjeCa4JSLS+a675XdXwiXAXHXbFm4+gSzd04CKcasdRLiB1ZzAH5VpCEGTTWeFOWWbg8UKmMo/jDzHCjPslWY2/wCOVyhIFCQ8Jbd8pnOTsXs9hhOEU/PwhlRIGiIJx6aQkd3XSq7Vb2ncGfYdFwfrLgCzDvO3ZULQPfVkynRTa0Ws4oErSQjRzS8EzLh5AMc+Pb4cRfPMz7zNr4bQ5UAAmNDCK+Pm964TxZcc48x4aDnpUqEDkNg/cu1W9Kn5fnYG+Txm0M1RrUp1ci0GRPxJtmAhZhVmFHDDmVTYswZq98zKrzNOaPArioPvR3jsfD7oc1Jd2nojcXHPSYLKAiv6Z3Ak=
