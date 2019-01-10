@@ -243,8 +243,11 @@ class PortableDeepSupervised(PortableClass):
         """Initialize the instance.
 
         Args:
-            graph: The graph form of the learned model
-
+            graph: The graph form of the learned model.
+            y_encoder: The encoder of the label. See example as OneHotEncoder
+            data_transformer: A transformer class to process the data. See example as ImageDataTransformer.
+            verbose: A boolean of whether the search process will be printed to stdout.
+            path: A string. The path to a directory, where the intermediate results are saved.
         """
         super(PortableDeepSupervised, self).__init__(graph, verbose)
         self.y_encoder = y_encoder
