@@ -252,6 +252,7 @@ where:
 * retrain: A boolean of whether reinitialize the weights of the model.
 
 # Object Detection tutorial
+#### by Wuyang Chen from [Dr. Atlas Wang's group](http://www.atlaswang.com/) at CSE Department, Texas A&M.
 
 `ObjectDetector` in `object_detector.py` is a child class of `Pretrained`. Currently it can load a pretrained SSD model ([Liu, Wei, et al. "Ssd: Single shot multibox detector." European conference on computer vision. Springer, Cham, 2016.](https://arxiv.org/abs/1512.02325)) and find object(s) in a given image.
 
