@@ -2,6 +2,7 @@
 # The idea of the classes and functions in this file is largely borrowed from
 # https://github.com/amdegroot/ssd.pytorch
 # A huge thank you to the authors: Max deGroot and Ellis Brown
+# modified by: Wuyang Chen, Haifeng Jin
 # ----------------------------------
 
 from autokeras.pretrained.base import Pretrained
