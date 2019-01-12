@@ -23,12 +23,6 @@ Here is a short example of using the package.
     clf.fit(x_train, y_train)
     results = clf.predict(x_test)
 
-## Community
-
-You can use Gitter to communicate with people who also interested in Auto-Keras.
-
-<a href="https://gitter.im/autokeras/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/autokeras/Lobby.svg" alt="Join the chat at https://gitter.im/autokeras/Lobby" style="width: 92px"></a>
-
 ## Cite this work
 
 Auto-Keras: Efficient Neural Architecture Search with Network Morphism.
@@ -46,6 +40,19 @@ Biblatex entry:
       eprinttype   = {arXiv},
       eprint       = {cs.LG/1806.10282},
     }
+
+## Community
+
+You can use Gitter to communicate with people who also interested in Auto-Keras.
+<a href="https://gitter.im/autokeras/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/autokeras/Lobby.svg" alt="Join the chat at https://gitter.im/autokeras/Lobby" style="width: 92px"></a>
+
+You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
+
+## Contributing Code
+
+You can follow the [Contributing Guide](https://autokeras.com/temp/contribute/) for details.
+The easist way to contribute is to resolve the issues with the "[call for contributors](https://github.com/jhfjhfj1/autokeras/labels/call%20for%20contributors)" tag.
+They are friendly to beginners.
  
 ## Support Auto-Keras
 
