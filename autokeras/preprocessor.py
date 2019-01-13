@@ -182,7 +182,8 @@ class ImageDataTransformer(DataTransformer):
         self.std = np.std(data, axis=(0, 1, 2), keepdims=True).flatten()
         if augment is None:
             self.augment = Constant.DATA_AUGMENTATION
-        self.augment = augment
+        else:
+            self.augment = augment
 
     def transform_train(self, data, targets=None, batch_size=None):
         """ Transform the training data, perform random cropping data augmentation and basic random flip augmentation.
