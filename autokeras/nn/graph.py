@@ -1,3 +1,4 @@
+import keras
 from collections import Iterable
 from copy import deepcopy, copy
 from queue import Queue
@@ -694,7 +695,6 @@ class TorchModel(torch.nn.Module):
 
 class KerasModel:
     def __init__(self, graph):
-        import keras
         self.graph = graph
         self.layers = []
         for layer in graph.layer_list:

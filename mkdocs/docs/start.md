@@ -18,11 +18,17 @@ You need to download the code from the GitHub repo and run the following command
 
     pip install -r requirements.txt
     python setup.py install
+<<<<<<< HEAD
 
 
 
 
 ## A Simple Example
+=======
+    
+    
+## Example
+>>>>>>> 21da0c0ccefd388d07d554e5fd10f04052cb351f
 
 We show an example of image classification on the MNIST dataset, which is a famous benchmark image dataset for hand-written digits classification. Auto-Keras supports different types of data inputs. 
 
@@ -149,6 +155,7 @@ Step 2 : After the model training is complete, run *examples/visualize.py*, whil
         visualize('~/automodels/')
 
 
+<<<<<<< HEAD
 
 
 
@@ -199,6 +206,10 @@ where:
 
 
 ### [CnnModule tutorial]
+=======
+        
+# CnnModule tutorial
+>>>>>>> 21da0c0ccefd388d07d554e5fd10f04052cb351f
 
 `CnnGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with basic cnn modules
 and the ResNet module. 
@@ -290,6 +301,7 @@ for a given tabular dataset. (Currently, theis module only supports lightgbm cla
 * data_info: a numpy.array describing the feature types (time, numerical or categorical) of each column in x_train.
 
 
+<<<<<<< HEAD
 **Notes:** Preprocessing of the tabular data:
 * Class `[TabularPreprocessor]` involves several automated feature preprocessing and engineering operation for tabular data . 
 *The input data should be in numpy array format for the class `TabularClassifier` and `TabularRegressor` .
@@ -299,6 +311,10 @@ for a given tabular dataset. (Currently, theis module only supports lightgbm cla
 ## Pretrained Models
  
 ### [Object detection tutorial]
+=======
+# Object Detection tutorial
+#### by Wuyang Chen from [Dr. Atlas Wang's group](http://www.atlaswang.com/) at CSE Department, Texas A&M.
+>>>>>>> 21da0c0ccefd388d07d554e5fd10f04052cb351f
 
 `ObjectDetector` in `object_detector.py` is a child class of `Pretrained`. Currently it can load a pretrained SSD model ([Liu, Wei, et al. "Ssd: Single shot multibox detector." European conference on computer vision. Springer, Cham, 2016.](https://arxiv.org/abs/1512.02325)) and find object(s) in a given image.
 

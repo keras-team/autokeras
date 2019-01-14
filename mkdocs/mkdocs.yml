@@ -12,8 +12,9 @@ google_analytics: ['UA-44322747-3', 'autokeras.com']
 nav:
     - Home: index.md
     - Getting Started: start.md
-    - Getting Started with Docker: docker.md
+    - Docker: docker.md
     - Contributing Guide: temp/contribute.md
+    - Neural Architecture Search: temp/nas.md
     - Documentation:
       - supervised: temp/supervised.md
       - image_supervised: temp/image_supervised.md

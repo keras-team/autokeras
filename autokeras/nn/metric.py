@@ -34,7 +34,7 @@ class Accuracy(Metric):
 
     @classmethod
     def evaluate(cls, prediction, target):
-        return accuracy_score(prediction, target)
+        return accuracy_score(target, prediction)
 
 
 class MSE(Metric):
@@ -48,4 +48,4 @@ class MSE(Metric):
 
     @classmethod
     def evaluate(cls, prediction, target):
-        return mean_squared_error(prediction, target)
+        return mean_squared_error(target, prediction)

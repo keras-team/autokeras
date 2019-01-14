@@ -1,15 +1,12 @@
 import os
 from abc import ABC
-from functools import reduce
-
 import numpy as np
-import torch
 
 from autokeras.constant import Constant
 from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
-from autokeras.supervised import PortableClass, DeepSupervised
+from autokeras.supervised import PortableDeepSupervised, DeepSupervised
 from autokeras.utils import pickle_to_file, \
     read_csv_file, read_image, compute_image_resize_params, resize_image_data
 
@@ -117,16 +114,6 @@ class ImageSupervised(DeepSupervised, ABC):
         if self.data_transformer is None:
             self.data_transformer = ImageDataTransformer(x, augment=self.augment)
 
-    def export_autokeras_model(self, model_file_name):
-        """ Creates and Exports the AutoKeras model to the given filename. """
-        portable_model = PortableImageSupervised(graph=self.cnn.best_model,
-                                                 y_encoder=self.y_encoder,
-                                                 data_transformer=self.data_transformer,
-                                                 metric=self.metric,
-                                                 inverse_transform_y_method=self.inverse_transform_y,
-                                                 resize_params=self.resize_shape)
-        pickle_to_file(portable_model, model_file_name)
-
     def preprocess(self, x):
         return resize_image_data(x, self.resize_shape)
 
@@ -142,6 +129,10 @@ class ImageClassifier(ImageSupervised):
     def loss(self):
         return classification_loss
 
+    @property
+    def metric(self):
+        return Accuracy
+
     def transform_y(self, y_train):
         # Transform y_train.
         if self.y_encoder is None:
@@ -156,9 +147,14 @@ class ImageClassifier(ImageSupervised):
     def get_n_output_node(self):
         return self.y_encoder.n_classes
 
-    @property
-    def metric(self):
-        return Accuracy
+    def export_autokeras_model(self, model_file_name):
+        """ Creates and Exports the AutoKeras model to the given filename. """
+        portable_model = PortableImageClassifier(graph=self.cnn.best_model,
+                                                 y_encoder=self.y_encoder,
+                                                 data_transformer=self.data_transformer,
+                                                 resize_params=self.resize_shape,
+                                                 path=self.path)
+        pickle_to_file(portable_model, model_file_name)
 
 
 class ImageClassifier1D(ImageClassifier):
@@ -209,6 +205,15 @@ class ImageRegressor(ImageSupervised):
     def inverse_transform_y(self, output):
         return output.flatten()
 
+    def export_autokeras_model(self, model_file_name):
+        """ Creates and Exports the AutoKeras model to the given filename. """
+        portable_model = PortableImageRegressor(graph=self.cnn.best_model,
+                                                y_encoder=self.y_encoder,
+                                                data_transformer=self.data_transformer,
+                                                resize_params=self.resize_shape,
+                                                path=self.path)
+        pickle_to_file(portable_model, model_file_name)
+
 
 class ImageRegressor1D(ImageRegressor):
     """ ImageRegressor1D class.
@@ -234,47 +239,46 @@ class ImageRegressor3D(ImageRegressor):
         super().__init__(**kwargs)
 
 
-class PortableImageSupervised(PortableClass):
-    def __init__(self, graph, data_transformer, y_encoder, metric, inverse_transform_y_method, resize_params):
+class PortableImageSupervised(PortableDeepSupervised):
+    def __init__(self, graph, y_encoder, data_transformer, resize_params, verbose=False, path=None):
         """Initialize the instance.
         Args:
             graph: The graph form of the learned model
         """
-        super().__init__(graph)
-        self.data_transformer = data_transformer
-        self.y_encoder = y_encoder
-        self.metric = metric
-        self.inverse_transform_y_method = inverse_transform_y_method
+        super().__init__(graph, y_encoder, data_transformer, verbose, path)
         self.resize_shape = resize_params
 
-    def predict(self, x_test):
-        """Return predict results for the testing data.
+    def preprocess(self, x):
+        return resize_image_data(x, self.resize_shape)
 
-        Args:
-            x_test: An instance of numpy.ndarray containing the testing data.
 
-        Returns:
-            A numpy.ndarray containing the results.
-        """
-        if Constant.LIMIT_MEMORY:
-            pass
+class PortableImageClassifier(PortableImageSupervised):
+    @property
+    def loss(self):
+        return classification_loss
 
-        test_loader = self.data_transformer.transform_test(x_test)
-        model = self.graph.produce_model()
-        model.eval()
+    @property
+    def metric(self):
+        return Accuracy
 
-        outputs = []
-        with torch.no_grad():
-            for index, inputs in enumerate(test_loader):
-                outputs.append(model(inputs).numpy())
-        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
-        return self.inverse_transform_y(output)
+    def transform_y(self, y_train):
+        return self.y_encoder.transform(y_train)
 
     def inverse_transform_y(self, output):
-        return self.inverse_transform_y_method(output)
+        return self.y_encoder.inverse_transform(output)
 
-    def evaluate(self, x_test, y_test):
-        """Return the accuracy score between predict value and `y_test`."""
-        x_test = resize_image_data(x_test, self.resize_shape)
-        y_predict = self.predict(x_test)
-        return self.metric().evaluate(y_test, y_predict)
+
+class PortableImageRegressor(PortableImageSupervised):
+    @property
+    def loss(self):
+        return regression_loss
+
+    @property
+    def metric(self):
+        return MSE
+
+    def transform_y(self, y_train):
+        return y_train.flatten().reshape(len(y_train), 1)
+
+    def inverse_transform_y(self, output):
+        return output.flatten()

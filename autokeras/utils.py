@@ -7,18 +7,14 @@ import zipfile
 import logging
 import itertools
 
-
-import warnings
 import imageio
 import numpy as np
 import requests
 import torch
-import subprocess
 import string
 import random
 from autokeras.constant import Constant
 from scipy.ndimage import zoom
-
 
 
 class NoImprovementError(Exception):
@@ -134,6 +130,14 @@ def download_file(file_link, file_path):
                     sys.stdout.flush()
 
 
+def download_model(model_link, model_file_name):
+    temp_path = temp_path_generator()
+    ensure_dir(temp_path)
+    model_path = f'{temp_path}/{model_file_name}'
+    download_file(model_link, model_path)
+    return model_path
+
+
 def download_file_with_extract(file_link, file_path, extract_path):
     """Download the file specified in `file_link`, save to `file_path` and extract to the directory `extract_path`."""
     if not os.path.exists(extract_path):
@@ -169,9 +173,8 @@ def assert_search_space(search_space):
         value_list.append(grid[key])
 
     dimension = list(itertools.product(*value_list))
-    #print(dimension)
+    # print(dimension)
     return grid, dimension
-
 
 
 def verbose_print(new_father_id, new_graph, new_model_id):
@@ -191,7 +194,6 @@ def verbose_print(new_father_id, new_graph, new_model_id):
         line = '|'.join(str(x).center(cell_size[i]) for i, x in enumerate(r))
         logging.info('|' + line + '|')
     logging.info('+' + '-' * len(line) + '+')
-
 
 
 def validate_xy(x_train, y_train):
