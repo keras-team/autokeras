@@ -1,28 +1,32 @@
 # Getting Started
 
+---
+
 ## Installation
 The installation of Auto-Keras is the same as other python packages. 
 
 **Note:** currently, Auto-Keras is only compatible with: **Python 3.6**.
 
-#### Latest Stable Version (`pip` installation):
+### Latest Stable Version (`pip` installation):
 You can run the following `pip` installation command in your terminal to install the latest stable version.
 
     pip install autokeras
 
-#### Bleeding Edge Version (manual installation):
+### Bleeding Edge Version (manual installation):
 If you want to install the latest development version. 
 You need to download the code from the GitHub repo and run the following commands in the project directory.
 
     pip install -r requirements.txt
     python setup.py install
-    
-    
-## Example
+
+
+
+
+## A Simple Example
 
 We show an example of image classification on the MNIST dataset, which is a famous benchmark image dataset for hand-written digits classification. Auto-Keras supports different types of data inputs. 
 
-#### Data with numpy array (.npy) format.
+### [Data with numpy array (.npy) format.]
 
 If the images and the labels are already formatted into numpy arrays, you can 
 
@@ -42,7 +46,7 @@ If the images and the labels are already formatted into numpy arrays, you can
         
 In the example above, the images and the labels are already formatted into numpy arrays.
 
-#### What if your data are raw image files (*e.g.* .jpg, .png, .bmp)?
+### [What if your data are raw image files (*e.g.* .jpg, .png, .bmp)?]
 
 You can use our `load_image_dataset` function to load the images and their labels as follows.
 
@@ -77,19 +81,24 @@ The second argument `images_path` is the path to the directory containing all th
 The returned values `x_train` and `y_train` are the numpy arrays,
 which can be directly feed into the `fit` function of `ImageClassifier`.
 
-#### How to export keras models?
+
+
+
+## Portable Models
+
+### How to export keras models?
     clf.load_searcher().load_best_model().produce_keras_model().save('my_model.h5')
 This uses the keras function model.save() to export a single HDF5 file containing the architecture of the model, the weights of the model, the training configuration, and the state of the optimizer. See https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
 
-Note: This is being built into AutoKeras as ImageClassifier().export_keras_model() 
+**Note:** This is being built into AutoKeras as ImageClassifier().export_keras_model() 
 
-#### how to export Portable model
+### [How to export Portable model]
     from autokeras import ImageClassifier
     clf = ImageClassifier(verbose=True, augment=False)
     clf.export_autokeras_model(model_file_name)
 The model will be stored into the path `model_file_name`. 
 
-#### How to load exported Portable model?
+### [How to load exported Portable model?]
     from autokeras.utils import pickle_from_file
     model = pickle_from_file(model_file_name)
     results = model.evaluate(x_test, y_test)
@@ -98,7 +107,12 @@ The model will be stored into the path `model_file_name`.
 The model will be loaded from the path `model_file_name` and then you can use the functions listed in `PortableImageSupervised`.
 
 	
-#### How to visualize keras models?
+
+
+
+## Model Visualizations
+
+### How to visualize keras models?
 
 This is not specific to AutoKeras, however, the following will generate a .PNG visualization of the best model found by AutoKeras:
 
@@ -108,7 +122,7 @@ This is not specific to AutoKeras, however, the following will generate a .PNG v
     plot_model(model, to_file='my_model.png')
 
     
-#### How to visualize the best selected architecture ?
+### [How to visualize the best selected architecture?]
 
 While trying to create a model, let's say an Image classifier on MNIST, there is a facility for the user to visualize a .PDF depiction of the best architecture that was chosen by autokeras, after model training is complete. 
 
@@ -116,9 +130,10 @@ Prerequisites :
 1) graphviz must be installed in your system. Refer [Installation Guide](https://graphviz.gitlab.io/download/)  
 2) Additionally, also install "graphviz" python package using pip / conda
 
-pip : pip install graphviz
 
-conda : conda install -c conda-forge python-graphviz
+    pip:  pip install graphviz
+    
+    conda : conda install -c conda-forge python-graphviz
 
 If the above installations are complete, proceed with the following steps :
 
@@ -134,13 +149,59 @@ Step 2 : After the model training is complete, run *examples/visualize.py*, whil
         visualize('~/automodels/')
 
 
-        
-# CnnModule tutorial
+
+
+## Net Modules
+
+### [MlpModule tutorial]
+
+`MlpGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with MLP modules 
+
+
+Normally, there's two place to call the MlpGenerator, one is call `MlpGenerator.fit` while the other is `MlpGenerator.final_fit`.
+
+For example, in a image classification class `ImageClassifier`, one can initialize the cnn module as:
+
+```python
+mlpModule = MlpModule(loss, metric, searcher_args, path, verbose)
+```
+Where:
+* `loss` and `metric` determines by the type of training model(classification or regression or others)
+* `search_args` can be referred in `search.py`
+* `path` is the path to store the whole searching process and generated model.
+* `verbose` is a boolean. Setting it to true prints to stdout.
+
+Then, for the searching part, one can call:
+```python
+mlpModule.fit(n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60)
+```
+where:
+* n_output_node: A integer value represent the number of output node in the final layer.
+* input_shape: A tuple to express the shape of every train entry. For example,
+                MNIST dataset would be (28,28,1).
+* train_data: A PyTorch DataLoader instance representing the training data.
+* test_data: A PyTorch DataLoader instance representing the testing data.
+* time_limit: A integer value represents the time limit on searching for models.
+
+And for final testing(testing the best searched model), one can call:
+```python
+mlpModule.final_fit(train_data, test_data, trainer_args=None, retrain=False)
+```
+where:
+* train_data: A DataLoader instance representing the training data.
+* test_data: A DataLoader instance representing the testing data.
+* trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
+* retrain: A boolean of whether reinitialize the weights of the model.
+
+
+
+
+### [CnnModule tutorial]
 
 `CnnGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with basic cnn modules
 and the ResNet module. 
 
-### Examples
+
 Normally, there's two place to call the CnnGenerator, one is call `CnnGenerator.fit` while the other is `CnnGenerator.final_fit`.
 
 For example, in a image classification class `ImageClassifier`, one can initialize the cnn module as:
@@ -182,76 +243,60 @@ where:
 * retrain: A boolean of whether reinitialize the weights of the model.
 
 
-# Automated text classifier tutorial
 
-### Introduction
-Class `TextClassifier` and `TextRegressor` is designed for automated generate best performance cnn neural architecture
+## Task Modules
+ 
+### [Automated text classifier tutorial]
+
+Class `TextClassifier` and `TextRegressor` are designed for automated generate best performance cnn neural architecture
 for a given text dataset. 
 
-### Example
+
 ```python
     clf = TextClassifier(verbose=True)
     clf.fit(x=x_train, y=y_train, batch_size=10, time_limit=12 * 60 * 60)
 ```
-After searching the best model, one can call `clf.final_fit` to test the best model found in searching.
-
-### Arguments
 
 * x_train: string format text data
 * y_train: int format text label
 
+After searching the best model, one can call `clf.final_fit` to test the best model found in searching.
 
-### Notes:
 
-Preprocessing of the text data:
+**Notes:** Preprocessing of the text data:
 * Class `TextClassifier` and `TextRegressor` contains a pre-process of the text data. Which means the input data
 should be in string format. 
 * The default pre-process model uses the [glove6B model](https://nlp.stanford.edu/projects/glove/) from Stanford NLP. 
 * To change the default setting of the pre-process model, one need to change the corresponding variable:
 `EMBEDDING_DIM`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_LINK`, `PRE_TRAIN_FILE_NAME` in `constant.py`.
 
+ 
+ 
+### [Automated tabular classifier tutorial]
 
-# MlpModule tutorial
+Class `TabularClassifier` and `TabularRegressor` are designed for automated generate best performance shallow/deep architecture
+for a given tabular dataset. (Currently, theis module only supports lightgbm classifier and regressor.)
 
-`MlpGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with MLP modules 
-
-### Examples
-Normally, there's two place to call the MlpGenerator, one is call `MlpGenerator.fit` while the other is `MlpGenerator.final_fit`.
-
-For example, in a image classification class `ImageClassifier`, one can initialize the cnn module as:
 
 ```python
-mlpModule = MlpModule(loss, metric, searcher_args, path, verbose)
+    clf = TabularClassifier(verbose=True)
+    clf.fit(x_train, y_train, time_limit=12 * 60 * 60, data_info=datainfo)
 ```
-Where:
-* `loss` and `metric` determines by the type of training model(classification or regression or others)
-* `search_args` can be referred in `search.py`
-* `path` is the path to store the whole searching process and generated model.
-* `verbose` is a boolean. Setting it to true prints to stdout.
 
-Then, for the searching part, one can call:
-```python
-mlpModule.fit(n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60)
-```
-where:
-* n_output_node: A integer value represent the number of output node in the final layer.
-* input_shape: A tuple to express the shape of every train entry. For example,
-                MNIST dataset would be (28,28,1).
-* train_data: A PyTorch DataLoader instance representing the training data.
-* test_data: A PyTorch DataLoader instance representing the testing data.
-* time_limit: A integer value represents the time limit on searching for models.
+* x_train: string format text data
+* y_train: int format text label
+* data_info: a numpy.array describing the feature types (time, numerical or categorical) of each column in x_train.
 
-And for final testing(testing the best searched model), one can call:
-```python
-mlpModule.final_fit(train_data, test_data, trainer_args=None, retrain=False)
-```
-where:
-* train_data: A DataLoader instance representing the training data.
-* test_data: A DataLoader instance representing the testing data.
-* trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
-* retrain: A boolean of whether reinitialize the weights of the model.
 
-# Object Detection tutorial
+**Notes:** Preprocessing of the tabular data:
+* Class `[TabularPreprocessor]` involves several automated feature preprocessing and engineering operation for tabular data . 
+*The input data should be in numpy array format for the class `TabularClassifier` and `TabularRegressor` .
+ 
+ 
+ 
+## Pretrained Models
+ 
+### [Object detection tutorial]
 #### by Wuyang Chen from [Dr. Atlas Wang's group](http://www.atlaswang.com/) at CSE Department, Texas A&M.
 
 `ObjectDetector` in `object_detector.py` is a child class of `Pretrained`. Currently it can load a pretrained SSD model ([Liu, Wei, et al. "Ssd: Single shot multibox detector." European conference on computer vision. Springer, Cham, 2016.](https://arxiv.org/abs/1512.02325)) and find object(s) in a given image.
@@ -261,7 +306,7 @@ Let's first import the ObjectDetector and create a detection model (```detector`
 from autokeras.pretrained.object_detector import ObjectDetector
 detector = ObjectDetector()
 ```
-Note that the ```ObjectDetector``` class can automatically detect the existance of available cuda device(s), and use the device if exists.
+**Note:**  the ```ObjectDetector``` class can automatically detect the existance of available cuda device(s), and use the device if exists.
 
 Second, you will want to load the pretrained weights for your model:
 ```python
@@ -274,3 +319,25 @@ Finally you can make predictions against an image:
 ```
 Function ```detector.predict()``` requires the path to the image. If the ```output_file_path``` is not given, the ```detector``` will just return the numerical results as a list of dictionaries. Each dictionary is like {"left": int, "top": int, "width": int, "height": int: "category": str, "confidence": float}, where ```left``` and ```top``` is the (left, top) coordinates of the bounding box of the object and ```width``` and ```height``` are width and height of the box. ```category``` is a string representing the class the object belongs to, and the confidence can be regarded as the probability that the model believes its prediction is correct. If the ```output_file_path``` is given, then the results mentioned above will be plotted and saved in a new image file with suffix "_prediction" into the given ```output_file_path```. If you run the example/object_detection/object_detection_example.py, you will get result
 ```[{'category': 'person', 'width': 331, 'height': 500, 'left': 17, 'confidence': 0.9741123914718628, 'top': 0}]```
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+[Data with numpy array (.npy) format.]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/mnist.py
+[What if your data are raw image files (*e.g.* .jpg, .png, .bmp)?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/load_raw_image.py
+[How to export Portable model]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py
+[How to load exported Portable model?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py
+[How to visualize the best selected architecture?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/visualizations/visualize.py
+[MlpModule tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/mlp_module.py
+[CnnModule tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/cnn_module.py
+[Automated text classifier tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/task_modules/text/text.py
+[Automated tabular classifier tutorial]: https://github.com/jhfjhfj1/autokeras/tree/master/examples/task_modules/tabular
+[Object Detection tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/pretrained_models/object_detection/object_detection_example.py
+[TabularPreprocessor]: https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/tabular/tabular_preprocessor.py
