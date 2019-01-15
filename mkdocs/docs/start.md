@@ -347,15 +347,14 @@ Function ```detector.predict()``` requires the path to the image. If the ```outp
  
  
  
-[Data with numpy array (.npy) format.]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/mnist.py
-[What if your data are raw image files (*e.g.* .jpg, .png, .bmp)?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/load_raw_image/load.py
-[How to export Portable model]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_load.py
-[How to load exported Portable model?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_load.py
-[How to visualize the best selected architecture?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/visualize.py
-[MlpModule tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/mlp_module.py
-[CnnModule tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/cnn_module.py
-[Automated text classifier tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/text_cnn/text.py
-[Automated tabular classifier tutorial]: https://github.com/jhfjhfj1/autokeras/tree/master/examples/tabular_examples
-[Object Detection tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/pre_train/object_detection/object_detection_example.py
+[Data with numpy array (.npy) format.]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/mnist.py
+[What if your data are raw image files (*e.g.* .jpg, .png, .bmp)?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/load_raw_image.py
+[How to export Portable model]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py
+[How to load exported Portable model?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py
+[How to visualize the best selected architecture?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/visualizations/visualize.py
+[MlpModule tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/mlp_module.py
+[CnnModule tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/cnn_module.py
+[Automated text classifier tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/task_modules/text/text.py
+[Automated tabular classifier tutorial]: https://github.com/jhfjhfj1/autokeras/tree/master/examples/task_modules/tabular
+[Object Detection tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/pretrained_models/object_detection/object_detection_example.py
 [TabularPreprocessor]: https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/tabular/tabular_preprocessor.py
-      
