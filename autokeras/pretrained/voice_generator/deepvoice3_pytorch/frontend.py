@@ -9,7 +9,6 @@ n_vocab = len(symbols)
 try:
     _arphabet = nltk.corpus.cmudict.dict()
 except:
-    import nltk
     nltk.download("cmudict")
     _arphabet = nltk.corpus.cmudict.dict()
 

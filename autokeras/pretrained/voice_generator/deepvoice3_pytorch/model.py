@@ -7,12 +7,8 @@ class MultiSpeakerTTSModel(nn.Module):
     """Attention seq2seq model + post processing network
     """
 
-    def __init__(self, seq2seq, postnet,
-                 mel_dim=80, linear_dim=513,
-                 n_speakers=1, speaker_embed_dim=16, padding_idx=None,
-                 trainable_positional_encodings=False,
-                 use_decoder_state_for_postnet_input=False,
-                 speaker_embedding_weight_std=0.01,
+    def __init__(self, seq2seq, postnet, mel_dim=80, linear_dim=513, n_speakers=1, speaker_embed_dim=16,
+                 trainable_positional_encodings=False, use_decoder_state_for_postnet_input=False,
                  freeze_embedding=False):
         super(MultiSpeakerTTSModel, self).__init__()
         self.seq2seq = seq2seq
@@ -37,7 +33,7 @@ class MultiSpeakerTTSModel(nn.Module):
 
     def forward(self, text_sequences, mel_targets=None, speaker_ids=None,
                 text_positions=None, frame_positions=None, input_lengths=None):
-        B = text_sequences.size(0)
+        b = text_sequences.size(0)
 
         speaker_embed = None
 
@@ -49,10 +45,10 @@ class MultiSpeakerTTSModel(nn.Module):
 
         # Reshape
         # (B, T, mel_dim)
-        mel_outputs = mel_outputs.view(B, -1, self.mel_dim)
+        mel_outputs = mel_outputs.view(b, -1, self.mel_dim)
 
         # Prepare postnet inputs
-        postnet_inputs = decoder_states.view(B, mel_outputs.size(1), -1)
+        postnet_inputs = decoder_states.view(b, mel_outputs.size(1), -1)
 
         # (B, T, linear_dim)
         # Convert coarse mel-spectrogram (or decoder hidden states) to
