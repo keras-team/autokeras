@@ -33,7 +33,7 @@ class Conv1d(nn.Conv1d):
             input_data = self.input_buffer
             if dilation > 1:
                 input_data = input_data[:, 0::dilation, :].contiguous()
-        conv_output = F.linear(input_data.view(bsz, -1), weight, self.bias)
+        conv_output = F.linear(conv_input.view(bsz, -1), weight, self.bias)
         return conv_output.view(bsz, 1, -1)
 
     def clear_buffer(self):
