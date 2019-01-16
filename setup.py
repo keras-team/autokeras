@@ -24,12 +24,12 @@ setup(
                       'nltk==3.3',
                       'lws==1.2',
                       'opencv-python==4.0.0.21'],
-    version='0.3.5',
+    version='0.3.6',
     description='AutoML for deep learning',
     author='DATA Lab at Texas A&M University',
     author_email='jhfjhfj1@gmail.com',
     url='http://autokeras.com',
-    download_url='https://github.com/jhfjhfj1/autokeras/archive/0.3.5.tar.gz',
+    download_url='https://github.com/jhfjhfj1/autokeras/archive/0.3.6.tar.gz',
     keywords=['AutoML', 'keras'],
     classifiers=[]
 )
