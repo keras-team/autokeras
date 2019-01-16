@@ -34,8 +34,7 @@ class SinusoidalEncoding(nn.Embedding):
         super(SinusoidalEncoding, self).__init__(num_embeddings, embedding_dim,
                                                  padding_idx=0,
                                                  *args, **kwargs)
-        self.weight.data = position_encoding_init(num_embeddings, embedding_dim,
-                                                  position_rate=1.0)
+        self.weight.data = position_encoding_init(num_embeddings, embedding_dim, position_rate=1.0)
 
     def forward(self, x, w=1.0):
         isscaler = np.isscalar(w)
@@ -107,7 +106,7 @@ class Conv1dGLU(nn.Module):
         else:
             self.speaker_proj = None
 
-    def forward(self, x):
+    def forward(self, x, speaker_embed=None):
         return self._forward(x, False)
 
     def incremental_forward(self, x):
@@ -118,7 +117,7 @@ class Conv1dGLU(nn.Module):
         x = F.dropout(x, p=self.dropout, training=self.training)
         if is_incremental:
             splitdim = -1
-            x = self.conv.incremental_forward(x)
+            x = self.conv.incremental_forward(x, )
         else:
             splitdim = 1
             x = self.conv(x)
@@ -131,4 +130,3 @@ class Conv1dGLU(nn.Module):
 
     def clear_buffer(self):
         self.conv.clear_buffer()
-

@@ -11,10 +11,8 @@ from .modules import SinusoidalEncoding, Conv1dGLU
 
 
 class Encoder(nn.Module):
-    def __init__(self, n_vocab, embed_dim, n_speakers, speaker_embed_dim,
-                 padding_idx=None, embedding_weight_std=0.1,
-                 convolutions=((64, 5, .1),) * 7,
-                 dropout=0.1, apply_grad_scaling=False):
+    def __init__(self, n_vocab, embed_dim, n_speakers, speaker_embed_dim, padding_idx=None, embedding_weight_std=0.1,
+                 convolutions=((64, 5, .1),) * 7, dropout=0.1, apply_grad_scaling=False):
         super(Encoder, self).__init__()
         self.dropout = dropout
         self.num_attention_layers = None
@@ -60,6 +58,8 @@ class Encoder(nn.Module):
         x = F.dropout(x, p=self.dropout, training=self.training)
 
         # expand speaker embedding for all time steps
+        speaker_embed_btc = None
+
         input_embedding = x
 
         # B x T x C -> B x C x T
@@ -67,7 +67,7 @@ class Encoder(nn.Module):
 
         # １D conv blocks
         for f in self.convolutions:
-            x = f(x) if isinstance(f, Conv1dGLU) else f(x)
+            x = f(x, speaker_embed_btc) if isinstance(f, Conv1dGLU) else f(x)
 
         # Back to B x T x C
         keys = x.transpose(1, 2)
@@ -130,19 +130,10 @@ class AttentionLayer(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, embed_dim, n_speakers, speaker_embed_dim,
-                 in_dim=80, r=5,
-                 max_positions=512,
-                 preattention=((128, 5, 1),) * 4,
-                 convolutions=((128, 5, 1),) * 4,
-                 attention=True, dropout=0.1,
-                 use_memory_mask=False,
-                 force_monotonic_attention=False,
-                 query_position_rate=1.0,
-                 key_position_rate=1.29,
-                 window_ahead=3,
-                 window_backward=1,
-                 ):
+    def __init__(self, embed_dim, n_speakers, speaker_embed_dim, in_dim=80, r=5, max_positions=512,
+                 preattention=((128, 5, 1),) * 4, convolutions=((128, 5, 1),) * 4, attention=True, dropout=0.1,
+                 use_memory_mask=False, force_monotonic_attention=False, query_position_rate=1.0,
+                 key_position_rate=1.29, window_ahead=3, window_backward=1):
         super(Decoder, self).__init__()
         self.dropout = dropout
         self.in_dim = in_dim
@@ -191,9 +182,7 @@ class Decoder(nn.Module):
                           dilation=dilation, dropout=dropout, std_mul=std_mul,
                           residual=False))
             self.attention.append(
-                AttentionLayer(out_channels, embed_dim,
-                               dropout=dropout,
-                               window_ahead=window_ahead,
+                AttentionLayer(out_channels, embed_dim, dropout=dropout, window_ahead=window_ahead,
                                window_backward=window_backward)
                 if attention[i] else None)
             in_channels = out_channels
@@ -256,31 +245,32 @@ class Decoder(nn.Module):
 
             if t > 0:
                 current_input = outputs[-1]
-            output = current_input
-            output = F.dropout(output, p=self.dropout, training=self.training)
+            output_tensor = current_input
+            output_tensor = F.dropout(output_tensor, p=self.dropout, training=self.training)
 
             # Prenet
             for f in self.preattention:
                 if isinstance(f, Conv1dGLU):
-                    output = f.incremental_forward(output)
+                    output_tensor = f.incremental_forward(output_tensor)
                 else:
                     try:
-                        output = f.incremental_forward(output)
+                        output_tensor = f.incremental_forward(output_tensor, )
                     except AttributeError:
-                        output = f(output)
+                        output_tensor = f(output_tensor)
 
             # Casual convolutions + Multi-hop attentions
             ave_alignment = None
             for idx, (f, attention) in enumerate(zip(self.convolutions,
                                                      self.attention)):
-                residual = output
+                residual = output_tensor
                 if isinstance(f, Conv1dGLU):
-                    output = f.incremental_forward(output)
+                    output_tensor = f.incremental_forward(output_tensor)
 
                 if attention is not None:
                     assert isinstance(f, Conv1dGLU)
-                    output = output + frame_pos_embed
-                    output, alignment = attention(output, (keys, values), last_attended=last_attended[idx])
+                    output_tensor = output_tensor + frame_pos_embed
+                    output_tensor, alignment = attention(output_tensor, (keys, values),
+                                                         last_attended=last_attended[idx])
                     if self.force_monotonic_attention[idx]:
                         last_attended[idx] = alignment.max(-1)[1].view(-1).data[0]
                     if ave_alignment is None:
@@ -290,15 +280,15 @@ class Decoder(nn.Module):
 
                 # residual
                 if isinstance(f, Conv1dGLU):
-                    output = (output + residual) * math.sqrt(0.5)
+                    output_tensor = (output_tensor + residual) * math.sqrt(0.5)
 
-            decoder_state = output
-            output = self.last_conv.incremental_forward(output)
+            decoder_state = output_tensor
+            output_tensor = self.last_conv.incremental_forward(output_tensor, )
             ave_alignment = ave_alignment.div_(num_attention_layers)
 
             # Ooutput & done flag predictions
-            output = F.sigmoid(output)
-            done = F.sigmoid(self.fc(output))
+            output = F.sigmoid(output_tensor)
+            done = F.sigmoid(self.fc(output_tensor))
 
             decoder_states += [decoder_state]
             outputs += [output]

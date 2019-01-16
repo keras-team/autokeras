@@ -7,11 +7,8 @@ class MultiSpeakerTTSModel(nn.Module):
     """Attention seq2seq model + post processing network
     """
 
-    def __init__(self, seq2seq, postnet,
-                 mel_dim=80, linear_dim=513,
-                 n_speakers=1, speaker_embed_dim=16,
-                 trainable_positional_encodings=False,
-                 use_decoder_state_for_postnet_input=False,
+    def __init__(self, seq2seq, postnet, mel_dim=80, linear_dim=513, n_speakers=1, speaker_embed_dim=16,
+                 trainable_positional_encodings=False, use_decoder_state_for_postnet_input=False,
                  freeze_embedding=False):
         super(MultiSpeakerTTSModel, self).__init__()
         self.seq2seq = seq2seq
