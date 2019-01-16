@@ -142,8 +142,6 @@ class Decoder(nn.Module):
                  key_position_rate=1.29,
                  window_ahead=3,
                  window_backward=1,
-                 key_projection=True,
-                 value_projection=True,
                  ):
         super(Decoder, self).__init__()
         self.dropout = dropout
@@ -219,7 +217,7 @@ class Decoder(nn.Module):
         if inputs is None:
             assert text_positions is not None
             self.start_fresh_sequence()
-            outputs = self.incremental_forward(encoder_out, text_positions, speaker_embed)
+            outputs = self.incremental_forward(encoder_out, text_positions)
             return outputs
 
         # Grouping multiple frames if necessary

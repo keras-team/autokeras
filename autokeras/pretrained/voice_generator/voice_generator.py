@@ -180,9 +180,7 @@ def build_model():
         max_positions=Hparams.max_positions,
         freeze_embedding=Hparams.freeze_embedding,
         window_ahead=Hparams.window_ahead,
-        window_backward=Hparams.window_backward,
-        key_projection=Hparams.key_projection,
-        value_projection=Hparams.value_projection,
+        window_backward=Hparams.window_backward
     )
     return model
 

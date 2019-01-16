@@ -18,8 +18,6 @@ def deepvoice3(n_vocab, embed_dim=256, mel_dim=80, linear_dim=513, r=4,
                freeze_embedding=False,
                window_ahead=3,
                window_backward=1,
-               key_projection=False,
-               value_projection=False,
                ):
     """Build deepvoice3
     """
@@ -54,8 +52,6 @@ def deepvoice3(n_vocab, embed_dim=256, mel_dim=80, linear_dim=513, r=4,
         use_memory_mask=use_memory_mask,
         window_ahead=window_ahead,
         window_backward=window_backward,
-        key_projection=key_projection,
-        value_projection=value_projection,
     )
 
     seq2seq = AttentionSeq2Seq(encoder, decoder)
