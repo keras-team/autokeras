@@ -12,16 +12,16 @@ class Conv1d(nn.Conv1d):
         self.clear_buffer()
         self._linearized_weight = None
 
-    def incremental_forward(self, conv_input):
+    def incremental_forward(self, input_data):
 
         # reshape weight
         weight = self._get_linearized_weight()
         kw = self.kernel_size[0]
         dilation = self.dilation[0]
 
-        bsz = conv_input.size(0)  # conv_input: bsz x len x dim
+        bsz = input_data.size(0)  # conv_input: bsz x len x dim
         if kw > 1:
-            input_data = conv_input.data
+            input_data = input_data.data
             if self.input_buffer is None:
                 self.input_buffer = input_data.new(bsz, kw + (kw - 1) * (dilation - 1), input_data.size(2))
                 self.input_buffer.zero_()
@@ -33,8 +33,8 @@ class Conv1d(nn.Conv1d):
             input_data = self.input_buffer
             if dilation > 1:
                 input_data = input_data[:, 0::dilation, :].contiguous()
-        conv_output = F.linear(input_data.view(bsz, -1), weight, self.bias)
-        return conv_output.view(bsz, 1, -1)
+        input_data = F.linear(input_data.view(bsz, -1), weight, self.bias)
+        return input_data.view(bsz, 1, -1)
 
     def clear_buffer(self):
         self.input_buffer = None
