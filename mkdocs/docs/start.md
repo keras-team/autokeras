@@ -81,6 +81,33 @@ The second argument `images_path` is the path to the directory containing all th
 The returned values `x_train` and `y_train` are the numpy arrays,
 which can be directly feed into the `fit` function of `ImageClassifier`.
 
+This CSV file for train or test can be created from folders containing images of a specific class (meaning label):
+```
+train
+└───class_1
+│   │   class_1_image_1.png
+│   │   class_1_image_2.png
+|   |   ...
+└───class_2
+    │   class_2_image_1.png
+    │   class_2_image_2.png
+    |   ...
+```
+The code below shows an example of how to create the CSV:
+```
+train_dir = 'train' # Path to the train directory
+class_dirs = [i for i in os.listdir(path=train_dir) if os.path.isdir(os.path.join(train_dir, i))]
+ with open('train/label.csv', 'w') as train_csv:
+    fieldnames = ['File Name', 'Label']
+    writer = csv.DictWriter(train_csv, fieldnames=fieldnames)
+    writer.writeheader()
+    label = 0
+    for current_class in class_dirs:
+        for image in os.listdir(os.path.join(train_dir, current_class)):
+            writer.writerow({'File Name': str(image), 'Label':label})
+        label += 1
+    train_csv.close()
+```
 
 
 
