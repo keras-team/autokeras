@@ -310,6 +310,9 @@ def mock_train(**kwargs):
     sleep(0.1)
     return 1, 0
 
+def mock_exception_handling_train(**kwargs):
+    str(kwargs)
+    raise Exception
 
 def mock_out_of_memory_train(**kwargs):
     str(kwargs)
