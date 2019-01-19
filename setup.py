@@ -7,7 +7,7 @@ setup(
     install_requires=['scipy==1.2.0',
                       'torch==0.4.1',
                       'torchvision==0.2.1',
-                      'numpy==1.15.4',
+                      'numpy==1.16.0',
                       'keras==2.2.4',
                       'scikit-learn==0.20.2',
                       'scikit-image==0.14.2',
