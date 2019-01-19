@@ -356,7 +356,8 @@ def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, 
         if q:
             q.put((None, None, None))
         return None, None, None
-    except TimeoutError:
+    except TimeoutError as exp:
+        logging.warning("TimeoutError occurred at train() : {0}".format(str(exp)))
         if q:
             q.put((None, None, None))
         return None, None, None
@@ -364,5 +365,7 @@ def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, 
         logging.warning("Exception occurred at train() : {0}".format(str(exp)))
         if verbose:
             print("Exception occurred at train() : {0}".format(str(exp)))
-        sys.exc_clear()
+        if q:
+            q.put((None, None, None))
+        return None, None, None
 

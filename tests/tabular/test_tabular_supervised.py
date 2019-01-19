@@ -7,6 +7,8 @@ from tests.common import clean_dir, TEST_TEMP_DIR
 
 
 def test_fit_evalute_predict_binary_classification():
+    train_x = None
+    train_y = None
     clean_dir(TEST_TEMP_DIR)
     clf = TabularClassifier(path=TEST_TEMP_DIR)
     nsample = 59
@@ -39,7 +41,7 @@ def test_fit_evalute_predict_multiclass_classification():
     clean_dir(TEST_TEMP_DIR)
     clf = TabularClassifier(path=TEST_TEMP_DIR)
     clf.verbose = True
-    nsample = 10000
+    nsample = 1000
     [ntime, nnum, ncat] = [11, 15, 13]
     datainfo = np.array(['TIME'] * ntime + ['NUM'] * nnum + ['CAT'] * ncat)
     x_num = np.random.random([nsample, nnum])
@@ -58,7 +60,7 @@ def test_fit_evalute_predict_multiclass_classification():
 def test_fit_predict_evalute_regression():
     clean_dir(TEST_TEMP_DIR)
     clf = TabularRegressor(path=TEST_TEMP_DIR)
-    nsample = 10000
+    nsample = 1000
     [ntime, nnum, ncat] = [3, 15, 3]
     datainfo = np.array(['TIME'] * ntime + ['NUM'] * nnum + ['CAT'] * ncat)
     x_num = np.random.random([nsample, nnum])
