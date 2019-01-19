@@ -280,6 +280,7 @@ class MockProcess(object):
                 if self.count > 8:
                     return 1
                 return 0
+
         # (0.5, 0.8, get_pooling_model())
         return MockQueue()
 
@@ -311,10 +312,14 @@ def mock_train(**kwargs):
     return 1, 0
 
 
+def mock_exception_handling_train(**kwargs):
+    str(kwargs)
+    raise Exception
+
+
 def mock_out_of_memory_train(**kwargs):
     str(kwargs)
     raise RuntimeError('CUDA: out of memory.')
-
 
 # def mock_nvidia_smi_output(*arg, **kwargs):
 #     return \

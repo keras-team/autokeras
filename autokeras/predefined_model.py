@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import torch
 from abc import ABC, abstractmethod
@@ -13,6 +12,7 @@ from autokeras.search import train
 from autokeras.constant import Constant
 from autokeras.preprocessor import ImageDataTransformer, OneHotEncoder
 
+
 class PredefinedModel(ABC):
     """The base class for the predefined model without architecture search
 
@@ -24,6 +24,7 @@ class PredefinedModel(ABC):
         verbose: A boolean of whether the search process will be printed to stdout.
         path: A string. The path to a directory, where the intermediate results are saved.
     """
+
     def __init__(self, y_encoder=OneHotEncoder, data_transformer_class=ImageDataTransformer,
                  verbose=False,
                  path=None):
@@ -81,7 +82,7 @@ class PredefinedModel(ABC):
                                                             test_size=validation_set_size,
                                                             random_state=42)
 
-        #initialize data_transformer
+        # initialize data_transformer
         self.data_transformer = self.data_transformer_class(x_train)
         # Wrap the data into DataLoaders
         train_loader = self.data_transformer.transform_train(x_train, y_train)
@@ -121,14 +122,6 @@ class PredefinedModel(ABC):
         """
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_predict, y_test)
-
-    def save(self, model_path):
-        """Save the model as keras format.
-
-        Args:
-            model_path: the path to save model.
-        """
-        self.graph.produce_keras_model().save(model_path)
 
 
 class PredefinedResnet(PredefinedModel):
