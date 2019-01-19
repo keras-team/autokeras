@@ -183,9 +183,6 @@ class Searcher:
 
         except (TimeoutError, queue.Empty) as e:
             raise TimeoutError from e
-        except Exception as exp:
-            logging.warning("Exception faced at mp_search : {0}".format(str(exp)))
-            pass
         finally:
             # terminate and join the subprocess to prevent any resource leak
             p.terminate()
@@ -207,9 +204,6 @@ class Searcher:
 
         except TimeoutError as e:
             raise TimeoutError from e
-        except Exception as exp:
-            logging.warning("Exception faced at sp_search : {0}".format(str(exp)))
-            pass
 
     def _search_common(self, mp_queue=None):
         search_results = []
