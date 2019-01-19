@@ -14,7 +14,7 @@ setup(
                       'tqdm==4.29.1',
                       'tensorflow==1.12.0',
                       'imageio==2.4.1',
-                      'requests==2.20.1',
+                      'requests==2.21.0',
                       'lightgbm==2.2.2',
                       'pandas==0.23.4',
                       'librosa==0.6.2',
