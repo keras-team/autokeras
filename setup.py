@@ -12,7 +12,7 @@ setup(
                       'scikit-learn==0.20.1',
                       'scikit-image==0.14.1',
                       'tqdm==4.29.0',
-                      'tensorflow==1.10.0',
+                      'tensorflow==1.12.0',
                       'imageio==2.4.1',
                       'requests==2.20.1',
                       'lightgbm==2.2.2',
