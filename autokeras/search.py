@@ -4,12 +4,12 @@ import queue
 import re
 import sys
 import time
-from datetime import datetime
-from abc import abstractmethod
-
 import torch
 import torch.multiprocessing as mp
 
+
+from abc import abstractmethod
+from datetime import datetime
 from autokeras.bayesian import BayesianOptimizer
 from autokeras.constant import Constant
 from autokeras.nn.model_trainer import ModelTrainer
@@ -85,10 +85,12 @@ class Searcher:
         self.training_queue = []
         self.x_queue = []
         self.y_queue = []
+
         logging.basicConfig(filename=os.path.join(self.path, datetime.now().strftime('run_%d_%m_%Y : _%H_%M.log')),
                             format='%(asctime)s - %(filename)s - %(message)s', level=logging.DEBUG)
 
         self._timeout = None
+
 
     def load_model_by_id(self, model_id):
         return pickle_from_file(os.path.join(self.path, str(model_id) + '.graph'))
@@ -206,7 +208,7 @@ class Searcher:
         except TimeoutError as e:
             raise TimeoutError from e
         except Exception as exp:
-            logging.warning("Exception faced at mp_search : {0}".format(str(exp)))
+            logging.warning("Exception faced at sp_search : {0}".format(str(exp)))
             pass
 
     def _search_common(self, mp_queue=None):
@@ -369,3 +371,4 @@ def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, 
         if verbose:
             print("Exception occurred at train() : {0}".format(str(exp)))
         sys.exc_clear()
+
