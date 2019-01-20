@@ -150,6 +150,46 @@ def download_file_with_extract(file_link, file_path, extract_path):
     print("file already extracted in the path %s" % extract_path)
 
 
+def get_confirm_token(response):
+    """If there is a warning when download is requested, return the token value. Otherwise, return None."""
+    for key, value in response.cookies.items():
+        if key.startswith('download_warning'):
+            return value
+
+    return None
+
+
+def save_response_content(response, destination):
+    """Save the HTTP GET response of the download request in the destination."""
+    chunk_size = 32768
+
+    with open(destination, "wb") as f:
+        for chunk in response.iter_content(chunk_size):
+            if chunk:
+                f.write(chunk)
+
+
+def download_file_from_google_drive(file_id, destination):
+    """Download a file with the specified Google Drive Id and save it to the destination."""
+    if not os.path.exists(destination):
+        print("Downloading file from Google Drive started.")
+
+        url = "https://docs.google.com/uc?export=download"
+
+        session = requests.Session()
+
+        response = session.get(url, params={'id': file_id}, stream=True)
+        token = get_confirm_token(response)
+
+        if token:
+            params = {'id': file_id, 'confirm': token}
+            response = session.get(url, params=params, stream=True)
+
+        save_response_content(response, destination)
+
+        print("Downloading file from Google Drive ended.")
+
+
 def assert_search_space(search_space):
     grid = search_space
     value_list = []
