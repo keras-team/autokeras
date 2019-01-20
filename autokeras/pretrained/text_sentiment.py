@@ -73,7 +73,7 @@ class TextSentiment(Pretrained):
 
         download_file_from_google_drive(TEXT_SENTIMENT_FILE_ID, output_model_file)
 
-        model_state_dict = torch.load(output_model_file)
+        model_state_dict = torch.load(output_model_file, map_location=lambda storage, loc: storage)
         self.model = BertForSequenceClassification.from_pretrained('bert-base-uncased', state_dict=model_state_dict)
         self.model.to(self.device)
 
