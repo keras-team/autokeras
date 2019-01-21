@@ -36,7 +36,7 @@ Here is a short example of using the package.
 
 ## Community
 
-You can use Gitter to communicate with people who also interested in Auto-Keras.
+You can use Gitter to communicate with people who are also interested in Auto-Keras.
 
 <a href="https://gitter.im/autokeras/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/autokeras/Lobby.svg" alt="Join the chat at https://gitter.im/autokeras/Lobby" style="width: 92px"></a>
 
