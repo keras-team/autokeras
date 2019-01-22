@@ -95,3 +95,7 @@ class Constant:
     SYS_LINUX = 'linux'
     SYS_WINDOWS = 'windows'
     SYS_GOOGLE_COLAB = 'goog_colab'
+
+    # Google drive downloader
+    CHUNK_SIZE = 32768
+    DOWNLOAD_URL = "https://docs.google.com/uc?export=download"
