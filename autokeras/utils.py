@@ -133,7 +133,7 @@ def download_file(file_link, file_path):
 def download_model(model_link, model_file_name):
     temp_path = temp_path_generator()
     ensure_dir(temp_path)
-    model_path = f'{temp_path}/{model_file_name}'
+    model_path = '{temp_path}/{model_file_name}'
     download_file(model_link, model_path)
     return model_path
 
