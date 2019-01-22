@@ -5,23 +5,22 @@
 # modified by: Wuyang Chen, Haifeng Jin
 # ----------------------------------
 
-from autokeras.pretrained.base import Pretrained
-from autokeras.utils import download_model, get_device
-from autokeras.constant import Constant
-import numpy as np
-import cv2
-from matplotlib import pyplot as plt
-
+import os
 from itertools import product as product
 from math import sqrt as sqrt
 
+import cv2
+import numpy as np
 import torch
-from torch.nn import functional
+from matplotlib import pyplot as plt
 from torch import nn as nn
 from torch.autograd import Variable, Function
+from torch.nn import functional
 from torch.nn import init as init
 
-import os
+from autokeras.constant import Constant
+from autokeras.pretrained.base import Pretrained
+from autokeras.utils import get_device, temp_path_generator, ensure_dir, download_file_from_google_drive
 
 """VOC Dataset Classes
 
@@ -518,8 +517,13 @@ class ObjectDetector(Pretrained):
         return SSD(phase, size, base_, extras_, head_, num_classes, self.device)
 
     def load(self, model_path=None):
+
         if model_path is None:
-            model_path = download_model(Constant.OBJECT_DETECTOR['MODEL_LINK'], Constant.OBJECT_DETECTOR['MODEL_NAME'])
+            model_file_name = Constant.OBJECT_DETECTOR['MODEL_NAME']
+            temp_path = temp_path_generator()
+            ensure_dir(temp_path)
+            model_path = f'{temp_path}/{model_file_name}'
+            download_file_from_google_drive(file_id=Constant.OBJECT_DETECTOR['MODEL_GOOGLE_ID'], dest_path=model_path)
         # load net
         num_classes = len(VOC_CLASSES) + 1  # +1 for background
         self.model = self._build_ssd('test', 300, num_classes)  # initialize SSD
