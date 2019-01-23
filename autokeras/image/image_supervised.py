@@ -34,8 +34,8 @@ def read_images(img_file_names, images_dir_path):
     if os.path.isdir(images_dir_path):
         pool = Pool(processes=cpu_count())
         x_train = pool.map(_image_to_array, img_file_names)
-        pool.join()
         pool.close()
+        pool.join()
     else:
         raise ValueError("Directory containing images does not exist")
     return np.asanyarray(x_train)
