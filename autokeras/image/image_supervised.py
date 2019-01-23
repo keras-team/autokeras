@@ -1,6 +1,7 @@
 import os
 from abc import ABC
 import numpy as np
+from multiprocessing import Pool, cpu_count
 
 from autokeras.constant import Constant
 from autokeras.nn.loss_function import classification_loss, regression_loss
@@ -19,17 +20,22 @@ def read_images(img_file_names, images_dir_path):
         img_file_names: List containing images names.
         images_dir_path: Path to the directory containing images.
     """
+    def _image_to_array(img_file):
+        img_path = os.path.join(images_dir_path, img_file)
+        if os.path.exists(img_path):
+            img = read_image(img_path)
+            if len(img.shape) < 3:
+                img = img[..., np.newaxis]
+            return img
+        else:
+            raise ValueError("%s image does not exist" % img_file)
+
     x_train = []
     if os.path.isdir(images_dir_path):
-        for img_file in img_file_names:
-            img_path = os.path.join(images_dir_path, img_file)
-            if os.path.exists(img_path):
-                img = read_image(img_path)
-                if len(img.shape) < 3:
-                    img = img[..., np.newaxis]
-                x_train.append(img)
-            else:
-                raise ValueError("%s image does not exist" % img_file)
+        pool = Pool(processes=cpu_count())
+        x_train = pool.map(_image_to_array, img_file_names)
+        pool.join()
+        pool.close()
     else:
         raise ValueError("Directory containing images does not exist")
     return np.asanyarray(x_train)
@@ -112,7 +118,8 @@ class ImageSupervised(DeepSupervised, ABC):
 
     def init_transformer(self, x):
         if self.data_transformer is None:
-            self.data_transformer = ImageDataTransformer(x, augment=self.augment)
+            self.data_transformer = ImageDataTransformer(
+                x, augment=self.augment)
 
     def preprocess(self, x):
         return resize_image_data(x, self.resize_shape)
