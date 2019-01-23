@@ -220,21 +220,3 @@ def get_from_cache(url: str, cache_dir: Union[str, Path] = None) -> str:
 
     return cache_path
 
-
-def read_set_from_file(filename: str) -> Set[str]:
-    '''
-    Extract a de-duped collection (set) of text from a file.
-    Expected file format is one item per line.
-    '''
-    collection = set()
-    with open(filename, 'r', encoding='utf-8') as file_:
-        for line in file_:
-            collection.add(line.rstrip())
-    return collection
-
-
-def get_file_extension(path: str, dot=True, lower: bool = True):
-    ext = os.path.splitext(path)[1]
-    ext = ext if dot else ext[1:]
-    return ext.lower() if lower else ext
-
