@@ -25,7 +25,7 @@ class InputFeatures(object):
 def convert_examples_to_features(examples, max_seq_length, tokenizer):
 
     features = []
-    for (ex_index, example) in enumerate(examples):
+    for (_, example) in enumerate(examples):
         tokens_a = tokenizer.tokenize(example)
 
         if len(tokens_a) > max_seq_length - 2:
@@ -43,9 +43,11 @@ def convert_examples_to_features(examples, max_seq_length, tokenizer):
         input_mask += padding
         segment_ids += padding
 
-        assert len(input_ids) == max_seq_length
-        assert len(input_mask) == max_seq_length
-        assert len(segment_ids) == max_seq_length
+        # assert len(input_ids) == max_seq_length
+        # assert len(input_mask) == max_seq_length
+        # assert len(segment_ids) == max_seq_length
+        if len(input_ids) != max_seq_length or len(input_mask) != max_seq_length or len(segment_ids) != max_seq_length:
+            raise AssertionError()
 
         features.append(
                 InputFeatures(input_ids=input_ids,
