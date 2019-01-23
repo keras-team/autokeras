@@ -12,20 +12,19 @@ from autokeras.utils import pickle_to_file, \
     read_csv_file, read_image, compute_image_resize_params, resize_image_data
 
 
-def _image_to_array(img_file):
+def _image_to_array(img_path):
     """Read the image from the path and return image object.
 
     Args:
-        img_file: image file name in images_dir_path.
+        img_path: image file name in images_dir_path.
     """
-    img_path = os.path.join(images_dir_path, img_file)
     if os.path.exists(img_path):
         img = read_image(img_path)
         if len(img.shape) < 3:
             img = img[..., np.newaxis]
         return img
     else:
-        raise ValueError("%s image does not exist" % img_file)
+        raise ValueError("%s image does not exist" % img_path)
 
 
 def read_images(img_file_names, images_dir_path):
@@ -36,11 +35,13 @@ def read_images(img_file_names, images_dir_path):
         img_file_names: List containing images names.
         images_dir_path: Path to the directory containing images.
     """
+    img_paths = [os.path.join(images_dir_path, img_file)
+                 for img_file in img_file_names]
 
     x_train = []
     if os.path.isdir(images_dir_path):
         pool = Pool(processes=cpu_count())
-        x_train = pool.map(_image_to_array, img_file_names)
+        x_train = pool.map(_image_to_array, img_paths)
         pool.close()
         pool.join()
     else:
