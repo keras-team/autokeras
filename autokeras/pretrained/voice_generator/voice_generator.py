@@ -1,18 +1,15 @@
+import lws
 import os
 
+import librosa
 import numpy as np
 import torch
-import lws
 from scipy import signal
 
-from autokeras.pretrained.base import Pretrained
 from autokeras.constant import Constant
-from autokeras.utils import temp_path_generator, ensure_dir, get_device
-import librosa
-
+from autokeras.pretrained.base import Pretrained
 from autokeras.pretrained.voice_generator.deepvoice3_pytorch import frontend, builder
-
-from autokeras.pretrained.voice_generator.google_drive_download import GoogleDriveDownloader as gdd
+from autokeras.utils import temp_path_generator, ensure_dir, get_device, download_file_from_google_drive
 
 
 # NOTE: If you want full control for model architecture. please take a look
@@ -269,8 +266,8 @@ class VoiceGenerator(Pretrained):
         # This can be changed directly use download_file method when the file is stored in server
         if not os.path.exists(self.checkpoint_path) or self.overwrite:
             checkpoint_google_id = Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_GOOGLE_DRIVE_ID
-            gdd.download_file_from_google_drive(file_id=checkpoint_google_id, dest_path=self.checkpoint_path,
-                                                overwrite=self.overwrite)
+            download_file_from_google_drive(file_id=checkpoint_google_id, dest_path=self.checkpoint_path,
+                                            overwrite=self.overwrite)
 
     def generate(self, text, path=None):
         waveform, alignment, spectrogram, mel = self.tts(text)
