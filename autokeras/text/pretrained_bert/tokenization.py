@@ -194,7 +194,7 @@ class BasicTokenizer(object):
                 output[-1].append(char)
             i += 1
         return ["".join(x) for x in output]
-    
+
     @classmethod
     def _tokenize_chinese_chars(self, text):
         """Adds whitespace around any CJK character."""
