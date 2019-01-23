@@ -11,7 +11,7 @@ import tempfile
 import json
 from urllib.parse import urlparse
 from pathlib import Path
-from typing import Optional, Tuple, Union, IO, Callable, Set
+from typing import Optional, Tuple, Union, IO, Callable
 from hashlib import sha256
 from functools import wraps
 

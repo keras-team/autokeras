@@ -4,5 +4,5 @@ text_cls = TextSentiment()
 
 polarity = text_cls.predict("The model is working well..")
 
-print("Polarity of the input sentence is (sentiment is +ve if polarity > 0.5, otherwise -ve) : ", polarity)
+print("Polarity of the input sentence is (sentiment is +ve if polarity > 0.5) : ", polarity)
 

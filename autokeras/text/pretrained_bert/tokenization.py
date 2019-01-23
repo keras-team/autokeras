@@ -163,6 +163,7 @@ class BasicTokenizer(object):
         output_tokens = whitespace_tokenize(" ".join(split_tokens))
         return output_tokens
 
+    @classmethod
     def _run_strip_accents(self, text):
         """Strips accents from a piece of text."""
         text = unicodedata.normalize("NFD", text)
@@ -174,6 +175,7 @@ class BasicTokenizer(object):
             output.append(char)
         return "".join(output)
 
+    @classmethod
     def _run_split_on_punc(self, text):
         """Splits punctuation on a piece of text."""
         chars = list(text)
@@ -194,6 +196,7 @@ class BasicTokenizer(object):
 
         return ["".join(x) for x in output]
     
+    @classmethod
     def _tokenize_chinese_chars(self, text):
         """Adds whitespace around any CJK character."""
         output = []
@@ -207,6 +210,7 @@ class BasicTokenizer(object):
                 output.append(char)
         return "".join(output)
 
+    @classmethod
     def _is_chinese_char(self, cp):
         """Checks whether CP is the codepoint of a CJK character."""
         # This defines a "chinese character" as anything in the CJK Unicode block:
@@ -228,7 +232,8 @@ class BasicTokenizer(object):
             return True
     
         return False
-    
+
+    @classmethod
     def _clean_text(self, text):
         """Performs invalid character removal and whitespace cleanup on text."""
         output = []

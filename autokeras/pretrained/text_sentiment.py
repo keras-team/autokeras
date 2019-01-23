@@ -43,9 +43,6 @@ def convert_examples_to_features(examples, max_seq_length, tokenizer):
         input_mask += padding
         segment_ids += padding
 
-        # assert len(input_ids) == max_seq_length
-        # assert len(input_mask) == max_seq_length
-        # assert len(segment_ids) == max_seq_length
         if len(input_ids) != max_seq_length or len(input_mask) != max_seq_length or len(segment_ids) != max_seq_length:
             raise AssertionError()
 
@@ -79,9 +76,9 @@ class TextSentiment(Pretrained):
         self.model = BertForSequenceClassification.from_pretrained('bert-base-uncased', state_dict=model_state_dict)
         self.model.to(self.device)
 
-    def predict(self, input_text):
+    def predict(self, x_predict):
 
-        eval_features = convert_examples_to_features([input_text], 128, self.tokenizer)
+        eval_features = convert_examples_to_features([x_predict], 128, self.tokenizer)
 
         all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
         all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
