@@ -7,8 +7,7 @@ import numpy as np
 from torch.nn import functional as F
 
 
-def position_encoding_init(n_position, d_pos_vec, position_rate=1.0,
-                           sinusoidal=True):
+def position_encoding_init(n_position, d_pos_vec, position_rate=1.0):
     """Init the sinusoid position encoding table """
 
     # keep dim 0 for padding token position encoding zero vector
@@ -35,9 +34,7 @@ class SinusoidalEncoding(nn.Embedding):
         super(SinusoidalEncoding, self).__init__(num_embeddings, embedding_dim,
                                                  padding_idx=0,
                                                  *args, **kwargs)
-        self.weight.data = position_encoding_init(num_embeddings, embedding_dim,
-                                                  position_rate=1.0,
-                                                  sinusoidal=False)
+        self.weight.data = position_encoding_init(num_embeddings, embedding_dim, position_rate=1.0)
 
     def forward(self, x, w=1.0):
         isscaler = np.isscalar(w)
@@ -50,7 +47,7 @@ class SinusoidalEncoding(nn.Embedding):
                 self.norm_type, self.scale_grad_by_freq, self.sparse)
 
 
-def Linear(in_features, out_features, dropout=0):
+def linear(in_features, out_features, dropout=0):
     """Weight-normalized Linear layer (input: N x T x C)"""
     m = nn.Linear(in_features, out_features)
     m.weight.data.normal_(mean=0, std=math.sqrt((1 - dropout) / in_features))
@@ -58,13 +55,13 @@ def Linear(in_features, out_features, dropout=0):
     return nn.utils.weight_norm(m)
 
 
-def Embedding(num_embeddings, embedding_dim, padding_idx, std=0.01):
+def embedding(num_embeddings, embedding_dim, padding_idx, std=0.01):
     m = nn.Embedding(num_embeddings, embedding_dim, padding_idx=padding_idx)
     m.weight.data.normal_(0, std)
     return m
 
 
-def Conv1d(in_channels, out_channels, kernel_size, dropout=0, std_mul=4.0, **kwargs):
+def conv1d(in_channels, out_channels, kernel_size, dropout=0, std_mul=4.0, **kwargs):
     from .conv import Conv1d
     m = Conv1d(in_channels, out_channels, kernel_size, **kwargs)
     std = math.sqrt((std_mul * (1.0 - dropout)) / (m.kernel_size[0] * in_channels))
@@ -73,8 +70,8 @@ def Conv1d(in_channels, out_channels, kernel_size, dropout=0, std_mul=4.0, **kwa
     return nn.utils.weight_norm(m)
 
 
-def ConvTranspose1d(in_channels, out_channels, kernel_size, dropout=0,
-                    std_mul=1.0, **kwargs):
+def conv_transpose1d(in_channels, out_channels, kernel_size, dropout=0,
+                     std_mul=1.0, **kwargs):
     m = nn.ConvTranspose1d(in_channels, out_channels, kernel_size, **kwargs)
     std = math.sqrt((std_mul * (1.0 - dropout)) / (m.kernel_size[0] * in_channels))
     m.weight.data.normal_(mean=0, std=std)
@@ -101,26 +98,26 @@ class Conv1dGLU(nn.Module):
                 padding = (kernel_size - 1) // 2 * dilation
         self.causal = causal
 
-        self.conv = Conv1d(in_channels, 2 * out_channels, kernel_size,
+        self.conv = conv1d(in_channels, 2 * out_channels, kernel_size,
                            dropout=dropout, padding=padding, dilation=dilation,
                            *args, **kwargs)
         if n_speakers > 1:
-            self.speaker_proj = Linear(speaker_embed_dim, out_channels)
+            self.speaker_proj = linear(speaker_embed_dim, out_channels)
         else:
             self.speaker_proj = None
 
     def forward(self, x, speaker_embed=None):
-        return self._forward(x, speaker_embed, False)
+        return self._forward(x, False)
 
-    def incremental_forward(self, x, speaker_embed=None):
-        return self._forward(x, speaker_embed, True)
+    def incremental_forward(self, x):
+        return self._forward(x, True)
 
-    def _forward(self, x, speaker_embed, is_incremental):
+    def _forward(self, x, is_incremental):
         residual = x
         x = F.dropout(x, p=self.dropout, training=self.training)
         if is_incremental:
             splitdim = -1
-            x = self.conv.incremental_forward(x)
+            x = self.conv.incremental_forward(x, )
         else:
             splitdim = 1
             x = self.conv(x)
@@ -133,4 +130,3 @@ class Conv1dGLU(nn.Module):
 
     def clear_buffer(self):
         self.conv.clear_buffer()
-

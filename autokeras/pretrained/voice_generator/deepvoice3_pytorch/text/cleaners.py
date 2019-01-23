@@ -1,4 +1,4 @@
-'''
+"""
 Cleaners are transformations that run over the input text at both training and eval time.
 
 Cleaners can be selected by passing a comma-delimited list of cleaner names as the "cleaners"
@@ -8,7 +8,7 @@ hyperparameter. Some cleaners are English-specific. You'll typically want to use
      the Unidecode library (https://pypi.python.org/pypi/Unidecode)
   3. "basic_cleaners" if you do not want to transliterate (in this case, you should also update
      the symbols in symbols.py to match your data).
-'''
+"""
 
 import re
 
@@ -71,7 +71,7 @@ def add_punctuation(text):
 
 
 def english_cleaners(text):
-    '''Pipeline for English text, including number and abbreviation expansion.'''
+    """Pipeline for English text, including number and abbreviation expansion."""
     text = convert_to_ascii(text)
     text = add_punctuation(text)
     text = lowercase(text)

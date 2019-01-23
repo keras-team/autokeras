@@ -6,22 +6,20 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .modules import Conv1d, ConvTranspose1d, Embedding, Linear
+from .modules import conv1d, conv_transpose1d, embedding, linear
 from .modules import SinusoidalEncoding, Conv1dGLU
 
 
 class Encoder(nn.Module):
-    def __init__(self, n_vocab, embed_dim, n_speakers, speaker_embed_dim,
-                 padding_idx=None, embedding_weight_std=0.1,
-                 convolutions=((64, 5, .1),) * 7,
-                 max_positions=512, dropout=0.1, apply_grad_scaling=False):
+    def __init__(self, n_vocab, embed_dim, n_speakers, speaker_embed_dim, padding_idx=None, embedding_weight_std=0.1,
+                 convolutions=((64, 5, .1),) * 7, dropout=0.1, apply_grad_scaling=False):
         super(Encoder, self).__init__()
         self.dropout = dropout
         self.num_attention_layers = None
         self.apply_grad_scaling = apply_grad_scaling
 
         # Text input embeddings
-        self.embed_tokens = Embedding(
+        self.embed_tokens = embedding(
             n_vocab, embed_dim, padding_idx, embedding_weight_std)
 
         self.n_speakers = n_speakers
@@ -34,7 +32,7 @@ class Encoder(nn.Module):
             if in_channels != out_channels:
                 # Conv1d + ReLU
                 self.convolutions.append(
-                    Conv1d(in_channels, out_channels, kernel_size=1, padding=0,
+                    conv1d(in_channels, out_channels, kernel_size=1, padding=0,
                            dilation=1, std_mul=std_mul))
                 self.convolutions.append(nn.ReLU(inplace=True))
                 in_channels = out_channels
@@ -47,7 +45,7 @@ class Encoder(nn.Module):
             in_channels = out_channels
             std_mul = 4.0
         # Last 1x1 convolution
-        self.convolutions.append(Conv1d(in_channels, embed_dim, kernel_size=1,
+        self.convolutions.append(conv1d(in_channels, embed_dim, kernel_size=1,
                                         padding=0, dilation=1, std_mul=std_mul,
                                         dropout=dropout))
 
@@ -82,14 +80,12 @@ class Encoder(nn.Module):
 
 
 class AttentionLayer(nn.Module):
-    def __init__(self, conv_channels, embed_dim, dropout=0.1,
-                 window_ahead=3, window_backward=1,
-                 key_projection=True, value_projection=True):
+    def __init__(self, conv_channels, embed_dim, dropout=0.1, window_ahead=3, window_backward=1):
         super(AttentionLayer, self).__init__()
-        self.query_projection = Linear(conv_channels, embed_dim)
+        self.query_projection = linear(conv_channels, embed_dim)
         self.key_projection = None
         self.value_projection = None
-        self.out_projection = Linear(embed_dim, conv_channels)
+        self.out_projection = linear(embed_dim, conv_channels)
         self.dropout = dropout
         self.window_ahead = window_ahead
         self.window_backward = window_backward
@@ -134,29 +130,16 @@ class AttentionLayer(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, embed_dim, n_speakers, speaker_embed_dim,
-                 in_dim=80, r=5,
-                 max_positions=512, padding_idx=None,
-                 preattention=((128, 5, 1),) * 4,
-                 convolutions=((128, 5, 1),) * 4,
-                 attention=True, dropout=0.1,
-                 use_memory_mask=False,
-                 force_monotonic_attention=False,
-                 query_position_rate=1.0,
-                 key_position_rate=1.29,
-                 window_ahead=3,
-                 window_backward=1,
-                 key_projection=True,
-                 value_projection=True,
-                 ):
+    def __init__(self, embed_dim, n_speakers, speaker_embed_dim, in_dim=80, r=5, max_positions=512,
+                 preattention=((128, 5, 1),) * 4, convolutions=((128, 5, 1),) * 4, attention=True, dropout=0.1,
+                 use_memory_mask=False, force_monotonic_attention=False, query_position_rate=1.0,
+                 key_position_rate=1.29, window_ahead=3, window_backward=1):
         super(Decoder, self).__init__()
         self.dropout = dropout
         self.in_dim = in_dim
         self.r = r
         self.query_position_rate = query_position_rate
         self.key_position_rate = key_position_rate
-
-        in_channels = in_dim * r
 
         # Position encodings for query (decoder states) and keys (encoder states)
         self.embed_query_positions = SinusoidalEncoding(
@@ -174,7 +157,7 @@ class Decoder(nn.Module):
             if in_channels != out_channels:
                 # Conv1d + ReLU
                 self.preattention.append(
-                    Conv1d(in_channels, out_channels, kernel_size=1, padding=0,
+                    conv1d(in_channels, out_channels, kernel_size=1, padding=0,
                            dilation=1, std_mul=std_mul))
                 self.preattention.append(nn.ReLU(inplace=True))
                 in_channels = out_channels
@@ -199,22 +182,18 @@ class Decoder(nn.Module):
                           dilation=dilation, dropout=dropout, std_mul=std_mul,
                           residual=False))
             self.attention.append(
-                AttentionLayer(out_channels, embed_dim,
-                               dropout=dropout,
-                               window_ahead=window_ahead,
-                               window_backward=window_backward,
-                               key_projection=key_projection,
-                               value_projection=value_projection)
+                AttentionLayer(out_channels, embed_dim, dropout=dropout, window_ahead=window_ahead,
+                               window_backward=window_backward)
                 if attention[i] else None)
             in_channels = out_channels
             std_mul = 4.0
         # Last 1x1 convolution
-        self.last_conv = Conv1d(in_channels, in_dim * r, kernel_size=1,
+        self.last_conv = conv1d(in_channels, in_dim * r, kernel_size=1,
                                 padding=0, dilation=1, std_mul=std_mul,
                                 dropout=dropout)
 
         # Mel-spectrogram (before sigmoid) -> Done binary flag
-        self.fc = Linear(in_dim * r, 1)
+        self.fc = linear(in_dim * r, 1)
 
         self.max_decoder_steps = 200
         self.min_decoder_steps = 10
@@ -227,15 +206,14 @@ class Decoder(nn.Module):
         if inputs is None:
             assert text_positions is not None
             self.start_fresh_sequence()
-            outputs = self.incremental_forward(encoder_out, text_positions, speaker_embed)
+            outputs = self.incremental_forward(encoder_out, text_positions)
             return outputs
 
         # Grouping multiple frames if necessary
 
-    def incremental_forward(self, encoder_out, text_positions, speaker_embed=None,
-                            initial_input=None, test_inputs=None):
+    def incremental_forward(self, encoder_out, text_positions, initial_input=None, test_inputs=None):
         keys, values = encoder_out
-        B = keys.size(0)
+        b = keys.size(0)
 
         # position encodings
         w = self.key_position_rate
@@ -257,42 +235,42 @@ class Decoder(nn.Module):
         num_attention_layers = sum([layer is not None for layer in self.attention])
         t = 0
         if initial_input is None:
-            initial_input = keys.data.new(B, 1, self.in_dim * self.r).zero_()
+            initial_input = keys.data.new(b, 1, self.in_dim * self.r).zero_()
         current_input = initial_input
         while True:
             # frame pos start with 1.
-            frame_pos = keys.data.new(B, 1).fill_(t + 1).long()
+            frame_pos = keys.data.new(b, 1).fill_(t + 1).long()
             w = self.query_position_rate
             frame_pos_embed = self.embed_query_positions(frame_pos, w)
 
             if t > 0:
                 current_input = outputs[-1]
-            x = current_input
-            x = F.dropout(x, p=self.dropout, training=self.training)
+            output_tensor = current_input
+            output_tensor = F.dropout(output_tensor, p=self.dropout, training=self.training)
 
             # Prenet
             for f in self.preattention:
                 if isinstance(f, Conv1dGLU):
-                    x = f.incremental_forward(x, speaker_embed)
+                    output_tensor = f.incremental_forward(output_tensor)
                 else:
                     try:
-                        x = f.incremental_forward(x)
-                    except AttributeError as e:
-                        x = f(x)
+                        output_tensor = f.incremental_forward(output_tensor, )
+                    except AttributeError:
+                        output_tensor = f(output_tensor)
 
             # Casual convolutions + Multi-hop attentions
             ave_alignment = None
             for idx, (f, attention) in enumerate(zip(self.convolutions,
                                                      self.attention)):
-                residual = x
+                residual = output_tensor
                 if isinstance(f, Conv1dGLU):
-                    x = f.incremental_forward(x, speaker_embed)
+                    output_tensor = f.incremental_forward(output_tensor)
 
                 if attention is not None:
                     assert isinstance(f, Conv1dGLU)
-                    x = x + frame_pos_embed
-                    x, alignment = attention(x, (keys, values),
-                                             last_attended=last_attended[idx])
+                    output_tensor = output_tensor + frame_pos_embed
+                    output_tensor, alignment = attention(output_tensor, (keys, values),
+                                                         last_attended=last_attended[idx])
                     if self.force_monotonic_attention[idx]:
                         last_attended[idx] = alignment.max(-1)[1].view(-1).data[0]
                     if ave_alignment is None:
@@ -302,15 +280,15 @@ class Decoder(nn.Module):
 
                 # residual
                 if isinstance(f, Conv1dGLU):
-                    x = (x + residual) * math.sqrt(0.5)
+                    output_tensor = (output_tensor + residual) * math.sqrt(0.5)
 
-            decoder_state = x
-            x = self.last_conv.incremental_forward(x)
+            decoder_state = output_tensor
+            output_tensor = self.last_conv.incremental_forward(output_tensor, )
             ave_alignment = ave_alignment.div_(num_attention_layers)
 
             # Ooutput & done flag predictions
-            output = F.sigmoid(x)
-            done = F.sigmoid(self.fc(x))
+            output = F.sigmoid(output_tensor)
+            done = F.sigmoid(self.fc(output_tensor))
 
             decoder_states += [decoder_state]
             outputs += [output]
@@ -344,15 +322,12 @@ def _clear_modules(modules):
     for m in modules:
         try:
             m.clear_buffer()
-        except AttributeError as e:
+        except AttributeError:
             pass
 
 
 class Converter(nn.Module):
-    def __init__(self, n_speakers, speaker_embed_dim,
-                 in_dim, out_dim, convolutions=((256, 5, 1),) * 4,
-                 time_upsampling=1,
-                 dropout=0.1):
+    def __init__(self, n_speakers, speaker_embed_dim, in_dim, out_dim, convolutions=((256, 5, 1),) * 4, dropout=0.1):
         super(Converter, self).__init__()
         self.dropout = dropout
         self.in_dim = in_dim
@@ -363,18 +338,18 @@ class Converter(nn.Module):
         in_channels = convolutions[0][0]
         # Idea from nyanko
         self.convolutions = nn.ModuleList([
-            Conv1d(in_dim, in_channels, kernel_size=1, padding=0, dilation=1,
+            conv1d(in_dim, in_channels, kernel_size=1, padding=0, dilation=1,
                    std_mul=1.0),
-            ConvTranspose1d(in_channels, in_channels, kernel_size=2,
-                            padding=0, stride=2, std_mul=1.0),
+            conv_transpose1d(in_channels, in_channels, kernel_size=2,
+                             padding=0, stride=2, std_mul=1.0),
             Conv1dGLU(n_speakers, speaker_embed_dim,
                       in_channels, in_channels, kernel_size=3, causal=False,
                       dilation=1, dropout=dropout, std_mul=1.0, residual=True),
             Conv1dGLU(n_speakers, speaker_embed_dim,
                       in_channels, in_channels, kernel_size=3, causal=False,
                       dilation=3, dropout=dropout, std_mul=4.0, residual=True),
-            ConvTranspose1d(in_channels, in_channels, kernel_size=2,
-                            padding=0, stride=2, std_mul=4.0),
+            conv_transpose1d(in_channels, in_channels, kernel_size=2,
+                             padding=0, stride=2, std_mul=4.0),
             Conv1dGLU(n_speakers, speaker_embed_dim,
                       in_channels, in_channels, kernel_size=3, causal=False,
                       dilation=1, dropout=dropout, std_mul=1.0, residual=True),
@@ -387,7 +362,7 @@ class Converter(nn.Module):
         for (out_channels, kernel_size, dilation) in convolutions:
             if in_channels != out_channels:
                 self.convolutions.append(
-                    Conv1d(in_channels, out_channels, kernel_size=1, padding=0,
+                    conv1d(in_channels, out_channels, kernel_size=1, padding=0,
                            dilation=1, std_mul=std_mul))
                 self.convolutions.append(nn.ReLU(inplace=True))
                 in_channels = out_channels
@@ -400,7 +375,7 @@ class Converter(nn.Module):
             in_channels = out_channels
             std_mul = 4.0
         # Last 1x1 convolution
-        self.convolutions.append(Conv1d(in_channels, out_dim, kernel_size=1,
+        self.convolutions.append(conv1d(in_channels, out_dim, kernel_size=1,
                                         padding=0, dilation=1, std_mul=std_mul,
                                         dropout=dropout))
 

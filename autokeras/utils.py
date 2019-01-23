@@ -1,20 +1,25 @@
 import csv
+import itertools
+import logging
 import os
 import pickle
+import random
+import string
 import sys
 import tempfile
 import zipfile
-import logging
-import itertools
+from os import makedirs
+from os.path import dirname
+from os.path import exists
+from sys import stdout
 
 import imageio
 import numpy as np
 import requests
 import torch
-import string
-import random
-from autokeras.constant import Constant
 from scipy.ndimage import zoom
+
+from autokeras.constant import Constant
 
 
 class NoImprovementError(Exception):
@@ -307,3 +312,66 @@ def get_system():
         return Constant.SYS_WINDOWS
 
     raise EnvironmentError('Unsupported environment')
+
+
+def download_file_from_google_drive(file_id, dest_path, overwrite=False):
+    """
+    Downloads a shared file from google drive into a given folder.
+    Optionally unzips it.
+
+    Refact from:
+    https://github.com/ndrplz/google-drive-downloader/blob/master/google_drive_downloader/google_drive_downloader.py
+
+    Parameters
+    ----------
+    file_id: str
+        the file identifier.
+        You can obtain it from the sharable link.
+    dest_path: str
+        the destination where to save the downloaded file.
+        Must be a path (for example: './downloaded_file.txt')
+    overwrite: bool
+        optional, if True forces re-download and overwrite.
+    unzip: bool
+        optional, if True unzips a file.
+        If the file is not a zip file, ignores it.
+
+    Returns
+    -------
+    None
+    """
+
+    destination_directory = dirname(dest_path)
+    if len(destination_directory) > 0 and not exists(destination_directory):
+        makedirs(destination_directory)
+
+    if not exists(dest_path) or overwrite:
+
+        session = requests.Session()
+
+        print('Downloading file with Google ID {} into {}... '.format(file_id, dest_path), end='')
+        stdout.flush()
+
+        response = session.get(Constant.DOWNLOAD_URL, params={'id': file_id}, stream=True)
+
+        token = get_confirm_token(response)
+        if token:
+            params = {'id': file_id, 'confirm': token}
+            response = session.get(Constant.DOWNLOAD_URL, params=params, stream=True)
+
+        save_response_content(response, dest_path)
+        print('Done.')
+
+
+def get_confirm_token(response):
+    for key, value in response.cookies.items():
+        if key.startswith('download_warning'):
+            return value
+    return None
+
+
+def save_response_content(response, destination):
+    with open(destination, "wb") as f:
+        for chunk in response.iter_content(Constant.CHUNK_SIZE):
+            if chunk:  # filter out keep-alive new chunks
+                f.write(chunk)
