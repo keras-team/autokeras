@@ -193,7 +193,6 @@ class BasicTokenizer(object):
                 start_new_word = False
                 output[-1].append(char)
             i += 1
-
         return ["".join(x) for x in output]
     
     @classmethod
