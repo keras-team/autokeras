@@ -12,6 +12,22 @@ from autokeras.utils import pickle_to_file, \
     read_csv_file, read_image, compute_image_resize_params, resize_image_data
 
 
+def _image_to_array(img_file):
+    """Read the image from the path and return image object.
+
+    Args:
+        img_file: image file name in images_dir_path.
+    """
+    img_path = os.path.join(images_dir_path, img_file)
+    if os.path.exists(img_path):
+        img = read_image(img_path)
+        if len(img.shape) < 3:
+            img = img[..., np.newaxis]
+        return img
+    else:
+        raise ValueError("%s image does not exist" % img_file)
+
+
 def read_images(img_file_names, images_dir_path):
     """Read the images from the path and return their numpy.ndarray instance.
         Return a numpy.ndarray instance containing the training data.
@@ -20,15 +36,6 @@ def read_images(img_file_names, images_dir_path):
         img_file_names: List containing images names.
         images_dir_path: Path to the directory containing images.
     """
-    def _image_to_array(img_file):
-        img_path = os.path.join(images_dir_path, img_file)
-        if os.path.exists(img_path):
-            img = read_image(img_path)
-            if len(img.shape) < 3:
-                img = img[..., np.newaxis]
-            return img
-        else:
-            raise ValueError("%s image does not exist" % img_file)
 
     x_train = []
     if os.path.isdir(images_dir_path):
