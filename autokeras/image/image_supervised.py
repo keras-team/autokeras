@@ -14,6 +14,7 @@ from autokeras.utils import pickle_to_file, \
 
 def _image_to_array(img_path):
     """Read the image from the path and return image object.
+        Return an image object.
 
     Args:
         img_path: image file name in images_dir_path.
@@ -27,29 +28,32 @@ def _image_to_array(img_path):
         raise ValueError("%s image does not exist" % img_path)
 
 
-def read_images(img_file_names, images_dir_path):
+def read_images(img_file_names, images_dir_path, parallel=True):
     """Read the images from the path and return their numpy.ndarray instance.
         Return a numpy.ndarray instance containing the training data.
 
     Args:
         img_file_names: List containing images names.
         images_dir_path: Path to the directory containing images.
+        parallel: (Default: True) Run _image_to_array will use multiprocessing.
     """
     img_paths = [os.path.join(images_dir_path, img_file)
                  for img_file in img_file_names]
 
-    x_train = []
     if os.path.isdir(images_dir_path):
-        pool = Pool(processes=cpu_count())
-        x_train = pool.map(_image_to_array, img_paths)
-        pool.close()
-        pool.join()
+        if parallel:
+            pool = Pool(processes=cpu_count())
+            x_train = pool.map(_image_to_array, img_paths)
+            pool.close()
+            pool.join()
+        else:
+            x_train = [_image_to_array(img_path) for img_path in img_paths]
     else:
         raise ValueError("Directory containing images does not exist")
     return np.asanyarray(x_train)
 
 
-def load_image_dataset(csv_file_path, images_path):
+def load_image_dataset(csv_file_path, images_path, parallel=True):
     """Load images from the files and labels from a csv file.
 
     Second, the dataset is a set of images and the labels are in a CSV file.
@@ -62,13 +66,14 @@ def load_image_dataset(csv_file_path, images_path):
     Args:
         csv_file_path: CSV file path.
         images_path: Path where images exist.
+        parallel: (Default: True) Load dataset with multiprocessing.
 
     Returns:
         x: Four dimensional numpy.ndarray. The channel dimension is the last dimension.
         y: The labels.
     """
     img_file_name, y = read_csv_file(csv_file_path)
-    x = read_images(img_file_name, images_path)
+    x = read_images(img_file_name, images_path, parallel)
     return np.array(x), np.array(y)
 
 
