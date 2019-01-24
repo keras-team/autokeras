@@ -27,7 +27,7 @@ You need to download the code from the GitHub repo and run the following command
 We show an example of image classification on the MNIST dataset, which is a famous benchmark image dataset for hand-written digits classification. Auto-Keras supports different types of data inputs. 
 
 
-### Data with numpy array (.npy) format. [source](https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/mnist.py)
+### Data with numpy array (.npy) format. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/mnist.py)
 
 If the images and the labels are already formatted into numpy arrays, you can 
 
@@ -48,7 +48,7 @@ If the images and the labels are already formatted into numpy arrays, you can
 In the example above, the images and the labels are already formatted into numpy arrays.
 
 
-### What if your data are raw image files (*e.g.* .jpg, .png, .bmp)? [source](https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/load_raw_image.py)
+### What if your data are raw image files (*e.g.* .jpg, .png, .bmp)? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/load_raw_image.py)
 
 You can use our `load_image_dataset` function to load the images and their labels as follows.
 
@@ -123,7 +123,7 @@ This uses the keras function model.save() to export a single HDF5 file containin
 **Note:** This is being built into AutoKeras as ImageClassifier().export_keras_model() 
 
 
-### How to export Portable model [source](https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py)
+### How to export Portable model? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py)
 
     from autokeras import ImageClassifier
     clf = ImageClassifier(verbose=True, augment=False)
@@ -131,7 +131,7 @@ This uses the keras function model.save() to export a single HDF5 file containin
 The model will be stored into the path `model_file_name`. 
 
 
-### How to load exported Portable model? [source](https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py)
+### How to load exported Portable model? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py)
 
     from autokeras.utils import pickle_from_file
     model = pickle_from_file(model_file_name)
@@ -158,7 +158,7 @@ This is not specific to AutoKeras, however, the following will generate a .PNG v
 
     
 
-### How to visualize the best selected architecture? [source](https://github.com/jhfjhfj1/autokeras/blob/master/examples/visualizations/visualize.py)
+### How to visualize the best selected architecture? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/visualizations/visualize.py)
 
 
 While trying to create a model, let's say an Image classifier on MNIST, there is a facility for the user to visualize a .PDF depiction of the best architecture that was chosen by autokeras, after model training is complete. 
@@ -191,7 +191,7 @@ Step 2 : After the model training is complete, run *examples/visualize.py*, whil
 ## Net Modules
 
 
-### MlpModule tutorial [source](https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/mlp_module.py)
+### MlpModule tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/mlp_module.py)
 
 
 `MlpGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with MLP modules 
@@ -236,7 +236,7 @@ where:
 
 
 
-### CnnModule tutorial [source](https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/cnn_module.py)
+### CnnModule tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/cnn_module.py)
 
 
 `CnnGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with basic cnn modules
@@ -288,7 +288,7 @@ where:
 ## Task Modules
  
 
-### Automated text classifier tutorial [source](https://github.com/jhfjhfj1/autokeras/blob/master/examples/task_modules/text/text.py)
+### Automated text classifier tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/task_modules/text/text.py)
 
 Class `TextClassifier` and `TextRegressor` are designed for automated generate best performance cnn neural architecture
 for a given text dataset. 
@@ -315,7 +315,7 @@ should be in string format.
  
  
 
-### Automated tabular classifier tutorial [source](https://github.com/jhfjhfj1/autokeras/tree/master/examples/task_modules/tabular)
+### Automated tabular classifier tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/tree/master/examples/task_modules/tabular)
 
 
 Class `TabularClassifier` and `TabularRegressor` are designed for automated generate best performance shallow/deep architecture
@@ -341,7 +341,7 @@ for a given tabular dataset. (Currently, theis module only supports lightgbm cla
 ## Pretrained Models
  
 
-### Object detection tutorial [source](https://github.com/jhfjhfj1/autokeras/blob/master/examples/pretrained_models/object_detection/object_detection_example.py)
+### Object detection tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/pretrained_models/object_detection/object_detection_example.py)
 
 #### by Wuyang Chen from [Dr. Atlas Wang's group](http://www.atlaswang.com/) at CSE Department, Texas A&M.
 
