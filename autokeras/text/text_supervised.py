@@ -5,11 +5,11 @@ import numpy as np
 from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder, TextDataTransformer
-from autokeras.supervised import DeepSupervised
+from autokeras.supervised import DeepTaskSupervised
 from autokeras.text.text_preprocessor import text_preprocess
 
 
-class TextSupervised(DeepSupervised, ABC):
+class TextSupervised(DeepTaskSupervised, ABC):
     """TextClassifier class.
 
     Attributes:

@@ -216,7 +216,7 @@ def test_export_keras_model(_, _1):
     score = model.evaluate(train_x, train_y)
     assert score <= 1.0
     before = model.graph
-    model.fit(train_x, train_y, train_x, train_y)
+    model.fit(train_x, train_y)
     assert model.graph == before
     clean_dir(TEST_TEMP_DIR)
 
