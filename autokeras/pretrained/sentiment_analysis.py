@@ -7,7 +7,7 @@ import torch
 from autokeras.pretrained.base import Pretrained
 from autokeras.text.pretrained_bert.tokenization import BertTokenizer
 from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification
-from autokeras.utils import download_file_from_google_drive
+from autokeras.utils import download_file_from_google_drive, get_device
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 
@@ -53,11 +53,11 @@ def convert_examples_to_features(examples, max_seq_length, tokenizer):
     return features
 
 
-class TextSentiment(Pretrained):
+class SentimentAnalysis(Pretrained):
 
     def __init__(self):
 
-        super(TextSentiment, self).__init__()
+        super(SentimentAnalysis, self).__init__()
         self.device = None
         self.tokenizer = None
         self.model = None
@@ -65,7 +65,7 @@ class TextSentiment(Pretrained):
 
     def load(self):
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = get_device()
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 
         output_model_file = os.path.join(tempfile.gettempdir(), 'text_sentiment_pytorch_model.bin')
@@ -90,6 +90,7 @@ class TextSentiment(Pretrained):
         eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=1)
 
         self.model.eval()
+        sentence_polarity = None
         for input_ids, input_mask, segment_ids in eval_dataloader:
             input_ids = input_ids.to(self.device)
             input_mask = input_mask.to(self.device)

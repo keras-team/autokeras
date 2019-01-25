@@ -1,6 +1,6 @@
-from autokeras.pretrained.text_sentiment import TextSentiment
+from autokeras.pretrained.sentiment_analysis import SentimentAnalysis
 
-text_cls = TextSentiment()
+text_cls = SentimentAnalysis()
 
 polarity = text_cls.predict("The model is working well..")
 
