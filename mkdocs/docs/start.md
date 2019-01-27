@@ -391,7 +391,7 @@ Function ```detector.predict()``` requires the path to the image. If the ```outp
 ### Sentiment Analysis tutorial. [[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/text_sentiment.py)
 
 
-The sentiment analysis module provided by *AutoKeras* may be used to find the sentiment of any text input. The pretrained model is obtained by training [Google AI’s BERT model]( https://arxiv.org/abs/1810.04805) on [IMDb dataset]( http://ai.stanford.edu/~amaas/data/sentiment/). 
+The sentiment analysis module provides an interface to find the sentiment of any text input. The pretrained model is obtained by training [Google AI’s BERT model]( https://arxiv.org/abs/1810.04805) on [IMDb dataset]( http://ai.stanford.edu/~amaas/data/sentiment/). 
 
 Let’s import the `SentimentAnalysis` module from *sentiment_analysis.py*. It is derived from the super class `Pretrained`. 
 ```python
@@ -400,9 +400,9 @@ sentiment_cls = SentimentAnalysis()
 ```
 During initialization of `SentimentAnalysis`, the pretrained model is loaded into memory i.e. CPU’s or GPU’s, if available.
 
-Now, you may directly call the `predict` function in `SentimentAnalysis` class on any input sentence provided as a python string as shown below. The function returns an output value between 0 and 1. 
+Now, you may directly call the `predict` function in `SentimentAnalysis` class on any input sentence provided as a string as shown below. The function returns a value between 0 and 1. 
 ```python
-polarity = text_cls.predict("The model is working well..")
+polarity = sentiment_cls.predict("The model is working well..")
 ```
 **Note:** If the output value of the `predict` function is close to 0, it implies the statement has negative sentiment, whereas value close to 1 implies positive sentiment.
 
