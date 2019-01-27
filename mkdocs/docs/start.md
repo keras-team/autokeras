@@ -362,6 +362,7 @@ for a given tabular dataset. (Currently, theis module only supports lightgbm cla
 
 
 #### by Wuyang Chen from [Dr. Atlas Wang's group](http://www.atlaswang.com/) at CSE Department, Texas A&M.
+class_id_mapping = {0 : "Business", 1 : "Sci/Tech", 2 : "Sports", 3 : "World"}
 
 `ObjectDetector` in `object_detector.py` is a child class of `Pretrained`. Currently it can load a pretrained SSD model ([Liu, Wei, et al. "Ssd: Single shot multibox detector." European conference on computer vision. Springer, Cham, 2016.](https://arxiv.org/abs/1512.02325)) and find object(s) in a given image.
 
@@ -384,16 +385,35 @@ Finally you can make predictions against an image:
 Function ```detector.predict()``` requires the path to the image. If the ```output_file_path``` is not given, the ```detector``` will just return the numerical results as a list of dictionaries. Each dictionary is like {"left": int, "top": int, "width": int, "height": int: "category": str, "confidence": float}, where ```left``` and ```top``` is the (left, top) coordinates of the bounding box of the object and ```width``` and ```height``` are width and height of the box. ```category``` is a string representing the class the object belongs to, and the confidence can be regarded as the probability that the model believes its prediction is correct. If the ```output_file_path``` is given, then the results mentioned above will be plotted and saved in a new image file with suffix "_prediction" into the given ```output_file_path```. If you run the example/object_detection/object_detection_example.py, you will get result
 ```[{'category': 'person', 'width': 331, 'height': 500, 'left': 17, 'confidence': 0.9741123914718628, 'top': 0}]```
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+
+
+
+### Sentiment Analysis tutorial. [[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/text_sentiment.py)
+
+
+The sentiment analysis module provided by *AutoKeras* may be used to find the sentiment of any text input. The pretrained model is obtained by training [Google AI’s BERT model]( https://arxiv.org/abs/1810.04805) on [IMDb dataset]( http://ai.stanford.edu/~amaas/data/sentiment/). 
+
+Let’s import the `SentimentAnalysis` module from *sentiment_analysis.py*. It is derived from the super class `Pretrained`. 
+```python
+from autokeras.pretrained.text_sentiment import SentimentAnalysis
+sentiment_cls = SentimentAnalysis()
+```
+During initialization of `SentimentAnalysis`, the pretrained model is loaded into memory i.e. CPU’s or GPU’s, if available.
+
+Now, you may directly call the `predict` function in `SentimentAnalysis` class on any input sentence provided as a python string as shown below. The function returns an output value between 0 and 1. 
+```python
+polarity = text_cls.predict("The model is working well..")
+```
+**Note:** If the output value of the `predict` function is close to 0, it implies the statement has negative sentiment, whereas value close to 1 implies positive sentiment.
+
+If you run *sentiment_analysis_example.py*, you should get an output value of 0.9 which implies that the input statement *The model is working well..* has strong positive sentiment.
+
+
+
+
+
+
+
 
 <!-- [Data with numpy array (.npy) format.]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/mnist.py
 [What if your data are raw image files (*e.g.* .jpg, .png, .bmp)?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/load_raw_image.py
