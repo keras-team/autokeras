@@ -316,7 +316,6 @@ class FaceDetector(Pretrained):
             download_file_from_google_drive(file_id=google_id, dest_path=f'{temp_path}/{file_name}')
         return model_paths
 
-
     def predict(self, img_path, output_file_path=None):
         """Predicts faces in an image.
 
@@ -338,7 +337,6 @@ class FaceDetector(Pretrained):
         if output_file_path is not None:
             vis_face(img_bg, bounding_boxes, output_file_path, landmarks)
         return bounding_boxes, landmarks
-
 
     def detect_pnet(self, im):
         h, w, c = im.shape
@@ -410,7 +408,6 @@ class FaceDetector(Pretrained):
         boxes_align = boxes_align.T
 
         return boxes, boxes_align
-
 
     def detect_rnet(self, im, dets):
         h, w, c = im.shape
@@ -485,7 +482,6 @@ class FaceDetector(Pretrained):
         boxes_align = boxes_align.T
 
         return boxes, boxes_align
-
 
     def detect_onet(self, im, dets):
         h, w, c = im.shape
@@ -573,7 +569,6 @@ class FaceDetector(Pretrained):
         landmark_align = landmark.T
 
         return boxes_align, landmark_align
-
 
     def detect_face(self, img):
         boxes_align = np.array([])
