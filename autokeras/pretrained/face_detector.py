@@ -3,17 +3,17 @@
 import os
 
 import cv2
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-import numpy as np
 from torch.autograd.variable import Variable
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
-from autokeras.utils import download_model, get_device, download_file_from_google_drive, temp_path_generator, ensure_dir
+from autokeras.utils import get_device, download_file_from_google_drive, temp_path_generator, ensure_dir
 
 
 def weights_init(m):

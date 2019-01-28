@@ -1,15 +1,14 @@
-import numpy as np
 import os
 import tempfile
+
+import numpy as np
 import torch
-
-
-from autokeras.pretrained.base import Pretrained
-from autokeras.text.pretrained_bert.tokenization import BertTokenizer
-from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification
-from autokeras.utils import download_file_from_google_drive, get_device
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
+from autokeras.pretrained.base import Pretrained
+from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification
+from autokeras.text.pretrained_bert.tokenization import BertTokenizer
+from autokeras.utils import download_file_from_google_drive, get_device
 
 TEXT_SENTIMENT_FILE_ID = '15kIuZrzWdoEpmZ842ufZHm3B3QZFpfLu'
 
