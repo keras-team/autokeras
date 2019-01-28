@@ -23,36 +23,6 @@ class InputFeatures(object):
         self.segment_ids = segment_ids
 
 
-def convert_examples_to_features(examples, max_seq_length, tokenizer):
-    features = []
-    for (_, example) in enumerate(examples):
-        tokens_a = tokenizer.tokenize(example)
-
-        if len(tokens_a) > max_seq_length - 2:
-            tokens_a = tokens_a[:(max_seq_length - 2)]
-
-        tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-        segment_ids = [0] * len(tokens)
-
-        input_ids = tokenizer.convert_tokens_to_ids(tokens)
-
-        input_mask = [1] * len(input_ids)
-
-        padding = [0] * (max_seq_length - len(input_ids))
-        input_ids += padding
-        input_mask += padding
-        segment_ids += padding
-
-        if len(input_ids) != max_seq_length or len(input_mask) != max_seq_length or len(segment_ids) != max_seq_length:
-            raise AssertionError()
-
-        features.append(
-                InputFeatures(input_ids=input_ids,
-                              input_mask=input_mask,
-                              segment_ids=segment_ids))
-    return features
-
-
 class TextClassifier(Pretrained):
 
     def __init__(self):
@@ -74,8 +44,37 @@ class TextClassifier(Pretrained):
         self.model = BertForSequenceClassification.from_pretrained('bert-base-uncased', state_dict=model_state_dict, num_labels=self.num_classes)
         self.model.to(self.device)
 
+    def convert_examples_to_features(self, examples, max_seq_length, tokenizer):
+        features = []
+        for (_, example) in enumerate(examples):
+            tokens_a = tokenizer.tokenize(example)
+
+            if len(tokens_a) > max_seq_length - 2:
+                tokens_a = tokens_a[:(max_seq_length - 2)]
+
+            tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
+            segment_ids = [0] * len(tokens)
+
+            input_ids = tokenizer.convert_tokens_to_ids(tokens)
+
+            input_mask = [1] * len(input_ids)
+
+            padding = [0] * (max_seq_length - len(input_ids))
+            input_ids += padding
+            input_mask += padding
+            segment_ids += padding
+
+            if len(input_ids) != max_seq_length or len(input_mask) != max_seq_length or len(segment_ids) != max_seq_length:
+                raise AssertionError()
+
+            features.append(
+                    InputFeatures(input_ids=input_ids,
+                                  input_mask=input_mask,
+                                  segment_ids=segment_ids))
+        return features
+
     def y_predict(self, x_predict):
-        eval_features = convert_examples_to_features([x_predict], 128, self.tokenizer)
+        eval_features = self.convert_examples_to_features([x_predict], 128, self.tokenizer)
 
         all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
         all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
