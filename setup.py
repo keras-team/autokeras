@@ -11,7 +11,7 @@ setup(
                       'keras==2.2.4',
                       'scikit-learn==0.20.2',
                       'scikit-image==0.14.2',
-                      'tqdm==4.29.1',
+                      'tqdm==4.30.0',
                       'tensorflow==1.12.0',
                       'imageio==2.4.1',
                       'requests==2.21.0',
