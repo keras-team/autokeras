@@ -33,7 +33,7 @@ Let's download the mnist example and run it within the container.
 
 Download the example :  
 ```
-wget https://raw.githubusercontent.com/jhfjhfj1/autokeras/master/examples/mnist.py
+wget https://raw.githubusercontent.com/jhfjhfj1/autokeras/master/examples/a_simple_example/mnist.py
 ```
 
 Run the mnist example :

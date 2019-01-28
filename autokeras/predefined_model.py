@@ -1,44 +1,36 @@
 import numpy as np
 import torch
 from abc import ABC, abstractmethod
-from functools import reduce
 from sklearn.model_selection import train_test_split
 
-from autokeras.utils import rand_temp_folder_generator, validate_xy
+from autokeras.utils import rand_temp_folder_generator, validate_xy, resize_image_data, compute_image_resize_params
 from autokeras.nn.metric import Accuracy
 from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.generator import ResNetGenerator, DenseNetGenerator
 from autokeras.search import train
 from autokeras.constant import Constant
 from autokeras.preprocessor import ImageDataTransformer, OneHotEncoder
+from autokeras.supervised import SingleModelSupervised
 
 
-class PredefinedModel(ABC):
+class PredefinedModel(SingleModelSupervised):
     """The base class for the predefined model without architecture search
 
     Attributes:
+        graph: The graph form of the model.
         y_encoder: Label encoder, used in transform_y or inverse_transform_y for encode the label. For example,
                    if one hot encoder needed, y_encoder can be OneHotEncoder.
-        data_transformer_class: A transformer class to process the data. See example as ImageDataTransformer.
-        data_transformer: A instance of data_transformer_class.
+        data_transformer: A instance of transformer to process the data, See example as ImageDataTransformer.
         verbose: A boolean of whether the search process will be printed to stdout.
         path: A string. The path to a directory, where the intermediate results are saved.
     """
 
-    def __init__(self, y_encoder=OneHotEncoder, data_transformer_class=ImageDataTransformer,
-                 verbose=False,
-                 path=None):
+    def __init__(self, y_encoder=OneHotEncoder(), data_transformer=None, verbose=False, path=None):
+        super().__init__(verbose, path)
         self.graph = None
         self.generator = None
-        self.loss = classification_loss
-        self.metric = Accuracy
-        self.y_encoder = y_encoder()
-        self.data_transformer_class = data_transformer_class
-        self.data_transformer = None
-        self.verbose = verbose
-        if path is None:
-            path = rand_temp_folder_generator()
-        self.path = path
+        self.y_encoder = y_encoder
+        self.data_transformer = data_transformer
 
     @abstractmethod
     def _init_generator(self, n_output_node, input_shape):
@@ -50,16 +42,22 @@ class PredefinedModel(ABC):
         """
         pass
 
-    def compile(self, loss=classification_loss, metric=Accuracy):
-        """Configures the model for training.
+    @property
+    def loss(self):
+        return classification_loss
 
-        Args:
-            loss: The loss function to train the model. See example as classification_loss.
-            metric: The metric to be evaluted by the model during training and testing.
-                    See example as Accuracy.
-        """
-        self.loss = loss
-        self.metric = metric
+    @property
+    def metric(self):
+        return Accuracy
+
+    def preprocess(self, x):
+        return resize_image_data(x, self.resize_shape)
+
+    def transform_y(self, y_train):
+        return self.y_encoder.transform(y_train)
+
+    def inverse_transform_y(self, output):
+        return self.y_encoder.inverse_transform(output)
 
     def fit(self, x, y, trainer_args=None):
         """Trains the model on the dataset given.
@@ -72,8 +70,10 @@ class PredefinedModel(ABC):
             trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
         """
         validate_xy(x, y)
+        self.resize_shape = compute_image_resize_params(x)
+        x = self.preprocess(x)
         self.y_encoder.fit(y)
-        y = self.y_encoder.transform(y)
+        y = self.transform_y(y)
         # Divide training data into training and testing data.
         validation_set_size = int(len(y) * Constant.VALIDATION_SET_SIZE)
         validation_set_size = min(validation_set_size, 500)
@@ -83,7 +83,7 @@ class PredefinedModel(ABC):
                                                             random_state=42)
 
         # initialize data_transformer
-        self.data_transformer = self.data_transformer_class(x_train)
+        self.data_transformer = ImageDataTransformer(x_train)
         # Wrap the data into DataLoaders
         train_loader = self.data_transformer.transform_train(x_train, y_train)
         test_loader = self.data_transformer.transform_test(x_test, y_test)
@@ -96,32 +96,6 @@ class PredefinedModel(ABC):
         _, _1, self.graph = train(None, graph, train_loader, test_loader,
                                   trainer_args, self.metric, self.loss,
                                   self.verbose, self.path)
-
-    def predict(self, x_test):
-        """Return predict results for the testing data.
-
-        Args:
-            x_test: An instance of numpy.ndarray containing the testing data.
-
-        Returns:
-            A numpy.ndarray containing the results.
-        """
-        test_loader = self.data_transformer.transform_test(x_test)
-        model = self.graph.produce_model()
-        model.eval()
-
-        outputs = []
-        with torch.no_grad():
-            for index, inputs in enumerate(test_loader):
-                outputs.append(model(inputs).numpy())
-        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
-        return self.y_encoder.inverse_transform(output)
-
-    def evaluate(self, x_test, y_test):
-        """Return the accuracy score between predict value and `y_test`.
-        """
-        y_predict = self.predict(x_test)
-        return self.metric().evaluate(y_predict, y_test)
 
 
 class PredefinedResnet(PredefinedModel):

@@ -43,19 +43,6 @@ class Supervised(ABC):
         """
 
     @abstractmethod
-    def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
-        """Final training after found the best architecture.
-
-        Args:
-            x_train: A numpy.ndarray of training data.
-            y_train: A numpy.ndarray of training targets.
-            x_test: A numpy.ndarray of testing data.
-            y_test: A numpy.ndarray of testing targets.
-            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
-            retrain: A boolean of whether reinitialize the weights of the model.
-        """
-
-    @abstractmethod
     def predict(self, x_test):
         """Return predict results for the testing data.
 
@@ -73,7 +60,25 @@ class Supervised(ABC):
         pass
 
 
-class DeepSupervised(Supervised):
+class SearchSupervised(Supervised):
+    """The base class for all supervised task with architecture search.
+    """
+
+    @abstractmethod
+    def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
+        """Final training after found the best architecture.
+
+        Args:
+            x_train: A numpy.ndarray of training data.
+            y_train: A numpy.ndarray of training targets.
+            x_test: A numpy.ndarray of testing data.
+            y_test: A numpy.ndarray of testing targets.
+            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
+            retrain: A boolean of whether reinitialize the weights of the model.
+        """
+
+
+class DeepTaskSupervised(SearchSupervised):
 
     def __init__(self, verbose=False, path=None, resume=False, searcher_args=None,
                  search_type=BayesianSearcher):
@@ -209,79 +214,20 @@ class DeepSupervised(Supervised):
         return self.metric().evaluate(y_predict, y_test)
 
 
-class PortableClass(ABC):
-    def __init__(self, graph, verbose=False):
-        self.graph = graph
-        self.verbose = verbose
-
-    @abstractmethod
-    def fit(self, **kwargs):
-        """further training of the model (graph).
-        """
-        pass
-
-    @abstractmethod
-    def predict(self, x_test):
-        """Return predict results for the testing data.
-
-        Args:
-            x_test: An instance of numpy.ndarray containing the testing data.
-
-        Returns:
-            A numpy.ndarray containing the results.
-        """
-        pass
-
-    @abstractmethod
-    def evaluate(self, x_test, y_test):
-        """Return the accuracy score between predict value and `y_test`."""
-        pass
-
-
-class PortableDeepSupervised(PortableClass):
-    def __init__(self, graph, y_encoder, data_transformer, verbose=False, path=None):
+class SingleModelSupervised(Supervised):
+    """The base class for all supervised task without architecture search.
+    """
+    def __init__(self, verbose=False, path=None):
         """Initialize the instance.
 
         Args:
-            graph: The graph form of the learned model.
-            y_encoder: The encoder of the label. See example as OneHotEncoder
-            data_transformer: A transformer class to process the data. See example as ImageDataTransformer.
             verbose: A boolean of whether the search process will be printed to stdout.
             path: A string. The path to a directory, where the intermediate results are saved.
         """
-        super(PortableDeepSupervised, self).__init__(graph, verbose)
-        self.y_encoder = y_encoder
-        self.data_transformer = data_transformer
+        super().__init__(verbose)
         if path is None:
             path = rand_temp_folder_generator()
         self.path = path
-
-    def fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
-        """further training of the model (graph).
-
-        Args:
-            x_train: A numpy.ndarray of training data.
-            y_train: A numpy.ndarray of training targets.
-            x_test: A numpy.ndarray of testing data.
-            y_test: A numpy.ndarray of testing targets.
-            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
-            retrain: A boolean of whether reinitialize the weights of the model.
-        """
-        x_train = self.preprocess(x_train)
-        x_test = self.preprocess(x_test)
-        if trainer_args is None:
-            trainer_args = {'max_no_improvement_num': 30}
-
-        y_train = self.transform_y(y_train)
-        y_test = self.transform_y(y_test)
-
-        train_data = self.data_transformer.transform_train(x_train, y_train)
-        test_data = self.data_transformer.transform_test(x_test, y_test)
-
-        if retrain:
-            self.graph.weighted = False
-        _, _1, self.graph = train(None, self.graph, train_data, test_data, trainer_args,
-                                  self.metric, self.loss, self.verbose, self.path)
 
     @property
     @abstractmethod
@@ -333,3 +279,61 @@ class PortableDeepSupervised(PortableClass):
         """Return the accuracy score between predict value and `y_test`."""
         y_predict = self.predict(x_test)
         return self.metric().evaluate(y_predict, y_test)
+
+    def save(self, model_path):
+        """Save the model as keras format.
+
+        Args:
+            model_path: the path to save model.
+        """
+        self.graph.produce_keras_model().save(model_path)
+
+
+class PortableDeepSupervised(SingleModelSupervised):
+    def __init__(self, graph, y_encoder, data_transformer, verbose=False, path=None):
+        """Initialize the instance.
+
+        Args:
+            graph: The graph form of the learned model.
+            y_encoder: The encoder of the label. See example as OneHotEncoder
+            data_transformer: A transformer class to process the data. See example as ImageDataTransformer.
+            verbose: A boolean of whether the search process will be printed to stdout.
+            path: A string. The path to a directory, where the intermediate results are saved.
+        """
+        super().__init__(verbose, path)
+        self.graph = graph
+        self.y_encoder = y_encoder
+        self.data_transformer = data_transformer
+
+    def fit(self, x, y, trainer_args=None, retrain=False):
+        """Trains the model on the dataset given.
+
+        Args:
+            x: A numpy.ndarray instance containing the training data or the training data combined with the
+               validation data.
+            y: A numpy.ndarray instance containing the label of the training data. or the label of the training data
+               combined with the validation label.
+            trainer_args: A dictionary containing the parameters of the ModelTrainer constructor.
+            retrain: A boolean of whether reinitialize the weights of the model.
+        """
+        x = self.preprocess(x)
+        # Divide training data into training and testing data.
+        validation_set_size = int(len(y) * Constant.VALIDATION_SET_SIZE)
+        validation_set_size = min(validation_set_size, 500)
+        validation_set_size = max(validation_set_size, 1)
+        x_train, x_test, y_train, y_test = train_test_split(x, y,
+                                                            test_size=validation_set_size,
+                                                            random_state=42)
+        if trainer_args is None:
+            trainer_args = {'max_no_improvement_num': 30}
+
+        y_train = self.transform_y(y_train)
+        y_test = self.transform_y(y_test)
+
+        train_data = self.data_transformer.transform_train(x_train, y_train)
+        test_data = self.data_transformer.transform_test(x_test, y_test)
+
+        if retrain:
+            self.graph.weighted = False
+        _, _1, self.graph = train(None, self.graph, train_data, test_data, trainer_args,
+                                  self.metric, self.loss, self.verbose, self.path)

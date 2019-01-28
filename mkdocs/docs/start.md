@@ -26,7 +26,10 @@ You need to download the code from the GitHub repo and run the following command
 
 We show an example of image classification on the MNIST dataset, which is a famous benchmark image dataset for hand-written digits classification. Auto-Keras supports different types of data inputs. 
 
-### [Data with numpy array (.npy) format.]
+
+
+### Data with numpy array (.npy) format. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/mnist.py)
+
 
 If the images and the labels are already formatted into numpy arrays, you can 
 
@@ -46,7 +49,10 @@ If the images and the labels are already formatted into numpy arrays, you can
         
 In the example above, the images and the labels are already formatted into numpy arrays.
 
-### [What if your data are raw image files (*e.g.* .jpg, .png, .bmp)?]
+
+
+### What if your data are raw image files (*e.g.* .jpg, .png, .bmp)? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/load_raw_image.py)
+
 
 You can use our `load_image_dataset` function to load the images and their labels as follows.
 
@@ -62,7 +68,7 @@ You can use our `load_image_dataset` function to load the images and their label
     print(x_test.shape)
     print(y_test.shape)
 
-The argument `csv_file_path` is the path to the CSV file containing the image file names and their corresponding labels.
+The argument `csv_file_path` is the path to the CSV file containing the image file names and their corresponding labels. Both csv files and the raw image datasets could be downloaded from [link](https://drive.google.com/a/tamu.edu/file/d/10TyvztrdL0fBaFlgGaqoRTlS3ts4faM8/view?usp=sharing).
 Here is an example of the csv file.
 
 
@@ -80,6 +86,7 @@ Here is an example of the csv file.
 The second argument `images_path` is the path to the directory containing all the images with those file names listed in the CSV file.
 The returned values `x_train` and `y_train` are the numpy arrays,
 which can be directly feed into the `fit` function of `ImageClassifier`.
+
 
 This CSV file for train or test can be created from folders containing images of a specific class (meaning label):
 ```
@@ -119,13 +126,19 @@ This uses the keras function model.save() to export a single HDF5 file containin
 
 **Note:** This is being built into AutoKeras as ImageClassifier().export_keras_model() 
 
-### [How to export Portable model]
+
+
+### How to export Portable model? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py)
+
     from autokeras import ImageClassifier
     clf = ImageClassifier(verbose=True, augment=False)
     clf.export_autokeras_model(model_file_name)
 The model will be stored into the path `model_file_name`. 
 
-### [How to load exported Portable model?]
+
+
+### How to load exported Portable model? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py)
+
     from autokeras.utils import pickle_from_file
     model = pickle_from_file(model_file_name)
     results = model.evaluate(x_test, y_test)
@@ -139,7 +152,8 @@ The model will be loaded from the path `model_file_name` and then you can use th
 
 ## Model Visualizations
 
-### How to visualize keras models?
+
+### How to visualize keras models? 
 
 This is not specific to AutoKeras, however, the following will generate a .PNG visualization of the best model found by AutoKeras:
 
@@ -149,7 +163,11 @@ This is not specific to AutoKeras, however, the following will generate a .PNG v
     plot_model(model, to_file='my_model.png')
 
     
-### [How to visualize the best selected architecture?]
+
+
+### How to visualize the best selected architecture? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/visualizations/visualize.py)
+
+
 
 While trying to create a model, let's say an Image classifier on MNIST, there is a facility for the user to visualize a .PDF depiction of the best architecture that was chosen by autokeras, after model training is complete. 
 
@@ -180,7 +198,11 @@ Step 2 : After the model training is complete, run *examples/visualize.py*, whil
 
 ## Net Modules
 
-### [MlpModule tutorial]
+
+
+### MlpModule tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/mlp_module.py)
+
+
 
 `MlpGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with MLP modules 
 
@@ -223,7 +245,11 @@ where:
 
 
 
-### [CnnModule tutorial]
+
+
+### CnnModule tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/cnn_module.py)
+
+
 
 `CnnGenerator` in `net_module.py` is a child class of `Networkmodule`. It can generates neural architecture with basic cnn modules
 and the ResNet module. 
@@ -273,7 +299,10 @@ where:
 
 ## Task Modules
  
-### [Automated text classifier tutorial]
+
+
+### Automated text classifier tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/task_modules/text/text.py)
+
 
 Class `TextClassifier` and `TextRegressor` are designed for automated generate best performance cnn neural architecture
 for a given text dataset. 
@@ -299,7 +328,11 @@ should be in string format.
 
  
  
-### [Automated tabular classifier tutorial]
+
+
+### Automated tabular classifier tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/tree/master/examples/task_modules/tabular)
+
+
 
 Class `TabularClassifier` and `TabularRegressor` are designed for automated generate best performance shallow/deep architecture
 for a given tabular dataset. (Currently, theis module only supports lightgbm classifier and regressor.)
@@ -323,8 +356,13 @@ for a given tabular dataset. (Currently, theis module only supports lightgbm cla
  
 ## Pretrained Models
  
-### [Object detection tutorial]
+
+
+### Object detection tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/pretrained_models/object_detection/object_detection_example.py)
+
+
 #### by Wuyang Chen from [Dr. Atlas Wang's group](http://www.atlaswang.com/) at CSE Department, Texas A&M.
+class_id_mapping = {0 : "Business", 1 : "Sci/Tech", 2 : "Sports", 3 : "World"}
 
 `ObjectDetector` in `object_detector.py` is a child class of `Pretrained`. Currently it can load a pretrained SSD model ([Liu, Wei, et al. "Ssd: Single shot multibox detector." European conference on computer vision. Springer, Cham, 2016.](https://arxiv.org/abs/1512.02325)) and find object(s) in a given image.
 
@@ -347,17 +385,37 @@ Finally you can make predictions against an image:
 Function ```detector.predict()``` requires the path to the image. If the ```output_file_path``` is not given, the ```detector``` will just return the numerical results as a list of dictionaries. Each dictionary is like {"left": int, "top": int, "width": int, "height": int: "category": str, "confidence": float}, where ```left``` and ```top``` is the (left, top) coordinates of the bounding box of the object and ```width``` and ```height``` are width and height of the box. ```category``` is a string representing the class the object belongs to, and the confidence can be regarded as the probability that the model believes its prediction is correct. If the ```output_file_path``` is given, then the results mentioned above will be plotted and saved in a new image file with suffix "_prediction" into the given ```output_file_path```. If you run the example/object_detection/object_detection_example.py, you will get result
 ```[{'category': 'person', 'width': 331, 'height': 500, 'left': 17, 'confidence': 0.9741123914718628, 'top': 0}]```
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-[Data with numpy array (.npy) format.]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/mnist.py
+
+
+
+### Sentiment Analysis tutorial. [[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/text_sentiment.py)
+
+
+The sentiment analysis module provides an interface to find the sentiment of any text input. The pretrained model is obtained by training [Google AI’s BERT model]( https://arxiv.org/abs/1810.04805) on [IMDb dataset]( http://ai.stanford.edu/~amaas/data/sentiment/). 
+
+Let’s import the `SentimentAnalysis` module from *sentiment_analysis.py*. It is derived from the super class `Pretrained`. 
+```python
+from autokeras.pretrained.text_sentiment import SentimentAnalysis
+sentiment_cls = SentimentAnalysis()
+```
+During initialization of `SentimentAnalysis`, the pretrained model is loaded into memory i.e. CPU’s or GPU’s, if available.
+
+Now, you may directly call the `predict` function in `SentimentAnalysis` class on any input sentence provided as a string as shown below. The function returns a value between 0 and 1. 
+```python
+polarity = sentiment_cls.predict("The model is working well..")
+```
+**Note:** If the output value of the `predict` function is close to 0, it implies the statement has negative sentiment, whereas value close to 1 implies positive sentiment.
+
+If you run *sentiment_analysis_example.py*, you should get an output value of 0.9 which implies that the input statement *The model is working well..* has strong positive sentiment.
+
+
+
+
+
+
+
+
+<!-- [Data with numpy array (.npy) format.]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/mnist.py
 [What if your data are raw image files (*e.g.* .jpg, .png, .bmp)?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/load_raw_image.py
 [How to export Portable model]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py
 [How to load exported Portable model?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py
@@ -366,5 +424,6 @@ Function ```detector.predict()``` requires the path to the image. If the ```outp
 [CnnModule tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/cnn_module.py
 [Automated text classifier tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/task_modules/text/text.py
 [Automated tabular classifier tutorial]: https://github.com/jhfjhfj1/autokeras/tree/master/examples/task_modules/tabular
-[Object Detection tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/pretrained_models/object_detection/object_detection_example.py
+[Object Detection tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/pretrained_models/object_detection/object_detection_example.py -->
 [TabularPreprocessor]: https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/tabular/tabular_preprocessor.py
+
