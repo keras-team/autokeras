@@ -44,7 +44,6 @@ class TextClassifier(Pretrained):
         self.model = BertForSequenceClassification.from_pretrained('bert-base-uncased', state_dict=model_state_dict, num_labels=self.num_classes)
         self.model.to(self.device)
 
-    @classmethod
     def convert_examples_to_features(self, examples, max_seq_length):
         features = []
         for (_, example) in enumerate(examples):
@@ -75,7 +74,7 @@ class TextClassifier(Pretrained):
         return features
 
     def y_predict(self, x_predict):
-        eval_features = self.convert_examples_to_features([x_predict], 128, self.tokenizer)
+        eval_features = self.convert_examples_to_features([x_predict], 128)
 
         all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
         all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
