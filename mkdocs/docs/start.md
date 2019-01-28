@@ -388,15 +388,15 @@ Function ```detector.predict()``` requires the path to the image. If the ```outp
 
 
 
-### Sentiment Analysis tutorial. [[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/text_sentiment.py)
+### Sentiment Analysis tutorial. [[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/text_classifier.py)
 
 
 The sentiment analysis module provides an interface to find the sentiment of any text input. The pretrained model is obtained by training [Google AI’s BERT model]( https://arxiv.org/abs/1810.04805) on [IMDb dataset]( http://ai.stanford.edu/~amaas/data/sentiment/). 
 
-Let’s import the `SentimentAnalysis` module from *sentiment_analysis.py*. It is derived from the super class `Pretrained`. 
+Let’s import the `SentimentAnalysis` module from *text_classifier.py*. It is derived from the super class `TextClassifier` which is the child class of `Pretrained` class.
 ```python
-from autokeras.pretrained.text_sentiment import SentimentAnalysis
-sentiment_cls = SentimentAnalysis()
+from autokeras.pretrained.text_classifier import SentimentAnalysis
+sentiment_analysis = SentimentAnalysis()
 ```
 During initialization of `SentimentAnalysis`, the pretrained model is loaded into memory i.e. CPU’s or GPU’s, if available.
 
@@ -410,8 +410,24 @@ If you run *sentiment_analysis_example.py*, you should get an output value of 0.
 
 
 
+### Topic Classification tutorial. [[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/text_classifier.py)
 
 
+The topic classifier module provides an interface to find the topic of any text input. The pretrained model is obtained by training [Google AI’s BERT model]( https://arxiv.org/abs/1810.04805) on [AGNews dataset](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html). 
+
+Let’s import the `TopicClassifier` module from *text_classifier.py*. It is derived from the super class `TextClassifier` which is child class of `Pretrained`. 
+```python
+from autokeras.pretrained.text_classifier import TopicClassifier
+topic_classifier = TopicClassifier()
+```
+During initialization of `TopicClassifier`, the pretrained model is loaded into memory i.e. CPU’s or GPU’s, if available.
+
+Now, you may directly call the `predict` function in `TopicClassifier` class on any input sentence provided as a string as shown below. The function returns one of the fours topics **Business**, **Sci/Tech**, **World** and **Sports**. 
+```python
+polarity = topic_classifier.predict("With some more practice, they will definitely make it to finals..")
+```
+
+If you run *topic_classifier_example.py*, you should see the predict function returns the label **Sports**, which is the predicted label for the input statements.
 
 
 
