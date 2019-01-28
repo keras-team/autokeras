@@ -105,7 +105,7 @@ class TextClassifier(Pretrained):
 
 
 class SentimentAnalysis(TextClassifier):
-    
+
     def __init__(self):
         self.model_dir = 'bert_sentiment_analysis_pytorch_model'
         self.file_id = SENTIMENT_ANALYSIS_MODEL_ID
