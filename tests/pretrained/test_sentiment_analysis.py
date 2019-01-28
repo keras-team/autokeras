@@ -1,4 +1,4 @@
-from autokeras.pretrained.sentiment_analysis import SentimentAnalysis
+from autokeras.pretrained.text_classifier import SentimentAnalysis
 
 def test_sentiment_analysis():
     sentiment_analyzer = SentimentAnalysis()

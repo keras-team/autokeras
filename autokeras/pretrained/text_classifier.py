@@ -129,7 +129,6 @@ class TopicClassifier(TextClassifier):
 
     def predict(self, x_predict):
         y_pred = self.y_predict(x_predict)
-        print(y_pred)
         class_id = np.argmax(y_pred)
         if class_id == 0:
             return "Business"
