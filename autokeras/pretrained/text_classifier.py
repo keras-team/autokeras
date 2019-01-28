@@ -44,10 +44,11 @@ class TextClassifier(Pretrained):
         self.model = BertForSequenceClassification.from_pretrained('bert-base-uncased', state_dict=model_state_dict, num_labels=self.num_classes)
         self.model.to(self.device)
 
-    def convert_examples_to_features(self, examples, max_seq_length, tokenizer):
+    @classmethod
+    def convert_examples_to_features(self, examples, max_seq_length):
         features = []
         for (_, example) in enumerate(examples):
-            tokens_a = tokenizer.tokenize(example)
+            tokens_a = self.tokenizer.tokenize(example)
 
             if len(tokens_a) > max_seq_length - 2:
                 tokens_a = tokens_a[:(max_seq_length - 2)]
@@ -55,7 +56,7 @@ class TextClassifier(Pretrained):
             tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
             segment_ids = [0] * len(tokens)
 
-            input_ids = tokenizer.convert_tokens_to_ids(tokens)
+            input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
 
             input_mask = [1] * len(input_ids)
 
@@ -86,7 +87,6 @@ class TextClassifier(Pretrained):
         eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=1)
 
         self.model.eval()
-        sentence_polarity = None
         for input_ids, input_mask, segment_ids in eval_dataloader:
             input_ids = input_ids.to(self.device)
             input_mask = input_mask.to(self.device)
@@ -119,7 +119,7 @@ class SentimentAnalysis(TextClassifier):
 
 
 class TopicClassifier(TextClassifier):
-    
+
     def __init__(self):
         self.model_dir = 'bert_topic_classifier_pytorch_model'
         self.file_id = TOPIC_CLASSIFIER_MODEL_ID
