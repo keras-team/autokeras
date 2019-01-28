@@ -117,3 +117,26 @@ class SentimentAnalysis(TextClassifier):
     def predict(self, x_predict):
         y_pred = self.y_predict(x_predict)
         return round(y_pred[1], 2)
+
+
+class TopicClassifier(TextClassifier):
+    
+    def __init__(self):
+        self.model_dir = 'bert_topic_classifier_pytorch_model'
+        self.file_id = TOPIC_CLASSIFIER_MODEL_ID
+        self.num_classes = 4
+        super(TopicClassifier, self).__init__()
+
+    def predict(self, x_predict):
+        y_pred = self.y_predict(x_predict)
+        print(y_pred)
+        class_id = np.argmax(y_pred)
+        if class_id == 0:
+            return "Business"
+        elif class_id == 1:
+            return "Sci/Tech"
+        elif class_id == 2:
+            return "World"
+        else:
+            return "Sports"
+
