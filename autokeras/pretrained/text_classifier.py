@@ -11,7 +11,8 @@ from autokeras.utils import download_file_from_google_drive, get_device
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 
-TEXT_SENTIMENT_FILE_ID = '15kIuZrzWdoEpmZ842ufZHm3B3QZFpfLu'
+SENTIMENT_ANALYSIS_MODEL_ID = '15kIuZrzWdoEpmZ842ufZHm3B3QZFpfLu'
+TOPIC_CLASSIFIER_MODEL_ID = '1U3O9wffh-DQ7BDIezKYWcDYkM9Cly8Yb'
 
 
 class InputFeatures(object):
@@ -23,7 +24,6 @@ class InputFeatures(object):
 
 
 def convert_examples_to_features(examples, max_seq_length, tokenizer):
-
     features = []
     for (_, example) in enumerate(examples):
         tokens_a = tokenizer.tokenize(example)
@@ -53,31 +53,28 @@ def convert_examples_to_features(examples, max_seq_length, tokenizer):
     return features
 
 
-class SentimentAnalysis(Pretrained):
+class TextClassifier(Pretrained):
 
     def __init__(self):
-
-        super(SentimentAnalysis, self).__init__()
+        super(TextClassifier, self).__init__()
         self.device = None
         self.tokenizer = None
         self.model = None
         self.load()
 
     def load(self):
-
         self.device = get_device()
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 
-        output_model_file = os.path.join(tempfile.gettempdir(), 'text_sentiment_pytorch_model.bin')
+        output_model_file = os.path.join(tempfile.gettempdir(), self.model_dir)
 
-        download_file_from_google_drive(TEXT_SENTIMENT_FILE_ID, output_model_file)
+        download_file_from_google_drive(self.file_id, output_model_file)
 
         model_state_dict = torch.load(output_model_file, map_location=lambda storage, loc: storage)
-        self.model = BertForSequenceClassification.from_pretrained('bert-base-uncased', state_dict=model_state_dict)
+        self.model = BertForSequenceClassification.from_pretrained('bert-base-uncased', state_dict=model_state_dict, num_labels=self.num_classes)
         self.model.to(self.device)
 
-    def predict(self, x_predict):
-
+    def y_predict(self, x_predict):
         eval_features = convert_examples_to_features([x_predict], 128, self.tokenizer)
 
         all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
@@ -104,6 +101,19 @@ class SentimentAnalysis(Pretrained):
             for logit in logits:
                 exp = np.exp(logit)
                 exp = exp / np.sum(exp)
-                sentence_polarity = round(exp[1], 2)
+                y_pred = exp
 
-        return sentence_polarity
+        return y_pred
+
+
+class SentimentAnalysis(TextClassifier):
+    
+    def __init__(self):
+        self.model_dir = 'bert_sentiment_analysis_pytorch_model'
+        self.file_id = SENTIMENT_ANALYSIS_MODEL_ID
+        self.num_classes = 2
+        super(SentimentAnalysis, self).__init__()
+
+    def predict(self, x_predict):
+        y_pred = self.y_predict(x_predict)
+        return round(y_pred[1], 2)
