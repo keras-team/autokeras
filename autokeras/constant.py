@@ -69,10 +69,10 @@ class Constant:
 
     # constants for pretrained model of face detection
     FACE_DETECTOR = {
-        'MODEL_LINKS': [
-            'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/pnet_epoch.pt',
-            'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/rnet_epoch.pt',
-            'https://raw.githubusercontent.com/kuaikuaikim/DFace/master/model_store/onet_epoch.pt'
+        'MODEL_GOOGLE_ID': [
+            '1QJWKpAHRrAjrYPl6hQNDaoyBjoa_LRgz',
+            '10aCiR393E6TLkp9KPPl4JhZamYqUVBO1',
+            '1RRBtPlzw46peS-A8pyYGsPRHHFIUrSVV'
         ],
         'MODEL_NAMES': [
             'pnet.pt',
@@ -82,7 +82,7 @@ class Constant:
     }
 
     OBJECT_DETECTOR = {
-        'MODEL_LINK': 'https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth',
+        'MODEL_GOOGLE_ID': '1QGG1trfj-z5_2OGNoSarUB4wx81cG-sa',
         'MODEL_NAME': 'object_detection_pretrained.pth'
     }
 
