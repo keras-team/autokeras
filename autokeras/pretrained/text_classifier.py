@@ -4,15 +4,12 @@ import tempfile
 import torch
 
 
+from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
 from autokeras.text.pretrained_bert.tokenization import BertTokenizer
 from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification
 from autokeras.utils import download_file_from_google_drive, get_device
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
-
-
-SENTIMENT_ANALYSIS_MODEL_ID = '15kIuZrzWdoEpmZ842ufZHm3B3QZFpfLu'
-TOPIC_CLASSIFIER_MODEL_ID = '1U3O9wffh-DQ7BDIezKYWcDYkM9Cly8Yb'
 
 
 class InputFeatures(object):
@@ -108,7 +105,7 @@ class SentimentAnalysis(TextClassifier):
 
     def __init__(self):
         self.model_dir = 'bert_sentiment_analysis_pytorch_model'
-        self.file_id = SENTIMENT_ANALYSIS_MODEL_ID
+        self.file_id = Constant.SENTIMENT_ANALYSIS_MODEL_ID
         self.num_classes = 2
         super(SentimentAnalysis, self).__init__()
 
@@ -121,7 +118,7 @@ class TopicClassifier(TextClassifier):
 
     def __init__(self):
         self.model_dir = 'bert_topic_classifier_pytorch_model'
-        self.file_id = TOPIC_CLASSIFIER_MODEL_ID
+        self.file_id = Constant.TOPIC_CLASSIFIER_MODEL_ID
         self.num_classes = 4
         super(TopicClassifier, self).__init__()
 
