@@ -86,6 +86,11 @@ class Constant:
         'MODEL_NAME': 'object_detection_pretrained.pth'
     }
 
+    # Constants for pretrained models of Sentiment Analysis and Topic Classification.
+
+    SENTIMENT_ANALYSIS_MODEL_ID = '15kIuZrzWdoEpmZ842ufZHm3B3QZFpfLu'
+    TOPIC_CLASSIFIER_MODEL_ID = '1U3O9wffh-DQ7BDIezKYWcDYkM9Cly8Yb'
+
     # Image Resize
 
     MAX_IMAGE_SIZE = 128 * 128
