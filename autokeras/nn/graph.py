@@ -633,7 +633,7 @@ class Graph:
             pre_node[i] = i
         for i in range(self.n_nodes - 1):
             for u in range(self.n_nodes):
-                for v in self.adj_list[u]:
+                for v, _ in self.adj_list[u]:
                     if distance[u] + 1 > distance[v]:
                         distance[v] = distance[u] + 1
                         pre_node[v] = u
