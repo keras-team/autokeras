@@ -257,7 +257,8 @@ class Graph:
         """Given two node IDs, return all the pooling layers between them."""
         layer_list = []
         node_list = [start_node_id]
-        assert self._depth_first_search(end_node_id, layer_list, node_list)
+        if not self._depth_first_search(end_node_id, layer_list, node_list):
+            raise AssertionError("Error: node %d not found among all the layers." % end_node_id)
         ret = []
         for layer_id in layer_list:
             layer = self.layer_list[layer_id]
@@ -273,7 +274,8 @@ class Graph:
 
         A recursive function to search all the layers and nodes between the node in the node_list
             and the node with target_id."""
-        assert len(node_list) <= self.n_nodes
+        if len(node_list) > self.n_nodes:
+            raise AssertionError("Error: length of the given node list is longer than the nodes in the graph. Length of the node list: %d, number of nodes in the graph: %d" % (len(node_list), self.n_nodes))
         u = node_list[-1]
         if u == target_id:
             return True
@@ -631,7 +633,7 @@ class Graph:
             pre_node[i] = i
         for i in range(self.n_nodes - 1):
             for u in range(self.n_nodes):
-                for v, layer_id in self.adj_list[u]:
+                for v in self.adj_list[u]:
                     if distance[u] + 1 > distance[v]:
                         distance[v] = distance[u] + 1
                         pre_node[v] = u
@@ -645,7 +647,8 @@ class Graph:
             if pre_node[temp_id] == temp_id:
                 break
             temp_id = pre_node[temp_id]
-        assert temp_id == pre_node[temp_id]
+        if temp_id != pre_node[temp_id]:
+            raise AssertionError("Error: main chain end condition not met.")
         ret.reverse()
         return ret
 
