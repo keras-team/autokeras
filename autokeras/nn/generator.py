@@ -138,9 +138,9 @@ class MlpGenerator(NetworkGenerator):
             model_len = Constant.MODEL_LEN
         if model_width is None:
             model_width = Constant.MODEL_WIDTH
-        if type(model_width) is list and not len(model_width) == model_len:
+        if isinstance(model_width, list) and not len(model_width) == model_len:
             raise ValueError('The length of \'model_width\' does not match \'model_len\'')
-        elif type(model_width) is int:
+        elif isinstance(model_width, int):
             model_width = [model_width] * model_len
 
         graph = Graph(self.input_shape, False)
