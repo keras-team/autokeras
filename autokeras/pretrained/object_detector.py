@@ -536,7 +536,7 @@ class ObjectDetector(Pretrained):
 
         self.model = self.model.to(self.device)
 
-    def predict(self, img_path, output_file_path=None):
+    def predict(self, input_data, output_file_path=None):
         """
         
         Returns:
@@ -547,7 +547,7 @@ class ObjectDetector(Pretrained):
 
         dataset_mean = (104, 117, 123)
 
-        image = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        image = cv2.imread(input_data, cv2.IMREAD_COLOR)
         height, width, _ = image.shape
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         x = base_transform(rgb_image, 300, dataset_mean)
@@ -605,7 +605,7 @@ class ObjectDetector(Pretrained):
                     j += 1
             plt.axis('off')
             plt.tight_layout()
-            save_name = img_path.split('/')[-1]
+            save_name = input_data.split('/')[-1]
             save_name = save_name.split('.')
             save_name = '.'.join(save_name[:-1]) + "_prediction." + save_name[-1]
             plt.savefig(os.path.join(output_file_path, save_name), bbox_inches='tight', pad_inches=0)
