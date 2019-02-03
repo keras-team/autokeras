@@ -8,12 +8,14 @@ from autokeras.constant import Constant
 
 
 class TorchConcatenate(nn.Module):
-    def forward(self, input_list):
+    @staticmethod
+    def forward(input_list):
         return torch.cat(input_list, dim=1)
 
 
 class TorchAdd(nn.Module):
-    def forward(self, input_list):
+    @staticmethod
+    def forward(input_list):
         return input_list[0] + input_list[1]
 
 
@@ -73,8 +75,8 @@ class StubLayer:
 
     def get_weights(self):
         return self.weights
-
-    def size(self):
+    @staticmethod
+    def size():
         return 0
 
     @property

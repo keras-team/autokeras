@@ -176,11 +176,11 @@ class DeepTaskSupervised(SearchSupervised):
     @abstractmethod
     def get_n_output_node(self):
         pass
-
-    def transform_y(self, y_train):
+    @staticmethod
+    def transform_y(y_train):
         return y_train
-
-    def inverse_transform_y(self, output):
+    @staticmethod
+    def inverse_transform_y(output):
         return output
 
     @abstractmethod
