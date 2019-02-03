@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import math
-import pytest
+import unittest
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -52,7 +52,6 @@ class Encoder(nn.Module):
     def forward(self, text_sequences, text_positions=None, lengths=None,
                 speaker_embed=None):
         assert self.n_speakers == 1 or speaker_embed is not None
-
         # embed text_sequences
         x = self.embed_tokens(text_sequences.long())
         x = F.dropout(x, p=self.dropout, training=self.training)
@@ -175,7 +174,8 @@ class Decoder(nn.Module):
         self.attention = nn.ModuleList()
 
         for i, (out_channels, kernel_size, dilation) in enumerate(convolutions):
-            assert in_channels == out_channels
+            #assert in_channels == out_channels
+            unittest.TestCase.assertEqual(in_channels,out_channels)
             self.convolutions.append(
                 Conv1dGLU(n_speakers, speaker_embed_dim,
                           in_channels, out_channels, kernel_size, causal=True,
