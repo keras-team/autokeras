@@ -50,7 +50,7 @@ class Encoder(nn.Module):
 
     def forward(self, text_sequences, text_positions=None, lengths=None,
                 speaker_embed=None):
-        # assert self.n_speakers == 1 or speaker_embed is not None
+        assert self.n_speakers == 1 or speaker_embed is not None
         if self.n_speakers != 1 and speaker_embed == None:
             print("Expected \033[1;31m<self.n_speakers>\033[m to be 1 or \033[1:31m<speaker_embed>[m to be not None, but was not")
             exit(1)
