@@ -326,7 +326,7 @@ class TabularPreprocessor:
         return x
 
     @staticmethod
-    def extract_data_info(self, raw_x):
+    def extract_data_info(raw_x):
         """
         This function extracts the data info automatically based on the type of each feature in raw_x.
 
