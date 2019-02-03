@@ -384,7 +384,7 @@ class Converter(nn.Module):
                                         dropout=dropout))
 
     def forward(self, x, speaker_embed=None):
-        assert self.n_speakers == 1 or speaker_embed is not None
+        # assert self.n_speakers == 1 or speaker_embed is not None
         if self.n_speakers != 1 and speaker_embed == None:
             raise AssertionError("Expected \033[1;31m<self.n_speakers>\033[m to be 1 or \033[1:31m<speaker_embed>[m to be not None, but was not")
         speaker_embed_btc = None
