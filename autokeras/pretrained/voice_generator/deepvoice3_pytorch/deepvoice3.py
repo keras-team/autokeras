@@ -50,8 +50,8 @@ class Encoder(nn.Module):
 
     def forward(self, text_sequences, text_positions=None, lengths=None,
                 speaker_embed=None):
-        assert self.n_speakers == 1 or speaker_embed is not None
-        if self.n_speakers != 1 and speaker_embed == None:
+        #assert self.n_speakers == 1 or speaker_embed is not None
+        if self.n_speakers != 1 and speaker_embed is None:
             print("Expected \033[1;31m<self.n_speakers>\033[m to be 1 or \033[1:31m<speaker_embed>[m to be not None, but was not")
             exit(1)
         # embed text_sequences
@@ -209,7 +209,7 @@ class Decoder(nn.Module):
                 speaker_embed=None, lengths=None):
         if inputs is None:
             # assert text_positions is not None
-            if text_positions == None:
+            if text_positions is None:
                 print("Expected \033[1;31m<text_positions>\033[m to be not None, but was")
                 exit(1)
             self.start_fresh_sequence()
