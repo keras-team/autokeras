@@ -228,6 +228,8 @@ class SingleModelSupervised(Supervised):
         if path is None:
             path = rand_temp_folder_generator()
         self.path = path
+        self.graph = None
+        self.data_transformer = None
 
     @property
     @abstractmethod
@@ -289,7 +291,7 @@ class SingleModelSupervised(Supervised):
         self.graph.produce_keras_model().save(model_path)
 
 
-class PortableDeepSupervised(SingleModelSupervised):
+class PortableDeepSupervised(SingleModelSupervised, ABC):
     def __init__(self, graph, y_encoder, data_transformer, verbose=False, path=None):
         """Initialize the instance.
 

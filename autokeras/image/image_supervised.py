@@ -259,7 +259,7 @@ class ImageRegressor3D(ImageRegressor):
         super().__init__(**kwargs)
 
 
-class PortableImageSupervised(PortableDeepSupervised):
+class PortableImageSupervised(PortableDeepSupervised, ABC):
     def __init__(self, graph, y_encoder, data_transformer, resize_params, verbose=False, path=None):
         """Initialize the instance.
         Args:
