@@ -52,8 +52,7 @@ class Encoder(nn.Module):
                 speaker_embed=None):
         #assert self.n_speakers == 1 or speaker_embed is not None
         if self.n_speakers != 1 and speaker_embed is None:
-            print("Expected \033[1;31m<self.n_speakers>\033[m to be 1 or \033[1:31m<speaker_embed>[m to be not None, but was not")
-            exit(1)
+            raise AssertionError("Expected \033[1;31m<self.n_speakers>\033[m to be 1 or \033[1:31m<speaker_embed>[m to be not None, but was not")
         # embed text_sequences
         x = self.embed_tokens(text_sequences.long())
         x = F.dropout(x, p=self.dropout, training=self.training)
@@ -178,8 +177,7 @@ class Decoder(nn.Module):
         for i, (out_channels, kernel_size, dilation) in enumerate(convolutions):
             # assert in_channels == out_channels
             if in_channels != out_channels:
-                print("Expected \033[1;31m<in_channels>\033[m to be equal to \033[1:31m<out_channels>[m, but was not")
-                exit(1)
+                raise AssertionError("Expected \033[1;31m<in_channels>\033[m to be equal to \033[1:31m<out_channels>[m, but was not)
             self.convolutions.append(
                 Conv1dGLU(n_speakers, speaker_embed_dim,
                           in_channels, out_channels, kernel_size, causal=True,
@@ -210,8 +208,7 @@ class Decoder(nn.Module):
         if inputs is None:
             # assert text_positions is not None
             if text_positions is None:
-                print("Expected \033[1;31m<text_positions>\033[m to be not None, but was")
-                exit(1)
+                raise AssertionError("Expected \033[1;31m<text_positions>\033[m to be not None, but was")
             self.start_fresh_sequence()
             outputs = self.incremental_forward(encoder_out, text_positions)
             return outputs
@@ -276,8 +273,7 @@ class Decoder(nn.Module):
                 if attention is not None:
                     # assert isinstance(f, Conv1dGLU)
                     if ~isinstance(f,Conv1dGLU):
-                        print("Expected \033[1;31m<the return value of isinstance(f,Conv1dGLU)>\033[m to be True, but was not")
-                        exit(1)
+                        raise AssertionError("Expected \033[1;31m<the return value of isinstance(f,Conv1dGLU)>\033[m to be True, but was not")
                     output_tensor = output_tensor + frame_pos_embed
                     output_tensor, alignment = attention(output_tensor, (keys, values),
                                                          last_attended=last_attended[idx])
@@ -390,10 +386,9 @@ class Converter(nn.Module):
                                         dropout=dropout))
 
     def forward(self, x, speaker_embed=None):
-        # assert self.n_speakers == 1 or speaker_embed is not None
+        assert self.n_speakers == 1 or speaker_embed is not None
         if self.n_speakers != 1 and speaker_embed == None:
-            print("Expected \033[1;31m<self.n_speakers>\033[m to be 1 or \033[1:31m<speaker_embed>[m to be not None, but was not")
-            exit(1)
+            raise AssertionError("Expected \033[1;31m<self.n_speakers>\033[m to be 1 or \033[1:31m<speaker_embed>[m to be not None, but was not")
         speaker_embed_btc = None
         # Generic case: B x T x C -> B x C x T
         x = x.transpose(1, 2)
