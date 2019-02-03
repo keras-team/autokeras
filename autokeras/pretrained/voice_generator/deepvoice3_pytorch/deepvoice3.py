@@ -275,7 +275,7 @@ class Decoder(nn.Module):
 
                 if attention is not None:
                     #assert isinstance(f, Conv1dGLU)
-                    if !isinstance(f,Conv1dGLU):
+                    if ~isinstance(f,Conv1dGLU):
                         print("Expected \033[1;31m<the return value of isinstance(f,Conv1dGLU)>\033[m to be True, but was not")
                         exit(1)
                     output_tensor = output_tensor + frame_pos_embed
