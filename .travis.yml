@@ -14,8 +14,8 @@ script:
 - sh docs.sh
 after_script:
 - python-codacy-coverage -r coverage.xml
-after_success:
-- pip install python-coveralls && coveralls
+# after_success:
+# - pip install python-coveralls && coveralls
 deploy:
 - provider: pypi
   user: jhfjhfj1
