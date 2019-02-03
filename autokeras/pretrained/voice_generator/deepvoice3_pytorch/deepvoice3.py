@@ -177,7 +177,7 @@ class Decoder(nn.Module):
         for i, (out_channels, kernel_size, dilation) in enumerate(convolutions):
             # assert in_channels == out_channels
             if in_channels != out_channels:
-                raise AssertionError("Expected \033[1;31m<in_channels>\033[m to be equal to \033[1:31m<out_channels>[m, but was not)
+                raise AssertionError("Expected \033[1;31m<in_channels>\033[m to be equal to \033[1:31m<out_channels>[m, but was not")
             self.convolutions.append(
                 Conv1dGLU(n_speakers, speaker_embed_dim,
                           in_channels, out_channels, kernel_size, causal=True,
