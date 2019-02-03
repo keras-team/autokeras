@@ -75,7 +75,6 @@ class StubLayer:
 
     def get_weights(self):
         return self.weights
-    
     @staticmethod
     def size():
         return 0
