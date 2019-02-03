@@ -1,9 +1,7 @@
-import numpy as np
-import torch
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from sklearn.model_selection import train_test_split
 
-from autokeras.utils import rand_temp_folder_generator, validate_xy, resize_image_data, compute_image_resize_params
+from autokeras.utils import validate_xy, resize_image_data, compute_image_resize_params
 from autokeras.nn.metric import Accuracy
 from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.generator import ResNetGenerator, DenseNetGenerator
