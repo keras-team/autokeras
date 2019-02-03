@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import math
-import unittest
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -51,7 +50,10 @@ class Encoder(nn.Module):
 
     def forward(self, text_sequences, text_positions=None, lengths=None,
                 speaker_embed=None):
-        assert self.n_speakers == 1 or speaker_embed is not None
+        #assert self.n_speakers == 1 or speaker_embed is not None
+        if self.n_speakers != 1 and speaker_embed == None:
+            print("Expected \033[1;31m<self.n_speakers>\033[m to be 1 or \033[1:31m<speaker_embed>[m to be not None, but was not")
+            exit(1)
         # embed text_sequences
         x = self.embed_tokens(text_sequences.long())
         x = F.dropout(x, p=self.dropout, training=self.training)
@@ -175,7 +177,9 @@ class Decoder(nn.Module):
 
         for i, (out_channels, kernel_size, dilation) in enumerate(convolutions):
             #assert in_channels == out_channels
-            unittest.TestCase.assertEqual(in_channels,out_channels)
+            if in_channels != out_channels:
+                print("Expected \033[1;31m<in_channels>\033[m to be equal to \033[1:31m<out_channels>[m, but was not")
+                exit(1)
             self.convolutions.append(
                 Conv1dGLU(n_speakers, speaker_embed_dim,
                           in_channels, out_channels, kernel_size, causal=True,
@@ -204,7 +208,10 @@ class Decoder(nn.Module):
                 text_positions=None, frame_positions=None,
                 speaker_embed=None, lengths=None):
         if inputs is None:
-            assert text_positions is not None
+            #assert text_positions is not None
+            if test_positions == None:
+                print("Expected \033[1;31m<text_positions>\033[m to be not None, but was")
+                exit(1)
             self.start_fresh_sequence()
             outputs = self.incremental_forward(encoder_out, text_positions)
             return outputs
@@ -267,7 +274,10 @@ class Decoder(nn.Module):
                     output_tensor = f.incremental_forward(output_tensor)
 
                 if attention is not None:
-                    assert isinstance(f, Conv1dGLU)
+                    #assert isinstance(f, Conv1dGLU)
+                    if !isinstance(f,Conv1dGLU):
+                        print("Expected \033[1;31m<the return value of isinstance(f,Conv1dGLU)>\033[m to be True, but was not")
+                        exit(1)
                     output_tensor = output_tensor + frame_pos_embed
                     output_tensor, alignment = attention(output_tensor, (keys, values),
                                                          last_attended=last_attended[idx])
@@ -380,8 +390,10 @@ class Converter(nn.Module):
                                         dropout=dropout))
 
     def forward(self, x, speaker_embed=None):
-        assert self.n_speakers == 1 or speaker_embed is not None
-
+        #assert self.n_speakers == 1 or speaker_embed is not None
+        if self.n_speakers != 1 and speaker_embed == None:
+            print("Expected \033[1;31m<self.n_speakers>\033[m to be 1 or \033[1:31m<speaker_embed>[m to be not None, but was not")
+            exit(1)
         speaker_embed_btc = None
         # Generic case: B x T x C -> B x C x T
         x = x.transpose(1, 2)
