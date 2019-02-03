@@ -50,7 +50,6 @@ class Encoder(nn.Module):
 
     def forward(self, text_sequences, text_positions=None, lengths=None,
                 speaker_embed=None):
-        #assert self.n_speakers == 1 or speaker_embed is not None
         if self.n_speakers != 1 and speaker_embed is None:
             raise AssertionError("Expected \033[1;31m<self.n_speakers>\033[m to be 1 or \033[1:31m<speaker_embed>[m to be not None, but was not")
         # embed text_sequences
@@ -175,7 +174,6 @@ class Decoder(nn.Module):
         self.attention = nn.ModuleList()
 
         for i, (out_channels, kernel_size, dilation) in enumerate(convolutions):
-            # assert in_channels == out_channels
             if in_channels != out_channels:
                 raise AssertionError("Expected \033[1;31m<in_channels>\033[m to be equal to \033[1:31m<out_channels>[m, but was not")
             self.convolutions.append(
@@ -206,7 +204,6 @@ class Decoder(nn.Module):
                 text_positions=None, frame_positions=None,
                 speaker_embed=None, lengths=None):
         if inputs is None:
-            # assert text_positions is not None
             if text_positions is None:
                 raise AssertionError("Expected \033[1;31m<text_positions>\033[m to be not None, but was")
             self.start_fresh_sequence()
@@ -384,7 +381,6 @@ class Converter(nn.Module):
                                         dropout=dropout))
 
     def forward(self, x, speaker_embed=None):
-        # assert self.n_speakers == 1 or speaker_embed is not None
         if self.n_speakers != 1 and speaker_embed == None:
             raise AssertionError("Expected \033[1;31m<self.n_speakers>\033[m to be 1 or \033[1:31m<speaker_embed>[m to be not None, but was not")
         speaker_embed_btc = None
