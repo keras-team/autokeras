@@ -8,7 +8,7 @@ import torch
 import torch.multiprocessing as mp
 
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from datetime import datetime
 from autokeras.bayesian import BayesianOptimizer
 from autokeras.constant import Constant
@@ -16,7 +16,7 @@ from autokeras.nn.model_trainer import ModelTrainer
 from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get_system
 
 
-class Searcher:
+class Searcher(ABC):
     """The base class to search for neural architectures.
 
     This class generate new architectures, call the trainer to train it, and update the optimizer.
@@ -234,7 +234,6 @@ class Searcher:
         """
         pass
 
-    @abstractmethod
     def update(self, *args):
         pass
 
