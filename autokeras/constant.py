@@ -88,8 +88,8 @@ class Constant:
 
     # Constants for pretrained models of Sentiment Analysis and Topic Classification.
 
-    SENTIMENT_ANALYSIS_MODEL_ID = '15kIuZrzWdoEpmZ842ufZHm3B3QZFpfLu'
-    TOPIC_CLASSIFIER_MODEL_ID = '1U3O9wffh-DQ7BDIezKYWcDYkM9Cly8Yb'
+    SENTIMENT_ANALYSIS_MODEL_ID = '1flRlQjfIa2toQ6HNmInhqrh4NuxGh8pT'
+    TOPIC_CLASSIFIER_MODEL_ID = '1U7C3xPid1ZvBKpkfW9KikrmNui0yJqnk'
 
     # Image Resize
 
