@@ -13,7 +13,7 @@ setup(
                       'scikit-image==0.14.2',
                       'tqdm==4.29.1',
                       'tensorflow==1.12.0',
-                      'imageio==2.4.1',
+                      'imageio==2.5.0',
                       'requests==2.21.0',
                       'lightgbm==2.2.3',
                       'pandas==0.23.4',
