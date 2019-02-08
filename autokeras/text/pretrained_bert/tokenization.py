@@ -223,15 +223,18 @@ class BasicTokenizer(object):
         # as is Japanese Hiragana and Katakana. Those alphabets are used to write
         # space-separated words, so they are not treated specially and handled
         # like the all of the other languages.
-        if ((0x4E00 <= cp <= 0x9FFF) or  #
-                (0x3400 <= cp <= 0x4DBF) or  #
-                (0x20000 <= cp <= 0x2A6DF) or  #
-                (0x2A700 <= cp <= 0x2B73F) or  #
-                (0x2B740 <= cp <= 0x2B81F) or  #
-                (0x2B820 <= cp <= 0x2CEAF) or
-                (0xF900 <= cp <= 0xFAFF) or  #
-                (0x2F800 <= cp <= 0x2FA1F)):  #
-            return True
+        chinese_character_ranges = [
+            (0x4E00, 0x9FFF),
+            (0x3400, 0x4DBF),
+            (0xF900, 0xFAFF),
+            (0x20000, 0x2A6DF),
+            (0x2A700, 0x2B73F),
+            (0x2B740, 0x2B81F),
+            (0x2B820, 0x2CEAF),
+            (0x2F800, 0x2FA1F)]
+        for start, end in chinese_character_ranges:
+            if not start <= cp <= end:
+                return True
         return False
 
     @staticmethod
@@ -340,9 +343,10 @@ def _is_punctuation(char):
     # Characters such as "^", "$", and "`" are not in the Unicode
     # Punctuation class but we treat them as punctuation anyways, for
     # consistency.
-    if ((33 <= cp <= 47) or (58 <= cp <= 64) or
-            (91 <= cp <= 96) or (123 <= cp <= 126)):
-        return True
+    punctuation_ranges = [(33, 47), (58, 64), (91, 96), (123, 126)]
+    for start, end in punctuation_ranges:
+        if not start <= cp <= end:
+            return True
     cat = unicodedata.category(char)
     if cat.startswith("P"):
         return True
