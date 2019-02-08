@@ -233,7 +233,7 @@ class BasicTokenizer(object):
             (0x2B820, 0x2CEAF),
             (0x2F800, 0x2FA1F)]
         for start, end in chinese_character_ranges:
-            if not start <= cp <= end:
+            if start <= cp <= end:
                 return True
         return False
 
@@ -345,7 +345,7 @@ def _is_punctuation(char):
     # consistency.
     punctuation_ranges = [(33, 47), (58, 64), (91, 96), (123, 126)]
     for start, end in punctuation_ranges:
-        if not start <= cp <= end:
+        if start <= cp <= end:
             return True
     cat = unicodedata.category(char)
     if cat.startswith("P"):
