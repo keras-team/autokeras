@@ -6,16 +6,13 @@ install:
 - pip install pytest
 - pip install pytest-cov
 - pip install coverage
-- pip install codacy-coverage
 - pip install mkdocs
 - pip install mkdocs-material
 script:
 - pytest tests --cov=autokeras --cov-report xml:coverage.xml
 - sh docs.sh
-after_script:
-- python-codacy-coverage -r coverage.xml
-# after_success:
-# - pip install python-coveralls && coveralls
+after_success:
+- pip install python-coveralls && coveralls
 deploy:
 - provider: pypi
   user: jhfjhfj1
