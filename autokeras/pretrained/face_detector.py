@@ -276,7 +276,6 @@ class FaceDetector(Pretrained):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         pnet, rnet, onet = self.local_paths[0], self.local_paths[1], self.local_paths[2]
-        self.device = get_device()
 
         self.pnet_detector = PNet()
         if torch.cuda.is_available():

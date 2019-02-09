@@ -2,7 +2,7 @@ import numpy as np
 import os
 import tempfile
 import torch
-
+from abc import ABC
 
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
@@ -20,25 +20,16 @@ class InputFeatures(object):
         self.segment_ids = segment_ids
 
 
-class TextClassifier(Pretrained):
+class TextClassifier(Pretrained, ABC):
 
-    def __init__(self):
-        super(TextClassifier, self).__init__()
-        self.device = None
-        self.tokenizer = None
-        self.model = None
-        self.load()
-
-    def load(self):
-        self.device = get_device()
+    def __init__(self, num_classes=None, **kwargs):
+        super().__init__(**kwargs)
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 
-        output_model_file = os.path.join(tempfile.gettempdir(), self.model_dir)
-
-        download_file_from_google_drive(self.file_id, output_model_file)
-
-        model_state_dict = torch.load(output_model_file, map_location=lambda storage, loc: storage)
-        self.model = BertForSequenceClassification.from_pretrained('bert-base-uncased', state_dict=model_state_dict, num_labels=self.num_classes)
+        model_state_dict = torch.load(self.local_paths[0], map_location=lambda storage, loc: storage)
+        self.model = BertForSequenceClassification.from_pretrained('bert-base-uncased',
+                                                                   state_dict=model_state_dict,
+                                                                   num_labels=num_classes)
         self.model.to(self.device)
 
     def convert_examples_to_features(self, examples, max_seq_length):
@@ -103,26 +94,28 @@ class TextClassifier(Pretrained):
 
 class SentimentAnalysis(TextClassifier):
 
-    def __init__(self):
-        self.model_dir = 'bert_sentiment_analysis_pytorch_model'
-        self.file_id = Constant.SENTIMENT_ANALYSIS_MODEL_ID
-        self.num_classes = 2
-        super(SentimentAnalysis, self).__init__()
+    def __init__(self, **kwargs):
+        super().__init__(num_classes=2, **kwargs)
 
-    def predict(self, x_predict):
+    @property
+    def _google_drive_files(self):
+        return Constant.SENTIMENT_ANALYSIS_MODELS
+
+    def predict(self, x_predict, **kwargs):
         y_pred = self.y_predict(x_predict)
         return round(y_pred[1], 2)
 
 
 class TopicClassifier(TextClassifier):
 
-    def __init__(self):
-        self.model_dir = 'bert_topic_classifier_pytorch_model'
-        self.file_id = Constant.TOPIC_CLASSIFIER_MODEL_ID
-        self.num_classes = 4
-        super(TopicClassifier, self).__init__()
+    def __init__(self, **kwargs):
+        super().__init__(num_classes=4, **kwargs)
 
-    def predict(self, x_predict):
+    @property
+    def _google_drive_files(self):
+        return Constant.TOPIC_CLASSIFIER_MODELS
+
+    def predict(self, x_predict, **kwargs):
         y_pred = self.y_predict(x_predict)
         class_id = np.argmax(y_pred)
         if class_id == 0:

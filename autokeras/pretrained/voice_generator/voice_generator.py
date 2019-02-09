@@ -229,7 +229,6 @@ class VoiceGenerator(Pretrained):
         super().__init__(**kwargs)
         self.sample_rate = 0
         self.hop_length = 0
-        self.device = get_device()
         self.sample_rate = Hparams.sample_rate
         self.hop_length = Hparams.hop_size
 
