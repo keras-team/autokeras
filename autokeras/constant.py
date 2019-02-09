@@ -1,3 +1,8 @@
+from collections import namedtuple
+
+GoogleDriveFile = namedtuple('GoogleDriveFile', ['google_drive_id', 'local_name'])
+
+
 class Constant:
     # Data
 
@@ -63,28 +68,15 @@ class Constant:
 
     PRE_TRAIN_DETECTION_FILE_LINK = "https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth"
 
-    PRE_TRAIN_VOICE_GENERATOR_MODEL_GOOGLE_DRIVE_ID = "1E-B92LZz4dgg8DU81D6pyhOzM9yvvBTj"
-    PRE_TRAIN_VOICE_GENERATOR_MODEL_NAME = "20180505_deepvoice3_checkpoint_step000640000.pth"
-    PRE_TRAIN_VOICE_GENERATOR_SAVE_FILE_DEFAULT_NAME = "test.wav"
+    VOICE_GENERATOR_MODELS = [GoogleDriveFile(google_drive_id='1E-B92LZz4dgg8DU81D6pyhOzM9yvvBTj',
+                                              local_name='20180505_deepvoice3_checkpoint_step000640000.pth')]
 
-    # constants for pretrained model of face detection
-    FACE_DETECTOR = {
-        'MODEL_GOOGLE_ID': [
-            '1QJWKpAHRrAjrYPl6hQNDaoyBjoa_LRgz',
-            '10aCiR393E6TLkp9KPPl4JhZamYqUVBO1',
-            '1RRBtPlzw46peS-A8pyYGsPRHHFIUrSVV'
-        ],
-        'MODEL_NAMES': [
-            'pnet.pt',
-            'rnet.pt',
-            'onet.pt'
-        ]
-    }
+    FACE_DETECTOR_MODELS = [GoogleDriveFile(google_drive_id='1QJWKpAHRrAjrYPl6hQNDaoyBjoa_LRgz', local_name='pnet.pt'),
+                            GoogleDriveFile(google_drive_id='10aCiR393E6TLkp9KPPl4JhZamYqUVBO1', local_name='rnet.pt'),
+                            GoogleDriveFile(google_drive_id='1RRBtPlzw46peS-A8pyYGsPRHHFIUrSVV', local_name='onet.pt')]
 
-    OBJECT_DETECTOR = {
-        'MODEL_GOOGLE_ID': '1QGG1trfj-z5_2OGNoSarUB4wx81cG-sa',
-        'MODEL_NAME': 'object_detection_pretrained.pth'
-    }
+    OBJECT_DETECTOR_MODELS = [GoogleDriveFile(google_drive_id='1QGG1trfj-z5_2OGNoSarUB4wx81cG-sa',
+                                              local_name='object_detection_pretrained.pth')]
 
     # Constants for pretrained models of Sentiment Analysis and Topic Classification.
 

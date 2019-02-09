@@ -21,4 +21,4 @@ if __name__ == '__main__':
     for idx, text in enumerate(texts):
         save_name = "test_" + str(idx) + ".wav"
         save_name = os.path.join(temp_dir, save_name)
-        voice_generator.generate(text, path=save_name)
+        voice_generator.predict(text, save_name)

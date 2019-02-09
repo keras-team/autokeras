@@ -371,13 +371,10 @@ Let's first import the ObjectDetector and create a detection model (```detector`
 from autokeras.pretrained.object_detector import ObjectDetector
 detector = ObjectDetector()
 ```
+It will automatically download and load the weights into ```detector```.
+
 **Note:**  the ```ObjectDetector``` class can automatically detect the existance of available cuda device(s), and use the device if exists.
 
-Second, you will want to load the pretrained weights for your model:
-```python
-detector.load()
-```
-This line will automatically download and load the weights into ```detector```.
 Finally you can make predictions against an image:
 ```python
     results = detector.predict("/path/to/images/000001.jpg", output_file_path="/path/to/images/")
