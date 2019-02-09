@@ -1,16 +1,14 @@
-import keras
 from collections import Iterable
 from copy import deepcopy, copy
 from queue import Queue
 
 import numpy as np
-import torch
 
+from autokeras.nn.external_models import TorchModel, KerasModel
 from autokeras.nn.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, \
     wider_pre_conv, add_noise, init_dense_weight, init_conv_weight, init_bn_weight
 from autokeras.nn.layers import StubConcatenate, StubAdd, is_layer, layer_width, \
-    to_real_keras_layer, set_torch_weight_to_stub, set_stub_weight_to_torch, set_stub_weight_to_keras, \
-    set_keras_weight_to_stub, get_conv_class, StubReLU, LayerType
+    get_conv_class, StubReLU, LayerType
 
 
 class NetworkDescriptor:
@@ -275,7 +273,9 @@ class Graph:
         A recursive function to search all the layers and nodes between the node in the node_list
             and the node with target_id."""
         if len(node_list) > self.n_nodes:
-            raise AssertionError("Error: length of the given node list is longer than the nodes in the graph. Length of the node list: %d, number of nodes in the graph: %d" % (len(node_list), self.n_nodes))
+            raise AssertionError("Error: length of the given node list is longer than the nodes in the graph. Length "
+                                 "of the node list: %d, number of nodes in the graph: %d" % (len(node_list),
+                                                                                             self.n_nodes))
         u = node_list[-1]
         if u == target_id:
             return True
@@ -651,91 +651,3 @@ class Graph:
             raise AssertionError("Error: main chain end condition not met.")
         ret.reverse()
         return ret
-
-
-class TorchModel(torch.nn.Module):
-    """A neural network class using pytorch constructed from an instance of Graph."""
-
-    def __init__(self, graph):
-        super(TorchModel, self).__init__()
-        self.graph = graph
-        self.layers = []
-        for layer in graph.layer_list:
-            self.layers.append(layer.to_real_layer())
-        if graph.weighted:
-            for index, layer in enumerate(self.layers):
-                set_stub_weight_to_torch(self.graph.layer_list[index], layer)
-        for index, layer in enumerate(self.layers):
-            self.add_module(str(index), layer)
-
-    def forward(self, input_tensor):
-        topo_node_list = self.graph.topological_order
-        output_id = topo_node_list[-1]
-        input_id = topo_node_list[0]
-
-        node_list = deepcopy(self.graph.node_list)
-        node_list[input_id] = input_tensor
-
-        for v in topo_node_list:
-            for u, layer_id in self.graph.reverse_adj_list[v]:
-                layer = self.graph.layer_list[layer_id]
-                torch_layer = list(self.modules())[layer_id + 1]
-
-                if isinstance(layer, (StubAdd, StubConcatenate)):
-                    edge_input_tensor = list(map(lambda x: node_list[x],
-                                                 self.graph.layer_id_to_input_node_ids[layer_id]))
-                else:
-                    edge_input_tensor = node_list[u]
-                temp_tensor = torch_layer(edge_input_tensor)
-                node_list[v] = temp_tensor
-        return node_list[output_id]
-
-    def set_weight_to_graph(self):
-        self.graph.weighted = True
-        for index, layer in enumerate(self.layers):
-            set_torch_weight_to_stub(layer, self.graph.layer_list[index])
-
-
-class KerasModel:
-    def __init__(self, graph):
-        self.graph = graph
-        self.layers = []
-        for layer in graph.layer_list:
-            self.layers.append(to_real_keras_layer(layer))
-
-        # Construct the keras graph.
-        # Input
-        topo_node_list = self.graph.topological_order
-        output_id = topo_node_list[-1]
-        input_id = topo_node_list[0]
-        input_tensor = keras.layers.Input(shape=graph.node_list[input_id].shape)
-
-        node_list = deepcopy(self.graph.node_list)
-        node_list[input_id] = input_tensor
-
-        # Output
-        for v in topo_node_list:
-            for u, layer_id in self.graph.reverse_adj_list[v]:
-                layer = self.graph.layer_list[layer_id]
-                keras_layer = self.layers[layer_id]
-
-                if isinstance(layer, (StubAdd, StubConcatenate)):
-                    edge_input_tensor = list(map(lambda x: node_list[x],
-                                                 self.graph.layer_id_to_input_node_ids[layer_id]))
-                else:
-                    edge_input_tensor = node_list[u]
-
-                temp_tensor = keras_layer(edge_input_tensor)
-                node_list[v] = temp_tensor
-
-        output_tensor = node_list[output_id]
-        self.model = keras.models.Model(inputs=input_tensor, outputs=output_tensor)
-
-        if graph.weighted:
-            for index, layer in enumerate(self.layers):
-                set_stub_weight_to_keras(self.graph.layer_list[index], layer)
-
-    def set_weight_to_graph(self):
-        self.graph.weighted = True
-        for index, layer in enumerate(self.layers):
-            set_keras_weight_to_stub(layer, self.graph.layer_list[index])
