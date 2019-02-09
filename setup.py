@@ -16,7 +16,7 @@ setup(
                       'imageio==2.5.0',
                       'requests==2.21.0',
                       'lightgbm==2.2.3',
-                      'pandas==0.23.4',
+                      'pandas==0.24.1',
                       'librosa==0.6.2',
                       'numba',
                       'inflect',
