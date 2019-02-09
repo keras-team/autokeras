@@ -275,29 +275,20 @@ class FaceDetector(Pretrained):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        pnet, rnet, onet = self.local_paths[0], self.local_paths[1], self.local_paths[2]
+        pnet, rnet, onet = (torch.load(path, map_location=lambda storage, loc: storage) for path in self.local_paths)
 
         self.pnet_detector = PNet()
-        if torch.cuda.is_available():
-            self.pnet_detector.load_state_dict(torch.load(pnet))
-        else:
-            self.pnet_detector.load_state_dict(torch.load(pnet, map_location=lambda storage, loc: storage))
+        self.pnet_detector.load_state_dict(pnet)
         self.pnet_detector = self.pnet_detector.to(self.device)
         self.pnet_detector.eval()
 
         self.rnet_detector = RNet()
-        if torch.cuda.is_available():
-            self.rnet_detector.load_state_dict(torch.load(rnet))
-        else:
-            self.rnet_detector.load_state_dict(torch.load(rnet, map_location=lambda storage, loc: storage))
+        self.rnet_detector.load_state_dict(rnet)
         self.rnet_detector = self.rnet_detector.to(self.device)
         self.rnet_detector.eval()
 
         self.onet_detector = ONet()
-        if torch.cuda.is_available():
-            self.onet_detector.load_state_dict(torch.load(onet))
-        else:
-            self.onet_detector.load_state_dict(torch.load(onet, map_location=lambda storage, loc: storage))
+        self.onet_detector.load_state_dict(onet)
         self.onet_detector = self.onet_detector.to(self.device)
         self.onet_detector.eval()
 
@@ -348,8 +339,7 @@ class FaceDetector(Pretrained):
             feed_imgs = torch.stack(feed_imgs)
             feed_imgs = Variable(feed_imgs)
 
-            if torch.cuda.is_available():
-                feed_imgs = feed_imgs.cuda()
+            feed_imgs = feed_imgs.to(self.device)
 
             cls_map, reg = self.pnet_detector(feed_imgs)
 
@@ -424,8 +414,7 @@ class FaceDetector(Pretrained):
             cropped_ims_tensors.append(crop_im_tensor)
         feed_imgs = Variable(torch.stack(cropped_ims_tensors))
 
-        if torch.cuda.is_available():
-            feed_imgs = feed_imgs.to(self.device)
+        feed_imgs = feed_imgs.to(self.device)
 
         cls_map, reg = self.rnet_detector(feed_imgs)
 
@@ -498,8 +487,7 @@ class FaceDetector(Pretrained):
             cropped_ims_tensors.append(crop_im_tensor)
         feed_imgs = Variable(torch.stack(cropped_ims_tensors))
 
-        if torch.cuda.is_available():
-            feed_imgs = feed_imgs.to(self.device)
+        feed_imgs = feed_imgs.to(self.device)
 
         cls_map, reg, landmark = self.onet_detector(feed_imgs)
 
