@@ -21,5 +21,5 @@ def test_voice_generator():
     for idx, text in enumerate(texts):
         save_name = "test_" + str(idx) + ".wav"
         save_name = os.path.join(TEST_TEMP_DIR, save_name)
-        voice_generator.generate(text, path=save_name)
+        voice_generator.predict(text, path=save_name)
     clean_dir(TEST_TEMP_DIR)

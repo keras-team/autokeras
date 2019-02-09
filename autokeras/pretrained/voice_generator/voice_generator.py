@@ -182,22 +182,6 @@ def build_model():
     return model
 
 
-def load_checkpoint(path, model, device):
-    global global_step
-    global global_epoch
-
-    print("Load checkpoint from: {}".format(path))
-    if device.startswith("cuda"):
-        checkpoint = torch.load(path)
-    else:
-        checkpoint = torch.load(path, map_location=lambda storage, loc: storage)
-    model.load_state_dict(checkpoint["state_dict"])
-    global_step = checkpoint["global_step"]
-    global_epoch = checkpoint["global_epoch"]
-
-    return model
-
-
 def inv_preemphasis(x, coef=Hparams.preemphasis):
     """Inverse operation of pre-emphasis
 
@@ -241,47 +225,48 @@ def _denormalize(S):
 
 
 class VoiceGenerator(Pretrained):
-    def __init__(self, model_path=None, overwrite=False):
-        super(VoiceGenerator, self).__init__()
-        self.model_path = model_path if model_path is not None else temp_path_generator()
-        ensure_dir(self.model_path)
-        self.checkpoint_path = os.path.join(self.model_path, Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_NAME)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.sample_rate = 0
         self.hop_length = 0
-        self.overwrite = overwrite
-        self.device = get_device()
-        self.load()
-
-    def load(self):
-        self._maybe_download()
         self.sample_rate = Hparams.sample_rate
         self.hop_length = Hparams.hop_size
-        model = build_model()
 
-        self.model = load_checkpoint(self.checkpoint_path, model, self.device)
+        self.model = self.load_checkpoint()
         self.model.to(self.device)
 
-    def _maybe_download(self):
-        # For files in dropbox or google drive, cannot directly use request to download
-        # This can be changed directly use download_file method when the file is stored in server
-        if not os.path.exists(self.checkpoint_path) or self.overwrite:
-            checkpoint_google_id = Constant.PRE_TRAIN_VOICE_GENERATOR_MODEL_GOOGLE_DRIVE_ID
-            download_file_from_google_drive(file_id=checkpoint_google_id, dest_path=self.checkpoint_path,
-                                            overwrite=self.overwrite)
+    @property
+    def _google_drive_files(self):
+        return Constant.VOICE_GENERATOR_MODELS
 
-    def generate(self, text, path=None):
+    def load_checkpoint(self):
+        global global_step
+        global global_epoch
+
+        model = build_model()
+        print("Load checkpoint from: {}".format(self.local_paths[0]))
+        if self.device.startswith("cuda"):
+            checkpoint = torch.load(self.local_paths[0])
+        else:
+            checkpoint = torch.load(self.local_paths[0], map_location=lambda storage, loc: storage)
+        model.load_state_dict(checkpoint["state_dict"])
+        global_step = checkpoint["global_step"]
+        global_epoch = checkpoint["global_epoch"]
+
+        return model
+
+    def predict(self, text, path=None):
         waveform, alignment, spectrogram, mel = self.tts(text)
         if path is None:
-            path = Constant.PRE_TRAIN_VOICE_GENERATOR_SAVE_FILE_DEFAULT_NAME
+            AssertionError('Please provide the output file path.')
         librosa.output.write_wav(path, waveform, self.sample_rate)
-
-    def predict(self, x_predict):
-        pass
 
     def tts(self, text, p=0, speaker_id=None, fast=True):
         """Convert text to speech waveform given a deepvoice3 model.
 
         Args:
+            speaker_id:
+            fast:
             text (str) : Input text to be synthesized
             p (float) : Replace word to pronounciation if p > 0. Default is 0.
         """

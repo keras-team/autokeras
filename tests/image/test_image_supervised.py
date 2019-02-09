@@ -203,7 +203,7 @@ def test_export_keras_model(_, _1):
     clf.export_keras_model(model_file_name)
     from keras.models import load_model
     model = load_model(model_file_name)
-    results = model.predict(test_x)
+    results = model.predict(test_x, )
     assert len(results) == len(test_x)
     del model, results, model_file_name
 
@@ -211,7 +211,7 @@ def test_export_keras_model(_, _1):
     clf.export_autokeras_model(model_file_name)
     from autokeras.utils import pickle_from_file
     model = pickle_from_file(model_file_name)
-    results = model.predict(test_x)
+    results = model.predict(test_x, )
     assert len(results) == len(test_x)
     score = model.evaluate(train_x, train_y)
     assert score <= 1.0
@@ -230,7 +230,7 @@ def test_export_keras_model(_, _1):
     clf.export_keras_model(model_file_name)
     from keras.models import load_model
     model = load_model(model_file_name)
-    results = model.predict(test_x)
+    results = model.predict(test_x, )
     assert len(results) == len(test_x)
     del model, results, model_file_name
 
@@ -238,7 +238,7 @@ def test_export_keras_model(_, _1):
     clf.export_autokeras_model(model_file_name)
     from autokeras.utils import pickle_from_file
     model = pickle_from_file(model_file_name)
-    results = model.predict(test_x)
+    results = model.predict(test_x, )
     assert len(results) == len(test_x)
     score = model.evaluate(train_x, train_y)
     assert score >= 0.0

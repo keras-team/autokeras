@@ -1,3 +1,4 @@
+import torch
 from autokeras.nn.generator import CnnGenerator, ResNetGenerator, DenseNetGenerator
 from autokeras.nn.graph import *
 from tests.common import get_conv_data, get_add_skip_model, get_conv_dense_model, get_pooling_model, \
@@ -168,6 +169,7 @@ def test_produce_keras_model():
                   get_pooling_model(),
                   get_concat_skip_model()]:
         model = graph.produce_keras_model()
+        import keras
         assert isinstance(model, keras.models.Model)
 
 

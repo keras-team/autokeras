@@ -273,10 +273,9 @@ class FaceDetector(Pretrained):
     """A class to predict faces using the MTCNN pre-trained model.
     """
 
-    def __init__(self):
-        super(FaceDetector, self).__init__()
-        pnet, rnet, onet = self.load()
-        self.device = get_device()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        pnet, rnet, onet = self.local_paths[0], self.local_paths[1], self.local_paths[2]
 
         self.pnet_detector = PNet()
         if torch.cuda.is_available():
@@ -307,14 +306,9 @@ class FaceDetector(Pretrained):
         self.threshold = [0.6, 0.7, 0.7]
         self.scale_factor = 0.709
 
-    def load(self, model_path=None):
-        temp_path = temp_path_generator()
-        ensure_dir(temp_path)
-        model_paths = [f'{temp_path}/{file_name}' for file_name in Constant.FACE_DETECTOR['MODEL_NAMES']]
-        for google_id, file_name in zip(Constant.FACE_DETECTOR['MODEL_GOOGLE_ID'],
-                                        Constant.FACE_DETECTOR['MODEL_NAMES']):
-            download_file_from_google_drive(file_id=google_id, dest_path=f'{temp_path}/{file_name}')
-        return model_paths
+    @property
+    def _google_drive_files(self):
+        return Constant.FACE_DETECTOR_MODELS
 
     def predict(self, img_path, output_file_path=None):
         """Predicts faces in an image.

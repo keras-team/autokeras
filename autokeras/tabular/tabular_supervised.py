@@ -177,7 +177,7 @@ class TabularSupervised(Supervised):
         The function predict eventually casdn return probabilities or continuous values.
         """
         x_test = self.tabular_preprocessor.encode(x_test)
-        y = self.clf.predict(x_test)
+        y = self.clf.predict(x_test, )
         if y is None:
             raise ValueError("Tabular predictor does not exist")
         return y
