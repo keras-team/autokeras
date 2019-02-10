@@ -40,8 +40,11 @@ Refer to examples/nas/cifar10_tutorial.py for more details.
 ## How to implement your own search?
 To implement your own NAS searcher, you need to implement your own searcher class YOUR_SEARCHER, which is derived 
 from base [Searcher](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/search.py) class. For your 
-YOUR_SEARCHER class, you must provide implementation of the abstract method: [generate(self, multiprocessing_queue)](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L223), 
+YOUR_SEARCHER class, you must provide implementation of the two abstract method: 
+1. [generate(self, multiprocessing_queue)](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L223), 
 which is invoked to generate the next neural architecture.
+2. [update(self, other_info, model_id, graph, metric_value)](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L238), which is invoked 
+to update the controller with evaluation result of a neural architecture.
 
 You are welcome to implement your own method for NAS in our framework.
 If it works well, we are happy to merge it into our repo.
