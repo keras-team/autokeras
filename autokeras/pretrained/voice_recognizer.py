@@ -136,8 +136,8 @@ class GreedyDecoder(Decoder):
                 continue
                 # if this char is a repetition and remove_repetitions=true, then skip
             if i != 0 and char == self.int_to_char[sequence[i - 1].item()]:
-                pass
-            elif char == self.labels[self.space_index]:
+                continue
+            if char == self.labels[self.space_index]:
                 string += ' '
                 offsets.append(i)
             else:
