@@ -46,6 +46,15 @@ which is invoked to generate the next neural architecture.
 2. [update(self, other_info, model_id, graph, metric_value)](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L238), which is invoked 
 to update the controller with evaluation result of a neural architecture.
 
+For the default [BeyasianSearcher](https://github.com/jhfjhfj1/autokeras/blob/f455e22c140775975f5061354dc78cdf6b52dc26/autokeras/search.py#L284), the [generate](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L306) 
+function returns the generated graph and the father ID of the graph in the search tree. Then when the generated model 
+finish
+training, the father ID 
+(other_info) 
+and ID (model_id) and instance (graph) and metric value (metric_value) of the model are passed to [update](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L329) 
+function to 
+update the controller BayesianOptimizer.
+
 You are welcome to implement your own method for NAS in our framework.
 If it works well, we are happy to merge it into our repo.
 
