@@ -1,0 +1,13 @@
+*.swp
+*.pdf
+*.eps
+*.png
+*.jpg
+*.mat
+*.gif
+*.out
+*.lua
+*.pyc
+garbageCan/*
+*Duplicate*
+*log*
