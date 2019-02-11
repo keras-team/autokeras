@@ -132,16 +132,17 @@ class GreedyDecoder(Decoder):
         offsets = []
         for i in range(size):
             char = self.int_to_char[sequence[i].item()]
-            if char != self.int_to_char[self.blank_index]:
+            if char == self.int_to_char[self.blank_index]:
+                continue
                 # if this char is a repetition and remove_repetitions=true, then skip
-                if i != 0 and char == self.int_to_char[sequence[i - 1].item()]:
-                    pass
-                elif char == self.labels[self.space_index]:
-                    string += ' '
-                    offsets.append(i)
-                else:
-                    string = string + char
-                    offsets.append(i)
+            if i != 0 and char == self.int_to_char[sequence[i - 1].item()]:
+                pass
+            elif char == self.labels[self.space_index]:
+                string += ' '
+                offsets.append(i)
+            else:
+                string = string + char
+                offsets.append(i)
         return string, torch.IntTensor(offsets)
 
     def decode(self, probs):
@@ -237,10 +238,11 @@ class DeepSpeech(nn.Module):
             nn.Hardtanh(0, 20, inplace=True)
         )
         # Based on above convolutions and spectrogram size using conv formula (W - F + 2P)/ S+1
-        rnn_input_size = int(math.floor((sample_rate * window_size) / 2) + 1)
-        rnn_input_size = int(math.floor(rnn_input_size - 41) / 2 + 1)
-        rnn_input_size = int(math.floor(rnn_input_size - 21) / 2 + 1)
-        rnn_input_size *= 32
+        # rnn_input_size = int(math.floor((sample_rate * window_size) / 2) + 1)
+        # rnn_input_size = int(math.floor(rnn_input_size - 41) / 2 + 1)
+        # rnn_input_size = int(math.floor(rnn_input_size - 21) / 2 + 1)
+        # rnn_input_size *= 32
+        rnn_input_size = 672
 
         rnns = []
         rnn = BatchRNN(input_size=rnn_input_size, hidden_size=rnn_hidden_size, rnn_type=rnn_type,
