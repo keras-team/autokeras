@@ -83,6 +83,11 @@ class Constant:
     TOPIC_CLASSIFIER_MODELS = [
         GoogleDriveFile(google_drive_id='1U7C3xPid1ZvBKpkfW9KikrmNui0yJqnk', local_name='tc.pth')]
 
+    VOICE_RECONGINIZER_LABELS = "_'ABCDEFGHIJKLMNOPQRSTUVWXYZ "
+    VOICE_RECONGINIZER_AUDIO_CONF = {'sample_rate': 16000, 'window_size': 0.02, 'window_stride': 0.01,
+                                     'window': 'hamming', 'noise_dir': None, 'noise_prob': 0.4,
+                                     'noise_levels': (0.0, 0.5)}
+
     # Image Resize
 
     MAX_IMAGE_SIZE = 128 * 128

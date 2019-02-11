@@ -115,26 +115,26 @@ class GreedyDecoder(Decoder):
     def __init__(self, labels, blank_index=0):
         super(GreedyDecoder, self).__init__(labels, blank_index)
 
-    def convert_to_strings(self, sequences, remove_repetitions=True, return_offsets=True):
+    def convert_to_strings(self, sequences, return_offsets=True):
         """Given a list of numeric sequences, returns the corresponding strings"""
         strings = []
         offsets = []
         for x in xrange(len(sequences)):
             seq_len = len(sequences[x])
-            string, string_offsets = self.process_string(sequences[x], seq_len, remove_repetitions)
+            string, string_offsets = self.process_string(sequences[x], seq_len)
             strings.append([string])  # We only return one path
             if return_offsets:
                 offsets.append([string_offsets])
         return strings, offsets
 
-    def process_string(self, sequence, size, remove_repetitions=False):
+    def process_string(self, sequence, size):
         string = ''
         offsets = []
         for i in range(size):
             char = self.int_to_char[sequence[i].item()]
             if char != self.int_to_char[self.blank_index]:
                 # if this char is a repetition and remove_repetitions=true, then skip
-                if remove_repetitions and i != 0 and char == self.int_to_char[sequence[i - 1].item()]:
+                if i != 0 and char == self.int_to_char[sequence[i - 1].item()]:
                     pass
                 elif char == self.labels[self.space_index]:
                     string += ' '
@@ -158,7 +158,7 @@ class GreedyDecoder(Decoder):
         """
         _, max_probs = torch.max(probs.transpose(0, 1), 2)
         strings, offsets = self.convert_to_strings(max_probs.view(max_probs.size(0), max_probs.size(1)),
-                                                   remove_repetitions=True, return_offsets=True)
+                                                   return_offsets=True)
         return strings, offsets
 
 
@@ -296,24 +296,16 @@ class DeepSpeech(nn.Module):
             model = torch.nn.DataParallel(model).cuda()
         return model
 
-    @staticmethod
-    def get_labels(model):
-        model_is_cuda = next(model.parameters()).is_cuda
-        return model.module._labels if model_is_cuda else model._labels
-
-    @staticmethod
-    def get_audio_conf(model):
-        model_is_cuda = next(model.parameters()).is_cuda
-        return model.module._audio_conf if model_is_cuda else model._audio_conf
-
 
 class VoiceRecognizer(Pretrained):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         self.model = self.load_checkpoint()
-        labels = DeepSpeech.get_labels(self.model)
-        audio_conf = DeepSpeech.get_audio_conf(self.model)
+        # labels = DeepSpeech.get_labels(self.model)
+        # audio_conf = DeepSpeech.get_audio_conf(self.model)
+        labels = Constant.VOICE_RECONGINIZER_LABELS
+        audio_conf = Constant.VOICE_RECONGINIZER_AUDIO_CONF
         self.decoder = GreedyDecoder(labels, blank_index=labels.index('_'))
         self.parser = SpectrogramParser(audio_conf, normalize=True)
 
