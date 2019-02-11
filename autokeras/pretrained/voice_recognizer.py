@@ -1,4 +1,3 @@
-import math
 from collections import OrderedDict
 
 import librosa
@@ -62,7 +61,7 @@ class SpectrogramParser:
         # STFT
         D = librosa.stft(y, n_fft=n_fft, hop_length=hop_length,
                          win_length=win_length, window=self.window)
-        spect, phase = librosa.magphase(D)
+        spect, _ = librosa.magphase(D)
         # S = log(S+1)
         spect = np.log1p(spect)
         spect = torch.FloatTensor(spect)
@@ -119,9 +118,9 @@ class GreedyDecoder(Decoder):
         """Given a list of numeric sequences, returns the corresponding strings"""
         strings = []
         offsets = []
-        for x in xrange(len(sequences)):
-            seq_len = len(sequences[x])
-            string, string_offsets = self.process_string(sequences[x], seq_len)
+        for sequence in sequences:
+            seq_len = len(sequence)
+            string, string_offsets = self.process_string(sequence, seq_len)
             strings.append([string])  # We only return one path
             if return_offsets:
                 offsets.append([string_offsets])
@@ -210,23 +209,18 @@ class BatchRNN(nn.Module):
 
 
 class DeepSpeech(nn.Module):
-    def __init__(self, rnn_type=nn.LSTM, labels="abc", rnn_hidden_size=768, nb_layers=5, audio_conf=None,
-                 bidirectional=True, context=20):
+    def __init__(self, rnn_type=nn.LSTM, labels="abc", rnn_hidden_size=768, nb_layers=5,
+                 bidirectional=True):
         super(DeepSpeech, self).__init__()
 
         # model metadata needed for serialization/deserialization
-        if audio_conf is None:
-            audio_conf = {}
         self._version = '0.0.1'
         self._hidden_size = rnn_hidden_size
         self._hidden_layers = nb_layers
         self._rnn_type = rnn_type
-        self._audio_conf = audio_conf or {}
         self._labels = labels
         self._bidirectional = bidirectional
 
-        sample_rate = self._audio_conf.get("sample_rate", 16000)
-        window_size = self._audio_conf.get("window_size", 0.02)
         num_classes = len(self._labels)
 
         self.conv = nn.Sequential(
@@ -281,8 +275,8 @@ class DeepSpeech(nn.Module):
     def load_model(cls, path, cuda=False):
         package = torch.load(path, map_location=lambda storage, loc: storage)
         model = cls(rnn_hidden_size=package['hidden_size'], nb_layers=package['hidden_layers'],
-                    labels=package['labels'], audio_conf=package['audio_conf'],
-                    rnn_type=supported_rnns[package['rnn_type']], bidirectional=package.get('bidirectional', True))
+                    labels=package['labels'], rnn_type=supported_rnns[package['rnn_type']],
+                    bidirectional=package.get('bidirectional', True))
         # the blacklist parameters are params that were previous erroneously saved by the model
         # care should be taken in future versions that if batch_norm on the first rnn is required
         # that it be named something else
@@ -304,8 +298,6 @@ class VoiceRecognizer(Pretrained):
         super().__init__(**kwargs)
 
         self.model = self.load_checkpoint()
-        # labels = DeepSpeech.get_labels(self.model)
-        # audio_conf = DeepSpeech.get_audio_conf(self.model)
         labels = Constant.VOICE_RECONGINIZER_LABELS
         audio_conf = Constant.VOICE_RECONGINIZER_AUDIO_CONF
         self.decoder = GreedyDecoder(labels, blank_index=labels.index('_'))
@@ -324,7 +316,6 @@ class VoiceRecognizer(Pretrained):
         if audio_data is not None:
             spect = audio_data
         else:
-            assert audio_path is not None
             spect = self.parser.parse_audio(audio_path).contiguous()
             spect = spect.view(1, 1, spect.size(0), spect.size(1))
 
