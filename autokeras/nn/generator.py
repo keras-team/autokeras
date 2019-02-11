@@ -157,11 +157,10 @@ class MlpGenerator(NetworkGenerator):
 
 
 class ResNetGenerator(NetworkGenerator):
-    def __init__(self, n_output_node, input_shape):
+    def __init__(self, n_output_node, input_shape, layers=[2, 2, 2, 2], bottleneck=False):
         super(ResNetGenerator, self).__init__(n_output_node, input_shape)
-        # self.layers = [2, 2, 2, 2]
+        self.layers = layers
         self.in_planes = 64
-        self.block_expansion = 1
         self.n_dim = len(self.input_shape) - 1
         if len(self.input_shape) > 4:
             raise ValueError('The input dimension is too high.')
@@ -172,6 +171,12 @@ class ResNetGenerator(NetworkGenerator):
         self.global_avg_pooling = get_global_avg_pooling_class(self.n_dim)
         self.adaptive_avg_pooling = get_global_avg_pooling_class(self.n_dim)
         self.batch_norm = get_batch_norm_class(self.n_dim)
+        if bottleneck:
+            self.make_block = self._make_bottleneck_block
+            self.block_expansion = 1
+        else:
+            self.make_block = self._make_basic_block
+            self.block_expansion = 4
 
     def generate(self, model_len=None, model_width=None):
         if model_width is None:
@@ -179,18 +184,18 @@ class ResNetGenerator(NetworkGenerator):
         graph = Graph(self.input_shape, False)
         temp_input_channel = self.input_shape[-1]
         output_node_id = 0
-        # output_node_id = graph.add_layer(StubReLU(), output_node_id)
         output_node_id = graph.add_layer(self.conv(temp_input_channel, model_width, kernel_size=3), output_node_id)
         output_node_id = graph.add_layer(self.batch_norm(model_width), output_node_id)
+        output_node_id = graph.add_layer(StubReLU(), output_node_id)
         # output_node_id = graph.add_layer(self.pooling(kernel_size=3, stride=2, padding=1), output_node_id)
 
-        output_node_id = self._make_layer(graph, model_width, 2, output_node_id, 1)
+        output_node_id = self._make_layer(graph, model_width, self.layers[0], output_node_id, 1)
         model_width *= 2
-        output_node_id = self._make_layer(graph, model_width, 2, output_node_id, 2)
+        output_node_id = self._make_layer(graph, model_width, self.layers[1], output_node_id, 2)
         model_width *= 2
-        output_node_id = self._make_layer(graph, model_width, 2, output_node_id, 2)
+        output_node_id = self._make_layer(graph, model_width, self.layers[2], output_node_id, 2)
         model_width *= 2
-        output_node_id = self._make_layer(graph, model_width, 2, output_node_id, 2)
+        output_node_id = self._make_layer(graph, model_width, self.layers[3], output_node_id, 2)
 
         output_node_id = graph.add_layer(self.global_avg_pooling(), output_node_id)
         graph.add_layer(StubDense(model_width * self.block_expansion, self.n_output_node), output_node_id)
@@ -200,35 +205,81 @@ class ResNetGenerator(NetworkGenerator):
         strides = [stride] + [1] * (blocks - 1)
         out = node_id
         for current_stride in strides:
-            out = self._make_block(graph, self.in_planes, planes, out, current_stride)
+            out = self.make_block(graph, self.in_planes, planes, out, current_stride)
             self.in_planes = planes * self.block_expansion
         return out
 
-    def _make_block(self, graph, in_planes, planes, node_id, stride=1):
-        out = graph.add_layer(self.batch_norm(in_planes), node_id)
-        out = graph.add_layer(StubReLU(), out)
-        residual_node_id = out
-        out = graph.add_layer(self.conv(in_planes, planes, kernel_size=3, stride=stride), out)
+    def _make_basic_block(self, graph, in_planes, planes, node_id, stride=1):
+        out = graph.add_layer(self.conv(in_planes, planes, kernel_size=3, stride=stride), node_id)
         out = graph.add_layer(self.batch_norm(planes), out)
         out = graph.add_layer(StubReLU(), out)
         out = graph.add_layer(self.conv(planes, planes, kernel_size=3), out)
+        out = graph.add_layer(self.batch_norm(planes), out)
 
-        residual_node_id = graph.add_layer(StubReLU(), residual_node_id)
-        residual_node_id = graph.add_layer(self.conv(in_planes,
-                                                     planes * self.block_expansion,
-                                                     kernel_size=1,
-                                                     stride=stride), residual_node_id)
+        residual_node_id = node_id
+
+        if stride != 1 or in_planes != self.block_expansion * planes:
+            residual_node_id = graph.add_layer(self.conv(in_planes,
+                                                         planes * self.block_expansion,
+                                                         kernel_size=1,
+                                                         stride=stride), residual_node_id)
+            residual_node_id = graph.add_layer(self.batch_norm(self.block_expansion*planes), residual_node_id)
+
         out = graph.add_layer(StubAdd(), (out, residual_node_id))
+        out = graph.add_layer(StubReLU(), out)
+        return out
+
+    def _make_bottleneck_block(self, graph, in_planes, planes, node_id, stride=1):
+        out = graph.add_layer(self.conv(in_planes, planes, kernel_size=1), node_id)
+        out = graph.add_layer(self.batch_norm(planes), out)
+        out = graph.add_layer(StubReLU(), out)
+        out = graph.add_layer(self.conv(planes, planes, kernel_size=3, stride=stride), out)
+        out = graph.add_layer(self.batch_norm(planes), out)
+        out = graph.add_layer(StubReLU(), out)
+        out = graph.add_layer(self.conv(planes, self.block_expansion*planes, kernel_size=1), out)
+        out = graph.add_layer(self.batch_norm(self.block_expansion*planes), out)
+
+        residual_node_id = node_id
+
+        if stride != 1 or in_planes != self.block_expansion*planes:
+            residual_node_id = graph.add_layer(self.conv(in_planes,
+                                                         planes * self.block_expansion,
+                                                         kernel_size=1,
+                                                         stride=stride), residual_node_id)
+            residual_node_id = graph.add_layer(self.batch_norm(self.block_expansion*planes), residual_node_id)
+
+        out = graph.add_layer(StubAdd(), (out, residual_node_id))
+        out = graph.add_layer(StubReLU(), out)
         return out
 
 
+def ResNet18(n_output_node, input_shape):
+    return ResNetGenerator(n_output_node, input_shape)
+
+
+def ResNet34(n_output_node, input_shape):
+    return ResNetGenerator(n_output_node, input_shape, [3, 4, 6, 3])
+
+
+def ResNet50(n_output_node, input_shape):
+    return ResNetGenerator(n_output_node, input_shape, [3, 4, 6, 3], bottleneck=True)
+
+
+def ResNet101(n_output_node, input_shape):
+    return ResNetGenerator(n_output_node, input_shape, [3, 4, 23, 3], bottleneck=True)
+
+
+def ResNet152(n_output_node, input_shape):
+    return ResNetGenerator(n_output_node, input_shape, [3, 8, 36, 3], bottleneck=True)
+
+
 class DenseNetGenerator(NetworkGenerator):
-    def __init__(self, n_output_node, input_shape):
+    def __init__(self, n_output_node, input_shape, block_config=[6, 12, 24, 16], growth_rate=32):
         super().__init__(n_output_node, input_shape)
         # DenseNet Constant
         self.num_init_features = 64
-        self.growth_rate = 32
-        self.block_config = (6, 12, 24, 16)
+        self.growth_rate = growth_rate
+        self.block_config = block_config
         self.bn_size = 4
         self.drop_rate = 0
         # Stub layers
@@ -255,7 +306,7 @@ class DenseNetGenerator(NetworkGenerator):
         output_node_id = graph.add_layer(self.batch_norm(num_features=self.num_init_features), output_node_id)
         output_node_id = graph.add_layer(StubReLU(), output_node_id)
         db_input_node_id = graph.add_layer(self.max_pooling(kernel_size=3, stride=2, padding=1), output_node_id)
-        # Each DensebLock
+        # Each Denseblock
         num_features = self.num_init_features
         for i, num_layers in enumerate(self.block_config):
             db_input_node_id = self._dense_block(num_layers=num_layers, num_input_features=num_features,
@@ -302,3 +353,20 @@ class DenseNetGenerator(NetworkGenerator):
         out = graph.add_layer(self.conv(num_input_features, num_output_features, kernel_size=1, stride=1), out)
         out = graph.add_layer(self.avg_pooling(kernel_size=2, stride=2), out)
         return out
+
+
+def DenseNet121(n_output_node, input_shape):
+    return DenseNetGenerator(n_output_node, input_shape)
+
+
+def DenseNet169(n_output_node, input_shape):
+    return DenseNetGenerator(n_output_node, input_shape, [6, 12, 32, 32])
+
+
+def DenseNet201(n_output_node, input_shape):
+    return DenseNetGenerator(n_output_node, input_shape, [6, 12, 48, 32])
+
+
+def DenseNet161(n_output_node, input_shape):
+    return DenseNetGenerator(n_output_node, input_shape, [6, 12, 36, 24], growth_rate=48)
+
