@@ -70,6 +70,8 @@ class Constant:
 
     VOICE_GENERATOR_MODELS = [
         GoogleDriveFile(google_drive_id='1E-B92LZz4dgg8DU81D6pyhOzM9yvvBTj', local_name='vg.pth')]
+    VOICE_RECONGINIZER_MODELS = [
+        GoogleDriveFile(google_drive_id='1RQQB-Yd-aqb6scWtnu1K4nlSTxTyaKjI', local_name='vr.pth')]
     FACE_DETECTOR_MODELS = [
         GoogleDriveFile(google_drive_id='1QJWKpAHRrAjrYPl6hQNDaoyBjoa_LRgz', local_name='pnet.pt'),
         GoogleDriveFile(google_drive_id='10aCiR393E6TLkp9KPPl4JhZamYqUVBO1', local_name='rnet.pt'),
