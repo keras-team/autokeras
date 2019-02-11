@@ -1,7 +1,7 @@
 <img src="https://github.com/jhfjhfj1/autokeras/blob/master/logo.png?raw=true" alt="drawing" width="400px" style="display: block; margin-left: auto; margin-right: auto"/>
 
 [![Build Status](https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master)](https://travis-ci.org/jhfjhfj1/autokeras)
-[![Maintainability](https://api.codeclimate.com/v1/badges/c7f2e68ff5c1c88cdf81/maintainability)](https://codeclimate.com/github/jhfjhfj1/autokeras/maintainability)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/620bd322918c476aa33230ec911a4301)](https://www.codacy.com/app/jhfjhfj1/autokeras?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jhfjhfj1/autokeras&amp;utm_campaign=Badge_Grade)
 [![Coverage Status](https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg)](https://coveralls.io/github/jhfjhfj1/autokeras)
 <a href="https://badge.fury.io/py/autokeras"><img src="https://badge.fury.io/py/autokeras.svg" alt="PyPI version" style="width: 125px"></a>
 
