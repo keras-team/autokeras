@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchaudio
-from six.moves import xrange
 from torch.autograd import Variable
 
 from autokeras.pretrained.base import Pretrained
@@ -181,6 +180,9 @@ class SequenceWise(nn.Module):
 
 
 class InferenceBatchSoftmax(nn.Module):
+    def __init__(self):
+        super(InferenceBatchSoftmax, self).__init__()
+
     def forward(self, input_):
         return F.softmax(input_, dim=-1)
 
@@ -318,8 +320,8 @@ class VoiceRecognizer(Pretrained):
         else:
             spect = self.parser.parse_audio(audio_path).contiguous()
             spect = spect.view(1, 1, spect.size(0), spect.size(1))
-
-        out = self.model(Variable(spect, volatile=True))
-        out = out.transpose(0, 1)  # TxNxH
-        decoded_output, _ = self.decoder.decode(out.data)
+        with torch.no_grad():
+            out = self.model(Variable(spect))
+            out = out.transpose(0, 1)  # TxNxH
+            decoded_output, _ = self.decoder.decode(out.data)
         return decoded_output[0][0]
