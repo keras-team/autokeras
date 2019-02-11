@@ -116,7 +116,14 @@ class_dirs = [i for i in os.listdir(path=train_dir) if os.path.isdir(os.path.joi
     train_csv.close()
 ```
 
-
+### Enable Multi-GPU Training
+Auto-Keras support multiple GPU training in the default setting. 
+There's no additional step needed to enable multiple GPU training. 
+However, if multiple-GPU training is not a desirable behavior. 
+You can disable it via environmental variable. ```CUDA_VISIBLE_DEVICES```. 
+For example, in your bash: ```export CUDA_VISIBLE_DEVICES=0```. 
+Keep in mind that when using multiple-GPU, make sure batch size is big enough that multiple-gpu context switch overhead won't effect the performance too much. 
+Otherwise multiple-gpu training may be slower than single-GPU training.
 
 ## Portable Models
 
