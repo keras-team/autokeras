@@ -41,12 +41,23 @@ Refer to examples/nas/cifar10_tutorial.py for more details.
 To implement your own NAS searcher, you need to implement your own searcher class YOUR_SEARCHER, which is derived 
 from base [Searcher](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/search.py) class. For your 
 YOUR_SEARCHER class, you must provide implementation of the two abstract method: 
+
 1. [generate(self, multiprocessing_queue)](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L223), 
 which is invoked to generate the next neural architecture.
+The return value of the generate function should be two elements.
+The first one is the generated graph.
+The second one is any other information you want to pass to the update function.
+If you have multiple values to pass, you need to put them into one tuple.
+If you don't have any value to pass, you can just put None.
+
 2. [update(self, other_info, model_id, graph, metric_value)](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L238), which is invoked 
 to update the controller with evaluation result of a neural architecture.
+The graph and other_info in the parameters are the corresponding return value of the generate function.
+There is no required return value for this function.
 
-For the default [BeyasianSearcher](https://github.com/jhfjhfj1/autokeras/blob/f455e22c140775975f5061354dc78cdf6b52dc26/autokeras/search.py#L284), the [generate](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L306) 
+You can refer to the default [BeyasianSearcher](https://github.com/jhfjhfj1/autokeras/blob/f455e22c140775975f5061354dc78cdf6b52dc26/autokeras/search.py#L284)
+as an example.
+The [generate](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L306) 
 function returns the generated graph and the father ID of the graph in the search tree. Then when the generated model 
 finish
 training, the father ID 
@@ -54,6 +65,8 @@ training, the father ID
 and ID (model_id) and instance (graph) and metric value (metric_value) of the model are passed to [update](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L329) 
 function to 
 update the controller BayesianOptimizer.
+
+You can find more example [here](https://github.com/jhfjhfj1/autokeras/tree/master/nas).
 
 You are welcome to implement your own method for NAS in our framework.
 If it works well, we are happy to merge it into our repo.
