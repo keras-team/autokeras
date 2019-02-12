@@ -7,8 +7,6 @@ from autokeras.search import Searcher
 
 class RandomSearcher(Searcher):
     """ Class to search for neural architectures using Random search strategy.
-    Attributes:
-        search_tree: The network morphism search tree
     """
 
     def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose,
@@ -19,7 +17,6 @@ class RandomSearcher(Searcher):
                                              path, metric, loss, generators,
                                              verbose, trainer_args, default_model_len,
                                              default_model_width)
-        self.search_tree = SearchTree()
 
     def generate(self, multiprocessing_queue):
         """Generate the next neural architecture.
@@ -51,12 +48,5 @@ class RandomSearcher(Searcher):
 
         return [(generated_graph, new_father_id)]
 
-    def update(self, other_info, model_id, *args):
-        """ Update the controller with evaluation result of a neural architecture.
-
-        Args:
-            other_info: Anything. In our case it is the father ID in the search tree.
-            model_id: An integer.
-        """
-        father_id = other_info
-        self.search_tree.add_child(father_id, model_id)
+    def update(self, other_info, model_id, graph, metric_value):
+        return
