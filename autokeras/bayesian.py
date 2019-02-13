@@ -2,7 +2,7 @@ import random
 import time
 from copy import deepcopy
 from functools import total_ordering
-from custom_queue import Queue
+from autokeras.custom_queue import Queue
 from queue import PriorityQueue
 import numpy as np
 import math
