@@ -1,6 +1,6 @@
 import time
 from copy import deepcopy
-from multiprocessing.queues import Queue
+from custom_queue import Queue
 
 from autokeras.bayesian import contain, SearchTree
 from autokeras.net_transformer import transform
