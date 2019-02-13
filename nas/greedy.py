@@ -1,11 +1,10 @@
 import time
 from copy import deepcopy
-from autokeras.custom_queue import Queue
 
+from autokeras.custom_queue import Queue
 from autokeras.bayesian import contain, SearchTree
 from autokeras.net_transformer import transform
 from autokeras.search import Searcher
-
 
 class GreedyOptimizer:
 
