@@ -9,17 +9,11 @@ from autokeras.nn.metric import Accuracy
 from autokeras.supervised import SingleModelSupervised
 from autokeras.text.pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
 from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification
-from autokeras.text.pretrained_bert.optimization import BertAdam
+from autokeras.text.pretrained_bert.optimization import BertAdam, warmup_linear
 from autokeras.text.pretrained_bert.tokenization import BertTokenizer
 from autokeras.utils import get_device, temp_path_generator
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from tqdm import tqdm, trange
-
-
-def warmup_linear(x, warmup=0.002):
-    if x < warmup:
-        return x / warmup
-    return 1.0 - x
 
 
 def get_inputs(features):
