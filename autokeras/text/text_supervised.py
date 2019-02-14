@@ -16,6 +16,19 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler, Sequentia
 from tqdm import tqdm, trange
 
 
+def warmup_linear(x, warmup=0.002):
+    if x < warmup:
+        return x / warmup
+    return 1.0 - x
+
+
+def get_inputs(features):
+    all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
+    all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
+    all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
+    return all_input_ids, all_input_mask, all_segment_ids
+
+
 class InputFeatures(object):
     """A single set of features of data."""
 
@@ -97,9 +110,7 @@ class TextClassifier(SingleModelSupervised, ABC):
         print("  Num examples = %d", len(x))
         print("  Batch size = %d", self.train_batch_size)
         print("  Num steps = %d", num_train_steps)
-        all_input_ids = torch.tensor([f.input_ids for f in train_features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in train_features], dtype=torch.long)
-        all_segment_ids = torch.tensor([f.segment_ids for f in train_features], dtype=torch.long)
+        all_input_ids, all_input_mask, all_segment_ids = get_inputs(train_features)
         all_label_ids = torch.tensor([int(f) for f in y], dtype=torch.long)
         train_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
         train_sampler = RandomSampler(train_data)
@@ -123,7 +134,7 @@ class TextClassifier(SingleModelSupervised, ABC):
                 nb_tr_steps += 1
                 if (step + 1) % self.gradient_accumulation_steps == 0:
                     # modify learning rate with special warm up BERT uses
-                    lr_this_step = self.learning_rate * self.warmup_linear(self.global_step / t_total,
+                    lr_this_step = self.learning_rate * warmup_linear(self.global_step / t_total,
                                                                            self.warmup_proportion)
                     for param_group in optimizer.param_groups:
                         param_group['lr'] = lr_this_step
@@ -145,9 +156,7 @@ class TextClassifier(SingleModelSupervised, ABC):
         print("***** Running evaluation *****")
         print("  Num examples = %d", len(x_test))
         print("  Batch size = %d", self.eval_batch_size)
-        all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
-        all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+        all_input_ids, all_input_mask, all_segment_ids = get_inputs(eval_features)
         eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
         # Run prediction for full data
         eval_sampler = SequentialSampler(eval_data)
@@ -204,11 +213,6 @@ class TextClassifier(SingleModelSupervised, ABC):
                                           input_mask=input_mask,
                                           segment_ids=segment_ids))
         return features
-
-    def warmup_linear(self, x, warmup=0.002):
-        if x < warmup:
-            return x / warmup
-        return 1.0 - x
 
     def transform_y(self, y):
         pass

@@ -80,6 +80,14 @@ class BertAdam(Optimizer):
                         max_grad_norm=max_grad_norm)
         super(BertAdam, self).__init__(params, defaults)
 
+    def get_lr_scheduled(self, group, state):
+        if group['t_total'] != -1:
+            schedule_fct = SCHEDULES[group['schedule']]
+            lr_scheduled = group['lr'] * schedule_fct(state['step'] / group['t_total'], group['warmup'])
+        else:
+            lr_scheduled = group['lr']
+        return lr_scheduled
+
     def get_lr(self):
         lr = []
         for group in self.param_groups:
@@ -87,12 +95,7 @@ class BertAdam(Optimizer):
                 state = self.state[p]
                 if len(state) == 0:
                     return [0]
-                if group['t_total'] != -1:
-                    schedule_fct = SCHEDULES[group['schedule']]
-                    lr_scheduled = group['lr'] * schedule_fct(state['step']/group['t_total'], group['warmup'])
-                else:
-                    lr_scheduled = group['lr']
-                lr.append(lr_scheduled)
+                lr.append(self.get_lr_scheduled(group, state))
         return lr
 
     def step(self, closure=None):
@@ -147,13 +150,7 @@ class BertAdam(Optimizer):
                 if group['weight_decay'] > 0.0:
                     update += group['weight_decay'] * p.data
 
-                if group['t_total'] != -1:
-                    schedule_fct = SCHEDULES[group['schedule']]
-                    lr_scheduled = group['lr'] * schedule_fct(state['step']/group['t_total'], group['warmup'])
-                else:
-                    lr_scheduled = group['lr']
-
-                update_with_lr = lr_scheduled * update
+                update_with_lr = self.get_lr_scheduled(group, state) * update
                 p.data.add_(-update_with_lr)
 
                 state['step'] += 1
