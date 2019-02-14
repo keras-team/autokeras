@@ -126,4 +126,3 @@ class TopicClassifier(TextClassifier):
             return "World"
         else:
             return "Sports"
-
