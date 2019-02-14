@@ -39,6 +39,15 @@ def warmup_linear(x, warmup=0.002):
     return 1.0 - x
 
 
+def get_lr_scheduled(self, group, state):
+    if group['t_total'] != -1:
+        schedule_fct = SCHEDULES[group['schedule']]
+        lr_scheduled = group['lr'] * schedule_fct(state['step'] / group['t_total'], group['warmup'])
+    else:
+        lr_scheduled = group['lr']
+    return lr_scheduled
+
+
 SCHEDULES = {
     'warmup_cosine':warmup_cosine,
     'warmup_constant':warmup_constant,
@@ -79,14 +88,6 @@ class BertAdam(Optimizer):
                         b1=b1, b2=b2, e=e, weight_decay=weight_decay,
                         max_grad_norm=max_grad_norm)
         super(BertAdam, self).__init__(params, defaults)
-
-    def get_lr_scheduled(self, group, state):
-        if group['t_total'] != -1:
-            schedule_fct = SCHEDULES[group['schedule']]
-            lr_scheduled = group['lr'] * schedule_fct(state['step'] / group['t_total'], group['warmup'])
-        else:
-            lr_scheduled = group['lr']
-        return lr_scheduled
 
     def get_lr(self):
         lr = []
