@@ -1,22 +1,4 @@
-import sys
-import os
-import threading
-import collections
-import time
-import weakref
-import errno
-
-from queue import Empty, Full
-
-import _multiprocessing
-
-from . import connection
-from . import context
-_ForkingPickler = context.reduction.ForkingPickler
-
-from .util import debug, info, Finalize, register_after_fork, is_exiting
-
-from multiprocessing.queues import Queue
+from multiprocessing.queues import Queue as MultiQueue
 
 class SharedCounter(object):
     """ A synchronized shared counter.
@@ -47,7 +29,7 @@ class SharedCounter(object):
         return self.count.value
 
 
-class Queue(multiprocessing.queues.Queue):
+class Queue(MultiQueue):
     """ A portable implementation of multiprocessing.Queue.
 
     Because of multithreading / multiprocessing semantics, Queue.qsize() may
