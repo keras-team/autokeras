@@ -13,8 +13,8 @@ import shutil
 import numpy as np
 from time import time, sleep
 # Local imports
-from ..opt.function_caller import FunctionCaller, EVAL_ERROR_CODE
-from ..utils.reporters import get_reporter
+from nas.nasbot.opt.function_caller import FunctionCaller, EVAL_ERROR_CODE
+from nas.nasbot.utils.reporters import get_reporter
 import tempfile
 
 _DEBUG_ERROR_PROB = 0.1

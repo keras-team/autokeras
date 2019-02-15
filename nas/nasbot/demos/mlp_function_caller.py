@@ -11,8 +11,8 @@ import os
 from time import sleep
 from copy import deepcopy
 # Local
-from ..opt.nn_function_caller import NNFunctionCaller
-from ..cg import run_tensorflow
+from nas.nasbot.opt.nn_function_caller import NNFunctionCaller
+from nas.nasbot.cg import run_tensorflow
 
 _MAX_TRIES = 3
 _SLEEP_BETWEEN_TRIES_SECS = 3

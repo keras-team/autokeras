@@ -10,9 +10,9 @@ import functools
 import os
 import argparse
 import tensorflow as tf
-from ..cifar import cifar10_myMain
+from nas.nasbot.cg.cifar import cifar10_myMain
 
-from ...opt.nn_opt_utils import get_initial_pool
+from nas.nasbot.opt.nn_opt_utils import get_initial_pool
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2' # To remove the tensorflow compilation warnings

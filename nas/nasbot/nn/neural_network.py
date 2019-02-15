@@ -10,8 +10,8 @@
 from copy import deepcopy
 import numpy as np
 # Local imports
-from ..utils import graph_utils
-from ..utils.general_utils import get_nonzero_indices_in_vector, reorder_list_or_array, \
+from nas.nasbot.utils import graph_utils
+from nas.nasbot.utils.general_utils import get_nonzero_indices_in_vector, reorder_list_or_array, \
                                 reorder_rows_and_cols_in_matrix
 
 # global constants

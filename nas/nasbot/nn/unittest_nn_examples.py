@@ -9,9 +9,9 @@
 
 import os
 # Local imports
-from ..utils.base_test_class import BaseTestClass, execute_tests
-from ..nn import nn_examples
-from ..nn.nn_visualise import visualise_list_of_nns
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.nn import nn_examples
+from nas.nasbot.nn.nn_visualise import visualise_list_of_nns
 
 # Test cases for nn_examples.py ----------------------------------------------------------
 class NNExamplesTestCase(BaseTestClass):

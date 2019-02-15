@@ -9,10 +9,10 @@
 # pylint: disable=relative-import
 
 # Local
-from .gp_instances import SimpleGPFitter
-from ..utils.base_test_class import BaseTestClass, execute_tests
-from .unittest_gp_core import build_gp_with_dataset, compute_average_prediction_error
-from .unittest_gp_core import gen_gp_test_data
+from nas.nasbot.gp.gp_instances import SimpleGPFitter
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.gp.unittest_gp_core import build_gp_with_dataset, compute_average_prediction_error
+from nas.nasbot.gp.unittest_gp_core import gen_gp_test_data
 
 
 def fit_gp_with_dataset(dataset):

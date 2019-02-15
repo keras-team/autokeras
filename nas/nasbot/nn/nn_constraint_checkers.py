@@ -9,7 +9,7 @@
 
 import numpy as np
 # Local
-from ..opt.domains import NNDomain
+from nas.nasbot.opt.domains import NNDomain
 
 
 class NNConstraintChecker(object):

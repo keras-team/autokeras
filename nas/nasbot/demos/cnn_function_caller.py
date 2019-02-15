@@ -8,8 +8,8 @@
 import os
 from time import sleep
 # Local
-from ..opt.nn_function_caller import NNFunctionCaller
-from ..cg.cifar import run_tensorflow_cifar
+from nas.nasbot.opt.nn_function_caller import NNFunctionCaller
+from nas.nasbot.cg.cifar import run_tensorflow_cifar
 import traceback
 
 _MAX_TRIES = 3

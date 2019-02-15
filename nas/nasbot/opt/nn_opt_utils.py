@@ -5,8 +5,8 @@
 # pylint: disable=no-member
 
 # Local
-from ..opt.function_caller import FunctionCaller
-from ..nn import nn_examples
+from nas.nasbot.opt.function_caller import FunctionCaller
+from nas.nasbot.nn import nn_examples
 
 
 class NNFunctionCaller(FunctionCaller):

@@ -9,14 +9,14 @@
 
 import numpy as np
 # Local
-from ..utils.syn_functions import get_syn_function_caller_from_name
-from .worker_manager import SyntheticWorkerManager
-from ..opt import gp_bandit
-from ..gp.gp_instances import all_simple_gp_args
+from nas.nasbot.utils.syn_functions import get_syn_function_caller_from_name
+from nas.nasbot.opt.worker_manager import SyntheticWorkerManager
+from nas.nasbot.opt import gp_bandit
+from nas.nasbot.gp.gp_instances import all_simple_gp_args
 # from nn.nn_gp import nn_gp_args
-from ..utils.base_test_class import BaseTestClass, execute_tests
-from ..utils import reporters
-from ..utils.option_handler import load_options
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.utils import reporters
+from nas.nasbot.utils.option_handler import load_options
 
 
 class GPBanditTestCase(BaseTestClass):

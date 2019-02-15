@@ -9,12 +9,12 @@
 
 import numpy as np
 # Local
-from ..gp import gp_core
-from ..gp.gp_instances import basic_gp_args
-from ..nn import nn_comparators
-from ..utils.ancillary_utils import get_list_of_floats_as_str
-from ..utils.reporters import get_reporter
-from ..utils.option_handler import get_option_specs, load_options
+from nas.nasbot.gp import gp_core
+from nas.nasbot.gp.gp_instances import basic_gp_args
+from nas.nasbot.nn import nn_comparators
+from nas.nasbot.utils.ancillary_utils import get_list_of_floats_as_str
+from nas.nasbot.utils.reporters import get_reporter
+from nas.nasbot.utils.option_handler import get_option_specs, load_options
 
 _DFLT_KERNEL_TYPE = 'lpemd_sum'
 

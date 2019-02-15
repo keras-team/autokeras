@@ -14,7 +14,7 @@ import numpy as np
 import pickle
 from scipy.io import savemat as sio_savemat
 # Local imports
-from ..utils.reporters import get_reporter
+from nas.nasbot.utils.reporters import get_reporter
 
 
 class BasicExperimenter(object):

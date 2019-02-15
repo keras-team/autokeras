@@ -10,13 +10,13 @@
 
 import numpy as np
 # Local
-from ..opt.function_caller import FunctionCaller
-from ..opt.ga_optimiser import ga_opt_args, ga_optimise_from_args
-from ..gp.kernel import SEKernel
-from ..utils.oper_utils import random_maximise, direct_ft_maximise
-from ..utils.option_handler import load_options
-from ..utils.reporters import get_reporter
-from ..opt.worker_manager import SyntheticWorkerManager
+from nas.nasbot.opt.function_caller import FunctionCaller
+from nas.nasbot.opt.ga_optimiser import ga_opt_args, ga_optimise_from_args
+from nas.nasbot.gp.kernel import SEKernel
+from nas.nasbot.utils.oper_utils import random_maximise, direct_ft_maximise
+from nas.nasbot.utils.option_handler import load_options
+from nas.nasbot.utils.reporters import get_reporter
+from nas.nasbot.opt.worker_manager import SyntheticWorkerManager
 
 
 _EUCLIDEAN_DFLT_OPT_METHOD = 'rand'

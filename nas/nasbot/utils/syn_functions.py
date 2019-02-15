@@ -10,7 +10,7 @@
 
 import numpy as np
 # Local imports
-from ..opt.function_caller import get_euc_function_caller_from_function
+from nas.nasbot.opt.function_caller import get_euc_function_caller_from_function
 
 # Hartmann Functions ---------------------------------------------------------------------
 def hartmann(x, alpha, A, P, max_val=np.inf):

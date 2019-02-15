@@ -9,9 +9,9 @@
 
 import numpy as np
 # Local imports
-from ..gp.kernel import ExpSumOfDistsKernel, SumOfExpSumOfDistsKernel
-from ..nn import neural_network
-from ..utils.oper_utils import opt_transport
+from nas.nasbot.gp.kernel import ExpSumOfDistsKernel, SumOfExpSumOfDistsKernel
+from nas.nasbot.nn import neural_network
+from nas.nasbot.utils.oper_utils import opt_transport
 
 DFLT_TRANSPORT_DIST = 'lp'
 DFLT_CONN_COST_FUNC = 'linear'

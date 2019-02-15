@@ -12,11 +12,11 @@
 import numpy as np
 from scipy.sparse import dok_matrix
 # local imports
-from ..nn.neural_network import ConvNeuralNetwork, MultiLayerPerceptron, \
+from nas.nasbot.nn.neural_network import ConvNeuralNetwork, MultiLayerPerceptron, \
                               get_cnn_layer_labels,\
                               get_mlp_layer_labels, is_a_conv_layer_label
-from ..nn.nn_modifiers import NNModifier
-from ..utils.general_utils import get_dok_mat_with_set_coords
+from nas.nasbot.nn.nn_modifiers import NNModifier
+from nas.nasbot.utils.general_utils import get_dok_mat_with_set_coords
 
 
 # CNNs ===================================================================================

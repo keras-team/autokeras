@@ -6,16 +6,16 @@
 #pylint: disable=relative-import
 
 # Local imports
-from ..opt import ga_optimiser
-from ..nn.syn_nn_functions import cnn_syn_func1, mlp_syn_func1
-from ..opt.domains import NNDomain
-from ..opt.function_caller import FunctionCaller
-from ..nn.nn_constraint_checkers import CNNConstraintChecker, MLPConstraintChecker
-from ..nn.nn_modifiers import get_nn_modifier_from_args
-from ..opt.nn_opt_utils import get_initial_cnn_pool, get_initial_mlp_pool
-from ..utils.reporters import get_reporter
-from ..utils.option_handler import load_options
-from ..opt.worker_manager import SyntheticWorkerManager
+from nas.nasbot.opt import ga_optimiser
+from nas.nasbot.nn.syn_nn_functions import cnn_syn_func1, mlp_syn_func1
+from nas.nasbot.opt.domains import NNDomain
+from nas.nasbot.opt.function_caller import FunctionCaller
+from nas.nasbot.nn.nn_constraint_checkers import CNNConstraintChecker, MLPConstraintChecker
+from nas.nasbot.nn.nn_modifiers import get_nn_modifier_from_args
+from nas.nasbot.opt.nn_opt_utils import get_initial_cnn_pool, get_initial_mlp_pool
+from nas.nasbot.utils.reporters import get_reporter
+from nas.nasbot.utils.option_handler import load_options
+from nas.nasbot.opt.worker_manager import SyntheticWorkerManager
 
 
 # The problem

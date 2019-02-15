@@ -9,10 +9,10 @@
 
 import numpy as np
 # Local imports
-from ..nn import neural_network
-from ..nn.nn_examples import generate_cnn_architectures, generate_mlp_architectures
-from ..utils.base_test_class import BaseTestClass, execute_tests
-from ..utils.graph_utils import apsp_floyd_warshall_costs
+from nas.nasbot.nn import neural_network
+from nas.nasbot.nn.nn_examples import generate_cnn_architectures, generate_mlp_architectures
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.utils.graph_utils import apsp_floyd_warshall_costs
 
 
 # Test cases for NeuralNetwork class -------------------------------------------------

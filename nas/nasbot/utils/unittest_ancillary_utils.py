@@ -7,8 +7,8 @@
 # pylint: disable=no-member
 # pylint: disable=invalid-name
 
-from ..utils import ancillary_utils
-from ..utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.utils import ancillary_utils
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
 
 
 class AncillaryUtilsTestCase(BaseTestClass):

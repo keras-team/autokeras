@@ -8,11 +8,11 @@
 # pylint: disable=invalid-name
 # pylint: disable=relative-import
 
-from ..utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
 import numpy as np
 # Local
-from ..gp import gp_core
-from ..gp import kernel
+from nas.nasbot.gp import gp_core
+from nas.nasbot.gp import kernel
 
 
 def gen_gp_test_data():

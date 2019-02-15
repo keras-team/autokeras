@@ -11,11 +11,11 @@ import sys
 import numpy as np
 from scipy.linalg import solve_triangular
 # Local imports
-from ..utils.general_utils import stable_cholesky, draw_gaussian_samples, \
+from nas.nasbot.utils.general_utils import stable_cholesky, draw_gaussian_samples, \
                                 project_symmetric_to_psd_cone
-from ..utils.oper_utils import direct_ft_maximise, random_maximise, random_sample
-from ..utils.option_handler import get_option_specs, load_options
-from ..utils.reporters import get_reporter
+from nas.nasbot.utils.oper_utils import direct_ft_maximise, random_maximise, random_sample
+from nas.nasbot.utils.option_handler import get_option_specs, load_options
+from nas.nasbot.utils.reporters import get_reporter
 
 
 # These are mandatory requirements. Every GP implementation should probably use them.

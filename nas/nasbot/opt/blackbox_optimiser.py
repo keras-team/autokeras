@@ -12,10 +12,10 @@ from argparse import Namespace
 import time
 import numpy as np
 # Local imports
-from ..opt.function_caller import EVAL_ERROR_CODE
-from ..nn.nn_examples import generate_many_neural_networks
-from ..utils.option_handler import get_option_specs, load_options
-from ..utils.reporters import get_reporter
+from nas.nasbot.opt.function_caller import EVAL_ERROR_CODE
+from nas.nasbot.nn.nn_examples import generate_many_neural_networks
+from nas.nasbot.utils.option_handler import get_option_specs, load_options
+from nas.nasbot.utils.reporters import get_reporter
 
 blackbox_opt_args = [
   get_option_specs('max_num_steps', False, 1e7,

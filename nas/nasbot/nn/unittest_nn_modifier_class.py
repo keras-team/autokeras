@@ -10,12 +10,12 @@ import numpy as np
 import os
 from shutil import rmtree
 # Local imports
-from ..nn import nn_constraint_checkers
-from ..nn import nn_modifiers
-from ..nn.neural_network import NeuralNetwork
-from ..nn.nn_visualise import visualise_nn
-from .unittest_neural_network import generate_cnn_architectures, generate_mlp_architectures
-from ..utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.nn import nn_constraint_checkers
+from nas.nasbot.nn import nn_modifiers
+from nas.nasbot.nn.neural_network import NeuralNetwork
+from nas.nasbot.nn.nn_visualise import visualise_nn
+from nas.nasbot.nn.unittest_neural_network import generate_cnn_architectures, generate_mlp_architectures
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
 
 
 def test_if_two_networks_are_equal(net1, net2, false_if_net1_is_net2=True):

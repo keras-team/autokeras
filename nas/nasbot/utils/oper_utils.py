@@ -15,7 +15,7 @@ try:
   import utils.direct_fortran.direct as direct_ft_wrap
 except ImportError:
   direct_ft_wrap = None
-from ..utils.general_utils import map_to_bounds
+from nas.nasbot.utils.general_utils import map_to_bounds
 
 _MAX_DIRECT_FN_EVALS = 2.6e6 # otherwise the fortran software complains
 

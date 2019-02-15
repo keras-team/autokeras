@@ -13,7 +13,7 @@ import os
 import shutil
 import time
 # Local
-from ..opt.function_caller import EVAL_ERROR_CODE
+from nas.nasbot.opt.function_caller import EVAL_ERROR_CODE
 
 TIME_TOL = 1e-5
 

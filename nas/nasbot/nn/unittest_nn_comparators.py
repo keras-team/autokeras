@@ -8,10 +8,10 @@
 
 import numpy as np
 # Local imports
-from ..utils.ancillary_utils import get_list_of_floats_as_str
-from ..utils.base_test_class import BaseTestClass, execute_tests
-from ..nn import nn_comparators
-from ..nn.unittest_neural_network import generate_cnn_architectures, \
+from nas.nasbot.utils.ancillary_utils import get_list_of_floats_as_str
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.nn import nn_comparators
+from nas.nasbot.nn.unittest_neural_network import generate_cnn_architectures, \
                                        generate_mlp_architectures
 
 _TOL = 1e-5

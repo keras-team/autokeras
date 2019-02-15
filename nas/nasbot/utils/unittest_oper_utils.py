@@ -11,8 +11,8 @@
 from argparse import Namespace
 import numpy as np
 # Local
-from ..utils.base_test_class import BaseTestClass, execute_tests
-from ..utils import oper_utils
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.utils import oper_utils
 
 
 class OptimiserTestCase(BaseTestClass):

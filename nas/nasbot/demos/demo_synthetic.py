@@ -5,12 +5,12 @@
 
 import numpy as np
 # Local
-from ..nn.nn_constraint_checkers import get_nn_domain_from_constraints
-from ..nn.syn_nn_functions import cnn_syn_func1
-from ..nn.nn_visualise import visualise_nn
-from ..opt import nasbot
-from ..opt.function_caller import FunctionCaller
-from ..opt.worker_manager import SyntheticWorkerManager
+from nas.nasbot.nn.nn_constraint_checkers import get_nn_domain_from_constraints
+from nas.nasbot.nn.syn_nn_functions import cnn_syn_func1
+from nas.nasbot.nn.nn_visualise import visualise_nn
+from nas.nasbot.opt import nasbot
+from nas.nasbot.opt.function_caller import FunctionCaller
+from nas.nasbot.opt.worker_manager import SyntheticWorkerManager
 
 
 # Search space

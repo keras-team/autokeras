@@ -8,9 +8,9 @@
 # pylint: disable=relative-import
 
 # Local imports
-from ..nn import nn_constraint_checkers
-from .unittest_neural_network import generate_cnn_architectures, generate_mlp_architectures
-from ..utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.nn import nn_constraint_checkers
+from nas.nasbot.nn.unittest_neural_network import generate_cnn_architectures, generate_mlp_architectures
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
 
 
 class NNConstraintCheckerTestCase(BaseTestClass):

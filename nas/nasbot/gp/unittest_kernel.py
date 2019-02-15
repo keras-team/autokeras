@@ -12,9 +12,9 @@
 import numpy as np
 
 # Local imports
-from ..gp import kernel
-from ..utils.ancillary_utils import dicts_are_equal
-from ..utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.gp import kernel
+from nas.nasbot.utils.ancillary_utils import dicts_are_equal
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
 
 
 class KernelBasicTestCase(BaseTestClass):

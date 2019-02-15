@@ -11,16 +11,16 @@
 
 import numpy as np
 # Local imports
-from ..opt.blackbox_optimiser import blackbox_opt_args
-from ..opt import gpb_acquisitions
-from ..nn.nn_gp import nn_gp_args, NNGPFitter
-from ..nn.nn_modifiers import get_nn_modifier_from_args
-from ..nn.nn_comparators import get_default_otmann_distance
-from ..opt.nn_opt_utils import get_initial_pool
-from ..opt.gp_bandit import GPBandit, gp_bandit_args
-from ..utils.general_utils import block_augment_array
-from ..utils.reporters import get_reporter
-from ..utils.option_handler import get_option_specs, load_options
+from nas.nasbot.opt.blackbox_optimiser import blackbox_opt_args
+from nas.nasbot.opt import gpb_acquisitions
+from nas.nasbot.nn.nn_gp import nn_gp_args, NNGPFitter
+from nas.nasbot.nn.nn_modifiers import get_nn_modifier_from_args
+from nas.nasbot.nn.nn_comparators import get_default_otmann_distance
+from nas.nasbot.opt.nn_opt_utils import get_initial_pool
+from nas.nasbot.opt.gp_bandit import GPBandit, gp_bandit_args
+from nas.nasbot.utils.general_utils import block_augment_array
+from nas.nasbot.utils.reporters import get_reporter
+from nas.nasbot.utils.option_handler import get_option_specs, load_options
 
 nasbot_specific_args = [
   get_option_specs('nasbot_acq_opt_method', False, 'ga',

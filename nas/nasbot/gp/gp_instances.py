@@ -8,9 +8,9 @@
 
 import numpy as np
 # Local imports
-from ..gp import gp_core
-from ..gp import kernel
-from ..utils.option_handler import get_option_specs
+from nas.nasbot.gp import gp_core
+from nas.nasbot.gp import kernel
+from nas.nasbot.utils.option_handler import get_option_specs
 
 _DFLT_KERNEL_TYPE = 'se'
 

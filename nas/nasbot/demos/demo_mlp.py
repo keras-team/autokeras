@@ -8,12 +8,12 @@ import numpy as np
 import time
 import os
 # Local
-from ..nn.nn_constraint_checkers import get_nn_domain_from_constraints
-from ..nn.nn_visualise import visualise_nn
-from ..opt import nasbot
-from ..demos.mlp_function_caller import MLPFunctionCaller
-from ..opt.worker_manager import RealWorkerManager
-from ..utils.reporters import get_reporter
+from nas.nasbot.nn.nn_constraint_checkers import get_nn_domain_from_constraints
+from nas.nasbot.nn.nn_visualise import visualise_nn
+from nas.nasbot.opt import nasbot
+from nas.nasbot.demos.mlp_function_caller import MLPFunctionCaller
+from nas.nasbot.opt.worker_manager import RealWorkerManager
+from nas.nasbot.utils.reporters import get_reporter
 
 # Data
 # The data should be in a pickle file stored as a dictionary. The 'train' key

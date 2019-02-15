@@ -13,7 +13,7 @@ from copy import deepcopy
 import numpy as np
 from scipy.linalg import eigh as sp_eigh
 # Local imports
-from ..utils.general_utils import get_nonzero_indices_in_vector
+from nas.nasbot.utils.general_utils import get_nonzero_indices_in_vector
 
 
 def construct_random_adjacency_matrix(num_vertices, avg_edge_frac=0.4, directed=False):

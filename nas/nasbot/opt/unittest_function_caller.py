@@ -12,8 +12,8 @@
 
 import numpy as np
 # Local
-from ..utils.base_test_class import BaseTestClass, execute_tests
-from ..utils.syn_functions import get_syn_function_caller_from_name
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.utils.syn_functions import get_syn_function_caller_from_name
 
 
 class FunctionCallerTestCase(BaseTestClass):

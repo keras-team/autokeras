@@ -8,12 +8,12 @@
 
 import numpy as np
 # Local imports
-from ..nn.syn_nn_functions import syn_func1_common, cnn_syn_func1, mlp_syn_func1
-from ..nn.nn_examples import generate_cnn_architectures, generate_mlp_architectures
-from ..nn import nn_gp
-from ..utils.ancillary_utils import get_list_of_floats_as_str
-from ..utils.base_test_class import BaseTestClass, execute_tests
-from ..utils.option_handler import load_options
+from nas.nasbot.nn.syn_nn_functions import syn_func1_common, cnn_syn_func1, mlp_syn_func1
+from nas.nasbot.nn.nn_examples import generate_cnn_architectures, generate_mlp_architectures
+from nas.nasbot.nn import nn_gp
+from nas.nasbot.utils.ancillary_utils import get_list_of_floats_as_str
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.utils.option_handler import load_options
 
 _TOL = 1e-5
 

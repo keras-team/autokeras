@@ -9,8 +9,8 @@
 # pylint: disable=relative-import
 
 import numpy as np
-from ..utils import general_utils
-from ..utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.utils import general_utils
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
 
 
 class GeneralUtilsTestCase(BaseTestClass):

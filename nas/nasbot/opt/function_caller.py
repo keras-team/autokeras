@@ -9,7 +9,7 @@
 from argparse import Namespace
 import numpy as np
 # Local
-from ..utils.general_utils import map_to_cube, map_to_bounds
+from nas.nasbot.utils.general_utils import map_to_cube, map_to_bounds
 # from domains import EuclideanDomain
 
 EVAL_ERROR_CODE = 'eval_error_2401181243'

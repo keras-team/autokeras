@@ -10,9 +10,9 @@
 # pylint: disable=no-name-in-module
 
 import numpy as np
-from ..utils import graph_utils
+from nas.nasbot.utils import graph_utils
 from time import clock
-from ..utils.base_test_class import BaseTestClass, execute_tests
+from nas.nasbot.utils.base_test_class import BaseTestClass, execute_tests
 from scipy.sparse import dok_matrix
 
 

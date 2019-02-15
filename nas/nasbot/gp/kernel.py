@@ -10,7 +10,7 @@
 import numpy as np
 
 # Local imports
-from ..utils.general_utils import dist_squared
+from nas.nasbot.utils.general_utils import dist_squared
 
 
 class Kernel(object):
