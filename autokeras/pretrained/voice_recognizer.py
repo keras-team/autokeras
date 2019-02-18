@@ -183,7 +183,8 @@ class InferenceBatchSoftmax(nn.Module):
     def __init__(self):
         super(InferenceBatchSoftmax, self).__init__()
 
-    def forward(self, input_):
+    @staticmethod
+    def forward(input_):
         return F.softmax(input_, dim=-1)
 
 

@@ -1,9 +1,12 @@
 language: python
 python:
 - '3.6'
+
+before_install:
+- ./torchaudio.sh
+
 install:
 - pip install -r requirements.txt --quiet
-- sudo apt-get install sox libsox-dev libsox-fmt-all
 - pip install pytest
 - pip install pytest-cov
 - pip install coverage
@@ -11,9 +14,6 @@ install:
 - pip install mkdocs-material
 
 script:
-- git clone https://github.com/pytorch/audio.git
-- cd audio && python setup.py install
-- cd ..
 - pytest tests --cov=autokeras --cov-report xml:coverage.xml
 - sh docs.sh
 after_success:
