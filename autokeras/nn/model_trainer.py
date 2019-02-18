@@ -11,7 +11,10 @@ from torchvision import utils as vutils
 from tqdm import tqdm
 
 from autokeras.constant import Constant
+from autokeras.text.pretrained_bert.optimization import BertAdam, warmup_linear
 from autokeras.utils import get_device
+from torch.utils.data import DataLoader, RandomSampler
+from tqdm import tqdm, trange
 
 
 class ModelTrainerBase(abc.ABC):
@@ -360,6 +363,91 @@ class GANModelTrainer(ModelTrainerBase):
                     normalize=True)
         if self.verbose:
             progress_bar.close()
+
+
+class BERTTrainer(ModelTrainerBase):
+    def __init__(self, train_data, model, output_model_file, num_labels, loss_function=None):
+        super().__init__(loss_function, train_data, verbose=True)
+
+        self.train_data = train_data
+        self.model = model
+        self.output_model_file = output_model_file
+        self.num_labels = num_labels
+
+        # Training params
+        self.global_step = 0
+        self.gradient_accumulation_steps = 1
+        self.learning_rate = 5e-5
+        self.nb_tr_steps = 1
+        self.num_train_epochs = 4
+        self.tr_loss = 0
+        self.train_batch_size = 32
+        self.warmup_proportion = 0.1
+        self.train_data_size = self.train_data.__len__()
+        self.num_train_steps = int(self.train_data_size /
+                                   self.train_batch_size /
+                                   self.gradient_accumulation_steps *
+                                   self.num_train_epochs)
+
+    def train_model(self):
+        self.model.to(self.device)
+
+        # Prepare optimizer
+        param_optimizer = list(self.model.named_parameters())
+        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        optimizer_grouped_parameters = [
+            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+        ]
+
+        # Add bert adam
+        optimizer = BertAdam(optimizer_grouped_parameters,
+                             lr=self.learning_rate,
+                             warmup=self.warmup_proportion,
+                             t_total=self.num_train_steps)
+
+        train_sampler = RandomSampler(self.train_data)
+        train_dataloader = DataLoader(self.train_data, sampler=train_sampler, batch_size=self.train_batch_size)
+
+        print("***** Running training *****")
+        print("  Num examples = %d", self.train_data_size)
+        print("  Batch size = %d", self.train_batch_size)
+        print("  Num steps = %d", self.num_train_steps)
+
+        self.model.train()
+        for _ in trange(int(self.num_train_epochs), desc="Epoch"):
+            tr_loss = 0
+            nb_tr_examples, nb_tr_steps = 0, 0
+            for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
+                batch = tuple(t.to(self.device) for t in batch)
+                input_ids, input_mask, segment_ids, label_ids = batch
+                loss = self.model(input_ids, segment_ids, input_mask, label_ids)
+                if self.gradient_accumulation_steps > 1:
+                    loss = loss / self.gradient_accumulation_steps
+
+                loss.backward()
+
+                tr_loss += loss.item()
+                nb_tr_examples += input_ids.size(0)
+                nb_tr_steps += 1
+                if (step + 1) % self.gradient_accumulation_steps == 0:
+                    # modify learning rate with special warm up BERT uses
+                    lr_this_step = self.learning_rate * warmup_linear(self.global_step / self.num_train_steps,
+                                                                      self.warmup_proportion)
+                    for param_group in optimizer.param_groups:
+                        param_group['lr'] = lr_this_step
+                    optimizer.step()
+                    optimizer.zero_grad()
+                    self.global_step += 1
+
+        self._save_model()
+
+    def _train(self):
+        pass
+
+    def _save_model(self):
+        model_to_save = self.model.module if hasattr(self.model, 'module') else self.model  # Only save the model
+        torch.save(model_to_save.state_dict(), self.output_model_file)
 
 
 class EarlyStop:
