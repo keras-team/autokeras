@@ -1,5 +1,4 @@
 import os
-import random
 
 from unittest.mock import patch
 
