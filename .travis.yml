@@ -3,7 +3,7 @@ python:
 - '3.6'
 
 before_install:
-- ./torchaudio.sh
+- sh torchaudio.sh
 
 install:
 - pip install -r requirements.txt --quiet
