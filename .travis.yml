@@ -2,11 +2,10 @@ language: python
 python:
 - '3.6'
 
-before_install:
-- sudo ./torchaudio.sh
 
 install:
 - pip install -r requirements.txt --quiet
+- sh torchaudio.sh
 - pip install pytest
 - pip install pytest-cov
 - pip install coverage
