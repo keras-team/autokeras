@@ -7,14 +7,13 @@ from functools import reduce
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader, RandomSampler
 from torchvision import utils as vutils
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 from autokeras.constant import Constant
 from autokeras.text.pretrained_bert.optimization import BertAdam, warmup_linear
 from autokeras.utils import get_device
-from torch.utils.data import DataLoader, RandomSampler
-from tqdm import tqdm, trange
 
 
 class ModelTrainerBase(abc.ABC):
@@ -379,7 +378,7 @@ class BERTTrainer(ModelTrainerBase):
         self.gradient_accumulation_steps = 1
         self.learning_rate = 5e-5
         self.nb_tr_steps = 1
-        self.num_train_epochs = 4
+        self.num_train_epochs = 2
         self.tr_loss = 0
         self.train_batch_size = 32
         self.warmup_proportion = 0.1
@@ -389,7 +388,13 @@ class BERTTrainer(ModelTrainerBase):
                                    self.gradient_accumulation_steps *
                                    self.num_train_epochs)
 
-    def train_model(self):
+    def train_model(self,
+                    max_iter_num=None,
+                    max_no_improvement_num=None,
+                    timeout=None):
+        if max_iter_num is not None:
+            self.num_train_epochs = max_iter_num
+
         self.model.to(self.device)
 
         # Prepare optimizer
@@ -409,41 +414,47 @@ class BERTTrainer(ModelTrainerBase):
         train_sampler = RandomSampler(self.train_data)
         train_dataloader = DataLoader(self.train_data, sampler=train_sampler, batch_size=self.train_batch_size)
 
-        print("***** Running training *****")
-        print("  Num examples = %d", self.train_data_size)
-        print("  Batch size = %d", self.train_batch_size)
-        print("  Num steps = %d", self.num_train_steps)
+        if self.verbose:
+            print("***** Running training *****")
+            print("Num examples = %d", self.train_data_size)
+            print("Batch size = %d", self.train_batch_size)
+            print("Num steps = %d", self.num_train_steps)
 
         self.model.train()
         for _ in trange(int(self.num_train_epochs), desc="Epoch"):
-            tr_loss = 0
-            nb_tr_examples, nb_tr_steps = 0, 0
-            for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
-                batch = tuple(t.to(self.device) for t in batch)
-                input_ids, input_mask, segment_ids, label_ids = batch
-                loss = self.model(input_ids, segment_ids, input_mask, label_ids)
-                if self.gradient_accumulation_steps > 1:
-                    loss = loss / self.gradient_accumulation_steps
+            tr_loss = self._train(optimizer, train_dataloader)
 
-                loss.backward()
-
-                tr_loss += loss.item()
-                nb_tr_examples += input_ids.size(0)
-                nb_tr_steps += 1
-                if (step + 1) % self.gradient_accumulation_steps == 0:
-                    # modify learning rate with special warm up BERT uses
-                    lr_this_step = self.learning_rate * warmup_linear(self.global_step / self.num_train_steps,
-                                                                      self.warmup_proportion)
-                    for param_group in optimizer.param_groups:
-                        param_group['lr'] = lr_this_step
-                    optimizer.step()
-                    optimizer.zero_grad()
-                    self.global_step += 1
+        if self.verbose:
+            print("Training loss = %d", tr_loss)
 
         self._save_model()
 
-    def _train(self):
-        pass
+    def _train(self, optimizer, dataloader):
+        tr_loss = 0
+        nb_tr_examples, nb_tr_steps = 0, 0
+        for step, batch in enumerate(tqdm(dataloader, desc="Iteration")):
+            batch = tuple(t.to(self.device) for t in batch)
+            input_ids, input_mask, segment_ids, label_ids = batch
+            loss = self.model(input_ids, segment_ids, input_mask, label_ids)
+            if self.gradient_accumulation_steps > 1:
+                loss = loss / self.gradient_accumulation_steps
+
+            loss.backward()
+
+            tr_loss += loss.item()
+            nb_tr_examples += input_ids.size(0)
+            nb_tr_steps += 1
+            if (step + 1) % self.gradient_accumulation_steps == 0:
+                # modify learning rate with special warm up BERT uses
+                lr_this_step = self.learning_rate * warmup_linear(self.global_step / self.num_train_steps,
+                                                                  self.warmup_proportion)
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = lr_this_step
+                optimizer.step()
+                optimizer.zero_grad()
+                self.global_step += 1
+
+        return tr_loss
 
     def _save_model(self):
         model_to_save = self.model.module if hasattr(self.model, 'module') else self.model  # Only save the model

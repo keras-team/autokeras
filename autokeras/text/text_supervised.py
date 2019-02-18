@@ -15,13 +15,6 @@ from autokeras.utils import get_device, temp_path_generator
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 
-def get_inputs(features):
-    all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
-    all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
-    all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
-    return all_input_ids, all_input_mask, all_segment_ids
-
-
 class InputFeatures(object):
     """A single set of features of data."""
 
@@ -35,9 +28,10 @@ class TextClassifier(SingleModelSupervised, ABC):
     """TextClassifier class.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, verbose, **kwargs):
         super().__init__(**kwargs)
         self.device = get_device()
+        self.verbose = verbose
 
         # BERT specific
         self.bert_model = 'bert-base-uncased'
@@ -66,8 +60,7 @@ class TextClassifier(SingleModelSupervised, ABC):
                                                               cache_dir=PYTORCH_PRETRAINED_BERT_CACHE/'distributed_-1',
                                                               num_labels=self.num_labels)
 
-        train_features = self.preprocess(x)
-        all_input_ids, all_input_mask, all_segment_ids = get_inputs(train_features)
+        all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x)
         all_label_ids = torch.tensor([int(f) for f in y], dtype=torch.long)
         train_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
 
@@ -80,12 +73,14 @@ class TextClassifier(SingleModelSupervised, ABC):
         model = BertForSequenceClassification.from_pretrained(self.bert_model, state_dict=model_state_dict,
                                                               num_labels=self.num_labels)
         model.to(self.device)
-        eval_features = self.preprocess(x_test)
-        print("***** Running evaluation *****")
-        print("  Num examples = %d", len(x_test))
-        print("  Batch size = %d", self.eval_batch_size)
-        all_input_ids, all_input_mask, all_segment_ids = get_inputs(eval_features)
+
+        if self.verbose:
+            print("***** Running evaluation *****")
+            print("  Num examples = %d", len(x_test))
+            print("  Batch size = %d", self.eval_batch_size)
+        all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x_test)
         eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
+
         # Run prediction for full data
         eval_sampler = SequentialSampler(eval_data)
         eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=self.eval_batch_size)
@@ -140,7 +135,11 @@ class TextClassifier(SingleModelSupervised, ABC):
             features.append(InputFeatures(input_ids=input_ids,
                                           input_mask=input_mask,
                                           segment_ids=segment_ids))
-        return features
+
+        all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
+        all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
+        all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
+        return all_input_ids, all_input_mask, all_segment_ids
 
     def transform_y(self, y):
         pass
