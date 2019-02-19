@@ -5,7 +5,9 @@ from autokeras.nn.graph import NetworkDescriptor
 
 from autokeras.constant import Constant
 from autokeras.nn.layers import is_layer, StubDense, get_dropout_class, StubReLU, get_conv_class, \
-    get_batch_norm_class, get_pooling_class, LayerType,StubDropout1d,StubDropout2d,StubDropout3d
+    get_batch_norm_class, get_pooling_class, LayerType,StubDropout1d,StubDropout2d,StubDropout3d,StubConv1d, \
+    StubConv2d,StubConv3d,StubBatchNormalization1d,StubBatchNormalization2d,StubBatchNormalization3d, \
+    StubPooling1d,StubPooling2d,StubPooling3d
 
 
 def to_wider_graph(graph):
@@ -75,14 +77,26 @@ def create_new_layer(layer, n_dim):
         else:
             new_layer = StubDropout3d(Constant.DENSE_DROPOUT_RATE)
     elif layer_class == get_conv_class(n_dim):
-        new_layer = layer_class(input_shape[-1], input_shape[-1], sample((1, 3, 5), 1)[0], stride=1)
-
+        if n_dim-1 == 0:
+            new_layer = StubConv1d(input_shape[-1], input_shape[-1], sample((1, 3, 5), 1)[0], stride=1)
+        elif n_dim-1 == 1:
+            new_layer = StubConv2d(input_shape[-1], input_shape[-1], sample((1, 3, 5), 1)[0], stride=1)
+        else:
+            new_layer = StubConv3d(input_shape[-1], input_shape[-1], sample((1, 3, 5), 1)[0], stride=1)
     elif layer_class == get_batch_norm_class(n_dim):
-        new_layer = layer_class(input_shape[-1])
-
+        if n_dim-1 == 0:
+            new_layer = StubBatchNormalization1d(input_shape[-1])
+        elif n_dim-1 == 1:
+            new_layer = StubBatchNormalization2d(input_shape[-1])
+        else:
+            new_layer = StubBatchNormalization3d(input_shape[-1])
     elif layer_class == get_pooling_class(n_dim):
-        new_layer = layer_class(sample((1, 3, 5), 1)[0])
-
+        if n_dim-1 == 0:
+            new_layer = StubPooling1d(sample((1, 3, 5), 1)[0])
+        elif n_dim-1 == 1:
+            new_layer = StubPooling2d(sample((1, 3, 5), 1)[0])
+        else:
+            new_layer = StubPooling3d(sample((1, 3, 5), 1)[0])
     else:
         new_layer = layer_class()
 
