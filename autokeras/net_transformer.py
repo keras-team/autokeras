@@ -5,7 +5,7 @@ from autokeras.nn.graph import NetworkDescriptor
 
 from autokeras.constant import Constant
 from autokeras.nn.layers import is_layer, StubDense, get_dropout_class, StubReLU, get_conv_class, \
-    get_batch_norm_class, get_pooling_class, LayerType
+    get_batch_norm_class, get_pooling_class, LayerType,StubDropout1d,StubDropout2d,StubDropout3d
 
 
 def to_wider_graph(graph):
@@ -68,8 +68,12 @@ def create_new_layer(layer, n_dim):
         new_layer = StubDense(input_shape[0], input_shape[0])
 
     elif layer_class == get_dropout_class(n_dim):
-        new_layer = layer_class(Constant.DENSE_DROPOUT_RATE)
-
+        if n_dim-1 == 0:
+            new_layer = StubDropout1d(Constant.DENSE_DROPOUT_RATE)
+        elif n_dim-1 == 1:
+            new_layer = StubDropout2d(Constant.DENSE_DROPOUT_RATE)
+        else:
+            new_layer = StubDropout3d(Constant.DENSE_DROPOUT_RATE)
     elif layer_class == get_conv_class(n_dim):
         new_layer = layer_class(input_shape[-1], input_shape[-1], sample((1, 3, 5), 1)[0], stride=1)
 
