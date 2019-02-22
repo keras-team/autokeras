@@ -369,9 +369,9 @@ class BERTTrainer(ModelTrainerBase):
         self.gradient_accumulation_steps = 1
         self.learning_rate = 5e-5
         self.nb_tr_steps = 1
-        self.num_train_epochs = 2
+        self.num_train_epochs = Constant.BERT_TRAINER_EPOCHS
         self.tr_loss = 0
-        self.train_batch_size = 32
+        self.train_batch_size = Constant.BERT_TRAINER_BATCH_SIZE
         self.warmup_proportion = 0.1
         self.train_data_size = self.train_data.__len__()
         self.num_train_steps = int(self.train_data_size /
