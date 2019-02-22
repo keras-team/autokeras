@@ -1,70 +1,104 @@
 from abc import ABC
 
 import numpy as np
+import os
+import torch
 
-from autokeras.nn.loss_function import classification_loss, regression_loss
-from autokeras.nn.metric import Accuracy, MSE
-from autokeras.preprocessor import OneHotEncoder, TextDataTransformer
-from autokeras.supervised import DeepTaskSupervised
-from autokeras.text.text_preprocessor import text_preprocess
+from autokeras.nn.loss_function import classification_loss
+from autokeras.nn.metric import Accuracy
+from autokeras.nn.model_trainer import BERTTrainer
+from autokeras.supervised import SingleModelSupervised
+from autokeras.text.pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
+from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification
+from autokeras.text.pretrained_bert.tokenization import BertTokenizer
+from autokeras.utils import get_device, temp_path_generator
+from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 
-class TextSupervised(DeepTaskSupervised, ABC):
+class InputFeatures(object):
+    """A single set of features of data."""
+
+    def __init__(self, input_ids, input_mask, segment_ids):
+        self.input_ids = input_ids
+        self.input_mask = input_mask
+        self.segment_ids = segment_ids
+
+
+class TextClassifier(SingleModelSupervised, ABC):
     """TextClassifier class.
-
-    Attributes:
-        cnn: CNN module from net_module.py.
-        path: A path to the directory to save the classifier as well as intermediate results.
-        y_encoder: Label encoder, used in transform_y or inverse_transform_y for encode the label. For example,
-                    if one hot encoder needed, y_encoder can be OneHotEncoder.
-        data_transformer: A transformer class to process the data. See example as ImageDataTransformer.
-        verbose: A boolean value indicating the verbosity mode which determines whether the search process
-                will be printed to stdout.
     """
 
-    def __init__(self, **kwargs):
-        """Initialize the instance.
-
-        The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
-        Otherwise it would create a new one.
-        Args:
-            verbose: A boolean of whether the search process will be printed to stdout.
-            path: A string. The path to a directory, where the intermediate results are saved.
-            resume: A boolean. If True, the classifier will continue to previous work saved in path.
-                Otherwise, the classifier will start a new search.
-            searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
-        """
+    def __init__(self, verbose, **kwargs):
         super().__init__(**kwargs)
+        self.device = get_device()
+        self.verbose = verbose
+
+        # BERT specific
+        self.bert_model = 'bert-base-uncased'
+        self.max_seq_length = 128
+        self.tokenizer = BertTokenizer.from_pretrained(self.bert_model, do_lower_case=True)
+
+        # Labels/classes
+        self.num_labels = None
+
+        # Output directory
+        self.output_dir = temp_path_generator() + 'bert_classifier/'
+        self.output_model_file = self.output_dir + 'pytorch_model.bin'
+
+        # Evaluation params
+        self.eval_batch_size = 32
 
     def fit(self, x, y, time_limit=None):
-        """Find the best neural architecture and train it.
+        if os.path.exists(self.output_dir) and os.listdir(self.output_dir):
+            raise ValueError("Output directory ({}) already exists and is not empty.".format(self.output_dir))
+        os.makedirs(self.output_dir, exist_ok=True)
 
-        Based on the given dataset, the function will find the best neural architecture for it.
-        The dataset is in numpy.ndarray format.
-        So they training data should be passed through `x_train`, `y_train`.
+        self.num_labels = len(list(set(y)))
 
-        Args:
-            x: A numpy.ndarray instance containing the training data.
-            y: A numpy.ndarray instance containing the label of the training data.
-            time_limit: The time limit for the search in seconds.
-        """
-        x = text_preprocess(x)
+        # Prepare model
+        model = BertForSequenceClassification.from_pretrained(self.bert_model,
+                                                              cache_dir=PYTORCH_PRETRAINED_BERT_CACHE/'distributed_-1',
+                                                              num_labels=self.num_labels)
 
-        x = np.array(x)
-        y = np.array(y).flatten()
+        all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x)
+        all_label_ids = torch.tensor([int(f) for f in y], dtype=torch.long)
+        train_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
 
-        super().fit(x, y, time_limit)
+        bert_trainer = BERTTrainer(train_data, model, self.output_model_file, self.num_labels)
+        bert_trainer.train_model()
 
-    def init_transformer(self, x):
-        # Wrap the data into DataLoaders
-        if self.data_transformer is None:
-            self.data_transformer = TextDataTransformer()
+    def predict(self, x_test):
+        # Load a trained model that you have fine-tuned
+        model_state_dict = torch.load(self.output_model_file)
+        model = BertForSequenceClassification.from_pretrained(self.bert_model, state_dict=model_state_dict,
+                                                              num_labels=self.num_labels)
+        model.to(self.device)
 
-    def preprocess(self, x):
-        return text_preprocess(x)
+        if self.verbose:
+            print("***** Running evaluation *****")
+            print("  Num examples = %d", len(x_test))
+            print("  Batch size = %d", self.eval_batch_size)
+        all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x_test)
+        eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
 
+        # Run prediction for full data
+        eval_sampler = SequentialSampler(eval_data)
+        eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=self.eval_batch_size)
 
-class TextClassifier(TextSupervised):
+        model.eval()
+        y_preds = []
+        for input_ids, input_mask, segment_ids in eval_dataloader:
+            input_ids = input_ids.to(self.device)
+            input_mask = input_mask.to(self.device)
+            segment_ids = segment_ids.to(self.device)
+
+            with torch.no_grad():
+                logits = model(input_ids, segment_ids, input_mask)
+
+            logits = logits.detach().cpu().numpy()
+            y_preds.extend(logits)
+        return self.inverse_transform_y(y_preds)
+
     @property
     def metric(self):
         return Accuracy
@@ -73,41 +107,42 @@ class TextClassifier(TextSupervised):
     def loss(self):
         return classification_loss
 
-    def transform_y(self, y_train):
-        # Transform y_train.
-        if self.y_encoder is None:
-            self.y_encoder = OneHotEncoder()
-            self.y_encoder.fit(y_train)
-        y_train = self.y_encoder.transform(y_train)
-        return y_train
+    def preprocess(self, x):
+        features = []
+        for (_, example) in enumerate(x):
+            tokens_a = self.tokenizer.tokenize(example)
+
+            if len(tokens_a) > self.max_seq_length - 2:
+                tokens_a = tokens_a[:(self.max_seq_length - 2)]
+
+            tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
+            segment_ids = [0] * len(tokens)
+
+            input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+
+            input_mask = [1] * len(input_ids)
+
+            padding = [0] * (self.max_seq_length - len(input_ids))
+            input_ids += padding
+            input_mask += padding
+            segment_ids += padding
+
+            if len(input_ids) != self.max_seq_length or \
+                    len(input_mask) != self.max_seq_length or \
+                    len(segment_ids) != self.max_seq_length:
+                raise AssertionError()
+
+            features.append(InputFeatures(input_ids=input_ids,
+                                          input_mask=input_mask,
+                                          segment_ids=segment_ids))
+
+        all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
+        all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
+        all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
+        return all_input_ids, all_input_mask, all_segment_ids
+
+    def transform_y(self, y):
+        pass
 
     def inverse_transform_y(self, output):
-        return self.y_encoder.inverse_transform(output)
-
-    def get_n_output_node(self):
-        return self.y_encoder.n_classes
-
-
-class TextRegressor(TextClassifier):
-    """ TextRegressor class.
-
-    It is used for text regression. It searches convolutional neural network architectures
-    for the best configuration for the text dataset.
-    """
-
-    @property
-    def loss(self):
-        return regression_loss
-
-    @property
-    def metric(self):
-        return MSE
-
-    def get_n_output_node(self):
-        return 1
-
-    def transform_y(self, y_train):
-        return y_train.flatten().reshape(len(y_train), 1)
-
-    def inverse_transform_y(self, output):
-        return output.flatten()
+        return np.argmax(output, axis=1)

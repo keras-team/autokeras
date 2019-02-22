@@ -312,6 +312,15 @@ def mock_train(**kwargs):
     return 1, 0
 
 
+def mock_bert_fit(train_x, train_y):
+    sleep(0.1)
+
+
+def mock_bert_predict(x_test):
+    sleep(0.1)
+    return [1 for _ in x_test]
+
+
 def mock_exception_handling_train(**kwargs):
     str(kwargs)
     raise Exception
