@@ -42,17 +42,12 @@ class TextClassifier(SingleModelSupervised, ABC):
         self.num_labels = None
 
         # Output directory
-        self.output_dir = temp_path_generator() + 'bert_classifier/'
-        self.output_model_file = self.output_dir + 'pytorch_model.bin'
+        self.output_model_file = os.path.join(self.path, 'pytorch_model.bin')
 
         # Evaluation params
         self.eval_batch_size = 32
 
     def fit(self, x, y, time_limit=None):
-        if os.path.exists(self.output_dir) and os.listdir(self.output_dir):
-            raise ValueError("Output directory ({}) already exists and is not empty.".format(self.output_dir))
-        os.makedirs(self.output_dir, exist_ok=True)
-
         self.num_labels = len(list(set(y)))
 
         # Prepare model
