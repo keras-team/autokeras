@@ -2,7 +2,6 @@ import random
 import time
 from copy import deepcopy
 from functools import total_ordering
-from multiprocessing.queues import Queue
 from queue import PriorityQueue
 import numpy as np
 import math
@@ -11,6 +10,7 @@ from scipy.linalg import cholesky, cho_solve, solve_triangular, LinAlgError
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import rbf_kernel
 
+from autokeras.custom_queue import Queue
 from autokeras.constant import Constant
 from autokeras.net_transformer import transform
 from autokeras.nn.layers import is_layer, LayerType
