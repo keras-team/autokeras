@@ -28,7 +28,8 @@ We show an example of image classification on the MNIST dataset, which is a famo
 
 
 
-### Data with numpy array (.npy) format. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/mnist.py)
+### Data with numpy array (.npy) format.
+[[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/mnist.py)
 
 
 If the images and the labels are already formatted into numpy arrays, you can 
@@ -51,7 +52,8 @@ In the example above, the images and the labels are already formatted into numpy
 
 
 
-### What if your data are raw image files (*e.g.* .jpg, .png, .bmp)? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/load_raw_image.py)
+### What if your data are raw image files (*e.g.* .jpg, .png, .bmp)? 
+[[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/load_raw_image.py)
 
 
 You can use our `load_image_dataset` function to load the images and their labels as follows.
@@ -128,7 +130,8 @@ Otherwise multiple-gpu training may be slower than single-GPU training.
 ## Portable Models
 
 
-### How to export Portable model? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py)
+### How to export Portable model?
+[[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py)
 
     from autokeras import ImageClassifier
     clf = ImageClassifier(verbose=True, augment=False)
@@ -137,7 +140,8 @@ The model will be stored into the path `model_file_name`.
 
 
 
-### How to load exported Portable model? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py)
+### How to load exported Portable model?
+[[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py)
 
     from autokeras.utils import pickle_from_file
     model = pickle_from_file(model_file_name)
@@ -154,7 +158,8 @@ The model will be loaded from the path `model_file_name` and then you can use th
 
 
 
-### How to visualize the best selected architecture? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/visualizations/visualize.py)
+### How to visualize the best selected architecture?
+[[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/visualizations/visualize.py)
 
 
 
@@ -189,7 +194,8 @@ Step 2 : After the model training is complete, run *examples/visualize.py*, whil
 
 
 
-### MlpModule tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/mlp_module.py)
+### MlpModule tutorial.
+[[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/mlp_module.py)
 
 
 
@@ -236,7 +242,8 @@ where:
 
 
 
-### CnnModule tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/cnn_module.py)
+### CnnModule tutorial.
+[[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/cnn_module.py)
 
 
 
@@ -290,7 +297,8 @@ where:
  
 
 
-### Automated text classifier tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/task_modules/text/text.py)
+### Automated text classifier tutorial.
+[[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/task_modules/text/text.py)
 
 
 Class `TextClassifier` and `TextRegressor` are designed for automated generate best performance cnn neural architecture
@@ -323,7 +331,8 @@ should be in string format.
  
 
 
-### Object detection tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/pretrained_models/object_detection/object_detection_example.py)
+### Object detection tutorial.
+[[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/pretrained_models/object_detection/object_detection_example.py)
 
 
 #### by Wuyang Chen from [Dr. Atlas Wang's group](http://www.atlaswang.com/) at CSE Department, Texas A&M.
@@ -350,7 +359,8 @@ Function ```detector.predict()``` requires the path to the image. If the ```outp
 
 
 
-### Sentiment Analysis tutorial. [[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/text_classifier.py)
+### Sentiment Analysis tutorial.
+[[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/text_classifier.py)
 
 
 The sentiment analysis module provides an interface to find the sentiment of any text. The pretrained model is obtained by training [Google AI’s BERT model]( https://arxiv.org/abs/1810.04805) on [IMDb dataset]( http://ai.stanford.edu/~amaas/data/sentiment/). 
@@ -372,7 +382,8 @@ If you run *sentiment_analysis_example.py*, you should get an output value of 0.
 
 
 
-### Topic Classification tutorial. [[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/text_classifier.py)
+### Topic Classification tutorial.
+[[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/text_classifier.py)
 
 
 The topic classifier module provides an interface to find the topic of any text. The pretrained model is obtained by training [Google AI’s BERT model]( https://arxiv.org/abs/1810.04805) on [AGNews dataset](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html). 
@@ -401,7 +412,5 @@ If you run *topic_classifier_example.py*, you should see the predict function re
 [MlpModule tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/mlp_module.py
 [CnnModule tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/net_modules/cnn_module.py
 [Automated text classifier tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/task_modules/text/text.py
-[Automated tabular classifier tutorial]: https://github.com/jhfjhfj1/autokeras/tree/master/examples/task_modules/tabular
 [Object Detection tutorial]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/pretrained_models/object_detection/object_detection_example.py -->
-[TabularPreprocessor]: https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/tabular/tabular_preprocessor.py
 
