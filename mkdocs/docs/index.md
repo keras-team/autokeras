@@ -3,7 +3,7 @@
 <div style="text-align: center">
 <p>
 <a class="badge-align" href="https://travis-ci.org/jhfjhfj1/autokeras"><img alt="Build Status" src="https://travis-ci.org/jhfjhfj1/autokeras.svg?branch=master"/></a>
-<a class="badge-align" href="https://codeclimate.com/github/jhfjhfj1/autokeras/maintainability"><img src="https://api.codeclimate.com/v1/badges/c7f2e68ff5c1c88cdf81/maintainability" /></a>
+<a class="badge-align" href="https://www.codacy.com/app/jhfjhfj1/autokeras?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jhfjhfj1/autokeras&amp;utm_campaign=Badge_Grade"><img src="https://api.codacy.com/project/badge/Grade/620bd322918c476aa33230ec911a4301"/></a>
 <a class="badge-align" href='https://coveralls.io/github/jhfjhfj1/autokeras'><img src='https://coveralls.io/repos/github/jhfjhfj1/autokeras/badge.svg' alt='Coverage Status' /></a>
 <a class="badge-align" href="https://badge.fury.io/py/autokeras"><img src="https://badge.fury.io/py/autokeras.svg" alt="PyPI version"></a>
 </p>

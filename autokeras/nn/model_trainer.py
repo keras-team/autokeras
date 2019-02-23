@@ -7,16 +7,17 @@ from functools import reduce
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader, RandomSampler
 from torchvision import utils as vutils
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 from autokeras.constant import Constant
+from autokeras.text.pretrained_bert.optimization import BertAdam, warmup_linear
 from autokeras.utils import get_device
 
 
 class ModelTrainerBase(abc.ABC):
     """ A base class all model trainers will inherit from.
-
     Attributes:
         device: A string. Indicating the device to use. 'cuda' or 'cpu'.
         train_loader: Training data wrapped in batches in Pytorch Dataloader.
@@ -56,7 +57,6 @@ class ModelTrainerBase(abc.ABC):
                     max_no_improvement_num=None,
                     timeout=None):
         """Train the model.
-
         Args:
             timeout: timeout in seconds
             max_iter_num: int, maximum numer of iteration
@@ -68,11 +68,9 @@ class ModelTrainerBase(abc.ABC):
 
 class ModelTrainer(ModelTrainerBase):
     """A class that is used to train the model.
-
     This class can train a Pytorch model with the given data loaders.
     The metric, loss_function, and model must be compatible with each other.
     Please see the details in the Attributes.
-
     Attributes:
         temp_model_path: Specify the path where temp model should be stored.
         model: An instance of Pytorch Module. The model that will be trained.
@@ -99,16 +97,13 @@ class ModelTrainer(ModelTrainerBase):
                     max_no_improvement_num=None,
                     timeout=None):
         """Train the model.
-
         Train the model with max_iter_num or max_no_improvement_num is met.
-
         Args:
             timeout: timeout in seconds
             max_iter_num: An integer. The maximum number of epochs to train the model.
                 The training will stop when this number is reached.
             max_no_improvement_num: An integer. The maximum number of epochs when the loss value doesn't decrease.
                 The training will stop when this number is reached.
-
         Returns:
             A tuple of loss values and metric value.
         """
@@ -236,7 +231,6 @@ class ModelTrainer(ModelTrainerBase):
 
 class GANModelTrainer(ModelTrainerBase):
     """A ModelTrainer especially for the GAN.
-
     Attributes:
         d_model: A discriminator model.
         g_model: A generator model.
@@ -255,7 +249,6 @@ class GANModelTrainer(ModelTrainerBase):
                  gen_training_result=None,
                  device=None):
         """Initialize the GANModelTrainer.
-
         Args:
             g_model: The generator model to be trained.
             d_model: The discriminator model to be trained.
@@ -362,9 +355,105 @@ class GANModelTrainer(ModelTrainerBase):
             progress_bar.close()
 
 
+class BERTTrainer(ModelTrainerBase):
+    def __init__(self, train_data, model, output_model_file, num_labels, loss_function=None):
+        super().__init__(loss_function, train_data, verbose=True)
+
+        self.train_data = train_data
+        self.model = model
+        self.output_model_file = output_model_file
+        self.num_labels = num_labels
+
+        # Training params
+        self.global_step = 0
+        self.gradient_accumulation_steps = 1
+        self.learning_rate = 5e-5
+        self.nb_tr_steps = 1
+        self.num_train_epochs = Constant.BERT_TRAINER_EPOCHS
+        self.tr_loss = 0
+        self.train_batch_size = Constant.BERT_TRAINER_BATCH_SIZE
+        self.warmup_proportion = 0.1
+        self.train_data_size = self.train_data.__len__()
+        self.num_train_steps = int(self.train_data_size /
+                                   self.train_batch_size /
+                                   self.gradient_accumulation_steps *
+                                   self.num_train_epochs)
+
+    def train_model(self,
+                    max_iter_num=None,
+                    max_no_improvement_num=None,
+                    timeout=None):
+        if max_iter_num is not None:
+            self.num_train_epochs = max_iter_num
+
+        self.model.to(self.device)
+
+        # Prepare optimizer
+        param_optimizer = list(self.model.named_parameters())
+        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        optimizer_grouped_parameters = [
+            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+        ]
+
+        # Add bert adam
+        optimizer = BertAdam(optimizer_grouped_parameters,
+                             lr=self.learning_rate,
+                             warmup=self.warmup_proportion,
+                             t_total=self.num_train_steps)
+
+        train_sampler = RandomSampler(self.train_data)
+        train_dataloader = DataLoader(self.train_data, sampler=train_sampler, batch_size=self.train_batch_size)
+
+        if self.verbose:
+            print("***** Running training *****")
+            print("Num examples = %d", self.train_data_size)
+            print("Batch size = %d", self.train_batch_size)
+            print("Num steps = %d", self.num_train_steps)
+
+        self.model.train()
+        for _ in trange(int(self.num_train_epochs), desc="Epoch"):
+            tr_loss = self._train(optimizer, train_dataloader)
+
+        if self.verbose:
+            print("Training loss = %d", tr_loss)
+
+        self._save_model()
+
+    def _train(self, optimizer, dataloader):
+        tr_loss = 0
+        nb_tr_examples, nb_tr_steps = 0, 0
+        for step, batch in enumerate(tqdm(dataloader, desc="Iteration")):
+            batch = tuple(t.to(self.device) for t in batch)
+            input_ids, input_mask, segment_ids, label_ids = batch
+            loss = self.model(input_ids, segment_ids, input_mask, label_ids)
+            if self.gradient_accumulation_steps > 1:
+                loss = loss / self.gradient_accumulation_steps
+
+            loss.backward()
+
+            tr_loss += loss.item()
+            nb_tr_examples += input_ids.size(0)
+            nb_tr_steps += 1
+            if (step + 1) % self.gradient_accumulation_steps == 0:
+                # modify learning rate with special warm up BERT uses
+                lr_this_step = self.learning_rate * warmup_linear(self.global_step / self.num_train_steps,
+                                                                  self.warmup_proportion)
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = lr_this_step
+                optimizer.step()
+                optimizer.zero_grad()
+                self.global_step += 1
+
+        return tr_loss
+
+    def _save_model(self):
+        model_to_save = self.model.module if hasattr(self.model, 'module') else self.model  # Only save the model
+        torch.save(model_to_save.state_dict(), self.output_model_file)
+
+
 class EarlyStop:
     """A class check for early stop condition.
-
     Attributes:
         training_losses: Record all the training loss.
         minimum_loss: The minimum loss we achieve so far. Used to compared to determine no improvement condition.
@@ -386,7 +475,6 @@ class EarlyStop:
 
     def on_train_begin(self):
         """Initiate the early stop condition.
-
         Call on every time the training iteration begins.
         """
         self.training_losses = []
@@ -396,12 +484,9 @@ class EarlyStop:
 
     def on_epoch_end(self, loss):
         """Check the early stop condition.
-
         Call on every time the training iteration end.
-
         Args:
             loss: The loss function achieved by the epoch.
-
         Returns:
             True if condition met, otherwise False.
         """

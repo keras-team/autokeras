@@ -228,6 +228,17 @@ def read_csv_file(csv_file_path):
     return file_names, file_labels
 
 
+def read_tsv_file(input_file, quotechar=None):
+    """Reads a tab separated value (tsv) file and return two lists containing file names and labels."""
+    with open(input_file, "r", encoding='utf-8') as f:
+        reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+        x, y = [], []
+        for line in reader:
+            x.append(line[0])
+            y.append(int(line[1]))
+        return x, y
+
+
 def read_image(img_path):
     """Read the image contained in the provided path `image_path`."""
     img = imageio.imread(uri=img_path)

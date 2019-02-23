@@ -1,18 +1,16 @@
 import time
 from copy import deepcopy
-from multiprocessing.queues import Queue
 
+from autokeras.custom_queue import Queue
 from autokeras.bayesian import contain, SearchTree
 from autokeras.net_transformer import transform
 from autokeras.search import Searcher
-
 
 class GreedyOptimizer:
 
     def __init__(self, searcher, metric):
         self.searcher = searcher
         self.metric = metric
-        self.search_tree = SearchTree()
 
     def generate(self, descriptors, timeout, sync_message):
         """Generate new neighbor architectures from the best model.
@@ -45,9 +43,6 @@ class GreedyOptimizer:
         if remaining_time < 0:
             raise TimeoutError
         return out
-
-    def add_child(self, father_id, model_id):
-        self.search_tree.add_child(father_id, model_id)
 
 
 class GreedySearcher(Searcher):
@@ -90,15 +85,8 @@ class GreedySearcher(Searcher):
 
         return results
 
-    def update(self, other_info, model_id, *args):
-        """ Update the controller with evaluation result of a neural architecture.
-
-        Args:
-            other_info: Anything. In our case it is the father ID in the search tree.
-            model_id: An integer.
-        """
-        father_id = other_info
-        self.optimizer.add_child(father_id, model_id)
+    def update(self, other_info, model_id, graph, metric_value):
+        return
 
     def load_neighbour_best_model(self):
         return self.load_model_by_id(self.get_neighbour_best_model_id())
