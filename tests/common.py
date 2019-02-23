@@ -13,7 +13,6 @@ from autokeras.nn.layers import StubReLU, StubFlatten, StubSoftmax, StubDense, S
 from autokeras.nn.layers import StubPooling2d
 from autokeras.preprocessor import ImageDataTransformer, DataTransformerMlp
 
-TEST_TEMP_KERAS_DIR = 'tests/resources/temp/autokeras'
 TEST_TEMP_DIR = 'tests/resources/temp'
 
 

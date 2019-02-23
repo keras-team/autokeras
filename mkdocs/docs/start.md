@@ -127,13 +127,6 @@ Otherwise multiple-gpu training may be slower than single-GPU training.
 
 ## Portable Models
 
-### How to export keras models?
-    clf.load_searcher().load_best_model().produce_keras_model().save('my_model.h5')
-This uses the keras function model.save() to export a single HDF5 file containing the architecture of the model, the weights of the model, the training configuration, and the state of the optimizer. See https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
-
-**Note:** This is being built into AutoKeras as ImageClassifier().export_keras_model() 
-
-
 
 ### How to export Portable model? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py)
 
@@ -159,17 +152,6 @@ The model will be loaded from the path `model_file_name` and then you can use th
 
 ## Model Visualizations
 
-
-### How to visualize keras models? 
-
-This is not specific to AutoKeras, however, the following will generate a .PNG visualization of the best model found by AutoKeras:
-
-    from keras.models import load_model
-    model = load_model('my_model.h5') #See 'How to export keras models?' to generate this file before loading it.
-    from keras.utils import plot_model
-    plot_model(model, to_file='my_model.png')
-
-    
 
 
 ### How to visualize the best selected architecture? [[source]](https://github.com/jhfjhfj1/autokeras/blob/master/examples/visualizations/visualize.py)
@@ -336,30 +318,6 @@ should be in string format.
  
  
 
-
-### Automated tabular classifier tutorial. [[source]](https://github.com/jhfjhfj1/autokeras/tree/master/examples/task_modules/tabular)
-
-
-
-Class `TabularClassifier` and `TabularRegressor` are designed for automated generate best performance shallow/deep architecture
-for a given tabular dataset. (Currently, theis module only supports lightgbm classifier and regressor.)
-
-
-```python
-    clf = TabularClassifier(verbose=True)
-    clf.fit(x_train, y_train, time_limit=12 * 60 * 60, data_info=datainfo)
-```
-
-* x_train: string format text data
-* y_train: int format text label
-* data_info: a numpy.array describing the feature types (time, numerical or categorical) of each column in x_train.
-
-
-**Notes:** Preprocessing of the tabular data:
-* Class `[TabularPreprocessor]` involves several automated feature preprocessing and engineering operation for tabular data . 
-*The input data should be in numpy array format for the class `TabularClassifier` and `TabularRegressor` .
- 
- 
  
 ## Pretrained Models
  
