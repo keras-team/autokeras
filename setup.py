@@ -7,6 +7,7 @@ setup(
     install_requires=['scipy==1.2.0',
                       'torch==1.0.1',
                       'torchvision==0.2.1',
+                      'torchaudio_pip',
                       'numpy==1.15.4',
                       'keras==2.2.4',
                       'scikit-learn==0.20.2',
