@@ -52,6 +52,11 @@ class Constant:
     LIMIT_MEMORY = False
     SEARCH_MAX_ITER = 200
 
+    # Text Classifier
+
+    BERT_TRAINER_EPOCHS = 4
+    BERT_TRAINER_BATCH_SIZE = 32
+
     # text preprocessor
 
     EMBEDDING_DIM = 100
