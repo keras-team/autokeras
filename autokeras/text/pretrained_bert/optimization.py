@@ -89,16 +89,6 @@ class BertAdam(Optimizer):
                         max_grad_norm=max_grad_norm)
         super(BertAdam, self).__init__(params, defaults)
 
-    def get_lr(self):
-        lr = []
-        for group in self.param_groups:
-            for p in group['params']:
-                state = self.state[p]
-                if len(state) == 0:
-                    return [0]
-                lr.append(get_lr_scheduled(group, state))
-        return lr
-
     def step(self, closure=None):
         """Performs a single optimization step.
         Arguments:
