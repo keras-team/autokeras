@@ -13,8 +13,6 @@ setup(
                       'tqdm==4.31.0',
                       'imageio==2.5.0',
                       'requests==2.21.0',
-                      'lightgbm==2.2.3',
-                      'pandas==0.24.1',
                       'librosa==0.6.2',
                       'numba',
                       'inflect',

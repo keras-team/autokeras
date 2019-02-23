@@ -5,7 +5,7 @@ import numpy as np
 from autokeras.constant import Constant
 from autokeras.utils import rand_temp_folder_generator, download_file, get_system, compute_image_resize_params, \
     resize_image_data, temp_path_generator
-from tests.common import clean_dir, TEST_TEMP_DIR, TEST_TEMP_KERAS_DIR
+from tests.common import clean_dir, TEST_TEMP_DIR, TEST_TEMP_AUTO_KERAS_DIR
 
 
 # This method will be used by the mock to replace requests.get
@@ -39,7 +39,7 @@ def test_temp_path_generator(_):
     assert path == TEST_TEMP_DIR + "/autokeras"
 
 
-@patch('autokeras.utils.temp_path_generator', return_value=TEST_TEMP_KERAS_DIR)
+@patch('autokeras.utils.temp_path_generator', return_value=TEST_TEMP_AUTO_KERAS_DIR)
 def test_rand_temp_folder_generator(_):
     path = rand_temp_folder_generator()
     assert path.find("tests/resources/temp/autokeras_") != -1
