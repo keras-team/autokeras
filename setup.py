@@ -13,7 +13,7 @@ setup(
                       'tqdm==4.31.0',
                       'imageio==2.5.0',
                       'requests==2.21.0',
-                      'librosa==0.6.2',
+                      'librosa==0.6.3',
                       'numba',
                       'inflect',
                       'unidecode',
