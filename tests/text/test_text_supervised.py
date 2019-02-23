@@ -6,7 +6,7 @@ from autokeras.utils import read_tsv_file, temp_path_generator
 
 
 def test_text_classifier():
-    model_file = temp_path_generator() + 'bert_classifier/pytorch_model.bin'
+    model_file = os.path.join(temp_path_generator(), 'bert_classifier/pytorch_model.bin')
     if os.path.exists(model_file):
         os.remove(model_file)
 
