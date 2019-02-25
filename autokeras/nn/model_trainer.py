@@ -425,7 +425,7 @@ class BERTTrainer(ModelTrainerBase):
             timeout: timeout in seconds
             max_iter_num: An integer. The maximum number of epochs to train the model.
             max_no_improvement_num: An integer. The maximum number of epochs when the loss value doesn't decrease.
-            
+
         Returns:
             Training loss.
         """
