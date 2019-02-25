@@ -37,6 +37,7 @@ class InputFeatures(object):
 
 class TextClassifier(Pretrained, ABC):
     """A pre-trained TextClassifier class based on Google AI's BERT model.
+
     Attributes:
         model: Type of BERT model to be used for the classification task. E.g:- Uncased, Cased, etc.
         The current pre-trained models are using 'bert-base-uncased'.
@@ -55,9 +56,12 @@ class TextClassifier(Pretrained, ABC):
 
     def convert_examples_to_features(self, examples, max_seq_length):
         """ Convert text examples to BERT specific input format.
+
         Tokenize the input text and convert into features.
+
         Args:
             examples: Text data.
+
         Returns:
             all_input_ids: ndarray containing the ids for each token.
             all_input_masks: ndarray containing 1's or 0's based on if the tokens are real or padded.
@@ -93,8 +97,10 @@ class TextClassifier(Pretrained, ABC):
 
     def y_predict(self, x_predict):
         """ Predict the labels for the provided input data.
+
         Args:
             x_predict: ndarray containing the data inputs.
+
         Returns:
             ndarray containing the predicted labels/outputs for x_predict.
         """
@@ -130,6 +136,7 @@ class TextClassifier(Pretrained, ABC):
 
 class SentimentAnalysis(TextClassifier):
     """A SentimentAnalysis class inherited from TextClassifier.
+
     The model is trained on the IMDb dataset. The link for the dataset is given below.
     http://ai.stanford.edu/~amaas/data/sentiment/
     """
@@ -148,6 +155,7 @@ class SentimentAnalysis(TextClassifier):
 
 class TopicClassifier(TextClassifier):
     """A pre-trained TopicClassifier class inherited from TextClassifier.
+
     The model is trained on the AG News dataset. The link for the dataset is given below.
     https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
     """

@@ -43,6 +43,7 @@ class InputFeatures(object):
 
 class TextClassifier(SingleModelSupervised, ABC):
     """A TextClassifier class based on Google AI's BERT model.
+
     Attributes:
         device: Specific hardware for using/running the model. E.g:- CPU, GPU or TPU.
         verbose: Mode of verbosity.
@@ -54,6 +55,7 @@ class TextClassifier(SingleModelSupervised, ABC):
 
     def __init__(self, verbose, **kwargs):
         """Initialize the TextClassifier.
+
         Args:
             verbose: Mode of verbosity.
         """
@@ -77,6 +79,7 @@ class TextClassifier(SingleModelSupervised, ABC):
 
     def fit(self, x, y, time_limit=None):
         """ Train the text classifier based on the training data.
+
         Args:
             x: ndarray containing the train data inputs.
             y: ndarray containing the train data outputs/labels.
@@ -98,8 +101,10 @@ class TextClassifier(SingleModelSupervised, ABC):
 
     def predict(self, x_test):
         """ Predict the labels for the provided input data.
+
         Args:
             x_test: ndarray containing the test data inputs.
+
         Returns:
             ndarray containing the predicted labels/outputs for x_test.
         """
@@ -144,9 +149,12 @@ class TextClassifier(SingleModelSupervised, ABC):
 
     def preprocess(self, x):
         """ Preprocess text data.
+
         Tokenize the input text and convert into features.
+
         Args:
             x: Text input.
+
         Returns:
             all_input_ids: ndarray containing the ids for each token.
             all_input_masks: ndarray containing 1's or 0's based on if the tokens are real or padded.

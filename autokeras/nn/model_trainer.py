@@ -374,6 +374,7 @@ class GANModelTrainer(ModelTrainerBase):
 
 class BERTTrainer(ModelTrainerBase):
     """A ModelTrainer for the Google AI's BERT model. Currently supports only classification task.
+
     Attributes:
         model: Type of BERT model to be used for the task. E.g:- Uncased, Cased, etc.
         output_model_file: File location to save the trained model.
@@ -382,6 +383,7 @@ class BERTTrainer(ModelTrainerBase):
 
     def __init__(self, train_data, model, output_model_file, num_labels, loss_function=None):
         """Initialize the BERTTrainer.
+
         Args:
             train_data: the training data.
             model: Type of BERT model to be used for the task. E.g:- Uncased, Cased, etc.
@@ -416,11 +418,14 @@ class BERTTrainer(ModelTrainerBase):
                     max_no_improvement_num=None,
                     timeout=None):
         """Train the model.
+
         Train the model with max_iter_num.
+
         Args:
             timeout: timeout in seconds
             max_iter_num: An integer. The maximum number of epochs to train the model.
             max_no_improvement_num: An integer. The maximum number of epochs when the loss value doesn't decrease.
+            
         Returns:
             Training loss.
         """
