@@ -1,3 +1,20 @@
+# coding=utf-8
+# Original work Copyright 2018 The Google AI Language Team Authors and The HugginFace Inc. team.
+# Modified work Copyright 2019 The AutoKeras team.
+# Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import abc
 import os
 import sys
@@ -356,7 +373,22 @@ class GANModelTrainer(ModelTrainerBase):
 
 
 class BERTTrainer(ModelTrainerBase):
+    """A ModelTrainer for the Google AI's BERT model. Currently supports only classification task.
+    Attributes:
+        model: Type of BERT model to be used for the task. E.g:- Uncased, Cased, etc.
+        output_model_file: File location to save the trained model.
+        num_labels: Number of output labels for the classification task.
+    """
+
     def __init__(self, train_data, model, output_model_file, num_labels, loss_function=None):
+        """Initialize the BERTTrainer.
+        Args:
+            train_data: the training data.
+            model: Type of BERT model to be used for the task. E.g:- Uncased, Cased, etc.
+            output_model_file: File location to save the trained model.
+            num_labels: Number of output labels for the classification task.
+            loss_function: The loss function for the classifier.
+        """
         super().__init__(loss_function, train_data, verbose=True)
 
         self.train_data = train_data
@@ -383,6 +415,15 @@ class BERTTrainer(ModelTrainerBase):
                     max_iter_num=None,
                     max_no_improvement_num=None,
                     timeout=None):
+        """Train the model.
+        Train the model with max_iter_num.
+        Args:
+            timeout: timeout in seconds
+            max_iter_num: An integer. The maximum number of epochs to train the model.
+            max_no_improvement_num: An integer. The maximum number of epochs when the loss value doesn't decrease.
+        Returns:
+            Training loss.
+        """
         if max_iter_num is not None:
             self.num_train_epochs = max_iter_num
 
@@ -419,8 +460,10 @@ class BERTTrainer(ModelTrainerBase):
             print("Training loss = %d", tr_loss)
 
         self._save_model()
+        return tr_loss
 
     def _train(self, optimizer, dataloader):
+        """ Actual training is performed here."""
         tr_loss = 0
         nb_tr_examples, nb_tr_steps = 0, 0
         for step, batch in enumerate(tqdm(dataloader, desc="Iteration")):
@@ -448,6 +491,7 @@ class BERTTrainer(ModelTrainerBase):
         return tr_loss
 
     def _save_model(self):
+        """Save the trained model to disk."""
         model_to_save = self.model.module if hasattr(self.model, 'module') else self.model  # Only save the model
         torch.save(model_to_save.state_dict(), self.output_model_file)
 
