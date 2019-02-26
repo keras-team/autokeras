@@ -4,7 +4,7 @@ from setuptools import find_packages
 setup(
     name='autokeras',
     packages=find_packages(exclude=('tests',)),
-    install_requires=['scipy==1.2.0',
+    install_requires=['scipy==1.2.1',
                       'torch==1.0.1.post2',
                       'torchvision==0.2.1',
                       'numpy==1.16.1',
