@@ -10,7 +10,7 @@ setup(
                       'numpy==1.16.1',
                       'scikit-learn==0.20.2',
                       'scikit-image==0.14.2',
-                      'tqdm==4.31.0',
+                      'tqdm==4.31.1',
                       'imageio==2.5.0',
                       'requests==2.21.0',
                       'librosa==0.6.2',
