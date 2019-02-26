@@ -86,7 +86,7 @@ class Searcher(ABC):
         self.x_queue = []
         self.y_queue = []
 
-        logging.basicConfig(filename=os.path.join(self.path, datetime.now().strftime('run_%d_%m_%Y : _%H_%M.log')),
+        logging.basicConfig(filename=os.path.join(self.path, datetime.now().strftime('run_%d_%m_%Y_%H_%M.log')),
                             format='%(asctime)s - %(filename)s - %(message)s', level=logging.DEBUG)
 
         self._timeout = None
