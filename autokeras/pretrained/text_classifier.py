@@ -22,7 +22,7 @@ from abc import ABC
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
 from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification
-from autokeras.text.pretrained_bert.text_utils import convert_examples_to_features, InputFeatures
+from autokeras.text.pretrained_bert.text_utils import convert_examples_to_features
 from autokeras.text.pretrained_bert.tokenization import BertTokenizer
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 

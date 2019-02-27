@@ -93,13 +93,6 @@ class BertTokenizer(object):
             ids.append(self.vocab[token])
         return ids
 
-    def convert_ids_to_tokens(self, ids):
-        """Converts a sequence of ids in wordpiece tokens using the vocab."""
-        tokens = []
-        for i in ids:
-            tokens.append(self.ids_to_tokens[i])
-        return tokens
-
     @classmethod
     def from_pretrained(cls, pretrained_model_name, cache_dir=None, *inputs, **kwargs):
         """
