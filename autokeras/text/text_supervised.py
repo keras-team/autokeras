@@ -25,9 +25,9 @@ from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
 from autokeras.nn.model_trainer import BERTTrainer
 from autokeras.supervised import SingleModelSupervised
-from autokeras.text.pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
+from autokeras.text.pretrained_bert.utils import PYTORCH_PRETRAINED_BERT_CACHE
 from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification
-from autokeras.text.pretrained_bert.text_utils import convert_examples_to_features
+from autokeras.text.pretrained_bert.utils import convert_examples_to_features
 from autokeras.text.pretrained_bert.tokenization import BertTokenizer
 from autokeras.utils import get_device
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler

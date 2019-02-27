@@ -1,4 +1,29 @@
+# coding=utf-8
+# Original work Copyright 2018 The Google AI Language Team Authors and The HugginFace Inc. team.
+# Modified work Copyright 2019 The AutoKeras team.
+# Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
 import torch
+
+from pathlib import Path
+
+from autokeras.utils import download_file_from_google_drive
+
+PYTORCH_PRETRAINED_BERT_CACHE = Path(os.getenv('PYTORCH_PRETRAINED_BERT_CACHE',
+                                               Path.home() / '.pytorch_pretrained_bert'))
 
 
 class InputFeatures(object):
@@ -58,3 +83,17 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length):
     all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
 
     return all_input_ids, all_input_mask, all_segment_ids
+
+
+def cached_path(drive_file_id, cache_dir=None):
+    if cache_dir is None:
+        cache_dir = PYTORCH_PRETRAINED_BERT_CACHE
+
+    os.makedirs(cache_dir, exist_ok=True)
+    file_path = os.path.join(cache_dir, drive_file_id)
+
+    if not os.path.exists(file_path):
+        download_file_from_google_drive(file_id=drive_file_id,
+                                        dest_path=file_path,
+                                        verbose=True)
+    return file_path
