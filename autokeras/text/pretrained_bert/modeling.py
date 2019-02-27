@@ -32,13 +32,14 @@ import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss
 
+from autokeras.constant import Constant
 from autokeras.text.pretrained_bert.utils import cached_path
 
 logger = logging.getLogger(__name__)
 
 PRETRAINED_MODEL_ARCHIVE_MAP = {
-    'bert-base-uncased': "1rp1rVBoQwqgvg-JE8JwLL-adgLE07oTG",
-    'bert-base-cased': "1YKoGj-e4zoyTabt5dYpgEPe-PAmjOTDV"
+    'bert-base-uncased': Constant.PRETRAINED_MODEL_BERT_BASE_UNCASED,
+    'bert-base-cased': Constant.PRETRAINED_MODEL_BERT_BASE_CASED
 }
 
 CONFIG_NAME = 'bert_config.json'

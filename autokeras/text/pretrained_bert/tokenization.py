@@ -23,17 +23,14 @@ import unicodedata
 import os
 import logging
 
+from autokeras.constant import Constant
 from autokeras.text.pretrained_bert.utils import cached_path
 
 logger = logging.getLogger(__name__)
 
-# PRETRAINED_VOCAB_ARCHIVE_MAP = {
-#     'bert-base-uncased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt",
-#     'bert-base-cased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-cased-vocab.txt"
-# }
 PRETRAINED_VOCAB_ARCHIVE_MAP = {
-    'bert-base-uncased': "1hlPkUSPeT5ZQBYZ1Z734BbnHIvpx2ZLj",
-    'bert-base-cased': "1FLytUhOIF0mTfA4A9MtE3aQ1kJr96oTR"
+    'bert-base-uncased': Constant.PRETRAINED_VOCAB_BERT_BASE_UNCASED,
+    'bert-base-cased': Constant.PRETRAINED_VOCAB_BERT_BASE_UNCASED
 }
 
 VOCAB_NAME = 'vocab.txt'

@@ -85,15 +85,15 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length):
     return all_input_ids, all_input_mask, all_segment_ids
 
 
-def cached_path(drive_file_id, cache_dir=None):
+def cached_path(file_info, cache_dir=None):
     if cache_dir is None:
         cache_dir = PYTORCH_PRETRAINED_BERT_CACHE
 
     os.makedirs(cache_dir, exist_ok=True)
-    file_path = os.path.join(cache_dir, drive_file_id)
+    file_path = os.path.join(cache_dir, file_info.local_name)
 
     if not os.path.exists(file_path):
-        download_file_from_google_drive(file_id=drive_file_id,
+        download_file_from_google_drive(file_id=file_info.google_drive_id,
                                         dest_path=file_path,
                                         verbose=True)
     return file_path
