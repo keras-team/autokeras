@@ -21,18 +21,10 @@ from abc import ABC
 
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
-from autokeras.text.pretrained_bert.tokenization import BertTokenizer
 from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification
+from autokeras.text.pretrained_bert.utils import convert_examples_to_features
+from autokeras.text.pretrained_bert.tokenization import BertTokenizer
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
-
-
-class InputFeatures(object):
-    """A single set of features of data."""
-
-    def __init__(self, input_ids, input_mask, segment_ids):
-        self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.segment_ids = segment_ids
 
 
 class TextClassifier(Pretrained, ABC):
@@ -54,47 +46,6 @@ class TextClassifier(Pretrained, ABC):
                                                                    num_labels=num_classes)
         self.model.to(self.device)
 
-    def convert_examples_to_features(self, examples, max_seq_length):
-        """ Convert text examples to BERT specific input format.
-
-        Tokenize the input text and convert into features.
-
-        Args:
-            examples: Text data.
-
-        Returns:
-            all_input_ids: ndarray containing the ids for each token.
-            all_input_masks: ndarray containing 1's or 0's based on if the tokens are real or padded.
-            all_segment_ids: ndarray containing all 0's since it is a classification task.
-        """
-        features = []
-        for (_, example) in enumerate(examples):
-            tokens_a = self.tokenizer.tokenize(example)
-
-            if len(tokens_a) > max_seq_length - 2:
-                tokens_a = tokens_a[:(max_seq_length - 2)]
-
-            tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-            segment_ids = [0] * len(tokens)
-
-            input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
-
-            input_mask = [1] * len(input_ids)
-
-            padding = [0] * (max_seq_length - len(input_ids))
-            input_ids += padding
-            input_mask += padding
-            segment_ids += padding
-
-            if len(input_ids) != max_seq_length or len(input_mask) != max_seq_length or len(segment_ids) != max_seq_length:
-                raise AssertionError()
-
-            features.append(
-                    InputFeatures(input_ids=input_ids,
-                                  input_mask=input_mask,
-                                  segment_ids=segment_ids))
-        return features
-
     def y_predict(self, x_predict):
         """ Predict the labels for the provided input data.
 
@@ -104,11 +55,9 @@ class TextClassifier(Pretrained, ABC):
         Returns:
             ndarray containing the predicted labels/outputs for x_predict.
         """
-        eval_features = self.convert_examples_to_features([x_predict], 128)
-
-        all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
-        all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+        all_input_ids, all_input_mask, all_segment_ids = convert_examples_to_features([x_predict],
+                                                                                      self.tokenizer,
+                                                                                      max_seq_length=128)
 
         eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
 

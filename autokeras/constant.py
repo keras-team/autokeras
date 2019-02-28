@@ -85,6 +85,14 @@ class Constant:
         GoogleDriveFile(google_drive_id='1flRlQjfIa2toQ6HNmInhqrh4NuxGh8pT', local_name='sa.pth')]
     TOPIC_CLASSIFIER_MODELS = [
         GoogleDriveFile(google_drive_id='1U7C3xPid1ZvBKpkfW9KikrmNui0yJqnk', local_name='tc.pth')]
+    PRETRAINED_VOCAB_BERT_BASE_UNCASED = \
+        GoogleDriveFile(google_drive_id='1hlPkUSPeT5ZQBYZ1Z734BbnHIvpx2ZLj', local_name='vbbu.txt')
+    PRETRAINED_VOCAB_BERT_BASE_CASED = \
+        GoogleDriveFile(google_drive_id='1FLytUhOIF0mTfA4A9MtE3aQ1kJr96oTR', local_name='vbbc.txt')
+    PRETRAINED_MODEL_BERT_BASE_UNCASED = \
+        GoogleDriveFile(google_drive_id='1rp1rVBoQwqgvg-JE8JwLL-adgLE07oTG', local_name='mbbu.pth')
+    PRETRAINED_MODEL_BERT_BASE_CASED = \
+        GoogleDriveFile(google_drive_id='1YKoGj-e4zoyTabt5dYpgEPe-PAmjOTDV', local_name='mbbc.pth')
 
     # Image Resize
 
