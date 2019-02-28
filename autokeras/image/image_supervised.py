@@ -13,11 +13,12 @@ from autokeras.utils import pickle_to_file, \
 
 
 def _image_to_array(img_path):
-    """Read the image from the path and return image object.
-        Return an image object.
-
-    Args:
-        img_path: image file name in images_dir_path.
+    """Read the image from the path and return it as an numpy.ndarray.
+    
+    Load the image file as an array
+    
+    Parameters:
+        img_path: a string whose value is the image file name
     """
     if os.path.exists(img_path):
         img = read_image(img_path)
@@ -29,13 +30,15 @@ def _image_to_array(img_path):
 
 
 def read_images(img_file_names, images_dir_path, parallel=True):
-    """Read the images from the path and return their numpy.ndarray instance.
-        Return a numpy.ndarray instance containing the training data.
+    """Read the images from the path and return their numpy.ndarray instances.
 
-    Args:
-        img_file_names: List containing images names.
+    Parameters:
+        img_file_names: List of strings representing image file names. # DEVELOPERS THERE'S PROBABLY A WAY TO MAKE THIS PARAM. OPTIONAL
         images_dir_path: Path to the directory containing images.
         parallel: (Default: True) Run _image_to_array will use multiprocessing.
+        
+    Returns:
+        x_train: a list of numpy.ndarrays containing the loaded images.
     """
     img_paths = [os.path.join(images_dir_path, img_file)
                  for img_file in img_file_names]
@@ -54,34 +57,36 @@ def read_images(img_file_names, images_dir_path, parallel=True):
 
 
 def load_image_dataset(csv_file_path, images_path, parallel=True):
-    """Load images from the files and labels from a csv file.
+    """Load images from their files and load their labels from a csv file.
 
-    Second, the dataset is a set of images and the labels are in a CSV file.
+    Assumes the dataset is a set of images and the labels are in a CSV file.
     The CSV file should contain two columns whose names are 'File Name' and 'Label'.
     The file names in the first column should match the file names of the images with extensions,
     e.g., .jpg, .png.
     The path to the CSV file should be passed through the `csv_file_path`.
     The path to the directory containing all the images should be passed through `image_path`.
 
-    Args:
-        csv_file_path: CSV file path.
-        images_path: Path where images exist.
-        parallel: (Default: True) Load dataset with multiprocessing.
+    Parameters:
+        csv_file_path: a string of the path to the CSV file
+        images_path: a string of the path containing the directory of the images
+        parallel: (Default: True) Load dataset using multiprocessing.
 
     Returns:
         x: Four dimensional numpy.ndarray. The channel dimension is the last dimension.
-        y: The labels.
+        y: a numpy.ndarray of the labels for the images
     """
-    img_file_name, y = read_csv_file(csv_file_path)
-    x = read_images(img_file_name, images_path, parallel)
+    img_file_names, y = read_csv_file(csv_file_path)
+    x = read_images(img_file_names, images_path, parallel)
     return np.array(x), np.array(y)
 
 
 class ImageSupervised(DeepTaskSupervised, ABC):
     """Abstract image supervised class.
+    
+    Inherits from DeepTaskSupervised.
 
-    Attributes:
-        path: A path to the directory to save the classifier as well as intermediate results.
+    Attribute variables:
+        path: A string of the path to the directory to save the classifier as well as intermediate results.
         cnn: CNN module from net_module.py.
         y_encoder: Label encoder, used in transform_y or inverse_transform_y for encode the label. For example,
                     if one hot encoder needed, y_encoder can be OneHotEncoder.
@@ -91,22 +96,31 @@ class ImageSupervised(DeepTaskSupervised, ABC):
         augment: A boolean value indicating whether the data needs augmentation.  If not define, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
-        resize_height: resize image height.
-        resize_width: resize image width.
+        resize_shape: resize image height and width
+        
+    Attribute methods:
+        __init__(): initialize the instance of the ImageSupervised class
+        fit(): 
+        init_transformer():
+        preprocess():
     """
 
     def __init__(self, augment=None, **kwargs):
-        """Initialize the instance.
+        """Initialize the instance of the ImageSupervised class.
+        
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
         Otherwise it would create a new one.
-        Args:
-            verbose: A boolean of whether the search process will be printed to stdout.
-            path: A string. The path to a directory, where the intermediate results are saved.
-            resume: A boolean. If True, the classifier will continue to previous work saved in path.
-                Otherwise, the classifier will start a new search.
-            searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
-            augment: A boolean value indicating whether the data needs augmentation. If not define, then it
+        
+        Parameters:
+            augment: A boolean value indicating whether the data needs augmentation. If not defined, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
+                
+            **kwargs: Needed for using the __init__() function of ImageSupervised's superclass
+                verbose: A boolean of whether the search process will be printed to stdout.
+                path: A string of the path to a directory where the intermediate results are saved.
+                resume: A boolean. If True, the classifier will continue to previous work saved in path.
+                    Otherwise, the classifier will start a new search.
+                searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
         """
         self.augment = augment if augment is not None else Constant.DATA_AUGMENTATION
         self.resize_shape = []
@@ -114,6 +128,23 @@ class ImageSupervised(DeepTaskSupervised, ABC):
         super().__init__(**kwargs)
 
     def fit(self, x, y, time_limit=None):
+        """Find the best neural architecture for classifying the training data and train it.
+        
+        Based on the given dataset, the function will find the best neural architecture for it.
+        The dataset must be in numpy.ndarray format.
+        The training and validation data should be passed through `x`, `y`. This method will automatically split
+        the training and validation data into training and validation sets.
+        
+        Parameters:
+            x: A numpy.ndarray instance containing the training data or the training data combined with the
+               validation data.
+            y: A numpy.ndarray instance containing the labels of the training data. or the label of the training data
+               combined with the validation label.
+            time_limit: The time limit for the search in seconds. (optional, default = None, which turns into 24 hours in method)
+            
+        Effects:
+            Trains a model that fits the data using the best neural architecture
+        """
         x = np.array(x)
         y = np.array(y)
 
@@ -130,21 +161,52 @@ class ImageSupervised(DeepTaskSupervised, ABC):
         super().fit(x, y, time_limit)
 
     def init_transformer(self, x):
+        """THIS FUNCTION NEEDS A DESCRIPTION.
+        
+        Parameters:
+            x: DATA TO TRANSFORM
+        """
         if self.data_transformer is None:
             self.data_transformer = ImageDataTransformer(
                 x, augment=self.augment)
 
     def preprocess(self, x):
+        """THIS FUNCTION NEEDS A DESCRIPTION.
+        
+        Parameters:
+            x: DATA TO RESIZE, IS IT A LIST OR A SINGLE IMAGE?
+        """
         return resize_image_data(x, self.resize_shape)
 
 
 class ImageClassifier(ImageSupervised):
     """ImageClassifier class.
+    
+    Inherits from ImageSupervised
 
     It is used for image classification. It searches convolutional neural network architectures
     for the best configuration for the image dataset.
+    
+    Attribute variables:
+        path: A string of the path to the directory to save the classifier as well as intermediate results.
+        cnn: CNN module from net_module.py.
+        y_encoder: Label encoder, used in transform_y or inverse_transform_y for encode the label. For example,
+                    if one hot encoder needed, y_encoder can be OneHotEncoder.
+        data_transformer: A transformer class to process the data. See example as ImageDataTransformer.
+        verbose: A boolean value indicating the verbosity mode which determines whether the search process
+                will be printed to stdout.
+        augment: A boolean value indicating whether the data needs augmentation.  If not define, then it
+                will use the value of Constant.DATA_AUGMENTATION which is True by default.
+        searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
+        resize_shape: resize image height and width
+        
+    Attribute methods:
+        __init__(): initialize the instance of the ImageSupervised class
+        fit(): 
+        init_transformer():
+        preprocess():
     """
-
+    # DEVELOPERS WHAT DO THESE FUNCTIONS DO?
     @property
     def loss(self):
         return classification_loss
@@ -153,15 +215,25 @@ class ImageClassifier(ImageSupervised):
     def metric(self):
         return Accuracy
 
-    def transform_y(self, y_train):
-        # Transform y_train.
+    def transform_y(self, y):
+        """Transform the parameter y_train using the variable self.y_encoder
+        
+        Parameters:
+            y: list of labels to convert
+        """
+        # Transform y.
         if self.y_encoder is None:
             self.y_encoder = OneHotEncoder()
-            self.y_encoder.fit(y_train)
-        y_train = self.y_encoder.transform(y_train)
-        return y_train
+            self.y_encoder.fit(y)
+        y = self.y_encoder.transform(y)
+        return y
 
     def inverse_transform_y(self, output):
+        """Convert the encoded labels back to the original label space.
+        
+        Parameters:
+            output: list of labels to decode
+        """
         return self.y_encoder.inverse_transform(output)
 
     def get_n_output_node(self):
@@ -262,7 +334,7 @@ class ImageRegressor3D(ImageRegressor):
 class PortableImageSupervised(PortableDeepSupervised, ABC):
     def __init__(self, graph, y_encoder, data_transformer, resize_params, verbose=False, path=None):
         """Initialize the instance.
-        Args:
+        Parameters:
             graph: The graph form of the learned model
         """
         super().__init__(graph, y_encoder, data_transformer, verbose, path)
