@@ -237,10 +237,22 @@ class ImageClassifier(ImageSupervised):
         return self.y_encoder.inverse_transform(output)
 
     def get_n_output_node(self):
+        """DEVELOPERS WHAT IS THE PURPOSE OF THIS FUNCTION
+        
+        Returns:
+            UNCLEAR
+        """
         return self.y_encoder.n_classes
 
     def export_autokeras_model(self, model_file_name):
-        """ Creates and Exports the AutoKeras model to the given filename. """
+        """ Creates and Exports the AutoKeras model to the given filename.
+        
+        Parameters:
+            model_file_name: A string containing the name of the file to which the model should be saved
+        
+        Effects:
+            Saves the AutoKeras model to a file.
+        """
         portable_model = PortableImageClassifier(graph=self.cnn.best_model,
                                                  y_encoder=self.y_encoder,
                                                  data_transformer=self.data_transformer,
