@@ -267,7 +267,7 @@ class DeepTaskSupervised(SearchSupervised):
         pass
 
     def export_keras_model(self, model_file_name):
-        """ Exports the best Keras model to the given filename. 
+        """Exports the best Keras model to the given filename.
         
         Parameters:
             model_file_name: A string of the filename to which the best model will be exported
@@ -322,9 +322,9 @@ class SingleModelSupervised(Supervised):
     Attribute functions:
         __init__(): initialize an instance of the class
         predict(): predict the classes of the given testing data
-        evaluate(): predict the results for the given testing data and calculate the accuracy of those 
+        evaluate(): predict the results for the given testing data and calculate the accuracy of those
                     predictions compared to the corresponding testing classes
-        save(): save the model    
+        save(): save the model
     """
     def __init__(self, verbose=False, path=None):
         """Initialize the instance of the SingleModelSupervised class.
@@ -404,7 +404,7 @@ class SingleModelSupervised(Supervised):
         return self.metric().evaluate(y_predict, y_test)
 
     def save(self, model_path):
-        """ Exports the Keras model to the given filename. 
+        """Exports the Keras model to the given filename.
         
         Parameters:
             model_path: A string of the path to which the model will be saved
@@ -420,17 +420,17 @@ class PortableDeepSupervised(SingleModelSupervised, ABC):
     
     Inheirits from SingleModelSupervised class and abc module.
     
-    Attribute variables:        
+    Attribute variables:
         graph: The graph form of the learned model.
         y_encoder: The encoder of the label. (See example `OneHotEncoder`.)
         data_transformer: A transformer class to process the data. (See example `ImageDataTransformer`.)
         verbose: A boolean of whether the search process will be printed to stdout.
-        path: A string value indicating the path to the directory where the intermediate model results 
+        path: A string value indicating the path to the directory where the intermediate model results
               are stored
-        
+    
     Attribute functions:
         __init__(): initialize an instance of the class
-        fit(): train the model on the given training data and labels    
+        fit(): train the model on the given training data and labels
     """
     def __init__(self, graph, y_encoder, data_transformer, verbose=False, path=None):
         """Initialize the instance of the PortableDeepSupervised class.
