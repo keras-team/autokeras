@@ -324,7 +324,6 @@ class FaceDetector(Pretrained):
         return bounding_boxes, landmarks
 
     def detect_pnet(self, im):
-        h, w, c = im.shape
         net_size = 12
 
         current_scale = float(net_size) / self.min_face_size
@@ -394,24 +393,11 @@ class FaceDetector(Pretrained):
         return boxes, boxes_align
 
     def detect_rnet(self, im, dets):
-        h, w, c = im.shape
-
         if dets is None:
             return None, None
+        else:
+            cropped_ims_tensors = self.get_cropped_ims_tensors(im, dets)
 
-        dets = get_square_bbox(dets)
-        dets[:, 0:4] = np.round(dets[:, 0:4])
-
-        [dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph] = pad(dets, w, h)
-        num_boxes = dets.shape[0]
-
-        cropped_ims_tensors = []
-        for i in range(num_boxes):
-            tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
-            tmp[dy[i]:edy[i] + 1, dx[i]:edx[i] + 1, :] = im[y[i]:ey[i] + 1, x[i]:ex[i] + 1, :]
-            crop_im = cv2.resize(tmp, (24, 24))
-            crop_im_tensor = convert_image_to_tensor(crop_im)
-            cropped_ims_tensors.append(crop_im_tensor)
         feed_imgs = Variable(torch.stack(cropped_ims_tensors))
 
         feed_imgs = feed_imgs.to(self.device)
@@ -467,24 +453,11 @@ class FaceDetector(Pretrained):
         return boxes, boxes_align
 
     def detect_onet(self, im, dets):
-        h, w, c = im.shape
-
         if dets is None:
             return None, None
+        else:
+            cropped_ims_tensors = self.get_cropped_ims_tensors(im, dets)
 
-        dets = get_square_bbox(dets)
-        dets[:, 0:4] = np.round(dets[:, 0:4])
-
-        [dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph] = pad(dets, w, h)
-        num_boxes = dets.shape[0]
-
-        cropped_ims_tensors = []
-        for i in range(num_boxes):
-            tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
-            tmp[dy[i]:edy[i] + 1, dx[i]:edx[i] + 1, :] = im[y[i]:ey[i] + 1, x[i]:ex[i] + 1, :]
-            crop_im = cv2.resize(tmp, (48, 48))
-            crop_im_tensor = convert_image_to_tensor(crop_im)
-            cropped_ims_tensors.append(crop_im_tensor)
         feed_imgs = Variable(torch.stack(cropped_ims_tensors))
 
         feed_imgs = feed_imgs.to(self.device)
@@ -572,3 +545,23 @@ class FaceDetector(Pretrained):
                 return np.array([]), np.array([])
 
         return boxes_align, landmark_align
+
+
+    def get_cropped_ims_tensors(im, dets):
+        h, w, c = im.shape
+
+        dets = get_square_bbox(dets)
+        dets[:, 0:4] = np.round(dets[:, 0:4])
+
+        [dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph] = pad(dets, w, h)
+        num_boxes = dets.shape[0]
+
+        cropped_ims_tensors = []
+        for i in range(num_boxes):
+            tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
+            tmp[dy[i]:edy[i] + 1, dx[i]:edx[i] + 1, :] = im[y[i]:ey[i] + 1, x[i]:ex[i] + 1, :]
+            crop_im = cv2.resize(tmp, (48, 48))
+            crop_im_tensor = convert_image_to_tensor(crop_im)
+            cropped_ims_tensors.append(crop_im_tensor)
+
+        return cropped_ims_tensors

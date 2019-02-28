@@ -91,10 +91,7 @@ def wider_bn(layer, start_dim, total_dim, n_add, weighted=True):
 
     weights = layer.get_weights()
 
-    new_weights = [add_noise(np.ones(n_add, dtype=np.float32), np.array([0, 1])),
-                   add_noise(np.zeros(n_add, dtype=np.float32), np.array([0, 1])),
-                   add_noise(np.zeros(n_add, dtype=np.float32), np.array([0, 1])),
-                   add_noise(np.ones(n_add, dtype=np.float32), np.array([0, 1]))]
+    new_weights = get_new_weights(n_add)
 
     student_w = tuple()
     for weight, new_weight in zip(weights, new_weights):
@@ -156,8 +153,14 @@ def init_conv_weight(layer):
 
 def init_bn_weight(layer):
     n_filters = layer.num_features
-    new_weights = [add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1])),
-                   add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
-                   add_noise(np.zeros(n_filters, dtype=np.float32), np.array([0, 1])),
-                   add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1]))]
+    new_weights = get_new_weights(n_filters)
     layer.set_weights(new_weights)
+
+
+def get_new_weights(feature, datatype=np.float32):
+    new_weights = [add_noise(np.ones(feature, datatype), np.array([0, 1])),
+                   add_noise(np.zeros(feature, datatype), np.array([0, 1])),
+                   add_noise(np.zeros(feature, datatype), np.array([0, 1])),
+                   add_noise(np.ones(feature, datatype), np.array([0, 1]))]
+
+    return new_weights
