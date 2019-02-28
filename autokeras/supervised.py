@@ -12,51 +12,71 @@ from autokeras.utils import rand_temp_folder_generator, pickle_from_file, valida
 
 
 class Supervised(ABC):
-    """The base class for all supervised task.
+    """The base class for all supervised tasks.
 
-    Attributes:
+    Attribute variables:
         verbose: A boolean value indicating the verbosity mode.
+        
+    Attribute functions:
+        __init__(): initialize an instance of the class
+        fit(): search for the best neural architecture for classifying the given training data and classes
+        predict(): predict the classes of the given testing data
+        evaluate(): predict the results for the given testing data and calculate the accuracy of those 
+                    predictions compared to the corresponding testing classes
     """
 
     def __init__(self, verbose=False):
-        """Initialize the instance.
+        """Initialize the instance of the class.
 
-        Args:
-            verbose: A boolean of whether the search process will be printed to stdout.
+        Parameters:
+            verbose: A boolean of whether the search process will be printed to stdout. (optional, default = False)
         """
         self.verbose = verbose
 
     @abstractmethod
-    def fit(self, x, y, time_limit=None):
-        """Find the best neural architecture and train it.
+    def fit(self, x_train, y_train, time_limit=None):
+        """Find the best neural architecture for classifying the training data and train it.
 
         Based on the given dataset, the function will find the best neural architecture for it.
-        The dataset is in numpy.ndarray format.
-        So they training data should be passed through `x_train`, `y_train`.
+        The dataset must be in numpy.ndarray format.
+        So the training data should be passed through `x_train`, `y_train`.
 
-        Args:
-            x: A numpy.ndarray instance containing the training data or the training data combined with the
+        Parameters:
+            x_train: A numpy.ndarray instance containing the training data or the training data combined with the
                validation data.
-            y: A numpy.ndarray instance containing the label of the training data. or the label of the training data
+            y_train: A numpy.ndarray instance containing the labels of the training data. or the label of the training data
                combined with the validation label.
             time_limit: The time limit for the search in seconds.
+            
+        Effects:
+            Trains a model that fits the data using the best neural architecture
         """
 
     @abstractmethod
     def predict(self, x_test):
-        """Return predict results for the testing data.
+        """Return the results for the testing data predicted by the best neural architecture.
+        
+        Dependent on the results of the fit() function.
 
-        Args:
+        Parameters:
             x_test: An instance of numpy.ndarray containing the testing data.
 
         Returns:
-            A numpy.ndarray containing the results.
+            A numpy.ndarray containing the predicted classes for x_test.
         """
         pass
 
     @abstractmethod
     def evaluate(self, x_test, y_test):
-        """Return the accuracy score between predict value and `y_test`."""
+        """Return the accuracy score between predict value and `y_test`.
+        
+        Parameters:
+            x_test: An instance of numpy.ndarray containing the testing data
+            y_test: An instance of numpy.ndarray containing the labels of the testing data
+            
+        Returns:
+            A float value of the accuracy of the predictions given the labels for the testing data
+        """
         pass
 
 
