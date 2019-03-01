@@ -14,21 +14,14 @@ from autokeras.utils import rand_temp_folder_generator, pickle_from_file, valida
 class Supervised(ABC):
     """The base class for all supervised tasks.
 
-    Attribute variables:
+    Attributes:
         verbose: A boolean value indicating the verbosity mode.
-        
-    Attribute functions:
-        __init__(): initialize an instance of the class
-        fit(): search for the best neural architecture for classifying the given training data and classes
-        predict(): predict the classes of the given testing data
-        evaluate(): predict the results for the given testing data and calculate the accuracy of those 
-                    predictions compared to the corresponding testing classes
     """
 
     def __init__(self, verbose=False):
         """Initialize the instance of the class.
 
-        Parameters:
+        Args:
             verbose: A boolean of whether the search process will be printed to stdout. (optional, default = False)
         """
         self.verbose = verbose
@@ -41,7 +34,7 @@ class Supervised(ABC):
         The dataset must be in numpy.ndarray format.
         So the training data should be passed through `x_train`, `y_train`.
 
-        Parameters:
+        Args:
             x_train: A numpy.ndarray instance containing the training data or the training data combined with the
                validation data.
             y_train: A numpy.ndarray instance containing the labels of the training data. or the label of the training data
@@ -59,7 +52,7 @@ class Supervised(ABC):
         
         Dependent on the results of the fit() function.
 
-        Parameters:
+        Args:
             x_test: An instance of numpy.ndarray containing the testing data.
 
         Returns:
@@ -71,7 +64,7 @@ class Supervised(ABC):
     def evaluate(self, x_test, y_test):
         """Return the accuracy score between predict value and `y_test`.
         
-        Parameters:
+        Args:
             x_test: An instance of numpy.ndarray containing the testing data
             y_test: An instance of numpy.ndarray containing the labels of the testing data
             
@@ -86,23 +79,15 @@ class SearchSupervised(Supervised):
     
     Inherits from Supervised class.
     
-    Attribute variables:
+    Attributes:
         verbose: A boolean value indicating the verbosity mode.
-        
-    Attribute functions:
-        __init__(): initialize an instance of the class
-        fit(): search for the best neural architecture for classifying the given training data and classes
-        predict(): predict the classes of the given testing data
-        evaluate(): predict the results for the given testing data and calculate the accuracy of those 
-                    predictions compared to the corresponding testing classes
-        final_fit(): perform the final training of a model using the best neural architecture
     """
 
     @abstractmethod
     def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
         """Final training after finding the best neural architecture.
 
-        Parameters:
+        Args:
             x_train: A numpy.ndarray of training data.
             y_train: A numpy.ndarray of training targets.
             x_test: A numpy.ndarray of testing data.
@@ -116,22 +101,13 @@ class DeepTaskSupervised(SearchSupervised):
     """
     Inherits from SearchSupervised class.
     
-    Attribute variables:
+    Attributes:
         verbose: A boolean value indicating the verbosity mode. (optional, default = False)
         path: A string indicating the path to a directory where the intermediate results are saved. (optional, default = None)
         resume: A boolean. If True, the classifier will continue to previous work saved in path.
             Otherwise, the classifier will start a new search. (optional, default = False)
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function. (optional, default = None)
         search_type: A constant denoting the type of hyperparameter search algorithm that must be used. (optional, default = BayesianSearcher)
-        
-    Attribute functions:
-        __init__(): initialize an instance of the class
-        fit(): search for the best neural architecture for classifying the given training data and classes
-        predict(): predict the classes of the given testing data
-        evaluate(): predict the results for the given testing data and calculate the accuracy of those 
-                    predictions compared to the corresponding testing classes
-        final_fit(): perform the final training of a model using the best neural architecture
-    
     """
 
     def __init__(self, verbose=False, path=None, resume=False, searcher_args=None,
@@ -141,7 +117,7 @@ class DeepTaskSupervised(SearchSupervised):
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
         Otherwise it would create a new one.
         
-        Parameters:
+        Args:
             verbose: A boolean of whether the search process will be printed to stdout.
             path: A string. The path to a directory, where the intermediate results are saved.
             resume: A boolean. If True, the classifier will continue to previous work saved in path.
@@ -177,7 +153,7 @@ class DeepTaskSupervised(SearchSupervised):
         The training and validation data should be passed through `x`, `y`. This method will automatically split
         the training and validation data into training and validation sets.
 
-        Parameters:
+        Args:
             x: A numpy.ndarray instance containing the training data or the training data combined with the
                validation data.
             y: A numpy.ndarray instance containing the labels of the training data. or the label of the training data
@@ -216,7 +192,7 @@ class DeepTaskSupervised(SearchSupervised):
     def final_fit(self, x_train, y_train, x_test, y_test, trainer_args=None, retrain=False):
         """Final training after found the best architecture.
 
-        Parameters:
+        Args:
             x_train: A numpy.ndarray of training data.
             y_train: A numpy.ndarray of training targets.
             x_test: A numpy.ndarray of testing data.
@@ -269,7 +245,7 @@ class DeepTaskSupervised(SearchSupervised):
     def export_keras_model(self, model_file_name):
         """Exports the best Keras model to the given filename.
         
-        Parameters:
+        Args:
             model_file_name: A string of the filename to which the best model will be exported
         
         Effects:
@@ -280,7 +256,7 @@ class DeepTaskSupervised(SearchSupervised):
     def predict(self, x_test):
         """Return predict results for the testing data.
 
-        Parameters:
+        Args:
             x_test: An instance of numpy.ndarray containing the testing data.
 
         Returns:
@@ -296,7 +272,7 @@ class DeepTaskSupervised(SearchSupervised):
         Predict the labels for the testing data.
         Calculate the accuracy metric between the predicted and actual labels of the testing data.
         
-        Parameters:
+        Args:
             x_test: An instance of numpy.ndarray containing the testing data
             y_test: An instance of numpy.ndarray containing the labels of the testing data
             
@@ -312,24 +288,17 @@ class SingleModelSupervised(Supervised):
     
     Inheirits from Supervised class.
     
-    Attribute variables:
+    Attributes:
         verbose: A boolean value indicating the verbosity mode.
         path: A string value indicating the path to the directory where the intermediate model results 
               are stored
         graph: DEFINED IN __init__() BUT PURPOSE UNCLEAR
         data_transformer: DEFINED IN __init__() BUT PURPOSE UNCLEAR
-        
-    Attribute functions:
-        __init__(): initialize an instance of the class
-        predict(): predict the classes of the given testing data
-        evaluate(): predict the results for the given testing data and calculate the accuracy of those
-                    predictions compared to the corresponding testing classes
-        save(): save the model
     """
     def __init__(self, verbose=False, path=None):
         """Initialize the instance of the SingleModelSupervised class.
 
-        Parameters:
+        Args:
             verbose: A boolean of whether the search process will be printed to stdout. (optional, default = False)
             path: A string. The path to a directory, where the intermediate results are saved. (optional, default = None)
         """
@@ -393,7 +362,7 @@ class SingleModelSupervised(Supervised):
         Predict the labels for the testing data.
         Calculate the accuracy metric between the predicted and actual labels of the testing data.
         
-        Parameters:
+        Args:
             x_test: An instance of numpy.ndarray containing the testing data
             y_test: An instance of numpy.ndarray containing the labels of the testing data
             
@@ -406,7 +375,7 @@ class SingleModelSupervised(Supervised):
     def save(self, model_path):
         """Exports the Keras model to the given filename.
         
-        Parameters:
+        Args:
             model_path: A string of the path to which the model will be saved
         
         Effects:
@@ -420,22 +389,18 @@ class PortableDeepSupervised(SingleModelSupervised, ABC):
     
     Inheirits from SingleModelSupervised class and abc module.
     
-    Attribute variables:
+    Attributes:
         graph: The graph form of the learned model.
         y_encoder: The encoder of the label. (See example `OneHotEncoder`.)
         data_transformer: A transformer class to process the data. (See example `ImageDataTransformer`.)
         verbose: A boolean of whether the search process will be printed to stdout.
         path: A string value indicating the path to the directory where the intermediate model results
               are stored
-    
-    Attribute functions:
-        __init__(): initialize an instance of the class
-        fit(): train the model on the given training data and labels
     """
     def __init__(self, graph, y_encoder, data_transformer, verbose=False, path=None):
         """Initialize the instance of the PortableDeepSupervised class.
 
-        Parameters:
+        Args:
             graph: The graph form of the learned model.
             y_encoder: The encoder of the label. See example as OneHotEncoder
             data_transformer: A transformer class to process the data. See example as ImageDataTransformer.
@@ -450,7 +415,7 @@ class PortableDeepSupervised(SingleModelSupervised, ABC):
     def fit(self, x, y, trainer_args=None, retrain=False):
         """Trains the model on the given dataset.
 
-        Parameters:
+        Args:
             x: A numpy.ndarray instance containing the training data or the training data combined with the
                validation data.
             y: A numpy.ndarray instance containing the label of the training data. or the label of the training data
