@@ -547,7 +547,7 @@ class FaceDetector(Pretrained):
         return boxes_align, landmark_align
 
 
-    def get_cropped_ims_tensors(im, dets):
+    def get_cropped_ims_tensors(self, im, dets):
         h, w, c = im.shape
 
         dets = get_square_bbox(dets)
