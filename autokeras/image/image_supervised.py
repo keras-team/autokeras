@@ -17,7 +17,7 @@ def _image_to_array(img_path):
     
     Load the image file as an array
     
-    Parameters:
+    Args:
         img_path: a string whose value is the image file name
     """
     if os.path.exists(img_path):
@@ -32,7 +32,7 @@ def _image_to_array(img_path):
 def read_images(img_file_names, images_dir_path, parallel=True):
     """Read the images from the path and return their numpy.ndarray instances.
 
-    Parameters:
+    Args:
         img_file_names: List of strings representing image file names. # DEVELOPERS THERE'S PROBABLY A WAY TO MAKE THIS PARAM. OPTIONAL
         images_dir_path: Path to the directory containing images.
         parallel: (Default: True) Run _image_to_array will use multiprocessing.
@@ -66,7 +66,7 @@ def load_image_dataset(csv_file_path, images_path, parallel=True):
     The path to the CSV file should be passed through the `csv_file_path`.
     The path to the directory containing all the images should be passed through `image_path`.
 
-    Parameters:
+    Args:
         csv_file_path: a string of the path to the CSV file
         images_path: a string of the path containing the directory of the images
         parallel: (Default: True) Load dataset using multiprocessing.
@@ -85,7 +85,7 @@ class ImageSupervised(DeepTaskSupervised, ABC):
     
     Inherits from DeepTaskSupervised.
 
-    Attribute variables:
+    Attributes:
         path: A string of the path to the directory to save the classifier as well as intermediate results.
         cnn: CNN module from net_module.py.
         y_encoder: Label encoder, used in transform_y or inverse_transform_y for encode the label. For example,
@@ -97,12 +97,6 @@ class ImageSupervised(DeepTaskSupervised, ABC):
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
         resize_shape: resize image height and width
-        
-    Attribute methods:
-        __init__(): initialize the instance of the ImageSupervised class
-        fit(): 
-        init_transformer():
-        preprocess():
     """
 
     def __init__(self, augment=None, **kwargs):
@@ -111,7 +105,7 @@ class ImageSupervised(DeepTaskSupervised, ABC):
         The classifier will be loaded from the files in 'path' if parameter 'resume' is True.
         Otherwise it would create a new one.
         
-        Parameters:
+        Args:
             augment: A boolean value indicating whether the data needs augmentation. If not defined, then it
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
                 
@@ -135,7 +129,7 @@ class ImageSupervised(DeepTaskSupervised, ABC):
         The training and validation data should be passed through `x`, `y`. This method will automatically split
         the training and validation data into training and validation sets.
         
-        Parameters:
+        Args:
             x: A numpy.ndarray instance containing the training data or the training data combined with the
                validation data.
             y: A numpy.ndarray instance containing the labels of the training data. or the label of the training data
@@ -163,7 +157,7 @@ class ImageSupervised(DeepTaskSupervised, ABC):
     def init_transformer(self, x):
         """THIS FUNCTION NEEDS A DESCRIPTION.
         
-        Parameters:
+        Args:
             x: DATA TO TRANSFORM
         """
         if self.data_transformer is None:
@@ -173,7 +167,7 @@ class ImageSupervised(DeepTaskSupervised, ABC):
     def preprocess(self, x):
         """THIS FUNCTION NEEDS A DESCRIPTION.
         
-        Parameters:
+        Args:
             x: DATA TO RESIZE, IS IT A LIST OR A SINGLE IMAGE?
         """
         return resize_image_data(x, self.resize_shape)
@@ -187,7 +181,7 @@ class ImageClassifier(ImageSupervised):
     It is used for image classification. It searches convolutional neural network architectures
     for the best configuration for the image dataset.
     
-    Attribute variables:
+    Attributes:
         path: A string of the path to the directory to save the classifier as well as intermediate results.
         cnn: CNN module from net_module.py.
         y_encoder: Label encoder, used in transform_y or inverse_transform_y for encode the label. For example,
@@ -199,12 +193,6 @@ class ImageClassifier(ImageSupervised):
                 will use the value of Constant.DATA_AUGMENTATION which is True by default.
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
         resize_shape: resize image height and width
-        
-    Attribute methods:
-        __init__(): initialize the instance of the ImageSupervised class
-        fit(): 
-        init_transformer():
-        preprocess():
     """
     # DEVELOPERS WHAT DO THESE FUNCTIONS DO?
     @property
@@ -218,7 +206,7 @@ class ImageClassifier(ImageSupervised):
     def transform_y(self, y):
         """Transform the parameter y_train using the variable self.y_encoder
         
-        Parameters:
+        Args:
             y: list of labels to convert
         """
         # Transform y.
@@ -231,7 +219,7 @@ class ImageClassifier(ImageSupervised):
     def inverse_transform_y(self, output):
         """Convert the encoded labels back to the original label space.
         
-        Parameters:
+        Args:
             output: list of labels to decode
         """
         return self.y_encoder.inverse_transform(output)
@@ -247,7 +235,7 @@ class ImageClassifier(ImageSupervised):
     def export_autokeras_model(self, model_file_name):
         """ Creates and Exports the AutoKeras model to the given filename.
         
-        Parameters:
+        Args:
             model_file_name: A string containing the name of the file to which the model should be saved
         
         Effects:
@@ -346,7 +334,8 @@ class ImageRegressor3D(ImageRegressor):
 class PortableImageSupervised(PortableDeepSupervised, ABC):
     def __init__(self, graph, y_encoder, data_transformer, resize_params, verbose=False, path=None):
         """Initialize the instance.
-        Parameters:
+        
+        Args:
             graph: The graph form of the learned model
         """
         super().__init__(graph, y_encoder, data_transformer, verbose, path)
