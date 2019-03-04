@@ -1,76 +1,18 @@
 from collections import OrderedDict
 
-import librosa
-import numpy as np
-import scipy.signal
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchaudio
 from torch.autograd import Variable
 
 from autokeras.pretrained.base import Pretrained
 from constant import Constant
-
-windows = {'hamming': scipy.signal.hamming, 'hann': scipy.signal.hann, 'blackman': scipy.signal.blackman,
-           'bartlett': scipy.signal.bartlett}
 
 supported_rnns = {
     'lstm': nn.LSTM,
     'rnn': nn.RNN,
     'gru': nn.GRU
 }
-supported_rnns_inv = dict((v, k) for k, v in supported_rnns.items())
-
-
-def load_audio(path):
-    sound, _ = torchaudio.load(path)
-    sound = sound.numpy()
-    if len(sound.shape) > 1:
-        if sound.shape[0] == 1:
-            sound = sound.squeeze()
-        else:
-            sound = sound.mean(axis=0)  # multiple channels, average
-    return sound
-
-
-class SpectrogramParser:
-    def __init__(self, audio_conf, normalize=False, augment=False):
-        """
-        Parses audio file into spectrogram with optional normalization and various augmentations
-        :param audio_conf: Dictionary containing the sample rate, window and the window length/stride in seconds
-        :param normalize(default False):  Apply standard mean and deviation normalization to audio tensor
-        :param augment(default False):  Apply random tempo and gain perturbations
-        """
-        super(SpectrogramParser, self).__init__()
-        self.window_stride = audio_conf['window_stride']
-        self.window_size = audio_conf['window_size']
-        self.sample_rate = audio_conf['sample_rate']
-        self.window = windows.get(audio_conf['window'], windows['hamming'])
-        self.normalize = normalize
-        self.augment = augment
-        self.noise_prob = audio_conf.get('noise_prob')
-
-    def parse_audio(self, audio_path):
-        y = load_audio(audio_path)
-
-        n_fft = int(self.sample_rate * self.window_size)
-        win_length = n_fft
-        hop_length = int(self.sample_rate * self.window_stride)
-        # STFT
-        D = librosa.stft(y, n_fft=n_fft, hop_length=hop_length,
-                         win_length=win_length, window=self.window)
-        spect, _ = librosa.magphase(D)
-        # S = log(S+1)
-        spect = np.log1p(spect)
-        spect = torch.FloatTensor(spect)
-        if self.normalize:
-            mean = spect.mean()
-            std = spect.std()
-            spect.add_(-mean)
-            spect.div_(std)
-
-        return spect
 
 
 class Decoder(object):
@@ -285,9 +227,6 @@ class DeepSpeech(nn.Module):
         # that it be named something else
         blacklist = ['rnns.0.batch_norm.module.weight', 'rnns.0.batch_norm.module.bias',
                      'rnns.0.batch_norm.module.running_mean', 'rnns.0.batch_norm.module.running_var']
-        for x in blacklist:
-            if x in package['state_dict']:
-                del package['state_dict'][x]
         model.load_state_dict(package['state_dict'])
         for x in model.rnns:
             x.flatten_parameters()
@@ -302,9 +241,7 @@ class VoiceRecognizer(Pretrained):
 
         self.model = self.load_checkpoint()
         labels = Constant.VOICE_RECONGINIZER_LABELS
-        audio_conf = Constant.VOICE_RECONGINIZER_AUDIO_CONF
         self.decoder = GreedyDecoder(labels, blank_index=labels.index('_'))
-        self.parser = SpectrogramParser(audio_conf, normalize=True)
 
     @property
     def _google_drive_files(self):
@@ -315,14 +252,12 @@ class VoiceRecognizer(Pretrained):
         model.eval()
         return model
 
-    def predict(self, audio_path, audio_data=None):
-        if audio_data is not None:
-            spect = audio_data
-        else:
-            spect = self.parser.parse_audio(audio_path).contiguous()
-            spect = spect.view(1, 1, spect.size(0), spect.size(1))
+    def predict(self, audio_data, audio_path=None):
+        if audio_data is None:
+            raise TypeError("audio_data cannot be None")
+        audio_data = audio_data.view(1, 1, audio_data.size(0), audio_data.size(1))
         with torch.no_grad():
-            out = self.model(Variable(spect))
+            out = self.model(Variable(audio_data))
             out = out.transpose(0, 1)  # TxNxH
             decoded_output, _ = self.decoder.decode(out.data)
         return decoded_output[0][0]
