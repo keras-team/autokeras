@@ -55,7 +55,7 @@ to update the controller with evaluation result of a neural architecture.
 The graph and other_info in the parameters are the corresponding return value of the generate function.
 There is no required return value for this function.
 
-You can refer to the default [BeyasianSearcher](https://github.com/jhfjhfj1/autokeras/blob/f455e22c140775975f5061354dc78cdf6b52dc26/autokeras/search.py#L284)
+You can refer to the default [BayesianSearcher](https://github.com/jhfjhfj1/autokeras/blob/f455e22c140775975f5061354dc78cdf6b52dc26/autokeras/search.py#L284)
 as an example.
 The [generate](https://github.com/jhfjhfj1/autokeras/blob/d6bea7369186df842dfb8ea3ed779cbd1b8f7c40/autokeras/search.py#L306) 
 function returns the generated graph and the father ID of the graph in the search tree. Then when the generated model 

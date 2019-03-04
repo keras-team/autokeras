@@ -25,6 +25,5 @@ def test_topic_classifier():
 
     topic_name = topic_classifier.predict("The soviet union was created about five years after Russian Revolution.", )
 
-    print(topic_name)
     if topic_name != "World":
         raise AssertionError()

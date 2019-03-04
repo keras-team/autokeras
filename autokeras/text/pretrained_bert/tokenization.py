@@ -23,21 +23,16 @@ import unicodedata
 import os
 import logging
 
-from .file_utils import cached_path
+from autokeras.constant import Constant
+from autokeras.text.pretrained_bert.utils import cached_path
 
 logger = logging.getLogger(__name__)
 
 PRETRAINED_VOCAB_ARCHIVE_MAP = {
-    'bert-base-uncased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt",
-    'bert-large-uncased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-large-uncased-vocab.txt",
-    'bert-base-cased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-cased-vocab.txt",
-    'bert-large-cased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-large-cased-vocab.txt",
-    'bert-base-multilingual-uncased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-multilingual"
-                                      "-uncased-vocab.txt",
-    'bert-base-multilingual-cased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-multilingual-cased"
-                                    "-vocab.txt",
-    'bert-base-chinese': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-chinese-vocab.txt",
+    'bert-base-uncased': Constant.PRETRAINED_VOCAB_BERT_BASE_UNCASED,
+    'bert-base-cased': Constant.PRETRAINED_VOCAB_BERT_BASE_UNCASED
 }
+
 VOCAB_NAME = 'vocab.txt'
 
 
@@ -93,25 +88,20 @@ class BertTokenizer(object):
             ids.append(self.vocab[token])
         return ids
 
-    def convert_ids_to_tokens(self, ids):
-        """Converts a sequence of ids in wordpiece tokens using the vocab."""
-        tokens = []
-        for i in ids:
-            tokens.append(self.ids_to_tokens[i])
-        return tokens
-
     @classmethod
     def from_pretrained(cls, pretrained_model_name, cache_dir=None, *inputs, **kwargs):
         """
         Instantiate a PreTrainedBertModel from a pre-trained model file.
         Download and cache the pre-trained model file if needed.
         """
-        if pretrained_model_name in PRETRAINED_VOCAB_ARCHIVE_MAP:
-            vocab_file = PRETRAINED_VOCAB_ARCHIVE_MAP[pretrained_model_name]
-        else:
-            vocab_file = pretrained_model_name
-        if os.path.isdir(vocab_file):
-            vocab_file = os.path.join(vocab_file, VOCAB_NAME)
+        try:
+            if pretrained_model_name in PRETRAINED_VOCAB_ARCHIVE_MAP:
+                vocab_file = PRETRAINED_VOCAB_ARCHIVE_MAP[pretrained_model_name]
+            else:
+                raise KeyError
+        except KeyError:
+            logger.error(str(pretrained_model_name) + " tokenizer is not available/supported.")
+
         # redirect to the cache, if necessary
         try:
             resolved_vocab_file = cached_path(vocab_file, cache_dir=cache_dir)

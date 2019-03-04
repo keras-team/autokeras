@@ -4,9 +4,7 @@ python:
 
 
 install:
-- sudo apt-get install sox libsox-dev libsox-fmt-all
 - pip install -r requirements.txt --quiet
-- sh torchaudio.sh
 - pip install pytest
 - pip install pytest-cov
 - pip install coverage
