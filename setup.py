@@ -17,7 +17,7 @@ setup(
                       'numba',
                       'inflect',
                       'unidecode',
-                      'nltk==3.3',
+                      'nltk==3.4',
                       'lws==1.2',
                       'opencv-python==4.0.0.21',
                       'boto3'],
