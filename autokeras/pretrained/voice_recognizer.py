@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 from autokeras.pretrained.base import Pretrained
-from constant import Constant
+from autokeras.constant import Constant
 
 supported_rnns = {
     'lstm': nn.LSTM,
