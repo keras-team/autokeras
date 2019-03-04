@@ -8,7 +8,7 @@ setup(
                       'torch==1.0.1.post2',
                       'torchvision==0.2.1',
                       'numpy==1.16.1',
-                      'scikit-learn==0.20.2',
+                      'scikit-learn==0.20.3',
                       'scikit-image==0.14.2',
                       'tqdm==4.31.0',
                       'imageio==2.5.0',
