@@ -24,4 +24,6 @@ def test_batch_dataset(_, _1):
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
     cnn = CnnModule(classification_loss, Accuracy, {}, TEST_TEMP_DIR, True)
     cnn.fit(2, (4, 250, 250, 3), train_dataloader, test_dataloader, 12 * 60 * 60)
+    score = cnn.evaluate(test_dataloader)
+    assert score <= 1.0
     clean_dir(TEST_TEMP_DIR)
