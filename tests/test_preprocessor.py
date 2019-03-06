@@ -25,6 +25,6 @@ def test_batch_dataset(_, _1):
     cnn = CnnModule(classification_loss, Accuracy, {}, TEST_TEMP_DIR, True)
     cnn.fit(2, (4, 250, 250, 3), train_dataloader, test_dataloader, 12 * 60 * 60)
     score = cnn.evaluate(test_dataloader)
-    if score <= 1.0:
+    if score < 0 or score > 1.0:
         raise AssertionError()
     clean_dir(TEST_TEMP_DIR)
