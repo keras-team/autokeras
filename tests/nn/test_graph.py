@@ -163,26 +163,6 @@ def test_node_consistency():
         assert layer.output.shape == layer.output_shape
 
 
-def test_produce_keras_model():
-    for graph in [get_conv_dense_model(),
-                  get_add_skip_model(),
-                  get_pooling_model(),
-                  get_concat_skip_model()]:
-        model = graph.produce_keras_model()
-        import keras
-        assert isinstance(model, keras.models.Model)
-
-
-def test_keras_model():
-    for graph in [get_conv_dense_model(),
-                  get_add_skip_model(),
-                  get_pooling_model(),
-                  get_concat_skip_model()]:
-        keras_model = KerasModel(graph)
-        keras_model.set_weight_to_graph()
-        assert isinstance(keras_model, KerasModel)
-
-
 def test_graph_size():
     graph = CnnGenerator(10, (32, 32, 3)).generate()
     assert graph.size() == 7254

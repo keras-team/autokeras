@@ -1,3 +1,20 @@
+# coding=utf-8
+# Original work Copyright 2018 The Google AI Language Team Authors and The HugginFace Inc. team.
+# Modified work Copyright 2019 The AutoKeras team.
+# Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from abc import ABC
 
 import numpy as np
@@ -8,27 +25,32 @@ from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
 from autokeras.nn.model_trainer import BERTTrainer
 from autokeras.supervised import SingleModelSupervised
-from autokeras.text.pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
+from autokeras.text.pretrained_bert.utils import PYTORCH_PRETRAINED_BERT_CACHE
 from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification
+from autokeras.text.pretrained_bert.utils import convert_examples_to_features
 from autokeras.text.pretrained_bert.tokenization import BertTokenizer
-from autokeras.utils import get_device, temp_path_generator
+from autokeras.utils import get_device
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 
-class InputFeatures(object):
-    """A single set of features of data."""
-
-    def __init__(self, input_ids, input_mask, segment_ids):
-        self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.segment_ids = segment_ids
-
-
 class TextClassifier(SingleModelSupervised, ABC):
-    """TextClassifier class.
+    """A TextClassifier class based on Google AI's BERT model.
+
+    Attributes:
+        device: Specific hardware for using/running the model. E.g:- CPU, GPU or TPU.
+        verbose: Mode of verbosity.
+        bert_model: Type of BERT model to be used for the classification task. E.g:- Uncased, Cased, etc.
+        tokenizer: Tokenizer used with BERT model.
+        num_labels: Number of output labels for the classification task.
+        output_model_file: File location to save the trained model.
     """
 
     def __init__(self, verbose, **kwargs):
+        """Initialize the TextClassifier.
+
+        Args:
+            verbose: Mode of verbosity.
+        """
         super().__init__(**kwargs)
         self.device = get_device()
         self.verbose = verbose
@@ -42,17 +64,19 @@ class TextClassifier(SingleModelSupervised, ABC):
         self.num_labels = None
 
         # Output directory
-        self.output_dir = temp_path_generator() + 'bert_classifier/'
-        self.output_model_file = self.output_dir + 'pytorch_model.bin'
+        self.output_model_file = os.path.join(self.path, 'pytorch_model.bin')
 
         # Evaluation params
         self.eval_batch_size = 32
 
     def fit(self, x, y, time_limit=None):
-        if os.path.exists(self.output_dir) and os.listdir(self.output_dir):
-            raise ValueError("Output directory ({}) already exists and is not empty.".format(self.output_dir))
-        os.makedirs(self.output_dir, exist_ok=True)
+        """ Train the text classifier based on the training data.
 
+        Args:
+            x: ndarray containing the train data inputs.
+            y: ndarray containing the train data outputs/labels.
+            time_limit: Maximum time allowed for searching. It does not apply for this classifier.
+        """
         self.num_labels = len(list(set(y)))
 
         # Prepare model
@@ -68,6 +92,14 @@ class TextClassifier(SingleModelSupervised, ABC):
         bert_trainer.train_model()
 
     def predict(self, x_test):
+        """ Predict the labels for the provided input data.
+
+        Args:
+            x_test: ndarray containing the test data inputs.
+
+        Returns:
+            ndarray containing the predicted labels/outputs for x_test.
+        """
         # Load a trained model that you have fine-tuned
         model_state_dict = torch.load(self.output_model_file)
         model = BertForSequenceClassification.from_pretrained(self.bert_model, state_dict=model_state_dict,
@@ -108,38 +140,19 @@ class TextClassifier(SingleModelSupervised, ABC):
         return classification_loss
 
     def preprocess(self, x):
-        features = []
-        for (_, example) in enumerate(x):
-            tokens_a = self.tokenizer.tokenize(example)
+        """ Preprocess text data.
 
-            if len(tokens_a) > self.max_seq_length - 2:
-                tokens_a = tokens_a[:(self.max_seq_length - 2)]
+        Tokenize the input text and convert into features.
 
-            tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-            segment_ids = [0] * len(tokens)
+        Args:
+            x: Text input.
 
-            input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
-
-            input_mask = [1] * len(input_ids)
-
-            padding = [0] * (self.max_seq_length - len(input_ids))
-            input_ids += padding
-            input_mask += padding
-            segment_ids += padding
-
-            if len(input_ids) != self.max_seq_length or \
-                    len(input_mask) != self.max_seq_length or \
-                    len(segment_ids) != self.max_seq_length:
-                raise AssertionError()
-
-            features.append(InputFeatures(input_ids=input_ids,
-                                          input_mask=input_mask,
-                                          segment_ids=segment_ids))
-
-        all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
-        all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
-        return all_input_ids, all_input_mask, all_segment_ids
+        Returns:
+            all_input_ids: ndarray containing the ids for each token.
+            all_input_masks: ndarray containing 1's or 0's based on if the tokens are real or padded.
+            all_segment_ids: ndarray containing all 0's since it is a classification task.
+        """
+        return convert_examples_to_features(x, self.tokenizer, self.max_seq_length)
 
     def transform_y(self, y):
         pass
