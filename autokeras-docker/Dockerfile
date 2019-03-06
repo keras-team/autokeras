@@ -4,5 +4,7 @@ RUN mkdir /app
 
 WORKDIR /app
 
+RUN python -m pip install numpy
+
 RUN python -m pip install autokeras
 
