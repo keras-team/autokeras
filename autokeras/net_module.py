@@ -136,7 +136,7 @@ class NetworkModule:
         target, prediction = [], []
 
         with torch.no_grad():
-            for batch_idx, (x, y) in enumerate(test_data):
+            for _, (x, y) in enumerate(test_data):
                 x, y = x.to(device), y.to(device)
                 prediction.append(model(x))
                 target.append(y)
