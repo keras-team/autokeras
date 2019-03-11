@@ -165,7 +165,7 @@ def test_node_consistency():
 
 def test_graph_size():
     graph = CnnGenerator(10, (32, 32, 3)).generate()
-    assert graph.size() == 7254
+    assert graph.size() == 80982
 
 
 def test_long_transform():
