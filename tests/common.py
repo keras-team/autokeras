@@ -11,7 +11,7 @@ from autokeras.nn.graph import Graph
 from autokeras.nn.layers import StubReLU, StubFlatten, StubSoftmax, StubDense, StubConcatenate, StubAdd, \
     StubConv2d, StubBatchNormalization2d, StubDropout2d
 from autokeras.nn.layers import StubPooling2d
-from autokeras.preprocessor import ImageDataTransformer, DataTransformerMlp
+from autokeras.backend.torch import ImageDataTransformer, DataTransformerMlp
 
 TEST_TEMP_AUTO_KERAS_DIR = 'tests/resources/temp/autokeras'
 TEST_TEMP_DIR = 'tests/resources/temp'

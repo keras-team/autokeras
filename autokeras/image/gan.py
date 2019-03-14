@@ -1,13 +1,17 @@
+import sys
+
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
-import torchvision.utils as vutils
+from copy import deepcopy
+from torchvision import utils as vutils
+from tqdm import tqdm
 
 from autokeras.constant import Constant
 from autokeras.nn.loss_function import binary_classification_loss
-from autokeras.nn.model_trainer import GANModelTrainer
-from autokeras.preprocessor import ImageDataTransformer
+from autokeras.backend.torch import ImageDataTransformer
+from autokeras.nn.model_trainer import ModelTrainerBase
 from autokeras.unsupervised import Unsupervised
 from autokeras.utils import get_device
 
@@ -135,3 +139,129 @@ class Generator(nn.Module):
     def forward(self, input_tensor):
         output = self.main(input_tensor)
         return output
+
+
+class GANModelTrainer(ModelTrainerBase):
+    """A ModelTrainer especially for the GAN.
+    Attributes:
+        d_model: A discriminator model.
+        g_model: A generator model.
+        out_f: Out file.
+        out_size: Size of the output image.
+        optimizer_d: Optimizer for discriminator.
+        optimizer_g: Optimizer for generator.
+    """
+
+    def __init__(self,
+                 g_model,
+                 d_model,
+                 train_data,
+                 loss_function,
+                 verbose,
+                 gen_training_result=None,
+                 device=None):
+        """Initialize the GANModelTrainer.
+        Args:
+            g_model: The generator model to be trained.
+            d_model: The discriminator model to be trained.
+            train_data: the training data.
+            loss_function: The loss function for both discriminator and generator.
+            verbose: Whether to output the system output.
+            gen_training_result: Whether to generate the intermediate result while training.
+        """
+        super().__init__(loss_function, train_data, verbose=verbose, device=device)
+        self.d_model = d_model
+        self.g_model = g_model
+        self.d_model.to(self.device)
+        self.g_model.to(self.device)
+        self.out_f = None
+        self.out_size = 0
+        if gen_training_result is not None:
+            self.out_f, self.out_size = gen_training_result
+            self.sample_noise = torch.randn(self.out_size,
+                                            self.g_model.nz,
+                                            1, 1, device=self.device)
+        self.optimizer_d = None
+        self.optimizer_g = None
+
+    def train_model(self,
+                    max_iter_num=None,
+                    max_no_improvement_num=None,
+                    timeout=None):
+        if max_iter_num is None:
+            max_iter_num = Constant.MAX_ITER_NUM
+        self.optimizer_d = torch.optim.Adam(self.d_model.parameters())
+        self.optimizer_g = torch.optim.Adam(self.g_model.parameters())
+        if self.verbose:
+            progress_bar = tqdm(total=max_iter_num,
+                                desc='     Model     ',
+                                file=sys.stdout,
+                                ncols=75,
+                                position=1,
+                                unit=' epoch')
+        else:
+            progress_bar = None
+        for epoch in range(max_iter_num):
+            self._train(epoch)
+            if self.verbose:
+                progress_bar.update(1)
+        if self.verbose:
+            progress_bar.close()
+
+    def _train(self, epoch):
+        """Perform the actual train."""
+        # put model into train mode
+        self.d_model.train()
+        # TODO: why?
+        cp_loader = deepcopy(self.train_loader)
+        if self.verbose:
+            progress_bar = tqdm(total=len(cp_loader),
+                                desc='Current Epoch',
+                                file=sys.stdout,
+                                leave=False,
+                                ncols=75,
+                                position=0,
+                                unit=' Batch')
+        else:
+            progress_bar = None
+        real_label = 1
+        fake_label = 0
+        for batch_idx, inputs in enumerate(cp_loader):
+            # Update Discriminator network maximize log(D(x)) + log(1 - D(G(z)))
+            # train with real
+            self.optimizer_d.zero_grad()
+            inputs = inputs.to(self.device)
+            batch_size = inputs.size(0)
+            outputs = self.d_model(inputs)
+
+            label = torch.full((batch_size,), real_label, device=self.device)
+            loss_d_real = self.loss_function(outputs, label)
+            loss_d_real.backward()
+
+            # train with fake
+            noise = torch.randn((batch_size, self.g_model.nz, 1, 1,), device=self.device)
+            fake_outputs = self.g_model(noise)
+            label.fill_(fake_label)
+            outputs = self.d_model(fake_outputs.detach())
+            loss_g_fake = self.loss_function(outputs, label)
+            loss_g_fake.backward()
+            self.optimizer_d.step()
+            # (2) Update G network: maximize log(D(G(z)))
+            self.g_model.zero_grad()
+            label.fill_(real_label)
+            outputs = self.d_model(fake_outputs)
+            loss_g = self.loss_function(outputs, label)
+            loss_g.backward()
+            self.optimizer_g.step()
+
+            if self.verbose:
+                if batch_idx % 10 == 0:
+                    progress_bar.update(10)
+            if self.out_f is not None and batch_idx % 100 == 0:
+                fake = self.g_model(self.sample_noise)
+                vutils.save_image(
+                    fake.detach(),
+                    '%s/fake_samples_epoch_%03d.png' % (self.out_f, epoch),
+                    normalize=True)
+        if self.verbose:
+            progress_bar.close()

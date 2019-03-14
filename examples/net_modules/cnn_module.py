@@ -2,7 +2,8 @@ from keras.datasets import mnist
 from autokeras import CnnModule
 from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
-from autokeras.preprocessor import ImageDataTransformer, OneHotEncoder
+from autokeras.preprocessor import OneHotEncoder
+from autokeras.backend.torch import ImageDataTransformer
 
 
 def transform_y(y_train):
