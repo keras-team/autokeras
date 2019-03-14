@@ -1,4 +1,6 @@
+import multiprocessing
 from multiprocessing.queues import Queue as MultiQueue
+
 
 class SharedCounter(object):
     """ A synchronized shared counter.
@@ -15,10 +17,10 @@ class SharedCounter(object):
 
     """
 
-    def __init__(self, n = 0):
+    def __init__(self, n=0):
         self.count = multiprocessing.Value('i', n)
 
-    def increment(self, n = 1):
+    def increment(self, n=1):
         """ Increment the counter by n (default = 1) """
         with self.count.get_lock():
             self.count.value += n

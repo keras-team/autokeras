@@ -1,6 +1,5 @@
 from abc import abstractmethod
 from sklearn.model_selection import train_test_split
-import numpy as np
 
 from autokeras.backend import Backend
 from autokeras.utils import validate_xy, resize_image_data, compute_image_resize_params
@@ -10,7 +9,6 @@ from autokeras.nn.generator import ResNetGenerator, DenseNetGenerator
 from autokeras.search import train
 from autokeras.constant import Constant
 from autokeras.preprocessor import OneHotEncoder
-from autokeras.backend.torch import ImageDataTransformer
 from autokeras.supervised import SingleModelSupervised
 
 
