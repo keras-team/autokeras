@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from autokeras.bayesian import edit_distance
-from autokeras.nn.loss_function import classification_loss
+from autokeras.backend.torch.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
 from autokeras.search import *
 from autokeras.nn.generator import CnnGenerator, MlpGenerator, ResNetGenerator

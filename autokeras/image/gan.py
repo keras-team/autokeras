@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 from autokeras.backend import Backend
 from autokeras.constant import Constant
-from autokeras.nn.loss_function import binary_classification_loss
 from autokeras.nn.model_trainer import ModelTrainerBase
 from autokeras.unsupervised import Unsupervised
 from autokeras.utils import get_device
@@ -61,7 +60,7 @@ class DCGAN(Unsupervised):
         GANModelTrainer(self.net_g,
                         self.net_d,
                         train_dataloader,
-                        binary_classification_loss,
+                        Backend.binary_classification_loss,
                         self.verbose,
                         self.gen_training_result,
                         device=get_device()).train_model()
