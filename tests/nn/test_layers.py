@@ -1,4 +1,6 @@
-from autokeras.nn.layers import *
+import torch
+
+from autokeras.backend.torch.model import GlobalAvgPool2d
 import numpy as np
 
 

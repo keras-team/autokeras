@@ -8,7 +8,6 @@ from autokeras.constant import Constant
 from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder
-from autokeras.backend.torch import ImageDataTransformer
 from autokeras.supervised import PortableDeepSupervised, DeepTaskSupervised
 from autokeras.utils import pickle_to_file, \
     read_csv_file, read_image, compute_image_resize_params, resize_image_data

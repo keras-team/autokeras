@@ -7,12 +7,12 @@ import time
 import torch
 import torch.multiprocessing as mp
 
-
 from abc import ABC, abstractmethod
 from datetime import datetime
+
+from autokeras.backend import Backend
 from autokeras.bayesian import BayesianOptimizer
 from autokeras.constant import Constant
-from autokeras.nn.model_trainer import ModelTrainer
 from autokeras.utils import pickle_to_file, pickle_from_file, verbose_print, get_system
 
 
@@ -90,7 +90,6 @@ class Searcher(ABC):
                             format='%(asctime)s - %(filename)s - %(message)s', level=logging.DEBUG)
 
         self._timeout = None
-
 
     def load_model_by_id(self, model_id):
         return pickle_from_file(os.path.join(self.path, str(model_id) + '.graph'))
@@ -344,13 +343,13 @@ def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, 
     """Train the neural architecture."""
     try:
         model = graph.produce_model()
-        loss, metric_value = ModelTrainer(model=model,
-                                          path=path,
-                                          train_data=train_data,
-                                          test_data=test_data,
-                                          metric=metric,
-                                          loss_function=loss,
-                                          verbose=verbose).train_model(**trainer_args)
+        loss, metric_value = Backend.get_model_trainer(model=model,
+                                                       path=path,
+                                                       train_data=train_data,
+                                                       test_data=test_data,
+                                                       metric=metric,
+                                                       loss_function=loss,
+                                                       verbose=verbose).train_model(**trainer_args)
         model.set_weight_to_graph()
         if q:
             q.put((metric_value, loss, model.graph))
@@ -376,4 +375,3 @@ def train(q, graph, train_data, test_data, trainer_args, metric, loss, verbose, 
         if q:
             q.put((None, None, None))
         return None, None, None
-

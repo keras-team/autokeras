@@ -8,7 +8,7 @@ from torchvision.transforms import Compose
 
 from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
-from autokeras.nn.model_trainer import ModelTrainer
+from autokeras.backend.torch.model_trainer import ModelTrainer
 from autokeras.preprocessor import OneHotEncoder
 from autokeras.backend.torch import MultiTransformDataset
 

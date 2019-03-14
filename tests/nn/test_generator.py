@@ -1,5 +1,5 @@
 from autokeras.nn.generator import *
-from autokeras.nn.external_models import TorchModel
+from autokeras.backend.torch.model import TorchModel
 import numpy as np
 import torch
 

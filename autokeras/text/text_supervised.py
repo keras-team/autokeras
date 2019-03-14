@@ -23,7 +23,7 @@ import torch
 
 from autokeras.nn.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
-from autokeras.nn.model_trainer import BERTTrainer
+from autokeras.backend.torch.model_trainer import BERTTrainer
 from autokeras.supervised import SingleModelSupervised
 from autokeras.text.pretrained_bert.utils import PYTORCH_PRETRAINED_BERT_CACHE
 from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification

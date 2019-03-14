@@ -4,7 +4,7 @@ from queue import Queue
 
 import numpy as np
 
-from autokeras.nn.external_models import TorchModel
+from autokeras.backend import Backend
 from autokeras.nn.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense, \
     wider_pre_conv, add_noise, init_dense_weight, init_conv_weight, init_bn_weight
 from autokeras.nn.layers import StubConcatenate, StubAdd, is_layer, layer_width, \
@@ -570,11 +570,7 @@ class Graph:
 
     def produce_model(self):
         """Build a new torch model based on the current graph."""
-        return TorchModel(self)
-
-    def produce_keras_model(self):
-        """Build a new keras model based on the current graph."""
-        return KerasModel(self).model
+        return Backend.produce_model(self)
 
     def _layer_ids_in_order(self, layer_ids):
         node_id_to_order_index = {}
