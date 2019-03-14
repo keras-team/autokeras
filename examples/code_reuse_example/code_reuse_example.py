@@ -6,7 +6,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
-from autokeras.nn.loss_function import classification_loss
+from autokeras.backend.torch.loss_function import classification_loss
 from autokeras.nn.metric import Accuracy
 from autokeras.backend.torch.model_trainer import ModelTrainer
 from autokeras.preprocessor import OneHotEncoder

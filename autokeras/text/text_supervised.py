@@ -21,7 +21,7 @@ import numpy as np
 import os
 import torch
 
-from autokeras.nn.loss_function import classification_loss
+from autokeras.backend import Backend
 from autokeras.nn.metric import Accuracy
 from autokeras.backend.torch.model_trainer import BERTTrainer
 from autokeras.supervised import SingleModelSupervised
@@ -29,7 +29,6 @@ from autokeras.text.pretrained_bert.utils import PYTORCH_PRETRAINED_BERT_CACHE
 from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification
 from autokeras.text.pretrained_bert.utils import convert_examples_to_features
 from autokeras.text.pretrained_bert.tokenization import BertTokenizer
-from autokeras.utils import get_device
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 
@@ -52,7 +51,7 @@ class TextClassifier(SingleModelSupervised, ABC):
             verbose: Mode of verbosity.
         """
         super().__init__(**kwargs)
-        self.device = get_device()
+        self.device = Backend.get_device()
         self.verbose = verbose
 
         # BERT specific
@@ -137,7 +136,7 @@ class TextClassifier(SingleModelSupervised, ABC):
 
     @property
     def loss(self):
-        return classification_loss
+        return Backend.classification_loss
 
     def preprocess(self, x):
         """ Preprocess text data.

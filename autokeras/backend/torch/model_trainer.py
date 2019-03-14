@@ -32,6 +32,13 @@ from autokeras.nn.model_trainer import ModelTrainerBase
 from autokeras.text.pretrained_bert.optimization import BertAdam, warmup_linear
 
 
+def get_device():
+    """ If CUDA is available, use CUDA device, else use CPU device.
+    Returns: string device name
+    """
+    return 'cuda' if torch.cuda.is_available() else 'cpu'
+
+
 class ModelTrainer(ModelTrainerBase):
     """A class that is used to train the model.
     This class can train a Pytorch model with the given data loaders.
@@ -47,6 +54,8 @@ class ModelTrainer(ModelTrainerBase):
 
     def __init__(self, model, path, **kwargs):
         super().__init__(**kwargs)
+        if self.device is None:
+            self.device = get_device()
         self.model = model
         if torch.cuda.device_count() > 1:
             self.model = torch.nn.DataParallel(self.model)

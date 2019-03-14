@@ -5,7 +5,6 @@ from multiprocessing import Pool, cpu_count
 
 from autokeras.backend import Backend
 from autokeras.constant import Constant
-from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
 from autokeras.preprocessor import OneHotEncoder
 from autokeras.supervised import PortableDeepSupervised, DeepTaskSupervised
@@ -197,7 +196,7 @@ class ImageClassifier(ImageSupervised):
     # DEVELOPERS WHAT DO THESE FUNCTIONS DO?
     @property
     def loss(self):
-        return classification_loss
+        return Backend.classification_loss
 
     @property
     def metric(self):
@@ -282,7 +281,7 @@ class ImageRegressor(ImageSupervised):
 
     @property
     def loss(self):
-        return regression_loss
+        return Backend.regression_loss
 
     @property
     def metric(self):
@@ -348,7 +347,7 @@ class PortableImageSupervised(PortableDeepSupervised, ABC):
 class PortableImageClassifier(PortableImageSupervised):
     @property
     def loss(self):
-        return classification_loss
+        return Backend.classification_loss
 
     @property
     def metric(self):
@@ -364,7 +363,7 @@ class PortableImageClassifier(PortableImageSupervised):
 class PortableImageRegressor(PortableImageSupervised):
     @property
     def loss(self):
-        return regression_loss
+        return Backend.regression_loss
 
     @property
     def metric(self):

@@ -1,7 +1,5 @@
 import abc
 
-from autokeras.utils import get_device
-
 
 class ModelTrainerBase(abc.ABC):
     """ A base class all model trainers will inherit from.
@@ -27,10 +25,7 @@ class ModelTrainerBase(abc.ABC):
                  metric=None,
                  verbose=False,
                  device=None):
-        if device:
-            self.device = device
-        else:
-            self.device = get_device()
+        self.device = device
         self.metric = metric
         self.verbose = verbose
         self.loss_function = loss_function
@@ -51,5 +46,3 @@ class ModelTrainerBase(abc.ABC):
                 if the model still makes no improvement, finish training.
         """
         pass
-
-

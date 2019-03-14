@@ -53,49 +53,6 @@ def pickle_to_file(obj, path):
     pickle.dump(obj, open(path, 'wb'))
 
 
-def get_device():
-    """ If CUDA is available, use CUDA device, else use CPU device.
-    Returns: string device name
-    """
-    return 'cuda' if torch.cuda.is_available() else 'cpu'
-
-
-# # TODO cannot detect nvidia-smi in Windows normally. We need a fall back for windows
-# def get_device():
-#     """ If CUDA is available, use CUDA device, else use CPU device.
-#     When choosing from CUDA devices, this function will choose the one with max memory available.
-#     Returns: string device name.
-#     """
-#     # TODO: could use gputil in the future
-#     device = 'cpu'
-#     if torch.cuda.is_available():
-#         try:
-#             # smi_out=
-#             #       Free                 : xxxxxx MiB
-#             #       Free                 : xxxxxx MiB
-#             #                      ....
-#             smi_out = subprocess.check_output('nvidia-smi -q -d Memory | grep -A4 GPU|grep Free', shell=True)
-#             if isinstance(smi_out, bytes):
-#                 smi_out = smi_out.decode('utf-8')
-#         except subprocess.SubprocessError:
-#             warnings.warn('Cuda device successfully detected. However, nvidia-smi cannot be invoked')
-#             return 'cpu'
-#         visible_devices = os.getenv('CUDA_VISIBLE_DEVICES', '').split(',')
-#         if len(visible_devices) == 1 and visible_devices[0] == '':
-#             visible_devices = []
-#         visible_devices = [int(x) for x in visible_devices]
-#         memory_available = [int(x.split()[2]) for x in smi_out.splitlines()]
-#         for cuda_index, _ in enumerate(memory_available):
-#             if cuda_index not in visible_devices and visible_devices:
-#                 memory_available[cuda_index] = 0
-#         memory_available = list(filter(lambda a: a != 2, memory_available))
-#         if memory_available:
-#             if max(memory_available) != 0 and torch.cuda.device_count() == 1:
-#                 device = 'cuda:' + str(memory_available.index(max(memory_available)))
-#             elif max(memory_available) != 0 and torch.cuda.device_count() > 1:
-#                 device = 'cuda:0'
-#     return device
-
 
 def temp_path_generator():
     sys_temp = tempfile.gettempdir()
