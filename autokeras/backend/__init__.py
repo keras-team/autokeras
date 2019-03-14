@@ -1,9 +1,9 @@
-from autokeras.backend import torch
+from autokeras.backend import torch, tensorflow
 from autokeras.constant import Constant
 
 
 class Backend:
-    backend = torch if Constant.BACKEND == 'torch' else None
+    backend = torch if Constant.BACKEND == 'torch' else tensorflow
 
     def __init__(self):
         pass

@@ -124,40 +124,39 @@ def set_stub_weight_to_torch(stub_layer, torch_layer):
 
 
 def to_real_layer(stub_layer):
-    self = stub_layer
     if isinstance(stub_layer, StubConv1d):
-        return torch.nn.Conv1d(self.input_channel,
-                               self.filters,
-                               self.kernel_size,
-                               stride=self.stride,
-                               padding=self.padding)
+        return torch.nn.Conv1d(stub_layer.input_channel,
+                               stub_layer.filters,
+                               stub_layer.kernel_size,
+                               stride=stub_layer.stride,
+                               padding=stub_layer.padding)
 
     elif isinstance(stub_layer, StubConv2d):
-        return torch.nn.Conv2d(self.input_channel,
-                               self.filters,
-                               self.kernel_size,
-                               stride=self.stride,
-                               padding=self.padding)
+        return torch.nn.Conv2d(stub_layer.input_channel,
+                               stub_layer.filters,
+                               stub_layer.kernel_size,
+                               stride=stub_layer.stride,
+                               padding=stub_layer.padding)
 
     elif isinstance(stub_layer, StubConv3d):
-        return torch.nn.Conv3d(self.input_channel,
-                               self.filters,
-                               self.kernel_size,
-                               stride=self.stride,
-                               padding=self.padding)
+        return torch.nn.Conv3d(stub_layer.input_channel,
+                               stub_layer.filters,
+                               stub_layer.kernel_size,
+                               stride=stub_layer.stride,
+                               padding=stub_layer.padding)
 
     elif isinstance(stub_layer, StubDropout1d):
-        return torch.nn.Dropout(self.rate)
+        return torch.nn.Dropout(stub_layer.rate)
     elif isinstance(stub_layer, StubDropout2d):
-        return torch.nn.Dropout2d(self.rate)
+        return torch.nn.Dropout2d(stub_layer.rate)
     elif isinstance(stub_layer, StubDropout3d):
-        return torch.nn.Dropout3d(self.rate)
+        return torch.nn.Dropout3d(stub_layer.rate)
     elif isinstance(stub_layer, StubAvgPooling1d):
-        return torch.nn.AvgPool1d(self.kernel_size, stride=self.stride)
+        return torch.nn.AvgPool1d(stub_layer.kernel_size, stride=stub_layer.stride)
     elif isinstance(stub_layer, StubAvgPooling2d):
-        return torch.nn.AvgPool2d(self.kernel_size, stride=self.stride)
+        return torch.nn.AvgPool2d(stub_layer.kernel_size, stride=stub_layer.stride)
     elif isinstance(stub_layer, StubAvgPooling3d):
-        return torch.nn.AvgPool3d(self.kernel_size, stride=self.stride)
+        return torch.nn.AvgPool3d(stub_layer.kernel_size, stride=stub_layer.stride)
     elif isinstance(stub_layer, StubGlobalPooling1d):
         return GlobalAvgPool1d()
     elif isinstance(stub_layer, StubGlobalPooling2d):
@@ -165,17 +164,17 @@ def to_real_layer(stub_layer):
     elif isinstance(stub_layer, StubGlobalPooling3d):
         return GlobalAvgPool3d()
     elif isinstance(stub_layer, StubPooling1d):
-        return torch.nn.MaxPool1d(self.kernel_size, stride=self.stride)
+        return torch.nn.MaxPool1d(stub_layer.kernel_size, stride=stub_layer.stride)
     elif isinstance(stub_layer, StubPooling2d):
-        return torch.nn.MaxPool2d(self.kernel_size, stride=self.stride)
+        return torch.nn.MaxPool2d(stub_layer.kernel_size, stride=stub_layer.stride)
     elif isinstance(stub_layer, StubPooling3d):
-        return torch.nn.MaxPool3d(self.kernel_size, stride=self.stride)
+        return torch.nn.MaxPool3d(stub_layer.kernel_size, stride=stub_layer.stride)
     elif isinstance(stub_layer, StubBatchNormalization1d):
-        return torch.nn.BatchNorm1d(self.num_features)
+        return torch.nn.BatchNorm1d(stub_layer.num_features)
     elif isinstance(stub_layer, StubBatchNormalization2d):
-        return torch.nn.BatchNorm2d(self.num_features)
+        return torch.nn.BatchNorm2d(stub_layer.num_features)
     elif isinstance(stub_layer, StubBatchNormalization3d):
-        return torch.nn.BatchNorm3d(self.num_features)
+        return torch.nn.BatchNorm3d(stub_layer.num_features)
     elif isinstance(stub_layer, StubSoftmax):
         return torch.nn.LogSoftmax(dim=1)
     elif isinstance(stub_layer, StubReLU):
@@ -187,4 +186,4 @@ def to_real_layer(stub_layer):
     elif isinstance(stub_layer, StubConcatenate):
         return TorchConcatenate()
     elif isinstance(stub_layer, StubDense):
-        return torch.nn.Linear(self.input_units, self.units)
+        return torch.nn.Linear(stub_layer.input_units, stub_layer.units)
