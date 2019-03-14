@@ -13,7 +13,6 @@ from torch.autograd.variable import Variable
 
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
-from autokeras.utils import get_device, download_file_from_google_drive, temp_path_generator, ensure_dir
 
 
 def weights_init(m):

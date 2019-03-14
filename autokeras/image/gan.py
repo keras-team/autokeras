@@ -12,7 +12,6 @@ from autokeras.backend import Backend
 from autokeras.constant import Constant
 from autokeras.nn.model_trainer import ModelTrainerBase
 from autokeras.unsupervised import Unsupervised
-from autokeras.utils import get_device
 
 
 class DCGAN(Unsupervised):
@@ -37,7 +36,7 @@ class DCGAN(Unsupervised):
         self.ndf = ndf
         self.nc = nc
         self.verbose = verbose
-        self.device = get_device()
+        self.device = Backend.get_device()
         self.gen_training_result = gen_training_result
         self.augment = augment if augment is not None else Constant.DATA_AUGMENTATION
         self.data_transformer = None
@@ -63,7 +62,7 @@ class DCGAN(Unsupervised):
                         Backend.binary_classification_loss,
                         self.verbose,
                         self.gen_training_result,
-                        device=get_device()).train_model()
+                        device=Backend.get_device()).train_model()
 
     def generate(self, input_sample=None):
         if input_sample is None:

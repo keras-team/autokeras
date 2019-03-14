@@ -1,10 +1,8 @@
 import os
 from abc import ABC, abstractmethod
 from sklearn.model_selection import train_test_split
-import torch
-import numpy as np
-from functools import reduce
 
+from autokeras.backend import Backend
 from autokeras.constant import Constant
 from autokeras.net_module import CnnModule
 from autokeras.search import BayesianSearcher, train
@@ -97,6 +95,7 @@ class SearchSupervised(Supervised):
         """
         pass
 
+
 class DeepTaskSupervised(SearchSupervised):
     """
     Inherits from SearchSupervised class.
@@ -170,8 +169,8 @@ class DeepTaskSupervised(SearchSupervised):
         validation_set_size = min(validation_set_size, 500)
         validation_set_size = max(validation_set_size, 1)
         x_train, x_valid, y_train, y_valid = train_test_split(x, y,
-                                                            test_size=validation_set_size,
-                                                            random_state=42)
+                                                              test_size=validation_set_size,
+                                                              random_state=42)
         # DEVELOPERS - WHY DOES THIS TRANSFORMER OCCUR AFTER SPLITTING THE DATA?
         self.init_transformer(x)
         # Transform x_train
@@ -227,9 +226,11 @@ class DeepTaskSupervised(SearchSupervised):
     @abstractmethod
     def get_n_output_node(self):
         pass
+
     @staticmethod
     def transform_y(y_train):
         return y_train
+
     @staticmethod
     def inverse_transform_y(output):
         return output
@@ -295,6 +296,7 @@ class SingleModelSupervised(Supervised):
         graph: DEFINED IN __init__() BUT PURPOSE UNCLEAR
         data_transformer: DEFINED IN __init__() BUT PURPOSE UNCLEAR
     """
+
     def __init__(self, verbose=False, path=None):
         """Initialize the instance of the SingleModelSupervised class.
 
@@ -349,11 +351,7 @@ class SingleModelSupervised(Supervised):
         model = self.graph.produce_model()
         model.eval()
 
-        outputs = []
-        with torch.no_grad():
-            for index, inputs in enumerate(test_loader):
-                outputs.append(model(inputs).numpy())
-        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
+        output = Backend.predict(model, test_loader)
         return self.inverse_transform_y(output)
 
     def evaluate(self, x_test, y_test):
@@ -397,6 +395,7 @@ class PortableDeepSupervised(SingleModelSupervised, ABC):
         path: A string value indicating the path to the directory where the intermediate model results
               are stored
     """
+
     def __init__(self, graph, y_encoder, data_transformer, verbose=False, path=None):
         """Initialize the instance of the PortableDeepSupervised class.
 

@@ -1,7 +1,9 @@
 import os
 
 from abc import ABC, abstractmethod
-from autokeras.utils import temp_path_generator, ensure_dir, download_file_from_google_drive, get_device
+
+from autokeras.backend import Backend
+from autokeras.utils import temp_path_generator, ensure_dir, download_file_from_google_drive
 
 
 class Pretrained(ABC):
@@ -11,7 +13,7 @@ class Pretrained(ABC):
         """Initialize the instance."""
         self.verbose = verbose
         self.model = None
-        self.device = get_device()
+        self.device = Backend.get_device()
         self.model_path = model_path if model_path is not None else temp_path_generator()
         ensure_dir(self.model_path)
         self.local_paths = [os.path.join(self.model_path, x.local_name) for x in self._google_drive_files]
