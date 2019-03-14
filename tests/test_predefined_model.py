@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import numpy as np
 
 from autokeras.predefined_model import *
 from tests.common import clean_dir, mock_train, TEST_TEMP_DIR, MockProcess
