@@ -9,6 +9,7 @@ from autokeras.nn.layers import StubAdd, StubConcatenate, StubConv1d, StubConv2d
 
 
 def produce_model(graph):
+    KerasModel(graph).model.summary()
     return KerasModel(graph)
 
 

@@ -39,7 +39,9 @@ class ImageDataTransformer(DataTransformer):
 
         # TODO: RandomCrop, HorizontalFlip Customize Probability, Cutout
         # channel-wise normalize the image
+        data = data / self.max_val
         data = (data - self.mean)/self.std
+
         # other transformation
         if self.augment:
             datagen = ImageDataGenerator(
@@ -86,7 +88,9 @@ class ImageDataTransformer(DataTransformer):
             A DataLoader instance.
         """
         # channel-wise normalize the image
+        data = data / self.max_val
         data = (data - self.mean)/self.std
+
         datagen = ImageDataGenerator()
         if batch_size is None:
             batch_size = Constant.MAX_BATCH_SIZE
