@@ -1,14 +1,13 @@
-import torch
+import tensorflow as tf
 
 
-def classification_loss(prediction, target):
-    labels = target.argmax(1)
-    return torch.nn.CrossEntropyLoss()(prediction, labels)
+def classification_loss(prediction, label):
+    return tf.keras.losses.categorical_crossentropy()(label, prediction)
 
 
 def regression_loss(prediction, target):
-    return torch.nn.MSELoss()(prediction, target.float())
+    return tf.keras.losses.mean_squared_error()(target.float(), prediction)
 
 
 def binary_classification_loss(prediction, label):
-    return torch.nn.BCELoss()(prediction, label)
+    return tf.keras.losses.binary_crossentropy()(label, prediction)
