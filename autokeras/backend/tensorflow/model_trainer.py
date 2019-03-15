@@ -115,11 +115,8 @@ class ModelTrainer(ModelTrainerBase):
 
     def __init__(self, model, path, **kwargs):
         super().__init__(**kwargs)
-        self.model = model
+        self.model = model.model
         # TODO: TF Parallel
-        # if torch.cuda.device_count() > 1:
-        #     self.model = torch.nn.DataParallel(self.model)
-        self.model.to(self.device)
         self.optimizer = None
         self.early_stop = None
         self.scheduler = None

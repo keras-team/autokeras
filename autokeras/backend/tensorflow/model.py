@@ -71,30 +71,31 @@ def to_real_keras_layer(stub_layer):
     if isinstance(stub_layer, StubConv1d):
         return layers.Conv1D(stub_layer.filters,
                              stub_layer.kernel_size,
-                             stride=stub_layer.stride,
+                             strides=stub_layer.stride,
                              input_shape=stub_layer.input.shape,
                              padding='same')  # padding
 
     elif isinstance(stub_layer, StubConv2d):
         return layers.Conv2D(stub_layer.filters,
                              stub_layer.kernel_size,
-                             stride=stub_layer.stride,
+                             strides=stub_layer.stride,
                              input_shape=stub_layer.input.shape,
                              padding='same')  # padding
 
     elif isinstance(stub_layer, StubConv3d):
         return layers.Conv3D(stub_layer.filters,
                              stub_layer.kernel_size,
-                             stride=stub_layer.stride,
+                             strides=stub_layer.stride,
                              input_shape=stub_layer.input.shape,
                              padding='same')  # padding
 
-    elif isinstance(stub_layer, StubDropout1d):
+    # TODO: Spatial Dropout
+    elif isinstance(stub_layer, (StubDropout1d, StubDropout2d, StubDropout3d)):
         return layers.Dropout(stub_layer.rate)
-    elif isinstance(stub_layer, StubDropout2d):
-        return layers.SpatialDropout2D(stub_layer.rate)
-    elif isinstance(stub_layer, StubDropout3d):
-        return layers.SpatialDropout3D(stub_layer.rate)
+    # elif isinstance(stub_layer, StubDropout2d):
+    #     return layers.SpatialDropout2D(stub_layer.rate)
+    # elif isinstance(stub_layer, StubDropout3d):
+    #     return layers.SpatialDropout3D(stub_layer.rate)
 
     elif isinstance(stub_layer, StubAvgPooling1d):
         return layers.AveragePooling1D(stub_layer.kernel_size, strides=stub_layer.stride)
@@ -104,11 +105,11 @@ def to_real_keras_layer(stub_layer):
         return layers.AveragePooling3D(stub_layer.kernel_size, strides=stub_layer.stride)
 
     elif isinstance(stub_layer, StubGlobalPooling1d):
-        return layers.GlobalAveragePooling1D
+        return layers.GlobalAveragePooling1D()
     elif isinstance(stub_layer, StubGlobalPooling2d):
-        return layers.GlobalAveragePooling1D
+        return layers.GlobalAveragePooling2D()
     elif isinstance(stub_layer, StubGlobalPooling3d):
-        return layers.GlobalAveragePooling1D
+        return layers.GlobalAveragePooling3D()
 
     elif isinstance(stub_layer, StubPooling1d):
         return layers.MaxPooling1D(stub_layer.kernel_size, strides=stub_layer.stride)
@@ -117,9 +118,7 @@ def to_real_keras_layer(stub_layer):
     elif isinstance(stub_layer, StubPooling3d):
         return layers.MaxPooling3D(stub_layer.kernel_size, strides=stub_layer.stride)
 
-    elif isinstance(stub_layer, StubBatchNormalization1d) \
-            or isinstance(stub_layer, StubBatchNormalization2d) or \
-            isinstance(stub_layer, StubBatchNormalization3d):
+    elif isinstance(stub_layer, (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)):
         return layers.BatchNormalization(input_shape=stub_layer.input.shape)
 
     elif isinstance(stub_layer, StubSoftmax):
