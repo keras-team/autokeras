@@ -216,7 +216,7 @@ class ImageClassifier(ImageSupervised):
         return self.y_encoder.n_classes
 
     def export_autokeras_model(self, model_file_name):
-        """ Creates and Exports the AutoKeras model to the given filename.
+        """Creates and Exports the AutoKeras model to the given filename.
         
         Args:
             model_file_name: A string containing the name of the file to which the model should be saved
