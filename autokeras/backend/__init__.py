@@ -33,6 +33,18 @@ class Backend:
         return cls.backend.binary_classification_loss(prediction, target)
 
     @classmethod
+    def classification_metric(cls, prediction, target):
+        return cls.backend.classification_metric(prediction, target)
+
+    @classmethod
+    def regression_metric(cls, prediction, target):
+        return cls.backend.regression_metric(prediction, target)
+
+    @classmethod
+    def binary_classification_metric(cls, prediction, target):
+        return cls.backend.binary_classification_metric(prediction, target)
+
+    @classmethod
     def predict(cls, model, loader):
         return cls.backend.predict(model, loader)
 

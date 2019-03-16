@@ -4,7 +4,7 @@ GoogleDriveFile = namedtuple('GoogleDriveFile', ['google_drive_id', 'local_name'
 
 
 class Constant:
-    BACKEND = 'torch'
+    BACKEND = 'tensorflow'
     # Data
 
     VALIDATION_SET_SIZE = 0.08333
