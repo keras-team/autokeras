@@ -233,7 +233,7 @@ class ImageClassifier(ImageSupervised):
 
 
 class ImageClassifier1D(ImageClassifier):
-    """ ImageClassifier1D class.
+    """ImageClassifier1D class.
 
     It is used for 1D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
@@ -245,7 +245,7 @@ class ImageClassifier1D(ImageClassifier):
 
 
 class ImageClassifier3D(ImageClassifier):
-    """ ImageClassifier3D class.
+    """ImageClassifier3D class.
 
     It is used for 3D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
@@ -281,7 +281,7 @@ class ImageRegressor(ImageSupervised):
         return output.flatten()
 
     def export_autokeras_model(self, model_file_name):
-        """ Creates and Exports the AutoKeras model to the given filename. """
+        """Creates and Exports the AutoKeras model to the given filename. """
         portable_model = PortableImageRegressor(graph=self.cnn.best_model,
                                                 y_encoder=self.y_encoder,
                                                 data_transformer=self.data_transformer,
@@ -291,7 +291,7 @@ class ImageRegressor(ImageSupervised):
 
 
 class ImageRegressor1D(ImageRegressor):
-    """ ImageRegressor1D class.
+    """ImageRegressor1D class.
 
     It is used for 1D image regression. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
@@ -303,7 +303,7 @@ class ImageRegressor1D(ImageRegressor):
 
 
 class ImageRegressor3D(ImageRegressor):
-    """ ImageRegressor3D class.
+    """ImageRegressor3D class.
 
     It is used for 3D image regression. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
