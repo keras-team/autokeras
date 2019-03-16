@@ -1,5 +1,5 @@
 from unittest.mock import patch
-
+import os
 import numpy as np
 
 from autokeras.constant import Constant
@@ -36,7 +36,7 @@ def mocked_requests_get(*args, **kwargs):
 @patch('tempfile.gettempdir', return_value=TEST_TEMP_DIR)
 def test_temp_path_generator(_):
     path = temp_path_generator()
-    assert path == TEST_TEMP_DIR + "/autokeras"
+    assert path == os.path.join(TEST_TEMP_DIR, "autokeras")
 
 
 @patch('autokeras.utils.temp_path_generator', return_value=TEST_TEMP_AUTO_KERAS_DIR)
