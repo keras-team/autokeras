@@ -361,7 +361,7 @@ class ImageNRegressor(ImageSupervised):
             # essentially will determine the number output nodes
             self.num_scalars = y_train.shape[1]
             return y_train.flatten().reshape(y_train.shape[0], y_train.shape[1])
-        except ValueError as e:
+        except ValueError:
             raise ValueError("ImageNRegressor.transform_y() cannot reshape {}. Must be shape (examples, N).")
 
     def inverse_transform_y(self, output):
@@ -370,7 +370,7 @@ class ImageNRegressor(ImageSupervised):
         return output
 
     def export_autokeras_model(self, model_file_name):
-        """ Creates and Exports the AutoKeras model to the given file path and filenmae. 
+        """Creates and Exports the AutoKeras model to the given file path and filenmae. 
         
         Args:
             model_file_name: file path and filename where to save the model.
