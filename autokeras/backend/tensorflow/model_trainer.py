@@ -20,7 +20,7 @@ import time
 
 import numpy as np
 import os
-from tensorflow.keras import optimizers, models
+from tensorflow.keras import optimizers, models, metrics
 from tensorflow.keras.callbacks import Callback, LearningRateScheduler, ReduceLROnPlateau
 from autokeras.constant import Constant
 from autokeras.nn.model_trainer import ModelTrainerBase
@@ -125,6 +125,14 @@ class ModelTrainer(ModelTrainerBase):
         self.current_metric_value = 0
         self.temp_model_path = os.path.join(path, 'temp_model.h5')
 
+        # TODO: better way to define keras metrics
+        if self.loss_function.__name__ == 'classification_loss':
+            self.keras_metric = metrics.categorical_accuracy
+        elif self.loss_function.__name__ == 'regression_loss':
+            self.keras_metric = metrics.mean_squared_error
+        elif self.loss_function.__name__ == 'binary_classification_loss':
+            self.keras_metric = metrics.binary_accuracy
+
     def train_model(self,
                     lr=0.001,
                     max_iter_num=None,
@@ -156,7 +164,9 @@ class ModelTrainer(ModelTrainerBase):
 
         # customize optimizer and compile model
         self.optimizer = optimizers.SGD(lr=lr, momentum=0.9, decay=3e-4)  # clipvalue=1.0,
-        self.model.compile(optimizer=self.optimizer, loss=self.loss_function)
+        self.model.compile(optimizer=self.optimizer,
+                           loss=self.loss_function,
+                           metrics=[self.keras_metric])
 
         # fit model
         # TODO: raise TimeoutError when timeout
