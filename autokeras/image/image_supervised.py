@@ -330,6 +330,58 @@ class ImageRegressor3D(ImageRegressor):
         kwargs['augment'] = False
         super().__init__(**kwargs)
 
+class ImageNRegressor(ImageSupervised):
+    """ImageNRegressor class.
+
+    It is used for image regression. It searches convolutional neural network architectures
+    for the best configuration for the image dataset.
+
+    With ImageNRegressor you can have 2 dimensional output (samples, N). This is different than ImageRegressor
+    as its output is (samples, 1).
+    """
+
+    @property
+    def loss(self):
+        return regression_loss
+
+    @property
+    def metric(self):
+        return MSE
+
+    def get_n_output_node(self):
+        return self.num_scalars
+
+    def transform_y(self, y_train):
+        """Transform the parameter y_train by reshaping to shape (examples, )
+        
+        Args:
+            y: list of labels to convert
+        """
+        try:
+            # essentially will determine the number output nodes
+            self.num_scalars = y_train.shape[1]
+            return y_train.flatten().reshape(y_train.shape[0], y_train.shape[1])
+        except ValueError as e:
+            raise ValueError("ImageNRegressor.transform_y() cannot reshape {}. Must be shape (examples, N).")
+
+    def inverse_transform_y(self, output):
+        """Output is expected to be the shape (examples, N)
+        """
+        return output
+
+    def export_autokeras_model(self, model_file_name):
+        """ Creates and Exports the AutoKeras model to the given file path and filenmae. 
+        
+        Args:
+            model_file_name: file path and filename where to save the model.
+        """
+        portable_model = PortableImageRegressor(graph=self.cnn.best_model,
+                                                y_encoder=self.y_encoder,
+                                                data_transformer=self.data_transformer,
+                                                resize_params=self.resize_shape,
+                                                path=self.path)
+        pickle_to_file(portable_model, model_file_name)
+
 
 class PortableImageSupervised(PortableDeepSupervised, ABC):
     def __init__(self, graph, y_encoder, data_transformer, resize_params, verbose=False, path=None):

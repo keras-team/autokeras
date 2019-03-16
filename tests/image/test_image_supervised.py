@@ -71,6 +71,13 @@ def test_fit_predict(_, _1):
     results = clf.predict(train_x)
     assert len(results) == len(train_y)
 
+    clf = ImageNRegressor(path=TEST_TEMP_DIR, verbose=True)
+    train_x = np.random.rand(100, 25, 25, 25, 1)
+    train_y = np.random.rand(100, 2)
+    clf.fit(train_x, train_y)
+    results = clf.predict(train_x)
+    assert results.shape == train_y.shape
+
     clean_dir(TEST_TEMP_DIR)
 
 
