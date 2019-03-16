@@ -10,7 +10,7 @@ def classification_loss(label, prediction):
 
 def regression_loss(target, prediction):
     return tf.keras.losses.mean_squared_error(
-        y_pred=prediction, 
+        y_pred=prediction,
         y_true=target)
 
 
