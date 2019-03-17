@@ -40,7 +40,7 @@ def read_images(images_dir_path, parallel=True, img_file_names = None):
         x_train: a list of numpy.ndarrays containing the loaded images.
     """
     if img_file_names is None:
-        img_file_names = [img_file for img_file in os.listdir(images_dir_path) if  imghdr.what(os.path.join(images_dir_path, img_file)) is not None]
+        img_file_names = [img_file for img_file in os.listdir(images_dir_path) if (imghdr.what(os.path.join(images_dir_path, img_file)) is not None)]
         
     img_paths = [os.path.join(images_dir_path, img_file)
                  for img_file in img_file_names]
