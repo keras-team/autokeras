@@ -180,3 +180,8 @@ def test_fit_predict_regression(_, _1):
     results = clf.predict(train_x)
     assert len(results) == len(train_x)
     clean_dir(TEST_TEMP_DIR)
+    
+def test_read_images_from_directory():
+    x_train = read_images_from_directory(images_dir_path=os.path.join(path, "images_test/Color_images"))
+    assert len(results) == 15
+    clean_dir(os.path.join(path, "temp"))
