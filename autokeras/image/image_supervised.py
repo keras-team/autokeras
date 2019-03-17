@@ -2,6 +2,7 @@ import os
 from abc import ABC
 import numpy as np
 from multiprocessing import Pool, cpu_count
+import imghdr
 
 from autokeras.constant import Constant
 from autokeras.nn.loss_function import classification_loss, regression_loss
@@ -29,17 +30,20 @@ def _image_to_array(img_path):
         raise ValueError("%s image does not exist" % img_path)
 
 
-def read_images(img_file_names, images_dir_path, parallel=True):
+def read_images(images_dir_path, parallel=True, img_file_names = None):
     """Read the images from the path and return their numpy.ndarray instances.
-
+    If not image file names are specified, read all image files present in the directory images_dir_path
     Args:
-        img_file_names: List of strings representing image file names. # DEVELOPERS THERE'S PROBABLY A WAY TO MAKE THIS PARAM. OPTIONAL
         images_dir_path: Path to the directory containing images.
         parallel: (Default: True) Run _image_to_array will use multiprocessing.
+        img_file_names: (Default: None) List of strings representing image file names. 
         
     Returns:
         x_train: a list of numpy.ndarrays containing the loaded images.
     """
+    if img_file_names is None:
+        img_file_names = [img_file for img_file in os.listdir(images_dir_path) if  imghdr.what(os.path.join(images_dir_path, img_file)) is not None]
+        
     img_paths = [os.path.join(images_dir_path, img_file)
                  for img_file in img_file_names]
 
@@ -54,7 +58,6 @@ def read_images(img_file_names, images_dir_path, parallel=True):
     else:
         raise ValueError("Directory containing images does not exist")
     return np.asanyarray(x_train)
-
 
 def load_image_dataset(csv_file_path, images_path, parallel=True):
     """Load images from their files and load their labels from a csv file.
