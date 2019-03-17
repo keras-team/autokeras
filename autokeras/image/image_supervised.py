@@ -31,8 +31,7 @@ def _image_to_array(img_path):
 
 
 def read_images(images_dir_path, parallel=True, img_file_names = None):
-    """Read the images from the path and return their numpy.ndarray instances.
-    If no image file names are specified, read all image files present in the directory images_dir_path
+    """Read the images from the path and return their numpy.ndarray instances. If no image file names are specified, read all image files present in the directory images_dir_path
     Args:
         images_dir_path: Path to the directory containing images.
         parallel: (Default: True) Run _image_to_array will use multiprocessing.
