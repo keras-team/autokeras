@@ -4,6 +4,7 @@ import pytest
 
 from autokeras.image.image_supervised import *
 from tests.common import clean_dir, MockProcess, simple_transform, mock_train, TEST_TEMP_DIR
+import os
 
 
 def test_train_x_array_exception():
@@ -183,6 +184,7 @@ def test_fit_predict_regression(_, _1):
     
 def test_read_images_from_directory():
     color_img_path = os.path.join(path, "images_test/Color_images")
+    path = 'tests/resources'
     x_train = read_images_from_directory(images_dir_path = color_img_path)
-    assert len(results) == len(os.listdir(color_img_path))
+    assert len(x_train) == len(os.listdir(color_img_path))
     clean_dir(os.path.join(path, "temp"))
