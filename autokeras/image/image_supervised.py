@@ -35,8 +35,7 @@ def read_images(images_dir_path, parallel=True, img_file_names = None):
     Args:
         images_dir_path: Path to the directory containing images.
         parallel: (Default: True) Run _image_to_array will use multiprocessing.
-        img_file_names: (Default: None) List of strings representing image file names. 
-        
+        img_file_names: (Default: None) List of strings representing image file names.
     Returns:
         x_train: a list of numpy.ndarrays containing the loaded images.
     """
