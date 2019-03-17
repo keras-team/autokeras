@@ -183,8 +183,8 @@ def test_fit_predict_regression(_, _1):
     clean_dir(TEST_TEMP_DIR)
     
 def test_read_images_from_directory():
-    color_img_path = os.path.join(path, "images_test/Color_images")
     path = 'tests/resources'
+    color_img_path = os.path.join(path, "images_test/Color_images")
     x_train = read_images_from_directory(images_dir_path = color_img_path)
     assert len(x_train) == len(os.listdir(color_img_path))
     clean_dir(os.path.join(path, "temp"))
