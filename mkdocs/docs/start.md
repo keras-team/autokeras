@@ -404,6 +404,115 @@ If you run *topic_classifier_example.py*, you should see the predict function re
 
 
 
+### Voice generator tutorial.
+[[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/voice_generator/voice_generator.py)
+
+The voice generator is a refactor of [deepvoice3](https://github.com/r9y9/deepvoice3_pytorch). 
+The structure contains three main parts:
+
+* **Encoder**: A  fully-convolutional  encoder,  which  converts  textual  features  to  an  internallearned representation.
+* **Decoder**: A fully-convolutional causal decoder, which decodes the learned representationwith a multi-hop convolutional attention mechanism into a low-dimensional audio repre-sentation (mel-scale spectrograms) in an autoregressive manner.
+* **Converter**:  A fully-convolutional post-processing network, which predicts final vocoderparameters (depending on the vocoder choice) from the decoder hidden states.  Unlike thedecoder, the converter is non-causal and can thus depend on future context information
+
+For more details, please refer the original paper: 
+[**Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning**](https://arxiv.org/pdf/1710.07654.pdf)
+
+Example:
+````python
+from autokeras.pretrained import VoiceGenerator
+voice_generator = VoiceGenerator()
+text = "The approximation of pi is 3.14"
+voice_generator.predict(text, "test.wav")
+````
+
+### Voice recognizer tutorial.
+[[source]]( https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/pretrained/voice_recognizer.py)
+
+The voice recognizer is a refactor of [deepspeech](https://github.com/SeanNaren/deepspeech.pytorch). 
+The model structure contains two parts:
+* Encoder: Convolutional layer followed by recurrent neural network and then fully convert network. Output is the hidden voice information.
+* Decoder: Decode the hidden voice information to the voice wave.
+
+For more details, please refer the original paper:
+[**Deep Speech 2: End-to-End Speech Recognition in English and Mandarin**](https://arxiv.org/abs/1512.02595)
+
+Because currently [torchaudio](https://github.com/pytorch/audio) does not support pip install. So the current package doesn't support audio parsing part.
+To use the voice recognizer, one should first parse the audio following the standard below:
+
+* First, install the [torchaudio](https://github.com/pytorch/audio), the install process can refer the repo.
+* Seconder use the following audio parser
+````python
+from autokeras.constant import Constant
+import torchaudio
+import scipy.signal
+import librosa
+import torch
+import numpy as np
+
+def load_audio(path):
+    sound, _ = torchaudio.load(path)
+    sound = sound.numpy()
+    if len(sound.shape) > 1:
+        if sound.shape[0] == 1:
+            sound = sound.squeeze()
+        else:
+            sound = sound.mean(axis=0)  # multiple channels, average
+    return sound
+
+
+class SpectrogramParser:
+    def __init__(self, audio_conf, normalize=False, augment=False):
+        """
+        Parses audio file into spectrogram with optional normalization and various augmentations
+        :param audio_conf: Dictionary containing the sample rate, window and the window length/stride in seconds
+        :param normalize(default False):  Apply standard mean and deviation normalization to audio tensor
+        :param augment(default False):  Apply random tempo and gain perturbations
+        """
+        super(SpectrogramParser, self).__init__()
+        self.window_stride = audio_conf['window_stride']
+        self.window_size = audio_conf['window_size']
+        self.sample_rate = audio_conf['sample_rate']
+        self.window = scipy.signal.hamming
+        self.normalize = normalize
+        self.augment = augment
+        self.noise_prob = audio_conf.get('noise_prob')
+
+    def parse_audio(self, audio_path):
+        y = load_audio(audio_path)
+
+        n_fft = int(self.sample_rate * self.window_size)
+        win_length = n_fft
+        hop_length = int(self.sample_rate * self.window_stride)
+        # STFT
+        D = librosa.stft(y, n_fft=n_fft, hop_length=hop_length,
+                         win_length=win_length, window=self.window)
+        spect, _ = librosa.magphase(D)
+        # S = log(S+1)
+        spect = np.log1p(spect)
+        spect = torch.FloatTensor(spect)
+        if self.normalize:
+            mean = spect.mean()
+            std = spect.std()
+            spect.add_(-mean)
+            spect.div_(std)
+
+        return spect
+        
+parser = SpectrogramParser(Constant.VOICE_RECONGINIZER_AUDIO_CONF, normalize=True)
+spect = parser.parse_audio("test.wav").contiguous()
+````
+
+After this we will have the audio parsed as torch tensor in variable `spect`. Then we can use the following to recognize the voice:
+
+````python
+from autokeras.pretrained import VoiceRecognizer
+voice_recognizer = VoiceRecognizer()
+print(voice_recognizer.predict(audio_data=spect))
+````
+
+This voice recognizer pretrained model is well tuned based on the [AN4](http://www.speech.cs.cmu.edu/databases/an4/) dataset. It has a large probability 
+cannot perform well on other dataset. 
+
 <!-- [Data with numpy array (.npy) format.]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/mnist.py
 [What if your data are raw image files (*e.g.* .jpg, .png, .bmp)?]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/a_simple_example/load_raw_image.py
 [How to export Portable model]: https://github.com/jhfjhfj1/autokeras/blob/master/examples/portable_models/portable_load.py
