@@ -171,7 +171,6 @@ class DeepTaskSupervised(SearchSupervised):
         x_train, x_valid, y_train, y_valid = train_test_split(x, y,
                                                               test_size=validation_set_size,
                                                               random_state=42)
-        # DEVELOPERS - WHY DOES THIS TRANSFORMER OCCUR AFTER SPLITTING THE DATA?
         self.init_transformer(x)
         # Transform x_train
 
@@ -182,7 +181,6 @@ class DeepTaskSupervised(SearchSupervised):
         # Save the classifier
         pickle_to_file(self, os.path.join(self.path, 'classifier'))
 
-        # DEVELOPERS - WHY NOT PUT THIS BIT IN THE FUNCTION DEFINITION IF time_limit IS BEING ASSIGNED A DEFAULT VALUE OF None?
         if time_limit is None:
             time_limit = 24 * 60 * 60
 
@@ -212,7 +210,6 @@ class DeepTaskSupervised(SearchSupervised):
 
         self.cnn.final_fit(train_data, test_data, trainer_args, retrain)
 
-    # DEVELOPERS - WHAT ARE THE PURPOSES OF THESE METHODS?
     @property
     @abstractmethod
     def metric(self):
@@ -293,8 +290,9 @@ class SingleModelSupervised(Supervised):
         verbose: A boolean value indicating the verbosity mode.
         path: A string value indicating the path to the directory where the intermediate model results 
               are stored
-        graph: DEFINED IN __init__() BUT PURPOSE UNCLEAR
-        data_transformer: DEFINED IN __init__() BUT PURPOSE UNCLEAR
+        graph: The graph form of the learned model.
+        data_transformer: A transformer class to process the data. (See example `ImageDataTransformer`.)
+        verbose: A boolean of whether the search process will be printed to stdout.
     """
 
     def __init__(self, verbose=False, path=None):
@@ -311,7 +309,6 @@ class SingleModelSupervised(Supervised):
         self.graph = None
         self.data_transformer = None
 
-    # DEVELOPERS - WHAT ARE THE PURPOSES OF THE FOLLOWING ABSTRACT METHODS?
     @property
     @abstractmethod
     def metric(self):
@@ -383,7 +380,7 @@ class SingleModelSupervised(Supervised):
 
 
 class PortableDeepSupervised(SingleModelSupervised, ABC):
-    """The base class for SOMETHING, PURPOSE UNCLEAR DEVELOPERS.
+    """The basis class for exported keras model
     
     Inheirits from SingleModelSupervised class and abc module.
     

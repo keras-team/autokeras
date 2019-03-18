@@ -155,20 +155,10 @@ class ImageSupervised(DeepTaskSupervised, ABC):
         super().fit(x, y, time_limit)
 
     def init_transformer(self, x):
-        """THIS FUNCTION NEEDS A DESCRIPTION.
-        
-        Args:
-            x: DATA TO TRANSFORM
-        """
         if self.data_transformer is None:
             self.data_transformer = Backend.get_image_transformer(x, augment=self.augment)
 
     def preprocess(self, x):
-        """THIS FUNCTION NEEDS A DESCRIPTION.
-        
-        Args:
-            x: DATA TO RESIZE, IS IT A LIST OR A SINGLE IMAGE?
-        """
         return resize_image_data(x, self.resize_shape)
 
 
@@ -193,7 +183,6 @@ class ImageClassifier(ImageSupervised):
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
         resize_shape: resize image height and width
     """
-    # DEVELOPERS WHAT DO THESE FUNCTIONS DO?
     @property
     def loss(self):
         return Backend.classification_loss
@@ -224,11 +213,6 @@ class ImageClassifier(ImageSupervised):
         return self.y_encoder.inverse_transform(output)
 
     def get_n_output_node(self):
-        """DEVELOPERS WHAT IS THE PURPOSE OF THIS FUNCTION
-        
-        Returns:
-            UNCLEAR
-        """
         return self.y_encoder.n_classes
 
     def export_autokeras_model(self, model_file_name):

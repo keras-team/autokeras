@@ -6,9 +6,6 @@ import librosa
 import torch
 import numpy as np
 
-windows = {'hamming': scipy.signal.hamming, 'hann': scipy.signal.hann, 'blackman': scipy.signal.blackman,
-           'bartlett': scipy.signal.bartlett}
-
 
 def load_audio(path):
     sound, _ = torchaudio.load(path)
@@ -33,7 +30,7 @@ class SpectrogramParser:
         self.window_stride = audio_conf['window_stride']
         self.window_size = audio_conf['window_size']
         self.sample_rate = audio_conf['sample_rate']
-        self.window = windows.get(audio_conf['window'], windows['hamming'])
+        self.window = scipy.signal.hamming
         self.normalize = normalize
         self.augment = augment
         self.noise_prob = audio_conf.get('noise_prob')
