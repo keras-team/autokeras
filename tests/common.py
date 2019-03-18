@@ -11,12 +11,11 @@ from autokeras.nn.graph import Graph
 from autokeras.nn.layers import StubReLU, StubFlatten, StubSoftmax, StubDense, StubConcatenate, StubAdd, \
     StubConv2d, StubBatchNormalization2d, StubDropout2d
 from autokeras.nn.layers import StubPooling2d
-from autokeras.backend.torch import ImageDataTransformer
+from autokeras.backend import Backend
 from autokeras.backend.torch.data_transformer import DataTransformerMlp
 
 TEST_TEMP_AUTO_KERAS_DIR = 'tests/resources/temp/autokeras'
 TEST_TEMP_DIR = 'tests/resources/temp'
-
 
 def get_concat_skip_model():
     graph = Graph((32, 32, 3), False)
@@ -201,7 +200,7 @@ def get_regression_data_loaders():
     y_train = np.random.rand(200, 1)
     x_test = np.random.rand(190, 28, 28, 3)
     y_test = np.random.rand(190, 1)
-    data_transformer = ImageDataTransformer(x_train, augment=True)
+    data_transformer = Backend.get_image_transformer(x_train, augment=True)
     train_data = data_transformer.transform_train(x_train, y_train)
     test_data = data_transformer.transform_test(x_test, y_test)
     return train_data, test_data
@@ -212,7 +211,7 @@ def get_classification_data_loaders():
     y_train = np.random.rand(200, 3)
     x_test = np.random.rand(190, 28, 28, 3)
     y_test = np.random.rand(190, 3)
-    data_transformer = ImageDataTransformer(x_train, augment=True)
+    data_transformer = Backend.get_image_transformer(x_train, augment=True)
     train_data = data_transformer.transform_train(x_train, y_train)
     test_data = data_transformer.transform_test(x_test, y_test)
     return train_data, test_data
@@ -220,7 +219,7 @@ def get_classification_data_loaders():
 
 def get_classification_train_data_loaders():
     x_train = np.random.rand(200, 32, 32, 3)
-    data_transformer = ImageDataTransformer(x_train, augment=True)
+    data_transformer = Backend.get_image_transformer(x_train, augment=True)
     train_data = data_transformer.transform_train(x_train)
     return train_data
 
