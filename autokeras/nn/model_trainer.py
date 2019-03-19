@@ -110,12 +110,14 @@ class ModelTrainer(ModelTrainerBase):
         self.temp_model_path = os.path.join(path, 'temp_model')
 
     def train_model(self,
+                    lr=0.001,
                     max_iter_num=None,
                     max_no_improvement_num=None,
                     timeout=None):
         """Train the model.
         Train the model with max_iter_num or max_no_improvement_num is met.
         Args:
+            lr: learning rate of the traininig
             timeout: timeout in seconds
             max_iter_num: An integer. The maximum number of epochs to train the model.
                 The training will stop when this number is reached.
@@ -138,7 +140,7 @@ class ModelTrainer(ModelTrainerBase):
         test_loss_list = []
         self.optimizer = torch.optim.SGD(
             self.model.parameters(),
-            0.025,
+            lr=lr,
             momentum=0.9,
             weight_decay=3e-4)
         # self.optimizer = torch.optim.Adam(self.model.parameters())
