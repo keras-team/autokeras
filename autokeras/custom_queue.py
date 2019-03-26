@@ -1,6 +1,6 @@
-from multiprocessing.queues import Queue as MultiQueue
+import multiprocessing.queues
 
-class SharedCounter(object):
+class SharedCounter():
     """ A synchronized shared counter.
 
     The locking done by multiprocessing.Value ensures that only a single
@@ -15,13 +15,13 @@ class SharedCounter(object):
 
     """
 
-    def __init__(self, n = 0):
+    def __init__(self, n=0):
         self.count = multiprocessing.Value('i', n)
 
-    def increment(self, n = 1):
+    def increment(self, num=1):
         """ Increment the counter by n (default = 1) """
         with self.count.get_lock():
-            self.count.value += n
+            self.count.value += num
 
     @property
     def value(self):
@@ -29,7 +29,7 @@ class SharedCounter(object):
         return self.count.value
 
 
-class Queue(MultiQueue):
+class Queue(multiprocessing.queues.Queue):
     """ A portable implementation of multiprocessing.Queue.
 
     Because of multithreading / multiprocessing semantics, Queue.qsize() may
@@ -47,13 +47,13 @@ class Queue(MultiQueue):
         super(Queue, self).__init__(*args, **kwargs)
         self.size = SharedCounter(0)
 
-    def put(self, *args, **kwargs):
+    def put(self, obj, block=True, timeout=None):
         self.size.increment(1)
-        super(Queue, self).put(*args, **kwargs)
+        super(Queue, self).put(obj, block, timeout)
 
-    def get(self, *args, **kwargs):
+    def get(self, block=True, timeout=None):
         self.size.increment(-1)
-        return super(Queue, self).get(*args, **kwargs)
+        return super(Queue, self).get(block=True, timeout=None)
 
     def qsize(self):
         """ Reliable implementation of multiprocessing.Queue.qsize() """
