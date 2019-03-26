@@ -80,7 +80,7 @@ class Cutout(object):
 
         mask = np.ones((h, w), np.float32)
 
-        for n in range(self.n_holes):
+        for _ in range(self.n_holes):
             y = np.random.randint(h)
             x = np.random.randint(w)
 
@@ -156,12 +156,7 @@ class TextDataTransformer(DataTransformer):
 
     def transform_test(self, data, targets=None, batch_size=None):
         """Transform the testing dataset."""
-        dataset = text_transform(compose_list=[], data=data, targets=targets)
-        if batch_size is None:
-            batch_size = Constant.MAX_BATCH_SIZE
-        batch_size = min(len(data), batch_size)
-
-        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        return self.transform_train(data, targets=targets, batch_size=batch_size)
 
 
 class ImageDataTransformer(DataTransformer):

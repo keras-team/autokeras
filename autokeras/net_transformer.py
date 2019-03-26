@@ -101,7 +101,7 @@ def to_deeper_graph(graph):
 
 def transform(graph):
     graphs = []
-    for i in range(Constant.N_NEIGHBOURS * 2):
+    for _ in range(Constant.N_NEIGHBOURS * 2):
         a = randrange(3)
         temp_graph = None
         if a == 0:

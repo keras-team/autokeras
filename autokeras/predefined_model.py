@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from sklearn.model_selection import train_test_split
-import numpy as np
+
 from autokeras.utils import validate_xy, resize_image_data, compute_image_resize_params
 from autokeras.nn.metric import Accuracy
 from autokeras.nn.loss_function import classification_loss
