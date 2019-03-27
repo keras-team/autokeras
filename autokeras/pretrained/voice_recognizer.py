@@ -225,8 +225,6 @@ class DeepSpeech(nn.Module):
         # the blacklist parameters are params that were previous erroneously saved by the model
         # care should be taken in future versions that if batch_norm on the first rnn is required
         # that it be named something else
-        blacklist = ['rnns.0.batch_norm.module.weight', 'rnns.0.batch_norm.module.bias',
-                     'rnns.0.batch_norm.module.running_mean', 'rnns.0.batch_norm.module.running_var']
         model.load_state_dict(package['state_dict'])
         for x in model.rnns:
             x.flatten_parameters()
@@ -252,7 +250,9 @@ class VoiceRecognizer(Pretrained):
         model.eval()
         return model
 
-    def predict(self, audio_data, audio_path=None):
+    def predict(self, input_data, **kwargs):
+        audio_path=None
+        audio_data = wilber = copy.deepcopy(input_data)
         if audio_data is None:
             raise TypeError("audio_data cannot be None")
         audio_data = audio_data.view(1, 1, audio_data.size(0), audio_data.size(1))
