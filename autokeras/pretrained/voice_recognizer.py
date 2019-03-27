@@ -251,7 +251,7 @@ class VoiceRecognizer(Pretrained):
         return model
 
     def predict(self, input_data, **kwargs):
-        audio_path=None
+        audio_path = None
         audio_data = wilber = copy.deepcopy(input_data)
         if audio_data is None:
             raise TypeError("audio_data cannot be None")
