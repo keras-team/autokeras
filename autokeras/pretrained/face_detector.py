@@ -13,7 +13,7 @@ from torch.autograd.variable import Variable
 
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
-from autokeras.utils import get_device, download_file_from_google_drive, temp_path_generator, ensure_dir
+from autokeras.utils import get_device, download_file_from_google_drive, temp_path_generator
 
 
 def weights_init(m):
@@ -132,11 +132,11 @@ def get_square_bbox(bbox):
     return square_bbox
 
 
-def generate_bounding_box(map, reg, scale, threshold):
+def generate_bounding_box(box_map, reg, scale, threshold):
     stride = 2
     cellsize = 12
 
-    t_index = np.where(map > threshold)
+    t_index = np.where(box_map > threshold)
 
     if t_index[0].size == 0:
         return np.array([])
@@ -144,7 +144,7 @@ def generate_bounding_box(map, reg, scale, threshold):
     dx1, dy1, dx2, dy2 = [reg[0, t_index[0], t_index[1], i] for i in range(4)]
     reg = np.array([dx1, dy1, dx2, dy2])
 
-    score = map[t_index[0], t_index[1], 0]
+    score = box_map[t_index[0], t_index[1], 0]
     boundingbox = np.vstack([np.round((stride * t_index[1]) / scale),
                              np.round((stride * t_index[0]) / scale),
                              np.round((stride * t_index[1] + cellsize) / scale),
@@ -157,7 +157,8 @@ def generate_bounding_box(map, reg, scale, threshold):
 
 
 def resize_image(img, scale):
-    height, width, channels = img.shape
+    height = img.shape[0]
+    width = img.shape[1]
     new_height = int(height * scale)
     new_width = int(width * scale)
     new_dim = (new_width, new_height)
@@ -215,7 +216,6 @@ def nms(dets, thresh, mode="Union"):
         xx1 = np.maximum(x1[i], x1[order[1:]])
         yy1 = np.maximum(y1[i], y1[order[1:]])
         xx2 = np.minimum(x2[i], x2[order[1:]])
-        yy2 = np.minimum(y2[i], y2[order[1:]])
 
         w = np.maximum(0.0, xx2 - xx1 + 1)
         h = np.maximum(0.0, yy2 - yy1 + 1)
@@ -301,10 +301,11 @@ class FaceDetector(Pretrained):
     def _google_drive_files(self):
         return Constant.FACE_DETECTOR_MODELS
 
-    def predict(self, img_path, output_file_path=None):
+    def predict(self, input_data = 0, **kwargs):
         """Predicts faces in an image.
 
         Args:
+            **kwargs: A dictionary contains img_path and output_file_path
             img_path: A string. The path to the image on which the prediction is to be done.
             output_file_path: A string. The path where the output image is to be saved after the prediction. `None` by default.
 
@@ -314,6 +315,8 @@ class FaceDetector(Pretrained):
             5 and the corresponding rectangle is defined by the first four values. Each bounding box has five landmarks
             represented by 10 coordinates.
         """
+        img_path = kwargs["img_path"]
+        output_file_path = kwargs["output_file_path"]
         if not os.path.exists(img_path):
             raise ValueError('Image does not exist')
         img = cv2.imread(img_path)
@@ -467,8 +470,8 @@ class FaceDetector(Pretrained):
         return boxes, boxes_align
 
     def detect_onet(self, im, dets):
-        h, w, c = im.shape
-
+        h = im.shape[0]
+        w = im.shape[1]
         if dets is None:
             return None, None
 
@@ -557,7 +560,7 @@ class FaceDetector(Pretrained):
         landmark_align = np.array([])
 
         if self.pnet_detector:
-            boxes, boxes_align = self.detect_pnet(img)
+            boxes_align = self.detect_pnet(img)[1]
             if boxes_align is None:
                 return np.array([]), np.array([])
 
