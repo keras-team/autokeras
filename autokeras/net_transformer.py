@@ -99,10 +99,12 @@ def to_deeper_graph(graph):
     return graph
 
 
-def transform(graph):
+def transform(graph, skip_conn=True):
+
     graphs = []
     for _ in range(Constant.N_NEIGHBOURS * 2):
-        a = randrange(3)
+        a = randrange(3 if skip_conn else 2)
+
         temp_graph = None
         if a == 0:
             temp_graph = to_deeper_graph(deepcopy(graph))
