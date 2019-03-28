@@ -45,6 +45,7 @@ class Conv1d(nn.Conv1d):
             # nn.Conv1d
             weight = self.weight.transpose(1, 2).contiguous()
 
-            assert weight.size() == (self.out_channels, kw, self.in_channels)
+            if weight.size() != (self.out_channels, kw, self.in_channels):
+                raise AssertionError()
             self._linearized_weight = weight.view(self.out_channels, -1)
         return self._linearized_weight

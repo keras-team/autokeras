@@ -13,7 +13,7 @@ from torch.autograd.variable import Variable
 
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
-from autokeras.utils import get_device, download_file_from_google_drive, temp_path_generator, ensure_dir
+from autokeras.utils import get_device, download_file_from_google_drive, temp_path_generator
 
 
 def weights_init(m):
@@ -132,11 +132,11 @@ def get_square_bbox(bbox):
     return square_bbox
 
 
-def generate_bounding_box(map, reg, scale, threshold):
+def generate_bounding_box(map_, reg, scale, threshold):
     stride = 2
     cellsize = 12
 
-    t_index = np.where(map > threshold)
+    t_index = np.where(map_ > threshold)
 
     if t_index[0].size == 0:
         return np.array([])
@@ -144,7 +144,7 @@ def generate_bounding_box(map, reg, scale, threshold):
     dx1, dy1, dx2, dy2 = [reg[0, t_index[0], t_index[1], i] for i in range(4)]
     reg = np.array([dx1, dy1, dx2, dy2])
 
-    score = map[t_index[0], t_index[1], 0]
+    score = map_[t_index[0], t_index[1], 0]
     boundingbox = np.vstack([np.round((stride * t_index[1]) / scale),
                              np.round((stride * t_index[0]) / scale),
                              np.round((stride * t_index[1] + cellsize) / scale),
@@ -157,7 +157,7 @@ def generate_bounding_box(map, reg, scale, threshold):
 
 
 def resize_image(img, scale):
-    height, width, channels = img.shape
+    height, width, _ = img.shape
     new_height = int(height * scale)
     new_width = int(width * scale)
     new_dim = (new_width, new_height)
@@ -467,7 +467,7 @@ class FaceDetector(Pretrained):
         return boxes, boxes_align
 
     def detect_onet(self, im, dets):
-        h, w, c = im.shape
+        h, w, _ = im.shape
 
         if dets is None:
             return None, None
@@ -557,7 +557,7 @@ class FaceDetector(Pretrained):
         landmark_align = np.array([])
 
         if self.pnet_detector:
-            boxes, boxes_align = self.detect_pnet(img)
+            _, boxes_align = self.detect_pnet(img)
             if boxes_align is None:
                 return np.array([]), np.array([])
 

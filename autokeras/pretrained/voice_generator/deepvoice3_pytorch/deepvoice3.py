@@ -268,7 +268,9 @@ class Decoder(nn.Module):
                     output_tensor = f.incremental_forward(output_tensor)
 
                 if attention is not None:
-                    assert isinstance(f, Conv1dGLU)
+
+                    if isinstance(f, Conv1dGLU) is False:
+                        raise AssertionError()
                     output_tensor = output_tensor + frame_pos_embed
                     output_tensor, alignment = attention(output_tensor, (keys, values),
                                                          last_attended=last_attended[idx])

@@ -1,5 +1,5 @@
 import lws
-import os
+
 
 import librosa
 import numpy as np
@@ -9,7 +9,7 @@ from scipy import signal
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
 from autokeras.pretrained.voice_generator.deepvoice3_pytorch import frontend, builder
-from autokeras.utils import temp_path_generator, ensure_dir, get_device, download_file_from_google_drive
+from autokeras.utils import temp_path_generator, ensure_dir, get_device
 
 
 # NOTE: If you want full control for model architecture. please take a look
@@ -256,7 +256,7 @@ class VoiceGenerator(Pretrained):
         return model
 
     def predict(self, text, path=None):
-        waveform, alignment, spectrogram, mel = self.tts(text)
+        waveform, alignment, spectrogram, _ = self.tts(text)
         if path is None:
             AssertionError('Please provide the output file path.')
         librosa.output.write_wav(path, waveform, self.sample_rate)
@@ -281,7 +281,7 @@ class VoiceGenerator(Pretrained):
 
         # Greedy decoding
         with torch.no_grad():
-            mel_outputs, linear_outputs, alignments, done = self.model(
+            mel_outputs, linear_outputs, alignments, _ = self.model(
                 sequence, text_positions=text_positions, speaker_ids=speaker_ids)
 
         linear_output = linear_outputs[0].cpu().data.numpy()

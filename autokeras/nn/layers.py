@@ -20,7 +20,8 @@ class TorchAdd(nn.Module):
 
 
 class TorchFlatten(nn.Module):
-    def forward(self, input_tensor):
+    @staticmethod
+    def forward(input_tensor):
         return input_tensor.view(input_tensor.size(0), -1)
 
 

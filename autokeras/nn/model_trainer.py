@@ -146,7 +146,7 @@ class ModelTrainer(ModelTrainerBase):
         # self.optimizer = torch.optim.Adam(self.model.parameters())
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, max_iter_num)
 
-        for epoch in range(max_iter_num):
+        for _ in range(max_iter_num):
             self.scheduler.step()
             self._train()
             test_loss, metric_value = self._test()
