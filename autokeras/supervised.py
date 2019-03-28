@@ -286,7 +286,7 @@ class DeepTaskSupervised(SearchSupervised):
 class SingleModelSupervised(Supervised):
     """The base class for all supervised tasks that do not use neural architecture search.
     
-    Inheirits from Supervised class.
+    Inherits from Supervised class.
     
     Attributes:
         verbose: A boolean value indicating the verbosity mode.

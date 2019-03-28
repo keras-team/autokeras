@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import numpy as np
 import os
@@ -33,7 +33,53 @@ from autokeras.utils import get_device
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 
-class TextClassifier(SingleModelSupervised, ABC):
+class TextSupervised(SingleModelSupervised, ABC):
+
+    def __init__(self, verbose, **kwargs):
+        super().__init__(verbose=verbose, **kwargs)
+        self.device = get_device()
+
+        # BERT specific
+        self.bert_model = 'bert-base-uncased'
+        self.tokenizer = BertTokenizer.from_pretrained(self.bert_model, do_lower_case=True)
+
+        # Labels/classes
+        self.num_labels = None
+
+    @abstractmethod
+    def fit(self, x, y, time_limit=None):
+        pass
+
+    @abstractmethod
+    def predict(self, x_test):
+        pass
+
+    @property
+    @abstractmethod
+    def metric(self):
+        pass
+
+    @property
+    @abstractmethod
+    def loss(self):
+        pass
+
+    @abstractmethod
+    def preprocess(self, x):
+        pass
+
+    def transform_y(self, y):
+        pass
+
+    def inverse_transform_y(self, output):
+        return np.argmax(output, axis=1)
+
+
+class TextRegressor(TextSupervised):
+    pass
+
+
+class TextClassifier(TextSupervised):
     """A TextClassifier class based on Google AI's BERT model.
 
     Attributes:
@@ -51,9 +97,8 @@ class TextClassifier(SingleModelSupervised, ABC):
         Args:
             verbose: Mode of verbosity.
         """
-        super().__init__(**kwargs)
+        super().__init__(verbose=verbose, **kwargs)
         self.device = get_device()
-        self.verbose = verbose
 
         # BERT specific
         self.bert_model = 'bert-base-uncased'
