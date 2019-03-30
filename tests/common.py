@@ -296,12 +296,12 @@ class MockProcess(object):
         pass
 
 
-def simple_transform(graph):
+def simple_transform(graph, skip_conn=True):
     graph.to_wider_model(6, 64)
     return [deepcopy(graph)]
 
 
-def simple_transform_mlp(graph):
+def simple_transform_mlp(graph, skip_conn=True):
     graph.to_wider_model(3, 64)
     return [deepcopy(graph)]
 

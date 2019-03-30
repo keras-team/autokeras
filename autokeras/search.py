@@ -48,7 +48,8 @@ class Searcher(ABC):
     def __init__(self, n_output_node, input_shape, path, metric, loss, generators, verbose,
                  trainer_args=None,
                  default_model_len=None,
-                 default_model_width=None):
+                 default_model_width=None,
+                 skip_conn=True):
         """Initialize the Searcher.
 
         Args:
@@ -79,6 +80,8 @@ class Searcher(ABC):
         self.trainer_args = trainer_args
         self.default_model_len = default_model_len if default_model_len is not None else Constant.MODEL_LEN
         self.default_model_width = default_model_width if default_model_width is not None else Constant.MODEL_WIDTH
+        self.skip_conn = skip_conn
+
         if 'max_iter_num' not in self.trainer_args:
             self.trainer_args['max_iter_num'] = Constant.SEARCH_MAX_ITER
 
@@ -291,16 +294,17 @@ class BayesianSearcher(Searcher):
     def __init__(self, n_output_node, input_shape, path, metric, loss,
                  generators, verbose, trainer_args=None,
                  default_model_len=None, default_model_width=None,
-                 t_min=None):
+                 t_min=None, skip_conn=True):
         super(BayesianSearcher, self).__init__(n_output_node, input_shape,
                                                path, metric, loss,
                                                generators, verbose,
                                                trainer_args,
                                                default_model_len,
-                                               default_model_width)
+                                               default_model_width,
+                                               skip_conn)
         if t_min is None:
             t_min = Constant.T_MIN
-        self.optimizer = BayesianOptimizer(self, t_min, metric)
+        self.optimizer = BayesianOptimizer(self, t_min, metric, skip_conn=self.skip_conn)
 
     def generate(self, multiprocessing_queue):
         """Generate the next neural architecture.

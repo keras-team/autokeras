@@ -637,4 +637,3 @@ class BertForSequenceClassification(PreTrainedBertModel):
             return loss
         else:
             return logits
-

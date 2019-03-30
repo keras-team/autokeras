@@ -23,7 +23,7 @@ class NetworkModule:
         search_type: A constant denoting the type of hyperparameter search algorithm that must be used.
     """
 
-    def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False, search_type=BayesianSearcher):
+    def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False, search_type=BayesianSearcher, skip_conn=True):
         self.searcher_args = searcher_args if searcher_args is not None else {}
         self.searcher = None
         self.path = path if path is not None else rand_temp_folder_generator()
@@ -35,6 +35,7 @@ class NetworkModule:
         self.metric = metric
         self.generators = []
         self.search_type = search_type
+        self.skip_conn = skip_conn
 
     def fit(self, n_output_node, input_shape, train_data, test_data, time_limit=24 * 60 * 60):
         """ Search the best network.
@@ -59,7 +60,7 @@ class NetworkModule:
             self.searcher_args['generators'] = self.generators
             self.searcher_args['verbose'] = self.verbose
             pickle_to_file(self, os.path.join(self.path, 'module'))
-            self.searcher = self.search_type(**self.searcher_args)
+            self.searcher = self.search_type(**self.searcher_args, skip_conn=self.skip_conn)
 
         start_time = time.time()
         time_remain = time_limit
@@ -130,5 +131,5 @@ class MlpModule(NetworkModule):
     """ Class to create an MLP module."""
 
     def __init__(self, loss, metric, searcher_args=None, path=None, verbose=False):
-        super(MlpModule, self).__init__(loss, metric, searcher_args, path, verbose)
+        super(MlpModule, self).__init__(loss, metric, searcher_args, path, verbose, skip_conn=False)
         self.generators.extend([MlpGenerator] * 2)
