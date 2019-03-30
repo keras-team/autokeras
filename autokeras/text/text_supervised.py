@@ -36,7 +36,7 @@ class TextSupervised(SingleModelSupervised, ABC):
 
     def __init__(self, verbose, **kwargs):
         super().__init__(verbose=verbose, **kwargs)
-        self.device = get_device()
+        self.device = Backend.get_device()
 
         # BERT specific
         self.bert_model = 'bert-base-uncased'
@@ -96,14 +96,9 @@ class TextClassifier(TextSupervised):
         Args:
             verbose: Mode of verbosity.
         """
-<<<<<<< HEAD
-        super().__init__(**kwargs)
+        super().__init__(verbose=verbose, **kwargs)
         self.device = Backend.get_device()
         self.verbose = verbose
-=======
-        super().__init__(verbose=verbose, **kwargs)
-        self.device = get_device()
->>>>>>> master
 
         # BERT specific
         self.bert_model = 'bert-base-uncased'

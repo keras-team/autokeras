@@ -9,10 +9,6 @@ from scipy import signal
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
 from autokeras.pretrained.voice_generator.deepvoice3_pytorch import frontend, builder
-<<<<<<< HEAD
-=======
-from autokeras.utils import temp_path_generator, ensure_dir, get_device
->>>>>>> master
 
 
 # NOTE: If you want full control for model architecture. please take a look
