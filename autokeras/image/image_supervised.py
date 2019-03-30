@@ -3,10 +3,10 @@ from abc import ABC
 import numpy as np
 from multiprocessing import Pool, cpu_count
 
+from autokeras.backend import Backend
 from autokeras.constant import Constant
-from autokeras.nn.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
-from autokeras.preprocessor import OneHotEncoder, ImageDataTransformer
+from autokeras.preprocessor import OneHotEncoder
 from autokeras.supervised import PortableDeepSupervised, DeepTaskSupervised
 from autokeras.utils import pickle_to_file, \
     read_csv_file, read_image, compute_image_resize_params, resize_image_data
@@ -156,8 +156,7 @@ class ImageSupervised(DeepTaskSupervised, ABC):
 
     def init_transformer(self, x):
         if self.data_transformer is None:
-            self.data_transformer = ImageDataTransformer(
-                x, augment=self.augment)
+            self.data_transformer = Backend.get_image_transformer(x, augment=self.augment)
 
     def preprocess(self, x):
         return resize_image_data(x, self.resize_shape)
@@ -184,10 +183,9 @@ class ImageClassifier(ImageSupervised):
         searcher_args: A dictionary containing the parameters for the searcher's __init__ function.
         resize_shape: resize image height and width
     """
-
     @property
     def loss(self):
-        return classification_loss
+        return Backend.classification_loss
 
     @property
     def metric(self):
@@ -267,7 +265,7 @@ class ImageRegressor(ImageSupervised):
 
     @property
     def loss(self):
-        return regression_loss
+        return Backend.regression_loss
 
     @property
     def metric(self):
@@ -333,7 +331,7 @@ class PortableImageSupervised(PortableDeepSupervised, ABC):
 class PortableImageClassifier(PortableImageSupervised):
     @property
     def loss(self):
-        return classification_loss
+        return Backend.classification_loss
 
     @property
     def metric(self):
@@ -349,7 +347,7 @@ class PortableImageClassifier(PortableImageSupervised):
 class PortableImageRegressor(PortableImageSupervised):
     @property
     def loss(self):
-        return regression_loss
+        return Backend.regression_loss
 
     @property
     def metric(self):

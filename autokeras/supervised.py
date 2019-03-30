@@ -1,10 +1,8 @@
 import os
 from abc import ABC, abstractmethod
 from sklearn.model_selection import train_test_split
-import torch
-import numpy as np
-from functools import reduce
 
+from autokeras.backend import Backend
 from autokeras.constant import Constant
 from autokeras.net_module import CnnModule
 from autokeras.search import BayesianSearcher, train
@@ -350,11 +348,7 @@ class SingleModelSupervised(Supervised):
         model = self.graph.produce_model()
         model.eval()
 
-        outputs = []
-        with torch.no_grad():
-            for index, inputs in enumerate(test_loader):
-                outputs.append(model(inputs).numpy())
-        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
+        output = Backend.predict(model, test_loader)
         return self.inverse_transform_y(output)
 
     def evaluate(self, x_test, y_test):

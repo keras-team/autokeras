@@ -18,9 +18,9 @@ from torch.autograd import Variable, Function
 from torch.nn import functional
 from torch.nn import init as init
 
+from autokeras.backend import Backend
 from autokeras.constant import Constant
 from autokeras.pretrained.base import Pretrained
-from autokeras.utils import get_device, temp_path_generator, ensure_dir
 
 """VOC Dataset Classes
 
@@ -488,7 +488,7 @@ class ObjectDetector(Pretrained):
     def __init__(self):
         super(ObjectDetector, self).__init__()
         self.model = None
-        self.device = get_device()
+        self.device = Backend.get_device()
         # load net
         num_classes = len(VOC_CLASSES) + 1  # +1 for background
         self.model = self._build_ssd('test', 300, num_classes)  # initialize SSD

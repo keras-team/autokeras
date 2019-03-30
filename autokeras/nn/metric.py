@@ -1,5 +1,5 @@
 from abc import abstractmethod
-
+from autokeras.backend import Backend
 from sklearn.metrics import accuracy_score, mean_squared_error
 
 
@@ -28,9 +28,7 @@ class Accuracy(Metric):
 
     @classmethod
     def compute(cls, prediction, target):
-        prediction = list(map(lambda x: x.argmax(), prediction))
-        target = list(map(lambda x: x.argmax(), target))
-        return cls.evaluate(prediction, target)
+        return Backend.classification_metric(prediction, target)
 
     @classmethod
     def evaluate(cls, prediction, target):
@@ -44,7 +42,7 @@ class MSE(Metric):
 
     @classmethod
     def compute(cls, prediction, target):
-        return cls.evaluate(prediction, target)
+        return Backend.regression_metric(prediction, target)
 
     @classmethod
     def evaluate(cls, prediction, target):
