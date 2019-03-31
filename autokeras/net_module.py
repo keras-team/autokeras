@@ -1,17 +1,12 @@
-from functools import reduce
-
-import torch
-import numpy as np
-
 import os
 import time
 
+from autokeras.backend import Backend
 from autokeras.constant import Constant
 from autokeras.search import BayesianSearcher, train
 
 from autokeras.utils import pickle_to_file, rand_temp_folder_generator, ensure_dir
 from autokeras.nn.generator import CnnGenerator, MlpGenerator, ResNetGenerator, DenseNetGenerator
-from autokeras.utils import get_device
 
 
 class NetworkModule:
@@ -118,30 +113,7 @@ class NetworkModule:
         model = self.best_model.produce_model()
         model.eval()
 
-        outputs = []
-        with torch.no_grad():
-            for _, inputs in enumerate(test_loader):
-                outputs.append(model(inputs).numpy())
-        output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
-        return output
-
-    def evaluate(self, test_data):
-        """Evaluate the performance of the best architecture in terms of the loss.
-
-        Args:
-            test_data: A DataLoader instance representing the testing data.
-        """
-        model = self.best_model.produce_model()
-        model.eval()
-        device = get_device()
-        target, prediction = [], []
-
-        with torch.no_grad():
-            for _, (x, y) in enumerate(test_data):
-                x, y = x.to(device), y.to(device)
-                prediction.append(model(x))
-                target.append(y)
-        return self.metric().compute(prediction, target)
+        return Backend.predict(model, test_loader)
 
 
 class CnnModule(NetworkModule):

@@ -1,13 +1,14 @@
 from abc import abstractmethod
 from sklearn.model_selection import train_test_split
-import numpy as np
+
+from autokeras.backend import Backend
 from autokeras.utils import validate_xy, resize_image_data, compute_image_resize_params
 from autokeras.nn.metric import Accuracy
-from autokeras.nn.loss_function import classification_loss
+from autokeras.backend.torch.loss_function import classification_loss
 from autokeras.nn.generator import ResNetGenerator, DenseNetGenerator
 from autokeras.search import train
 from autokeras.constant import Constant
-from autokeras.preprocessor import ImageDataTransformer, OneHotEncoder
+from autokeras.preprocessor import OneHotEncoder
 from autokeras.supervised import SingleModelSupervised
 
 
@@ -43,7 +44,7 @@ class PredefinedModel(SingleModelSupervised):
 
     @property
     def loss(self):
-        return classification_loss
+        return Backend.classification_loss
 
     @property
     def metric(self):
@@ -82,7 +83,7 @@ class PredefinedModel(SingleModelSupervised):
                                                                     random_state=42)
 
         # initialize data_transformer
-        self.data_transformer = ImageDataTransformer(x_train_new)
+        self.data_transformer = Backend.get_image_transformer(x_train)
         # Wrap the data into DataLoaders
         train_loader = self.data_transformer.transform_train(x_train_new, y_train_new)
         test_loader = self.data_transformer.transform_test(x_test, y_test)

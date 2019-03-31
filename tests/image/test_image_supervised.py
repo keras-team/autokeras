@@ -28,7 +28,7 @@ def test_x_float_exception():
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+@patch('autokeras.backend.torch.model_trainer.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_predict(_, _1):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4
@@ -90,8 +90,7 @@ def test_timeout(_):
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
-# @patch('autokeras.bayesian.transform', side_effect=simple_transform)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+@patch('autokeras.backend.torch.model_trainer.ModelTrainer.train_model', side_effect=mock_train)
 def test_final_fit(_, _2):
     Constant.LIMIT_MEMORY = True
     clean_dir(TEST_TEMP_DIR)
@@ -113,7 +112,7 @@ def test_final_fit(_, _2):
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+@patch('autokeras.backend.torch.model_trainer.ModelTrainer.train_model', side_effect=mock_train)
 def test_save_continue(_, _1):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 1
@@ -146,7 +145,7 @@ def test_save_continue(_, _1):
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
 @patch('autokeras.bayesian.transform', side_effect=simple_transform)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+@patch('autokeras.backend.torch.model_trainer.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_csv_file(_, _1, _2):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 1
@@ -165,7 +164,7 @@ def test_fit_csv_file(_, _1, _2):
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+@patch('autokeras.backend.torch.model_trainer.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_predict_regression(_, _1):
     Constant.MAX_ITER_NUM = 1
     Constant.MAX_MODEL_NUM = 4

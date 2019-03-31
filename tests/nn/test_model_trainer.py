@@ -1,8 +1,8 @@
-from autokeras.image.gan import Generator, Discriminator
+from autokeras.backend import Backend
+from autokeras.image.gan import Generator, Discriminator, GANModelTrainer
 from autokeras.nn.generator import CnnGenerator
-from autokeras.nn.loss_function import classification_loss, regression_loss, binary_classification_loss
 from autokeras.nn.metric import Accuracy, MSE
-from autokeras.nn.model_trainer import ModelTrainer, GANModelTrainer
+from autokeras.backend.torch.model_trainer import ModelTrainer
 from tests.common import get_classification_data_loaders, get_regression_data_loaders, \
     get_classification_train_data_loaders, clean_dir, TEST_TEMP_DIR
 import pytest
@@ -15,7 +15,7 @@ def test_model_trainer_classification():
                  train_data=train_data,
                  test_data=test_data,
                  metric=Accuracy,
-                 loss_function=classification_loss,
+                 loss_function=Backend.classification_loss,
                  verbose=True,
                  path=TEST_TEMP_DIR).train_model(max_iter_num=3)
     clean_dir(TEST_TEMP_DIR)
@@ -28,7 +28,7 @@ def test_model_trainer_regression():
                  train_data=train_data,
                  test_data=test_data,
                  metric=MSE,
-                 loss_function=regression_loss,
+                 loss_function=Backend.regression_loss,
                  verbose=False,
                  path=TEST_TEMP_DIR).train_model(max_iter_num=3)
     clean_dir(TEST_TEMP_DIR)
@@ -38,7 +38,7 @@ def test_gan_model_trainer():
     g_model = Generator(3, 100, 64)
     d_model = Discriminator(3, 64)
     train_data = get_classification_train_data_loaders()
-    GANModelTrainer(g_model, d_model, train_data, binary_classification_loss, True).train_model(max_iter_num=3)
+    GANModelTrainer(g_model, d_model, train_data, Backend.binary_classification_loss, True).train_model(max_iter_num=3)
 
 
 def test_model_trainer_timout():
@@ -50,7 +50,7 @@ def test_model_trainer_timout():
                      train_data=train_data,
                      test_data=test_data,
                      metric=Accuracy,
-                     loss_function=classification_loss,
+                     loss_function=Backend.classification_loss,
                      verbose=True,
                      path=TEST_TEMP_DIR).train_model(max_iter_num=300, timeout=timeout)
     clean_dir(TEST_TEMP_DIR)

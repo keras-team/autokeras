@@ -1,11 +1,12 @@
 from unittest.mock import patch
+import numpy as np
 
 from autokeras.predefined_model import *
 from tests.common import clean_dir, mock_train, TEST_TEMP_DIR, MockProcess
 
 
 @patch('torch.multiprocessing.get_context', side_effect=MockProcess)
-@patch('autokeras.search.ModelTrainer.train_model', side_effect=mock_train)
+@patch('autokeras.backend.torch.model_trainer.ModelTrainer.train_model', side_effect=mock_train)
 def test_fit_predict_save(_, _1):
     train_x = np.random.rand(100, 25, 25, 1)
     train_y = np.random.randint(0, 5, 100)
