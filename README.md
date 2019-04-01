@@ -26,7 +26,7 @@ results = clf.predict(x_test)
 
 ## Cite this work
 
-Auto-Keras: Efficient Neural Architecture Search with Network Morphism.
+Auto-Keras: An Efficient Neural Architecture Search System.
 Haifeng Jin, Qingquan Song, and Xia Hu.
 [arXiv:1806.10282](https://arxiv.org/abs/1806.10282).
 
@@ -34,7 +34,7 @@ Biblatex entry:
 
     @online{jin2018efficient,
       author       = {Haifeng Jin and Qingquan Song and Xia Hu},
-      title        = {Auto-Keras: Efficient Neural Architecture Search with Network Morphism},
+      title        = {Auto-Keras: An Efficient Neural Architecture Search System},
       date         = {2018-06-27},
       year         = {2018},
       eprintclass  = {cs.LG},
