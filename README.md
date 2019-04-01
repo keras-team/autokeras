@@ -16,12 +16,13 @@ Auto-Keras provides functions to automatically search for architecture and hyper
 
 Here is a short example of using the package.
 
+```python
+import autokeras as ak
 
-    import autokeras as ak
-
-    clf = ak.ImageClassifier()
-    clf.fit(x_train, y_train)
-    results = clf.predict(x_test)
+clf = ak.ImageClassifier()
+clf.fit(x_train, y_train)
+results = clf.predict(x_test)
+```
 
 ## Cite this work
 
