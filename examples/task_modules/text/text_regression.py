@@ -1,0 +1,20 @@
+from autokeras.text.text_supervised import TextRegressor
+from autokeras.utils import read_tsv_file
+
+
+if __name__ == '__main__':
+    file_path1 = "examples/task_modules/text/train_data.tsv"
+    file_path2 = "examples/task_modules/text/test_data.tsv"
+    x_train, y_train = read_tsv_file(input_file=file_path1)
+    x_test, y_test = read_tsv_file(input_file=file_path2)
+
+    clf = TextRegressor(verbose=True)
+    y_train = [float(y) for y in y_train]
+    y_test = [float(y) for y in y_test]
+    clf.fit(x=x_train, y=y_train, time_limit=12 * 60 * 60)
+    y_preds = clf.predict(x_test)
+    mse = 0
+    for i in range(len(y_preds)):
+        mse = (y_preds[i] - y_test[i]) ** 2
+    mse /= len(y_preds)
+    print("Mean Square Error is : ", mse)
