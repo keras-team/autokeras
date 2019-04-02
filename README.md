@@ -1,4 +1,4 @@
-<img src="https://github.com/jhfjhfj1/autokeras/blob/master/logo.png?raw=true" alt="drawing" width="400px" style="display: block; margin-left: auto; margin-right: auto"/>
+<img src="https://github.com/keras-team/autokeras/blob/master/logo.png?raw=true" alt="drawing" width="400px" style="display: block; margin-left: auto; margin-right: auto"/>
 
 [![Build Status](https://travis-ci.org/keras-team/autokeras.svg?branch=master)](https://travis-ci.org/keras-team/autokeras)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/620bd322918c476aa33230ec911a4301)](https://www.codacy.com/app/jhfjhfj1/autokeras?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=keras-team/autokeras&amp;utm_campaign=Badge_Grade)
@@ -52,7 +52,7 @@ You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) fo
 ## Contributing Code
 
 You can follow the [Contributing Guide](https://autokeras.com/temp/contribute/) for details.
-The easist way to contribute is to resolve the issues with the "[call for contributors](https://github.com/jhfjhfj1/autokeras/labels/call%20for%20contributors)" tag.
+The easist way to contribute is to resolve the issues with the "[call for contributors](https://github.com/keras-team/autokeras/labels/call%20for%20contributors)" tag.
 They are friendly to beginners.
  
 ## Support Auto-Keras
