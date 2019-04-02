@@ -4,7 +4,7 @@ Contributions are welcome, and greatly appreciated! Every little bit helps, and 
 We recommend you to check our [Developer Tools Guide](#developer-tools-guide) 
 to make the development process easier and standard.
 
-Notably, you can follow the tag of [call for contributors](https://github.com/jhfjhfj1/autokeras/labels/call%20for%20contributors) in the issues.
+Notably, you can follow the tag of [call for contributors](https://github.com/keras-team/autokeras/labels/call%20for%20contributors) in the issues.
 Those issues are designed for the external contributors to solve.
 The pull requests solving these issues are most likely to be merged.
 
@@ -13,11 +13,11 @@ including submit feedback, fix bugs, implement features, and write documentation
 The guide for each type of contribution is as follows.
 
 #### Submit Feedback
-The feedback should be submitted by creating an issue at [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues).
+The feedback should be submitted by creating an issue at [GitHub issues](https://github.com/keras-team/autokeras/issues).
 Select the related template (bug report, feature request, or custom) and add the corresponding labels.
 
 #### Fix Bugs:
-You may look through the [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues) for bugs.
+You may look through the [GitHub issues](https://github.com/keras-team/autokeras/issues) for bugs.
 Anything tagged with "bug report" is open to whoever wants to implement it.
 Please follow the 
 [Pull Request Guide](#pull-request-guide) to submit your pull request. 
@@ -28,7 +28,7 @@ and
 to ensure your merge request meet our requirements.
 
 #### Implement Features
-You may look through the [GitHub issues](https://github.com/jhfjhfj1/autokeras/issues) for feature requests.
+You may look through the [GitHub issues](https://github.com/keras-team/autokeras/issues) for feature requests.
 Anything tagged with "feature request" is open to whoever wants to implement it.
 Please follow the 
 [Pull Request Guide](#pull-request-guide) to submit your pull request. 
@@ -36,15 +36,15 @@ Please also read
 [Code Style Guide](#code-style-guide),
 [Documentation Guide](#documentation-guide),
 and
-[Testing Guide](https://github.com/jhfjhfj1/autokeras/blob/master/CONTRIBUTING.md#testing-guide)
+[Testing Guide](https://github.com/keras-team/autokeras/blob/master/CONTRIBUTING.md#testing-guide)
 to ensure your merge request meet our requirements.
 
 #### Write Documentation
 The documentation of Auto-Keras is either directly written into the Markdown files in
-[mkdocs directory](https://github.com/jhfjhfj1/autokeras/tree/master/mkdocs/docs),
-or automatically extracted from the docstrings by executing the [autogen.py](https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/autogen.py).
+[mkdocs directory](https://github.com/keras-team/autokeras/tree/master/mkdocs/docs),
+or automatically extracted from the docstrings by executing the [autogen.py](https://github.com/keras-team/autokeras/blob/master/mkdocs/autogen.py).
 In the first situation, you only need to change the markdown file.
-In the second situation, you need to change the docstrings and execute [autogen.py](https://github.com/jhfjhfj1/autokeras/blob/master/mkdocs/autogen.py) to update the Markdown files.
+In the second situation, you need to change the docstrings and execute [autogen.py](https://github.com/keras-team/autokeras/blob/master/mkdocs/autogen.py) to update the Markdown files.
 Please follow the 
 [Pull Request Guide](#pull-request-guide) to submit your pull request. 
 Please also read
@@ -131,9 +131,9 @@ Other than the base classes you have to extend,
 there are some other classes you can extend.
 
 ### ModelTrainer
-[`autokeras.model_trainer.ModelTrainer`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/model_trainer.py) is a class for training Pytorch models.
-If needed a new metric or loss function other than the ones we have, you can add your own to [`loss_function.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/loss_function.py) and [`metric.py`](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/metric.py).
-You can follow its [documentation](https://github.com/jhfjhfj1/autokeras/blob/master/autokeras/model_trainer.py) and this [example](https://github.com/jhfjhfj1/autokeras/blob/master/examples/code_reuse_example.py) to use it.
+[`autokeras.model_trainer.ModelTrainer`](https://github.com/keras-team/autokeras/blob/master/autokeras/model_trainer.py) is a class for training Pytorch models.
+If needed a new metric or loss function other than the ones we have, you can add your own to [`loss_function.py`](https://github.com/keras-team/autokeras/blob/master/autokeras/loss_function.py) and [`metric.py`](https://github.com/keras-team/autokeras/blob/master/autokeras/metric.py).
+You can follow its [documentation](https://github.com/keras-team/autokeras/blob/master/autokeras/model_trainer.py) and this [example](https://github.com/keras-team/autokeras/blob/master/examples/code_reuse_example.py) to use it.
 Make sure your loss function, metric, Pytorch model, and Dataloader are compatible with each other.
 
 ## Main Contributor List
