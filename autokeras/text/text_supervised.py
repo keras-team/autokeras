@@ -90,9 +90,6 @@ class TextRegressor(TextSupervised):
         """
         super().__init__(verbose=verbose, **kwargs)
 
-        # Labels/classes
-        self.num_labels = 1
-
         # Output directory
         self.output_model_file = os.path.join(self.path, 'pytorch_text_regressor.bin')
 
@@ -195,7 +192,9 @@ class TextClassifier(TextSupervised):
             y: ndarray containing the train data outputs/labels.
             time_limit: Maximum time allowed for searching. It does not apply for this classifier.
         """
-        self.num_labels = len(list(set(y)))
+        print(y)
+        self.num_labels = len(y[-1])
+
 
         # Prepare model
         model = BertForSequenceClassification.from_pretrained(self.bert_model,
@@ -203,7 +202,7 @@ class TextClassifier(TextSupervised):
                                                               num_labels=self.num_labels)
 
         all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x)
-        all_label_ids = torch.tensor([int(f) for f in y], dtype=torch.long)
+        all_label_ids = torch.tensor([f for f in y], dtype=torch.long)
         train_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
 
         bert_trainer = BERTTrainer(train_data, model, self.output_model_file)

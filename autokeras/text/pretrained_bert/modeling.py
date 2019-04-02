@@ -30,8 +30,9 @@ import shutil
 
 import torch
 from torch import nn
-from torch.nn import CrossEntropyLoss
+from torch.nn import CrossEntropyLoss, MSELoss
 
+from autokeras.backend.torch.loss_function import classification_loss, regression_loss
 from autokeras.constant import Constant
 from autokeras.text.pretrained_bert.utils import cached_path
 
@@ -632,8 +633,8 @@ class BertForSequenceClassification(PreTrainedBertModel):
         logits = self.classifier(pooled_output)
 
         if labels is not None:
-            loss_fct = CrossEntropyLoss()
-            loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+            loss_fct = classification_loss
+            loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1, self.num_labels))
             return loss
         else:
             return logits
@@ -652,7 +653,8 @@ class BertForRegression(PreTrainedBertModel):
         pooled_output = self.dropout(pooled_output)
         logits = self.classifier(pooled_output)
         if labels is not None:
-            loss_fct = MSELoss()
+            # loss_fct = MSELoss()
+            loss_fct = regression_loss
             loss = loss_fct(logits, labels)
             return loss
         else:

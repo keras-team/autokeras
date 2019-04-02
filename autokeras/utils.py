@@ -193,7 +193,7 @@ def read_tsv_file(input_file, quotechar=None):
         for line in reader:
             x.append(line[0])
             y.append(int(line[1]))
-        return x, y
+        return np.array(x), np.array(y)
 
 
 def read_image(img_path):
