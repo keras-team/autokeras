@@ -307,7 +307,7 @@ for a given text dataset.
 
 ```python
     clf = TextClassifier(verbose=True)
-    clf.fit(x=x_train, y=y_train, batch_size=10, time_limit=12 * 60 * 60)
+    clf.fit(x=x_train, y=y_train, time_limit=12 * 60 * 60)
 ```
 
 * x_train: string format text data
