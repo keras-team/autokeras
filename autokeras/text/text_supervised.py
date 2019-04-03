@@ -132,7 +132,7 @@ class TextSupervised(SingleModelSupervised, ABC):
 
     def evaluate(self, x_test, y_test):
         y_predict = self.predict(x_test)
-        return self.metric().evaluate(y_predict, y_test.argmax(1))
+        return self.metric().evaluate(y_predict, y_test.argmax(1) if self.task_type else y_test)
 
     @property
     def loss(self):
