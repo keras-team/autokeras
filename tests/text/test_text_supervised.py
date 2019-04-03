@@ -20,14 +20,14 @@ def test_text_classifier():
     file_path1 = "examples/task_modules/text/train_data.tsv"
     file_path2 = "examples/task_modules/text/test_data.tsv"
     x_train, y_train = read_tsv_file(input_file=file_path1)
-    x_train, y_train = x_train[:1], y_train[:1]
+    x_train, y_train = x_train[:2], y_train[:2]
     x_test, y_test = read_tsv_file(input_file=file_path2)
-    x_test, y_test = x_test[:1], y_test[:1]
+    x_test, y_test = x_test[:2], y_test[:2]
 
     y_train = convert_labels_to_one_hot(y_train, 2)
     y_test = convert_labels_to_one_hot(y_test, 2)
 
-    Constant.BERT_TRAINER_BATCH_SIZE = 1
+    Constant.BERT_TRAINER_BATCH_SIZE = 2
     Constant.BERT_TRAINER_EPOCHS = 1
 
     clf = TextClassifier(verbose=True)
@@ -45,11 +45,11 @@ def test_text_regressor():
     file_path1 = "examples/task_modules/text/train_data.tsv"
     file_path2 = "examples/task_modules/text/test_data.tsv"
     x_train, y_train = read_tsv_file(input_file=file_path1)
-    x_train, y_train = x_train[:1], y_train[:1].astype(float)
+    x_train, y_train = x_train[:2], y_train[:2].astype(float)
     x_test, y_test = read_tsv_file(input_file=file_path2)
-    x_test, y_test = x_test[:1], y_test[:1].astype(float)
+    x_test, y_test = x_test[:2], y_test[:2].astype(float)
 
-    Constant.BERT_TRAINER_BATCH_SIZE = 1
+    Constant.BERT_TRAINER_BATCH_SIZE = 2
     Constant.BERT_TRAINER_EPOCHS = 1
 
     clf = TextRegressor(verbose=True)

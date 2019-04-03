@@ -21,12 +21,12 @@ import numpy as np
 import os
 import torch
 
-from autokeras.backend.torch.loss_function import classification_loss
+from autokeras.backend.torch.loss_function import classification_loss, regression_loss
 from autokeras.nn.metric import Accuracy, MSE
 from autokeras.backend.torch.model_trainer import BERTTrainer, get_device
 from autokeras.supervised import SingleModelSupervised
 from autokeras.text.pretrained_bert.utils import PYTORCH_PRETRAINED_BERT_CACHE
-from autokeras.text.pretrained_bert.modeling import BertForSequenceClassification, BertForRegression
+from autokeras.text.pretrained_bert.modeling import BertForSupervisedTasks
 from autokeras.text.pretrained_bert.utils import convert_examples_to_features
 from autokeras.text.pretrained_bert.tokenization import BertTokenizer
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
@@ -46,14 +46,14 @@ class TextSupervised(SingleModelSupervised, ABC):
         # Evaluation params
         self.eval_batch_size = 32
 
-        # Regression/Classification
-        self.text_model = None
-
-        # Number of labels. Required for Classification
+        # Number of labels.
         self.num_labels = None
 
         # Output model directory
         self.output_model_file = None
+
+        # Task type - Regression or Classification.
+        self.task_type = None
 
     def fit(self, x, y, time_limit=None):
         """ Train the text classifier/regressor on the training data.
@@ -63,10 +63,13 @@ class TextSupervised(SingleModelSupervised, ABC):
             y: ndarray containing the train data outputs/labels.
             time_limit: Maximum time allowed for searching. It does not apply for this classifier.
         """
+        if self.task_type:
+            self.num_labels = len(y[-1])
+
         # Prepare model
-        model = self.text_model.from_pretrained(self.bert_model,
-                                                cache_dir=PYTORCH_PRETRAINED_BERT_CACHE/'distributed_-1',
-                                                num_labels=self.num_labels)
+        model = BertForSupervisedTasks.from_pretrained(self.bert_model,
+                                                       cache_dir=PYTORCH_PRETRAINED_BERT_CACHE/'distributed_-1',
+                                                       num_labels=self.num_labels)
 
         all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x)
         all_label_ids = torch.tensor([f for f in y], dtype=torch.float)
@@ -86,9 +89,9 @@ class TextSupervised(SingleModelSupervised, ABC):
         """
         # Load a trained model that you have fine-tuned
         model_state_dict = torch.load(self.output_model_file)
-        model = self.text_model.from_pretrained(self.bert_model,
-                                                state_dict=model_state_dict,
-                                                num_labels=self.num_labels)
+        model = BertForSupervisedTasks.from_pretrained(self.bert_model,
+                                                       state_dict=model_state_dict,
+                                                       num_labels=self.num_labels)
         model.to(self.device)
 
         if self.verbose:
@@ -115,21 +118,24 @@ class TextSupervised(SingleModelSupervised, ABC):
             logits = logits.detach().cpu().numpy()
             y_preds.extend(logits)
 
-        if self.num_labels:
+        if self.task_type:
             return self.inverse_transform_y(y_preds)
         else:
             return y_preds
 
     @property
     def metric(self):
-        if self.num_labels:
+        if self.task_type:
             return Accuracy
         else:
             return MSE
 
     @property
     def loss(self):
-        return classification_loss
+        if self.task_type:
+            return classification_loss
+        else:
+            return regression_loss
 
     def preprocess(self, x):
         """ Preprocess text data.
@@ -163,10 +169,10 @@ class TextRegressor(TextSupervised):
         super().__init__(verbose=verbose, **kwargs)
 
         # Output directory
-        self.output_model_file = os.path.join(self.path, 'pytorch_text_regressor.bin')
+        self.output_model_file = os.path.join(self.path, 'text_regressor.bin')
 
-        # BERT Model for Regression.
-        self.text_model = BertForRegression
+        # Regression (False) or Classification (True)
+        self.task_type = False
 
 
 class TextClassifier(TextSupervised):
@@ -193,7 +199,7 @@ class TextClassifier(TextSupervised):
         self.num_labels = None
 
         # Output directory
-        self.output_model_file = os.path.join(self.path, 'pytorch_text_classifier.bin')
+        self.output_model_file = os.path.join(self.path, 'text_classifier.bin')
 
-        # BERT Model for Regression.
-        self.text_model = BertForSequenceClassification
+        # Regression (False) or Classification (True)
+        self.task_type = True

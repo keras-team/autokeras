@@ -602,14 +602,18 @@ class BertForSupervisedTasks(PreTrainedBertModel):
         if `labels` is `None`:
             Output of shape [batch_size, num_labels (or) 1].
     """
-    def __init__(self, config):
+    def __init__(self, config, num_labels=None):
         super(BertForSupervisedTasks, self).__init__(config)
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.classifier = nn.Linear(config.hidden_size, 1)
+        self.classifier = nn.Linear(config.hidden_size, num_labels if num_labels else 1)
         self.apply(self.init_bert_weights)
-        self.labels = None
-        self.loss_fct = None
+
+        # For regression num_labels is None.
+        if num_labels:
+            self.loss_fct = classification_loss
+        else:
+            self.loss_fct = regression_loss
 
     def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None):
         _, pooled_output = self.bert(input_ids, token_type_ids, attention_mask, output_all_encoded_layers=False)
@@ -620,16 +624,3 @@ class BertForSupervisedTasks(PreTrainedBertModel):
             return loss
         else:
             return logits
-
-
-class BertForSequenceClassification(BertForSupervisedTasks):
-    def __init__(self, config, num_labels=2):
-        super(BertForSequenceClassification, self).__init__(config)
-        self.num_labels = num_labels
-        self.loss_fct = classification_loss
-
-
-class BertForRegression(BertForSupervisedTasks):
-    def __init__(self, config, num_labels=None):
-        super(BertForRegression, self).__init__(config)
-        self.loss_fct = regression_loss
