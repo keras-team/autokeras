@@ -298,7 +298,7 @@ where:
 
 
 ### Automated text classifier tutorial.
-[[source]](https://github.com/keras-team/autokeras/blob/master/examples/task_modules/text/text.py)
+[[source]](https://github.com/keras-team/autokeras/blob/master/examples/task_modules/text/text_classification.py)
 
 
 Class `TextClassifier` and `TextRegressor` are designed for automated generate best performance cnn neural architecture
