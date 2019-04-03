@@ -118,10 +118,7 @@ class TextSupervised(SingleModelSupervised, ABC):
             logits = logits.detach().cpu().numpy()
             y_preds.extend(logits)
 
-        if self.task_type:
-            return self.inverse_transform_y(y_preds)
-        else:
-            return y_preds
+        return np.array(y_preds)
 
     @property
     def metric(self):
