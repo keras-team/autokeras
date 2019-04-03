@@ -118,7 +118,10 @@ class TextSupervised(SingleModelSupervised, ABC):
             logits = logits.detach().cpu().numpy()
             y_preds.extend(logits)
 
-        return np.array(y_preds)
+        if self.task_type:
+            return self.inverse_transform_y(y_preds)
+        else:
+            return y_preds
 
     @property
     def metric(self):
@@ -126,6 +129,10 @@ class TextSupervised(SingleModelSupervised, ABC):
             return Accuracy
         else:
             return MSE
+
+    def evaluate(self, x_test, y_test):
+        y_predict = self.predict(x_test)
+        return self.metric().evaluate(y_predict, y_test.argmax(1))
 
     @property
     def loss(self):
