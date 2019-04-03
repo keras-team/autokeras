@@ -45,9 +45,9 @@ def test_text_regressor():
     file_path1 = "examples/task_modules/text/train_data.tsv"
     file_path2 = "examples/task_modules/text/test_data.tsv"
     x_train, y_train = read_tsv_file(input_file=file_path1)
-    x_train, y_train = x_train[:1], y_train[:1]
+    x_train, y_train = x_train[:1], y_train[:1].astype(float)
     x_test, y_test = read_tsv_file(input_file=file_path2)
-    x_test, y_test = x_test[:1], y_test[:1]
+    x_test, y_test = x_test[:1], y_test[:1].astype(float)
 
     Constant.BERT_TRAINER_BATCH_SIZE = 1
     Constant.BERT_TRAINER_EPOCHS = 1

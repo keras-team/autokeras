@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
+from abc import ABC
 
 import numpy as np
 import os
@@ -43,13 +43,82 @@ class TextSupervised(SingleModelSupervised, ABC):
         self.max_seq_length = 128
         self.tokenizer = BertTokenizer.from_pretrained(self.bert_model, do_lower_case=True)
 
-    @abstractmethod
-    def fit(self, x, y, time_limit=None):
-        pass
+        # Evaluation params
+        self.eval_batch_size = 32
 
-    @abstractmethod
+        # Regression/Classification
+        self.text_model = None
+
+        # Number of labels. Required for Classification
+        self.num_labels = None
+
+        # Output model directory
+        self.output_model_file = None
+
+    def fit(self, x, y, time_limit=None):
+        """ Train the text classifier/regressor on the training data.
+
+        Args:
+            x: ndarray containing the train data inputs.
+            y: ndarray containing the train data outputs/labels.
+            time_limit: Maximum time allowed for searching. It does not apply for this classifier.
+        """
+        # Prepare model
+        model = self.text_model.from_pretrained(self.bert_model,
+                                                cache_dir=PYTORCH_PRETRAINED_BERT_CACHE/'distributed_-1',
+                                                num_labels=self.num_labels)
+
+        all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x)
+        all_label_ids = torch.tensor([f for f in y], dtype=torch.float)
+        train_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
+
+        bert_trainer = BERTTrainer(train_data, model, self.output_model_file)
+        bert_trainer.train_model()
+
     def predict(self, x_test):
-        pass
+        """ Predict the labels/outputs for the provided input data.
+
+        Args:
+            x_test: ndarray containing the test data inputs.
+
+        Returns:
+            ndarray containing the predicted labels/outputs for x_test.
+        """
+        # Load a trained model that you have fine-tuned
+        model_state_dict = torch.load(self.output_model_file)
+        model = self.text_model.from_pretrained(self.bert_model,
+                                                state_dict=model_state_dict,
+                                                num_labels=self.num_labels)
+        model.to(self.device)
+
+        if self.verbose:
+            print("***** Running evaluation *****")
+            print("  Num examples = %d", len(x_test))
+            print("  Batch size = %d", self.eval_batch_size)
+        all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x_test)
+        eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
+
+        # Run prediction for full data
+        eval_sampler = SequentialSampler(eval_data)
+        eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=self.eval_batch_size)
+
+        model.eval()
+        y_preds = []
+        for input_ids, input_mask, segment_ids in eval_dataloader:
+            input_ids = input_ids.to(self.device)
+            input_mask = input_mask.to(self.device)
+            segment_ids = segment_ids.to(self.device)
+
+            with torch.no_grad():
+                logits = model(input_ids, segment_ids, input_mask)
+
+            logits = logits.detach().cpu().numpy()
+            y_preds.extend(logits)
+
+        if self.num_labels:
+            return self.inverse_transform_y(y_preds)
+        else:
+            return y_preds
 
     @property
     def metric(self):
@@ -93,66 +162,8 @@ class TextRegressor(TextSupervised):
         # Output directory
         self.output_model_file = os.path.join(self.path, 'pytorch_text_regressor.bin')
 
-        # Evaluation params
-        self.eval_batch_size = 32
-
-    def fit(self, x, y, time_limit=None):
-        """ Train the text classifier based on the training data.
-
-        Args:
-            x: ndarray containing the train data inputs.
-            y: ndarray containing the train data outputs/labels.
-            time_limit: Maximum time allowed for searching. It does not apply for this classifier.
-        """
-        # Prepare model
-        model = BertForRegression.from_pretrained(self.bert_model,
-                                                  cache_dir=PYTORCH_PRETRAINED_BERT_CACHE/'distributed_-1')
-
-        all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x)
-        all_label_ids = torch.tensor([float(f) for f in y], dtype=torch.float)
-        train_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
-
-        bert_trainer = BERTTrainer(train_data, model, self.output_model_file)
-        bert_trainer.train_model()
-
-    def predict(self, x_test):
-        """ Predict the labels for the provided input data.
-
-        Args:
-            x_test: ndarray containing the test data inputs.
-
-        Returns:
-            ndarray containing the predicted labels/outputs for x_test.
-        """
-        # Load a trained model that you have fine-tuned
-        model_state_dict = torch.load(self.output_model_file)
-        model = BertForRegression.from_pretrained(self.bert_model, state_dict=model_state_dict)
-        model.to(self.device)
-
-        if self.verbose:
-            print("***** Running evaluation *****")
-            print("  Num examples = %d", len(x_test))
-            print("  Batch size = %d", self.eval_batch_size)
-        all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x_test)
-        eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
-
-        # Run prediction for full data
-        eval_sampler = SequentialSampler(eval_data)
-        eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=self.eval_batch_size)
-
-        model.eval()
-        y_preds = []
-        for input_ids, input_mask, segment_ids in eval_dataloader:
-            input_ids = input_ids.to(self.device)
-            input_mask = input_mask.to(self.device)
-            segment_ids = segment_ids.to(self.device)
-
-            with torch.no_grad():
-                logits = model(input_ids, segment_ids, input_mask)
-
-            logits = logits.detach().cpu().numpy()
-            y_preds.extend(logits)
-        return y_preds
+        # BERT Model for Regression.
+        self.text_model = BertForRegression
 
 
 class TextClassifier(TextSupervised):
@@ -181,69 +192,5 @@ class TextClassifier(TextSupervised):
         # Output directory
         self.output_model_file = os.path.join(self.path, 'pytorch_text_classifier.bin')
 
-        # Evaluation params
-        self.eval_batch_size = 32
-
-    def fit(self, x, y, time_limit=None):
-        """ Train the text classifier based on the training data.
-
-        Args:
-            x: ndarray containing the train data inputs.
-            y: ndarray containing the train data outputs/labels.
-            time_limit: Maximum time allowed for searching. It does not apply for this classifier.
-        """
-        print(y)
-        self.num_labels = len(y[-1])
-
-
-        # Prepare model
-        model = BertForSequenceClassification.from_pretrained(self.bert_model,
-                                                              cache_dir=PYTORCH_PRETRAINED_BERT_CACHE/'distributed_-1',
-                                                              num_labels=self.num_labels)
-
-        all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x)
-        all_label_ids = torch.tensor([f for f in y], dtype=torch.long)
-        train_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
-
-        bert_trainer = BERTTrainer(train_data, model, self.output_model_file)
-        bert_trainer.train_model()
-
-    def predict(self, x_test):
-        """ Predict the labels for the provided input data.
-
-        Args:
-            x_test: ndarray containing the test data inputs.
-
-        Returns:
-            ndarray containing the predicted labels/outputs for x_test.
-        """
-        # Load a trained model that you have fine-tuned
-        model_state_dict = torch.load(self.output_model_file)
-        model = BertForSequenceClassification.from_pretrained(self.bert_model, state_dict=model_state_dict,
-                                                              num_labels=self.num_labels)
-        model.to(self.device)
-
-        if self.verbose:
-            print("***** Running evaluation *****")
-            print("  Num examples = %d", len(x_test))
-            print("  Batch size = %d", self.eval_batch_size)
-        all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x_test)
-        eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
-
-        # Run prediction for full data
-        eval_sampler = SequentialSampler(eval_data)
-        eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=self.eval_batch_size)
-
-        model.eval()
-        y_preds = []
-        for input_ids, input_mask, segment_ids in eval_dataloader:
-            input_ids = input_ids.to(self.device)
-            input_mask = input_mask.to(self.device)
-            segment_ids = segment_ids.to(self.device)
-
-            with torch.no_grad():
-                logits = model(input_ids, segment_ids, input_mask)
-
-            logits = logits.detach().cpu().numpy()
-            y_preds.extend(logits)
-        return self.inverse_transform_y(y_preds)
+        # BERT Model for Regression.
+        self.text_model = BertForSequenceClassification
