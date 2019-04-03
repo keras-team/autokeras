@@ -15,9 +15,4 @@ if __name__ == '__main__':
 
     clf = TextRegressor(verbose=True)
     clf.fit(x=x_train, y=y_train, time_limit=12 * 60 * 60)
-    y_preds = clf.predict(x_test)
-    mse = 0
-    for i in range(len(y_preds)):
-        mse = (y_preds[i] - y_test[i]) ** 2
-    mse /= len(y_preds)
-    print("Mean Square Error is : ", mse)
+    print("Mean Square Error is : ", 100 * clf.evaluate(x_test, y_test), "%")

@@ -22,7 +22,7 @@ import os
 import torch
 
 from autokeras.backend.torch.loss_function import classification_loss
-from autokeras.nn.metric import Accuracy
+from autokeras.nn.metric import Accuracy, MSE
 from autokeras.backend.torch.model_trainer import BERTTrainer, get_device
 from autokeras.supervised import SingleModelSupervised
 from autokeras.text.pretrained_bert.utils import PYTORCH_PRETRAINED_BERT_CACHE
@@ -122,7 +122,10 @@ class TextSupervised(SingleModelSupervised, ABC):
 
     @property
     def metric(self):
-        return Accuracy
+        if self.num_labels:
+            return Accuracy
+        else:
+            return MSE
 
     @property
     def loss(self):
