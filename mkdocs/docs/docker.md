@@ -6,8 +6,17 @@
 The following command download Auto-Keras docker image to your machine.  
 
 ```
-docker pull garawalid/autokeras
+docker pull garawalid/autokeras:latest
 ```
+
+Image releases are tagged using the following format:
+
+
+| Tag | Description|
+| ------------- |:-------------:|
+|latest|Auto-Keras image|
+|devel| Auto-Keras image that tracks Github repository|
+
 
 ## Start Auto-Keras Docker container
 
@@ -33,7 +42,7 @@ Let's download the mnist example and run it within the container.
 
 Download the example :  
 ```
-wget https://raw.githubusercontent.com/jhfjhfj1/autokeras/master/examples/a_simple_example/mnist.py
+curl https://raw.githubusercontent.com/keras-team/autokeras/master/examples/a_simple_example/mnist.py --output mnist.py
 ```
 
 Run the mnist example :
