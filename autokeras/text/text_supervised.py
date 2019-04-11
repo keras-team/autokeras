@@ -52,9 +52,6 @@ class TextSupervised(SingleModelSupervised, ABC):
         # Output model directory
         self.output_model_file = None
 
-        # Task type - Regression or Classification.
-        self.task_type = None
-
     def fit(self, x, y, time_limit=None):
         """ Train the text classifier/regressor on the training data.
 
@@ -63,12 +60,13 @@ class TextSupervised(SingleModelSupervised, ABC):
             y: ndarray containing the train data outputs/labels.
             time_limit: Maximum time allowed for searching. It does not apply for this classifier.
         """
-        if self.task_type:
+        if not self.num_labels:
             self.num_labels = len(y[-1])
 
         # Prepare model
         model = BertForSupervisedTasks.from_pretrained(self.bert_model,
                                                        cache_dir=PYTORCH_PRETRAINED_BERT_CACHE/'distributed_-1',
+                                                       loss=self.loss,
                                                        num_labels=self.num_labels)
 
         all_input_ids, all_input_mask, all_segment_ids = self.preprocess(x)
@@ -118,28 +116,7 @@ class TextSupervised(SingleModelSupervised, ABC):
             logits = logits.detach().cpu().numpy()
             y_preds.extend(logits)
 
-        if self.task_type:
-            return self.inverse_transform_y(y_preds)
-        else:
-            return y_preds
-
-    @property
-    def metric(self):
-        if self.task_type:
-            return Accuracy
-        else:
-            return MSE
-
-    def evaluate(self, x_test, y_test):
-        y_predict = self.predict(x_test)
-        return self.metric().evaluate(y_predict, y_test.argmax(1) if self.task_type else y_test)
-
-    @property
-    def loss(self):
-        if self.task_type:
-            return classification_loss
-        else:
-            return regression_loss
+        return self.inverse_transform_y(y_preds)
 
     def preprocess(self, x):
         """ Preprocess text data.
@@ -159,9 +136,6 @@ class TextSupervised(SingleModelSupervised, ABC):
     def transform_y(self, y):
         pass
 
-    def inverse_transform_y(self, output):
-        return np.argmax(output, axis=1)
-
 
 class TextRegressor(TextSupervised):
     def __init__(self, verbose, **kwargs):
@@ -172,11 +146,26 @@ class TextRegressor(TextSupervised):
         """
         super().__init__(verbose=verbose, **kwargs)
 
+        # Labels/classes
+        self.num_labels = 1
+
         # Output directory
         self.output_model_file = os.path.join(self.path, 'text_regressor.bin')
 
-        # Regression (False) or Classification (True)
-        self.task_type = False
+    def inverse_transform_y(self, output):
+        return output
+
+    @property
+    def metric(self):
+        return MSE
+
+    @property
+    def loss(self):
+        return regression_loss
+
+    def evaluate(self, x_test, y_test):
+        y_predict = self.predict(x_test)
+        return self.metric().evaluate(y_predict, y_test)
 
 
 class TextClassifier(TextSupervised):
@@ -205,5 +194,17 @@ class TextClassifier(TextSupervised):
         # Output directory
         self.output_model_file = os.path.join(self.path, 'text_classifier.bin')
 
-        # Regression (False) or Classification (True)
-        self.task_type = True
+    def inverse_transform_y(self, output):
+        return np.argmax(output, axis=1)
+
+    @property
+    def metric(self):
+        return Accuracy
+
+    @property
+    def loss(self):
+        return classification_loss
+
+    def evaluate(self, x_test, y_test):
+        y_predict = self.predict(x_test)
+        return self.metric().evaluate(y_predict, y_test.argmax(1))

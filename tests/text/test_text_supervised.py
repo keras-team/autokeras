@@ -35,6 +35,7 @@ def test_text_classifier():
     y_pred = clf.predict(x_test)
     if len(y_pred) != len(y_test):
         raise AssertionError()
+    clf.evaluate(x_test, y_test)
 
 
 def test_text_regressor():
@@ -57,3 +58,4 @@ def test_text_regressor():
     y_pred = clf.predict(x_test)
     if len(y_pred) != len(y_test):
         raise AssertionError()
+    clf.evaluate(x_test, y_test)
