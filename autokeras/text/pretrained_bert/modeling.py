@@ -31,7 +31,6 @@ import shutil
 import torch
 from torch import nn
 
-from autokeras.backend.torch.loss_function import classification_loss, regression_loss
 from autokeras.constant import Constant
 from autokeras.text.pretrained_bert.utils import cached_path
 
