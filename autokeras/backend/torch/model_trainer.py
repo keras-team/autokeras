@@ -269,7 +269,7 @@ class BERTTrainer(ModelTrainerBase):
         num_labels: Number of output labels for the classification task.
     """
 
-    def __init__(self, train_data, model, output_model_file, num_labels, loss_function=None):
+    def __init__(self, train_data, model, output_model_file, loss_function=None):
         """Initialize the BERTTrainer.
 
         Args:
@@ -284,7 +284,6 @@ class BERTTrainer(ModelTrainerBase):
         self.train_data = train_data
         self.model = model
         self.output_model_file = output_model_file
-        self.num_labels = num_labels
 
         # Training params
         self.global_step = 0
