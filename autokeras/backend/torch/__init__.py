@@ -1,7 +1,7 @@
 import numpy as np
 from functools import reduce
 from autokeras.backend.torch.model import produce_model
-from autokeras.backend.torch.data_transformer import ImageDataTransformer
+from autokeras.backend.torch.data_transformer import ImageDataTransformer, DataTransformerMlp
 from autokeras.backend.torch.model_trainer import ModelTrainer, get_device
 from autokeras.backend.torch.loss_function import *
 from autokeras.backend.torch.metric import *
