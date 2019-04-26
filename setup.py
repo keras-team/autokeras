@@ -15,7 +15,7 @@ setup(
                       'imageio==2.5.0',
                       'requests==2.21.0'
                       ],
-    version='0.3.7',
+    version='0.4.0',
     description='AutoML for deep learning',
     author='DATA Lab at Texas A&M University',
     author_email='jhfjhfj1@gmail.com',
