@@ -173,10 +173,10 @@ class ResNetGenerator(NetworkGenerator):
         self.batch_norm = get_batch_norm_class(self.n_dim)
         if bottleneck:
             self.make_block = self._make_bottleneck_block
-            self.block_expansion = 1
+            self.block_expansion = 4
         else:
             self.make_block = self._make_basic_block
-            self.block_expansion = 4
+            self.block_expansion = 1
 
     def generate(self, model_len=None, model_width=None):
         if model_width is None:
