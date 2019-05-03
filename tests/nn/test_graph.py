@@ -196,7 +196,7 @@ def test_long_transform2():
 
 def test_long_transform4():
     graph = ResNetGenerator(10, (28, 28, 1)).generate()
-    graph.to_concat_skip_model(57, 68)
+    graph.to_concat_skip_model(57, 60)
     model = graph.produce_model()
     model(torch.Tensor(np.random.random((10, 1, 28, 28))))
 
