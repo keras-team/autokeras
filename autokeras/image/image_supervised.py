@@ -261,6 +261,8 @@ class ImageRegressor(ImageSupervised):
 
     It is used for image regression. It searches convolutional neural network architectures
     for the best configuration for the image dataset.
+
+    The class supports regressing to N scalars. Therefore, train_y is expected to be shape (examples, N) or (examples,)
     """
 
     @property
@@ -272,13 +274,45 @@ class ImageRegressor(ImageSupervised):
         return MSE
 
     def get_n_output_node(self):
-        return 1
+        """Determines the output nodes in the keras Model.
+           i.e. if self.num_scalars is 2, the last Dense layer is Dense(2)
+
+           self.num_scalars is set in the function self.transform_y()
+        """
+        return self.num_scalars
 
     def transform_y(self, y_train):
-        return y_train.flatten().reshape(len(y_train), 1)
+        """Transforms y_train for model fitting.
+           If y_train is shape (examples,) it is reshaped to (examples, 1).
+           Otherwise, y_train is expected to be reshaped to (examples, N).
+        
+        Args:
+            y: an ndarray of scalars that are transformed for model fitting.
+        Throws:
+            ValueError: when y_train cannot be transformed into (examples, N)
+        """
+        try:
+            # num_scalars determines the number of output nodes in the keras model.
+            # ie. if num_scalars = 2, the last Dense node is Dense(2)
+            
+            # if y_train is shape (examples,) then set num_scalars to 1
+            self.num_scalars = y_train.shape[1] if 1 < len(y_train.shape) else 1
+            return y_train.flatten().reshape(y_train.shape[0], self.num_scalars)
+        except ValueError as e:
+            raise ValueError("ImageNRegressor.transform_y() cannot reshape {}. Must be shape (examples, N).")
 
     def inverse_transform_y(self, output):
-        return output.flatten()
+        """Output is expected to be the shape (examples, N).
+           For single scalar outputs: (examples, 1) it is transformed into (examples,)
+           to mimic a prior version of ImageRegressor
+
+        Args:
+            output: the output ndarray from the keras model.
+
+        Returns:
+            ndarray: a transformed/reshaped output
+        """
+        return output.flatten() if self.num_scalars == 1 else output
 
     def export_autokeras_model(self, model_file_name):
         """Creates and Exports the AutoKeras model to the given filename. """
@@ -312,64 +346,6 @@ class ImageRegressor3D(ImageRegressor):
     def __init__(self, **kwargs):
         kwargs['augment'] = False
         super().__init__(**kwargs)
-
-class ImageNRegressor(ImageSupervised):
-    """ImageNRegressor class.
-
-    It is used for image regression. It searches convolutional neural network architectures
-    for the best configuration for the image dataset.
-
-    With ImageNRegressor you can have 2 dimensional output (samples, N). This is different than ImageRegressor
-    as its output is (samples, 1).
-    """
-
-    @property
-    def loss(self):
-        return regression_loss
-
-    @property
-    def metric(self):
-        return MSE
-
-    def get_n_output_node(self):
-        return self.num_scalars
-
-    def transform_y(self, y_train):
-        """Transform the parameter y_train by reshaping to shape (examples, )
-        
-        Args:
-            y: list of labels to convert
-        """
-        try:
-            # essentially will determine the number output nodes
-            # sets output nodes to y_train.shape[1] if y_train has more than one dimension
-            # otherwise, set it to 1 (similar behavior to ImageRegressor)
-            self.num_scalars = y_train.shape[1] if 1 < len(y_train.shape) else 1
-            return y_train.flatten().reshape(y_train.shape[0], self.num_scalars)
-        except ValueError:
-            raise ValueError("ImageNRegressor.transform_y() cannot reshape {}. Must be shape (examples, N).")
-
-    def inverse_transform_y(self, output):
-        """Output is expected to be the shape (samples, N).
-        If N=1, then output is flattned to be the shape (samples,). When N=1, the model is practically equivalent
-        to ImageRegressor() class.
-        """
-        # if num_scalars is 1, the model performs like ImageRegressor
-        # so return a flattened result
-        return output if self.num_scalars != 1 else output.flatten()
-
-    def export_autokeras_model(self, model_file_name):
-        """Creates and Exports the AutoKeras model to the given file path and filenmae. 
-        
-        Args:
-            model_file_name: file path and filename where to save the model.
-        """
-        portable_model = PortableImageRegressor(graph=self.cnn.best_model,
-                                                y_encoder=self.y_encoder,
-                                                data_transformer=self.data_transformer,
-                                                resize_params=self.resize_shape,
-                                                path=self.path)
-        pickle_to_file(portable_model, model_file_name)
 
 
 class PortableImageSupervised(PortableDeepSupervised, ABC):
