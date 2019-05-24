@@ -6,11 +6,11 @@ import numpy as np
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
-from autokeras.backend.torch.loss_function import classification_loss
-from autokeras.nn.metric import Accuracy
-from autokeras.backend.torch.model_trainer import ModelTrainer
-from autokeras.preprocessor import OneHotEncoder
-from autokeras.backend.torch import MultiTransformDataset
+from autokeras import classification_loss
+from autokeras import Accuracy
+from autokeras import ModelTrainer
+from autokeras import OneHotEncoder
+from autokeras import MultiTransformDataset
 
 
 class Net(torch.nn.Module):

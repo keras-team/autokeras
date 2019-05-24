@@ -1,5 +1,5 @@
-from autokeras.pretrained import VoiceRecognizer
-from autokeras.constant import Constant
+from autokeras import VoiceRecognizer
+from autokeras import Constant
 import torchaudio
 import scipy.signal
 import librosa

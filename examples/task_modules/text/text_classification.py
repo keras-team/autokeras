@@ -1,7 +1,7 @@
 import numpy as np
 
-from autokeras.text.text_supervised import TextClassifier
-from autokeras.utils import read_tsv_file
+from autokeras import TextClassifier
+from autokeras import read_tsv_file
 
 
 def convert_labels_to_one_hot(labels, num_labels):

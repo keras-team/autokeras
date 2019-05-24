@@ -1,4 +1,4 @@
-from autokeras.pretrained import VoiceGenerator
+from autokeras import VoiceGenerator
 import os
 
 temp_dir = "test"
