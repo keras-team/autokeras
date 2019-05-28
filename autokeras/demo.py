@@ -1,17 +1,20 @@
 import tensorflow as tf
+from keras.callbacks import LearningRateScheduler, EarlyStopping
+from keras.datasets import mnist
 from tensorflow import keras
 
 import numpy as np
+from tensorflow.python.keras.metrics import CategoricalAccuracy
+
+import autokeras as ak
 
 from autokeras.tuner import SequentialRandomSearch
-from autokeras.hypermodel import HyperModel
+from autokeras.hypermodel.hypermodel import HyperModel
 from autokeras.hyperparameters import HyperParameters
-
 
 (x, y), (val_x, val_y) = keras.datasets.mnist.load_data()
 x = x.astype('float32') / 255.
 val_x = val_x.astype('float32') / 255.
-
 
 """Basic case:
 - We define a `build_model` function
@@ -25,7 +28,7 @@ def build_model(hp):
     model.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
     for i in range(hp.Range('num_layers', 2, 20)):
         model.add(tf.keras.layers.Dense(units=hp.Range('units_' + str(i), 32, 512, 32),
-                               activation='relu'))
+                                        activation='relu'))
     model.add(tf.keras.layers.Dense(10, activation='softmax'))
     model.compile(
         optimizer=keras.optimizers.Adam(
@@ -45,7 +48,6 @@ tuner.search(trials=2,
              epochs=5,
              validation_data=(val_x, val_y))
 
-
 """Case #2:
 - We override the loss and metrics
 """
@@ -61,7 +63,6 @@ tuner.search(trials=2,
              y=y,
              epochs=5,
              validation_data=(val_x, val_y))
-
 
 """Case #3:
 - We define a HyperModel subclass
@@ -80,7 +81,7 @@ class MyHyperModel(HyperModel):
         model.add(tf.keras.layers.Flatten(input_shape=self.img_size))
         for i in range(hp.Range('num_layers', 2, 20)):
             model.add(tf.keras.layers.Dense(units=hp.Range('units_' + str(i), 32, 512, 32),
-                                   activation='relu'))
+                                            activation='relu'))
         model.add(tf.keras.layers.Dense(self.num_classes, activation='softmax'))
         model.compile(
             optimizer=keras.optimizers.Adam(
@@ -120,7 +121,6 @@ tuner.search(trials=2,
              epochs=5,
              validation_data=(val_x, val_y))
 
-
 """Case #5:
 - We predefine the search space
 - No unregistered parameters are allowed in `build`
@@ -136,7 +136,7 @@ def build_model(hp):
     model.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
     for i in range(hp.get('num_layers')):
         model.add(tf.keras.layers.Dense(32,
-                               activation='relu'))
+                                        activation='relu'))
     model.add(tf.keras.layers.Dense(10, activation='softmax'))
     model.compile(
         optimizer=keras.optimizers.Adam(hp.get('learning_rate')),
@@ -157,3 +157,49 @@ tuner.search(trials=2,
              y=y,
              epochs=5,
              validation_data=(val_x, val_y))
+
+# Use cases of AutoModel and AutoPipeline
+
+num_classes = 10
+shape = (28, 28, 1)
+# Simple
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+automodel = ak.ImageClassifier(shape, num_classes)
+
+# Loss, optimizer are picked automatically
+automodel.compile(metrics=[CategoricalAccuracy()])
+automodel.fit(x_train, y_train)
+
+# The predict function should output the labels instead of numerical vectors.
+automodel.predict(x_test)
+
+# Alternatively, the user can get the probability as follows.
+probabilities = automodel.predict(x_test, postprocessing=False)
+
+# Intermediate
+inputs = ak.ImageInput(shape=...)
+x = ak.ImageBlock(inputs)
+outputs = ak.ClassificationHead(num_classes)(x)
+automodel = ak.AutoModel(inputs=inputs, outputs=outputs)
+
+# Loss, optimizer are picked automatically
+automodel.compile(metrics=[CategoricalAccuracy()])
+automodel.fit(x_train, y_train, time_limit=12 * 60 * 60)
+
+# Advanced
+
+inputs = ak.ImageInput(shape=...)
+outputs1 = ak.ResNetBlock()(inputs)
+outputs2 = ak.XceptionBlock()(inputs)
+outputs = ak.Merge()((outputs1, outputs2))
+outputs = ak.ClassificationHead(num_classes)(outputs)
+automodel = ak.AutoModel(inputs=inputs, outputs=outputs)
+
+learning_rate = 1.0
+automodel.compile(optimizer=tf.keras.optimizers.Adam(learning_rate),
+                  metrics=[tf.keras.metrics.CategoricalAccuracy()],
+                  loss=tf.keras.losses.CategoricalCrossentropy())
+
+automodel.fit(ak.image_augmentation(x_train, y_train), time_limit=12 * 60 * 60,
+              epochs=200,
+              callbacks=[EarlyStopping(), LearningRateScheduler()])
