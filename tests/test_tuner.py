@@ -1,8 +1,5 @@
 from unittest.mock import patch
 from tensorflow import keras
-from tensorflow.keras import layers
-
-import numpy as np
 
 from autokeras.tuner import SequentialRandomSearch
 from autokeras.hypermodel import HyperModel
@@ -17,12 +14,12 @@ class MyHyperModel(HyperModel):
 
     def build(self, hp):
         model = keras.Sequential()
-        model.add(layers.Flatten(input_shape=(28, 28)))
+        model.add(keras.layers.Flatten(input_shape=(28, 28)))
         for i in range(hp.Choice('num_layers', [2, 4, 6], default=7)):
-            model.add(layers.Dense(units=hp.Range('units_' + str(i), 32, 512,
-                                                  default=31),
-                                   activation='relu'))
-        model.add(layers.Dense(10, activation='softmax'))
+            model.add(keras.layers.Dense(units=hp.Range('units_' + str(i), 32, 512,
+                                                        default=31),
+                                         activation='relu'))
+        model.add(keras.layers.Dense(10, activation='softmax'))
         model.compile(
             optimizer=keras.optimizers.Adam(
                 hp.Choice('learning_rate', [1e-2, 1e-3, 1e-4])),
@@ -38,8 +35,7 @@ class MyHyperModel(HyperModel):
         return model
 
 
-@patch('tensorflow.keras.Sequential.fit', side_effect=lambda *args, **kwargs:
-None)
+@patch('tensorflow.keras.Sequential.fit', side_effect=lambda *args, **kwargs: None)
 def test_reparameterize_and_tune_rest(_):
     (x, y), (val_x, val_y) = keras.datasets.mnist.load_data()
 
@@ -60,8 +56,7 @@ def test_reparameterize_and_tune_rest(_):
                  validation_data=(val_x, val_y))
 
 
-@patch('tensorflow.keras.Sequential.fit', side_effect=lambda *args, **kwargs:
-None)
+@patch('tensorflow.keras.Sequential.fit', side_effect=lambda *args, **kwargs: None)
 def test_reparameterize_and_not_tune_rest(_):
     (x, y), (val_x, val_y) = keras.datasets.mnist.load_data()
 
