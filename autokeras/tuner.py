@@ -1,7 +1,7 @@
 import random
 import numpy as np
 
-from autokeras.hypermodel import HyperModel, DefaultHyperModel
+from autokeras.hypermodel.hypermodel import HyperModel, DefaultHyperModel
 import autokeras.hyperparameters as hp_module
 
 
@@ -99,8 +99,7 @@ class SequentialRandomSearch(Tuner):
 
         # Optional recompile
         if not model.optimizer:
-            model.compile(
-                optimizer=self.optimizer, loss=self.loss, metrics=self.metrics)
+            model.compile()
         elif self.optimizer or self.loss or self.metrics:
             compile_kwargs = {
                 'optimizer': model.optimizer,
@@ -113,7 +112,7 @@ class SequentialRandomSearch(Tuner):
                 compile_kwargs['optimizer'] = self.optimizer
             if self.metrics:
                 compile_kwargs['metrics'] = self.metrics
-            model.compile(**compile_kwargs)
+            model.compile()
 
         # Train model
         # TODO: reporting presumably done with a callback

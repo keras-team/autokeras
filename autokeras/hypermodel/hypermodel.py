@@ -6,6 +6,9 @@ class HyperModel(object):
         self.name = name
         self.tunable = tunable
 
+    def __call__(self, *args, **kwargs):
+        pass
+
     def build(self, hp):
         raise NotImplementedError
 

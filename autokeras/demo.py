@@ -164,17 +164,17 @@ num_classes = 10
 shape = (28, 28, 1)
 # Simple
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
-automodel = ak.ImageClassifier(shape, num_classes)
+auto_pipeline = ak.ImageClassifier(shape, num_classes)
 
 # Loss, optimizer are picked automatically
-automodel.compile(metrics=[CategoricalAccuracy()])
-automodel.fit(x_train, y_train)
+auto_pipeline.compile(metrics=[CategoricalAccuracy()])
+auto_pipeline.fit(x_train, y_train)
 
 # The predict function should output the labels instead of numerical vectors.
-automodel.predict(x_test)
+auto_pipeline.predict(x_test)
 
 # Alternatively, the user can get the probability as follows.
-probabilities = automodel.predict(x_test, postprocessing=False)
+probabilities = auto_pipeline.predict(x_test, postprocessing=False)
 
 # Intermediate
 inputs = ak.ImageInput(shape=...)
@@ -183,7 +183,7 @@ outputs = ak.ClassificationHead(num_classes)(x)
 automodel = ak.AutoModel(inputs=inputs, outputs=outputs)
 
 # Loss, optimizer are picked automatically
-automodel.compile(metrics=[CategoricalAccuracy()])
+automodel.compile()
 automodel.fit(x_train, y_train, time_limit=12 * 60 * 60)
 
 # Advanced
@@ -200,6 +200,6 @@ automodel.compile(optimizer=tf.keras.optimizers.Adam(learning_rate),
                   metrics=[tf.keras.metrics.CategoricalAccuracy()],
                   loss=tf.keras.losses.CategoricalCrossentropy())
 
-automodel.fit(ak.image_augmentation(x_train, y_train), time_limit=12 * 60 * 60,
+automodel.fit(ak.image_augment(x_train, y_train), time_limit=12 * 60 * 60,
               epochs=200,
-              callbacks=[EarlyStopping(), LearningRateScheduler()])
+              callbacks=[EarlyStopping(), LearningRateScheduler(1)])
