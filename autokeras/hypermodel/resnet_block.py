@@ -1,87 +1,87 @@
-from autokeras import HyperModel
+from autokeras.hypermodel.hypermodel_network import ConnectedHyperModel
 
 
-class ResNetBlock(HyperModel):
+class ResNetBlock(ConnectedHyperModel):
+    def build(self, hp, inputs=None):
+        pass
+
+
+class DenseNetBlock(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class DenseNetBlock(HyperModel):
+class MlpBlock(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class MlpBlock(HyperModel):
+class AlexNetBlock(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class AlexNetBlock(HyperModel):
+class CnnBlock(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class CnnBlock(HyperModel):
+class RnnBlock(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class RnnBlock(HyperModel):
+class LstmBlock(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class LstmBlock(HyperModel):
+class SeqToSeqBlock(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class SeqToSeqBlock(HyperModel):
+class ImageBlock(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class ImageBlock(HyperModel):
+class NlpBlock(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class NlpBlock(HyperModel):
+class Merge(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class Merge(HyperModel):
+class XceptionBlock(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class XceptionBlock(HyperModel):
+class ClassificationHead(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class ClassificationHead(HyperModel):
+class RegressionHead(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class RegressionHead(HyperModel):
+class TensorRegressionHead(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class TensorRegressionHead(HyperModel):
+class TensorClassificationHead(ConnectedHyperModel):
     def build(self, hp):
         pass
 
 
-class TensorClassificationHead(HyperModel):
-    def build(self, hp):
-        pass
-
-
-class ImageInput(HyperModel):
+class ImageInput(ConnectedHyperModel):
     def __init__(self, shape=None):
         super().__init__()
         self.shape = shape
@@ -90,7 +90,7 @@ class ImageInput(HyperModel):
         pass
 
 
-class Input(HyperModel):
+class Input(ConnectedHyperModel):
     def __init__(self, shape=None):
         super().__init__()
         self.shape = shape

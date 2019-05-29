@@ -163,7 +163,7 @@ class ModelTrainer(ModelTrainerBase):
 
         # customize optimizer and compile model
         self.optimizer = tf.keras.optimizers.SGD(lr=lr, momentum=0.9, decay=3e-4)  # clipvalue=1.0,
-        self.model.compile()
+        self.model.compile(optimizer="Adam")
 
         # fit model
         # TODO: raise TimeoutError when timeout

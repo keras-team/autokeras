@@ -1,3 +1,5 @@
+from autokeras.hypermodel.hypermodel_network import HyperModelNetwork
+
 
 class AutoModel:
     """ A AutoModel should be an AutoML solution.
@@ -7,16 +9,14 @@ class AutoModel:
     Attributes:
         inputs: A HyperModel instance. The input node of a the AutoModel.
         outputs: A HyperModel instance. The output node of the AutoModel.
-        hypermodels: A list of HyperModels connecting from the inputs to the
+        hypermodel: An instance of HyperModelWrap connecting from the inputs to the
             outputs.
         tuner: An instance of Tuner.
     """
     def __init__(self, inputs, outputs, tuner=None):
         """
         """
-        self.inputs = inputs
-        self.outputs = outputs
-        self.hypermodels = []
+        self.hypermodel = HyperModelNetwork(inputs, outputs)
         self.tuner = tuner
 
     def hyperparameters(self):
