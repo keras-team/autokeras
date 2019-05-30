@@ -20,7 +20,7 @@ setup(
     author='DATA Lab at Texas A&M University',
     author_email='jhfjhfj1@gmail.com',
     url='http://autokeras.com',
-    download_url='https://github.com/keras-team/autokeras/archive/0.3.7.tar.gz',
+    download_url='https://github.com/keras-team/autokeras/archive/0.4.0.tar.gz',
     keywords=['AutoML', 'keras'],
     classifiers=[]
 )

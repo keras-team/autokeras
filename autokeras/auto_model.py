@@ -1,4 +1,4 @@
-from autokeras.hypermodel.hypermodel_network import HyperModelNetwork
+from autokeras.hypermodel.hypermodel_network import HyperGraph
 
 
 class AutoModel:
@@ -16,7 +16,9 @@ class AutoModel:
     def __init__(self, inputs, outputs, tuner=None):
         """
         """
-        self.hypermodel = HyperModelNetwork(inputs, outputs)
+        self.inputs = inputs
+        self.outputs = outputs
+        self.hypermodel = None
         self.tuner = tuner
 
     def hyperparameters(self):
@@ -26,7 +28,10 @@ class AutoModel:
         pass
 
     def fit(self, x_train, y_train=None, **kwargs):
-        pass
+        # Set the shapes of the inputs and outputs first
+        self.inputs.shape = None
+        self.outputs.shape = None
+        self.hypermodel = HyperGraph(self.inputs, self.outputs)
 
     def predict(self, x_test, postprocessing=True):
         """Predict the output for a given testing data.
