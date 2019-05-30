@@ -8,7 +8,7 @@ from autokeras.hyperparameters import HyperParameters
 
 class ConnectedHyperParameters(HyperParameters):
     def retrieve(self, name, type, config):
-        super().retrieve(tf.contrib.framework.get_scope_name() + '/' + name, type, config)
+        super().retrieve(tf.get_default_graph().get_name_scope() + '/' + name, type, config)
 
 
 class HyperNode(HyperModel):
