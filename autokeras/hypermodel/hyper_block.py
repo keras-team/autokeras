@@ -1,12 +1,11 @@
 from abc import ABC
 
 import tensorflow as tf
-from tensorflow.python.util import nest
 
 from autokeras import HyperModel
 from autokeras.hypermodel.hyper_node import HyperNode
 from autokeras.hyperparameters import HyperParameters
-from autokeras.layer_utils import flatten
+from autokeras.layer_utils import flatten, format_inputs
 
 
 class HierarchicalHyperParameters(HyperParameters):
@@ -23,11 +22,12 @@ class HyperBlock(HyperModel, ABC):
         self.inputs = None
         self.outputs = None
         self.n_output_node = 1
+        self._build = self.build
         self.build = self._build_with_name_scope
 
     def __call__(self, inputs):
-        self.inputs = inputs
-        for input_node in inputs:
+        self.inputs = format_inputs(inputs, self.name)
+        for input_node in self.inputs:
             input_node.add_out_hypermodel(self)
         self.outputs = []
         for _ in range(self.n_output_node):
@@ -41,20 +41,7 @@ class HyperBlock(HyperModel, ABC):
 
     def _build_with_name_scope(self, hp, inputs=None):
         with tf.name_scope(self.name):
-            self.build(hp, inputs)
-
-    def _format_inputs(self, inputs, num):
-        inputs = nest.flatten(inputs)
-
-        if isinstance(inputs, list) and len(inputs) == num:
-            return inputs
-
-        if (not isinstance(inputs, list)) and num == 1:
-            return inputs
-
-        raise ValueError('Expected {num} input in the '
-                         'inputs list for hypermodel {name} '
-                         'but received {len} inputs.'.format(num=num, name=self.name, len=len(inputs)))
+            self._build(hp, inputs)
 
 
 class ResNetBlock(HyperBlock):
@@ -69,7 +56,7 @@ class DenseNetBlock(HyperBlock):
 
 class MlpBlock(HyperBlock):
     def build(self, hp, inputs=None):
-        input_node = self._format_inputs(inputs, 1)[0]
+        input_node = format_inputs(inputs, 1)[0]
         output_node = input_node
         output_node = flatten(output_node)
 

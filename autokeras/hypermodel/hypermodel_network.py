@@ -1,23 +1,24 @@
 from queue import Queue
 import tensorflow as tf
 
-from autokeras.hypermodel.hyper_block import HyperBlock
+from autokeras import HyperModel
+from autokeras.layer_utils import format_inputs
 
 
-class HyperGraph(HyperBlock):
+class HyperGraph(HyperModel):
     def __init__(self, inputs, outputs, **kwargs):
         super().__init__(**kwargs)
-        self.inputs = inputs
-        self.outputs = outputs
+        self.inputs = format_inputs(inputs, self.name)
+        self.outputs = format_inputs(outputs, self.name)
         self.node_to_id = None
         self.nodes = None
         self.hypermodel_to_id = None
         self.hypermodels = None
-        self._build_network(inputs, outputs)
+        self._build_network()
 
-    def build(self, hp, inputs=None):
+    def build(self, hp):
         real_nodes = {}
-        for input_node in inputs:
+        for input_node in self.inputs:
             node_id = self.node_to_id[input_node]
             real_nodes[node_id] = input_node.build(hp)
         for hypermodel in self.hypermodels:
@@ -27,15 +28,15 @@ class HyperGraph(HyperBlock):
         return tf.keras.Model([real_nodes[self.node_to_id[input_node]] for input_node in self.inputs],
                               [real_nodes[self.node_to_id[output_node]] for output_node in self.outputs])
 
-    def _build_network(self, inputs, outputs):
+    def _build_network(self):
         self.node_to_id = {}
 
         # Recursively find all the interested nodes.
-        for input_node in inputs:
-            self._search_network(input_node, outputs, set(), set())
+        for input_node in self.inputs:
+            self._search_network(input_node, self.outputs, set(), set())
         self.nodes = sorted(list(self.node_to_id.keys()), key=lambda x: self.node_to_id[x])
 
-        for node in (inputs + outputs):
+        for node in (self.inputs + self.outputs):
             if node not in self.node_to_id:
                 raise ValueError("Inputs and outputs not connected.")
 
@@ -44,12 +45,12 @@ class HyperGraph(HyperBlock):
         self.hypermodel_to_id = {}
         visited_nodes = set()
         queue = Queue()
-        for input_node in inputs:
+        for input_node in self.inputs:
             queue.put(input_node)
             visited_nodes.add(input_node)
         while not queue.empty():
             input_node = queue.get()
-            for hypermodel in input_node.out_hypermodel:
+            for hypermodel in input_node.out_hypermodels:
                 # Check at least one output node of the hypermodel is in the interested nodes.
                 if not any([output_node in self.node_to_id for output_node in hypermodel.outputs]):
                     continue
@@ -59,7 +60,7 @@ class HyperGraph(HyperBlock):
                     if output_node not in visited_nodes and output_node in self.node_to_id:
                         visited_nodes.add(output_node)
                         queue.put(output_node)
-        for output_node in outputs:
+        for output_node in self.outputs:
             hypermodel = output_node.in_hypermodels[0]
             hypermodel.output_shape = output_node.shape
 
@@ -71,7 +72,7 @@ class HyperGraph(HyperBlock):
         if input_node in outputs:
             outputs_reached = True
 
-        for hypermodel in input_node.out_hypermodel:
+        for hypermodel in input_node.out_hypermodels:
             for output_node in hypermodel.outputs:
                 if output_node in in_stack_nodes:
                     raise ValueError("The network has a cycle.")

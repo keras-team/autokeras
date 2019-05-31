@@ -13,7 +13,7 @@ class HyperHead(HyperBlock, ABC):
 
 class ClassificationHead(HyperHead):
     def build(self, hp, inputs=None):
-        input_node = self._format_inputs(inputs, 1)[0]
+        input_node = _format_inputs(inputs, 1)[0]
         output_node = input_node
         output_node = flatten(output_node)
 
@@ -27,7 +27,7 @@ class ClassificationHead(HyperHead):
 
 class RegressionHead(HyperHead):
     def build(self, hp, inputs=None):
-        input_node = self._format_inputs(inputs, 1)[0]
+        input_node = _format_inputs(inputs, 1)[0]
         output_node = input_node
         output_node = flatten(output_node)
         output_node = tf.keras.layers.Dense(self.output_shape)(output_node)
