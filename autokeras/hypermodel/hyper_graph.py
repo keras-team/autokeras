@@ -22,8 +22,12 @@ class HyperGraph(HyperModel):
             node_id = self.node_to_id[input_node]
             real_nodes[node_id] = input_node.build(hp)
         for hypermodel in self.hypermodels:
-            model = hypermodel.build(hp, inputs=[self.node_to_id[input_node] for input_node in hypermodel.inputs])
-            for output_node, real_output_node in zip(hypermodel.outputs, model.outputs):
+            outputs = hypermodel.build(hp,
+                                       inputs=[real_nodes[self.node_to_id[input_node]]
+                                               for input_node in hypermodel.inputs],
+                                       sub_model=True)
+            outputs = format_inputs(outputs, hypermodel.name)
+            for output_node, real_output_node in zip(hypermodel.outputs, outputs):
                 real_nodes[self.node_to_id[output_node]] = real_output_node
         return tf.keras.Model([real_nodes[self.node_to_id[input_node]] for input_node in self.inputs],
                               [real_nodes[self.node_to_id[output_node]] for output_node in self.outputs])

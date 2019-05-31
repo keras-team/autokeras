@@ -10,7 +10,7 @@ from autokeras.layer_utils import flatten, format_inputs
 
 class HierarchicalHyperParameters(HyperParameters):
     def retrieve(self, name, type, config):
-        super().retrieve(tf.get_default_graph().get_name_scope() + '/' + name, type, config)
+        return super().retrieve(tf.get_default_graph().get_name_scope() + '/' + name, type, config)
 
 
 class HyperBlock(HyperModel, ABC):
@@ -22,8 +22,6 @@ class HyperBlock(HyperModel, ABC):
         self.inputs = None
         self.outputs = None
         self.n_output_node = 1
-        self._build = self.build
-        self.build = self._build_with_name_scope
 
     def __call__(self, inputs):
         self.inputs = format_inputs(inputs, self.name)
@@ -36,76 +34,82 @@ class HyperBlock(HyperModel, ABC):
             self.outputs.append(output_node)
         return self.outputs
 
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         raise NotImplementedError
 
-    def _build_with_name_scope(self, hp, inputs=None):
-        with tf.name_scope(self.name):
-            self._build(hp, inputs)
+    def build(self, hp, inputs=None, sub_model=False):
+        if sub_model:
+            with tf.name_scope(self.name):
+                outputs = self.build_output(hp, inputs)
+            return outputs
+        outputs = self.build_output(hp, inputs)
+        return tf.keras.Model(inputs, outputs)
 
 
 class ResNetBlock(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
 
 
 class DenseNetBlock(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
 
 
 class MlpBlock(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         input_node = format_inputs(inputs, 1)[0]
         output_node = input_node
         output_node = flatten(output_node)
 
         for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
-            output_node = tf.keras.layers.Dense(hp.Choice('units_{i}'.format(i=i)))(output_node)
+            output_node = tf.keras.layers.Dense(hp.Choice('units_{i}'.format(i=i),
+                                                          [16, 32, 64],
+                                                          default=32))(output_node)
 
-        return tf.keras.Model(input_node, output_node)
+        return output_node
 
 
 class AlexNetBlock(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
 
 
 class CnnBlock(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
 
 
 class RnnBlock(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
 
 
 class LstmBlock(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
 
 
 class SeqToSeqBlock(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
 
 
 class ImageBlock(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
 
 
 class NlpBlock(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
 
 
 class Merge(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
 
 
 class XceptionBlock(HyperBlock):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass

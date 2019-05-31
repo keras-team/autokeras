@@ -1,4 +1,4 @@
-from autokeras.hypermodel.hypermodel_network import HyperGraph
+from autokeras.hypermodel.hyper_graph import HyperGraph
 
 
 class AutoModel:

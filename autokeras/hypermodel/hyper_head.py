@@ -2,7 +2,7 @@ from abc import ABC
 
 import tensorflow as tf
 from autokeras.hypermodel.hyper_block import HyperBlock
-from autokeras.layer_utils import flatten
+from autokeras.layer_utils import flatten, format_inputs
 
 
 class HyperHead(HyperBlock, ABC):
@@ -12,8 +12,8 @@ class HyperHead(HyperBlock, ABC):
 
 
 class ClassificationHead(HyperHead):
-    def build(self, hp, inputs=None):
-        input_node = _format_inputs(inputs, 1)[0]
+    def build_output(self, hp, inputs=None):
+        input_node = format_inputs(inputs, 1)[0]
         output_node = input_node
         output_node = flatten(output_node)
 
@@ -26,20 +26,20 @@ class ClassificationHead(HyperHead):
 
 
 class RegressionHead(HyperHead):
-    def build(self, hp, inputs=None):
-        input_node = _format_inputs(inputs, 1)[0]
+    def build_output(self, hp, inputs=None):
+        input_node = format_inputs(inputs, 1)[0]
         output_node = input_node
         output_node = flatten(output_node)
-        output_node = tf.keras.layers.Dense(self.output_shape)(output_node)
+        output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
 
-        return tf.keras.Model(input_node, output_node)
+        return output_node
 
 
 class TensorRegressionHead(HyperHead):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
 
 
 class TensorClassificationHead(HyperHead):
-    def build(self, hp, inputs=None):
+    def build_output(self, hp, inputs=None):
         pass
