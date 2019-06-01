@@ -2,11 +2,15 @@ from queue import Queue
 import tensorflow as tf
 
 from autokeras import HyperModel
+from autokeras.hypermodel.hyper_head import ClassificationHead
 from autokeras.layer_utils import format_inputs
 
 
 class HyperGraph(HyperModel):
-    def __init__(self, inputs, outputs, **kwargs):
+    def __init__(self,
+                 inputs,
+                 outputs,
+                 **kwargs):
         super().__init__(**kwargs)
         self.inputs = format_inputs(inputs, self.name)
         self.outputs = format_inputs(outputs, self.name)
@@ -29,8 +33,21 @@ class HyperGraph(HyperModel):
             outputs = format_inputs(outputs, hypermodel.name)
             for output_node, real_output_node in zip(hypermodel.outputs, outputs):
                 real_nodes[self.node_to_id[output_node]] = real_output_node
-        return tf.keras.Model([real_nodes[self.node_to_id[input_node]] for input_node in self.inputs],
-                              [real_nodes[self.node_to_id[output_node]] for output_node in self.outputs])
+        model = tf.keras.Model([real_nodes[self.node_to_id[input_node]] for input_node in self.inputs],
+                               [real_nodes[self.node_to_id[output_node]] for output_node in self.outputs])
+        # Specify hyperparameters from compile(...)
+        optimizer = hp.Choice('optimizer',
+                                   [tf.keras.optimizers.Adam,
+                                    tf.keras.optimizers.Adadelta,
+                                    tf.keras.optimizers.SGD])()
+        metrics = self._infer_metrics()
+        loss = self._infer_loss()
+
+        model.compile(optimizer=optimizer,
+                      metrics=metrics,
+                      loss=loss)
+
+        return model
 
     def _build_network(self):
         self.node_to_id = {}
@@ -104,3 +121,13 @@ class HyperGraph(HyperModel):
     def _add_node(self, input_node):
         if input_node not in self.node_to_id:
             self.node_to_id[input_node] = len(self.node_to_id)
+
+    def _infer_metrics(self):
+        if any([isinstance(hypermodel, ClassificationHead) for hypermodel in self.hypermodels]):
+            return tf.keras.metrics.Accuracy
+        return tf.keras.metrics.mse
+
+    def _infer_loss(self):
+        if any([isinstance(hypermodel, ClassificationHead) for hypermodel in self.hypermodels]):
+            return tf.keras.losses.categorical_crossentropy
+        return tf.keras.losses.mean_squared_error

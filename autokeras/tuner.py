@@ -3,13 +3,14 @@ import numpy as np
 
 from autokeras.hypermodel.hypermodel import HyperModel, DefaultHyperModel
 import autokeras.hyperparameters as hp_module
+from autokeras.layer_utils import format_inputs
 
 
 class Tuner(object):
 
     def __init__(self,
                  hypermodel,
-                 objective,
+                 objective=None,
                  optimizer=None,
                  loss=None,
                  metrics=None,
@@ -39,7 +40,10 @@ class Tuner(object):
                     'a callable with signature `build(hp)` returning a model, '
                     'or an instance of `HyperModel`.')
             self.hypermodel = DefaultHyperModel(hypermodel)
-        self.objective = objective
+        if objective is not None:
+            self.objective = objective
+        elif metrics:
+            self.objective = format_inputs(metrics, 'Tuner objective')[0]
         self.optimizer = optimizer
         self.loss = loss
         self.metrics = metrics
@@ -47,26 +51,8 @@ class Tuner(object):
 
 class SequentialRandomSearch(Tuner):
 
-    def __init__(self,
-                 hypermodel,
-                 objective,
-                 optimizer=None,
-                 loss=None,
-                 metrics=None,
-                 reparameterization=None,
-                 tune_rest=True,
-                 static_values=None,
-                 allow_new_parameters=True):
-        super(SequentialRandomSearch, self).__init__(
-            hypermodel,
-            objective,
-            optimizer=optimizer,
-            loss=loss,
-            metrics=metrics,
-            tune_rest=tune_rest,
-            reparameterization=reparameterization,
-            static_values=static_values,
-            allow_new_parameters=allow_new_parameters)
+    def __init__(self, hypermodel, **kwargs):
+        super(SequentialRandomSearch, self).__init__(hypermodel, **kwargs)
 
     def search(self, trials, **kwargs):
         for _ in range(trials):
@@ -115,7 +101,7 @@ class SequentialRandomSearch(Tuner):
             model.compile()
 
         # Train model
-        # TODO: reporting presumably done with a callback
+        # TODO: reporting presumably done with a callback, record the hp and performances
         history = model.fit(**fit_kwargs)
 
     def _populate_hyperparameter_values(self, hyperparameters):
