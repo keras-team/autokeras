@@ -1,6 +1,5 @@
 # Contributor Covenant Code of Conduct
 
-
 Other languages available:
 -[Korean/한국어](CODE_OF_COUDUCT_languages/ko.md)
 
