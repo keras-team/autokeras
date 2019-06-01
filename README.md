@@ -5,6 +5,9 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/620bd322918c476aa33230ec911a4301)](https://www.codacy.com/app/jhfjhfj1/autokeras?utm_source=github.com&utm_medium=referral&utm_content=keras-team/autokeras&utm_campaign=Badge_Coverage)
 <a href="https://badge.fury.io/py/autokeras"><img src="https://badge.fury.io/py/autokeras.svg" alt="PyPI version" style="width: 125px"></a>
 
+Other languages available:
+-[Korean/한국어](README_languages/ko.md)
+
 Official Website: [autokeras.com](https://autokeras.com)
 
 Auto-Keras is an open source software library for automated machine learning (AutoML).
