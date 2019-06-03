@@ -1,8 +1,7 @@
 import numpy as np
 
-from autokeras.dataset import Dataset
 from autokeras.hypermodel.hyper_graph import HyperGraph
-from autokeras.layer_utils import format_inputs
+from autokeras.layer_utils import format_inputs, split_train_to_valid
 from autokeras.tuner import SequentialRandomSearch
 
 
@@ -42,22 +41,21 @@ class AutoModel(object):
         self.loss = loss
 
     def fit(self,
-            x_train=None,
-            y_train=None,
-            x_valid=None,
-            y_valid=None,
+            x=None,
+            y=None,
+            validation_data=None,
             tuner=None,
             trails=None,
             **kwargs):
         # Initialize HyperGraph model
-        x_train = format_inputs(x_train, 'train_x')
-        y_train = format_inputs(y_train, 'train_y')
-        for x, input_node in zip(x_train, self.inputs):
-            input_node.shape = x.shape[1:]
-        for y, output_node in zip(y_train, self.outputs):
-            if len(y.shape) == 1:
-                y = np.reshape(y, y.shape + (1,))
-            output_node.shape = y.shape[1:]
+        x = format_inputs(x, 'train_x')
+        y = format_inputs(y, 'train_y')
+        for x_input, input_node in zip(x, self.inputs):
+            input_node.shape = x_input.shape[1:]
+        for y_input, output_node in zip(y, self.outputs):
+            if len(y_input.shape) == 1:
+                y_input = np.reshape(y_input, y_input.shape + (1,))
+            output_node.shape = y_input.shape[1:]
         self.hypermodel = HyperGraph(self.inputs, self.outputs)
 
         # Initialize Tuner
@@ -67,18 +65,15 @@ class AutoModel(object):
             self.tuner = SequentialRandomSearch(self.hypermodel,
                                                 objective=self.metrics)
         # Prepare the dataset
-        dataset = Dataset(x_train=x_train,
-                          y_train=y_train,
-                          x_valid=x_valid,
-                          y_valid=y_valid)
-        if any([x_train, y_train]) and not any([x_valid, y_valid]):
-            dataset.split_train_to_valid()
+        if validation_data is None:
+            (x, y), (x_val, y_val) = split_train_to_valid(x, y)
+            validation_data = x_val, y_val
 
         # TODO: allow early stop if epochs is not specified.
         self.tuner.search(trails,
-                          x=x_train,
-                          y=y_train,
-                          validation_data=(dataset.x_valid, dataset.y_valid),
+                          x=x,
+                          y=y,
+                          validation_data=validation_data,
                           **kwargs)
 
     def predict(self, x, **kwargs):
