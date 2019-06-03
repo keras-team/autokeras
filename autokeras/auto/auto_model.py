@@ -1,4 +1,6 @@
 import numpy as np
+
+from autokeras.dataset import Dataset
 from autokeras.hypermodel.hyper_graph import HyperGraph
 from autokeras.layer_utils import format_inputs
 from autokeras.tuner import SequentialRandomSearch
@@ -40,11 +42,13 @@ class AutoModel(object):
         self.loss = loss
 
     def fit(self,
-            x_train,
+            x_train=None,
             y_train=None,
+            x_valid=None,
+            y_valid=None,
             tuner=None,
             trails=None,
-            single_model_epochs=None):
+            **kwargs):
         # Initialize HyperGraph model
         x_train = format_inputs(x_train, 'train_x')
         y_train = format_inputs(y_train, 'train_y')
@@ -62,14 +66,21 @@ class AutoModel(object):
         else:
             self.tuner = SequentialRandomSearch(self.hypermodel,
                                                 objective=self.metrics)
-        self.tuner.search(trails, single_model_epochs=single_model_epochs)
+        # Prepare the dataset
+        dataset = Dataset(x_train=x_train,
+                          y_train=y_train,
+                          x_valid=x_valid,
+                          y_valid=y_valid)
+        if any([x_train, y_train]) and not any([x_valid, y_valid]):
+            dataset.split_train_to_valid()
 
-    def predict(self, x_test, postprocessing=True):
-        """Predict the output for a given testing data.
+        # TODO: allow early stop if epochs is not specified.
+        self.tuner.search(trails,
+                          x=x_train,
+                          y=y_train,
+                          validation_data=(dataset.x_valid, dataset.y_valid),
+                          **kwargs)
 
-        Arguments:
-            x_test: The x_test should be a numpy.ndarray.
-            postprocessing: Boolean. Mainly for classification task to output
-                probabilities instead of labels when set to False.
-        """
-        pass
+    def predict(self, x, **kwargs):
+        """Predict the output for a given testing data. """
+        return self.tuner.best_model.predict(x, **kwargs)

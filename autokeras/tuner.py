@@ -1,6 +1,8 @@
 import random
 import numpy as np
+from tensorflow.python.util import nest
 
+from autokeras.constant import Constant
 from autokeras.hypermodel.hypermodel import HyperModel, DefaultHyperModel
 import autokeras.hyperparameters as hp_module
 from autokeras.layer_utils import format_inputs
@@ -49,10 +51,20 @@ class Tuner(object):
         self.metrics = metrics
 
 
+def convert_metric_to_higher_better(metric_value, metric):
+    if metric in Constant.LOWER_BETTER:
+        return 1 - metric_value
+    return metric_value
+
+
 class SequentialRandomSearch(Tuner):
 
     def __init__(self, hypermodel, **kwargs):
         super(SequentialRandomSearch, self).__init__(hypermodel, **kwargs)
+        self.best_hp = None
+        self.best_feedback = -float('inf')
+        # TODO: clear the memory of the models and save the best model in disk instead of memory.
+        self.best_model = None
 
     def search(self, trials, **kwargs):
         for _ in range(trials):
@@ -66,7 +78,11 @@ class SequentialRandomSearch(Tuner):
                 hp = hp_module.HyperParameters.from_config(
                     self.hyperparameters.get_config())
             hp = self._populate_hyperparameter_values(hp)
-            self._run(hp, fit_kwargs=kwargs)
+            model, feedback = self._run(hp, fit_kwargs=kwargs)
+            if feedback > self.best_feedback:
+                self.best_feedback = feedback
+                self.best_hp = hp
+                self.best_model = model
 
     def _run(self, hyperparameters, fit_kwargs):
         # Build a model instance.
@@ -103,6 +119,10 @@ class SequentialRandomSearch(Tuner):
         # Train model
         # TODO: reporting presumably done with a callback, record the hp and performances
         history = model.fit(**fit_kwargs)
+
+        metric_name = model.metrics_names[1]
+        feedback = history.history['val_' + metric_name][-1]
+        return model, convert_metric_to_higher_better(feedback, metric_name)
 
     def _populate_hyperparameter_values(self, hyperparameters):
         for p in hyperparameters.space:

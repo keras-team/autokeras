@@ -1,6 +1,5 @@
-import numpy as np
 from autokeras.auto.auto_model import *
-from autokeras.hypermodel.hyper_block import MlpBlock, HierarchicalHyperParameters
+from autokeras.hypermodel.hyper_block import MlpBlock
 from autokeras.hypermodel.hyper_head import RegressionHead
 from autokeras.hypermodel.hyper_node import Input
 
@@ -19,7 +18,7 @@ def test_auto_model_basic():
 
     auto_model = AutoModel(input_node, output_node)
     auto_model.compile(loss='mean_squared_error', optimizer='adam')
-    auto_model.fit(x_train, y_train, trails=2)
+    auto_model.fit(x_train, y_train, trails=2, epochs=2)
     result = auto_model.predict(x_train)
 
     assert result.shape == (100, 1)

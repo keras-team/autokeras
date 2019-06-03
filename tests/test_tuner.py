@@ -1,4 +1,4 @@
-from unittest.mock import patch
+import numpy as np
 from tensorflow import keras
 
 from autokeras.tuner import SequentialRandomSearch
@@ -35,9 +35,11 @@ class MyHyperModel(HyperModel):
         return model
 
 
-@patch('tensorflow.keras.Sequential.fit', side_effect=lambda *args, **kwargs: None)
-def test_reparameterize_and_tune_rest(_):
-    (x, y), (val_x, val_y) = keras.datasets.mnist.load_data()
+def test_reparameterize_and_tune_rest():
+    x = np.random.rand(10, 28, 28)
+    y = np.random.rand(10, 1)
+    val_x = np.random.rand(10, 28, 28)
+    val_y = np.random.rand(10, 1)
 
     hp = HyperParameters()
     hp.Choice('units_0', [29, 28], default=31)
@@ -52,13 +54,15 @@ def test_reparameterize_and_tune_rest(_):
     tuner.search(trials=2,
                  x=x,
                  y=y,
-                 epochs=5,
+                 epochs=1,
                  validation_data=(val_x, val_y))
 
 
-@patch('tensorflow.keras.Sequential.fit', side_effect=lambda *args, **kwargs: None)
-def test_reparameterize_and_not_tune_rest(_):
-    (x, y), (val_x, val_y) = keras.datasets.mnist.load_data()
+def test_reparameterize_and_not_tune_rest():
+    x = np.random.rand(10, 28, 28)
+    y = np.random.rand(10, 1)
+    val_x = np.random.rand(10, 28, 28)
+    val_y = np.random.rand(10, 1)
 
     hp = HyperParameters()
     hp.Choice('units_0', [29, 28], default=31)
@@ -73,5 +77,5 @@ def test_reparameterize_and_not_tune_rest(_):
     tuner.search(trials=2,
                  x=x,
                  y=y,
-                 epochs=5,
+                 epochs=1,
                  validation_data=(val_x, val_y))
