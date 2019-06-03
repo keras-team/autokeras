@@ -124,8 +124,8 @@ class HyperGraph(HyperModel):
 
     def _infer_metrics(self):
         if any([isinstance(hypermodel, ClassificationHead) for hypermodel in self.hypermodels]):
-            return tf.keras.metrics.Accuracy
-        return tf.keras.metrics.mae
+            return [tf.keras.metrics.Accuracy]
+        return [tf.keras.metrics.mse]
 
     def _infer_loss(self):
         if any([isinstance(hypermodel, ClassificationHead) for hypermodel in self.hypermodels]):
