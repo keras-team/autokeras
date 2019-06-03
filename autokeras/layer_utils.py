@@ -8,7 +8,7 @@ def get_global_average_pooling_layer_class(shape):
             tf.keras.layers.GlobalAveragePooling3D][len(shape) - 2]
 
 
-def format_inputs(inputs, name, num=None):
+def format_inputs(inputs, name=None, num=None):
     inputs = nest.flatten(inputs)
     if not isinstance(inputs, list):
         inputs = [inputs]

@@ -37,9 +37,9 @@ class HyperGraph(HyperModel):
                                [real_nodes[self.node_to_id[output_node]] for output_node in self.outputs])
         # Specify hyperparameters from compile(...)
         optimizer = hp.Choice('optimizer',
-                                   [tf.keras.optimizers.Adam,
-                                    tf.keras.optimizers.Adadelta,
-                                    tf.keras.optimizers.SGD])()
+                              [tf.keras.optimizers.Adam,
+                               tf.keras.optimizers.Adadelta,
+                               tf.keras.optimizers.SGD])()
         metrics = self._infer_metrics()
         loss = self._infer_loss()
 
@@ -125,7 +125,7 @@ class HyperGraph(HyperModel):
     def _infer_metrics(self):
         if any([isinstance(hypermodel, ClassificationHead) for hypermodel in self.hypermodels]):
             return tf.keras.metrics.Accuracy
-        return tf.keras.metrics.mse
+        return tf.keras.metrics.mae
 
     def _infer_loss(self):
         if any([isinstance(hypermodel, ClassificationHead) for hypermodel in self.hypermodels]):

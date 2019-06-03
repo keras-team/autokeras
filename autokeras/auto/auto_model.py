@@ -1,3 +1,4 @@
+import numpy as np
 from autokeras.hypermodel.hyper_graph import HyperGraph
 from autokeras.layer_utils import format_inputs
 from autokeras.tuner import SequentialRandomSearch
@@ -19,8 +20,8 @@ class AutoModel(object):
     def __init__(self, inputs, outputs, tuner=None):
         """
         """
-        self.inputs = inputs
-        self.outputs = outputs
+        self.inputs = format_inputs(inputs)
+        self.outputs = format_inputs(outputs)
         self.hypermodel = None
         self.tuner = tuner
         self.optimizer = None
@@ -47,10 +48,12 @@ class AutoModel(object):
         # Initialize HyperGraph model
         x_train = format_inputs(x_train, 'train_x')
         y_train = format_inputs(y_train, 'train_y')
-        for x in x_train:
-            self.inputs.shape = x.shape[1:]
-        for y in y_train:
-            self.outputs.shape = y.shape[1:]
+        for x, input_node in zip(x_train, self.inputs):
+            input_node.shape = x.shape[1:]
+        for y, output_node in zip(y_train, self.outputs):
+            if len(y.shape) == 1:
+                y = np.reshape(y, y.shape + (1,))
+            output_node.shape = y.shape[1:]
         self.hypermodel = HyperGraph(self.inputs, self.outputs)
 
         # Initialize Tuner
@@ -58,7 +61,7 @@ class AutoModel(object):
             self.tuner = tuner
         else:
             self.tuner = SequentialRandomSearch(self.hypermodel,
-                                                objective=self.metrics),
+                                                objective=self.metrics)
         self.tuner.search(trails, single_model_epochs=single_model_epochs)
 
     def predict(self, x_test, postprocessing=True):
