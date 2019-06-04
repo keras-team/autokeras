@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-class HyperNode(object):
+class Node(object):
     def __init__(self, shape=None):
         super().__init__()
         self.in_hypermodels = []
@@ -18,7 +18,15 @@ class HyperNode(object):
         raise NotImplementedError
 
 
-class ImageInput(HyperNode):
+class Input(Node):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def build(self, hp):
+        return tf.keras.Input(shape=self.shape)
+
+
+class ImageInput(Node):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -26,9 +34,10 @@ class ImageInput(HyperNode):
         pass
 
 
-class Input(HyperNode):
+class TextInput(Node):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def build(self, hp):
-        return tf.keras.Input(shape=self.shape)
+        pass
+

@@ -3,7 +3,7 @@ from abc import ABC
 import tensorflow as tf
 
 from autokeras import HyperModel
-from autokeras.hypermodel.hyper_node import HyperNode
+from autokeras.hypermodel.hyper_node import Node
 from autokeras.hyperparameters import HyperParameters
 from autokeras.layer_utils import format_inputs, get_global_average_pooling_layer_class
 
@@ -29,7 +29,7 @@ class HyperBlock(HyperModel, ABC):
             input_node.add_out_hypermodel(self)
         self.outputs = []
         for _ in range(self.num_output_node):
-            output_node = HyperNode()
+            output_node = Node()
             output_node.add_in_hypermodel(self)
             self.outputs.append(output_node)
         return self.outputs
