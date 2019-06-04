@@ -53,6 +53,8 @@ class AutoModel(HyperModel):
         # Initialize HyperGraph model
         x = format_inputs(x, 'train_x')
         y = format_inputs(y, 'train_y')
+
+        # TODO: Set the shapes only if they are not provided by the user when initiating the HyperHead or Block.
         for x_input, input_node in zip(x, self.inputs):
             input_node.shape = x_input.shape[1:]
         for y_input, output_node in zip(y, self.outputs):

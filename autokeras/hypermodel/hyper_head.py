@@ -6,12 +6,16 @@ from autokeras.layer_utils import format_inputs
 
 
 class HyperHead(HyperBlock, ABC):
-    def __init__(self, **kwargs):
+    def __init__(self, output_shape=None, **kwargs):
         super().__init__(**kwargs)
-        self.output_shape = None
+        self.output_shape = output_shape
 
 
 class ClassificationHead(HyperHead):
+    def __init__(self, num_classes, **kwargs):
+        super().__init__(**kwargs)
+        self.num_classes = num_classes
+
     def build_output(self, hp, inputs=None):
         input_node = format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
@@ -33,13 +37,3 @@ class RegressionHead(HyperHead):
         output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
 
         return output_node
-
-
-class TensorRegressionHead(HyperHead):
-    def build_output(self, hp, inputs=None):
-        pass
-
-
-class TensorClassificationHead(HyperHead):
-    def build_output(self, hp, inputs=None):
-        pass
