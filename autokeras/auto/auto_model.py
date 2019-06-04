@@ -29,9 +29,6 @@ class AutoModel(object):
         self.metrics = None
         self.loss = None
 
-    def hyperparameters(self):
-        pass
-
     def compile(self,
                 optimizer=None,
                 metrics=None,

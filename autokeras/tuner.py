@@ -1,6 +1,5 @@
 import random
 import numpy as np
-from tensorflow.python.util import nest
 
 from autokeras.constant import Constant
 from autokeras.hypermodel.hypermodel import HyperModel, DefaultHyperModel

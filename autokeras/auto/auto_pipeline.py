@@ -1,16 +1,25 @@
-class AutoPipeline:
+from autokeras import AutoModel
+
+
+class AutoPipeline(AutoModel):
     """An AutoModel plus preprocessing and postprocessing.
 
     The preprocessing can include encoding, normalization, and augmentation.
     The postprocessing can include decode the labels from one-hot encoding.
     """
 
-    def fit(self, x_train, y_train, **kwargs):
+    def fit(self,
+            x=None,
+            y=None,
+            validation_data=None,
+            tuner=None,
+            trails=None,
+            **kwargs):
         """Tuning the model.
 
         Arguments:
-            x_train: An instance of numpy.ndarray.
-            y_train: An instance of numpy.ndarray.
+            x: An instance of numpy.ndarray.
+            y: An instance of numpy.ndarray.
         """
         pass
 
