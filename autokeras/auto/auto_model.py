@@ -102,8 +102,7 @@ class GraphAutoModel(AutoModel):
         for hypermodel in self._hypermodels:
             outputs = hypermodel.build(hp,
                                        inputs=[real_nodes[self._node_to_id[input_node]]
-                                               for input_node in hypermodel.inputs],
-                                       sub_model=True)
+                                               for input_node in hypermodel.inputs])
             outputs = format_inputs(outputs, hypermodel.name)
             for output_node, real_output_node in zip(hypermodel.outputs, outputs):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
