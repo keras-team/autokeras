@@ -21,14 +21,14 @@ class HyperBlock(HyperModel, ABC):
             self.name = prefix + '_' + str(tf.keras.backend.get_uid(prefix))
         self.inputs = None
         self.outputs = None
-        self.n_output_node = 1
+        self.num_output_node = 1
 
     def __call__(self, inputs):
         self.inputs = format_inputs(inputs, self.name)
         for input_node in self.inputs:
             input_node.add_out_hypermodel(self)
         self.outputs = []
-        for _ in range(self.n_output_node):
+        for _ in range(self.num_output_node):
             output_node = HyperNode()
             output_node.add_in_hypermodel(self)
             self.outputs.append(output_node)
