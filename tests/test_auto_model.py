@@ -1,5 +1,5 @@
 from autokeras.auto.auto_model import *
-from autokeras.hypermodel.hyper_block import MlpBlock
+from autokeras.hypermodel.hyper_block import DenseBlock
 from autokeras.hypermodel.hyper_head import RegressionHead
 from autokeras.hypermodel.hyper_node import Input
 
@@ -10,7 +10,7 @@ def test_auto_model_basic():
 
     input_node = Input()
     output_node = input_node
-    output_node = MlpBlock()(output_node)
+    output_node = DenseBlock()(output_node)
     output_node = RegressionHead()(output_node)
 
     input_node.shape = (32,)

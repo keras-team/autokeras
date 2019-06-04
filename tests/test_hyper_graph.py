@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from autokeras.auto.auto_model import GraphAutoModel
-from autokeras.hypermodel.hyper_block import MlpBlock, HierarchicalHyperParameters, Merge
+from autokeras.hypermodel.hyper_block import DenseBlock, HierarchicalHyperParameters, Merge
 from autokeras.hypermodel.hyper_head import RegressionHead
 from autokeras.hypermodel.hyper_node import Input
 
@@ -13,7 +13,7 @@ def test_hyper_graph_basic():
 
     input_node = Input()
     output_node = input_node
-    output_node = MlpBlock()(output_node)
+    output_node = DenseBlock()(output_node)
     output_node = RegressionHead()(output_node)
 
     input_node.shape = (32,)
@@ -34,8 +34,8 @@ def test_merge():
 
     input_node1 = Input()
     input_node2 = Input()
-    output_node1 = MlpBlock()(input_node1)
-    output_node2 = MlpBlock()(input_node2)
+    output_node1 = DenseBlock()(input_node1)
+    output_node2 = DenseBlock()(input_node2)
     output_node = Merge()([output_node1, output_node2])
     output_node = RegressionHead()(output_node)
 
@@ -55,11 +55,11 @@ def test_merge():
 def test_input_output_disconnect():
     input_node1 = Input()
     output_node = input_node1
-    _ = MlpBlock()(output_node)
+    _ = DenseBlock()(output_node)
 
     input_node = Input()
     output_node = input_node
-    output_node = MlpBlock()(output_node)
+    output_node = DenseBlock()(output_node)
     output_node = RegressionHead()(output_node)
 
     input_node.shape = (32,)
@@ -74,8 +74,8 @@ def test_input_output_disconnect():
 def test_hyper_graph_cycle():
     input_node1 = Input()
     input_node2 = Input()
-    output_node1 = MlpBlock()(input_node1)
-    output_node2 = MlpBlock()(input_node2)
+    output_node1 = DenseBlock()(input_node1)
+    output_node2 = DenseBlock()(input_node2)
     output_node = Merge()([output_node1, output_node2])
     head = RegressionHead()
     output_node = head(output_node)
@@ -94,8 +94,8 @@ def test_hyper_graph_cycle():
 def test_input_missing():
     input_node1 = Input()
     input_node2 = Input()
-    output_node1 = MlpBlock()(input_node1)
-    output_node2 = MlpBlock()(input_node2)
+    output_node1 = DenseBlock()(input_node1)
+    output_node2 = DenseBlock()(input_node2)
     output_node = Merge()([output_node1, output_node2])
     output_node = RegressionHead()(output_node)
 
