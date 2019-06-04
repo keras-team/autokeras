@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
 
+from autokeras.auto.auto_model import GraphAutoModel
 from autokeras.hypermodel.hyper_block import MlpBlock, HierarchicalHyperParameters, Merge
 from autokeras.hypermodel.hyper_head import RegressionHead
 from autokeras.hypermodel.hyper_node import Input
-from autokeras.hypermodel.hyper_graph import *
 
 
 def test_hyper_graph_basic():
@@ -19,7 +19,7 @@ def test_hyper_graph_basic():
     input_node.shape = (32,)
     output_node[0].shape = (1,)
 
-    graph = HyperGraph(input_node, output_node)
+    graph = GraphAutoModel(input_node, output_node)
     model = graph.build(HierarchicalHyperParameters())
     model.compile(loss='mean_squared_error', optimizer='adam')
     model.fit(x_train, y_train, epochs=1, batch_size=100, verbose=False)
@@ -43,7 +43,7 @@ def test_merge():
     input_node2.shape = (32,)
     output_node[0].shape = (1,)
 
-    graph = HyperGraph([input_node1, input_node2], output_node)
+    graph = GraphAutoModel([input_node1, input_node2], output_node)
     model = graph.build(HierarchicalHyperParameters())
     model.compile(loss='mean_squared_error', optimizer='adam')
     model.fit([x_train, x_train], y_train, epochs=1, batch_size=100, verbose=False)
@@ -66,7 +66,7 @@ def test_input_output_disconnect():
     output_node[0].shape = (1,)
 
     with pytest.raises(ValueError) as info:
-        graph = HyperGraph(input_node1, output_node)
+        graph = GraphAutoModel(input_node1, output_node)
         graph.build(HierarchicalHyperParameters())
     assert str(info.value) == 'Inputs and outputs not connected.'
 
@@ -86,7 +86,7 @@ def test_hyper_graph_cycle():
     output_node[0].shape = (1,)
 
     with pytest.raises(ValueError) as info:
-        graph = HyperGraph([input_node1, input_node2], output_node)
+        graph = GraphAutoModel([input_node1, input_node2], output_node)
         graph.build(HierarchicalHyperParameters())
     assert str(info.value) == "The network has a cycle."
 
@@ -104,6 +104,6 @@ def test_input_missing():
     output_node[0].shape = (1,)
 
     with pytest.raises(ValueError) as info:
-        graph = HyperGraph(input_node1, output_node)
+        graph = GraphAutoModel(input_node1, output_node)
         graph.build(HierarchicalHyperParameters())
     assert str(info.value).startswith("A required input is missing for HyperModel")
