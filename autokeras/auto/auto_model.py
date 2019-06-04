@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from autokeras import HyperModel
+from autokeras.constant import Constant
 from autokeras.hypermodel.hyper_head import ClassificationHead
 from autokeras.layer_utils import format_inputs, split_train_to_valid
 from autokeras.tuner import SequentialRandomSearch
@@ -48,7 +49,6 @@ class AutoModel(HyperModel):
             x=None,
             y=None,
             validation_data=None,
-            trails=None,
             **kwargs):
         # Initialize HyperGraph model
         x = format_inputs(x, 'train_x')
@@ -71,7 +71,7 @@ class AutoModel(HyperModel):
             validation_data = x_val, y_val
 
         # TODO: allow early stop if epochs is not specified.
-        self.tuner.search(trails,
+        self.tuner.search(Constant.NUM_TRAILS,
                           x=x,
                           y=y,
                           validation_data=validation_data,
