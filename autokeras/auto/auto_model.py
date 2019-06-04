@@ -1,11 +1,12 @@
 import numpy as np
 
+from autokeras import HyperModel
 from autokeras.hypermodel.hyper_graph import HyperGraph
 from autokeras.layer_utils import format_inputs, split_train_to_valid
 from autokeras.tuner import SequentialRandomSearch
 
 
-class AutoModel(object):
+class AutoModel(HyperModel):
     """ A AutoModel should be an AutoML solution.
 
     It contains the HyperModels and the Tuner.
@@ -18,9 +19,10 @@ class AutoModel(object):
         tuner: An instance of Tuner.
     """
 
-    def __init__(self, inputs, outputs, tuner=None):
+    def __init__(self, inputs, outputs, tuner=None, **kwargs):
         """
         """
+        super().__init__(**kwargs)
         self.inputs = format_inputs(inputs)
         self.outputs = format_inputs(outputs)
         self.hypermodel = None
@@ -28,6 +30,9 @@ class AutoModel(object):
         self.optimizer = None
         self.metrics = None
         self.loss = None
+
+    def build(self, hp):
+        return self.hypermodel.build(hp)
 
     def compile(self,
                 optimizer=None,
@@ -41,7 +46,6 @@ class AutoModel(object):
             x=None,
             y=None,
             validation_data=None,
-            tuner=None,
             trails=None,
             **kwargs):
         # Initialize HyperGraph model
@@ -56,11 +60,8 @@ class AutoModel(object):
         self.hypermodel = HyperGraph(self.inputs, self.outputs)
 
         # Initialize Tuner
-        if tuner is not None:
-            self.tuner = tuner
-        else:
-            self.tuner = SequentialRandomSearch(self.hypermodel,
-                                                objective=self.metrics)
+        self.tuner = SequentialRandomSearch(self.hypermodel,
+                                            objective=self.metrics)
         # Prepare the dataset
         if validation_data is None:
             (x, y), (x_val, y_val) = split_train_to_valid(x, y)
