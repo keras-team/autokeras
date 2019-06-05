@@ -2,6 +2,7 @@ from queue import Queue
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.util import nest
 
 from autokeras.hypermodel import hypermodel, hyper_head
 from autokeras import layer_utils
@@ -102,8 +103,12 @@ class GraphAutoModel(AutoModel):
                               [tf.keras.optimizers.Adam,
                                tf.keras.optimizers.Adadelta,
                                tf.keras.optimizers.SGD])()
-        metrics = self._infer_metrics()
-        loss = self._infer_loss()
+        metrics = sum([output_node.metrics
+                       for output_node in self.outputs
+                       if isinstance(output_node, hyper_head.HyperHead)])
+        loss = nest.flatten([output_node.loss
+                             for output_node in self.outputs
+                             if isinstance(output_node, hyper_head.HyperHead)])
 
         model.compile(optimizer=optimizer,
                       metrics=metrics,
@@ -183,13 +188,3 @@ class GraphAutoModel(AutoModel):
     def _add_node(self, input_node):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
-
-    def _infer_metrics(self):
-        if any([isinstance(hypermodel, hyper_head.ClassificationHead) for hypermodel in self._hypermodels]):
-            return [tf.keras.metrics.Accuracy]
-        return [tf.keras.metrics.mse]
-
-    def _infer_loss(self):
-        if any([isinstance(hypermodel, hyper_head.ClassificationHead) for hypermodel in self._hypermodels]):
-            return tf.keras.losses.categorical_crossentropy
-        return tf.keras.losses.mean_squared_error
