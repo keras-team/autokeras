@@ -22,13 +22,13 @@ class AutoModel(hypermodel.HyperModel):
         tuner: An instance of Tuner.
     """
 
-    def __init__(self, inputs, outputs, tuner=None, **kwargs):
+    def __init__(self, inputs, outputs, **kwargs):
         """
         """
         super().__init__(**kwargs)
         self.inputs = layer_utils.format_inputs(inputs)
         self.outputs = layer_utils.format_inputs(outputs)
-        self.tuner = tuner
+        self.tuner = tuner.SequentialRandomSearch(self, objective=self.metrics)
         self.optimizer = None
         self.metrics = None
         self.loss = None
@@ -60,9 +60,6 @@ class AutoModel(hypermodel.HyperModel):
             if len(y_input.shape) == 1:
                 y_input = np.reshape(y_input, y_input.shape + (1,))
             output_node.shape = y_input.shape[1:]
-
-        # Initialize Tuner
-        self.tuner = tuner.SequentialRandomSearch(self, objective=self.metrics)
 
         # Prepare the dataset
         if validation_data is None:
