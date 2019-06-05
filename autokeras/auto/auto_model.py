@@ -22,12 +22,12 @@ class AutoModel(hypermodel.HyperModel):
         tuner: An instance of Tuner.
     """
 
-    def __init__(self, inputs, outputs, **kwargs):
+    def __init__(self, **kwargs):
         """
         """
         super().__init__(**kwargs)
-        self.inputs = layer_utils.format_inputs(inputs)
-        self.outputs = layer_utils.format_inputs(outputs)
+        self.inputs = []
+        self.outputs = []
         self.tuner = None
         self.optimizer = None
         self.metrics = None
@@ -78,7 +78,9 @@ class GraphAutoModel(AutoModel):
                  inputs,
                  outputs,
                  **kwargs):
-        super().__init__(inputs, outputs, **kwargs)
+        super().__init__(**kwargs)
+        self.inputs = layer_utils.format_inputs(inputs)
+        self.outputs = layer_utils.format_inputs(outputs)
         self._node_to_id = {}
         self._nodes = []
         self._hypermodels = []
