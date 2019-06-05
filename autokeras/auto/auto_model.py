@@ -35,14 +35,6 @@ class AutoModel(hypermodel.HyperModel):
     def build(self, hp):
         raise NotImplementedError
 
-    def compile(self,
-                optimizer=None,
-                metrics=None,
-                loss=None):
-        self.optimizer = optimizer
-        self.metrics = metrics
-        self.loss = loss
-
     def fit(self,
             x=None,
             y=None,
