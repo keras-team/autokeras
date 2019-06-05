@@ -1,7 +1,7 @@
-from autokeras import AutoModel
+from autokeras.auto import auto_model
 
 
-class AutoPipeline(AutoModel):
+class AutoPipeline(auto_model.AutoModel):
     """An AutoModel plus preprocessing and postprocessing.
 
     The preprocessing can include encoding, normalization, and augmentation.
@@ -36,3 +36,6 @@ class AutoPipeline(AutoModel):
             classification.
         """
         pass
+
+    def build(self, hp):
+        raise NotImplementedError

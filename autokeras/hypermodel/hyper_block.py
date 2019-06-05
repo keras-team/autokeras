@@ -1,19 +1,16 @@
-from abc import ABC
-
 import tensorflow as tf
 
-from autokeras import HyperModel
-from autokeras.hypermodel.hyper_node import Node
-from autokeras.hyperparameters import HyperParameters
-from autokeras.layer_utils import format_inputs, get_global_average_pooling_layer_class
+from autokeras.hypermodel import hyper_node, hypermodel
+from autokeras import hyperparameters
+from autokeras import layer_utils
 
 
-class HierarchicalHyperParameters(HyperParameters):
+class HierarchicalHyperParameters(hyperparameters.HyperParameters):
     def retrieve(self, name, type, config):
         return super().retrieve(tf.get_default_graph().get_name_scope() + '/' + name, type, config)
 
 
-class HyperBlock(HyperModel, ABC):
+class HyperBlock(hypermodel.HyperModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not self.name:
@@ -22,14 +19,16 @@ class HyperBlock(HyperModel, ABC):
         self.inputs = None
         self.outputs = None
         self._num_output_node = 1
+        self._build = self.build
+        self.build = self.build_wrapper
 
     def __call__(self, inputs):
-        self.inputs = format_inputs(inputs, self.name)
+        self.inputs = layer_utils.format_inputs(inputs, self.name)
         for input_node in self.inputs:
             input_node.add_out_hypermodel(self)
         self.outputs = []
         for _ in range(self._num_output_node):
-            output_node = Node()
+            output_node = hyper_node.Node()
             output_node.add_in_hypermodel(self)
             self.outputs.append(output_node)
         return self.outputs
@@ -46,7 +45,7 @@ class ResNetBlock(HyperBlock):
 class DenseBlock(HyperBlock):
     def build(self, hp, inputs=None):
         with tf.name_scope(self.name):
-            input_node = format_inputs(inputs, self.name, num=1)[0]
+            input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
             output_node = input_node
             output_node = Flatten().build(hp, output_node)
 
@@ -78,7 +77,7 @@ def shape_compatible(shape1, shape2):
 class Merge(HyperBlock):
     def build(self, hp, inputs=None):
         with tf.name_scope(self.name):
-            inputs = format_inputs(inputs, self.name)
+            inputs = layer_utils.format_inputs(inputs, self.name)
             if len(inputs) == 1:
                 return inputs
 
@@ -105,7 +104,7 @@ class XceptionBlock(HyperBlock):
 class Flatten(HyperBlock):
     def build(self, hp, inputs=None):
         with tf.name_scope(self.name):
-            input_node = format_inputs(inputs, self.name, num=1)[0]
+            input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
             output_node = input_node
             if len(output_node.shape) > 5:
                 raise ValueError("Expect the input tensor to have less or equal to 5 dimensions, "
@@ -113,6 +112,6 @@ class Flatten(HyperBlock):
             # Flatten the input tensor
             # TODO: Add hp.Choice to use Flatten()
             if len(output_node.shape) > 2:
-                global_average_pooling = get_global_average_pooling_layer_class(output_node.shape)
+                global_average_pooling = layer_utils.get_global_average_pooling_layer_class(output_node.shape)
                 output_node = global_average_pooling()(output_node)
             return output_node

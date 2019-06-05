@@ -1,8 +1,7 @@
-import numpy as np
 import pytest
 
-from autokeras.auto.auto_model import GraphAutoModel
-from autokeras.constant import Constant
+from autokeras.auto.auto_model import *
+from autokeras import constant
 from autokeras.hypermodel.hyper_block import DenseBlock, HierarchicalHyperParameters, Merge
 from autokeras.hypermodel.hyper_head import RegressionHead
 from autokeras.hypermodel.hyper_node import Input
@@ -124,7 +123,7 @@ def test_auto_model_basic():
 
     auto_model = GraphAutoModel(input_node, output_node)
     auto_model.compile(loss='mean_squared_error', optimizer='adam')
-    Constant.NUM_TRAILS = 2
+    constant.Constant.NUM_TRAILS = 2
     auto_model.fit(x_train, y_train, epochs=2)
     result = auto_model.predict(x_train)
 

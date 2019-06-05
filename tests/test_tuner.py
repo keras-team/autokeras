@@ -1,14 +1,13 @@
-import numpy as np
 from tensorflow import keras
 
-from autokeras.tuner import SequentialRandomSearch
+from autokeras.tuner import *
 from autokeras.hypermodel import HyperModel
 from autokeras.hyperparameters import HyperParameters
 
 
 class MyHyperModel(HyperModel):
     def __init__(self, tune, **kwargs):
-        super().__init__()
+        super().__init__(**kwargs)
         self.count = 0
         self.tune = tune
 

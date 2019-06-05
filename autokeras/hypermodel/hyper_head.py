@@ -1,25 +1,28 @@
-from abc import ABC
-
 import tensorflow as tf
-from autokeras.hypermodel.hyper_block import HyperBlock, Flatten
-from autokeras.layer_utils import format_inputs
+from autokeras.hypermodel import hyper_block
+from autokeras import layer_utils
 
 
-class HyperHead(HyperBlock, ABC):
+class HyperHead(hyper_block.HyperBlock):
+
     def __init__(self, output_shape=None, **kwargs):
         super().__init__(**kwargs)
         self.output_shape = output_shape
 
+    def build(self, hp, inputs=None):
+        raise NotImplementedError
+
 
 class ClassificationHead(HyperHead):
+
     def __init__(self, num_classes, **kwargs):
         super().__init__(**kwargs)
         self.num_classes = num_classes
 
     def build(self, hp, inputs=None):
-        input_node = format_inputs(inputs, self.name, num=1)[0]
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
-        output_node = Flatten().build(hp, output_node)
+        output_node = hyper_block.Flatten().build(hp, output_node)
 
         output_node = tf.keras.layers.Dense(self.output_shape)(output_node)
         output_node = tf.keras.layers.Softmax()(output_node)
@@ -30,10 +33,11 @@ class ClassificationHead(HyperHead):
 
 
 class RegressionHead(HyperHead):
+
     def build(self, hp, inputs=None):
-        input_node = format_inputs(inputs, self.name, num=1)[0]
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
-        output_node = Flatten().build(hp, output_node)
+        output_node = hyper_block.Flatten().build(hp, output_node)
         output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
 
         return output_node

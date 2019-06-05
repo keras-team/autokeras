@@ -3,14 +3,13 @@ from queue import Queue
 import numpy as np
 import tensorflow as tf
 
-from autokeras import HyperModel
-from autokeras.constant import Constant
-from autokeras.hypermodel.hyper_head import ClassificationHead
-from autokeras.layer_utils import format_inputs, split_train_to_valid
-from autokeras.tuner import SequentialRandomSearch
+from autokeras.hypermodel import hypermodel, hyper_head
+from autokeras import constant
+from autokeras import layer_utils
+from autokeras import tuner
 
 
-class AutoModel(HyperModel):
+class AutoModel(hypermodel.HyperModel):
     """ A AutoModel should be an AutoML solution.
 
     It contains the HyperModels and the Tuner.
@@ -27,8 +26,8 @@ class AutoModel(HyperModel):
         """
         """
         super().__init__(**kwargs)
-        self.inputs = format_inputs(inputs)
-        self.outputs = format_inputs(outputs)
+        self.inputs = layer_utils.format_inputs(inputs)
+        self.outputs = layer_utils.format_inputs(outputs)
         self.tuner = tuner
         self.optimizer = None
         self.metrics = None
@@ -51,8 +50,8 @@ class AutoModel(HyperModel):
             validation_data=None,
             **kwargs):
         # Initialize HyperGraph model
-        x = format_inputs(x, 'train_x')
-        y = format_inputs(y, 'train_y')
+        x = layer_utils.format_inputs(x, 'train_x')
+        y = layer_utils.format_inputs(y, 'train_y')
 
         # TODO: Set the shapes only if they are not provided by the user when initiating the HyperHead or Block.
         for x_input, input_node in zip(x, self.inputs):
@@ -63,15 +62,15 @@ class AutoModel(HyperModel):
             output_node.shape = y_input.shape[1:]
 
         # Initialize Tuner
-        self.tuner = SequentialRandomSearch(self, objective=self.metrics)
+        self.tuner = tuner.SequentialRandomSearch(self, objective=self.metrics)
 
         # Prepare the dataset
         if validation_data is None:
-            (x, y), (x_val, y_val) = split_train_to_valid(x, y)
+            (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(x, y)
             validation_data = x_val, y_val
 
         # TODO: allow early stop if epochs is not specified.
-        self.tuner.search(Constant.NUM_TRAILS,
+        self.tuner.search(constant.Constant.NUM_TRAILS,
                           x=x,
                           y=y,
                           validation_data=validation_data,
@@ -103,7 +102,7 @@ class GraphAutoModel(AutoModel):
             outputs = hypermodel.build(hp,
                                        inputs=[real_nodes[self._node_to_id[input_node]]
                                                for input_node in hypermodel.inputs])
-            outputs = format_inputs(outputs, hypermodel.name)
+            outputs = layer_utils.format_inputs(outputs, hypermodel.name)
             for output_node, real_output_node in zip(hypermodel.outputs, outputs):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
         model = tf.keras.Model([real_nodes[self._node_to_id[input_node]] for input_node in self.inputs],
@@ -196,11 +195,11 @@ class GraphAutoModel(AutoModel):
             self._node_to_id[input_node] = len(self._node_to_id)
 
     def _infer_metrics(self):
-        if any([isinstance(hypermodel, ClassificationHead) for hypermodel in self._hypermodels]):
+        if any([isinstance(hypermodel, hyper_head.ClassificationHead) for hypermodel in self._hypermodels]):
             return [tf.keras.metrics.Accuracy]
         return [tf.keras.metrics.mse]
 
     def _infer_loss(self):
-        if any([isinstance(hypermodel, ClassificationHead) for hypermodel in self._hypermodels]):
+        if any([isinstance(hypermodel, hyper_head.ClassificationHead) for hypermodel in self._hypermodels]):
             return tf.keras.losses.categorical_crossentropy
         return tf.keras.losses.mean_squared_error
