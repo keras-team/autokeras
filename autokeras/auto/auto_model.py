@@ -28,10 +28,7 @@ class AutoModel(hypermodel.HyperModel):
         super().__init__(**kwargs)
         self.inputs = []
         self.outputs = []
-        self.tuner = None
-        self.optimizer = None
-        self.metrics = None
-        self.loss = None
+        self.tuner = tuner.SequentialRandomSearch(self, objective=self.get_metrics())
 
     def build(self, hp):
         raise NotImplementedError
@@ -71,6 +68,19 @@ class AutoModel(hypermodel.HyperModel):
         """Predict the output for a given testing data. """
         return self.tuner.best_model.predict(x, **kwargs)
 
+    def get_loss(self):
+        loss = nest.flatten([output_node.in_hypermodels[0].loss
+                             for output_node in self.outputs
+                             if isinstance(output_node.in_hypermodels[0], hyper_head.HyperHead)])
+        return loss
+
+    def get_metrics(self):
+        metrics = []
+        for metrics_list in [output_node.in_hypermodels[0].metrics for output_node in self.outputs
+                             if isinstance(output_node.in_hypermodels[0], hyper_head.HyperHead)]:
+            metrics += metrics_list
+        return metrics
+
 
 class GraphAutoModel(AutoModel):
 
@@ -86,15 +96,6 @@ class GraphAutoModel(AutoModel):
         self._hypermodels = []
         self._hypermodel_to_id = {}
         self._build_network()
-        self.metrics = []
-        for metrics in [output_node.in_hypermodels[0].metrics for output_node in self.outputs
-                        if isinstance(output_node.in_hypermodels[0], hyper_head.HyperHead)]:
-            self.metrics += metrics
-
-        self.loss = nest.flatten([output_node.in_hypermodels[0].loss
-                                  for output_node in self.outputs
-                                  if isinstance(output_node.in_hypermodels[0], hyper_head.HyperHead)])
-        self.tuner = tuner.SequentialRandomSearch(self, objective=self.metrics)
 
     def build(self, hp):
         real_nodes = {}
@@ -117,8 +118,8 @@ class GraphAutoModel(AutoModel):
                                tf.keras.optimizers.SGD])()
 
         model.compile(optimizer=optimizer,
-                      metrics=self.metrics,
-                      loss=self.loss)
+                      metrics=self.get_metrics(),
+                      loss=self.get_loss())
 
         return model
 
