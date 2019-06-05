@@ -88,7 +88,7 @@ def test_hyper_graph_cycle():
     with pytest.raises(ValueError) as info:
         graph = GraphAutoModel([input_node1, input_node2], output_node)
         graph.build(HierarchicalHyperParameters())
-    assert str(info.value) == "The network has a cycle."
+    assert str(info.value) == 'The network has a cycle.'
 
 
 def test_input_missing():
@@ -106,7 +106,7 @@ def test_input_missing():
     with pytest.raises(ValueError) as info:
         graph = GraphAutoModel(input_node1, output_node)
         graph.build(HierarchicalHyperParameters())
-    assert str(info.value).startswith("A required input is missing for HyperModel")
+    assert str(info.value).startswith('A required input is missing for HyperModel')
 
 
 def test_auto_model_basic():

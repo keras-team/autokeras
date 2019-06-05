@@ -4,7 +4,6 @@ import numpy as np
 import tensorflow as tf
 
 from autokeras.hypermodel import hypermodel, hyper_head
-from autokeras import constant
 from autokeras import layer_utils
 from autokeras import tuner
 
@@ -80,6 +79,7 @@ class AutoModel(hypermodel.HyperModel):
 
 
 class GraphAutoModel(AutoModel):
+
     def __init__(self,
                  inputs,
                  outputs,
@@ -129,7 +129,7 @@ class GraphAutoModel(AutoModel):
 
         for node in (self.inputs + self.outputs):
             if node not in self._node_to_id:
-                raise ValueError("Inputs and outputs not connected.")
+                raise ValueError('Inputs and outputs not connected.')
 
         # Find the hypermodels and sort the hypermodels in topological order.
         self._hypermodels = []
@@ -166,7 +166,7 @@ class GraphAutoModel(AutoModel):
         for hypermodel in input_node.out_hypermodels:
             for output_node in hypermodel.outputs:
                 if output_node in in_stack_nodes:
-                    raise ValueError("The network has a cycle.")
+                    raise ValueError('The network has a cycle.')
                 if output_node not in visited_nodes:
                     self._search_network(output_node, outputs, in_stack_nodes, visited_nodes)
                 if output_node in self._node_to_id.keys():
@@ -186,7 +186,7 @@ class GraphAutoModel(AutoModel):
             self._add_node(output_node)
         for input_node in hypermodel.inputs:
             if input_node not in self._node_to_id:
-                raise ValueError("A required input is missing for HyperModel {name}. ".format(name=hypermodel.name))
+                raise ValueError('A required input is missing for HyperModel {name}. '.format(name=hypermodel.name))
 
     def _add_node(self, input_node):
         if input_node not in self._node_to_id:

@@ -19,8 +19,6 @@ class HyperBlock(hypermodel.HyperModel):
         self.inputs = None
         self.outputs = None
         self._num_output_node = 1
-        self._build = self.build
-        self.build = self.build_wrapper
 
     def __call__(self, inputs):
         self.inputs = layer_utils.format_inputs(inputs, self.name)
