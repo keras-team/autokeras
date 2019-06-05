@@ -9,19 +9,14 @@ class AutoPipeline(auto_model.AutoModel):
     """
 
     def fit(self, **kwargs):
-        """Tuning the model.
-
-        Arguments:
-            x: An instance of numpy.ndarray.
-            y: An instance of numpy.ndarray.
-        """
+        """Tuning the model. """
         pass
 
     def predict(self, x_test, postprocessing=True):
         """Predict the output for a given testing data.
 
         Arguments:
-            x_test: The x_test should be a numpy.ndarray.
+            x_test: An instance compatible for input to a Keras Model.
             postprocessing: Boolean. Mainly for classification task to output
                 probabilities instead of labels when set to False.
 
