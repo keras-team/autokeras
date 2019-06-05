@@ -48,6 +48,7 @@ class AutoModel(hypermodel.HyperModel):
             x=None,
             y=None,
             validation_data=None,
+            num_trials=None,
             **kwargs):
         # Initialize HyperGraph model
         x = layer_utils.format_inputs(x, 'train_x')
@@ -67,7 +68,7 @@ class AutoModel(hypermodel.HyperModel):
             validation_data = x_val, y_val
 
         # TODO: allow early stop if epochs is not specified.
-        self.tuner.search(constant.Constant.NUM_TRAILS,
+        self.tuner.search(num_trials=num_trials,
                           x=x,
                           y=y,
                           validation_data=validation_data,

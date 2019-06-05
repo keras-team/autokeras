@@ -4,7 +4,7 @@ import numpy as np
 from autokeras.constant import Constant
 from autokeras.hypermodel import hypermodel as hm_module
 import autokeras.hyperparameters as hp_module
-from autokeras import layer_utils
+from autokeras import layer_utils, constant
 
 
 class Tuner(object):
@@ -65,8 +65,10 @@ class SequentialRandomSearch(Tuner):
         # TODO: clear the memory of the models and save the best model in disk instead of memory.
         self.best_model = None
 
-    def search(self, trials, **kwargs):
-        for _ in range(trials):
+    def search(self, num_trials=None, **kwargs):
+        if num_trials is None:
+            num_trials = constant.Constant.NUM_TRAILS
+        for _ in range(num_trials):
             if self.tune_rest:
                 # In this case, append to the space,
                 # so pass the internal hp object to `build`

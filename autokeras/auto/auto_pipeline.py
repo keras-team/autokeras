@@ -8,13 +8,7 @@ class AutoPipeline(auto_model.AutoModel):
     The postprocessing can include decode the labels from one-hot encoding.
     """
 
-    def fit(self,
-            x=None,
-            y=None,
-            validation_data=None,
-            tuner=None,
-            trails=None,
-            **kwargs):
+    def fit(self, **kwargs):
         """Tuning the model.
 
         Arguments:
