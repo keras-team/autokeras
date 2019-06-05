@@ -2,7 +2,7 @@ import tensorflow as tf
 import sklearn
 from tensorflow.python.util import nest
 
-from autokeras import constant
+from autokeras import const
 
 
 def get_global_average_pooling_layer_class(shape):
@@ -28,12 +28,12 @@ def format_inputs(inputs, name=None, num=None):
 
 def split_train_to_valid(x, y):
     # Generate split index
-    validation_set_size = int(len(x[0]) * constant.Constant.VALIDATION_SET_SIZE)
+    validation_set_size = int(len(x[0]) * const.Constant.VALIDATION_SET_SIZE)
     validation_set_size = min(validation_set_size, 500)
     validation_set_size = max(validation_set_size, 1)
     train_index, valid_index = sklearn.model_selection.train_test_split(range(len(x[0])),
                                                                         test_size=validation_set_size,
-                                                                        random_state=constant.Constant.SEED)
+                                                                        random_state=const.Constant.SEED)
 
     # Split the data
     x_train = None

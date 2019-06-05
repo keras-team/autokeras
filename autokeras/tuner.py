@@ -1,10 +1,10 @@
 import random
 import numpy as np
 
-from autokeras.constant import Constant
+from autokeras.const import Constant
 from autokeras.hypermodel import hypermodel as hm_module
 import autokeras.hyperparameters as hp_module
-from autokeras import layer_utils, constant
+from autokeras import layer_utils, const
 
 
 class Tuner(object):
@@ -67,7 +67,7 @@ class SequentialRandomSearch(Tuner):
 
     def search(self, num_trials=None, **kwargs):
         if num_trials is None:
-            num_trials = constant.Constant.NUM_TRAILS
+            num_trials = const.Constant.NUM_TRAILS
         for _ in range(num_trials):
             if self.tune_rest:
                 # In this case, append to the space,

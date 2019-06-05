@@ -28,7 +28,7 @@ class AutoModel(hypermodel.HyperModel):
         super().__init__(**kwargs)
         self.inputs = layer_utils.format_inputs(inputs)
         self.outputs = layer_utils.format_inputs(outputs)
-        self.tuner = tuner.SequentialRandomSearch(self, objective=self.metrics)
+        self.tuner = None
         self.optimizer = None
         self.metrics = None
         self.loss = None
@@ -53,6 +53,7 @@ class AutoModel(hypermodel.HyperModel):
             if len(y_input.shape) == 1:
                 y_input = np.reshape(y_input, y_input.shape + (1,))
             output_node.shape = y_input.shape[1:]
+            output_node.in_hypermodels[0].output_shape = output_node.shape
 
         # Prepare the dataset
         if validation_data is None:
@@ -83,6 +84,15 @@ class GraphAutoModel(AutoModel):
         self._hypermodels = []
         self._hypermodel_to_id = {}
         self._build_network()
+        self.metrics = []
+        for metrics in [output_node.in_hypermodels[0].metrics for output_node in self.outputs
+                        if isinstance(output_node.in_hypermodels[0], hyper_head.HyperHead)]:
+            self.metrics += metrics
+
+        self.loss = nest.flatten([output_node.in_hypermodels[0].loss
+                                  for output_node in self.outputs
+                                  if isinstance(output_node.in_hypermodels[0], hyper_head.HyperHead)])
+        self.tuner = tuner.SequentialRandomSearch(self, objective=self.metrics)
 
     def build(self, hp):
         real_nodes = {}
@@ -103,16 +113,10 @@ class GraphAutoModel(AutoModel):
                               [tf.keras.optimizers.Adam,
                                tf.keras.optimizers.Adadelta,
                                tf.keras.optimizers.SGD])()
-        metrics = sum([output_node.metrics
-                       for output_node in self.outputs
-                       if isinstance(output_node, hyper_head.HyperHead)])
-        loss = nest.flatten([output_node.loss
-                             for output_node in self.outputs
-                             if isinstance(output_node, hyper_head.HyperHead)])
 
         model.compile(optimizer=optimizer,
-                      metrics=metrics,
-                      loss=loss)
+                      metrics=self.metrics,
+                      loss=self.loss)
 
         return model
 

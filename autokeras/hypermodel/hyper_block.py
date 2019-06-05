@@ -113,3 +113,13 @@ class Flatten(HyperBlock):
                 global_average_pooling = layer_utils.get_global_average_pooling_layer_class(output_node.shape)
                 output_node = global_average_pooling()(output_node)
             return output_node
+
+
+class Reshape(HyperBlock):
+    def __init__(self, output_shape, **kwargs):
+        super().__init__(**kwargs)
+        self.output_shape = output_shape
+
+    def build(self, hp, inputs=None):
+        # TODO: Implement reshape layer
+        return inputs
