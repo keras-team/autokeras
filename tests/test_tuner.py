@@ -41,13 +41,13 @@ def test_reparameterize_and_tune_rest():
     val_y = np.random.rand(10, 1)
 
     hp = HyperParameters()
-    hp.Choice('units_0', [29, 28], default=31)
+    hp.Range('hm/units_0', 28, 29, default=31)
 
     tuner = SequentialRandomSearch(
-        MyHyperModel(True),
+        MyHyperModel(True, name='hm'),
         reparameterization=hp,
         tune_rest=True,
-        static_values={'learning_rate': 3},
+        static_values={'hm/learning_rate': 3},
         objective='val_accuracy')
 
     tuner.search(num_trials=2,
@@ -64,13 +64,13 @@ def test_reparameterize_and_not_tune_rest():
     val_y = np.random.rand(10, 1)
 
     hp = HyperParameters()
-    hp.Choice('units_0', [29, 28], default=31)
+    hp.Range('hm/units_0', 28, 29, default=31)
 
     tuner = SequentialRandomSearch(
-        MyHyperModel(False),
+        MyHyperModel(False, name='hm'),
         reparameterization=hp,
         tune_rest=False,
-        static_values={'learning_rate': 3},
+        static_values={'hm/learning_rate': 3},
         objective='val_accuracy')
 
     tuner.search(num_trials=2,

@@ -46,3 +46,9 @@ def split_train_to_valid(x, y):
         y_train, y_val = temp_y_train_input[train_index], temp_y_train_input[valid_index]
 
     return (x_train, y_train), (x_val, y_val)
+
+
+def get_name_scope():
+    with tf.name_scope('a') as scope:
+        name_scope = scope[:-2]
+    return name_scope
