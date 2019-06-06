@@ -5,11 +5,6 @@ from autokeras import hyperparameters
 from autokeras import layer_utils
 
 
-class HierarchicalHyperParameters(hyperparameters.HyperParameters):
-    def retrieve(self, name, type, config):
-        return super().retrieve(tf.get_default_graph().get_name_scope() + '/' + name, type, config)
-
-
 class HyperBlock(hypermodel.HyperModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
