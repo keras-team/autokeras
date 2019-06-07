@@ -12,11 +12,12 @@ class AutoPipeline(auto_model.AutoModel):
         """Tuning the model. """
         pass
 
-    def predict(self, x_test, postprocessing=True):
+    def predict(self, x, postprocessing=True):
         """Predict the output for a given testing data.
 
         Arguments:
-            x_test: An instance compatible for input to a Keras Model.
+            x: Data in a format that can be passed to a Keras model:
+                either a Numpy array, a Python generator of arrays, or a TensorFlow Dataset..
             postprocessing: Boolean. Mainly for classification task to output
                 probabilities instead of labels when set to False.
 

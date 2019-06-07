@@ -65,10 +65,10 @@ class SequentialRandomSearch(Tuner):
         # TODO: clear the memory of the models and save the best model in disk instead of memory.
         self.best_model = None
 
-    def search(self, num_trials=None, **kwargs):
-        if num_trials is None:
-            num_trials = const.Constant.NUM_TRAILS
-        for _ in range(num_trials):
+    def search(self, trials=None, **kwargs):
+        if trials is None:
+            trials = const.Constant.NUM_TRAILS
+        for _ in range(trials):
             if self.tune_rest:
                 # In this case, append to the space,
                 # so pass the internal hp object to `build`
