@@ -1,11 +1,10 @@
 import random
 import numpy as np
-from tensorflow.python.util import nest
 
-from autokeras.constant import Constant
-from autokeras.hypermodel.hypermodel import HyperModel, DefaultHyperModel
+from autokeras.const import Constant
+from autokeras.hypermodel import hypermodel as hm_module
 import autokeras.hyperparameters as hp_module
-from autokeras.layer_utils import format_inputs
+from autokeras import layer_utils, const
 
 
 class Tuner(object):
@@ -33,7 +32,7 @@ class Tuner(object):
                 print(name, value)
                 self.hyperparameters.Choice(name, [value], default=value)
 
-        if isinstance(hypermodel, HyperModel):
+        if isinstance(hypermodel, hm_module.HyperModel):
             self.hypermodel = hypermodel
         else:
             if not callable(hypermodel):
@@ -41,11 +40,11 @@ class Tuner(object):
                     'The `hypermodel` argument should be either '
                     'a callable with signature `build(hp)` returning a model, '
                     'or an instance of `HyperModel`.')
-            self.hypermodel = DefaultHyperModel(hypermodel)
+            self.hypermodel = hm_module.DefaultHyperModel(hypermodel)
         if objective is not None:
             self.objective = objective
         elif metrics:
-            self.objective = format_inputs(metrics, 'Tuner objective')[0]
+            self.objective = layer_utils.format_inputs(metrics, 'Tuner objective')[0]
         self.optimizer = optimizer
         self.loss = loss
         self.metrics = metrics
@@ -66,7 +65,9 @@ class SequentialRandomSearch(Tuner):
         # TODO: clear the memory of the models and save the best model in disk instead of memory.
         self.best_model = None
 
-    def search(self, trials, **kwargs):
+    def search(self, trials=None, **kwargs):
+        if trials is None:
+            trials = const.Constant.NUM_TRAILS
         for _ in range(trials):
             if self.tune_rest:
                 # In this case, append to the space,
@@ -129,7 +130,8 @@ class SequentialRandomSearch(Tuner):
             hyperparameters.values[p.name] = self._sample_parameter(p)
         return hyperparameters
 
-    def _sample_parameter(self, parameter):
+    @staticmethod
+    def _sample_parameter(parameter):
         if isinstance(parameter, hp_module.Choice):
             return random.choice(parameter.values)
         elif isinstance(parameter, hp_module.Range):

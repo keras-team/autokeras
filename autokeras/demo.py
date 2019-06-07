@@ -1,6 +1,4 @@
 import tensorflow as tf
-from keras.callbacks import LearningRateScheduler, EarlyStopping
-from keras.datasets import mnist
 from tensorflow import keras
 
 import numpy as np
@@ -163,7 +161,7 @@ tuner.search(trials=2,
 num_classes = 10
 shape = (28, 28, 1)
 # Simple
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 auto_pipeline = ak.ImageClassifier(shape, num_classes)
 
 # Loss, optimizer are picked automatically
@@ -202,4 +200,5 @@ automodel.compile(optimizer=tf.keras.optimizers.Adam(learning_rate),
 
 automodel.fit(ak.image_augment(x_train, y_train), time_limit=12 * 60 * 60,
               epochs=200,
-              callbacks=[EarlyStopping(), LearningRateScheduler(1)])
+              callbacks=[tf.keras.callbacks.EarlyStopping(),
+                         tf.keras.callbacks.LearningRateScheduler(1)])

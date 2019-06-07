@@ -1,4 +1,6 @@
-from tensorflow import keras
+import tensorflow as tf
+
+from autokeras import layer_utils
 
 
 class HyperParameter(object):
@@ -62,6 +64,9 @@ class HyperParameters(object):
         self.values = {}
 
     def retrieve(self, name, type, config):
+        name_scope = layer_utils.get_name_scope()
+        if name_scope:
+            name = name_scope + name
         if name in self.values:
             # TODO: type compatibility check.
             return self.values[name]
@@ -111,5 +116,5 @@ class HyperParameters(object):
 
 def deserialize(config):
     module_objects = globals()
-    return keras.utils.deserialize_keras_object(
+    return tf.keras.utils.deserialize_keras_object(
         config, module_objects=module_objects)
