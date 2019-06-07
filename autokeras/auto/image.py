@@ -1,14 +1,15 @@
 import tensorflow as tf
 
 from autokeras import const
-from autokeras.auto.auto_pipeline import AutoPipeline
-from autokeras.auto.processor import Normalizer, OneHotEncoder
-from autokeras.hypermodel.hyper_block import ImageBlock
-from autokeras.hypermodel.hyper_head import ClassificationHead, RegressionHead
-from autokeras.tuner import SequentialRandomSearch
+from autokeras.auto import auto_pipeline
+from autokeras.auto import processor
+from autokeras.hypermodel import hyper_block, hyper_node
+from autokeras.hypermodel import hyper_head
+from autokeras import tuner
 
 
-class ImageTuner(SequentialRandomSearch):
+class ImageTuner(tuner.SequentialRandomSearch):
+
     def _run(self, hyperparameters, fit_kwargs):
         # Build a model instance.
         model = self.hypermodel.build(hyperparameters)
@@ -51,47 +52,51 @@ class ImageTuner(SequentialRandomSearch):
         datagen.fit(fit_kwargs['x'])
         fit_kwargs['batch_size'] = min(len(fit_kwargs['x']),
                                        fit_kwargs.get('batch_size',
-                                                      default=const.Constant.BATCH_SIZE))
+                                                      const.Constant.BATCH_SIZE))
         data_flow = datagen.flow(fit_kwargs['x'],
                                  fit_kwargs['y'],
                                  fit_kwargs['batch_size'],
                                  shuffle=True)
-        fit_kwargs.pop('x', None)
-        fit_kwargs.pop('y', None)
+        temp_fit_kwargs = fit_kwargs.copy()
+        temp_fit_kwargs.pop('x', None)
+        temp_fit_kwargs.pop('y', None)
+        temp_fit_kwargs.pop('batch_size', None)
 
         # Train model
-        history = model.fit_generator(data_flow, **fit_kwargs)
+        history = model.fit_generator(data_flow, **temp_fit_kwargs)
 
         metric_name = model.metrics_names[1]
         feedback = history.history['val_' + metric_name][-1]
         return model, feedback
 
 
-class ImageSupervised(AutoPipeline):
+class ImageSupervised(auto_pipeline.AutoPipeline):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.image_block = ImageBlock()
+        self.image_block = hyper_block.ImageBlock()
         self.head = None
-        self.x_normalizer = Normalizer()
+        self.x_normalizer = processor.Normalizer()
 
     def fit(self, x=None, y=None, **kwargs):
         self.tuner = ImageTuner(self, metrics=self.head.metrics)
         self.x_normalizer.fit(x)
+        self.inputs = [hyper_node.ImageInput()]
         super().fit(x=self.x_normalizer.transform(x), y=y, **kwargs)
 
     def build(self, hp):
-        output_node = self.image_block.build(hp, self.inputs)
+        input_node = self.inputs[0].build(hp)
+        output_node = self.image_block.build(hp, input_node)
         output_node = self.head.build(hp, output_node)
-        model = tf.keras.Model(self.inputs, output_node)
+        model = tf.keras.Model(input_node, output_node)
         optimizer = hp.Choice('optimizer',
                               [tf.keras.optimizers.Adam,
                                tf.keras.optimizers.Adadelta,
                                tf.keras.optimizers.SGD])()
 
         model.compile(optimizer=optimizer,
-                      metrics=self.head.metrics,
-                      loss=self.head.loss)
+                      loss=self.head.loss,
+                      metrics=self.head.metrics)
 
         return model
 
@@ -99,11 +104,12 @@ class ImageSupervised(AutoPipeline):
 class ImageClassifier(ImageSupervised):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.head = ClassificationHead()
-        self.y_encoder = OneHotEncoder()
+        self.head = hyper_head.ClassificationHead()
+        self.y_encoder = processor.OneHotEncoder()
 
     def fit(self, x=None, y=None, **kwargs):
         self.y_encoder.fit(y)
+        self.head.output_shape = (self.y_encoder.n_classes,)
         super().fit(x=x, y=self.y_encoder.transform(y), **kwargs)
 
     def predict(self, x, **kwargs):
@@ -113,4 +119,4 @@ class ImageClassifier(ImageSupervised):
 class ImageRegressor(ImageSupervised):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.head = RegressionHead()
+        self.head = hyper_head.RegressionHead()

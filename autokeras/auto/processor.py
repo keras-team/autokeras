@@ -1,10 +1,6 @@
 import numpy as np
 
 
-def image_augment(x, y):
-    pass
-
-
 class OneHotEncoder:
     """A class that can format data.
 

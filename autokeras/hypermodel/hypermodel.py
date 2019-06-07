@@ -18,7 +18,6 @@ class HyperModel(object):
 
         def build_wrapper(obj, *args, **kwargs):
             with tf.name_scope(obj.name) as scope:
-                print(scope)
                 return build_fn(*args, **kwargs)
 
         obj.build = types.MethodType(build_wrapper, obj)

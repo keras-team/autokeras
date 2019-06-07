@@ -10,5 +10,3 @@ class AutoPipeline(auto_model.AutoModel):
 
     def build(self, hp):
         raise NotImplementedError
-
-

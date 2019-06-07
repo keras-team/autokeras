@@ -6,6 +6,7 @@ from autokeras import layer_utils
 
 
 class HyperBlock(hypermodel.HyperModel):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.inputs = None
@@ -28,11 +29,13 @@ class HyperBlock(hypermodel.HyperModel):
 
 
 class ResNetBlock(HyperBlock):
+
     def build(self, hp, inputs=None):
         pass
 
 
 class DenseBlock(HyperBlock):
+
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
@@ -46,13 +49,26 @@ class DenseBlock(HyperBlock):
 
 
 class RNNBlock(HyperBlock):
+
     def build(self, hp, inputs=None):
         pass
 
 
 class ImageBlock(HyperBlock):
+
     def build(self, hp, inputs=None):
-        pass
+        # TODO: make it more advanced, selecting from multiple models, e.g., ResNet.
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        output_node = input_node
+
+        for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
+            output_node = tf.keras.layers.Conv2D(hp.Choice('units_{i}'.format(i=i),
+                                                           [16, 32, 64],
+                                                           default=32),
+                                                 hp.Choice('kernel_size_{i}'.format(i=i),
+                                                           [3, 5, 7],
+                                                           default=3))(output_node)
+        return output_node
 
 
 def shape_compatible(shape1, shape2):
@@ -64,6 +80,7 @@ def shape_compatible(shape1, shape2):
 
 
 class Merge(HyperBlock):
+
     def build(self, hp, inputs=None):
         inputs = layer_utils.format_inputs(inputs, self.name)
         if len(inputs) == 1:
@@ -85,11 +102,13 @@ class Merge(HyperBlock):
 
 
 class XceptionBlock(HyperBlock):
+
     def build(self, hp, inputs=None):
         pass
 
 
 class Flatten(HyperBlock):
+
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
@@ -105,6 +124,7 @@ class Flatten(HyperBlock):
 
 
 class Reshape(HyperBlock):
+
     def __init__(self, output_shape, **kwargs):
         super().__init__(**kwargs)
         self.output_shape = output_shape
