@@ -50,7 +50,7 @@ def test_reparameterize_and_tune_rest():
         static_values={'hm/learning_rate': 3},
         objective='val_accuracy')
 
-    tuner.search(num_trials=2,
+    tuner.search(trials=2,
                  x=x,
                  y=y,
                  epochs=1,
@@ -73,7 +73,7 @@ def test_reparameterize_and_not_tune_rest():
         static_values={'hm/learning_rate': 3},
         objective='val_accuracy')
 
-    tuner.search(num_trials=2,
+    tuner.search(trials=2,
                  x=x,
                  y=y,
                  epochs=1,

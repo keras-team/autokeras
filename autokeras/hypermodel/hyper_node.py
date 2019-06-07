@@ -19,6 +19,7 @@ class Node(object):
 
 
 class Input(Node):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -27,6 +28,7 @@ class Input(Node):
 
 
 class ImageInput(Node):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -35,6 +37,7 @@ class ImageInput(Node):
 
 
 class TextInput(Node):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

@@ -37,7 +37,7 @@ class AutoModel(hypermodel.HyperModel):
             x=None,
             y=None,
             validation_data=None,
-            num_trials=None,
+            trials=None,
             **kwargs):
         # Initialize HyperGraph model
         x = layer_utils.format_inputs(x, 'train_x')
@@ -58,7 +58,7 @@ class AutoModel(hypermodel.HyperModel):
             validation_data = x_val, y_val
 
         # TODO: allow early stop if epochs is not specified.
-        self.tuner.search(num_trials=num_trials,
+        self.tuner.search(trials=trials,
                           x=x,
                           y=y,
                           validation_data=validation_data,
@@ -83,7 +83,7 @@ class GraphAutoModel(AutoModel):
         self._hypermodels = []
         self._hypermodel_to_id = {}
         self._build_network()
-        self.tuner = tuner.SequentialRandomSearch(self, objective=self.get_metrics())
+        self.tuner = tuner.SequentialRandomSearch(self, objective=self._get_metrics())
 
     def build(self, hp):
         real_nodes = {}
@@ -106,8 +106,8 @@ class GraphAutoModel(AutoModel):
                                tf.keras.optimizers.SGD])()
 
         model.compile(optimizer=optimizer,
-                      metrics=self.get_metrics(),
-                      loss=self.get_loss())
+                      metrics=self._get_metrics(),
+                      loss=self._get_loss())
 
         return model
 
@@ -184,16 +184,15 @@ class GraphAutoModel(AutoModel):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
 
-    def get_loss(self):
+    def _get_loss(self):
         loss = nest.flatten([output_node.in_hypermodels[0].loss
                              for output_node in self.outputs
                              if isinstance(output_node.in_hypermodels[0], hyper_head.HyperHead)])
         return loss
 
-    def get_metrics(self):
+    def _get_metrics(self):
         metrics = []
         for metrics_list in [output_node.in_hypermodels[0].metrics for output_node in self.outputs
                              if isinstance(output_node.in_hypermodels[0], hyper_head.HyperHead)]:
             metrics += metrics_list
         return metrics
-
