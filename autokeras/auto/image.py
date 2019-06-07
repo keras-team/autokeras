@@ -120,3 +120,10 @@ class ImageRegressor(ImageSupervised):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.head = hyper_head.RegressionHead()
+
+    def fit(self, x=None, y=None, **kwargs):
+        self.head.output_shape = (1,)
+        super().fit(x=x, y=y, **kwargs)
+
+    def predict(self, x, **kwargs):
+        return super().predict(x, **kwargs).flatten()
