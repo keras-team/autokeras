@@ -1,5 +1,5 @@
 import tensorflow as tf
-import sklearn
+from sklearn import model_selection
 from tensorflow.python.util import nest
 
 from autokeras import const
@@ -31,9 +31,9 @@ def split_train_to_valid(x, y):
     validation_set_size = int(len(x[0]) * const.Constant.VALIDATION_SET_SIZE)
     validation_set_size = min(validation_set_size, 500)
     validation_set_size = max(validation_set_size, 1)
-    train_index, valid_index = sklearn.model_selection.train_test_split(range(len(x[0])),
-                                                                        test_size=validation_set_size,
-                                                                        random_state=const.Constant.SEED)
+    train_index, valid_index = model_selection.train_test_split(range(len(x[0])),
+                                                                test_size=validation_set_size,
+                                                                random_state=const.Constant.SEED)
 
     # Split the data
     x_train = None
