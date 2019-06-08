@@ -165,24 +165,20 @@ shape = (28, 28, 1)
 auto_pipeline = ak.ImageClassifier(shape, num_classes)
 
 # Loss, optimizer are picked automatically
-auto_pipeline.compile(metrics=[CategoricalAccuracy()])
 auto_pipeline.fit(x_train, y_train)
 
 # The predict function should output the labels instead of numerical vectors.
 auto_pipeline.predict(x_test)
 
-# Alternatively, the user can get the probability as follows.
-probabilities = auto_pipeline.predict(x_test, postprocessing=False)
-
 # Intermediate
 inputs = ak.ImageInput(shape=...)
 x = ak.ImageBlock(inputs)
-outputs = ak.ClassificationHead(num_classes)(x)
-automodel = ak.AutoModel(inputs=inputs, outputs=outputs)
+head = ak.ClassificationHead(num_classes, metrics=['accuracy'])
+outputs = head(x)
+automodel = ak.GraphAutoModel(inputs=inputs, outputs=outputs)
 
 # Loss, optimizer are picked automatically
-automodel.compile()
-automodel.fit(x_train, y_train, time_limit=12 * 60 * 60)
+automodel.fit(x_train, y_train)
 
 # Advanced
 
@@ -191,7 +187,7 @@ outputs1 = ak.ResNetBlock()(inputs)
 outputs2 = ak.XceptionBlock()(inputs)
 outputs = ak.Merge()((outputs1, outputs2))
 outputs = ak.ClassificationHead(num_classes)(outputs)
-automodel = ak.AutoModel(inputs=inputs, outputs=outputs)
+automodel = ak.GraphAutoModel(inputs=inputs, outputs=outputs)
 
 learning_rate = 1.0
 automodel.compile(optimizer=tf.keras.optimizers.Adam(learning_rate),
