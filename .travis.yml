@@ -10,7 +10,7 @@ install:
 - pip install mkdocs
 - pip install mkdocs-material
 script:
-- pytest tests --cov=autokeras --cov-report xml:coverage.xml --ignore tests/legacy
+- pytest tests --cov=autokeras --cov-report xml:coverage.xml
 - sh docs.sh
 after_script:
 - python-codacy-coverage -r coverage.xml
