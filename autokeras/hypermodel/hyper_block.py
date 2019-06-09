@@ -103,7 +103,30 @@ class Merge(HyperBlock):
 class XceptionBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        pass
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        output_node = input_node
+        output_node = Flatten().build(hp, output_node)
+        channel_axis = 1 if tf.keras.backend.image_data_format() == 'channels_first' else -1
+
+        for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
+            num_filters = hp.Choice('units_{i}'.format(i=i), [16, 32, 64], default=32)
+            output_node = tf.keras.layers.SeparableConv2D(
+                filters=num_filters,
+                kernel_size=(3, 3),
+                padding='same',
+                use_bias=False)(output_node)
+            output_node = tf.keras.layers.BatchNormalization(
+                axis=channel_axis)(output_node)
+            output_node = tf.keras.layers.Activation('relu')(output_node)
+            output_node = tf.keras.layers.SeparableConv2D(
+                filters=num_filters,
+                kernel_size=(3, 3),
+                padding='same',
+                use_bias=False)(output_node)
+            output_node = tf.keras.layers.BatchNormalization(
+                axis=channel_axis)(output_node)
+
+        return output_node
 
 
 class Flatten(HyperBlock):
