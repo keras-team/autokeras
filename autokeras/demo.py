@@ -1,9 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
 
-import numpy as np
-from tensorflow.python.keras.metrics import CategoricalAccuracy
-
 import autokeras as ak
 
 from autokeras.tuner import SequentialRandomSearch
@@ -25,7 +22,8 @@ def build_model(hp):
     model = keras.Sequential()
     model.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
     for i in range(hp.Range('num_layers', 2, 20)):
-        model.add(tf.keras.layers.Dense(units=hp.Range('units_' + str(i), 32, 512, 32),
+        model.add(tf.keras.layers.Dense(units=hp.Range('units_' + str(i),
+                                                       32, 512, 32),
                                         activation='relu'))
     model.add(tf.keras.layers.Dense(10, activation='softmax'))
     model.compile(
@@ -78,9 +76,11 @@ class MyHyperModel(HyperModel):
         model = keras.Sequential()
         model.add(tf.keras.layers.Flatten(input_shape=self.img_size))
         for i in range(hp.Range('num_layers', 2, 20)):
-            model.add(tf.keras.layers.Dense(units=hp.Range('units_' + str(i), 32, 512, 32),
+            model.add(tf.keras.layers.Dense(units=hp.Range('units_' + str(i),
+                                                           32, 512, 32),
                                             activation='relu'))
-        model.add(tf.keras.layers.Dense(self.num_classes, activation='softmax'))
+        model.add(tf.keras.layers.Dense(self.num_classes,
+                                        activation='softmax'))
         model.compile(
             optimizer=keras.optimizers.Adam(
                 hp.Choice('learning_rate', [1e-2, 1e-3, 1e-4])),

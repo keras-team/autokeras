@@ -51,8 +51,9 @@ class ImageTuner(tuner.SequentialRandomSearch):
 
         datagen.fit(fit_kwargs['x'])
         fit_kwargs['batch_size'] = min(len(fit_kwargs['x']),
-                                       fit_kwargs.get('batch_size',
-                                                      const.Constant.BATCH_SIZE))
+                                       fit_kwargs.get(
+                                           'batch_size',
+                                           const.Constant.BATCH_SIZE))
         data_flow = datagen.flow(fit_kwargs['x'],
                                  fit_kwargs['y'],
                                  fit_kwargs['batch_size'],
