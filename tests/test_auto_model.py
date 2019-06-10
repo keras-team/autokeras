@@ -123,3 +123,15 @@ def test_auto_model_basic():
     result = auto_model.predict(x_train)
 
     assert result.shape == (100, 1)
+
+
+def test_sequential_auto_model_init():
+    x_train = np.random.rand(100, 32)
+    y_train = np.random.rand(100)
+
+    auto_model = SequentialAutoModel([DenseBlock(), RegressionHead()])
+    const.Constant.NUM_TRAILS = 2
+    auto_model.fit(x_train, y_train, epochs=2)
+    result = auto_model.predict(x_train)
+
+    assert result.shape == (100, 1)

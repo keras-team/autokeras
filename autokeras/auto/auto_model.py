@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import hypermodel, hyper_head
+from autokeras.hypermodel import hypermodel, hyper_head, hyper_node
 from autokeras import layer_utils
 from autokeras import tuner
 
@@ -28,10 +28,16 @@ class AutoModel(hypermodel.HyperModel):
         super().__init__(**kwargs)
         self.inputs = []
         self.outputs = []
+        self._hypermodels = []
+        self._nodes = []
+        self._built = False
         self.tuner = tuner.SequentialRandomSearch(self, objective=self._get_metrics())
 
     def build(self, hp):
         raise NotImplementedError
+
+    def _hyper_build(self):
+        self._built = True
 
     def fit(self,
             x=None,
@@ -39,6 +45,10 @@ class AutoModel(hypermodel.HyperModel):
             validation_data=None,
             trials=None,
             **kwargs):
+
+        if not self._built:
+            self._hyper_build()
+
         # Initialize HyperGraph model
         x = layer_utils.format_inputs(x, 'train_x')
         y = layer_utils.format_inputs(y, 'train_y')
@@ -81,6 +91,18 @@ class AutoModel(hypermodel.HyperModel):
             metrics += metrics_list
         return metrics
 
+    def _compiled(self, hp, model):
+        optimizer = hp.Choice('optimizer',
+                              [tf.keras.optimizers.Adam,
+                               tf.keras.optimizers.Adadelta,
+                               tf.keras.optimizers.SGD])()
+
+        model.compile(optimizer=optimizer,
+                      metrics=self._get_metrics(),
+                      loss=self._get_loss())
+
+        return model
+
 
 class GraphAutoModel(AutoModel):
 
@@ -92,10 +114,8 @@ class GraphAutoModel(AutoModel):
         self.inputs = layer_utils.format_inputs(inputs)
         self.outputs = layer_utils.format_inputs(outputs)
         self._node_to_id = {}
-        self._nodes = []
-        self._hypermodels = []
         self._hypermodel_to_id = {}
-        self._build_network()
+        self._hyper_build()
 
     def build(self, hp):
         real_nodes = {}
@@ -111,19 +131,11 @@ class GraphAutoModel(AutoModel):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
         model = tf.keras.Model([real_nodes[self._node_to_id[input_node]] for input_node in self.inputs],
                                [real_nodes[self._node_to_id[output_node]] for output_node in self.outputs])
-        # Specify hyperparameters from compile(...)
-        optimizer = hp.Choice('optimizer',
-                              [tf.keras.optimizers.Adam,
-                               tf.keras.optimizers.Adadelta,
-                               tf.keras.optimizers.SGD])()
 
-        model.compile(optimizer=optimizer,
-                      metrics=self._get_metrics(),
-                      loss=self._get_loss())
+        return self._compiled(hp, model)
 
-        return model
-
-    def _build_network(self):
+    def _hyper_build(self):
+        super()._hyper_build()
         self._node_to_id = {}
 
         # Recursively find all the interested nodes.
@@ -195,3 +207,33 @@ class GraphAutoModel(AutoModel):
     def _add_node(self, input_node):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
+
+
+class SequentialAutoModel(AutoModel):
+
+    def __init__(self, hypermodels=None, **kwargs):
+        super().__init__(**kwargs)
+        if hypermodels:
+            self._hypermodels = hypermodels
+
+    def add(self, hypermodel):
+        self._hypermodels.add(hypermodel)
+
+    def build(self, hp):
+        input_node = self.inputs[0].build(hp)
+        output_node = input_node
+        for hypermodel in self._hypermodels:
+            output_node = hypermodel.build(hp, inputs=[output_node])
+        return self._compiled(hp, tf.keras.Model(input_node, output_node))
+
+    def _hyper_build(self):
+        super()._hyper_build()
+        output_node = hyper_node.Input()
+        self.inputs = [output_node]
+        self._nodes.append(output_node)
+        for hypermodel in self._hypermodels:
+            output_node = hypermodel(output_node)
+            self._nodes.append(output_node)
+        self.outputs = output_node
+
+
