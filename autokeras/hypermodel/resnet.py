@@ -1,54 +1,12 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import os
+import tensorflow as tf
 
 from autokeras.hypermodel import hyper_block
 
-backend = None
-layers = None
-models = None
-keras_utils = None
 
-_KERAS_BACKEND = None
-_KERAS_LAYERS = None
-_KERAS_MODELS = None
-_KERAS_UTILS = None
-
-
-def get_submodules_from_kwargs(kwargs):
-    backend = kwargs.get('backend', _KERAS_BACKEND)
-    layers = kwargs.get('layers', _KERAS_LAYERS)
-    models = kwargs.get('models', _KERAS_MODELS)
-    utils = kwargs.get('utils', _KERAS_UTILS)
-    for key in kwargs.keys():
-        if key not in ['backend', 'layers', 'models', 'utils']:
-            raise TypeError('Invalid keyword argument: %s', key)
-    return backend, layers, models, utils
-
-
-BASE_WEIGHTS_PATH = (
-    'https://github.com/keras-team/keras-applications/'
-    'releases/download/resnet/')
-WEIGHTS_HASHES = {
-    'resnet50': ('2cb95161c43110f7111970584f804107',
-                 '4d473c1dd8becc155b73f8504c6f6626'),
-    'resnet101': ('f1aeb4b969a6efcfb50fad2f0c20cfc5',
-                  '88cf7a10940856eca736dc7b7e228a21'),
-    'resnet152': ('100835be76be38e30d865e96f2aaae62',
-                  'ee4c566cf9a93f14d82f913c2dc6dd0c'),
-    'resnet50v2': ('3ef43a0b657b3be2300d5770ece849e0',
-                   'fac2f116257151a9d068a22e544a4917'),
-    'resnet101v2': ('6343647c601c52e1368623803854d971',
-                    'c0ed64b8031c3730f411d2eb4eea35b5'),
-    'resnet152v2': ('a49b44d1979771252814e80f8ec446f9',
-                    'ed17cf2e0169df9d443503ef94b23b33'),
-    'resnext50': ('67a5b30d522ed92f75a1f16eef299d1a',
-                  '62527c363bdd9ec598bed41947b379fc'),
-    'resnext101': ('34fb605428fcc7aa4d62f44404c11509',
-                   '0f678c91647380debd923963594981b3')
-}
+backend = tf.keras.backend
+layers = tf.keras.layers
+models = tf.keras.models
+utils = tf.keras.utils
 
 
 def block1(x, filters, kernel_size=3, stride=1,
@@ -259,17 +217,11 @@ def stack3(x, filters, blocks, stride1=2, groups=32, name=None):
     return x
 
 
-def ResNet(stack_fn,
+def resnet(stack_fn,
            preact,
            use_bias,
-           model_name='resnet',
-           include_top=True,
-           weights='imagenet',
            input_tensor=None,
-           input_shape=None,
-           pooling=None,
-           classes=1000,
-           **kwargs):
+           pooling=None):
     """Instantiates the ResNet, ResNetV2, and ResNeXt architecture.
 
     Optionally loads weights pre-trained on ImageNet.
@@ -319,30 +271,9 @@ def ResNet(stack_fn,
         ValueError: in case of invalid argument for `weights`,
             or invalid input shape.
     """
-    global backend, layers, models, keras_utils
-    backend, layers, models, keras_utils = get_submodules_from_kwargs(kwargs)
-
-    if not (weights in {'imagenet', None} or os.path.exists(weights)):
-        raise ValueError('The `weights` argument should be either '
-                         '`None` (random initialization), `imagenet` '
-                         '(pre-training on ImageNet), '
-                         'or the path to the weights file to be loaded.')
-
-    if weights == 'imagenet' and include_top and classes != 1000:
-        raise ValueError('If using `weights` as `"imagenet"` with `include_top`'
-                         ' as true, `classes` should be 1000')
-
-    if input_tensor is None:
-        img_input = layers.Input(shape=input_shape)
-    else:
-        if not backend.is_keras_tensor(input_tensor):
-            img_input = layers.Input(tensor=input_tensor, shape=input_shape)
-        else:
-            img_input = input_tensor
-
     bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
 
-    x = layers.ZeroPadding2D(padding=((3, 3), (3, 3)), name='conv1_pad')(img_input)
+    x = layers.ZeroPadding2D(padding=((3, 3), (3, 3)), name='conv1_pad')(input_tensor)
     x = layers.Conv2D(64, 7, strides=2, use_bias=use_bias, name='conv1_conv')(x)
 
     if preact is False:
@@ -360,224 +291,43 @@ def ResNet(stack_fn,
                                       name='post_bn')(x)
         x = layers.Activation('relu', name='post_relu')(x)
 
-    if include_top:
+    if pooling == 'avg':
         x = layers.GlobalAveragePooling2D(name='avg_pool')(x)
-        x = layers.Dense(classes, activation='softmax', name='probs')(x)
-    else:
-        if pooling == 'avg':
-            x = layers.GlobalAveragePooling2D(name='avg_pool')(x)
-        elif pooling == 'max':
-            x = layers.GlobalMaxPooling2D(name='max_pool')(x)
+    elif pooling == 'max':
+        x = layers.GlobalMaxPooling2D(name='max_pool')(x)
 
-    # Ensure that the model takes into account
-    # any potential predecessors of `input_tensor`.
-    if input_tensor is not None:
-        inputs = keras_utils.get_source_inputs(input_tensor)
-    else:
-        inputs = img_input
-
-    # Create model.
-    model = models.Model(inputs, x, name=model_name)
-
-    # Load weights.
-    if (weights == 'imagenet') and (model_name in WEIGHTS_HASHES):
-        if include_top:
-            file_name = model_name + '_weights_tf_dim_ordering_tf_kernels.h5'
-            file_hash = WEIGHTS_HASHES[model_name][0]
-        else:
-            file_name = model_name + '_weights_tf_dim_ordering_tf_kernels_notop.h5'
-            file_hash = WEIGHTS_HASHES[model_name][1]
-        weights_path = keras_utils.get_file(file_name,
-                                            BASE_WEIGHTS_PATH + file_name,
-                                            cache_subdir='models',
-                                            file_hash=file_hash)
-        model.load_weights(weights_path)
-    elif weights is not None:
-        model.load_weights(weights)
-
-    return model
-
-
-def ResNet50(include_top=True,
-             weights='imagenet',
-             input_tensor=None,
-             input_shape=None,
-             pooling=None,
-             classes=1000,
-             **kwargs):
-    def stack_fn(x):
-        x = stack1(x, 64, 3, stride1=1, name='conv2')
-        x = stack1(x, 128, 4, name='conv3')
-        x = stack1(x, 256, 6, name='conv4')
-        x = stack1(x, 512, 3, name='conv5')
-        return x
-
-    return ResNet(stack_fn, False, True, 'resnet50',
-                  include_top, weights,
-                  input_tensor, input_shape,
-                  pooling, classes,
-                  **kwargs)
-
-
-def ResNet101(include_top=True,
-              weights='imagenet',
-              input_tensor=None,
-              input_shape=None,
-              pooling=None,
-              classes=1000,
-              **kwargs):
-    def stack_fn(x):
-        x = stack1(x, 64, 3, stride1=1, name='conv2')
-        x = stack1(x, 128, 4, name='conv3')
-        x = stack1(x, 256, 23, name='conv4')
-        x = stack1(x, 512, 3, name='conv5')
-        return x
-
-    return ResNet(stack_fn, False, True, 'resnet101',
-                  include_top, weights,
-                  input_tensor, input_shape,
-                  pooling, classes,
-                  **kwargs)
-
-
-def ResNet152(include_top=True,
-              weights='imagenet',
-              input_tensor=None,
-              input_shape=None,
-              pooling=None,
-              classes=1000,
-              **kwargs):
-    def stack_fn(x):
-        x = stack1(x, 64, 3, stride1=1, name='conv2')
-        x = stack1(x, 128, 8, name='conv3')
-        x = stack1(x, 256, 36, name='conv4')
-        x = stack1(x, 512, 3, name='conv5')
-        return x
-
-    return ResNet(stack_fn, False, True, 'resnet152',
-                  include_top, weights,
-                  input_tensor, input_shape,
-                  pooling, classes,
-                  **kwargs)
-
-
-def ResNet50V2(include_top=True,
-               weights='imagenet',
-               input_tensor=None,
-               input_shape=None,
-               pooling=None,
-               classes=1000,
-               **kwargs):
-    def stack_fn(x):
-        x = stack2(x, 64, 3, name='conv2')
-        x = stack2(x, 128, 4, name='conv3')
-        x = stack2(x, 256, 6, name='conv4')
-        x = stack2(x, 512, 3, stride1=1, name='conv5')
-        return x
-
-    return ResNet(stack_fn, True, True, 'resnet50v2',
-                  include_top, weights,
-                  input_tensor, input_shape,
-                  pooling, classes,
-                  **kwargs)
-
-
-def ResNet101V2(include_top=True,
-                weights='imagenet',
-                input_tensor=None,
-                input_shape=None,
-                pooling=None,
-                classes=1000,
-                **kwargs):
-    def stack_fn(x):
-        x = stack2(x, 64, 3, name='conv2')
-        x = stack2(x, 128, 4, name='conv3')
-        x = stack2(x, 256, 23, name='conv4')
-        x = stack2(x, 512, 3, stride1=1, name='conv5')
-        return x
-
-    return ResNet(stack_fn, True, True, 'resnet101v2',
-                  include_top, weights,
-                  input_tensor, input_shape,
-                  pooling, classes,
-                  **kwargs)
-
-
-def ResNet152V2(include_top=True,
-                weights='imagenet',
-                input_tensor=None,
-                input_shape=None,
-                pooling=None,
-                classes=1000,
-                **kwargs):
-    def stack_fn(x):
-        x = stack2(x, 64, 3, name='conv2')
-        x = stack2(x, 128, 8, name='conv3')
-        x = stack2(x, 256, 36, name='conv4')
-        x = stack2(x, 512, 3, stride1=1, name='conv5')
-        return x
-
-    return ResNet(stack_fn, True, True, 'resnet152v2',
-                  include_top, weights,
-                  input_tensor, input_shape,
-                  pooling, classes,
-                  **kwargs)
-
-
-def ResNeXt50(include_top=True,
-              weights='imagenet',
-              input_tensor=None,
-              input_shape=None,
-              pooling=None,
-              classes=1000,
-              **kwargs):
-    def stack_fn(x):
-        x = stack3(x, 128, 3, stride1=1, name='conv2')
-        x = stack3(x, 256, 4, name='conv3')
-        x = stack3(x, 512, 6, name='conv4')
-        x = stack3(x, 1024, 3, name='conv5')
-        return x
-
-    return ResNet(stack_fn, False, False, 'resnext50',
-                  include_top, weights,
-                  input_tensor, input_shape,
-                  pooling, classes,
-                  **kwargs)
-
-
-def ResNeXt101(include_top=True,
-               weights='imagenet',
-               input_tensor=None,
-               input_shape=None,
-               pooling=None,
-               classes=1000,
-               **kwargs):
-    def stack_fn(x):
-        x = stack3(x, 128, 3, stride1=1, name='conv2')
-        x = stack3(x, 256, 4, name='conv3')
-        x = stack3(x, 512, 23, name='conv4')
-        x = stack3(x, 1024, 3, name='conv5')
-        return x
-
-    return ResNet(stack_fn, False, False, 'resnext101',
-                  include_top, weights,
-                  input_tensor, input_shape,
-                  pooling, classes,
-                  **kwargs)
+    return x
 
 
 class ResNetBlock(hyper_block.HyperBlock):
     def build(self, hp, inputs=None):
         def stack_fn(x):
             stack_layer = hp.Choice('stack', [stack1, stack2, stack3])
-            x = stack_layer(x, 128, 3, stride1=1, name='conv2')
-            x = stack_layer(x, 256, 4, name='conv3')
-            x = stack_layer(x, 512, 23, name='conv4')
-            x = stack_layer(x, 1024, 3, name='conv5')
+            multiplier = 2
+            filters = hp.Choice('start_filters', [16, 32, 64, 128, 256, 512, 1024], default=64)
+            x = stack_layer(x, filters,
+                            hp.Choice('block1', [2, 3], default=2),
+                            stride1=hp.Choice('stride1', [1, 2], default=1),
+                            name='conv2')
+            filters *= multiplier
+            x = stack_layer(x,
+                            filters,
+                            hp.Choice('block2', [2, 4, 8], default=2),
+                            name='conv3')
+            filters *= multiplier
+            x = stack_layer(x,
+                            filters,
+                            hp.Choice('block3', [2, 6, 23, 36], default=2),
+                            name='conv4')
+            filters *= multiplier
+            x = stack_layer(x,
+                            filters,
+                            hp.Choice('block4', [2, 3], default=2),
+                            stride1=hp.Choice('stride4', [1, 2], default=1),
+                            name='conv5')
             return x
 
-        return ResNet(stack_fn, False, False, 'resnext101',
-                      include_top, weights,
-                      input_tensor, input_shape,
-                      pooling, classes,
-                      **kwargs)
+        return resnet(stack_fn,
+                      preact=hp.Choice('preact', [True, False], default=True),
+                      use_bias=hp.Choice('use_bias', [True, False], default=True),
+                      input_tensor=inputs[0])

@@ -1,9 +1,9 @@
 import numpy as np
 
 from autokeras.auto.auto_model import GraphAutoModel
-from autokeras.hypermodel.hyper_block import *
 from autokeras.hypermodel.hyper_head import ClassificationHead
 from autokeras.hypermodel.hyper_node import Input
+from autokeras.hypermodel.resnet import *
 
 
 def test_resnet_block():
@@ -16,7 +16,7 @@ def test_resnet_block():
     output_node = ClassificationHead()(output_node)
 
     auto_model = GraphAutoModel(input_node, output_node)
-    auto_model.fit(x_train, y_train, trials=2, epochs=1)
+    auto_model.fit(x_train, y_train, trials=1, epochs=1)
     result = auto_model.predict(x_train)
 
     assert result.shape == (100, 10)
