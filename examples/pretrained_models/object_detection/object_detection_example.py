@@ -1,4 +1,4 @@
-from autokeras.pretrained import ObjectDetector
+from autokeras import ObjectDetector
 
 if __name__ == '__main__':
     detector = ObjectDetector()

@@ -1,4 +1,4 @@
-from autokeras.pretrained.text_classifier import TopicClassifier
+from autokeras import TopicClassifier
 
 topic_classifier = TopicClassifier()
 
