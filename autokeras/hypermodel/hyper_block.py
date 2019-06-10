@@ -123,8 +123,6 @@ class XceptionBlock(HyperBlock):
         filter_entry = hp.Choice('num_filters', [16, 32, 64], default=32)
         filter_middle = int(filter_entry * 22.75)
         filter_exit = int(filter_entry * 48)
-        # To decide the pooling layer in the end
-        last_pooling = hp.Choice('pooling', ['avg', 'max'], default='avg')
 
         # Entry flow (original filters: 32, 64)
         output_node = tf.keras.layers.Conv2D(filter_entry, (3, 3), strides=(2, 2), use_bias=False)(output_node)
@@ -139,7 +137,7 @@ class XceptionBlock(HyperBlock):
         output_node = self._entry_flow(filter_entry*8, channel_axis, start_with_relu=True)(output_node)
         output_node = self._entry_flow(filter_middle, channel_axis, start_with_relu=True)(output_node)
 
-        # Middel flow (original filters: 728)
+        # Middle flow (original filters: 728), repeated eight times
         for i in range(8):
             output_node = self._middle_flow(filter_middle, channel_axis)(output_node)
 
@@ -148,10 +146,6 @@ class XceptionBlock(HyperBlock):
                                       start_with_relu=True, with_shortcut=True)(output_node)
         output_node = self._exit_flow(filter_exit, filter_entry*64,
                                       start_with_relu=False, with_shortcut=False)(output_node)
-        if last_pooling == 'avg':
-            output_node = tf.keras.layers.GlobalAvgPool2D()(output_node)
-        else: # last_pooling == 'max'
-            output_node = tf.keras.layers.GlobalMaxPool2D()(output_node)
 
         return output_node
 
