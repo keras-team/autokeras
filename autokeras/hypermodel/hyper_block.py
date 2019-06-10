@@ -101,16 +101,32 @@ class Merge(HyperBlock):
 
 
 class XceptionBlock(HyperBlock):
+    """ XceptionBlock
+    An Xception structure, used for specifying your model with specific datasets.
+
+    The original Xception architecture is from https://arxiv.org/abs/1610.02357.
+    The data first goes through the entry flow, then through the middle flow which
+    is repeated eight times, and finally through the exit flow.
+
+    This XceptionBlock returns a similar architecture as Xception except without
+    the last (optional) fully connected layer(s) and logistic regression.
+    The size of this architecture could be decided by `HyperParameters`, to get an
+    architecture with a half, an identical, or a double size of the original one.
+    """
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         channel_axis = 1 if tf.keras.backend.image_data_format() == 'channels_first' else -1
-        filter_entry = hp.Choice('num_filters', [16, 32, 64], default=32)
-        filter_middel = int(filter_entry * 22.75)
-        filter_exit = int(filter_entry * 48)
 
-        # Entry flow (original: 32, 64)
+        # To decide the size of the architecture
+        filter_entry = hp.Choice('num_filters', [16, 32, 64], default=32)
+        filter_middle = int(filter_entry * 22.75)
+        filter_exit = int(filter_entry * 48)
+        # To decide the pooling layer in the end
+        last_pooling = hp.Choice('pooling', ['avg', 'max'], default='avg')
+
+        # Entry flow (original filters: 32, 64)
         output_node = tf.keras.layers.Conv2D(filter_entry, (3, 3), strides=(2, 2), use_bias=False)(output_node)
         output_node = tf.keras.layers.BatchNormalization(axis=channel_axis)(output_node)
         output_node = tf.keras.layers.Activation('relu')(output_node)
@@ -118,18 +134,24 @@ class XceptionBlock(HyperBlock):
         output_node = tf.keras.layers.BatchNormalization(axis=channel_axis)(output_node)
         output_node = tf.keras.layers.Activation('relu')(output_node)
 
-        # Entry flow (original: 128, 256, 728)
+        # Entry flow (original filters: 128, 256, 728)
         output_node = self._entry_flow(filter_entry*4, channel_axis, start_with_relu=False)(output_node)
         output_node = self._entry_flow(filter_entry*8, channel_axis, start_with_relu=True)(output_node)
-        output_node = self._entry_flow(filter_middel, channel_axis, start_with_relu=True)(output_node)
+        output_node = self._entry_flow(filter_middle, channel_axis, start_with_relu=True)(output_node)
 
-        # Middel flow (original: 728)
+        # Middel flow (original filters: 728)
         for i in range(8):
-            output_node = self._middle_flow(filter_middel, channel_axis)(output_node)
+            output_node = self._middle_flow(filter_middle, channel_axis)(output_node)
 
-        # Exit flow (original: 728, 1024; 1536, 2048)
-        output_node = self._exit_flow(filter_middel, filter_entry*32, start_with_relu=True, with_shortcut=True)(output_node)
-        output_node = self._exit_flow(filter_exit, filter_entry*64, start_with_relu=False, with_shortcut=False)(output_node)
+        # Exit flow (original filters: 728, 1024; 1536, 2048)
+        output_node = self._exit_flow(filter_middle, filter_entry*32,
+                                      start_with_relu=True, with_shortcut=True)(output_node)
+        output_node = self._exit_flow(filter_exit, filter_entry*64,
+                                      start_with_relu=False, with_shortcut=False)(output_node)
+        if last_pooling == 'avg':
+            output_node = tf.keras.layers.GlobalAvgPool2D()(output_node)
+        else: # last_pooling == 'max'
+            output_node = tf.keras.layers.GlobalMaxPool2D()(output_node)
 
         return output_node
 
