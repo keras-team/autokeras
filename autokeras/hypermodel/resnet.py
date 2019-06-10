@@ -70,7 +70,10 @@ def stack1(x, filters, blocks, stride1=2, name=None):
     """
     x = block1(x, filters, stride=stride1, name=name + '_block1')
     for i in range(2, blocks + 1):
-        x = block1(x, filters, conv_shortcut=False, name=name + '_block' + str(i))
+        x = block1(x,
+                   filters,
+                   conv_shortcut=False,
+                   name=name + '_block' + str(i))
     return x
 
 
@@ -100,7 +103,8 @@ def block2(x, filters, kernel_size=3, stride=1,
         shortcut = layers.Conv2D(4 * filters, 1, strides=stride,
                                  name=name + '_0_conv')(preact)
     else:
-        shortcut = layers.MaxPooling2D(1, strides=stride)(x) if stride > 1 else x
+        shortcut = layers.MaxPooling2D(1, strides=stride)(x) \
+            if stride > 1 else x
 
     x = layers.Conv2D(filters, 1, strides=1, use_bias=False,
                       name=name + '_1_conv')(preact)
@@ -178,7 +182,9 @@ def block3(x, filters, kernel_size=3, stride=1, groups=32,
                                use_bias=False, name=name + '_2_conv')(x)
     x_shape = backend.int_shape(x)[1:-1]
     x = layers.Reshape(x_shape + (groups, c, c))(x)
-    output_shape = x_shape + (groups, c) if backend.backend() == 'theano' else None
+    output_shape = x_shape + (groups, c) \
+        if backend.backend() == 'theano' \
+        else None
     x = layers.Lambda(lambda x: sum([x[:, :, :, :, i] for i in range(c)]),
                       output_shape=output_shape, name=name + '_2_reduce')(x)
     x = layers.Reshape(x_shape + (filters,))(x)
@@ -210,7 +216,11 @@ def stack3(x, filters, blocks, stride1=2, groups=32, name=None):
     # Returns
         Output tensor for the stacked blocks.
     """
-    x = block3(x, filters, stride=stride1, groups=groups, name=name + '_block1')
+    x = block3(x,
+               filters,
+               stride=stride1,
+               groups=groups,
+               name=name + '_block1')
     for i in range(2, blocks + 1):
         x = block3(x, filters, groups=groups, conv_shortcut=False,
                    name=name + '_block' + str(i))
@@ -251,8 +261,13 @@ def resnet(stack_fn,
     """
     bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
 
-    x = layers.ZeroPadding2D(padding=((3, 3), (3, 3)), name='conv1_pad')(input_tensor)
-    x = layers.Conv2D(64, 7, strides=2, use_bias=use_bias, name='conv1_conv')(x)
+    x = layers.ZeroPadding2D(padding=((3, 3), (3, 3)),
+                             name='conv1_pad')(input_tensor)
+    x = layers.Conv2D(64,
+                      7,
+                      strides=2,
+                      use_bias=use_bias,
+                      name='conv1_conv')(x)
 
     if preact is False:
         x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
@@ -282,7 +297,9 @@ class ResNetBlock(hyper_block.HyperBlock):
         def stack_fn(x):
             stack_layer = hp.Choice('stack', [stack1, stack2, stack3])
             multiplier = 2
-            filters = hp.Choice('start_filters', [16, 32, 64, 128, 256, 512, 1024], default=64)
+            filters = hp.Choice('start_filters',
+                                [16, 32, 64, 128, 256, 512, 1024],
+                                default=64)
             x = stack_layer(x, filters,
                             hp.Choice('block1', [2, 3], default=2),
                             stride1=hp.Choice('stride1', [1, 2], default=1),
@@ -307,5 +324,7 @@ class ResNetBlock(hyper_block.HyperBlock):
 
         return resnet(stack_fn,
                       preact=hp.Choice('preact', [True, False], default=True),
-                      use_bias=hp.Choice('use_bias', [True, False], default=True),
+                      use_bias=hp.Choice('use_bias',
+                                         [True, False],
+                                         default=True),
                       input_tensor=inputs[0])
