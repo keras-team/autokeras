@@ -44,7 +44,8 @@ class Tuner(object):
         if objective is not None:
             self.objective = objective
         elif metrics:
-            self.objective = layer_utils.format_inputs(metrics, 'Tuner objective')[0]
+            self.objective = layer_utils.format_inputs(metrics,
+                                                       'Tuner objective')[0]
         self.optimizer = optimizer
         self.loss = loss
         self.metrics = metrics
@@ -62,7 +63,8 @@ class SequentialRandomSearch(Tuner):
         super(SequentialRandomSearch, self).__init__(hypermodel, **kwargs)
         self.best_hp = None
         self.best_feedback = -float('inf')
-        # TODO: clear the memory of the models and save the best model in disk instead of memory.
+        # TODO: clear the memory of the models and save the best model in
+        #  disk instead of memory.
         self.best_model = None
 
     def search(self, trials=None, **kwargs):
@@ -118,7 +120,8 @@ class SequentialRandomSearch(Tuner):
             model.compile()
 
         # Train model
-        # TODO: reporting presumably done with a callback, record the hp and performances
+        # TODO: reporting presumably done with a callback,
+        #  record the hp and performances
         history = model.fit(**fit_kwargs)
 
         metric_name = model.metrics_names[1]

@@ -4,7 +4,8 @@ import numpy as np
 class OneHotEncoder:
     """A class that can format data.
 
-    This class provides ways to transform data's classification label into vector.
+    This class provides ways to transform data's classification label into
+    vector.
 
     Attributes:
           data: The input data
@@ -42,7 +43,8 @@ class OneHotEncoder:
 
     def inverse_transform(self, data):
         """Get label for every element in data."""
-        return np.array(list(map(lambda x: self.int_to_label[x], np.argmax(np.array(data), axis=1))))
+        return np.array(list(map(lambda x: self.int_to_label[x],
+                                 np.argmax(np.array(data), axis=1))))
 
 
 class Normalizer(object):
@@ -75,5 +77,5 @@ class Normalizer(object):
         """
         # channel-wise normalize the image
         data = data / self.max_val
-        data = (data - self.mean)/self.std
+        data = (data - self.mean) / self.std
         return data
