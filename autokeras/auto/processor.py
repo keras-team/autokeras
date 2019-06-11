@@ -57,13 +57,10 @@ class Normalizer(object):
     """
 
     def __init__(self):
-        self.max_val = None
         self.mean = None
         self.std = None
 
     def fit(self, data):
-        self.max_val = data.max()
-        data = data / self.max_val
         self.mean = np.mean(data, axis=(0, 1, 2), keepdims=True).flatten()
         self.std = np.std(data, axis=(0, 1, 2), keepdims=True).flatten()
 
@@ -77,6 +74,5 @@ class Normalizer(object):
             A DataLoader instance.
         """
         # channel-wise normalize the image
-        data = data / self.max_val
         data = (data - self.mean) / self.std
         return data
