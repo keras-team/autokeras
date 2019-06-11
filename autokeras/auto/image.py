@@ -71,19 +71,19 @@ class ImageTuner(tuner.SequentialRandomSearch):
         return model, feedback
 
 
-class ImageSupervised(auto_pipeline.AutoPipeline):
+class SupervisedImagePipeline(auto_pipeline.AutoPipeline):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.image_block = hyper_block.ImageBlock()
         self.head = None
-        self.x_normalizer = processor.Normalizer()
+        self.normalizer = processor.Normalizer()
 
     def fit(self, x=None, y=None, **kwargs):
         self.tuner = ImageTuner(self, metrics=self.head.metrics)
-        self.x_normalizer.fit(x)
+        self.normalizer.fit(x)
         self.inputs = [hyper_node.ImageInput()]
-        super().fit(x=self.x_normalizer.transform(x), y=y, **kwargs)
+        super().fit(x=self.normalizer.transform(x), y=y, **kwargs)
 
     def build(self, hp):
         input_node = self.inputs[0].build(hp)
@@ -102,22 +102,22 @@ class ImageSupervised(auto_pipeline.AutoPipeline):
         return model
 
 
-class ImageClassifier(ImageSupervised):
+class ImageClassifier(SupervisedImagePipeline):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.head = hyper_head.ClassificationHead()
-        self.y_encoder = processor.OneHotEncoder()
+        self.label_encoder = processor.OneHotEncoder()
 
     def fit(self, x=None, y=None, **kwargs):
-        self.y_encoder.fit(y)
-        self.head.output_shape = (self.y_encoder.num_classes,)
-        super().fit(x=x, y=self.y_encoder.transform(y), **kwargs)
+        self.label_encoder.fit(y)
+        self.head.output_shape = (self.label_encoder.num_classes,)
+        super().fit(x=x, y=self.label_encoder.transform(y), **kwargs)
 
     def predict(self, x, **kwargs):
-        return self.y_encoder.inverse_transform(super().predict(x, **kwargs))
+        return self.label_encoder.inverse_transform(super().predict(x, **kwargs))
 
 
-class ImageRegressor(ImageSupervised):
+class ImageRegressor(SupervisedImagePipeline):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.head = hyper_head.RegressionHead()
