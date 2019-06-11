@@ -27,6 +27,7 @@ class Tuner(object):
         else:
             self.hyperparameters = hp_module.HyperParameters.from_config(
                 reparameterization.get_config())
+        self._old_space = self.hyperparameters.space[:]
         if static_values:
             for name, value in static_values.items():
                 print(name, value)
@@ -49,6 +50,17 @@ class Tuner(object):
         self.optimizer = optimizer
         self.loss = loss
         self.metrics = metrics
+
+    def _check_space(self, hyperparameters):
+        # Optionally disallow hyperparameters defined on the fly.
+        new_space = hyperparameters.space[:]
+        if not self.allow_new_parameters and set(self._old_space) != set(new_space):
+            diff = set(new_space) - set(self._old_space)
+            raise RuntimeError(
+                'The hypermodel has requested a parameter that was not part '
+                'of `hyperparameters`, '
+                'yet `allow_new_parameters` is set to False. '
+                'The unknown parameters are: {diff}'.format(diff=diff))
 
 
 def convert_metric_to_higher_better(metric_value, metric):
@@ -91,16 +103,7 @@ class SequentialRandomSearch(Tuner):
         # Build a model instance.
         model = self.hypermodel.build(hyperparameters)
 
-        # Optionally disallow hyperparameters defined on the fly.
-        old_space = hyperparameters.space[:]
-        new_space = hyperparameters.space[:]
-        if not self.allow_new_parameters and set(old_space) != set(new_space):
-            diff = set(new_space) - set(old_space)
-            raise RuntimeError(
-                'The hypermodel has requested a parameter that was not part '
-                'of `hyperparameters`, '
-                'yet `allow_new_parameters` is set to False. '
-                'The unknown parameters are: {diff}'.format(diff=diff))
+        self._check_space(hyperparameters)
 
         # Optional recompile
         if not model.optimizer:

@@ -8,5 +8,5 @@ class AutoPipeline(auto_model.AutoModel):
     The postprocessing can include decode the labels from one-hot encoding.
     """
 
-    def build(self, hp):
+    def build(self, hp, **kwargs):
         raise NotImplementedError

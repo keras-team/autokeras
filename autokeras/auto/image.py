@@ -14,16 +14,7 @@ class ImageTuner(tuner.SequentialRandomSearch):
         # Build a model instance.
         model = self.hypermodel.build(hyperparameters)
 
-        # Optionally disallow hyperparameters defined on the fly.
-        old_space = hyperparameters.space[:]
-        new_space = hyperparameters.space[:]
-        if not self.allow_new_parameters and set(old_space) != set(new_space):
-            diff = set(new_space) - set(old_space)
-            raise RuntimeError(
-                'The hypermodel has requested a parameter that was not part '
-                'of `hyperparameters`, '
-                'yet `allow_new_parameters` is set to False. '
-                'The unknown parameters are: {diff}'.format(diff=diff))
+        self._check_space(hyperparameters)
 
         datagen = tf.keras.preprocessing.image.ImageDataGenerator(
             # rescale image pixels to [0, 1]
@@ -71,21 +62,21 @@ class ImageTuner(tuner.SequentialRandomSearch):
         return model, feedback
 
 
-class ImageSupervised(auto_pipeline.AutoPipeline):
+class SupervisedImagePipeline(auto_pipeline.AutoPipeline):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.image_block = hyper_block.ImageBlock()
         self.head = None
-        self.x_normalizer = processor.Normalizer()
+        self.normalizer = processor.Normalizer()
 
     def fit(self, x=None, y=None, **kwargs):
         self.tuner = ImageTuner(self, metrics=self.head.metrics)
-        self.x_normalizer.fit(x)
+        self.normalizer.fit(x)
         self.inputs = [hyper_node.ImageInput()]
-        super().fit(x=self.x_normalizer.transform(x), y=y, **kwargs)
+        super().fit(x=self.normalizer.transform(x), y=y, **kwargs)
 
-    def build(self, hp):
+    def build(self, hp, **kwargs):
         input_node = self.inputs[0].build(hp)
         output_node = self.image_block.build(hp, input_node)
         output_node = self.head.build(hp, output_node)
@@ -102,22 +93,22 @@ class ImageSupervised(auto_pipeline.AutoPipeline):
         return model
 
 
-class ImageClassifier(ImageSupervised):
+class ImageClassifier(SupervisedImagePipeline):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.head = hyper_head.ClassificationHead()
-        self.y_encoder = processor.OneHotEncoder()
+        self.label_encoder = processor.OneHotEncoder()
 
     def fit(self, x=None, y=None, **kwargs):
-        self.y_encoder.fit(y)
-        self.head.output_shape = (self.y_encoder.n_classes,)
-        super().fit(x=x, y=self.y_encoder.transform(y), **kwargs)
+        self.label_encoder.fit(y)
+        self.head.output_shape = (self.label_encoder.num_classes,)
+        super().fit(x=x, y=self.label_encoder.transform(y), **kwargs)
 
     def predict(self, x, **kwargs):
-        return self.y_encoder.inverse_transform(super().predict(x, **kwargs))
+        return self.label_encoder.inverse_transform(super().predict(x, **kwargs))
 
 
-class ImageRegressor(ImageSupervised):
+class ImageRegressor(SupervisedImagePipeline):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.head = hyper_head.RegressionHead()
