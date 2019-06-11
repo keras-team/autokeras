@@ -76,7 +76,7 @@ class SupervisedImagePipeline(auto_pipeline.AutoPipeline):
         self.inputs = [hyper_node.ImageInput()]
         super().fit(x=self.normalizer.transform(x), y=y, **kwargs)
 
-    def build(self, hp):
+    def build(self, hp, **kwargs):
         input_node = self.inputs[0].build(hp)
         output_node = self.image_block.build(hp, input_node)
         output_node = self.head.build(hp, output_node)

@@ -30,7 +30,7 @@ class AutoModel(hypermodel.HyperModel):
         self.outputs = []
         self.tuner = None
 
-    def build(self, hp):
+    def build(self, hp, **kwargs):
         raise NotImplementedError
 
     def fit(self,
@@ -88,7 +88,7 @@ class GraphAutoModel(AutoModel):
             self,
             objective=self._get_metrics())
 
-    def build(self, hp):
+    def build(self, hp, **kwargs):
         real_nodes = {}
         for input_node in self.inputs:
             node_id = self._node_to_id[input_node]
