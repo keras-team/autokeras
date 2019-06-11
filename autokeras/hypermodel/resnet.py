@@ -2,7 +2,6 @@ import tensorflow as tf
 
 from autokeras.hypermodel import hyper_block
 
-
 backend = tf.keras.backend
 layers = tf.keras.layers
 models = tf.keras.models
@@ -294,37 +293,38 @@ def resnet(stack_fn,
 
 class ResNetBlock(hyper_block.HyperBlock):
     def build(self, hp, inputs=None):
+        version = hp.Choice('version', ['v1', 'v2', 'next'], default='v2')
+        preact = False
+        use_bias = False
+        if version == 'v1':
+            use_bias = True
+        elif version == 'v2':
+            preact = True
+            use_bias = True
+
         def stack_fn(x):
-            stack_layer = hp.Choice('stack', [stack1, stack2, stack3])
-            multiplier = 2
-            filters = hp.Choice('start_filters',
-                                [16, 32, 64, 128, 256, 512, 1024],
-                                default=64)
-            x = stack_layer(x, filters,
-                            hp.Choice('block1', [2, 3], default=2),
-                            stride1=hp.Choice('stride1', [1, 2], default=1),
-                            name='conv2')
-            filters *= multiplier
-            x = stack_layer(x,
-                            filters,
-                            hp.Choice('block2', [2, 4, 8], default=2),
-                            name='conv3')
-            filters *= multiplier
-            x = stack_layer(x,
-                            filters,
-                            hp.Choice('block3', [2, 6, 23, 36], default=2),
-                            name='conv4')
-            filters *= multiplier
-            x = stack_layer(x,
-                            filters,
-                            hp.Choice('block4', [2, 3], default=2),
-                            stride1=hp.Choice('stride4', [1, 2], default=1),
-                            name='conv5')
+            version = hp.Choice('version', ['v1', 'v2', 'next'], default='v2')
+            conv3_depth = hp.Choice('conv3_depth', [4, 8], default=4)
+            conv4_depth = hp.Choice('conv4_depth', [6, 23, 36], default=6)
+            if version == 'v1':
+                x = stack1(x, 64, 3, stride1=1, name='conv2')
+                x = stack1(x, 128, conv3_depth, name='conv3')
+                x = stack1(x, 256, conv4_depth, name='conv4')
+                x = stack1(x, 512, 3, name='conv5')
+            elif version == 'v2':
+                x = stack2(x, 64, 3, name='conv2')
+                x = stack2(x, 128, conv3_depth, name='conv3')
+                x = stack2(x, 256, conv4_depth, name='conv4')
+                x = stack2(x, 512, 3, stride1=1, name='conv5')
+            elif version == 'next':
+                x = stack3(x, 64, 3, name='conv2')
+                x = stack3(x, 256, conv3_depth, name='conv3')
+                x = stack3(x, 512, conv4_depth, name='conv4')
+                x = stack3(x, 1024, 3, stride1=1, name='conv5')
+
             return x
 
         return resnet(stack_fn,
-                      preact=hp.Choice('preact', [True, False], default=True),
-                      use_bias=hp.Choice('use_bias',
-                                         [True, False],
-                                         default=True),
+                      preact=preact,
+                      use_bias=use_bias,
                       input_tensor=inputs[0])
