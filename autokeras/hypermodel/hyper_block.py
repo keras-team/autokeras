@@ -39,12 +39,18 @@ class DenseBlock(HyperBlock):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         output_node = Flatten().build(hp, output_node)
-
+        active_category = hp.Choice('activate_category', ['softmax','relu','tanh','sigmoid'], default='relu')
         for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
-            output_node = tf.keras.layers.Dense(
-                hp.Choice('units_{i}'.format(i=i),
-                          [16, 32, 64],
-                          default=32))(output_node)
+            if hp.Choice('layer_category_Dense', ['Dense','BN','Dropout','Activation'], default='Dense') == 'Dense':
+                output_node = tf.keras.layers.Dense(hp.Choice('units_{i}'.format(i=i),
+                                                              [16, 32, 64, 128, 256, 512, 1024],
+                                                              default=32))(output_node)
+            elif hp.Choice('layer_category_BN', ['Dense','BN','Dropout','Activation'], default='Dense') == 'BN':
+                output_node = tf.keras.layers.BatchNormalization()(output_node)
+            elif hp.Choice('layer_category_Dropout', ['Dense','BN','Dropout','ACtivation'], default='Dense') == 'Dropout':
+                output_node = tf.keras.layers.Dropout(rate=hp.Choice('dropout_rate',[0, 0.25, 0.5],default=0.5))(output_node)
+            else:
+                output_node = tf.keras.layers.Activation(active_category)(output_node)
         return output_node
 
 
