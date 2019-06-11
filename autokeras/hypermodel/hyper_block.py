@@ -39,10 +39,8 @@ class DenseBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
-
         output_node = input_node
         output_node = Flatten().build(hp, output_node)
-        print(output_node)
         for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
             output_node = tf.keras.layers.Dense(
                 hp.Choice('units_{i}'.format(i=i),
