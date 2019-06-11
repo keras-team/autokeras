@@ -119,8 +119,7 @@ def test_auto_model_basic():
     output_node = RegressionHead()(output_node)
 
     auto_model = GraphAutoModel(input_node, output_node)
-    const.Constant.NUM_TRAILS = 2
-    auto_model.fit(x_train, y_train, epochs=2)
+    auto_model.fit(x_train, y_train, trials=2, epochs=2)
     result = auto_model.predict(x_train)
 
     assert result.shape == (100, 1)

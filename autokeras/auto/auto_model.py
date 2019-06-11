@@ -8,6 +8,7 @@ from autokeras.hypermodel import hypermodel
 from autokeras.hypermodel import hyper_head
 from autokeras.hypermodel import hyper_node
 from autokeras import layer_utils
+from autokeras import tuner
 
 
 class AutoModel(hypermodel.HyperModel):
@@ -33,6 +34,7 @@ class AutoModel(hypermodel.HyperModel):
         self._nodes = []
         self._built = False
         self.tuner = None
+        self.tuner = tuner.SequentialRandomSearch(self, objective=self._get_metrics())
 
     def build(self, hp, **kwargs):
         raise NotImplementedError
@@ -136,7 +138,6 @@ class GraphAutoModel(AutoModel):
 
         model = tf.keras.Model([real_nodes[self._node_to_id[input_node]] for input_node in self.inputs],
                                [real_nodes[self._node_to_id[output_node]] for output_node in self.outputs])
-
 
         return self._compiled(hp, model)
 
