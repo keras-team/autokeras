@@ -43,7 +43,7 @@ class AutoModel(hypermodel.HyperModel):
             x=None,
             y=None,
             validation_data=None,
-            trials=None,
+            trials=100,
             **kwargs):
 
         if not self._built:

@@ -2,7 +2,6 @@ import tensorflow as tf
 
 
 class Constant(object):
-    NUM_TRAILS = 100
     LOWER_BETTER = [tf.keras.metrics.mean_squared_error.__name__,
                     tf.keras.metrics.mean_absolute_error.__name__]
     VALIDATION_SET_SIZE = 0.08333
