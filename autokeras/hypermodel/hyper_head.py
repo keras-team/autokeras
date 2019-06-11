@@ -20,7 +20,7 @@ class ClassificationHead(HyperHead):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not self.metrics:
-            self.metrics = [tf.keras.metrics.Accuracy]
+            self.metrics = [tf.keras.metrics.categorical_accuracy]
         if not self.loss:
             self.loss = tf.keras.losses.categorical_crossentropy
 
@@ -29,7 +29,8 @@ class ClassificationHead(HyperHead):
         output_node = input_node
         if len(self.output_shape) == 1:
             output_node = hyper_block.Flatten().build(hp, output_node)
-            output_node = tf.keras.layers.Dense(self.output_shape)(output_node)
+            output_node = tf.keras.layers.Dense(
+                self.output_shape[0])(output_node)
             output_node = tf.keras.layers.Softmax()(output_node)
             return output_node
 
@@ -52,6 +53,7 @@ class RegressionHead(HyperHead):
         output_node = input_node
         if len(self.output_shape) == 1:
             output_node = hyper_block.Flatten().build(hp, output_node)
-            output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
+            output_node = tf.keras.layers.Dense(
+                self.output_shape[-1])(output_node)
             return output_node
         return hyper_block.Reshape(self.output_shape).build(hp, output_node)

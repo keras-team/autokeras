@@ -1,9 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
 
-import numpy as np
-from tensorflow.python.keras.metrics import CategoricalAccuracy
-
 import autokeras as ak
 
 from autokeras.tuner import SequentialRandomSearch
@@ -25,7 +22,8 @@ def build_model(hp):
     model = keras.Sequential()
     model.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
     for i in range(hp.Range('num_layers', 2, 20)):
-        model.add(tf.keras.layers.Dense(units=hp.Range('units_' + str(i), 32, 512, 32),
+        model.add(tf.keras.layers.Dense(units=hp.Range('units_' + str(i),
+                                                       32, 512, 32),
                                         activation='relu'))
     model.add(tf.keras.layers.Dense(10, activation='softmax'))
     model.compile(
@@ -78,9 +76,11 @@ class MyHyperModel(HyperModel):
         model = keras.Sequential()
         model.add(tf.keras.layers.Flatten(input_shape=self.img_size))
         for i in range(hp.Range('num_layers', 2, 20)):
-            model.add(tf.keras.layers.Dense(units=hp.Range('units_' + str(i), 32, 512, 32),
+            model.add(tf.keras.layers.Dense(units=hp.Range('units_' + str(i),
+                                                           32, 512, 32),
                                             activation='relu'))
-        model.add(tf.keras.layers.Dense(self.num_classes, activation='softmax'))
+        model.add(tf.keras.layers.Dense(self.num_classes,
+                                        activation='softmax'))
         model.compile(
             optimizer=keras.optimizers.Adam(
                 hp.Choice('learning_rate', [1e-2, 1e-3, 1e-4])),
@@ -165,24 +165,20 @@ shape = (28, 28, 1)
 auto_pipeline = ak.ImageClassifier(shape, num_classes)
 
 # Loss, optimizer are picked automatically
-auto_pipeline.compile(metrics=[CategoricalAccuracy()])
 auto_pipeline.fit(x_train, y_train)
 
 # The predict function should output the labels instead of numerical vectors.
 auto_pipeline.predict(x_test)
 
-# Alternatively, the user can get the probability as follows.
-probabilities = auto_pipeline.predict(x_test, postprocessing=False)
-
 # Intermediate
 inputs = ak.ImageInput(shape=...)
 x = ak.ImageBlock(inputs)
-outputs = ak.ClassificationHead(num_classes)(x)
-automodel = ak.AutoModel(inputs=inputs, outputs=outputs)
+head = ak.ClassificationHead(num_classes, metrics=['accuracy'])
+outputs = head(x)
+automodel = ak.GraphAutoModel(inputs=inputs, outputs=outputs)
 
 # Loss, optimizer are picked automatically
-automodel.compile()
-automodel.fit(x_train, y_train, time_limit=12 * 60 * 60)
+automodel.fit(x_train, y_train)
 
 # Advanced
 
@@ -191,7 +187,7 @@ outputs1 = ak.ResNetBlock()(inputs)
 outputs2 = ak.XceptionBlock()(inputs)
 outputs = ak.Merge()((outputs1, outputs2))
 outputs = ak.ClassificationHead(num_classes)(outputs)
-automodel = ak.AutoModel(inputs=inputs, outputs=outputs)
+automodel = ak.GraphAutoModel(inputs=inputs, outputs=outputs)
 
 learning_rate = 1.0
 automodel.compile(optimizer=tf.keras.optimizers.Adam(learning_rate),

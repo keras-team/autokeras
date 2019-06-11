@@ -19,6 +19,7 @@ class Node(object):
 
 
 class Input(Node):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -27,17 +28,18 @@ class Input(Node):
 
 
 class ImageInput(Node):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def build(self, hp):
-        pass
+        return tf.keras.Input(shape=self.shape)
 
 
 class TextInput(Node):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def build(self, hp):
         pass
-

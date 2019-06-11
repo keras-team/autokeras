@@ -8,7 +8,6 @@ from autokeras.hypermodel import hypermodel
 from autokeras.hypermodel import hyper_head
 from autokeras.hypermodel import hyper_node
 from autokeras import layer_utils
-from autokeras import tuner
 
 
 class AutoModel(hypermodel.HyperModel):
@@ -16,11 +15,11 @@ class AutoModel(hypermodel.HyperModel):
 
     It contains the HyperModels and the Tuner.
 
-    Attributes:
+    # Attributes
         inputs: A HyperModel instance. The input node of a the AutoModel.
         outputs: A HyperModel instance. The output node of the AutoModel.
-        hypermodel: An instance of HyperModelWrap connecting from the inputs to the
-            outputs.
+        hypermodel: An instance of HyperModelWrap connecting from the inputs to
+            the outputs.
         tuner: An instance of Tuner.
     """
 
@@ -33,9 +32,9 @@ class AutoModel(hypermodel.HyperModel):
         self._hypermodels = []
         self._nodes = []
         self._built = False
-        self.tuner = tuner.SequentialRandomSearch(self, objective=self._get_metrics())
+        self.tuner = None
 
-    def build(self, hp):
+    def build(self, hp, **kwargs):
         raise NotImplementedError
 
     def _hyper_build(self):
@@ -55,7 +54,8 @@ class AutoModel(hypermodel.HyperModel):
         x = layer_utils.format_inputs(x, 'train_x')
         y = layer_utils.format_inputs(y, 'train_y')
 
-        # TODO: Set the shapes only if they are not provided by the user when initiating the HyperHead or Block.
+        # TODO: Set the shapes only if they are not provided by the user when
+        #  initiating the HyperHead or Block.
         for x_input, input_node in zip(x, self.inputs):
             input_node.shape = x_input.shape[1:]
         for y_input, output_node in zip(y, self.outputs):
@@ -119,20 +119,24 @@ class GraphAutoModel(AutoModel):
         self._hypermodel_to_id = {}
         self._hyper_build()
 
-    def build(self, hp):
+    def build(self, hp, **kwargs):
         real_nodes = {}
         for input_node in self.inputs:
             node_id = self._node_to_id[input_node]
             real_nodes[node_id] = input_node.build(hp)
         for hypermodel in self._hypermodels:
+            temp_inputs = [real_nodes[self._node_to_id[input_node]]
+                           for input_node in hypermodel.inputs]
             outputs = hypermodel.build(hp,
-                                       inputs=[real_nodes[self._node_to_id[input_node]]
-                                               for input_node in hypermodel.inputs])
+                                       inputs=temp_inputs)
             outputs = layer_utils.format_inputs(outputs, hypermodel.name)
-            for output_node, real_output_node in zip(hypermodel.outputs, outputs):
+            for output_node, real_output_node in zip(hypermodel.outputs,
+                                                     outputs):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
+
         model = tf.keras.Model([real_nodes[self._node_to_id[input_node]] for input_node in self.inputs],
                                [real_nodes[self._node_to_id[output_node]] for output_node in self.outputs])
+
 
         return self._compiled(hp, model)
 
@@ -143,7 +147,8 @@ class GraphAutoModel(AutoModel):
         # Recursively find all the interested nodes.
         for input_node in self.inputs:
             self._search_network(input_node, self.outputs, set(), set())
-        self._nodes = sorted(list(self._node_to_id.keys()), key=lambda x: self._node_to_id[x])
+        self._nodes = sorted(list(self._node_to_id.keys()),
+                             key=lambda x: self._node_to_id[x])
 
         for node in (self.inputs + self.outputs):
             if node not in self._node_to_id:
@@ -160,20 +165,24 @@ class GraphAutoModel(AutoModel):
         while not queue.empty():
             input_node = queue.get()
             for hypermodel in input_node.out_hypermodels:
-                # Check at least one output node of the hypermodel is in the interested nodes.
-                if not any([output_node in self._node_to_id for output_node in hypermodel.outputs]):
+                # Check at least one output node of the hypermodel is in the
+                # interested nodes.
+                if not any([output_node in self._node_to_id for output_node in
+                            hypermodel.outputs]):
                     continue
                 self._add_hypermodel(hypermodel)
                 for output_node in hypermodel.outputs:
                     # The node is not visited and in interested nodes.
-                    if output_node not in visited_nodes and output_node in self._node_to_id:
+                    if output_node not in visited_nodes \
+                            and output_node in self._node_to_id:
                         visited_nodes.add(output_node)
                         queue.put(output_node)
         for output_node in self.outputs:
             hypermodel = output_node.in_hypermodels[0]
             hypermodel.output_shape = output_node.shape
 
-    def _search_network(self, input_node, outputs, in_stack_nodes, visited_nodes):
+    def _search_network(self, input_node, outputs, in_stack_nodes,
+                        visited_nodes):
         visited_nodes.add(input_node)
         in_stack_nodes.add(input_node)
 
@@ -186,7 +195,8 @@ class GraphAutoModel(AutoModel):
                 if output_node in in_stack_nodes:
                     raise ValueError('The network has a cycle.')
                 if output_node not in visited_nodes:
-                    self._search_network(output_node, outputs, in_stack_nodes, visited_nodes)
+                    self._search_network(output_node, outputs, in_stack_nodes,
+                                         visited_nodes)
                 if output_node in self._node_to_id.keys():
                     outputs_reached = True
 
@@ -204,7 +214,10 @@ class GraphAutoModel(AutoModel):
             self._add_node(output_node)
         for input_node in hypermodel.inputs:
             if input_node not in self._node_to_id:
-                raise ValueError('A required input is missing for HyperModel {name}. '.format(name=hypermodel.name))
+                raise ValueError(
+                    'A required input is missing '
+                    'for HyperModel {name}.'.format(
+                        name=hypermodel.name))
 
     def _add_node(self, input_node):
         if input_node not in self._node_to_id:
