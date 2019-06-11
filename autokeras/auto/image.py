@@ -14,16 +14,7 @@ class ImageTuner(tuner.SequentialRandomSearch):
         # Build a model instance.
         model = self.hypermodel.build(hyperparameters)
 
-        # Optionally disallow hyperparameters defined on the fly.
-        old_space = hyperparameters.space[:]
-        new_space = hyperparameters.space[:]
-        if not self.allow_new_parameters and set(old_space) != set(new_space):
-            diff = set(new_space) - set(old_space)
-            raise RuntimeError(
-                'The hypermodel has requested a parameter that was not part '
-                'of `hyperparameters`, '
-                'yet `allow_new_parameters` is set to False. '
-                'The unknown parameters are: {diff}'.format(diff=diff))
+        self._check_space(hyperparameters)
 
         datagen = tf.keras.preprocessing.image.ImageDataGenerator(
             # rescale image pixels to [0, 1]
