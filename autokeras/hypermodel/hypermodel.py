@@ -1,4 +1,3 @@
-from autokeras import layer_utils
 import tensorflow as tf
 import types
 

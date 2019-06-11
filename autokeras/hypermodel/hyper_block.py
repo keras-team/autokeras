@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from autokeras.hypermodel import hyper_node, hypermodel
-from autokeras import hyperparameters
+from autokeras.hypermodel import hyper_node
+from autokeras.hypermodel import hypermodel
 from autokeras import layer_utils
 
 

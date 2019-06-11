@@ -4,7 +4,9 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import hypermodel, hyper_head, hyper_node
+from autokeras.hypermodel import hypermodel
+from autokeras.hypermodel import hyper_head
+from autokeras.hypermodel import hyper_node
 from autokeras import layer_utils
 from autokeras import tuner
 
