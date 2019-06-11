@@ -5,18 +5,6 @@ from tensorflow.python.util import nest
 from autokeras import const
 
 
-def get_conv_class(shape):
-    return [tf.keras.layers.Conv1D,
-            tf.keras.layers.Conv2D,
-            tf.keras.layers.Conv3D][len(shape) - 3]
-
-
-def get_dropout_class(shape):
-    return [tf.keras.layers.SpatialDropout1D,
-            tf.keras.layers.SpatialDropout2D,
-            tf.keras.layers.SpatialDropout3D][len(shape) - 3]
-
-
 def get_global_average_pooling_class(shape):
     return [tf.keras.layers.GlobalAveragePooling1D,
             tf.keras.layers.GlobalAveragePooling2D,
