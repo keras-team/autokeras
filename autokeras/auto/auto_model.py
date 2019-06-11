@@ -14,7 +14,7 @@ class AutoModel(hypermodel.HyperModel):
 
     It contains the HyperModels and the Tuner.
 
-    Attributes:
+    # Attributes
         inputs: A HyperModel instance. The input node of a the AutoModel.
         outputs: A HyperModel instance. The output node of the AutoModel.
         hypermodel: An instance of HyperModelWrap connecting from the inputs to

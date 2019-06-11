@@ -110,7 +110,7 @@ class ImageClassifier(ImageSupervised):
 
     def fit(self, x=None, y=None, **kwargs):
         self.y_encoder.fit(y)
-        self.head.output_shape = (self.y_encoder.n_classes,)
+        self.head.output_shape = (self.y_encoder.num_classes,)
         super().fit(x=x, y=self.y_encoder.transform(y), **kwargs)
 
     def predict(self, x, **kwargs):
