@@ -17,12 +17,14 @@ class HyperHead(hyper_block.HyperBlock):
 
 class ClassificationHead(HyperHead):
 
-    def __init__(self, **kwargs):
+    def __init__(self, num_classes=None, **kwargs):
         super().__init__(**kwargs)
         if not self.metrics:
             self.metrics = [tf.keras.metrics.categorical_accuracy]
         if not self.loss:
             self.loss = tf.keras.losses.categorical_crossentropy
+        if num_classes:
+            self.output_shape = (num_classes,)
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]

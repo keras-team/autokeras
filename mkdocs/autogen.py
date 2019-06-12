@@ -59,8 +59,8 @@ def parse_func_string(comment):
     if comment is None or len(comment) == 0:
         return {}
     comments = {}
-    paras = ('Args', 'Attributes', 'Returns', 'Raises')
-    comment_parts = ['short_description', 'long_description', 'Args', 'Attributes', 'Returns', 'Raises']
+    paras = ('Arguments', 'Attributes', 'Returns', 'Raises')
+    comment_parts = ['short_description', 'long_description', 'Arguments', 'Attributes', 'Returns', 'Raises']
     for x in comment_parts:
         comments[x] = None
 
@@ -127,7 +127,7 @@ Hello world.
 
 
    
-    Args:
+    Arguments:
         big_table: An open Bigtable Table instance.
         keys: A sequence of strings representing the key of each table row
             to fetch.
@@ -151,9 +151,9 @@ def to_md(comment_dict):
         doc += comment_dict['long_description']
         doc += '\n'
 
-    if 'Args' in comment_dict and comment_dict['Args'] is not None:
-        doc += '#####Args\n'
-        for arg, des in comment_dict['Args'].items():
+    if 'Arguments' in comment_dict and comment_dict['Arguments'] is not None:
+        doc += '#####Arguments\n'
+        for arg, des in comment_dict['Arguments'].items():
             doc += '* **' + arg + '**: ' + des + '\n\n'
 
     if 'Attributes' in comment_dict and comment_dict['Attributes'] is not None:

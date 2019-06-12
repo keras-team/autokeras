@@ -56,15 +56,18 @@ class AutoModel(hypermodel.HyperModel):
         x = layer_utils.format_inputs(x, 'train_x')
         y = layer_utils.format_inputs(y, 'train_y')
 
-        # TODO: Set the shapes only if they are not provided by the user when
-        #  initiating the HyperHead or Block.
         for x_input, input_node in zip(x, self.inputs):
             input_node.shape = x_input.shape[1:]
         for y_input, output_node in zip(y, self.outputs):
             if len(y_input.shape) == 1:
                 y_input = np.reshape(y_input, y_input.shape + (1,))
             output_node.shape = y_input.shape[1:]
-            output_node.in_hypermodels[0].output_shape = output_node.shape
+            head = output_node.in_hypermodels[0]
+            if not head.output_shape:
+                head.output_shape = output_node.shape
+            elif head.output_shape != output_node.shape:
+                raise ValueError('Expected target shape to be {shape1}, '
+                                 'but got {shape2}'.format(shape1=head.output_shape, shape2=output_node.shape))
 
         # Prepare the dataset
         if validation_data is None:
@@ -132,8 +135,7 @@ class GraphAutoModel(AutoModel):
             outputs = hypermodel.build(hp,
                                        inputs=temp_inputs)
             outputs = layer_utils.format_inputs(outputs, hypermodel.name)
-            for output_node, real_output_node in zip(hypermodel.outputs,
-                                                     outputs):
+            for output_node, real_output_node in zip(hypermodel.outputs, outputs):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
 
         model = tf.keras.Model([real_nodes[self._node_to_id[input_node]] for input_node in self.inputs],
@@ -178,9 +180,6 @@ class GraphAutoModel(AutoModel):
                             and output_node in self._node_to_id:
                         visited_nodes.add(output_node)
                         queue.put(output_node)
-        for output_node in self.outputs:
-            hypermodel = output_node.in_hypermodels[0]
-            hypermodel.output_shape = output_node.shape
 
     def _search_network(self, input_node, outputs, in_stack_nodes,
                         visited_nodes):
@@ -235,7 +234,7 @@ class SequentialAutoModel(AutoModel):
     def add(self, hypermodel):
         self._hypermodels.add(hypermodel)
 
-    def build(self, hp):
+    def build(self, hp, **kwargs):
         input_node = self.inputs[0].build(hp)
         output_node = input_node
         for hypermodel in self._hypermodels:
@@ -251,5 +250,3 @@ class SequentialAutoModel(AutoModel):
             output_node = hypermodel(output_node)
             self._nodes.append(output_node)
         self.outputs = output_node
-
-
