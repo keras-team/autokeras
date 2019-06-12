@@ -39,6 +39,7 @@ class DenseBlock(HyperBlock):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         output_node = Flatten().build(hp, output_node)
+
         for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
             output_node = tf.keras.layers.Dense(hp.Choice('units_{i}'.format(i=i),
                                                           [16, 32, 64],
@@ -51,62 +52,33 @@ class RNNBlock(HyperBlock):
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
-        rnn_layer_units = input_node.shape[1]
-        output_node = tf.reshape(Flatten().build(hp, output_node), [-1, rnn_layer_units, 1])
+        layer_units = input_node.shape[1]
+        output_node = tf.reshape(Flatten().build(hp, output_node), [-1, layer_units, 1])
+        type_of_block = hp.Choice('rnn_type', ['vanilla', 'gru', 'lstm'], default='vanilla')
+        if type_of_block == 'vanilla':
+            print("make vanilla")
+            in_layer = tf.keras.layers.SimpleRNN
+        elif type_of_block == 'gru':
+            print("make gru")
+            in_layer = tf.keras.layers.GRU
+        elif type_of_block == 'lstm':
+            print("make lstm")
+            in_layer = tf.keras.layers.LSTM
+
         choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
-        ## Do not remove return_sequences = True, since we are stacking multiple layers
         for i in range(choice_of_layers):
-            if i == choice_of_layers-1:
-                bidirectional_rnn = tf.keras.layers.Bidirectional(
-                    tf.keras.layers.SimpleRNN(rnn_layer_units, activation='tanh', use_bias=True,
+            if i == choice_of_layers - 1:
+                bidirectional_block = tf.keras.layers.Bidirectional(
+                    in_layer(layer_units, activation='tanh', use_bias=True,
                                               return_sequences=False))
             else:
-                bidirectional_rnn = tf.keras.layers.Bidirectional(
-                    tf.keras.layers.SimpleRNN(rnn_layer_units, activation='tanh', use_bias=True,
+                bidirectional_block = tf.keras.layers.Bidirectional(
+                    in_layer(layer_units, activation='tanh', use_bias=True,
                                               return_sequences=True))
-            output_node = bidirectional_rnn(output_node)
+            output_node = bidirectional_block(output_node)
 
         return output_node
 
-
-class GRUBlock(HyperBlock):
-
-    def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
-        output_node = input_node
-        gru_layer_units = input_node.shape[1]
-        output_node = tf.reshape(Flatten().build(hp, output_node), [-1, gru_layer_units, 1])
-        choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
-        for i in range(choice_of_layers):
-            if i == choice_of_layers-1:
-                bidirectional_gru = tf.keras.layers.Bidirectional(
-                    tf.keras.layers.GRU(gru_layer_units, activation='tanh', use_bias=True, return_sequences=False))
-            else:
-                bidirectional_gru = tf.keras.layers.Bidirectional(
-                    tf.keras.layers.GRU(gru_layer_units, activation='tanh', use_bias=True, return_sequences=True))
-            output_node = bidirectional_gru(output_node)
-
-        return output_node
-
-
-class LSTMBlock(HyperBlock):
-
-    def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
-        output_node = input_node
-        lstm_layer_units = input_node.shape[1]
-        output_node = tf.reshape(Flatten().build(hp, output_node), [-1, lstm_layer_units, 1])
-        choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
-        for i in range(choice_of_layers):
-            if i == choice_of_layers-1:
-                bidirectional_lstm = tf.keras.layers.Bidirectional(
-                    tf.keras.layers.LSTM(lstm_layer_units, activation='tanh', use_bias=True, return_sequences=False))
-            else:
-                bidirectional_lstm = tf.keras.layers.Bidirectional(
-                    tf.keras.layers.LSTM(lstm_layer_units, activation='tanh', use_bias=True, return_sequences=True))
-            output_node = bidirectional_lstm(output_node)
-
-        return output_node
 
 
 class ImageBlock(HyperBlock):

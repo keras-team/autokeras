@@ -2,6 +2,7 @@ import pytest
 
 from autokeras.auto.auto_model import *
 from autokeras import const
+
 from autokeras.hypermodel.hyper_block import XceptionBlock, RNNBlock
 from autokeras.hypermodel.hyper_head import ClassificationHead, RegressionHead
 from autokeras.hypermodel.hyper_node import Input
