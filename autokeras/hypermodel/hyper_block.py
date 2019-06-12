@@ -39,22 +39,29 @@ class DenseBlock(HyperBlock):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         output_node = Flatten().build(hp, output_node)
-
+        active_category = hp.Choice('activate_category', ['softmax','relu','tanh','sigmoid'], default='relu')
+        layer_stack = hp.Choice('layer_stack', ['dense-bn-act', 'dense-act', 'act-bn-dense'],default='act-bn-dense')
         for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
-            if hp.Choice('layer_category', ['Dense','BN','Dropout','Activation'], default='Dense') == 'Dense':
+            if layer_stack == 'dense-bn-act':
                 output_node = tf.keras.layers.Dense(hp.Choice('units_{i}'.format(i=i),
-                                                              [16, 32, 64],
+                                                              [16, 32, 64, 128, 256, 512, 1024],
                                                               default=32))(output_node)
-            elif hp.Choice('layer_category', ['Dense','BN','Dropout','Activation'], default='Dense') == 'BN':
-                # TODO: Insert BN layer
                 output_node = tf.keras.layers.BatchNormalization()(output_node)
-            elif hp.Choice('layer_category', ['Dense','BN','Dropout','ACtivation'], default='Dense') == 'Dropout':
-                # TODO: Insert Dropout layer
-                output_node = tf.keras.layers.Dropout(rate=hp.Choice('dropout_rate',[0.1, 0.3, 0.5],default=0.5))(output_node)
+                output_node = tf.keras.layers.Activation(active_category)(output_node)
+                output_node = tf.keras.layers.Dropout(rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(output_node)
+            elif layer_stack == 'dense-act':
+                output_node = tf.keras.layers.Dense(hp.Choice('units_{i}'.format(i=i),
+                                                              [16, 32, 64, 128, 256, 512, 1024],
+                                                              default=32))(output_node)
+                output_node = tf.keras.layers.Activation(active_category)(output_node)
+                output_node = tf.keras.layers.Dropout(rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(output_node)
             else:
-                # TODO: Insert Activation layer
-                output_node = tf.keras.layers.Activation(hp.Choice('activate_category', ['softmax','relu','tanh','sigmoid'], default='relu'))(output_node)
-      
+                output_node = tf.keras.layers.Activation(active_category)(output_node)
+                output_node = tf.keras.layers.BatchNormalization()(output_node)
+                output_node = tf.keras.layers.Dense(hp.Choice('units_{i}'.format(i=i),
+                                                              [16, 32, 64, 128, 256, 512, 1024],
+                                                              default=32))(output_node)
+                output_node = tf.keras.layers.Dropout(rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(output_node)
         return output_node
 
 
