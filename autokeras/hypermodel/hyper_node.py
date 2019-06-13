@@ -42,5 +42,4 @@ class TextInput(Node):
         super().__init__(**kwargs)
 
     def build(self, hp):
-        pass
-
+        return tf.keras.Input(shape=self.shape)

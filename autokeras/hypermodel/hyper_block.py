@@ -98,7 +98,6 @@ class RNNBlock(HyperBlock):
         return output_node
 
 
-
 class ImageBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
@@ -113,6 +112,23 @@ class ImageBlock(HyperBlock):
                                                  hp.Choice('kernel_size_{i}'.format(i=i),
                                                            [3, 5, 7],
                                                            default=3))(output_node)
+        return output_node
+
+
+class TextBlock(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        output_node = input_node
+        layer_units = input_node.shape[1]
+
+        choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
+        for i in range(choice_of_layers):
+            bidirectional_block = tf.keras.layers.Bidirectional(
+                tf.keras.layers.SimpleRNN(layer_units, activation='tanh', use_bias=True,
+                                          return_sequences=not (i == choice_of_layers-1)))
+            output_node = bidirectional_block(output_node)
+
         return output_node
 
 
