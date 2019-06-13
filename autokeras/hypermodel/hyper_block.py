@@ -176,8 +176,6 @@ class XceptionBlock(HyperBlock):
         # [Middle Flow]
         residual_blocks = hp.Range("num_residual_blocks", 2, 8)
         # [Exit Flow]
-        dense_merge_type = hp.Choice("merge_type", ["avg", "flatten", "max"])
-        dense_layers = hp.Range("dense_layers", 1, 3)
 
         #### Model ####
         # Initial conv2d
