@@ -32,6 +32,7 @@ def test_xception_block():
 
     assert result.shape == (100, 10)
 
+
 def test_rnn_block():
     x_train = np.random.rand(100, 32, 10)
     y_train = np.random.rand(100)
