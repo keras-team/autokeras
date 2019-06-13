@@ -50,7 +50,35 @@ class DenseBlock(HyperBlock):
 class RNNBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        pass
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        output_node = input_node
+        layer_units = input_node.shape[1]
+        output_node = tf.reshape(Flatten().build(hp, output_node), [-1, layer_units, 1])
+        type_of_block = hp.Choice('rnn_type', ['vanilla', 'gru', 'lstm'], default='vanilla')
+        if type_of_block == 'vanilla':
+            print("make vanilla")
+            in_layer = tf.keras.layers.SimpleRNN
+        elif type_of_block == 'gru':
+            print("make gru")
+            in_layer = tf.keras.layers.GRU
+        elif type_of_block == 'lstm':
+            print("make lstm")
+            in_layer = tf.keras.layers.LSTM
+
+        choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
+        for i in range(choice_of_layers):
+            if i == choice_of_layers - 1:
+                bidirectional_block = tf.keras.layers.Bidirectional(
+                    in_layer(layer_units, activation='tanh', use_bias=True,
+                                              return_sequences=False))
+            else:
+                bidirectional_block = tf.keras.layers.Bidirectional(
+                    in_layer(layer_units, activation='tanh', use_bias=True,
+                                              return_sequences=True))
+            output_node = bidirectional_block(output_node)
+
+        return output_node
+
 
 
 class ImageBlock(HyperBlock):
