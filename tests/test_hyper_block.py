@@ -4,7 +4,8 @@ from autokeras.auto.auto_model import *
 from autokeras import const
 
 from autokeras.hypermodel.hyper_block import *
-from autokeras.hypermodel.hyper_head import *
+from autokeras.hypermodel.hyper_head import ClassificationHead
+from autokeras.hypermodel.hyper_head import RegressionHead
 from autokeras.hypermodel.hyper_node import Input
 from autokeras.hyperparameters import HyperParameters
 
