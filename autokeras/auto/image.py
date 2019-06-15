@@ -127,8 +127,12 @@ class ImageTuner(tuner.SequentialRandomSearch):
         self._check_space(hyperparameters)
         
         (x_train, y_train), (x_test, y_test) = augmentedDataGenerator('cifar100')
-        loss = model.train(x_train,y_train)
-        return model, loss
+        
+        history = model.fit(x_train,y_train,batch_size=32)
+        metric_name = model.metrics_names[1]
+        feedback = history.history['val_' + metric_name][-1]
+        
+        return model, feedback
 
 class SupervisedImagePipeline(auto_pipeline.AutoPipeline):
 
