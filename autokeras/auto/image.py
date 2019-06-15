@@ -126,7 +126,7 @@ class ImageTuner(tuner.SequentialRandomSearch):
 
         self._check_space(hyperparameters)
         
-        (x_train, y_train), (x_test, y_test) = AugmentedDataGenerator('cifar100')
+        (x_train, y_train), (x_test, y_test) = augmentedDataGenerator('cifar100')
         loss = model.train(x_train,y_train)
         return model, loss
 
