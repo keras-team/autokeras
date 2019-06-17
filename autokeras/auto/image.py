@@ -6,6 +6,7 @@ from autokeras.auto import processor
 from autokeras.hypermodel import hyper_block, hyper_node
 from autokeras.hypermodel import hyper_head
 from autokeras import tuner
+from keras.utils import to_categorical
 
 def augmentedDataGenerator(dataset='cifar10'):
     # You give the dataset name, we return the augmented data!
