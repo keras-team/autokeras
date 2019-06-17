@@ -26,7 +26,7 @@ def format_inputs(inputs, name=None, num=None):
     return inputs
 
 
-def get_block(choice):
+def get_rnn_block(choice):
     return const.Constant.RNN_LAYERS[choice]
 
 

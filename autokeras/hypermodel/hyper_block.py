@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 from autokeras.hypermodel import hyper_node
 from autokeras.hypermodel import hypermodel
@@ -70,10 +71,17 @@ class RNNBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
-        feature_size = input_node.shape[2]
+        shape = input_node.shape.as_list()
+        if len(shape) < 3:
+            raise ValueError("Expect the input tensor to have atleast 3 dimensions for rnn models, "
+                             "but got {shape}".format(shape=input_node.shape))
+
+        # Flatten feature_list to a single dimension. Final shape 3-D (num_sample , time_steps , features)
+        feature_size = np.prod(shape[2:])
+        input_node = tf.reshape(input_node, [-1, shape[1], feature_size])
         output_node = input_node
 
-        in_layer = layer_utils.get_block(hp.Choice('rnn_type', ['vanilla', 'gru', 'lstm'], default='vanilla'))
+        in_layer = layer_utils.get_rnn_block(hp.Choice('rnn_type', ['vanilla', 'gru', 'lstm'], default='vanilla'))
         choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
 
         for i in range(choice_of_layers):

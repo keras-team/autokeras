@@ -35,7 +35,7 @@ def test_xception_block():
 
 
 def test_rnn_block():
-    x_train = np.random.rand(100, 32, 10)
+    x_train = np.random.rand(100, 32, 20, 10)
     y_train = np.random.rand(100)
 
     input_node = Input()
