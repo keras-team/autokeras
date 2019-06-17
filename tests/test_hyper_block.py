@@ -4,7 +4,8 @@ from autokeras.auto.auto_model import *
 from autokeras import const
 
 from autokeras.hypermodel.hyper_block import *
-from autokeras.hypermodel.hyper_head import *
+from autokeras.hypermodel.hyper_head import ClassificationHead
+from autokeras.hypermodel.hyper_head import RegressionHead
 from autokeras.hypermodel.hyper_node import Input
 from autokeras.hyperparameters import HyperParameters
 
@@ -34,7 +35,7 @@ def test_xception_block():
 
 
 def test_rnn_block():
-    x_train = np.random.rand(100, 32, 10)
+    x_train = np.random.rand(100, 32, 20, 10)
     y_train = np.random.rand(100)
 
     input_node = Input()
