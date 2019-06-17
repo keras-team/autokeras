@@ -10,20 +10,19 @@ from autokeras import tuner
 def augmentedDataGenerator(dataset='cifar10'):
     # You give the dataset name, we return the augmented data!
     if dataset == 'cifar10':
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+        (x_train, y_train) = tf.keras.datasets.cifar10.load_data()
     elif dataset == 'cifar100':
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar100.load_data()
+        (x_train, y_train) = tf.keras.datasets.cifar100.load_data()
     elif dataset == 'mnist':
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+        (x_train, y_train) = tf.keras.datasets.mnist.load_data()
     else:
         # Fasion-MNIST
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
+        (x_train, y_train) = tf.keras.datasets.fashion_mnist.load_data()
     # Augment the images
     for i in range(x_train.shape[0]):
         x_train[i] = augment_image(x_train[i])
-    for i in range(x_test.shape[0]):
-        x_test[i] = augment_image(x_test[i])
-    return (x_train, y_train), (x_test, y_test)
+    y_train = to_categorical(y_train,num_classes=None)
+    return (x_train, y_train)
 
 def _get_min_and_max(value, name):
     if isinstance(value, (tuple, list)):
@@ -126,7 +125,7 @@ class ImageTuner(tuner.SequentialRandomSearch):
 
         self._check_space(hyperparameters)
         
-        (x_train, y_train), (x_test, y_test) = augmentedDataGenerator('cifar100')
+        (x_train, y_train) = augmentedDataGenerator('cifar100')
         
         history = model.fit(x_train,y_train,batch_size=32)
         metric_name = model.metrics_names[1]
