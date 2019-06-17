@@ -6,7 +6,6 @@ from autokeras.auto import processor
 from autokeras.hypermodel import hyper_block, hyper_node
 from autokeras.hypermodel import hyper_head
 from autokeras import tuner
-from keras.utils import to_categorical
 
 def augmentedDataGenerator(dataset='cifar10'):
     # You give the dataset name, we return the augmented data!
@@ -22,7 +21,7 @@ def augmentedDataGenerator(dataset='cifar10'):
     # Augment the images
     for i in range(x_train.shape[0]):
         x_train[i] = augment_image(x_train[i])
-    y_train = to_categorical(y_train,num_classes=None)
+    y_train = tf.keras.utils.to_categorical(y_train,num_classes=None)
     return (x_train, y_train)
 
 def _get_min_and_max(value, name):
