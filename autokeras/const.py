@@ -9,3 +9,8 @@ class Constant(object):
     # TODO: Change it to random and configurable.
     SEED = 42
     BATCH_SIZE = 128
+    RNN_LAYERS = {
+        'vanilla': tf.keras.layers.SimpleRNN,
+        'gru': tf.keras.layers.GRU,
+        'lstm': tf.keras.layers.LSTM
+    }
