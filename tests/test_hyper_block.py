@@ -3,8 +3,9 @@ import pytest
 from autokeras.auto.auto_model import *
 from autokeras import const
 
-from autokeras.hypermodel.hyper_block import XceptionBlock, RNNBlock
-from autokeras.hypermodel.hyper_head import ClassificationHead, RegressionHead
+from autokeras.hypermodel.hyper_block import *
+from autokeras.hypermodel.hyper_head import ClassificationHead
+from autokeras.hypermodel.hyper_head import RegressionHead
 from autokeras.hypermodel.hyper_node import Input
 from autokeras.hyperparameters import HyperParameters
 
@@ -32,8 +33,9 @@ def test_xception_block():
 
     assert result.shape == (100, 10)
 
+
 def test_rnn_block():
-    x_train = np.random.rand(100, 32)
+    x_train = np.random.rand(100, 32, 20, 10)
     y_train = np.random.rand(100)
 
     input_node = Input()
