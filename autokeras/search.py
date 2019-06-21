@@ -156,8 +156,15 @@ class Searcher(ABC):
             print('+' + '-' * 46 + '+')
             print('|' + 'Training model {}'.format(model_id).center(46) + '|')
             print('+' + '-' * 46 + '+')
-        # Temporary solution to support GOOGLE Colab
-        if get_system() == Constant.SYS_GOOGLE_COLAB:
+            
+        #check run in ipython
+        try:
+            __IPYTHON__
+            RunInIpython=True
+        except:
+            RunInIpython=False
+        # Temporary solution to support GOOGLE Colab  
+        if (get_system() == Constant.SYS_GOOGLE_COLAB)  or (RunInIpython):
             # When using Google Colab, use single process for searching and training.
             self.sp_search(graph, other_info, model_id, train_data, test_data)
         else:
