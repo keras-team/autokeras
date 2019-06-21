@@ -216,7 +216,7 @@ class ImageClassifier(ImageSupervised):
         return self.y_encoder.n_classes
 
     def export_autokeras_model(self, model_file_name):
-        """ Creates and Exports the AutoKeras model to the given filename.
+        """Creates and Exports the AutoKeras model to the given filename.
         
         Args:
             model_file_name: A string containing the name of the file to which the model should be saved
@@ -233,7 +233,7 @@ class ImageClassifier(ImageSupervised):
 
 
 class ImageClassifier1D(ImageClassifier):
-    """ ImageClassifier1D class.
+    """ImageClassifier1D class.
 
     It is used for 1D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
@@ -245,7 +245,7 @@ class ImageClassifier1D(ImageClassifier):
 
 
 class ImageClassifier3D(ImageClassifier):
-    """ ImageClassifier3D class.
+    """ImageClassifier3D class.
 
     It is used for 3D image classification. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
@@ -261,6 +261,8 @@ class ImageRegressor(ImageSupervised):
 
     It is used for image regression. It searches convolutional neural network architectures
     for the best configuration for the image dataset.
+
+    The class supports regressing to N scalars. Therefore, train_y is expected to be shape (examples, N) or (examples,)
     """
 
     @property
@@ -272,16 +274,48 @@ class ImageRegressor(ImageSupervised):
         return MSE
 
     def get_n_output_node(self):
-        return 1
+        """Determines the output nodes in the keras Model.
+           i.e. if self.num_scalars is 2, the last Dense layer is Dense(2)
+
+           self.num_scalars is set in the function self.transform_y()
+        """
+        return self.num_scalars
 
     def transform_y(self, y_train):
-        return y_train.flatten().reshape(len(y_train), 1)
+        """Transforms y_train for model fitting.
+           If y_train is shape (examples,) it is reshaped to (examples, 1).
+           Otherwise, y_train is expected to be reshaped to (examples, N).
+        
+        Args:
+            y: an ndarray of scalars that are transformed for model fitting.
+        Throws:
+            ValueError: when y_train cannot be transformed into (examples, N)
+        """
+        try:
+            # num_scalars determines the number of output nodes in the keras model.
+            # ie. if num_scalars = 2, the last Dense node is Dense(2)
+            
+            # if y_train is shape (examples,) then set num_scalars to 1
+            self.num_scalars = y_train.shape[1] if 1 < len(y_train.shape) else 1
+            return y_train.flatten().reshape(y_train.shape[0], self.num_scalars)
+        except ValueError as e:
+            raise ValueError("ImageNRegressor.transform_y() cannot reshape {}. Must be shape (examples, N).")
 
     def inverse_transform_y(self, output):
-        return output.flatten()
+        """Output is expected to be the shape (examples, N).
+           For single scalar outputs: (examples, 1) it is transformed into (examples,)
+           to mimic a prior version of ImageRegressor
+
+        Args:
+            output: the output ndarray from the keras model.
+
+        Returns:
+            ndarray: a transformed/reshaped output
+        """
+        return output.flatten() if self.num_scalars == 1 else output
 
     def export_autokeras_model(self, model_file_name):
-        """ Creates and Exports the AutoKeras model to the given filename. """
+        """Creates and Exports the AutoKeras model to the given filename. """
         portable_model = PortableImageRegressor(graph=self.cnn.best_model,
                                                 y_encoder=self.y_encoder,
                                                 data_transformer=self.data_transformer,
@@ -291,7 +325,7 @@ class ImageRegressor(ImageSupervised):
 
 
 class ImageRegressor1D(ImageRegressor):
-    """ ImageRegressor1D class.
+    """ImageRegressor1D class.
 
     It is used for 1D image regression. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.
@@ -303,7 +337,7 @@ class ImageRegressor1D(ImageRegressor):
 
 
 class ImageRegressor3D(ImageRegressor):
-    """ ImageRegressor3D class.
+    """ImageRegressor3D class.
 
     It is used for 3D image regression. It searches convolutional neural network architectures
     for the best configuration for the 1D image dataset.

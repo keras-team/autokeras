@@ -71,6 +71,56 @@ def test_fit_predict(_, _1):
     results = clf.predict(train_x)
     assert len(results) == len(train_y)
 
+    # test expected behavior of ImageRegressor
+    # train_y is (samples, N), result is (samples, N)
+    clf = ImageRegressor(path=TEST_TEMP_DIR, verbose=True)
+    train_x = np.random.rand(100, 25, 25, 25, 1)
+    train_y = np.random.rand(100, 2)
+    clf.fit(train_x, train_y)
+    results = clf.predict(train_x)
+    if not results.shape[0] == train_y.shape[0] and results.shape[1] == train_y.shape[1]:
+        raise AssertionError("ImageRegressor prediction shape {} not similar to train_y shape {}".format(results.shape, train_y.shape))
+
+    # test edge behavior of ImageRegressor
+    # train_y is (samples, N, 1), result is (samples, N)
+    clf = ImageRegressor(path=TEST_TEMP_DIR, verbose=True)
+    train_x = np.random.rand(100, 25, 25, 25, 1)
+    train_y = np.random.rand(100, 2, 1)
+    clf.fit(train_x, train_y)
+    results = clf.predict(train_x)
+    if not results.shape[0] == train_y.shape[0] and results.shape[1] == train_y.shape[1]:
+        raise AssertionError("ImageRegressor prediction shape {} not similar to train_y shape {}".format(results.shape, train_y.shape))
+
+    # test edge behavior of ImageRegressor
+    # train_y is samples (samples, 1), result is (samples, 1)
+    clf = ImageRegressor(path=TEST_TEMP_DIR, verbose=True)
+    train_x = np.random.rand(100, 25, 25, 25, 1)
+    train_y = np.random.rand(100, 1)
+    clf.fit(train_x, train_y)
+    results = clf.predict(train_x)
+    if not results.shape[0] == train_y.shape[0] and results.shape[1] == train_y.shape[1]:
+        raise AssertionError("ImageRegressor prediction shape {} not similar to train_y shape {}".format(results.shape, train_y.shape))
+
+    # test edge behavior of ImageRegressor
+    # train_y is samples (samples), result is (samples, 1)
+    clf = ImageRegressor(path=TEST_TEMP_DIR, verbose=True)
+    train_x = np.random.rand(100, 25, 25, 25, 1)
+    train_y = np.random.rand(100)
+    clf.fit(train_x, train_y)
+    results = clf.predict(train_x)
+    if results.shape[0] != train_y.shape[0]:
+        raise AssertionError("ImageRegressor prediction shape {} not similar to train_y shape {}".format(results.shape, train_y.shape))
+    if len(results.shape) != 1:
+        raise AssertionError("ImageRegressor should behave like ImageRegressor when train_y shape is 1 dimensional. Got output shape of {} but expecting shape (samples,)".format(result.shape))
+
+    # test that a train_y shape (examples, N, M) where M != 1 raises an exception
+    with pytest.raises(ValueError):
+        clf = ImageRegressor(path=TEST_TEMP_DIR, verbose=True)
+        train_x = np.random.rand(100, 25, 25, 25, 1)
+        train_y = np.random.rand(100, 2, 2)
+        clf.fit(train_x, train_y)
+        results = clf.predict(train_x)
+
     clean_dir(TEST_TEMP_DIR)
 
 
