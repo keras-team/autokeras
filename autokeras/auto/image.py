@@ -104,6 +104,59 @@ def augment_image(    x_train,
                 image = tf.image.flip_up_down(image)
     return image
 
+class ImageTuner(tuner.SequentialRandomSearch):
+
+    def _run(self, hyperparameters, fit_kwargs):
+        # Build a model instance.
+        model = self.hypermodel.build(hyperparameters)
+
+        self._check_space(hyperparameters)
+
+        datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+            # rescale image pixels to [0, 1]
+            rescale=None,  # 1. / self.max_val,
+            # set input mean to 0 over the dataset
+            featurewise_center=False,
+            # set each sample mean to 0
+            samplewise_center=False,
+            # divide inputs by std of dataset
+            featurewise_std_normalization=False,
+            # divide each input by its std
+            samplewise_std_normalization=False,
+            # apply ZCA whitening
+            zca_whitening=False,
+            # randomly rotate images in the range (deg 0 to 180)
+            rotation_range=0,
+            # randomly shift images horizontally
+            width_shift_range=0.1,
+            # randomly shift images vertically
+            height_shift_range=0.1,
+            # randomly flip images
+            horizontal_flip=True,
+            # randomly flip images
+            vertical_flip=False)
+
+        datagen.fit(fit_kwargs['x'])
+        fit_kwargs['batch_size'] = min(len(fit_kwargs['x']),
+                                       fit_kwargs.get(
+                                           'batch_size',
+                                           const.Constant.BATCH_SIZE))
+        data_flow = datagen.flow(fit_kwargs['x'],
+                                 fit_kwargs['y'],
+                                 fit_kwargs['batch_size'],
+                                 shuffle=True)
+        temp_fit_kwargs = fit_kwargs.copy()
+        temp_fit_kwargs.pop('x', None)
+        temp_fit_kwargs.pop('y', None)
+        temp_fit_kwargs.pop('batch_size', None)
+
+        # Train model
+        history = model.fit_generator(data_flow, **temp_fit_kwargs)
+
+        metric_name = model.metrics_names[1]
+        feedback = history.history['val_' + metric_name][-1]
+        return model, feedback
+
 class SupervisedImagePipeline(auto_pipeline.AutoPipeline):
 
     def __init__(self, **kwargs):
@@ -113,7 +166,7 @@ class SupervisedImagePipeline(auto_pipeline.AutoPipeline):
         self.normalizer = processor.Normalizer()
 
     def fit(self, x=None, y=None, **kwargs):
-        self.tuner = tuner.SequentialRandomSearch(self, metrics=self.head.metrics)
+        self.tuner = ImageTuner(self, metrics=self.head.metrics)
         self.normalizer.fit(x)
         self.inputs = [hyper_node.ImageInput()]
         super().fit(x=self.normalizer.transform(x), y=y, **kwargs)
