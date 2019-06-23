@@ -7,6 +7,7 @@ from autokeras.hypermodel.hyper_block import *
 from autokeras.hypermodel.hyper_head import ClassificationHead
 from autokeras.hypermodel.hyper_head import RegressionHead
 from autokeras.hypermodel.hyper_head import SequenceHead
+
 from autokeras.hypermodel.hyper_node import Input
 from autokeras.hyperparameters import HyperParameters
 
@@ -36,7 +37,8 @@ def test_xception_block():
 
 
 def test_rnn_block():
-    x_train = np.random.rand(100, 32, 20)
+
+    x_train = np.random.rand(100, 32, 20, 10)
     y_train = np.random.rand(100)
 
     input_node = Input()
@@ -67,4 +69,3 @@ def test_seq2seq():
 
     assert result.shape == (100, 32,20)
 
-test_seq2seq()
