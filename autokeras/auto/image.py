@@ -113,7 +113,7 @@ class SupervisedImagePipeline(auto_pipeline.AutoPipeline):
         self.normalizer = processor.Normalizer()
 
     def fit(self, x=None, y=None, **kwargs):
-        self.tuner = ImageTuner(self, metrics=self.head.metrics)
+        self.tuner = tuner.SequentialRandomSearch(self, metrics=self.head.metrics)
         self.normalizer.fit(x)
         self.inputs = [hyper_node.ImageInput()]
         super().fit(x=self.normalizer.transform(x), y=y, **kwargs)
