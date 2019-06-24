@@ -5,15 +5,11 @@ jobs:
   include:
     - stage: test
       script:
-        - pip install -r requirements.txt
         - pip install codacy-coverage
         - pytest tests --cov=autokeras --cov-report xml:coverage.xml
         - python-codacy-coverage -r coverage.xml
     -
       script:
-        - pip install pytest==4.5.0
-        - pip install pytest-pep8
-        - pip install pytest-xdist
         - pytest autokeras/ --pep8
     - stage: deploy
       script:
