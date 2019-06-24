@@ -31,3 +31,5 @@ Developed the BERT based Natural Language API for AutoKeras,
 including two pretrained models of sentiment analysis and topic classifier.
 and generic modules for text classification and regression.
 
+[**Xia "Ben" Hu**](http://faculty.cs.tamu.edu/xiahu/):
+Project lead and maintainer.

@@ -1,2 +1,6 @@
-tensorflow==2.0.0b0
-scikit-learn==0.20.2
+tensorflow>=2.0.0b0
+scikit-learn>=0.20.2
+pytest>=4.5.0
+pytest-pep8
+pytest-xdist
+pytest-cov

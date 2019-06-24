@@ -14,11 +14,11 @@ class AutoModel(hypermodel.HyperModel):
 
     It contains the HyperModels and the Tuner.
 
-    # Attributes
+    Attributes:
         inputs: A HyperModel instance. The input node of a the AutoModel.
         outputs: A HyperModel instance. The output node of the AutoModel.
-        hypermodel: An instance of HyperModelWrap connecting from the inputs to
-            the outputs.
+        hypermodel: An instance of HyperModelWrap connecting from the inputs to the
+            outputs.
         tuner: An instance of Tuner.
     """
 
@@ -107,6 +107,7 @@ class GraphAutoModel(AutoModel):
              self.inputs],
             [real_nodes[self._node_to_id[output_node]] for output_node in
              self.outputs])
+
         # Specify hyperparameters from compile(...)
         optimizer = hp.Choice('optimizer',
                               [tf.keras.optimizers.Adam,
