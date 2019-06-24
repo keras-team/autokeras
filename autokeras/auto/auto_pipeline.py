@@ -17,7 +17,8 @@ class AutoPipeline(auto_model.AutoModel):
 
         Arguments:
             x: Data in a format that can be passed to a Keras model:
-                either a Numpy array, a Python generator of arrays, or a TensorFlow Dataset..
+                either a Numpy array, a Python generator of arrays,
+                or a TensorFlow Dataset..
             postprocessing: Boolean. Mainly for classification task to output
                 probabilities instead of labels when set to False.
 

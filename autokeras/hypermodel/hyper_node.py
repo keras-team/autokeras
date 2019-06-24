@@ -40,4 +40,3 @@ class TextInput(Node):
 
     def build(self, hp):
         pass
-

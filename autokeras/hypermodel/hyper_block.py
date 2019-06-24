@@ -1,7 +1,6 @@
 import tensorflow as tf
 
 from autokeras.hypermodel import hyper_node, hypermodel
-from autokeras import hyperparameters
 from autokeras import layer_utils
 
 
@@ -58,7 +57,8 @@ class ImageBlock(HyperBlock):
 def shape_compatible(shape1, shape2):
     if len(shape1) != len(shape2):
         return False
-    # TODO: If they can be the same after passing through any layer, they are compatible.
+    # TODO: If they can be the same after passing through any layer,
+    #  they are compatible.
     #  e.g. (32, 32, 3), (16, 16, 2) are compatible
     return shape1[:-1] == shape2[:-1]
 
@@ -69,13 +69,15 @@ class Merge(HyperBlock):
         if len(inputs) == 1:
             return inputs
 
-        if not all([shape_compatible(input_node.shape, inputs[0].shape) for input_node in inputs]):
+        if not all([shape_compatible(input_node.shape, inputs[0].shape)
+                    for input_node in inputs]):
             new_inputs = []
             for input_node in inputs:
                 new_inputs.append(Flatten().build(hp, input_node))
             inputs = new_inputs
 
-        # TODO: Even inputs have different shape[-1], they can still be Add() after another layer.
+        # TODO: Even inputs have different shape[-1],
+        #  they can still be Add() after another layer.
         # Check if the inputs are all of the same shape
         if all([input_node.shape == inputs[0].shape for input_node in inputs]):
             if hp.Choice("merge_type", ['Add', 'Concatenate'], default='Add'):
@@ -94,12 +96,14 @@ class Flatten(HyperBlock):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         if len(output_node.shape) > 5:
-            raise ValueError("Expect the input tensor to have less or equal to 5 dimensions, "
+            raise ValueError("Expect the input tensor to have "
+                             "less or equal to 5 dimensions, "
                              "but got {shape}".format(shape=output_node.shape))
         # Flatten the input tensor
         # TODO: Add hp.Choice to use Flatten()
         if len(output_node.shape) > 2:
-            global_average_pooling = layer_utils.get_global_average_pooling_layer_class(output_node.shape)
+            global_average_pooling = \
+                layer_utils.get_global_average_pooling_layer_class(output_node.shape)
             output_node = global_average_pooling()(output_node)
         return output_node
 
