@@ -2,10 +2,10 @@ import numpy as np
 from keras.datasets import mnist
 
 from autokeras import MlpModule
-from autokeras.backend.torch.loss_function import classification_loss
-from autokeras.nn.metric import Accuracy
-from autokeras.preprocessor import OneHotEncoder
-from autokeras.backend.torch import DataTransformerMlp
+from autokeras import classification_loss
+from autokeras import Accuracy
+from autokeras import OneHotEncoder
+from autokeras import DataTransformerMlp
 
 
 def transform_y(y_train):

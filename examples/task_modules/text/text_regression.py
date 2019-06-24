@@ -1,7 +1,5 @@
-import numpy as np
-
-from autokeras.text.text_supervised import TextRegressor
-from autokeras.utils import read_tsv_file
+from autokeras import TextRegressor
+from autokeras import read_tsv_file
 
 
 if __name__ == '__main__':

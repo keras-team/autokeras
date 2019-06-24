@@ -3,7 +3,7 @@ import os
 from keras.datasets import mnist
 
 from autokeras import ImageClassifier
-from autokeras.utils import pickle_from_file
+from autokeras import pickle_from_file
 
 # Customer temp dir by your own
 TEMP_DIR = '/tmp/autokeras_U8KEOQ'
