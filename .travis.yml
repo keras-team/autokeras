@@ -11,7 +11,6 @@ jobs:
         - python-codacy-coverage -r coverage.xml
     -
       script:
-        - pip install -r requirements.txt
         - pip install pytest==4.5.0
         - pip install pytest-pep8
         - pip install pytest-xdist
@@ -31,6 +30,8 @@ jobs:
           on:
             branch: master
     -
+      script:
+        - python --version
       deploy:
       - provider: pypi
         user: jhfjhfj1
