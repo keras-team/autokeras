@@ -95,7 +95,7 @@ class RNNBlock(HyperBlock):
         # TODO: Attention layer can also be placed after LSTM.
         #       Possible values for hp.Choice must be [attention_first, attention_last, no_attention]
         attention_mode = hp.Choice('attention', [True, False], default=True)
-        input_node = self.attention_block(input_node) if attention_mode else input_node
+        input_node = layer_utils.attention_block(input_node) if attention_mode else input_node
 
         # seq2seq and attention not enabled on Vanilla Rnn
         if self.seq2seq or attention_mode:
@@ -103,13 +103,13 @@ class RNNBlock(HyperBlock):
         else:
             rnn_type = hp.Choice('rnn_type', ['vanilla', 'gru', 'lstm'], default='lstm')
         in_block = layer_utils.get_rnn_block(rnn_type)
-        choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=4)
+        choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
 
         print("HP choices here \n Bid : ", self.bidirectional, " attention : ", attention_mode, " num_layers : ",
               choice_of_layers, " seq2seq : ", self.seq2seq, " rnn_type : ", rnn_type)
         output_node = input_node
         if self.seq2seq:
-            output_node = self.seq2seq_builder(output_node,in_block,choice_of_layers,feature_size,time_steps)
+            output_node = layer_utils.seq2seq_builder(output_node, rnn_type, choice_of_layers, feature_size, time_steps)
         else:
             for i in range(choice_of_layers):
                 return_sequences = self.return_sequences if i == choice_of_layers - 1 else True
@@ -122,37 +122,6 @@ class RNNBlock(HyperBlock):
         # for attention to work; the underlying computation is the same, and return_sequences should be used only based
         # on whether you need 1 output or an output "for each timestep".
         return output_node
-
-    def attention_block(self, inputs):
-        time_steps = int(inputs.shape[1])
-        attention_out = tf.keras.layers.Permute((2,1))(inputs)
-        attention_out = tf.keras.layers.Dense(time_steps, activation='softmax')(attention_out)
-        attention_out = tf.keras.layers.Permute((2,1))(attention_out)
-        mul_attention_out = tf.keras.layers.Multiply()([inputs, attention_out])
-        return mul_attention_out
-
-    def seq2seq_builder(self,inputs,in_block,choice_of_layers,feature_size,time_steps):
-        print("In seq2seq ..",inputs.shape)
-
-        # TODO: Autoencoder setup exists. Must accommodate NMT setup in future
-        encoder_inputs = decoder_inputs = inputs
-
-        # TODO: Accept different num_layers for encoder and decoder
-        for i in range(choice_of_layers):
-            return_sequences = False if i == choice_of_layers - 1 else True
-            lstm_enc = in_block(feature_size, return_state=True,return_sequences=return_sequences)
-            encoder_inputs = lstm_enc(encoder_inputs)
-
-        enc_out, state_h, state_c = encoder_inputs
-        encoder_states = [state_h, state_c]
-
-        for i in range(choice_of_layers):
-            initial_state = encoder_states if i == 0 else None
-            decoder_inputs = in_block(feature_size, return_state=True, return_sequences=True)(decoder_inputs, initial_state=initial_state)
-
-        dec_out, _, _ = decoder_inputs
-
-        return dec_out
 
 
 class ImageBlock(HyperBlock):
