@@ -2,7 +2,7 @@ language: python
 python:
 - '3.6'
 install:
-- python setup.py test
+  - pip install -r requirements.txt
 jobs:
   include:
     - stage: unittest
