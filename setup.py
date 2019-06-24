@@ -9,7 +9,7 @@ setup(
         'scikit-learn==0.20.2',
     ],
     tests_require=[
-        'pytest',
+        'pytest==4.5.0',
         'pytest-pep8',
         'pytest-xdist',
         'pytest-cov',
