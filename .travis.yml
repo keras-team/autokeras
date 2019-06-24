@@ -19,6 +19,16 @@ jobs:
         - pip install mkdocs-material
         - sh docs.sh
       deploy:
+        - provider: pages
+          skip-cleanup: true
+          github-token: "$GITHUB_TOKEN"
+          keep-history: true
+          local-dir: docs/
+          target-branch: gh-pages
+          on:
+            branch: master
+    -
+      deploy:
       - provider: pypi
         user: jhfjhfj1
         password:
@@ -26,14 +36,6 @@ jobs:
         on:
           tags: true
           repo: keras-team/autokeras
-      - provider: pages
-        skip-cleanup: true
-        github-token: "$GITHUB_TOKEN"
-        keep-history: true
-        local-dir: docs/
-        target-branch: gh-pages
-        on:
-          branch: master
 env:
   global:
     secure: hukof0dDtKZsiD6f7t2KFuJJlX53HRZ9w54EdDod6/JpLaRNP6pHp7zNdxmwZREfZXFQgq2UxaY4vUM5vw6xHoaF0OrOaqU+dUdQxei5q/RBZCcrSaabGaztXm0zDookRSQtuo3w7g6/3mbBguMhRge1h9u021iZ5Hxdams6bDcCeK7M+2+utoB8nUI7otiwzighvuV3/8cBGHdyKHMuYs+lfQAingEGiT7PzRltoWHX1Qlw/78HURiQbcD01BpRQkzzgsznBZhlTdlWdWA2UGqhe7xu+ntg3w4+rHNIuQ0+FD0E3oRuiysKA1aZ7pDz9FlYDjx0WP4AFm6hbLBcVeJ02w7/6xAeMC8TJumrqxEDzWDas+Ybj8vS5daV2XrCvEH23+HnPnj9HGDkjhDFaIiJwFxfG5hYSZsQQnn09Bw0JnG8Qm0ytf3c+Z2ldtdD15iSlold0sE5i4YIWSkINm5WKP6nySpWfo9/S5v9rE+8sjNmua82bK010Hy6nZai/WRZgtJPRel0u0kl96FVaj7VPAaK8LqseBSoFCfUQQdtUNVPVchgWME060Pr2RHRLUfs/vXUlURU9mW9SpZFV2hMJCiuDaq7CGcY6lbmqZki7QFsY07c9yH8X8fGRn1y48UeDM7gEpnGmVCLnOD6SLoGFaulZHMdgaVX5ey/BAE=
