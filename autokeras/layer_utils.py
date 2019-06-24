@@ -30,6 +30,44 @@ def get_rnn_block(choice):
     return const.Constant.RNN_LAYERS[choice]
 
 
+def attention_block(inputs):
+    time_steps = int(inputs.shape[1])
+    attention_out = tf.keras.layers.Permute((2,1))(inputs)
+    attention_out = tf.keras.layers.Dense(time_steps, activation='softmax')(attention_out)
+    attention_out = tf.keras.layers.Permute((2,1))(attention_out)
+    mul_attention_out = tf.keras.layers.Multiply()([inputs, attention_out])
+    return mul_attention_out
+
+
+def seq2seq_builder(inputs,rnn_type,choice_of_layers,feature_size):
+    print("In seq2seq ..",inputs.shape)
+
+    block = get_rnn_block(rnn_type)
+    # TODO: Autoencoder setup exists. Must accommodate NMT setup in future
+    encoder_inputs = decoder_inputs = inputs
+
+    # TODO: Accept different num_layers for encoder and decoder
+    for i in range(choice_of_layers):
+        return_sequences = False if i == choice_of_layers - 1 else True
+        lstm_enc = block(feature_size, return_state=True,return_sequences=return_sequences)
+        encoder_inputs = lstm_enc(encoder_inputs)
+        print(len(encoder_inputs),encoder_inputs[0].shape,encoder_inputs[1].shape)
+    if rnn_type == 'lstm':
+        enc_out, state_h, state_c = encoder_inputs
+        encoder_states = [state_h, state_c]
+    else:
+        enc_out, state_h = encoder_inputs
+        encoder_states = [state_h]
+
+    for i in range(choice_of_layers):
+        initial_state = encoder_states if i == 0 else None
+        decoder_inputs = block(feature_size, return_state=True, return_sequences=True)(decoder_inputs, initial_state=initial_state)
+
+    dec_out = decoder_inputs[0]
+
+    return dec_out
+
+
 def split_train_to_valid(x, y):
     # Generate split index
     validation_set_size = int(len(x[0]) * const.Constant.VALIDATION_SET_SIZE)
