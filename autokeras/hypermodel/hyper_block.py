@@ -109,7 +109,7 @@ class RNNBlock(HyperBlock):
               choice_of_layers, " seq2seq : ", self.seq2seq, " rnn_type : ", rnn_type)
         output_node = input_node
         if self.seq2seq:
-            output_node = layer_utils.seq2seq_builder(output_node, rnn_type, choice_of_layers, feature_size, time_steps)
+            output_node = layer_utils.seq2seq_builder(output_node, rnn_type, choice_of_layers, feature_size)
         else:
             for i in range(choice_of_layers):
                 return_sequences = self.return_sequences if i == choice_of_layers - 1 else True
