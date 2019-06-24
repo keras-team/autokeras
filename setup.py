@@ -6,8 +6,16 @@ setup(
     packages=find_packages(exclude=('tests',)),
     install_requires=[
         'tensorflow==2.0.0b0',
-        'scikit-learn==0.20.2'
-                      ],
+        'scikit-learn==0.20.2',
+    ],
+    extras_require={
+        'tests': [
+            'pytest',
+            'pytest-pep8',
+            'pytest-xdist',
+            'pytest-cov',
+        ],
+    },
     version='1.0.0',
     description='AutoML for deep learning',
     author='Data Analytics at Texas A&M (DATA) Lab, Keras Team',
