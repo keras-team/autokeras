@@ -5,7 +5,8 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras.hypermodel import hyper_head
-from autokeras import layer_utils, const
+from autokeras import layer_utils
+from autokeras import const
 
 
 class AutoModel(kerastuner.HyperModel):
@@ -21,13 +22,14 @@ class AutoModel(kerastuner.HyperModel):
         tuner: An instance of Tuner.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, directory=None, **kwargs):
         """
         """
         super().__init__(**kwargs)
         self.inputs = []
         self.outputs = []
         self.tuner = None
+        self.directory = directory or const.Constant.TEMP_DIRECTORY
 
     def build(self, hp):
         raise NotImplementedError
@@ -60,7 +62,8 @@ class AutoModel(kerastuner.HyperModel):
         self.tuner = kerastuner.RandomSearch(
             hypermodel=self,
             objective='val_loss',
-            max_trials=trials or const.Constant.NUM_TRAILS)
+            max_trials=trials or const.Constant.NUM_TRAILS,
+            directory=self.directory)
 
         # TODO: allow early stop if epochs is not specified.
         self.tuner.search(x=x,

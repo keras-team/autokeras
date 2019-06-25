@@ -28,6 +28,10 @@ def format_inputs(inputs, name=None, num=None):
     return inputs
 
 
+def get_rnn_block(choice):
+    return const.Constant.RNN_LAYERS[choice]
+
+
 def split_train_to_valid(x, y):
     # Generate split index
     validation_set_size = int(len(x[0]) * const.Constant.VALIDATION_SET_SIZE)
