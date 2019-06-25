@@ -1,7 +1,9 @@
 import tensorflow as tf
 
-from autokeras.auto import processor, auto_model
-from autokeras.hypermodel import hyper_block, hyper_node
+from autokeras.auto import processor
+from autokeras.auto import auto_model
+from autokeras.hypermodel import hyper_block
+from autokeras.hypermodel import hyper_node
 from autokeras.hypermodel import hyper_head
 
 

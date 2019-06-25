@@ -5,7 +5,8 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras.hypermodel import hyper_head
-from autokeras import layer_utils, const
+from autokeras import layer_utils
+from autokeras import const
 
 
 class AutoModel(kerastuner.HyperModel):
