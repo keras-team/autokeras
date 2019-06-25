@@ -1,7 +1,5 @@
-import kerastuner
 import tensorflow as tf
 
-from autokeras import const
 from autokeras.auto import processor, auto_model
 from autokeras.hypermodel import hyper_block, hyper_node
 from autokeras.hypermodel import hyper_head
@@ -15,7 +13,7 @@ class SupervisedImagePipeline(auto_model.AutoModel):
         self.head = None
         self.normalizer = processor.Normalizer()
 
-    def fit(self, x=None, y=None, trials=None, **kwargs):
+    def fit(self, x=None, y=None, **kwargs):
         self.normalizer.fit(x)
         self.inputs = [hyper_node.ImageInput()]
         super().fit(x=self.normalizer.transform(x), y=y, **kwargs)

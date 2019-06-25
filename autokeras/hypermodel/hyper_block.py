@@ -41,29 +41,47 @@ class DenseBlock(HyperBlock):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         output_node = Flatten().build(hp, output_node)
-        active_category = hp.Choice('activate_category', ['softmax','relu','tanh','sigmoid'], default='relu')
-        layer_stack = hp.Choice('layer_stack', ['dense-bn-act', 'dense-act', 'act-bn-dense'],default='act-bn-dense')
+        active_category = hp.Choice(
+            'activate_category',
+            ['softmax', 'relu', 'tanh', 'sigmoid'],
+            default='relu')
+        layer_stack = hp.Choice(
+            'layer_stack',
+            ['dense-bn-act', 'dense-act', 'act-bn-dense'],
+            default='act-bn-dense')
         for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
             if layer_stack == 'dense-bn-act':
-                output_node = tf.keras.layers.Dense(hp.Choice('units_{i}'.format(i=i),
-                                                              [16, 32, 64, 128, 256, 512, 1024],
-                                                              default=32))(output_node)
+                output_node = tf.keras.layers.Dense(hp.Choice(
+                    'units_{i}'.format(i=i),
+                    [16, 32, 64, 128, 256, 512, 1024],
+                    default=32))(output_node)
                 output_node = tf.keras.layers.BatchNormalization()(output_node)
-                output_node = tf.keras.layers.Activation(active_category)(output_node)
-                output_node = tf.keras.layers.Dropout(rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(output_node)
+                output_node = tf.keras.layers.Activation(active_category)(
+                    output_node)
+                output_node = tf.keras.layers.Dropout(
+                    rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(
+                    output_node)
             elif layer_stack == 'dense-act':
-                output_node = tf.keras.layers.Dense(hp.Choice('units_{i}'.format(i=i),
-                                                              [16, 32, 64, 128, 256, 512, 1024],
-                                                              default=32))(output_node)
-                output_node = tf.keras.layers.Activation(active_category)(output_node)
-                output_node = tf.keras.layers.Dropout(rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(output_node)
+                output_node = tf.keras.layers.Dense(
+                    hp.Choice('units_{i}'.format(i=i),
+                              [16, 32, 64, 128, 256, 512, 1024],
+                              default=32))(output_node)
+                output_node = tf.keras.layers.Activation(active_category)(
+                    output_node)
+                output_node = tf.keras.layers.Dropout(
+                    rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(
+                    output_node)
             else:
-                output_node = tf.keras.layers.Activation(active_category)(output_node)
+                output_node = tf.keras.layers.Activation(active_category)(
+                    output_node)
                 output_node = tf.keras.layers.BatchNormalization()(output_node)
-                output_node = tf.keras.layers.Dense(hp.Choice('units_{i}'.format(i=i),
-                                                              [16, 32, 64, 128, 256, 512, 1024],
-                                                              default=32))(output_node)
-                output_node = tf.keras.layers.Dropout(rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(output_node)
+                output_node = tf.keras.layers.Dense(
+                    hp.Choice('units_{i}'.format(i=i),
+                              [16, 32, 64, 128, 256, 512, 1024],
+                              default=32))(output_node)
+                output_node = tf.keras.layers.Dropout(
+                    rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(
+                    output_node)
         return output_node
 
 
@@ -73,15 +91,19 @@ class RNNBlock(HyperBlock):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         shape = input_node.shape.as_list()
         if len(shape) < 3:
-            raise ValueError("Expect the input tensor to have atleast 3 dimensions for rnn models, "
-                             "but got {shape}".format(shape=input_node.shape))
+            raise ValueError(
+                "Expect the input tensor to have "
+                "at least 3 dimensions for rnn models, "
+                "but got {shape}".format(shape=input_node.shape))
 
-        # Flatten feature_list to a single dimension. Final shape 3-D (num_sample , time_steps , features)
+        # Flatten feature_list to a single dimension.
+        # Final shape 3-D (num_sample , time_steps , features)
         feature_size = np.prod(shape[2:])
         input_node = tf.reshape(input_node, [-1, shape[1], feature_size])
         output_node = input_node
 
-        in_layer = layer_utils.get_rnn_block(hp.Choice('rnn_type', ['vanilla', 'gru', 'lstm'], default='vanilla'))
+        in_layer = layer_utils.get_rnn_block(
+            hp.Choice('rnn_type', ['vanilla', 'gru', 'lstm'], default='vanilla'))
         choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
 
         for i in range(choice_of_layers):
@@ -94,6 +116,7 @@ class RNNBlock(HyperBlock):
         output_node = Flatten().build(hp, output_node)
 
         return output_node
+
 
 class ImageBlock(HyperBlock):
 
@@ -163,9 +186,10 @@ class XceptionBlock(HyperBlock):
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
-        channel_axis = 1 if tf.keras.backend.image_data_format() == 'channels_first' else -1
+        channel_axis = 1 \
+            if tf.keras.backend.image_data_format() == 'channels_first' else -1
 
-        #### Parameters ####
+        # Parameters
         # [general]
         kernel_size = hp.Range("kernel_size", 3, 5)
         initial_strides = (2, 2)
@@ -177,20 +201,23 @@ class XceptionBlock(HyperBlock):
         residual_blocks = hp.Range("num_residual_blocks", 2, 8)
         # [Exit Flow]
 
-        #### Model ####
+        # Model
         # Initial conv2d
         dims = conv2d_filters
         output_node = self._conv(dims, kernel_size=(kernel_size, kernel_size),
-                                 activation=activation, strides=initial_strides)(output_node)
+                                 activation=activation, strides=initial_strides)(
+            output_node)
         # Separable convs
         dims = sep_filters
         for _ in range(residual_blocks):
             output_node = self._residual(dims, activation=activation,
-                                         max_pooling=False, channel_axis=channel_axis)(output_node)
+                                         max_pooling=False,
+                                         channel_axis=channel_axis)(output_node)
         # Exit
         dims *= 2
         output_node = self._residual(dims, activation=activation,
-                                     max_pooling=True, channel_axis=channel_axis)(output_node)
+                                     max_pooling=True, channel_axis=channel_axis)(
+            output_node)
 
         return output_node
 
@@ -198,10 +225,11 @@ class XceptionBlock(HyperBlock):
     def _sep_conv(cls, filters, kernel_size=(3, 3), activation='relu'):
         def func(x):
             if activation == 'selu':
-                x = tf.keras.layers.SeparableConv2D(filters, kernel_size,
-                                                    activation='selu',
-                                                    padding='same',
-                                                    kernel_initializer='lecun_normal')(x)
+                x = tf.keras.layers.SeparableConv2D(
+                    filters, kernel_size,
+                    activation='selu',
+                    padding='same',
+                    kernel_initializer='lecun_normal')(x)
             elif activation == 'relu':
                 x = tf.keras.layers.SeparableConv2D(filters, kernel_size,
                                                     padding='same',
@@ -209,8 +237,10 @@ class XceptionBlock(HyperBlock):
                 x = tf.keras.layers.BatchNormalization()(x)
                 x = tf.keras.layers.Activation('relu')(x)
             else:
-                raise ValueError('Unknown activation function: {:s}'.format(activation))
+                raise ValueError(
+                    'Unknown activation function: {:s}'.format(activation))
             return x
+
         return func
 
     @classmethod
@@ -219,37 +249,49 @@ class XceptionBlock(HyperBlock):
                   pool_strides=(2, 2), max_pooling=True,
                   channel_axis=-1):
         """ Residual block. """
+
         def func(x):
             if max_pooling:
-                res = tf.keras.layers.Conv2D(filters, kernel_size=(1, 1), strides=pool_strides, padding='same')(x)
+                res = tf.keras.layers.Conv2D(filters, kernel_size=(1, 1),
+                                             strides=pool_strides, padding='same')(x)
             elif filters != tf.keras.backend.int_shape(x)[channel_axis]:
-                res = tf.keras.layers.Conv2D(filters, kernel_size=(1, 1), padding='same')(x)
+                res = tf.keras.layers.Conv2D(filters, kernel_size=(1, 1),
+                                             padding='same')(x)
             else:
                 res = x
 
             x = cls._sep_conv(filters, kernel_size, activation)(x)
             x = cls._sep_conv(filters, kernel_size, activation)(x)
             if max_pooling:
-                x = tf.keras.layers.MaxPool2D(kernel_size, strides=pool_strides, padding='same')(x)
+                x = tf.keras.layers.MaxPool2D(kernel_size, strides=pool_strides,
+                                              padding='same')(x)
 
             x = tf.keras.layers.add([x, res])
             return x
+
         return func
 
     @classmethod
     def _conv(cls, filters, kernel_size=(3, 3), activation='relu', strides=(2, 2)):
         """ 2d convolution block. """
+
         def func(x):
             if activation == 'selu':
-                x = tf.keras.layers.Conv2D(filters, kernel_size, strides=strides, activation='selu',
-                                       padding='same', kernel_initializer='lecun_normal', bias_initializer='zeros')(x)
+                x = tf.keras.layers.Conv2D(filters, kernel_size, strides=strides,
+                                           activation='selu',
+                                           padding='same',
+                                           kernel_initializer='lecun_normal',
+                                           bias_initializer='zeros')(x)
             elif activation == 'relu':
-                x = tf.keras.layers.Conv2D(filters, kernel_size, strides=strides, padding='same', use_bias=False)(x)
+                x = tf.keras.layers.Conv2D(filters, kernel_size, strides=strides,
+                                           padding='same', use_bias=False)(x)
                 x = tf.keras.layers.BatchNormalization()(x)
                 x = tf.keras.layers.Activation('relu')(x)
             else:
-                raise ValueError('Unknown activation function: {:s}'.format(activation))
+                raise ValueError(
+                    'Unknown activation function: {:s}'.format(activation))
             return x
+
         return func
 
     @classmethod
@@ -268,8 +310,10 @@ class XceptionBlock(HyperBlock):
                 if dropout_rate:
                     x = tf.keras.layers.Dropout(dropout_rate)(x)
             else:
-                raise ValueError('Unknown activation function: {:s}'.format(activation))
+                raise ValueError(
+                    'Unknown activation function: {:s}'.format(activation))
             return x
+
         return func
 
 
