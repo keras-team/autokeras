@@ -17,18 +17,23 @@ class AutoModel(kerastuner.HyperModel):
     Attributes:
         inputs: A HyperModel instance. The input node of a the AutoModel.
         outputs: A HyperModel instance. The output node of the AutoModel.
-        hypermodel: An instance of HyperModelWrap connecting from the inputs to the
-            outputs.
-        tuner: An instance of Tuner.
+        trials: Int. The number of models to try.
+        directory: String. The path to a directory for storing the search outputs.
     """
 
-    def __init__(self, directory=None, **kwargs):
+    def __init__(self,
+                 inputs,
+                 outputs,
+                 trials=None,
+                 directory=None,
+                 **kwargs):
         """
         """
         super().__init__(**kwargs)
-        self.inputs = []
-        self.outputs = []
+        self.inputs = layer_utils.format_inputs(inputs)
+        self.outputs = layer_utils.format_inputs(outputs)
         self.tuner = None
+        self.trials = trials or const.Constant.NUM_TRAILS
         self.directory = directory or const.Constant.TEMP_DIRECTORY
 
     def build(self, hp):
@@ -38,7 +43,6 @@ class AutoModel(kerastuner.HyperModel):
             x=None,
             y=None,
             validation_data=None,
-            trials=None,
             **kwargs):
         # Initialize HyperGraph model
         x = layer_utils.format_inputs(x, 'train_x')
@@ -62,7 +66,7 @@ class AutoModel(kerastuner.HyperModel):
         self.tuner = kerastuner.RandomSearch(
             hypermodel=self,
             objective='val_loss',
-            max_trials=trials or const.Constant.NUM_TRAILS,
+            max_trials=self.trials,
             directory=self.directory)
 
         # TODO: allow early stop if epochs is not specified.
@@ -91,9 +95,7 @@ class GraphAutoModel(AutoModel):
                  inputs,
                  outputs,
                  **kwargs):
-        super().__init__(**kwargs)
-        self.inputs = layer_utils.format_inputs(inputs)
-        self.outputs = layer_utils.format_inputs(outputs)
+        super().__init__(inputs, outputs, **kwargs)
         self._node_to_id = {}
         self._nodes = []
         self._hypermodels = []

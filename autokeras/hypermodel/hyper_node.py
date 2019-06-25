@@ -43,3 +43,21 @@ class TextInput(Node):
 
     def build(self, hp):
         pass
+
+
+class StructuredInput(Node):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def build(self, hp):
+        pass
+
+
+class TimeSeriesInput(Node):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def build(self, hp):
+        pass
