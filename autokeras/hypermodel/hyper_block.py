@@ -1,10 +1,11 @@
 import tensorflow as tf
+import kerastuner
 
-from autokeras.hypermodel import hyper_node, hypermodel
+from autokeras.hypermodel import hyper_node
 from autokeras import layer_utils
 
 
-class HyperBlock(hypermodel.HyperModel):
+class HyperBlock(kerastuner.HyperModel):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

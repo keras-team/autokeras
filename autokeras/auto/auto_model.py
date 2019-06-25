@@ -1,15 +1,14 @@
 from queue import Queue
-
+import kerastuner
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import hypermodel, hyper_head
-from autokeras import layer_utils
-from autokeras import tuner
+from autokeras.hypermodel import hyper_head
+from autokeras import layer_utils, const
 
 
-class AutoModel(hypermodel.HyperModel):
+class AutoModel(kerastuner.HyperModel):
     """ A AutoModel should be an AutoML solution.
 
     It contains the HyperModels and the Tuner.
@@ -30,7 +29,7 @@ class AutoModel(hypermodel.HyperModel):
         self.outputs = []
         self.tuner = None
 
-    def build(self, hp, **kwargs):
+    def build(self, hp):
         raise NotImplementedError
 
     def fit(self,
@@ -58,16 +57,29 @@ class AutoModel(hypermodel.HyperModel):
             (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(x, y)
             validation_data = x_val, y_val
 
+        self.tuner = kerastuner.RandomSearch(
+            hypermodel=self,
+            objective='val_loss',
+            max_trials=trials or const.Constant.NUM_TRAILS)
+
         # TODO: allow early stop if epochs is not specified.
-        self.tuner.search(trials=trials,
-                          x=x,
+        self.tuner.search(x=x,
                           y=y,
                           validation_data=validation_data,
                           **kwargs)
 
     def predict(self, x, **kwargs):
         """Predict the output for a given testing data. """
-        return self.tuner.best_model.predict(x, **kwargs)
+        return self.tuner.get_best_models(1)[0].predict(x, **kwargs)
+
+    def _get_metrics(self):
+        metrics = []
+        for metrics_list in [output_node.in_hypermodels[0].metrics for
+                             output_node in self.outputs
+                             if isinstance(output_node.in_hypermodels[0],
+                                           hyper_head.HyperHead)]:
+            metrics += metrics_list
+        return metrics
 
 
 class GraphAutoModel(AutoModel):
@@ -84,11 +96,8 @@ class GraphAutoModel(AutoModel):
         self._hypermodels = []
         self._hypermodel_to_id = {}
         self._build_network()
-        self.tuner = tuner.SequentialRandomSearch(
-            self,
-            objective=self._get_metrics())
 
-    def build(self, hp, **kwargs):
+    def build(self, hp):
         real_nodes = {}
         for input_node in self.inputs:
             node_id = self._node_to_id[input_node]
@@ -110,9 +119,9 @@ class GraphAutoModel(AutoModel):
 
         # Specify hyperparameters from compile(...)
         optimizer = hp.Choice('optimizer',
-                              [tf.keras.optimizers.Adam,
-                               tf.keras.optimizers.Adadelta,
-                               tf.keras.optimizers.SGD])()
+                              ['adam',
+                               'adadelta',
+                               'sgd'])
 
         model.compile(optimizer=optimizer,
                       metrics=self._get_metrics(),
@@ -208,12 +217,3 @@ class GraphAutoModel(AutoModel):
                              if isinstance(output_node.in_hypermodels[0],
                                            hyper_head.HyperHead)])
         return loss
-
-    def _get_metrics(self):
-        metrics = []
-        for metrics_list in [output_node.in_hypermodels[0].metrics for
-                             output_node in self.outputs
-                             if isinstance(output_node.in_hypermodels[0],
-                                           hyper_head.HyperHead)]:
-            metrics += metrics_list
-        return metrics

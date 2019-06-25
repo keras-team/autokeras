@@ -20,9 +20,9 @@ class ClassificationHead(HyperHead):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not self.metrics:
-            self.metrics = [tf.keras.metrics.categorical_accuracy]
+            self.metrics = ['accuracy']
         if not self.loss:
-            self.loss = tf.keras.losses.categorical_crossentropy
+            self.loss = 'sparse_categorical_crossentropy'
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
@@ -44,9 +44,9 @@ class RegressionHead(HyperHead):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not self.metrics:
-            self.metrics = [tf.keras.metrics.mse]
+            self.metrics = ['mean_squared_error']
         if not self.loss:
-            self.loss = tf.keras.losses.mean_squared_error
+            self.loss = 'mean_squared_error'
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]

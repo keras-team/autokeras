@@ -5,7 +5,6 @@ from autokeras import const
 from autokeras.hypermodel.hyper_block import DenseBlock, Merge
 from autokeras.hypermodel.hyper_head import RegressionHead
 from autokeras.hypermodel.hyper_node import Input
-from autokeras.hyperparameters import HyperParameters
 
 
 def test_hyper_graph_basic():
@@ -21,7 +20,7 @@ def test_hyper_graph_basic():
     output_node[0].shape = (1,)
 
     graph = GraphAutoModel(input_node, output_node)
-    model = graph.build(HyperParameters())
+    model = graph.build(kerastuner.HyperParameters())
     model.fit(x_train, y_train, epochs=1, batch_size=100, verbose=False)
     result = model.predict(x_train)
 
@@ -44,7 +43,7 @@ def test_merge():
     output_node[0].shape = (1,)
 
     graph = GraphAutoModel([input_node1, input_node2], output_node)
-    model = graph.build(HyperParameters())
+    model = graph.build(kerastuner.HyperParameters())
     model.fit([x_train, x_train], y_train, epochs=1, batch_size=100, verbose=False)
     result = model.predict([x_train, x_train])
 
@@ -66,7 +65,7 @@ def test_input_output_disconnect():
 
     with pytest.raises(ValueError) as info:
         graph = GraphAutoModel(input_node1, output_node)
-        graph.build(HyperParameters())
+        graph.build(kerastuner.HyperParameters())
     assert str(info.value) == 'Inputs and outputs not connected.'
 
 
@@ -86,7 +85,7 @@ def test_hyper_graph_cycle():
 
     with pytest.raises(ValueError) as info:
         graph = GraphAutoModel([input_node1, input_node2], output_node)
-        graph.build(HyperParameters())
+        graph.build(kerastuner.HyperParameters())
     assert str(info.value) == 'The network has a cycle.'
 
 
@@ -104,7 +103,7 @@ def test_input_missing():
 
     with pytest.raises(ValueError) as info:
         graph = GraphAutoModel(input_node1, output_node)
-        graph.build(HyperParameters())
+        graph.build(kerastuner.HyperParameters())
     assert str(info.value).startswith('A required input is missing for HyperModel')
 
 
