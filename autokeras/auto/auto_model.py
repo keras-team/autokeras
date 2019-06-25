@@ -161,8 +161,8 @@ class GraphAutoModel(AutoModel):
                 self._add_hypermodel(hypermodel)
                 for output_node in hypermodel.outputs:
                     # The node is not visited and in interested nodes.
-                    if output_node not in visited_nodes \
-                            and output_node in self._node_to_id:
+                    if (output_node not in visited_nodes and
+                            output_node in self._node_to_id):
                         visited_nodes.add(output_node)
                         queue.put(output_node)
         for output_node in self.outputs:
