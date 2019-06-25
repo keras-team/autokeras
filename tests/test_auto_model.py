@@ -69,8 +69,8 @@ def test_input_output_disconnect(tmp_dir):
 
     with pytest.raises(ValueError) as info:
         graph = ak.GraphAutoModel(input_node1,
-                               output_node,
-                               directory=tmp_dir)
+                                  output_node,
+                                  directory=tmp_dir)
         graph.build(kerastuner.HyperParameters())
     assert str(info.value) == 'Inputs and outputs not connected.'
 
@@ -91,8 +91,8 @@ def test_hyper_graph_cycle(tmp_dir):
 
     with pytest.raises(ValueError) as info:
         graph = ak.GraphAutoModel([input_node1, input_node2],
-                               output_node,
-                               directory=tmp_dir)
+                                  output_node,
+                                  directory=tmp_dir)
         graph.build(kerastuner.HyperParameters())
     assert str(info.value) == 'The network has a cycle.'
 

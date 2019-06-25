@@ -171,6 +171,7 @@ class Merge(HyperBlock):
 
 class XceptionBlock(HyperBlock):
     """ XceptionBlock
+
     An Xception structure, used for specifying your model with specific datasets.
 
     The original Xception architecture is from https://arxiv.org/abs/1610.02357.
@@ -181,6 +182,7 @@ class XceptionBlock(HyperBlock):
     the last (optional) fully connected layer(s) and logistic regression.
     The size of this architecture could be decided by `HyperParameters`, to get an
     architecture with a half, an identical, or a double size of the original one.
+
     """
 
     def build(self, hp, inputs=None):
