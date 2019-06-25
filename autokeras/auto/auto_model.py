@@ -1,15 +1,14 @@
 from queue import Queue
-
+import kerastuner
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import hypermodel, hyper_head
-from autokeras import layer_utils
-from autokeras import tuner
+from autokeras.hypermodel import hyper_head
+from autokeras import layer_utils, const
 
 
-class AutoModel(hypermodel.HyperModel):
+class AutoModel(kerastuner.HyperModel):
     """ A AutoModel should be an AutoML solution.
 
     It contains the HyperModels and the Tuner.
@@ -28,8 +27,7 @@ class AutoModel(hypermodel.HyperModel):
         super().__init__(**kwargs)
         self.inputs = []
         self.outputs = []
-        self.tuner = tuner.SequentialRandomSearch(self,
-                                                  objective=self._get_metrics())
+        self.tuner = None
 
     def build(self, hp):
         raise NotImplementedError
@@ -44,8 +42,8 @@ class AutoModel(hypermodel.HyperModel):
         x = layer_utils.format_inputs(x, 'train_x')
         y = layer_utils.format_inputs(y, 'train_y')
 
-        # TODO: Set the shapes only if they are not provided by the user
-        #  when initiating the HyperHead or Block.
+        # TODO: Set the shapes only if they are not provided by the user when
+        #  initiating the HyperHead or Block.
         for x_input, input_node in zip(x, self.inputs):
             input_node.shape = x_input.shape[1:]
         for y_input, output_node in zip(y, self.outputs):
@@ -59,28 +57,25 @@ class AutoModel(hypermodel.HyperModel):
             (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(x, y)
             validation_data = x_val, y_val
 
+        self.tuner = kerastuner.RandomSearch(
+            hypermodel=self,
+            objective='val_loss',
+            max_trials=trials or const.Constant.NUM_TRAILS)
+
         # TODO: allow early stop if epochs is not specified.
-        self.tuner.search(trials=trials,
-                          x=x,
+        self.tuner.search(x=x,
                           y=y,
                           validation_data=validation_data,
                           **kwargs)
 
     def predict(self, x, **kwargs):
         """Predict the output for a given testing data. """
-        return self.tuner.best_model.predict(x, **kwargs)
-
-    def _get_loss(self):
-        loss = nest.flatten([output_node.in_hypermodels[0].loss
-                             for output_node in self.outputs
-                             if isinstance(output_node.in_hypermodels[0],
-                                           hyper_head.HyperHead)])
-        return loss
+        return self.tuner.get_best_models(1)[0].predict(x, **kwargs)
 
     def _get_metrics(self):
         metrics = []
-        for metrics_list in [output_node.in_hypermodels[0].metrics
-                             for output_node in self.outputs
+        for metrics_list in [output_node.in_hypermodels[0].metrics for
+                             output_node in self.outputs
                              if isinstance(output_node.in_hypermodels[0],
                                            hyper_head.HyperHead)]:
             metrics += metrics_list
@@ -108,22 +103,25 @@ class GraphAutoModel(AutoModel):
             node_id = self._node_to_id[input_node]
             real_nodes[node_id] = input_node.build(hp)
         for hypermodel in self._hypermodels:
-            outputs = hypermodel.build(
-                hp,
-                inputs=[real_nodes[self._node_to_id[input_node]]
-                        for input_node in hypermodel.inputs])
+            temp_inputs = [real_nodes[self._node_to_id[input_node]]
+                           for input_node in hypermodel.inputs]
+            outputs = hypermodel.build(hp,
+                                       inputs=temp_inputs)
             outputs = layer_utils.format_inputs(outputs, hypermodel.name)
-            for output_node, real_output_node in zip(hypermodel.outputs, outputs):
+            for output_node, real_output_node in zip(hypermodel.outputs,
+                                                     outputs):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
-        model = tf.keras.Model([real_nodes[self._node_to_id[input_node]]
-                                for input_node in self.inputs],
-                               [real_nodes[self._node_to_id[output_node]]
-                                for output_node in self.outputs])
+        model = tf.keras.Model(
+            [real_nodes[self._node_to_id[input_node]] for input_node in
+             self.inputs],
+            [real_nodes[self._node_to_id[output_node]] for output_node in
+             self.outputs])
+
         # Specify hyperparameters from compile(...)
         optimizer = hp.Choice('optimizer',
-                              [tf.keras.optimizers.Adam,
-                               tf.keras.optimizers.Adadelta,
-                               tf.keras.optimizers.SGD])()
+                              ['adam',
+                               'adadelta',
+                               'sgd'])
 
         model.compile(optimizer=optimizer,
                       metrics=self._get_metrics(),
@@ -155,8 +153,8 @@ class GraphAutoModel(AutoModel):
         while not queue.empty():
             input_node = queue.get()
             for hypermodel in input_node.out_hypermodels:
-                # Check at least one output node of the hypermodel
-                # is in the interested nodes.
+                # Check at least one output node of the hypermodel is in the
+                # interested nodes.
                 if not any([output_node in self._node_to_id for output_node in
                             hypermodel.outputs]):
                     continue
@@ -171,7 +169,8 @@ class GraphAutoModel(AutoModel):
             hypermodel = output_node.in_hypermodels[0]
             hypermodel.output_shape = output_node.shape
 
-    def _search_network(self, input_node, outputs, in_stack_nodes, visited_nodes):
+    def _search_network(self, input_node, outputs, in_stack_nodes,
+                        visited_nodes):
         visited_nodes.add(input_node)
         in_stack_nodes.add(input_node)
 
@@ -184,9 +183,7 @@ class GraphAutoModel(AutoModel):
                 if output_node in in_stack_nodes:
                     raise ValueError('The network has a cycle.')
                 if output_node not in visited_nodes:
-                    self._search_network(output_node,
-                                         outputs,
-                                         in_stack_nodes,
+                    self._search_network(output_node, outputs, in_stack_nodes,
                                          visited_nodes)
                 if output_node in self._node_to_id.keys():
                     outputs_reached = True
@@ -205,9 +202,18 @@ class GraphAutoModel(AutoModel):
             self._add_node(output_node)
         for input_node in hypermodel.inputs:
             if input_node not in self._node_to_id:
-                raise ValueError('A required input is missing for HyperModel {name}.'
-                                 .format(name=hypermodel.name))
+                raise ValueError(
+                    'A required input is missing '
+                    'for HyperModel {name}.'.format(
+                        name=hypermodel.name))
 
     def _add_node(self, input_node):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
+
+    def _get_loss(self):
+        loss = nest.flatten([output_node.in_hypermodels[0].loss
+                             for output_node in self.outputs
+                             if isinstance(output_node.in_hypermodels[0],
+                                           hyper_head.HyperHead)])
+        return loss

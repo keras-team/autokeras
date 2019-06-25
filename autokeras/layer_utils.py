@@ -8,7 +8,7 @@ from autokeras import const
 def get_global_average_pooling_layer_class(shape):
     return [tf.keras.layers.GlobalAveragePooling1D,
             tf.keras.layers.GlobalAveragePooling2D,
-            tf.keras.layers.GlobalAveragePooling3D][len(shape) - 2]
+            tf.keras.layers.GlobalAveragePooling3D][len(shape) - 3]
 
 
 def format_inputs(inputs, name=None, num=None):
