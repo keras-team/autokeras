@@ -22,7 +22,7 @@ class ClassificationHead(HyperHead):
         if not self.metrics:
             self.metrics = ['accuracy']
         if not self.loss:
-            self.loss = 'sparse_categorical_crossentropy'
+            self.loss = 'categorical_crossentropy'
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
