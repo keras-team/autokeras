@@ -83,8 +83,8 @@ class Normalizer(object):
             if len(value) != 2:
                 raise ValueError(
                     'Argument %s expected either a float between 0 and 1, '
-                    'or a tuple of 2 floats between 0 and 1 '
-                    , but got: %s' % (value, name))
+                    'or a tuple of 2 floats between 0 and 1, '
+                    'but got: %s' % (value, name))
             min_value = value[0]
             max_value = value[1]
         else:
