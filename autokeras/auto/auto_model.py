@@ -9,7 +9,7 @@ from autokeras import layer_utils
 from autokeras import const
 
 
-class AutoModel(kerastuner.HyperModel):
+class GraphAutoModel(kerastuner.HyperModel):
     """ A AutoModel should be an AutoML solution.
 
     It contains the HyperModels and the Tuner.
@@ -35,67 +35,6 @@ class AutoModel(kerastuner.HyperModel):
         self.tuner = None
         self.trials = trials or const.Constant.NUM_TRAILS
         self.directory = directory or const.Constant.TEMP_DIRECTORY
-
-    def build(self, hp):
-        raise NotImplementedError
-
-    def fit(self,
-            x=None,
-            y=None,
-            validation_data=None,
-            **kwargs):
-        # Initialize HyperGraph model
-        x = layer_utils.format_inputs(x, 'train_x')
-        y = layer_utils.format_inputs(y, 'train_y')
-
-        # TODO: Set the shapes only if they are not provided by the user when
-        #  initiating the HyperHead or Block.
-        for x_input, input_node in zip(x, self.inputs):
-            input_node.shape = x_input.shape[1:]
-        for y_input, output_node in zip(y, self.outputs):
-            if len(y_input.shape) == 1:
-                y_input = np.reshape(y_input, y_input.shape + (1,))
-            output_node.shape = y_input.shape[1:]
-            output_node.in_hypermodels[0].output_shape = output_node.shape
-
-        # Prepare the dataset
-        if validation_data is None:
-            (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(x, y)
-            validation_data = x_val, y_val
-
-        self.tuner = kerastuner.RandomSearch(
-            hypermodel=self,
-            objective='val_loss',
-            max_trials=self.trials,
-            directory=self.directory)
-
-        # TODO: allow early stop if epochs is not specified.
-        self.tuner.search(x=x,
-                          y=y,
-                          validation_data=validation_data,
-                          **kwargs)
-
-    def predict(self, x, **kwargs):
-        """Predict the output for a given testing data. """
-        return self.tuner.get_best_models(1)[0].predict(x, **kwargs)
-
-    def _get_metrics(self):
-        metrics = []
-        for metrics_list in [output_node.in_hypermodels[0].metrics for
-                             output_node in self.outputs
-                             if isinstance(output_node.in_hypermodels[0],
-                                           hyper_head.HyperHead)]:
-            metrics += metrics_list
-        return metrics
-
-
-class GraphAutoModel(AutoModel):
-
-    def __init__(self,
-                 inputs,
-                 outputs,
-                 **kwargs):
-        super().__init__(inputs, outputs, **kwargs)
         self._node_to_id = {}
         self._nodes = []
         self._hypermodels = []
@@ -122,17 +61,7 @@ class GraphAutoModel(AutoModel):
             [real_nodes[self._node_to_id[output_node]] for output_node in
              self.outputs])
 
-        # Specify hyperparameters from compile(...)
-        optimizer = hp.Choice('optimizer',
-                              ['adam',
-                               'adadelta',
-                               'sgd'])
-
-        model.compile(optimizer=optimizer,
-                      metrics=self._get_metrics(),
-                      loss=self._get_loss())
-
-        return model
+        return self._compiled(hp, model)
 
     def _build_network(self):
         self._node_to_id = {}
@@ -216,9 +145,83 @@ class GraphAutoModel(AutoModel):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
 
+    def fit(self,
+            x=None,
+            y=None,
+            validation_data=None,
+            **kwargs):
+        # Initialize HyperGraph model
+        x = layer_utils.format_inputs(x, 'train_x')
+        y = layer_utils.format_inputs(y, 'train_y')
+
+        # TODO: Set the shapes only if they are not provided by the user when
+        #  initiating the HyperHead or Block.
+        for x_input, input_node in zip(x, self.inputs):
+            input_node.shape = x_input.shape[1:]
+        for y_input, output_node in zip(y, self.outputs):
+            if len(y_input.shape) == 1:
+                y_input = np.reshape(y_input, y_input.shape + (1,))
+            output_node.shape = y_input.shape[1:]
+            output_node.in_hypermodels[0].output_shape = output_node.shape
+
+        # Prepare the dataset
+        if validation_data is None:
+            (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(x, y)
+            validation_data = x_val, y_val
+
+        self.tuner = kerastuner.RandomSearch(
+            hypermodel=self,
+            objective='val_loss',
+            max_trials=self.trials,
+            directory=self.directory)
+
+        # TODO: allow early stop if epochs is not specified.
+        self.tuner.search(x=x,
+                          y=y,
+                          validation_data=validation_data,
+                          **kwargs)
+
+    def predict(self, x, **kwargs):
+        """Predict the output for a given testing data. """
+        return self.tuner.get_best_models(1)[0].predict(x, **kwargs)
+
+    def _get_metrics(self):
+        metrics = []
+        for metrics_list in [output_node.in_hypermodels[0].metrics for
+                             output_node in self.outputs
+                             if isinstance(output_node.in_hypermodels[0],
+                                           hyper_head.HyperHead)]:
+            metrics += metrics_list
+        return metrics
+
+    def _compiled(self, hp, model):
+        # Specify hyperparameters from compile(...)
+        optimizer = hp.Choice('optimizer',
+                              ['adam',
+                               'adadelta',
+                               'sgd'])
+
+        model.compile(optimizer=optimizer,
+                      metrics=self._get_metrics(),
+                      loss=self._get_loss())
+
+        return model
+
     def _get_loss(self):
         loss = nest.flatten([output_node.in_hypermodels[0].loss
                              for output_node in self.outputs
                              if isinstance(output_node.in_hypermodels[0],
                                            hyper_head.HyperHead)])
         return loss
+
+
+class AutoModel(GraphAutoModel):
+
+    def __init__(self,
+                 inputs,
+                 outputs,
+                 **kwargs):
+        inputs = layer_utils.format_inputs(inputs)
+        outputs = layer_utils.format_inputs(outputs)
+        super().__init__(inputs, outputs, **kwargs)
+
