@@ -91,7 +91,7 @@ class Normalizer(object):
             min_value = 1. - value
             max_value = 1. + value
         return min_value, max_value
-    
+
     def augment_image(self,
                       x_train,
                       rotation_range=0,  # either 0, 90, 180, 270
@@ -137,12 +137,12 @@ class Normalizer(object):
                         or translation_right or translation_top:
                     x = tf.image.pad_to_bounding_box(image, translation_top,
                                                      translation_left,
-                                                     target_height
-                                                     + translation_bottom
-                                                     + translation_top,
-                                                     target_width
-                                                     + translation_right
-                                                     + translation_left)
+                                                     target_height +
+                                                     translation_bottom +
+                                                     translation_top,
+                                                     target_width +
+                                                     translation_right +
+                                                     translation_left)
                     image = tf.image.crop_to_bounding_box(x, translation_bottom,
                                                           translation_right, 
                                                           target_height,
