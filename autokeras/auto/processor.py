@@ -119,7 +119,7 @@ class Normalizer(object):
         dataset = dataset.batch(batch_size=batch_num)
         iterator = dataset.make_one_shot_iterator()
         one_element = iterator.get_next()
-        '''with tf.Session() as sess:
+        with tf.Session() as sess:
             for i in range(1):
                 batch = sess.run([one_element])
                 image = tf.convert_to_tensor(batch[0])
@@ -146,18 +146,15 @@ class Normalizer(object):
                         image = tf.image.rot90(image, k=4)
 
                 if brightness_range:
-                    min_value, max_value = get_min_and_max(
-                        brightness_range, 'brightness_range')
+                    min_value, max_value = get_min_and_max(brightness_range, 'brightness_range')
                     image = tf.image.random_brightness(image, min_value, max_value)
 
                 if saturation_range:
-                    min_value, max_value = get_min_and_max(
-                        saturation_range, 'saturation_range')
+                    min_value, max_value = get_min_and_max(saturation_range, 'saturation_range')
                     image = tf.image.random_saturation(image, min_value, max_value)
 
                 if contrast_range:
-                    min_value, max_value = get_min_and_max(
-                        contrast_range, 'contrast_range')
+                    min_value, max_value = get_min_and_max(contrast_range, 'contrast_range')
                     image = tf.image.random_contrast(image, min_value, max_value)
 
                 if random_crop_height and random_crop_width:
@@ -170,5 +167,5 @@ class Normalizer(object):
                     image = tf.image.flip_left_right(image)
 
                 if vertical_flip:
-                    image = tf.image.flip_up_down(image)'''
-        return x_train
+                    image = tf.image.flip_up_down(image)
+        return image
