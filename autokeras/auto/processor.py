@@ -90,7 +90,8 @@ class Normalizer(object):
             max_value = 1. + value
         return min_value, max_value
     
-    def augment_image(    x_train,
+    def augment_image(self,
+                      x_train,
                       rotation_range=0,  # either 0, 90, 180, 270
                       random_crop_height=0,  # fraction 0-1
                       random_crop_width=0,  # fraction 0-1
