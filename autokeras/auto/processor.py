@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
+
 class OneHotEncoder(object):
     """A class that can format data.
 
@@ -82,7 +83,8 @@ class Normalizer(object):
             if len(value) != 2:
                 raise ValueError(
                     'Argument %s expected either a float between 0 and 1, '
-                    'or a tuple of 2 floats between 0 and 1, but got: %s' % (value, name))
+                    'or a tuple of 2 floats between 0 and 1
+                    , but got: %s' % (value, name))
             min_value = value[0]
             max_value = value[1]
         else:
@@ -101,7 +103,7 @@ class Normalizer(object):
                       contrast_range=0.,  # fraction 0-1  [X]
                       horizontal_flip=False,  # boolean  [X]
                       vertical_flip=False,
-                      translation_top=0,  # translation_top are the number of pixels, so positive int type are required.
+                      translation_top=0,  # translation_top are the number of pixels.
                       translation_bottom=0,
                       translation_left=0,
                       translation_right=0,
@@ -110,7 +112,8 @@ class Normalizer(object):
         length_dim = len(x_train.shape)
         if length_dim != 4:
             raise ValueError(
-             'The input of x_train should be a [batch_size, height, width, channel] shape tensor or list, but we get %s' % (x_train.shape))
+                'The input of x_train should be a [batch_size, height, width, channel] '
+                'shape tensor or list, but we get %s' % x_train.shape)
         batch_num = x_train.shape[0]
         target_height = x_train.shape[1]
         target_width = x_train.shape[2]
@@ -123,17 +126,25 @@ class Normalizer(object):
             for i in range(1):
                 batch = sess.run([one_element])
                 image = tf.convert_to_tensor(batch[0])
-                image = tf.cast(image,dtype=tf.float32)
+                image = tf.cast(image, dtype=tf.float32)
                 if gaussian_noise:
-                    noise = tf.random_normal(shape=tf.shape(image), mean=0.0, stddev=1.0, dtype=tf.float32)
+                    noise = tf.random_normal(shape=tf.shape(image),
+                                            mean=0.0, stddev=1.0, dtype=tf.float32)
                     image = tf.add(image, noise)
 
-                if translation_bottom or translation_left or translation_right or translation_top:
-                    x = tf.image.pad_to_bounding_box(image, translation_top, translation_left,
-                                                     target_height + translation_bottom + translation_top,
-                                                     target_width + translation_right + translation_left)
-                    image = tf.image.crop_to_bounding_box(x, translation_bottom, translation_right, target_height,
-                                                        target_width)
+                if translation_bottom or translation_left \
+                        or translation_right or translation_top:
+                    x = tf.image.pad_to_bounding_box(image, translation_top,
+                                                 translation_left,
+                                                 target_height
+                                                 + translation_bottom
+                                                 + translation_top,
+                                                 target_width
+                                                 + translation_right
+                                                 + translation_left)
+                    image = tf.image.crop_to_bounding_box(x, translation_bottom,
+                                                      translation_right, target_height,
+                                                      target_width)
 
                 if rotation_range:
                     if rotation_range == 90:
@@ -146,22 +157,33 @@ class Normalizer(object):
                         image = tf.image.rot90(image, k=4)
 
                 if brightness_range:
-                    min_value, max_value = get_min_and_max(brightness_range, 'brightness_range')
+                    min_value, max_value = get_min_and_max(
+                        brightness_range, 'brightness_range')
                     image = tf.image.random_brightness(image, min_value, max_value)
 
                 if saturation_range:
-                    min_value, max_value = get_min_and_max(saturation_range, 'saturation_range')
+                    min_value, max_value = get_min_and_max(
+                        saturation_range, 
+                        'saturation_range')
+                    print(min_value, max_value)
                     image = tf.image.random_saturation(image, min_value, max_value)
 
                 if contrast_range:
-                    min_value, max_value = get_min_and_max(contrast_range, 'contrast_range')
-                    image = tf.image.random_contrast(image, min_value, max_value)
+                    min_value, max_value = get_min_and_max(
+                        contrast_range,
+                        'contrast_range')
+                    image = tf.image.random_contrast(
+                        image, min_value, max_value)
 
                 if random_crop_height and random_crop_width:
-                    crop_size = [batch_num, random_crop_height, random_crop_width, channels]
+                    crop_size = [batch_num, random_crop_height
+                        , random_crop_width, channels]
                     seed = np.random.randint(random_crop_seed)
                     target_shape = (target_height,target_width)
-                    image = tf.image.resize_images(tf.random_crop(image, size=crop_size, seed=seed),size=target_shape)
+                    print(tf.random_crop(image, size=crop_size, seed=seed).shape)
+                    image = tf.image.resize_images(
+                        tf.random_crop(image, size=crop_size, seed=seed),
+                        size=target_shape)
 
                 if horizontal_flip:
                     image = tf.image.flip_left_right(image)
