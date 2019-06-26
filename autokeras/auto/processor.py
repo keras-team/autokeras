@@ -1,5 +1,5 @@
 import numpy as np
-
+import tensorflow as tf
 
 class OneHotEncoder(object):
     """A class that can format data.
