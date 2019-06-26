@@ -144,7 +144,7 @@ class Normalizer(object):
                                                      translation_right +
                                                      translation_left)
                     image = tf.image.crop_to_bounding_box(x, translation_bottom,
-                                                          translation_right, 
+                                                          translation_right,
                                                           target_height,
                                                           target_width)
 
@@ -165,7 +165,7 @@ class Normalizer(object):
 
                 if saturation_range:
                     min_value, max_value = get_min_and_max(
-                        saturation_range, 
+                        saturation_range,
                         'saturation_range')
                     print(min_value, max_value)
                     image = tf.image.random_saturation(image, min_value, max_value)
@@ -178,7 +178,7 @@ class Normalizer(object):
                         image, min_value, max_value)
 
                 if random_crop_height and random_crop_width:
-                    crop_size = [batch_num, random_crop_height, 
+                    crop_size = [batch_num, random_crop_height,
                                  random_crop_width, channels]
                     seed = np.random.randint(random_crop_seed)
                     target_shape = (target_height, target_width)
