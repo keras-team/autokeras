@@ -112,9 +112,9 @@ class Normalizer(object):
         length_dim = len(x_train.shape)
         if length_dim != 4:
             raise ValueError(
-            'The input of x_train should be a [batch_size, height, '
-            'width, channel] '
-            'shape tensor or list, but we get %s' % x_train.shape)
+                             'The input of x_train should be a [batch_size, height, '
+                             'width, channel] '
+                             'shape tensor or list, but we get %s' % x_train.shape)
         batch_num = x_train.shape[0]
         target_height = x_train.shape[1]
         target_width = x_train.shape[2]
