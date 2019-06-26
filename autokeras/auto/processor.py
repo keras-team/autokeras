@@ -119,7 +119,7 @@ class Normalizer(object):
         dataset = dataset.batch(batch_size=batch_num)
         iterator = dataset.make_one_shot_iterator()
         one_element = iterator.get_next()
-        with tf.Session() as sess:
+        '''with tf.Session() as sess:
             for i in range(1):
                 batch = sess.run([one_element])
                 image = tf.convert_to_tensor(batch[0])
@@ -153,7 +153,6 @@ class Normalizer(object):
                 if saturation_range:
                     min_value, max_value = get_min_and_max(
                         saturation_range, 'saturation_range')
-                    print(min_value,max_value)
                     image = tf.image.random_saturation(image, min_value, max_value)
 
                 if contrast_range:
@@ -165,12 +164,11 @@ class Normalizer(object):
                     crop_size = [batch_num, random_crop_height, random_crop_width, channels]
                     seed = np.random.randint(random_crop_seed)
                     target_shape = (target_height,target_width)
-                    print(tf.random_crop(image, size=crop_size, seed=seed).shape)
                     image = tf.image.resize_images(tf.random_crop(image, size=crop_size, seed=seed),size=target_shape)
 
                 if horizontal_flip:
                     image = tf.image.flip_left_right(image)
 
                 if vertical_flip:
-                    image = tf.image.flip_up_down(image)
-        return image
+                    image = tf.image.flip_up_down(image)'''
+        return x_train
