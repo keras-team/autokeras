@@ -25,6 +25,7 @@ class ClassificationHead(HyperHead):
         if not self.loss:
             if binary:
                 self.loss = 'binary_crossentropy'
+                self.output_shape = (1,)
             else:
                 self.loss = 'categorical_crossentropy'
 
@@ -32,8 +33,7 @@ class ClassificationHead(HyperHead):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         output_node = hyper_block.Flatten().build(hp, output_node)
-        output_node = tf.keras.layers.Dense(
-            self.output_shape[0])(output_node)
+        output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
         if self.binary:
             output_node = tf.keras.activations.sigmoid(output_node)
         else:
@@ -53,9 +53,6 @@ class RegressionHead(HyperHead):
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
-        if len(self.output_shape) == 1:
-            output_node = hyper_block.Flatten().build(hp, output_node)
-            output_node = tf.keras.layers.Dense(
-                self.output_shape[-1])(output_node)
-            return output_node
-        return hyper_block.Reshape(self.output_shape).build(hp, output_node)
+        output_node = hyper_block.Flatten().build(hp, output_node)
+        output_node = tf.keras.layers.Dense( self.output_shape[-1])(output_node)
+        return output_node

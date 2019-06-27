@@ -5,10 +5,16 @@ from tensorflow.python.util import nest
 from autokeras import const
 
 
-def get_global_average_pooling_layer_class(shape):
+def get_global_average_pooling_layer(shape):
     return [tf.keras.layers.GlobalAveragePooling1D,
             tf.keras.layers.GlobalAveragePooling2D,
             tf.keras.layers.GlobalAveragePooling3D][len(shape) - 3]
+
+
+def get_global_max_pooling_layer(shape):
+    return [tf.keras.layers.GlobalMaxPool1D,
+            tf.keras.layers.GlobalMaxPool2D,
+            tf.keras.layers.GlobalMaxPool3D][len(shape) - 3]
 
 
 def format_inputs(inputs, name=None, num=None):
@@ -26,8 +32,6 @@ def format_inputs(inputs, name=None, num=None):
                                                              name=name,
                                                              len=len(inputs)))
     return inputs
-
-    const.Constant.RNN_LAYERS[choice]
 
 
 def split_train_to_valid(x, y):

@@ -347,36 +347,66 @@ class Flatten(HyperBlock):
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        return tf.keras.layers.Flatten()(input_node)
+
+
+class SpatialReduction(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
-        if len(output_node.shape) > 5:
-            raise ValueError(
-                'Expect the input tensor to have less or equal to 5 '
-                'dimensions, but got {shape}'.format(shape=output_node.shape))
-        # Flatten the input tensor
-        # TODO: Add hp.Choice to use Flatten()
-        if len(output_node.shape) > 2:
-            global_average_pooling = \
-                layer_utils.get_global_average_pooling_layer_class(
-                    output_node.shape)
-            output_node = global_average_pooling()(output_node)
+
+        # No need to reduce.
+        if len(output_node.shape) <= 2:
+            return output_node
+
+        reduction_type = hp.Choice('reduction_type',
+                                   ['flatten',
+                                    'global_max',
+                                    'global_ave'],
+                                   default='global_ave')
+        if reduction_type == 'flatten':
+            output_node = Flatten().build(hp, output_node)
+        elif reduction_type == 'global_max':
+            output_node = layer_utils.get_global_max_pooling_layer(
+                output_node.shape)()(output_node)
+        elif reduction_type == 'global_ave':
+            output_node = layer_utils.get_global_average_pooling_layer(
+                output_node.shape)()(output_node)
         return output_node
 
 
-class Reshape(HyperBlock):
-
-    def __init__(self, output_shape, **kwargs):
-        super().__init__(**kwargs)
-        self.output_shape = output_shape
+class TemporalReduction(HyperBlock):
 
     def build(self, hp, inputs=None):
-        # TODO: Implement reshape layer
-        return inputs
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        output_node = input_node
+
+        # No need to reduce.
+        if len(output_node.shape) <= 2:
+            return output_node
+
+        reduction_type = hp.Choice('reduction_type',
+                                   ['flatten',
+                                    'max',
+                                    'ave',
+                                    'min'],
+                                   default='global_ave')
+
+        if reduction_type == 'flatten':
+            output_node = Flatten().build(hp, output_node)
+        elif reduction_type == 'max':
+            output_node = tf.math.reduce_max(output_node, axis=-2)
+        elif reduction_type == 'ave':
+            output_node = tf.math.reduce_mean(output_node, axis=-2)
+        elif reduction_type == 'min':
+            output_node = tf.math.reduce_min(output_node, axis=-2)
+
+        return output_node
 
 
-class TextBlock(HyperBlock):
-
-    def build(self, hp, inputs=None):
-        pass
+class TextBlock(RNNBlock):
+    pass
 
 
 class StructuredBlock(HyperBlock):
