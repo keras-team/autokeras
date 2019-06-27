@@ -1,4 +1,5 @@
 import tensorflow as tf
+from autokeras.hypermodel import hyper_block
 
 
 class Node(object):
@@ -26,38 +27,29 @@ class Input(Node):
     def build(self, hp):
         return tf.keras.Input(shape=self.shape)
 
-
-class ImageInput(Node):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def build(self, hp):
-        return tf.keras.Input(shape=self.shape)
+    def related_block(self):
+        return hyper_block.ResNetBlock()
 
 
-class TextInput(Node):
+class ImageInput(Input):
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def build(self, hp):
-        pass
+    def related_block(self):
+        return hyper_block.ImageBlock()
 
 
-class StructuredInput(Node):
+class TextInput(Input):
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def build(self, hp):
-        pass
+    def related_block(self):
+        return hyper_block.TextBlock()
 
 
-class TimeSeriesInput(Node):
+class StructuredInput(Input):
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def related_block(self):
+        return hyper_block.StructuredBlock()
 
-    def build(self, hp):
-        pass
+
+class TimeSeriesInput(Input):
+
+    def related_block(self):
+        return hyper_block.TimeSeriesBlock()

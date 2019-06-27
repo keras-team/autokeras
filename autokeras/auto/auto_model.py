@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import hyper_head
+from autokeras.hypermodel import hyper_head, hyper_block
 from autokeras import layer_utils
 from autokeras import const
 
@@ -223,5 +223,12 @@ class AutoModel(GraphAutoModel):
                  **kwargs):
         inputs = layer_utils.format_inputs(inputs)
         outputs = layer_utils.format_inputs(outputs)
+        middle_nodes = [input_node.related_block()(input_node)
+                        for input_node in inputs]
+        if len(middle_nodes) > 1:
+            output_node = hyper_block.Merge()(middle_nodes)
+        else:
+            output_node = middle_nodes[0]
+        outputs = [output_blocks(output_node)
+                   for output_blocks in outputs]
         super().__init__(inputs, outputs, **kwargs)
-
