@@ -27,9 +27,7 @@ def format_inputs(inputs, name=None, num=None):
                                                              len=len(inputs)))
     return inputs
 
-
-def get_rnn_block(choice):
-    return const.Constant.RNN_LAYERS[choice]
+    const.Constant.RNN_LAYERS[choice]
 
 
 def split_train_to_valid(x, y):

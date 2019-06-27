@@ -4,6 +4,7 @@ import kerastuner
 
 from autokeras.hypermodel import hyper_node
 from autokeras import layer_utils
+from autokeras import const
 
 
 class HyperBlock(kerastuner.HyperModel):
@@ -41,13 +42,9 @@ class DenseBlock(HyperBlock):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         output_node = Flatten().build(hp, output_node)
-        active_category = hp.Choice(
-            'activate_category',
-            ['softmax', 'relu', 'tanh', 'sigmoid'],
-            default='relu')
         layer_stack = hp.Choice(
             'layer_stack',
-            ['dense-bn-act', 'dense-act', 'act-bn-dense'],
+            ['dense-bn-act', 'dense-act'],
             default='act-bn-dense')
         for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
             if layer_stack == 'dense-bn-act':
@@ -56,8 +53,7 @@ class DenseBlock(HyperBlock):
                     [16, 32, 64, 128, 256, 512, 1024],
                     default=32))(output_node)
                 output_node = tf.keras.layers.BatchNormalization()(output_node)
-                output_node = tf.keras.layers.Activation(active_category)(
-                    output_node)
+                output_node = tf.keras.layers.ReLU()(output_node)
                 output_node = tf.keras.layers.Dropout(
                     rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(
                     output_node)
@@ -66,14 +62,12 @@ class DenseBlock(HyperBlock):
                     hp.Choice('units_{i}'.format(i=i),
                               [16, 32, 64, 128, 256, 512, 1024],
                               default=32))(output_node)
-                output_node = tf.keras.layers.Activation(active_category)(
-                    output_node)
+                output_node = tf.keras.layers.ReLU()(output_node)
                 output_node = tf.keras.layers.Dropout(
                     rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(
                     output_node)
             else:
-                output_node = tf.keras.layers.Activation(active_category)(
-                    output_node)
+                output_node = tf.keras.layers.ReLU()(output_node)
                 output_node = tf.keras.layers.BatchNormalization()(output_node)
                 output_node = tf.keras.layers.Dense(
                     hp.Choice('units_{i}'.format(i=i),
@@ -86,6 +80,20 @@ class DenseBlock(HyperBlock):
 
 
 class RNNBlock(HyperBlock):
+    """ An RNN HyperBlock.
+
+    Attributes:
+        bidirectional: Boolean. If not provided, it would be a tunable variable.
+        return_sequences: Boolean.  If not provided, it would be a tunable variable.
+    """
+
+    def __init__(self,
+                 bidirectional=None,
+                 return_sequences=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.bidirectional = bidirectional
+        self.return_sequences = return_sequences
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
@@ -102,18 +110,34 @@ class RNNBlock(HyperBlock):
         input_node = tf.reshape(input_node, [-1, shape[1], feature_size])
         output_node = input_node
 
-        in_layer = layer_utils.get_rnn_block(
-            hp.Choice('rnn_type', ['vanilla', 'gru', 'lstm'], default='vanilla'))
+        in_layer = const.Constant.RNN_LAYERS[hp.Choice('rnn_type',
+                                                       ['gru', 'lstm'],
+                                                       default='lstm')]
         choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
 
-        for i in range(choice_of_layers):
-            return_sequences = False if i == choice_of_layers - 1 else True
-            bidirectional_block = tf.keras.layers.Bidirectional(
-                in_layer(feature_size, activation='tanh',
-                         return_sequences=return_sequences))
-            output_node = bidirectional_block(output_node)
+        bidirectional = self.bidirectional
+        if bidirectional is None:
+            bidirectional = hp.Choice('bidirectional',
+                                      [True, False],
+                                      default=True)
 
-        output_node = Flatten().build(hp, output_node)
+        return_sequences = self.return_sequences
+        if return_sequences is None:
+            return_sequences = hp.Choice('return_sequences',
+                                         [True, False],
+                                         default=True)
+
+        for i in range(choice_of_layers):
+            temp_return_sequences = True
+            if i == choice_of_layers - 1:
+                temp_return_sequences = return_sequences
+            if bidirectional:
+                output_node = tf.keras.layers.Bidirectional(
+                    in_layer(feature_size,
+                             return_sequences=temp_return_sequences))(output_node)
+            else:
+                output_node = in_layer(feature_size,
+                                       return_sequences=return_sequences)
 
         return output_node
 
