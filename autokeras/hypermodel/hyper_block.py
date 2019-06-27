@@ -33,7 +33,8 @@ class HyperBlock(kerastuner.HyperModel):
 class ResNetBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        pass
+        # TODO: Reuse kerastuner application resnet
+        return 0
 
 
 class DenseBlock(HyperBlock):
@@ -145,19 +146,42 @@ class RNNBlock(HyperBlock):
 class ImageBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        # TODO: make it more advanced, selecting from multiple models, e.g.,
-        #  ResNet.
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
 
-        for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
+        block_type = hp.Choice('block_type',
+                               {'resnet', 'xception', 'vanilla'},
+                               default='resnet')
+
+        if block_type == 'resnet':
+            output_node = ResNetBlock.build(hp, output_node)
+        elif block_type == 'xception':
+            output_node = XceptionBlock().build(hp, output_node)
+        elif block_type == 'vanilla':
+            output_node = ConvBlock().build(hp, output_node)
+        return output_node
+
+
+class ConvBlock(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        output_node = input_node
+
+        kernel_size = hp.Choice('kernel_size', [3, 5, 7], default=3)
+        for i in range(hp.Choice('num_blocks', [1, 2, 3], default=2)):
             output_node = tf.keras.layers.Conv2D(
-                hp.Choice('units_{i}'.format(i=i),
+                hp.Choice('filters_{i}_1'.format(i=i),
                           [16, 32, 64],
                           default=32),
-                hp.Choice('kernel_size_{i}'.format(i=i),
-                          [3, 5, 7],
-                          default=3))(output_node)
+                kernel_size)(output_node)
+            output_node = tf.keras.layers.Conv2D(
+                hp.Choice('filters_{i}_2'.format(i=i),
+                          [16, 32, 64],
+                          default=32),
+                kernel_size)(output_node)
+            output_node = tf.keras.layers.MaxPool2D(
+                kernel_size - 1)(output_node)
         return output_node
 
 

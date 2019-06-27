@@ -54,5 +54,5 @@ class RegressionHead(HyperHead):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         output_node = hyper_block.Flatten().build(hp, output_node)
-        output_node = tf.keras.layers.Dense( self.output_shape[-1])(output_node)
+        output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
         return output_node
