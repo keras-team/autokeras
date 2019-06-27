@@ -27,29 +27,34 @@ class Input(Node):
     def build(self, hp):
         return tf.keras.Input(shape=self.shape)
 
-    def related_block(self):
-        return hyper_block.ResNetBlock()
+    @staticmethod
+    def related_block():
+        return hyper_block.GeneralBlock()
 
 
 class ImageInput(Input):
 
-    def related_block(self):
+    @staticmethod
+    def related_block():
         return hyper_block.ImageBlock()
 
 
 class TextInput(Input):
 
-    def related_block(self):
+    @staticmethod
+    def related_block():
         return hyper_block.TextBlock()
 
 
 class StructuredInput(Input):
 
-    def related_block(self):
+    @staticmethod
+    def related_block():
         return hyper_block.StructuredBlock()
 
 
 class TimeSeriesInput(Input):
 
-    def related_block(self):
+    @staticmethod
+    def related_block():
         return hyper_block.TimeSeriesBlock()

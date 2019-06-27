@@ -350,12 +350,24 @@ class Reshape(HyperBlock):
 
 
 class TextBlock(HyperBlock):
-    pass
+
+    def build(self, hp, inputs=None):
+        pass
 
 
 class StructuredBlock(HyperBlock):
-    pass
+
+    def build(self, hp, inputs=None):
+        pass
 
 
 class TimeSeriesBlock(HyperBlock):
-    pass
+
+    def build(self, hp, inputs=None):
+        pass
+
+
+class GeneralBlock(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        pass

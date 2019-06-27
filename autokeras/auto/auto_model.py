@@ -4,7 +4,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import hyper_head, hyper_block
+from autokeras.hypermodel import hyper_block
+from autokeras.hypermodel import hyper_head
 from autokeras import layer_utils
 from autokeras import const
 
@@ -27,8 +28,6 @@ class GraphAutoModel(kerastuner.HyperModel):
                  trials=None,
                  directory=None,
                  **kwargs):
-        """
-        """
         super().__init__(**kwargs)
         self.inputs = layer_utils.format_inputs(inputs)
         self.outputs = layer_utils.format_inputs(outputs)
@@ -194,6 +193,13 @@ class GraphAutoModel(kerastuner.HyperModel):
             metrics += metrics_list
         return metrics
 
+    def _get_loss(self):
+        loss = nest.flatten([output_node.in_hypermodels[0].loss
+                             for output_node in self.outputs
+                             if isinstance(output_node.in_hypermodels[0],
+                                           hyper_head.HyperHead)])
+        return loss
+
     def _compiled(self, hp, model):
         # Specify hyperparameters from compile(...)
         optimizer = hp.Choice('optimizer',
@@ -206,13 +212,6 @@ class GraphAutoModel(kerastuner.HyperModel):
                       loss=self._get_loss())
 
         return model
-
-    def _get_loss(self):
-        loss = nest.flatten([output_node.in_hypermodels[0].loss
-                             for output_node in self.outputs
-                             if isinstance(output_node.in_hypermodels[0],
-                                           hyper_head.HyperHead)])
-        return loss
 
 
 class AutoModel(GraphAutoModel):
