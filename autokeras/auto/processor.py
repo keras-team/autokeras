@@ -78,15 +78,14 @@ class Normalizer(object):
         data = (data - self.mean) / self.std
         return data
 
-    def get_min_and_max(value, name):
+    def _get_min_and_max(value, name):
         if isinstance(value, (tuple, list)):
             if len(value) != 2:
                 raise ValueError(
                     'Argument %s expected either a float between 0 and 1, '
                     'or a tuple of 2 floats between 0 and 1, '
                     'but got: %s' % (value, name))
-            min_value = value[0]
-            max_value = value[1]
+            min_value, max_value = value
         else:
             min_value = 1. - value
             max_value = 1. + value
@@ -115,16 +114,12 @@ class Normalizer(object):
                              'The input of x_train should be a [batch_size, height, '
                              'width, channel] '
                              'shape tensor or list, but we get %s' % x_train.shape)
-        batch_num = x_train.shape[0]
-        target_height = x_train.shape[1]
-        target_width = x_train.shape[2]
-        channels = x_train.shape[3]
+        batch_num, target_height, target_width, channels = x_train.shape
         dataset = tf.data.Dataset.from_tensor_slices(x_train)
         dataset = dataset.batch(batch_size=batch_num)
         iterator = dataset.make_one_shot_iterator()
         one_element = iterator.get_next()
         with tf.Session() as sess:
-            for i in range(1):
                 batch = sess.run([one_element])
                 image = tf.convert_to_tensor(batch[0])
                 image = tf.cast(image, dtype=tf.float32)
@@ -167,7 +162,6 @@ class Normalizer(object):
                     min_value, max_value = get_min_and_max(
                         saturation_range,
                         'saturation_range')
-                    print(min_value, max_value)
                     image = tf.image.random_saturation(image, min_value, max_value)
 
                 if contrast_range:
@@ -182,7 +176,6 @@ class Normalizer(object):
                                  random_crop_width, channels]
                     seed = np.random.randint(random_crop_seed)
                     target_shape = (target_height, target_width)
-                    print(tf.random_crop(image, size=crop_size, seed=seed).shape)
                     image = tf.image.resize_images(
                         tf.random_crop(image, size=crop_size, seed=seed),
                         size=target_shape)
