@@ -11,13 +11,21 @@ from autokeras import const
 
 
 class GraphAutoModel(kerastuner.HyperModel):
-    """ A AutoModel should be an AutoML solution.
+    """ A HyperModel defined by a graph of HyperBlocks.
 
-    It contains the HyperModels and the Tuner.
+    GraphAutoModel is a subclass of HyperModel. Besides the HyperModel properties,
+    it also has a tuner to tune the HyperModel. The user can use it in a similar
+    way to a Keras model since it also has `fit()` and  `predict()` methods.
+
+    The user can specify the high-level neural architecture by connecting the
+    HyperBlocks with the functional API which is the same as
+    the Keras functional API.
 
     Attributes:
-        inputs: A HyperModel instance. The input node of a the AutoModel.
-        outputs: A HyperModel instance. The output node of the AutoModel.
+        inputs: A list of or a HyperNode instance.
+            The input node(s) of a the AutoGraphModel.
+        outputs: A list of or a HyperNode instance.
+            The output node(s) of the AutoGraphModel.
         trials: Int. The number of models to try.
         directory: String. The path to a directory for storing the search outputs.
     """
@@ -215,6 +223,23 @@ class GraphAutoModel(kerastuner.HyperModel):
 
 
 class AutoModel(GraphAutoModel):
+    """ A HyperModel defined by inputs and outputs.
+
+    AutoModel is a subclass of HyperModel. Besides the HyperModel properties,
+    it also has a tuner to tune the HyperModel. The user can use it in a similar
+    way to a Keras model since it also has `fit()` and  `predict()` methods.
+
+    The user can specify the inputs and outputs of the AutoModel. It will infer
+    the rest of the high-level neural architecture.
+
+    Attributes:
+        inputs: A list of or a HyperNode instance.
+            The input node(s) of a the AutoModel.
+        outputs: A list of or a HyperHead instance.
+            The output head(s) of the AutoModel.
+        trials: Int. The number of models to try.
+        directory: String. The path to a directory for storing the search outputs.
+    """
 
     def __init__(self,
                  inputs,
