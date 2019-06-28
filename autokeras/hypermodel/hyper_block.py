@@ -34,7 +34,7 @@ class ResNetBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
         # TODO: Reuse kerastuner application resnet
-        return 0
+        return inputs
 
 
 class DenseBlock(HyperBlock):
@@ -46,7 +46,7 @@ class DenseBlock(HyperBlock):
         layer_stack = hp.Choice(
             'layer_stack',
             ['dense-bn-act', 'dense-act'],
-            default='act-bn-dense')
+            default='dense-bn-act')
         for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
             if layer_stack == 'dense-bn-act':
                 output_node = tf.keras.layers.Dense(hp.Choice(
@@ -150,11 +150,11 @@ class ImageBlock(HyperBlock):
         output_node = input_node
 
         block_type = hp.Choice('block_type',
-                               {'resnet', 'xception', 'vanilla'},
+                               ['resnet', 'xception', 'vanilla'],
                                default='resnet')
 
         if block_type == 'resnet':
-            output_node = ResNetBlock.build(hp, output_node)
+            output_node = ResNetBlock().build(hp, output_node)
         elif block_type == 'xception':
             output_node = XceptionBlock().build(hp, output_node)
         elif block_type == 'vanilla':
@@ -371,7 +371,9 @@ class Flatten(HyperBlock):
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
-        return tf.keras.layers.Flatten()(input_node)
+        if len(input_node.shape) > 2:
+            return tf.keras.layers.Flatten()(input_node)
+        return input_node
 
 
 class SpatialReduction(HyperBlock):
