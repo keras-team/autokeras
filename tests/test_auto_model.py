@@ -125,7 +125,7 @@ def test_auto_model_basic(tmp_dir):
     output_node = ak.RegressionHead()(output_node)
 
     auto_model = ak.GraphAutoModel(input_node, output_node, directory=tmp_dir)
-    ak.const.Constant.NUM_TRAILS = 2
+    ak.const.Constant.NUM_TRIALS = 2
     auto_model.fit(x_train, y_train, epochs=2)
     result = auto_model.predict(x_train)
 
