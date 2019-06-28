@@ -47,36 +47,21 @@ class DenseBlock(HyperBlock):
             'layer_stack',
             ['dense-bn-act', 'dense-act'],
             default='dense-bn-act')
+        dropout_rate = hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5)
         for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
+            units = hp.Choice(
+                'units_{i}'.format(i=i),
+                [16, 32, 64, 128, 256, 512, 1024],
+                default=32)
             if layer_stack == 'dense-bn-act':
-                output_node = tf.keras.layers.Dense(hp.Choice(
-                    'units_{i}'.format(i=i),
-                    [16, 32, 64, 128, 256, 512, 1024],
-                    default=32))(output_node)
+                output_node = tf.keras.layers.Dense(units)(output_node)
                 output_node = tf.keras.layers.BatchNormalization()(output_node)
                 output_node = tf.keras.layers.ReLU()(output_node)
-                output_node = tf.keras.layers.Dropout(
-                    rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(
-                    output_node)
+                output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
             elif layer_stack == 'dense-act':
-                output_node = tf.keras.layers.Dense(
-                    hp.Choice('units_{i}'.format(i=i),
-                              [16, 32, 64, 128, 256, 512, 1024],
-                              default=32))(output_node)
+                output_node = tf.keras.layers.Dense(units)(output_node)
                 output_node = tf.keras.layers.ReLU()(output_node)
-                output_node = tf.keras.layers.Dropout(
-                    rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(
-                    output_node)
-            else:
-                output_node = tf.keras.layers.ReLU()(output_node)
-                output_node = tf.keras.layers.BatchNormalization()(output_node)
-                output_node = tf.keras.layers.Dense(
-                    hp.Choice('units_{i}'.format(i=i),
-                              [16, 32, 64, 128, 256, 512, 1024],
-                              default=32))(output_node)
-                output_node = tf.keras.layers.Dropout(
-                    rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(
-                    output_node)
+                output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         return output_node
 
 
