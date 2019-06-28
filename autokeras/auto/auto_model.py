@@ -1,9 +1,11 @@
 from queue import Queue
+
 import kerastuner
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras.auto import tuner
 from autokeras.hypermodel import hyper_block
 from autokeras.hypermodel import hyper_head
 from autokeras import layer_utils
@@ -176,7 +178,7 @@ class GraphAutoModel(kerastuner.HyperModel):
             (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(x, y)
             validation_data = x_val, y_val
 
-        self.tuner = kerastuner.RandomSearch(
+        self.tuner = tuner.RandomSearch(
             hypermodel=self,
             objective='val_loss',
             max_trials=self.trials,
