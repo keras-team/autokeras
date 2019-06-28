@@ -159,15 +159,27 @@ class ConvBlock(HyperBlock):
                 hp.Choice('filters_{i}_1'.format(i=i),
                           [16, 32, 64],
                           default=32),
-                kernel_size)(output_node)
+                kernel_size,
+                padding=self._get_padding(kernel_size, output_node))(output_node)
+
             output_node = tf.keras.layers.Conv2D(
                 hp.Choice('filters_{i}_2'.format(i=i),
                           [16, 32, 64],
                           default=32),
-                kernel_size)(output_node)
+                kernel_size,
+                padding=self._get_padding(kernel_size, output_node))(output_node)
+
             output_node = tf.keras.layers.MaxPool2D(
-                kernel_size - 1)(output_node)
+                kernel_size - 1,
+                padding=self._get_padding(kernel_size - 1, output_node))(output_node)
         return output_node
+
+    @staticmethod
+    def _get_padding(kernel_size, output_node):
+        if (kernel_size >= output_node.shape[1] * 2 and
+                kernel_size >= output_node.shape[2] * 2):
+            return 'valid'
+        return 'same'
 
 
 def shape_compatible(shape1, shape2):

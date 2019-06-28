@@ -9,6 +9,7 @@ from autokeras.hypermodel.hyper_block import RNNBlock
 from autokeras.hypermodel.hyper_block import XceptionBlock
 from autokeras.hypermodel.hyper_block import Merge
 from autokeras.hypermodel.hyper_block import ImageBlock
+from autokeras.hypermodel.hyper_block import ConvBlock
 from autokeras.hypermodel.hyper_block import DenseBlock
 
 from autokeras.hypermodel.hyper_node import Input
