@@ -11,23 +11,24 @@ from autokeras import const
 
 
 class GraphAutoModel(kerastuner.HyperModel):
-    """ A HyperModel defined by a graph of HyperBlocks.
+    """A HyperModel defined by a graph of HyperBlocks.
 
     GraphAutoModel is a subclass of HyperModel. Besides the HyperModel properties,
     it also has a tuner to tune the HyperModel. The user can use it in a similar
     way to a Keras model since it also has `fit()` and  `predict()` methods.
 
     The user can specify the high-level neural architecture by connecting the
-    HyperBlocks with the functional API which is the same as
+    HyperBlocks with the functional API, which is the same as
     the Keras functional API.
 
     Attributes:
-        inputs: A list of or a HyperNode instance.
-            The input node(s) of a the AutoGraphModel.
-        outputs: A list of or a HyperNode instance.
-            The output node(s) of the AutoGraphModel.
-        trials: Int. The number of models to try.
-        directory: String. The path to a directory for storing the search outputs.
+        inputs: A list of or a HyperNode instances.
+            The input node(s) of the GraphAutoModel.
+        outputs: A list of or a HyperNode instances.
+            The output node(s) of the GraphAutoModel.
+        trials: Int. The number of different models to try.
+        directory: String. The path to the directory
+            for storing the search outputs.
     """
 
     def __init__(self,
