@@ -62,7 +62,7 @@ class AutoModel(kerastuner.HyperModel):
         self.tuner = kerastuner.RandomSearch(
             hypermodel=self,
             objective='val_loss',
-            max_trials=trials or const.Constant.NUM_TRAILS,
+            max_trials=trials or const.Constant.NUM_TRIALS,
             directory=self.directory)
 
         # TODO: allow early stop if epochs is not specified.
