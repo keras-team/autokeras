@@ -1,3 +1,4 @@
+import queue
 from queue import Queue
 
 import kerastuner
@@ -6,7 +7,7 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras.auto import tuner
-from autokeras.hypermodel import hyper_block
+from autokeras.hypermodel import hyper_block, processor
 from autokeras.hypermodel import hyper_head
 from autokeras import layer_utils
 from autokeras import const
@@ -48,9 +49,13 @@ class GraphAutoModel(kerastuner.HyperModel):
         self._nodes = []
         self._hypermodels = []
         self._hypermodel_to_id = {}
+        self._model_inputs = []
         self._build_network()
 
     def build(self, hp):
+        # add different types of node in hyper_node
+        # use the type of node to build some internal node of hyper model into
+        # a real input node.
         real_nodes = {}
         for input_node in self.inputs:
             node_id = self._node_to_id[input_node]
@@ -66,7 +71,7 @@ class GraphAutoModel(kerastuner.HyperModel):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
         model = tf.keras.Model(
             [real_nodes[self._node_to_id[input_node]] for input_node in
-             self.inputs],
+             self._model_inputs],
             [real_nodes[self._node_to_id[output_node]] for output_node in
              self.outputs])
 
@@ -111,6 +116,14 @@ class GraphAutoModel(kerastuner.HyperModel):
         for output_node in self.outputs:
             hypermodel = output_node.in_hypermodels[0]
             hypermodel.output_shape = output_node.shape
+
+        # Find the model input nodes
+        for node in self._nodes:
+            if self._is_model_inputs(node):
+                self._model_inputs.append(node)
+
+        self._model_inputs = sorted(self._model_inputs,
+                                    key=lambda x: self._node_to_id[x])
 
     def _search_network(self, input_node, outputs, in_stack_nodes,
                         visited_nodes):
@@ -222,6 +235,42 @@ class GraphAutoModel(kerastuner.HyperModel):
                       loss=self._get_loss())
 
         return model
+
+    def preprocess(self, hp, x, *args, **kwargs):
+        x = layer_utils.format_inputs(x, self.name)
+        q = queue.Queue()
+        for input_node, data in zip(self.inputs, x):
+            q.put((input_node, data))
+
+        new_x = []
+        while not q.empty():
+            node, data = q.get()
+            if self._is_model_inputs(node):
+                new_x.append((self._node_to_id[node], data))
+
+            for hypermodel in node.out_hypermodels:
+                if isinstance(hypermodel, processor.HyperPreprocessor):
+                    q.put((hypermodel.outputs[0],
+                           hypermodel.fit_transform(hp, data)))
+        # Sort by id.
+        new_x = sorted(new_x, key=lambda a: a[0])
+
+        # Remove the id from the list.
+        return_x = []
+        for node_id, data in new_x:
+            self._nodes[node_id].shape = data.shape[1:]
+            return_x.append(data)
+        return return_x
+
+    @staticmethod
+    def _is_model_inputs(node):
+        for hypermodel in node.in_hypermodels:
+            if not isinstance(hypermodel, processor.HyperPreprocessor):
+                return False
+        for hypermodel in node.out_hypermodels:
+            if not isinstance(hypermodel, processor.HyperPreprocessor):
+                return True
+        return False
 
 
 class AutoModel(GraphAutoModel):

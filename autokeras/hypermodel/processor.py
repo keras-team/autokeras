@@ -1,5 +1,23 @@
 import numpy as np
 
+from autokeras.hypermodel import hyper_block as hb_module
+
+
+class HyperPreprocessor(hb_module.HyperBlock):
+
+    def build(self, hp, inputs=None):
+        return inputs
+
+    def fit_transform(self, hp, inputs):
+        self.fit(hp, inputs)
+        return self.transform(hp, inputs)
+
+    def fit(self, hp, inputs):
+        raise NotImplementedError
+
+    def transform(self, hp, inputs):
+        raise NotImplementedError
+
 
 class OneHotEncoder(object):
     """A class that can format data.
@@ -47,7 +65,7 @@ class OneHotEncoder(object):
                                  np.argmax(np.array(data), axis=1))))
 
 
-class Normalizer(object):
+class Normalize(HyperPreprocessor):
     """ Perform basic image transformation and augmentation.
 
     # Attributes
@@ -56,15 +74,16 @@ class Normalizer(object):
         std: the standard deviation.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.mean = None
         self.std = None
 
-    def fit(self, data):
+    def fit(self, hp, data):
         self.mean = np.mean(data, axis=(0, 1, 2), keepdims=True).flatten()
         self.std = np.std(data, axis=(0, 1, 2), keepdims=True).flatten()
 
-    def transform(self, data):
+    def transform(self, hp, data):
         """ Transform the test data, perform normalization.
 
         # Arguments

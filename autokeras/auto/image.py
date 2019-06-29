@@ -1,6 +1,5 @@
-from autokeras.auto import processor
 from autokeras.auto import auto_model
-from autokeras.hypermodel import hyper_node
+from autokeras.hypermodel import hyper_node, processor
 from autokeras.hypermodel import hyper_head
 
 
@@ -10,11 +9,9 @@ class SupervisedImagePipeline(auto_model.AutoModel):
         super().__init__(inputs=hyper_node.ImageInput(),
                          outputs=outputs,
                          **kwargs)
-        self.normalizer = processor.Normalizer()
 
     def fit(self, x=None, y=None, **kwargs):
-        self.normalizer.fit(x)
-        super().fit(x=self.normalizer.transform(x), y=y, **kwargs)
+        super().fit(x=x, y=y, **kwargs)
 
 
 class ImageClassifier(SupervisedImagePipeline):

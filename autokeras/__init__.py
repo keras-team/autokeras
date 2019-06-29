@@ -12,6 +12,8 @@ from autokeras.hypermodel.hyper_block import ImageBlock
 from autokeras.hypermodel.hyper_block import ConvBlock
 from autokeras.hypermodel.hyper_block import DenseBlock
 
+from autokeras.hypermodel.processor import Normalize
+
 from autokeras.hypermodel.hyper_node import Input
 from autokeras.hypermodel.hyper_node import ImageInput
 from autokeras.hypermodel.hyper_node import TextInput
