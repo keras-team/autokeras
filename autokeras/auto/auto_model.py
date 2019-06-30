@@ -212,9 +212,9 @@ class GraphAutoModel(kerastuner.HyperModel):
             (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(x, y)
             validation_data = x_val, y_val
 
-        self.preprocess(kerastuner.HyperParameters(),
-                        x,
-                        y,
+        self.preprocess(hp=kerastuner.HyperParameters(),
+                        x=x,
+                        y=y,
                         validation_data=validation_data)
         self.tuner = tuner.RandomSearch(
             hypermodel=self,
