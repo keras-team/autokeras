@@ -14,14 +14,6 @@ class SupervisedImagePipeline(auto_model.AutoModel):
 class ImageClassifier(SupervisedImagePipeline):
     def __init__(self, **kwargs):
         super().__init__(hyper_head.ClassificationHead(), **kwargs)
-        self.label_encoder = processor.OneHotEncoder()
-
-    def fit(self, x=None, y=None, **kwargs):
-        self.label_encoder.fit(y)
-        super().fit(x=x, y=self.label_encoder.transform(y), **kwargs)
-
-    def predict(self, x, **kwargs):
-        return self.label_encoder.inverse_transform(super().predict(x, **kwargs))
 
 
 class ImageRegressor(SupervisedImagePipeline):

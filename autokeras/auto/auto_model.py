@@ -49,6 +49,7 @@ class GraphAutoModel(kerastuner.HyperModel):
         self._hypermodel_to_id = {}
         self._model_inputs = []
         self._build_network()
+        self._label_encoders = None
 
     def build(self, hp):
         real_nodes = {}
@@ -197,6 +198,7 @@ class GraphAutoModel(kerastuner.HyperModel):
         x = layer_utils.format_inputs(x, 'train_x')
         y = layer_utils.format_inputs(y, 'train_y')
 
+        y = self._label_encoding(y)
         # TODO: Set the shapes only if they are not provided by the user when
         #  initiating the HyperHead or Block.
         for y_input, output_node in zip(y, self.outputs):
@@ -228,9 +230,13 @@ class GraphAutoModel(kerastuner.HyperModel):
 
     def predict(self, x, **kwargs):
         """Predict the output for a given testing data. """
-        return self.tuner.get_best_models(1)[0].predict(
-            self.preprocess(self.tuner.get_best_models(1), x),
-            **kwargs)
+        x = self.preprocess(self.tuner.get_best_models(1), x)
+        y = self.tuner.get_best_models(1)[0].predict(x, **kwargs)
+        y = layer_utils.format_inputs(y, self.name)
+        y = self._postprocess(y)
+        if len(y) == 1:
+            y = y[0]
+        return y
 
     def _get_metrics(self):
         metrics = []
@@ -320,6 +326,35 @@ class GraphAutoModel(kerastuner.HyperModel):
             if not isinstance(hypermodel, processor.HyperPreprocessor):
                 return True
         return False
+
+    def _label_encoding(self, y):
+        self._label_encoders = []
+        new_y = []
+        for temp_y, output_node in zip(y, self.outputs):
+            head = output_node.in_hypermodels[0]
+            if (isinstance(head, hyper_head.ClassificationHead)
+                    and self._is_label(temp_y)):
+                label_encoder = processor.OneHotEncoder()
+                label_encoder.fit(y)
+                new_y.append(label_encoder.transform(y))
+                self._label_encoders.append(label_encoder)
+            else:
+                new_y.append(temp_y)
+                self._label_encoders.append(None)
+        return new_y
+
+    def _postprocess(self, y):
+        new_y = []
+        for temp_y, label_encoder in zip(y, self._label_encoders):
+            if label_encoder:
+                new_y.append(label_encoder.inverse_transform(temp_y))
+            else:
+                new_y.append(temp_y)
+        return new_y
+
+    @staticmethod
+    def _is_label(y):
+        return len(y.flatten()) == len(y) and len(set(y.flatten())) > 2
 
 
 class AutoModel(GraphAutoModel):
