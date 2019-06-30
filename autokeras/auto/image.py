@@ -10,9 +10,6 @@ class SupervisedImagePipeline(auto_model.AutoModel):
                          outputs=outputs,
                          **kwargs)
 
-    def fit(self, x=None, y=None, **kwargs):
-        super().fit(x=x, y=y, **kwargs)
-
 
 class ImageClassifier(SupervisedImagePipeline):
     def __init__(self, **kwargs):
@@ -30,9 +27,3 @@ class ImageClassifier(SupervisedImagePipeline):
 class ImageRegressor(SupervisedImagePipeline):
     def __init__(self, **kwargs):
         super().__init__(hyper_head.RegressionHead(), **kwargs)
-
-    def fit(self, x=None, y=None, **kwargs):
-        super().fit(x=x, y=y, **kwargs)
-
-    def predict(self, x, **kwargs):
-        return super().predict(x, **kwargs).flatten()

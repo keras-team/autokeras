@@ -113,17 +113,21 @@ class GraphAutoModel(kerastuner.HyperModel):
         # Add the hypermodels in topological order.
         self._hypermodels = []
         self._hypermodel_to_id = {}
-        while len(hypermodels) != len(self._hypermodels):
+        while len(hypermodels) != 0:
+            new_added = []
             for hypermodel in hypermodels:
                 if any([in_degree[self._node_to_id[node]]
                         for node in hypermodel.inputs]):
                     continue
                 self._add_hypermodel(hypermodel)
+                new_added.append(hypermodel)
                 for output_node in hypermodel.outputs:
                     if output_node not in self._node_to_id:
                         continue
                     output_node_id = self._node_to_id[output_node]
                     in_degree[output_node_id] -= 1
+            for hypermodel in new_added:
+                hypermodels.remove(hypermodel)
 
         # Set the output shape.
         for output_node in self.outputs:

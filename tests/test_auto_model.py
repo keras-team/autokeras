@@ -18,7 +18,7 @@ def test_graph_auto_model_basic(tmp_dir):
     output_node = ak.DenseBlock()(output_node)
     output_node = ak.RegressionHead()(output_node)
 
-    graph = ak.GraphAutoModel(input_node, output_node, directory=tmp_dir, trials=2)
+    graph = ak.GraphAutoModel(input_node, output_node, directory=tmp_dir, trials=1)
     graph.fit(x_train, y_train, epochs=1)
     result = graph.predict(x_train)
 
@@ -39,7 +39,8 @@ def test_merge(tmp_dir):
     graph = ak.GraphAutoModel([input_node1, input_node2],
                               output_node,
                               directory=tmp_dir,
-                              trials=2)
+                              trials=1)
+    print('****************############*********')
     graph.fit([x_train, x_train], y_train, epochs=1, batch_size=100, verbose=False)
     result = graph.predict([x_train, x_train])
 
@@ -67,7 +68,7 @@ def test_preprocessing(tmp_dir):
     graph = ak.GraphAutoModel([input_node1, input_node2],
                               output_node,
                               directory=tmp_dir,
-                              trials=2)
+                              trials=1)
     graph.fit([x_train, x_train], y_train, epochs=1, batch_size=100, verbose=False)
     result = graph.predict([x_train, x_train])
 
@@ -126,7 +127,7 @@ def test_auto_model_basic(tmp_dir):
     auto_model = ak.AutoModel(ak.ImageInput(),
                               ak.RegressionHead(),
                               directory=tmp_dir,
-                              trials=2)
+                              trials=1)
     auto_model.fit(x_train, y_train, epochs=2)
     result = auto_model.predict(x_train)
 
