@@ -1,6 +1,4 @@
 import queue
-from queue import Queue
-
 import kerastuner
 import numpy as np
 import tensorflow as tf
@@ -53,14 +51,13 @@ class GraphAutoModel(kerastuner.HyperModel):
         self._build_network()
 
     def build(self, hp):
-        # add different types of node in hyper_node
-        # use the type of node to build some internal node of hyper model into
-        # a real input node.
         real_nodes = {}
-        for input_node in self.inputs:
+        for input_node in self._model_inputs:
             node_id = self._node_to_id[input_node]
-            real_nodes[node_id] = input_node.build(hp)
+            real_nodes[node_id] = input_node.build()
         for hypermodel in self._hypermodels:
+            if isinstance(hypermodel, processor.HyperPreprocessor):
+                continue
             temp_inputs = [real_nodes[self._node_to_id[input_node]]
                            for input_node in hypermodel.inputs]
             outputs = hypermodel.build(hp,
@@ -90,29 +87,45 @@ class GraphAutoModel(kerastuner.HyperModel):
             if node not in self._node_to_id:
                 raise ValueError('Inputs and outputs not connected.')
 
-        # Find the hypermodels and sort the hypermodels in topological order.
+        # Find the hypermodels.
+        hypermodels = set()
+        for input_node in self._nodes:
+            for hypermodel in input_node.out_hypermodels:
+                if any([output_node in self._node_to_id
+                        for output_node in hypermodel.outputs]):
+                    hypermodels.add(hypermodel)
+
+        # Check if all the inputs of the hypermodels are set as inputs.
+        for hypermodel in hypermodels:
+            for input_node in hypermodel.inputs:
+                if input_node not in self._node_to_id:
+                    raise ValueError('A required input is missing for HyperModel '
+                                     '{name}.'.format(name=hypermodel.name))
+
+        # Calculate the in degree of all the nodes
+        in_degree = [0] * len(self._nodes)
+        for node_id, node in enumerate(self._nodes):
+            in_degree[node_id] = len([
+                hypermodel
+                for hypermodel in node.in_hypermodels if hypermodel in hypermodels
+            ])
+
+        # Add the hypermodels in topological order.
         self._hypermodels = []
         self._hypermodel_to_id = {}
-        visited_nodes = set()
-        queue = Queue()
-        for input_node in self.inputs:
-            queue.put(input_node)
-            visited_nodes.add(input_node)
-        while not queue.empty():
-            input_node = queue.get()
-            for hypermodel in input_node.out_hypermodels:
-                # Check at least one output node of the hypermodel is in the
-                # interested nodes.
-                if not any([output_node in self._node_to_id for output_node in
-                            hypermodel.outputs]):
+        while len(hypermodels) != len(self._hypermodels):
+            for hypermodel in hypermodels:
+                if any([in_degree[self._node_to_id[node]]
+                        for node in hypermodel.inputs]):
                     continue
                 self._add_hypermodel(hypermodel)
                 for output_node in hypermodel.outputs:
-                    # The node is not visited and in interested nodes.
-                    if (output_node not in visited_nodes and
-                            output_node in self._node_to_id):
-                        visited_nodes.add(output_node)
-                        queue.put(output_node)
+                    if output_node not in self._node_to_id:
+                        continue
+                    output_node_id = self._node_to_id[output_node]
+                    in_degree[output_node_id] -= 1
+
+        # Set the output shape.
         for output_node in self.outputs:
             hypermodel = output_node.in_hypermodels[0]
             hypermodel.output_shape = output_node.shape
@@ -154,14 +167,6 @@ class GraphAutoModel(kerastuner.HyperModel):
             hypermodel_id = len(self._hypermodels)
             self._hypermodel_to_id[hypermodel] = hypermodel_id
             self._hypermodels.append(hypermodel)
-        for output_node in hypermodel.outputs:
-            self._add_node(output_node)
-        for input_node in hypermodel.inputs:
-            if input_node not in self._node_to_id:
-                raise ValueError(
-                    'A required input is missing '
-                    'for HyperModel {name}.'.format(
-                        name=hypermodel.name))
 
     def _add_node(self, input_node):
         if input_node not in self._node_to_id:
@@ -178,8 +183,6 @@ class GraphAutoModel(kerastuner.HyperModel):
 
         # TODO: Set the shapes only if they are not provided by the user when
         #  initiating the HyperHead or Block.
-        for x_input, input_node in zip(x, self.inputs):
-            input_node.shape = x_input.shape[1:]
         for y_input, output_node in zip(y, self.outputs):
             if len(y_input.shape) == 1:
                 y_input = np.reshape(y_input, y_input.shape + (1,))
@@ -191,6 +194,10 @@ class GraphAutoModel(kerastuner.HyperModel):
             (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(x, y)
             validation_data = x_val, y_val
 
+        self.preprocess(kerastuner.HyperParameters(),
+                        x,
+                        y,
+                        validation_data=validation_data)
         self.tuner = tuner.RandomSearch(
             hypermodel=self,
             objective='val_loss',
@@ -205,7 +212,9 @@ class GraphAutoModel(kerastuner.HyperModel):
 
     def predict(self, x, **kwargs):
         """Predict the output for a given testing data. """
-        return self.tuner.get_best_models(1)[0].predict(x, **kwargs)
+        return self.tuner.get_best_models(1)[0].predict(
+            self.preprocess(self.tuner.get_best_models(1), x),
+            **kwargs)
 
     def _get_metrics(self):
         metrics = []
@@ -236,7 +245,17 @@ class GraphAutoModel(kerastuner.HyperModel):
 
         return model
 
-    def preprocess(self, hp, x, *args, **kwargs):
+    def preprocess(self, hp, x, y=None, validation_data=None, *args, **kwargs):
+        x, y = self._preprocess(hp, x, y)
+        if not y:
+            return x
+        if not validation_data:
+            return x, y
+        val_x, val_y = validation_data
+        val_x, val_y = self._preprocess(hp, val_x, val_y)
+        return x, y, val_x, val_y
+
+    def _preprocess(self, hp, x, y):
         x = layer_utils.format_inputs(x, self.name)
         q = queue.Queue()
         for input_node, data in zip(self.inputs, x):
@@ -247,6 +266,7 @@ class GraphAutoModel(kerastuner.HyperModel):
             node, data = q.get()
             if self._is_model_inputs(node):
                 new_x.append((self._node_to_id[node], data))
+                node.shape = data.shape[1:]
 
             for hypermodel in node.out_hypermodels:
                 if isinstance(hypermodel, processor.HyperPreprocessor):
@@ -260,7 +280,7 @@ class GraphAutoModel(kerastuner.HyperModel):
         for node_id, data in new_x:
             self._nodes[node_id].shape = data.shape[1:]
             return_x.append(data)
-        return return_x
+        return return_x, y
 
     @staticmethod
     def _is_model_inputs(node):

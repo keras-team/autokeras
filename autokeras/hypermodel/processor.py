@@ -80,8 +80,13 @@ class Normalize(HyperPreprocessor):
         self.std = None
 
     def fit(self, hp, data):
-        self.mean = np.mean(data, axis=(0, 1, 2), keepdims=True).flatten()
-        self.std = np.std(data, axis=(0, 1, 2), keepdims=True).flatten()
+        axis = tuple(range(len(data.shape) - 1))
+        self.mean = np.mean(data,
+                            axis=axis,
+                            keepdims=True).flatten()
+        self.std = np.std(data,
+                          axis=axis,
+                          keepdims=True).flatten()
 
     def transform(self, hp, data):
         """ Transform the test data, perform normalization.

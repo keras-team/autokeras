@@ -15,17 +15,14 @@ class Node(object):
     def add_out_hypermodel(self, hypermodel):
         self.out_hypermodels.append(hypermodel)
 
-    def build(self, hp):
-        raise NotImplementedError
+    def build(self):
+        return tf.keras.Input(shape=self.shape)
 
 
 class Input(Node):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-    def build(self, hp):
-        return tf.keras.Input(shape=self.shape)
 
     @staticmethod
     def related_block():
