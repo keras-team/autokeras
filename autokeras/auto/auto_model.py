@@ -181,6 +181,18 @@ class GraphAutoModel(kerastuner.HyperModel):
             y=None,
             validation_data=None,
             **kwargs):
+        """Search for the best model and hyperparameters for the AutoModel.
+
+        It will search for the best model based on the performances on
+        validation data.
+
+        Args:
+            x: Any type compatible with Keras training x. Training data x.
+            y: Any type compatible with Keras training y. Training data y.
+            validation_data: Tuple of (val_x, val_y). The same type as x and y.
+                Validation set for the search. If not provided, training data will
+                be split for validation.
+        """
         # Initialize HyperGraph model
         x = layer_utils.format_inputs(x, 'train_x')
         y = layer_utils.format_inputs(y, 'train_y')
@@ -250,6 +262,19 @@ class GraphAutoModel(kerastuner.HyperModel):
         return model
 
     def preprocess(self, hp, x, y=None, validation_data=None, *args, **kwargs):
+        """Preprocess the data to be ready for the Keras Model.
+
+        Args:
+            hp: HyperParameters. Used to build the HyperModel.
+            x: Any type compatible with Keras training x. Training data x.
+            y: Any type compatible with Keras training y. Training data y.
+            validation_data: Tuple of (val_x, val_y). The same type as x and y.
+                Validation set for the search.
+
+        Returns:
+            A tuple of four preprocessed elements, (x, y, val_x, val_y).
+
+        """
         x, y = self._preprocess(hp, x, y)
         if not y:
             return x
