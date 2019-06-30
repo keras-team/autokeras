@@ -332,8 +332,8 @@ class GraphAutoModel(kerastuner.HyperModel):
         new_y = []
         for temp_y, output_node in zip(y, self.outputs):
             head = output_node.in_hypermodels[0]
-            if (isinstance(head, hyper_head.ClassificationHead)
-                    and self._is_label(temp_y)):
+            if (isinstance(head, hyper_head.ClassificationHead) and
+                    self._is_label(temp_y)):
                 label_encoder = processor.OneHotEncoder()
                 label_encoder.fit(y)
                 new_y.append(label_encoder.transform(y))

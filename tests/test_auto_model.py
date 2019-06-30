@@ -1,6 +1,5 @@
 import pytest
 import numpy as np
-import kerastuner
 import autokeras as ak
 
 
@@ -40,7 +39,6 @@ def test_merge(tmp_dir):
                               output_node,
                               directory=tmp_dir,
                               trials=1)
-    print('****************############*********')
     graph.fit([x_train, x_train], y_train, epochs=1, batch_size=100, verbose=False)
     result = graph.predict([x_train, x_train])
 
