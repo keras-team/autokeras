@@ -122,7 +122,7 @@ def test_auto_model_basic(tmp_dir):
     auto_model = ak.AutoModel(ak.ImageInput(),
                               ak.RegressionHead(),
                               directory=tmp_dir,
-                              trials=2)
+                              max_trials=2)
     auto_model.fit(x_train, y_train, epochs=2)
     result = auto_model.predict(x_train)
 
