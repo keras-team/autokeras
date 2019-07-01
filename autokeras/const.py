@@ -13,3 +13,8 @@ class Constant(object):
         'gru': tf.keras.layers.GRU,
         'lstm': tf.keras.layers.LSTM
     }
+    S2S_TYPES = [
+        'auto_enc',
+        'nmt',
+        'text_gen',
+    ]

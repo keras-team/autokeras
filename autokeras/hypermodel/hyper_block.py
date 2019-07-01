@@ -87,33 +87,82 @@ class DenseBlock(HyperBlock):
 
 class RNNBlock(HyperBlock):
 
+    def __init__(self, bidirectional=None, return_sequences=False, **kwargs):
+        self.bidirectional = bidirectional
+        self.return_sequences = return_sequences
+
+        super().__init__(**kwargs)
+
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
-        shape = input_node.shape.as_list()
-        if len(shape) < 3:
-            raise ValueError(
-                "Expect the input tensor to have "
-                "at least 3 dimensions for rnn models, "
-                "but got {shape}".format(shape=input_node.shape))
+        input_node = layer_utils.validate_input(input_node)
+        feature_size = input_node.shape[2]
 
-        # Flatten feature_list to a single dimension.
-        # Final shape 3-D (num_sample , time_steps , features)
-        feature_size = np.prod(shape[2:])
-        input_node = tf.reshape(input_node, [-1, shape[1], feature_size])
-        output_node = input_node
+        if self.bidirectional is None:
+            self.bidirectional = hp.Choice('bidirectional', [True, False], default=False)
+        bidirectional_layer = tf.keras.layers.Bidirectional if self.bidirectional else tf.keras.layers.Lambda(
+            lambda x: x)
 
-        in_layer = layer_utils.get_rnn_block(
-            hp.Choice('rnn_type', ['vanilla', 'gru', 'lstm'], default='vanilla'))
+        # TODO: Attention layer can also be placed after LSTM.
+        #       Possible values for hp.Choice must be [attention_first, attention_last, no_attention]
+        attention_mode = hp.Choice('attention', [True, False], default=True)
+        input_node = layer_utils.attention_block(input_node) if attention_mode else input_node
+
+        # attention not enabled on Vanilla rnn
+        if attention_mode:
+            rnn_type = hp.Choice('rnn_type', ['gru', 'lstm'], default='lstm')
+        else:
+            rnn_type = hp.Choice('rnn_type', ['vanilla', 'gru', 'lstm'], default='lstm')
+        in_block = layer_utils.get_rnn_block(rnn_type)
         choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
 
+        print("HP choices here \n Bid : ", self.bidirectional, " attention : ", attention_mode, " num_layers : ",
+              choice_of_layers, " rnn_type : ", rnn_type)
+
+        output_node = input_node
         for i in range(choice_of_layers):
-            return_sequences = False if i == choice_of_layers - 1 else True
-            bidirectional_block = tf.keras.layers.Bidirectional(
-                in_layer(feature_size, activation='tanh',
-                         return_sequences=return_sequences))
-            output_node = bidirectional_block(output_node)
+            return_sequences = self.return_sequences if i == choice_of_layers - 1 else True
+            block = bidirectional_layer(in_block(feature_size, activation='tanh', return_sequences=return_sequences))
+            output_node = block(output_node)
 
         output_node = Flatten().build(hp, output_node)
+
+        # return_sequences does not necessarily need to be True
+        # for attention to work; the underlying computation is the same, and return_sequences should be used only based
+        # on whether you need 1 output or an output "for each timestep".
+        return output_node
+
+
+class S2SBlock(HyperBlock):
+
+    def __init__(self, type="auto_enc", **kwargs):
+        if type not in layer_utils.get_s2s_types():
+            raise ValueError("Invalid type. Allowed types are : ", layer_utils.get_s2s_types(), " \n but got ",
+                             type)
+        self.seq_type = type
+        super().__init__(**kwargs)
+
+    def build(self, hp, inputs=None, targets=None):
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        input_node = layer_utils.validate_input(input_node)
+        feature_size = input_node.shape[-1]
+        if self.seq_type == 'auto_enc':
+            target_node = input_node
+        else:
+            if targets is None:
+                raise ValueError("Model needs valid target sequences for training. No targets passed")
+            else:
+                target_node = layer_utils.format_inputs(targets, self.name, num=1)[0]
+
+        # TODO: Attention layer can also be placed after LSTM.
+        #       Possible values for hp.Choice must be [attention_first, attention_last, no_attention]
+        attention_mode = hp.Choice('attention', [True, False], default=True)
+        input_node = layer_utils.attention_block(input_node) if attention_mode else input_node
+
+        rnn_type = hp.Choice('rnn_type', ['gru', 'lstm'], default='lstm')
+        choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
+
+        output_node = layer_utils.seq2seq_builder(input_node,target_node,rnn_type,choice_of_layers,feature_size)
 
         return output_node
 

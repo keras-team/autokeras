@@ -3,9 +3,11 @@ from autokeras.auto.auto_model import GraphAutoModel
 
 from autokeras.hypermodel.hyper_head import ClassificationHead
 from autokeras.hypermodel.hyper_head import RegressionHead
+from autokeras.hypermodel.hyper_head import SequenceHead
 
 from autokeras.hypermodel.hyper_block import ResNetBlock
 from autokeras.hypermodel.hyper_block import RNNBlock
+from autokeras.hypermodel.hyper_block import S2SBlock
 from autokeras.hypermodel.hyper_block import XceptionBlock
 from autokeras.hypermodel.hyper_block import Merge
 from autokeras.hypermodel.hyper_block import ImageBlock

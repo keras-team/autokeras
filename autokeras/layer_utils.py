@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 from sklearn import model_selection
 from tensorflow.python.util import nest
 
@@ -30,6 +31,61 @@ def format_inputs(inputs, name=None, num=None):
 
 def get_rnn_block(choice):
     return const.Constant.RNN_LAYERS[choice]
+
+
+def get_s2s_types():
+    return const.Constant.S2S_TYPES
+
+
+def validate_input(input_node):
+    shape = input_node.shape.as_list()
+    if len(shape) < 3:
+        raise ValueError("Expect the input tensor to have atleast 3 dimensions for rnn models, "
+                         "but got {shape}".format(shape=input_node.shape))
+
+    # Shape change (samples, time_steps , feat_1 , feat_2 ,.. feat_k) => (sample , time_steps , features)
+    feature_size = np.prod(shape[2:])
+    input_node = tf.reshape(input_node, [-1, shape[1], feature_size])
+    return input_node
+
+
+def attention_block(inputs):
+    time_steps = int(inputs.shape[1])
+    attention_out = tf.keras.layers.Permute((2,1))(inputs)
+    attention_out = tf.keras.layers.Dense(time_steps, activation='softmax')(attention_out)
+    attention_out = tf.keras.layers.Permute((2,1))(attention_out)
+    mul_attention_out = tf.keras.layers.Multiply()([inputs, attention_out])
+    return mul_attention_out
+
+
+def seq2seq_builder(inputs,targets,rnn_type,choice_of_layers,feature_size):
+    print("In seq2seq ..",inputs.shape)
+
+    block = get_rnn_block(rnn_type)
+    # TODO: Autoencoder setup exists. Must accommodate NMT setup in future
+    encoder_inputs = inputs
+    decoder_inputs = targets
+
+    # TODO: Accept different num_layers for encoder and decoder
+    for i in range(choice_of_layers):
+        return_sequences = False if i == choice_of_layers - 1 else True
+        lstm_enc = block(feature_size, return_state=True,return_sequences=return_sequences)
+        encoder_inputs = lstm_enc(encoder_inputs)
+        print(len(encoder_inputs),encoder_inputs[0].shape,encoder_inputs[1].shape)
+    if rnn_type == 'lstm':
+        enc_out, state_h, state_c = encoder_inputs
+        encoder_states = [state_h, state_c]
+    else:
+        enc_out, state_h = encoder_inputs
+        encoder_states = [state_h]
+
+    for i in range(choice_of_layers):
+        initial_state = encoder_states if i == 0 else None
+        decoder_inputs = block(feature_size, return_state=True, return_sequences=True)(decoder_inputs, initial_state=initial_state)
+
+    dec_out = decoder_inputs[0]
+
+    return dec_out
 
 
 def split_train_to_valid(x, y):

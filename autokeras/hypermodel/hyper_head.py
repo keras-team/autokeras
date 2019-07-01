@@ -57,3 +57,22 @@ class RegressionHead(HyperHead):
                 self.output_shape[-1])(output_node)
             return output_node
         return hyper_block.Reshape(self.output_shape).build(hp, output_node)
+
+
+class SequenceHead(HyperHead):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.metrics:
+            self.metrics = ['mean_squared_error']
+        if not self.loss:
+            self.loss = 'mean_squared_error'
+
+    def build(self, hp, inputs=None):
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        output_node = input_node
+        if len(self.output_shape) == 1:
+            raise ValueError("Error message")
+        output_node = tf.keras.layers.Dense(self.output_shape[-1],activation='softmax')(output_node)
+        return output_node
+

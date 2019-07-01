@@ -30,3 +30,43 @@ def test_xception_block(tmp_dir):
     result = model.predict(x_train)
 
     assert result.shape == (100, 10)
+
+
+def test_rnn_block(tmp_dir):
+    x_train = np.random.rand(100,32,32)
+    y_train = np.random.rand(100)
+    input_node = ak.Input()
+    output_node = input_node
+    output_node = ak.RNNBlock(bidirectional=True,return_sequences=False)(output_node)
+    output_node = ak.RegressionHead()(output_node)
+
+    input_node.shape = (32, 32)
+    output_node[0].shape = (1,)
+
+    auto_model = ak.GraphAutoModel(input_node, output_node,directory=tmp_dir)
+    model = auto_model.build(kerastuner.HyperParameters())
+    model.fit(x_train, y_train, epochs=2)
+    result = model.predict(x_train)
+
+    assert result.shape == (100, 1)
+
+
+def test_seq2seq(tmp_dir):
+    # Autoencoder setup
+    x_train = np.random.rand(100,32,32)
+    input_node = ak.Input()
+    output_node = input_node
+    output_node = ak.S2SBlock()(output_node)
+    output_node = ak.SequenceHead()(output_node)
+
+    input_node.shape = (32, 32)
+    output_node[0].shape = (32,32)
+
+    auto_model = ak.GraphAutoModel(input_node, output_node,directory=tmp_dir)
+    model = auto_model.build(kerastuner.HyperParameters())
+    model.fit(x_train, x_train, epochs=2)
+    result = model.predict(x_train)
+
+    assert result.shape == (100, 32, 32)
+
+test_seq2seq('/home/venugopal/dmx/')
