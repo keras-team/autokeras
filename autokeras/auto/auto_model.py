@@ -5,33 +5,15 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras.auto import tuner
-from autokeras.hypermodel import hyper_block, processor
+from autokeras.hypermodel import hyper_block
+from autokeras.hypermodel import processor
+from autokeras.hypermodel import hyper_node
 from autokeras.hypermodel import hyper_head
 from autokeras import layer_utils
 from autokeras import const
 
 
-class GraphAutoModel(kerastuner.HyperModel):
-    """A HyperModel defined by a graph of HyperBlocks.
-
-    GraphAutoModel is a subclass of HyperModel. Besides the HyperModel properties,
-    it also has a tuner to tune the HyperModel. The user can use it in a similar
-    way to a Keras model since it also has `fit()` and  `predict()` methods.
-
-    The user can specify the high-level neural architecture by connecting the
-    HyperBlocks with the functional API, which is the same as
-    the Keras functional API.
-
-    Attributes:
-        inputs: A list of or a HyperNode instances.
-            The input node(s) of the GraphAutoModel.
-        outputs: A list of or a HyperNode instances.
-            The output node(s) of the GraphAutoModel.
-        max_trials: Int. The maximum number of different models to try.
-        directory: String. The path to the directory
-            for storing the search outputs.
-    """
-
+class AutoModelBase(kerastuner.HyperModel):
     def __init__(self,
                  inputs,
                  outputs,
@@ -49,7 +31,6 @@ class GraphAutoModel(kerastuner.HyperModel):
         self._hypermodels = []
         self._hypermodel_to_id = {}
         self._model_inputs = []
-        self._build_network()
         self._label_encoders = None
 
     def build(self, hp):
@@ -358,6 +339,46 @@ class GraphAutoModel(kerastuner.HyperModel):
         return len(y.flatten()) == len(y) and len(set(y.flatten())) > 2
 
 
+class GraphAutoModel(AutoModelBase):
+    """A HyperModel defined by a graph of HyperBlocks.
+
+    GraphAutoModel is a subclass of HyperModel. Besides the HyperModel properties,
+    it also has a tuner to tune the HyperModel. The user can use it in a similar
+    way to a Keras model since it also has `fit()` and  `predict()` methods.
+
+    The user can specify the high-level neural architecture by connecting the
+    HyperBlocks with the functional API, which is the same as
+    the Keras functional API.
+
+    Attributes:
+        inputs: A list of or a HyperNode instances.
+            The input node(s) of the GraphAutoModel.
+        outputs: A list of or a HyperNode instances.
+            The output node(s) of the GraphAutoModel.
+        max_trials: Int. The maximum number of different models to try.
+        directory: String. The path to the directory
+            for storing the search outputs.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(GraphAutoModel, self).__init__(*args, **kwargs)
+        self._build_network()
+
+
+def sw_ratio(temp_x):
+    return 0
+
+
+def meta_model(temp_x, input_node):
+    output_node = input_node
+    if isinstance(input_node, hyper_node.TextNode):
+        if sw_ratio(temp_x) < 1500:
+            pass
+        else:
+            pass
+    return output_node
+
+
 class AutoModel(GraphAutoModel):
     """ A HyperModel defined by inputs and outputs.
 
@@ -381,14 +402,28 @@ class AutoModel(GraphAutoModel):
                  inputs,
                  outputs,
                  **kwargs):
-        inputs = layer_utils.format_inputs(inputs)
-        outputs = layer_utils.format_inputs(outputs)
-        middle_nodes = [input_node.related_block()(input_node)
-                        for input_node in inputs]
+        super().__init__(inputs, outputs, **kwargs)
+
+    def fit(self,
+            x=None,
+            y=None,
+            validation_data=None,
+            **kwargs):
+        inputs = layer_utils.format_inputs(self.inputs)
+        outputs = layer_utils.format_inputs(self.outputs)
+        middle_nodes = [meta_model(temp_x, input_node)
+                        for input_node, temp_x in zip(inputs, x)]
+
         if len(middle_nodes) > 1:
             output_node = hyper_block.Merge()(middle_nodes)
         else:
             output_node = middle_nodes[0]
+
         outputs = [output_blocks(output_node)
                    for output_blocks in outputs]
-        super().__init__(inputs, outputs, **kwargs)
+
+        self._build_network()
+        super(AutoModel, self).fit(x=x,
+                                   y=y,
+                                   validation_data=validation_data,
+                                   **kwargs)
