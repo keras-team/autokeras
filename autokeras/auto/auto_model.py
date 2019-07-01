@@ -11,36 +11,37 @@ from autokeras import const
 
 
 class GraphAutoModel(kerastuner.HyperModel):
-    """ A HyperModel defined by a graph of HyperBlocks.
+    """A HyperModel defined by a graph of HyperBlocks.
 
     GraphAutoModel is a subclass of HyperModel. Besides the HyperModel properties,
     it also has a tuner to tune the HyperModel. The user can use it in a similar
     way to a Keras model since it also has `fit()` and  `predict()` methods.
 
     The user can specify the high-level neural architecture by connecting the
-    HyperBlocks with the functional API which is the same as
+    HyperBlocks with the functional API, which is the same as
     the Keras functional API.
 
     Attributes:
-        inputs: A list of or a HyperNode instance.
-            The input node(s) of a the AutoGraphModel.
-        outputs: A list of or a HyperNode instance.
-            The output node(s) of the AutoGraphModel.
-        trials: Int. The number of models to try.
-        directory: String. The path to a directory for storing the search outputs.
+        inputs: A list of or a HyperNode instances.
+            The input node(s) of the GraphAutoModel.
+        outputs: A list of or a HyperNode instances.
+            The output node(s) of the GraphAutoModel.
+        max_trials: Int. The maximum number of different models to try.
+        directory: String. The path to the directory
+            for storing the search outputs.
     """
 
     def __init__(self,
                  inputs,
                  outputs,
-                 trials=None,
+                 max_trials=None,
                  directory=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.inputs = layer_utils.format_inputs(inputs)
         self.outputs = layer_utils.format_inputs(outputs)
         self.tuner = None
-        self.trials = trials or const.Constant.NUM_TRAILS
+        self.max_trials = max_trials or const.Constant.NUM_TRAILS
         self.directory = directory or const.Constant.TEMP_DIRECTORY
         self._node_to_id = {}
         self._nodes = []
@@ -179,7 +180,7 @@ class GraphAutoModel(kerastuner.HyperModel):
         self.tuner = kerastuner.RandomSearch(
             hypermodel=self,
             objective='val_loss',
-            max_trials=self.trials,
+            max_trials=self.max_trials,
             directory=self.directory)
 
         # TODO: allow early stop if epochs is not specified.
@@ -237,7 +238,7 @@ class AutoModel(GraphAutoModel):
             The input node(s) of a the AutoModel.
         outputs: A list of or a HyperHead instance.
             The output head(s) of the AutoModel.
-        trials: Int. The number of models to try.
+        max_trials: Int. The maximum number of different models to try.
         directory: String. The path to a directory for storing the search outputs.
     """
 
