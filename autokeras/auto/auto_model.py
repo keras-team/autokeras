@@ -370,6 +370,10 @@ def sw_ratio(temp_x):
 
 
 def meta_model(temp_x, input_node):
+    # all inputs, all train_x y, all heads
+    # for text data we just follow the rules on that page.
+    # for image, use the num_instance to determine the range of the sizes of the resnet and xception
+    # use the image size to determine how the down sampling works, e.g. pooling.
     output_node = input_node
     if isinstance(input_node, hyper_node.TextNode):
         if sw_ratio(temp_x) < 1500:
