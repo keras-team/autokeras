@@ -69,4 +69,3 @@ def test_seq2seq(tmp_dir):
 
     assert result.shape == (100, 32, 32)
 
-test_seq2seq('/home/venugopal/dmx/')
