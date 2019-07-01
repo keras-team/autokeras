@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 from sklearn import model_selection
 from tensorflow.python.util import nest
 
@@ -22,12 +23,30 @@ def format_inputs(inputs, name=None, num=None):
     if not len(inputs) == num:
         raise ValueError('Expected {num} elements in the '
                          'inputs list for {name} '
-                         'but received {len} inputs.'.format(num=num, name=name, len=len(inputs)))
+                         'but received {len} inputs.'.format(num=num,
+                                                             name=name,
+                                                             len=len(inputs)))
     return inputs
 
 
 def get_rnn_block(choice):
     return const.Constant.RNN_LAYERS[choice]
+
+
+def get_s2s_types():
+    return const.Constant.S2S_TYPES
+
+
+def validate_input(input_node):
+    shape = input_node.shape.as_list()
+    if len(shape) < 3:
+        raise ValueError("Expect the input tensor to have atleast 3 dimensions for rnn models, "
+                         "but got {shape}".format(shape=input_node.shape))
+
+    # Shape change (samples, time_steps , feat_1 , feat_2 ,.. feat_k) => (sample , time_steps , features)
+    feature_size = np.prod(shape[2:])
+    input_node = tf.reshape(input_node, [-1, shape[1], feature_size])
+    return input_node
 
 
 def attention_block(inputs):
@@ -39,12 +58,13 @@ def attention_block(inputs):
     return mul_attention_out
 
 
-def seq2seq_builder(inputs,rnn_type,choice_of_layers,feature_size):
+def seq2seq_builder(inputs,targets,rnn_type,choice_of_layers,feature_size):
     print("In seq2seq ..",inputs.shape)
 
     block = get_rnn_block(rnn_type)
     # TODO: Autoencoder setup exists. Must accommodate NMT setup in future
-    encoder_inputs = decoder_inputs = inputs
+    encoder_inputs = inputs
+    decoder_inputs = targets
 
     # TODO: Accept different num_layers for encoder and decoder
     for i in range(choice_of_layers):
@@ -73,9 +93,10 @@ def split_train_to_valid(x, y):
     validation_set_size = int(len(x[0]) * const.Constant.VALIDATION_SET_SIZE)
     validation_set_size = min(validation_set_size, 500)
     validation_set_size = max(validation_set_size, 1)
-    train_index, valid_index = model_selection.train_test_split(range(len(x[0])),
-                                                                test_size=validation_set_size,
-                                                                random_state=const.Constant.SEED)
+    train_index, valid_index = model_selection.train_test_split(
+        range(len(x[0])),
+        test_size=validation_set_size,
+        random_state=const.Constant.SEED)
 
     # Split the data
     x_train = None
@@ -83,9 +104,11 @@ def split_train_to_valid(x, y):
     x_val = None
     y_val = None
     for temp_x_train_input in x:
-        x_train, x_val = temp_x_train_input[train_index], temp_x_train_input[valid_index]
+        x_train, x_val = temp_x_train_input[train_index], temp_x_train_input[
+            valid_index]
     for temp_y_train_input in y:
-        y_train, y_val = temp_y_train_input[train_index], temp_y_train_input[valid_index]
+        y_train, y_val = temp_y_train_input[train_index], temp_y_train_input[
+            valid_index]
 
     return (x_train, y_train), (x_val, y_val)
 

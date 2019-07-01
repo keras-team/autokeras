@@ -12,6 +12,8 @@ It is developed by <a href="http://faculty.cs.tamu.edu/xiahu/index.html" target=
 The ultimate goal of AutoML is to provide easily accessible deep learning tools to domain experts with limited data science or machine learning background. 
 Auto-Keras provides functions to automatically search for architecture and hyperparameters of deep learning models.
 
+**Now we are refactoring the code on `master` branch for the next release.
+Please use the `legacy` branch if you want to checkout the 0.4 version.**
 ## Example
 
 Here is a short example of using the package.
