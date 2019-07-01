@@ -21,4 +21,4 @@ def test_image_regressor(tmp_dir):
     y_train = np.random.rand(100)
     clf = ak.ImageRegressor(directory=tmp_dir, max_trials=2)
     clf.fit(x_train, y_train, epochs=2)
-    assert clf.predict(x_train).shape == (100,)
+    assert clf.predict(x_train).shape == (100, 1)

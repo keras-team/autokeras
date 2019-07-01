@@ -17,26 +17,28 @@ class HyperHead(hyper_block.HyperBlock):
 
 class ClassificationHead(HyperHead):
 
-    def __init__(self, **kwargs):
+    def __init__(self, binary=False, **kwargs):
         super().__init__(**kwargs)
+        self.binary = binary
         if not self.metrics:
             self.metrics = ['accuracy']
         if not self.loss:
-            self.loss = 'categorical_crossentropy'
+            if binary:
+                self.loss = 'binary_crossentropy'
+                self.output_shape = (1,)
+            else:
+                self.loss = 'categorical_crossentropy'
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
-        if len(self.output_shape) == 1:
-            output_node = hyper_block.Flatten().build(hp, output_node)
-            output_node = tf.keras.layers.Dense(
-                self.output_shape[0])(output_node)
+        output_node = hyper_block.Flatten().build(hp, output_node)
+        output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
+        if self.binary:
+            output_node = tf.keras.activations.sigmoid(output_node)
+        else:
             output_node = tf.keras.layers.Softmax()(output_node)
-            return output_node
-
-        # TODO: Add hp.Choice to use sigmoid
-
-        return hyper_block.Reshape(self.output_shape).build(hp, output_node)
+        return output_node
 
 
 class RegressionHead(HyperHead):
@@ -49,11 +51,9 @@ class RegressionHead(HyperHead):
             self.loss = 'mean_squared_error'
 
     def build(self, hp, inputs=None):
+        print(inputs)
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
-        if len(self.output_shape) == 1:
-            output_node = hyper_block.Flatten().build(hp, output_node)
-            output_node = tf.keras.layers.Dense(
-                self.output_shape[-1])(output_node)
-            return output_node
-        return hyper_block.Reshape(self.output_shape).build(hp, output_node)
+        output_node = hyper_block.Flatten().build(hp, output_node)
+        output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
+        return output_node

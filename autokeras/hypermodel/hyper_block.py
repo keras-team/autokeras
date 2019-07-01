@@ -4,6 +4,7 @@ import kerastuner
 
 from autokeras.hypermodel import hyper_node
 from autokeras import layer_utils
+from autokeras import const
 
 
 class HyperBlock(kerastuner.HyperModel):
@@ -32,7 +33,8 @@ class HyperBlock(kerastuner.HyperModel):
 class ResNetBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        pass
+        # TODO: Reuse kerastuner application resnet
+        return inputs
 
 
 class DenseBlock(HyperBlock):
@@ -41,51 +43,43 @@ class DenseBlock(HyperBlock):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         output_node = Flatten().build(hp, output_node)
-        active_category = hp.Choice(
-            'activate_category',
-            ['softmax', 'relu', 'tanh', 'sigmoid'],
-            default='relu')
         layer_stack = hp.Choice(
             'layer_stack',
-            ['dense-bn-act', 'dense-act', 'act-bn-dense'],
-            default='act-bn-dense')
+            ['dense-bn-act', 'dense-act'],
+            default='dense-bn-act')
+        dropout_rate = hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5)
         for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
+            units = hp.Choice(
+                'units_{i}'.format(i=i),
+                [16, 32, 64, 128, 256, 512, 1024],
+                default=32)
             if layer_stack == 'dense-bn-act':
-                output_node = tf.keras.layers.Dense(hp.Choice(
-                    'units_{i}'.format(i=i),
-                    [16, 32, 64, 128, 256, 512, 1024],
-                    default=32))(output_node)
+                output_node = tf.keras.layers.Dense(units)(output_node)
                 output_node = tf.keras.layers.BatchNormalization()(output_node)
-                output_node = tf.keras.layers.Activation(active_category)(
-                    output_node)
-                output_node = tf.keras.layers.Dropout(
-                    rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(
-                    output_node)
+                output_node = tf.keras.layers.ReLU()(output_node)
+                output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
             elif layer_stack == 'dense-act':
-                output_node = tf.keras.layers.Dense(
-                    hp.Choice('units_{i}'.format(i=i),
-                              [16, 32, 64, 128, 256, 512, 1024],
-                              default=32))(output_node)
-                output_node = tf.keras.layers.Activation(active_category)(
-                    output_node)
-                output_node = tf.keras.layers.Dropout(
-                    rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(
-                    output_node)
-            else:
-                output_node = tf.keras.layers.Activation(active_category)(
-                    output_node)
-                output_node = tf.keras.layers.BatchNormalization()(output_node)
-                output_node = tf.keras.layers.Dense(
-                    hp.Choice('units_{i}'.format(i=i),
-                              [16, 32, 64, 128, 256, 512, 1024],
-                              default=32))(output_node)
-                output_node = tf.keras.layers.Dropout(
-                    rate=hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5))(
-                    output_node)
+                output_node = tf.keras.layers.Dense(units)(output_node)
+                output_node = tf.keras.layers.ReLU()(output_node)
+                output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         return output_node
 
 
 class RNNBlock(HyperBlock):
+    """ An RNN HyperBlock.
+
+    Attributes:
+        bidirectional: Boolean. If not provided, it would be a tunable variable.
+        return_sequences: Boolean.  If not provided, it would be a tunable variable.
+    """
+
+    def __init__(self,
+                 bidirectional=None,
+                 return_sequences=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.bidirectional = bidirectional
+        self.return_sequences = return_sequences
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
@@ -102,18 +96,34 @@ class RNNBlock(HyperBlock):
         input_node = tf.reshape(input_node, [-1, shape[1], feature_size])
         output_node = input_node
 
-        in_layer = layer_utils.get_rnn_block(
-            hp.Choice('rnn_type', ['vanilla', 'gru', 'lstm'], default='vanilla'))
+        in_layer = const.Constant.RNN_LAYERS[hp.Choice('rnn_type',
+                                                       ['gru', 'lstm'],
+                                                       default='lstm')]
         choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
 
-        for i in range(choice_of_layers):
-            return_sequences = False if i == choice_of_layers - 1 else True
-            bidirectional_block = tf.keras.layers.Bidirectional(
-                in_layer(feature_size, activation='tanh',
-                         return_sequences=return_sequences))
-            output_node = bidirectional_block(output_node)
+        bidirectional = self.bidirectional
+        if bidirectional is None:
+            bidirectional = hp.Choice('bidirectional',
+                                      [True, False],
+                                      default=True)
 
-        output_node = Flatten().build(hp, output_node)
+        return_sequences = self.return_sequences
+        if return_sequences is None:
+            return_sequences = hp.Choice('return_sequences',
+                                         [True, False],
+                                         default=True)
+
+        for i in range(choice_of_layers):
+            temp_return_sequences = True
+            if i == choice_of_layers - 1:
+                temp_return_sequences = return_sequences
+            if bidirectional:
+                output_node = tf.keras.layers.Bidirectional(
+                    in_layer(feature_size,
+                             return_sequences=temp_return_sequences))(output_node)
+            else:
+                output_node = in_layer(feature_size,
+                                       return_sequences=return_sequences)
 
         return output_node
 
@@ -121,20 +131,55 @@ class RNNBlock(HyperBlock):
 class ImageBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        # TODO: make it more advanced, selecting from multiple models, e.g.,
-        #  ResNet.
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
 
-        for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
+        block_type = hp.Choice('block_type',
+                               ['resnet', 'xception', 'vanilla'],
+                               default='resnet')
+
+        if block_type == 'resnet':
+            output_node = ResNetBlock().build(hp, output_node)
+        elif block_type == 'xception':
+            output_node = XceptionBlock().build(hp, output_node)
+        elif block_type == 'vanilla':
+            output_node = ConvBlock().build(hp, output_node)
+        return output_node
+
+
+class ConvBlock(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        output_node = input_node
+
+        kernel_size = hp.Choice('kernel_size', [3, 5, 7], default=3)
+        for i in range(hp.Choice('num_blocks', [1, 2, 3], default=2)):
             output_node = tf.keras.layers.Conv2D(
-                hp.Choice('units_{i}'.format(i=i),
+                hp.Choice('filters_{i}_1'.format(i=i),
                           [16, 32, 64],
                           default=32),
-                hp.Choice('kernel_size_{i}'.format(i=i),
-                          [3, 5, 7],
-                          default=3))(output_node)
+                kernel_size,
+                padding=self._get_padding(kernel_size, output_node))(output_node)
+
+            output_node = tf.keras.layers.Conv2D(
+                hp.Choice('filters_{i}_2'.format(i=i),
+                          [16, 32, 64],
+                          default=32),
+                kernel_size,
+                padding=self._get_padding(kernel_size, output_node))(output_node)
+
+            output_node = tf.keras.layers.MaxPool2D(
+                kernel_size - 1,
+                padding=self._get_padding(kernel_size - 1, output_node))(output_node)
         return output_node
+
+    @staticmethod
+    def _get_padding(kernel_size, output_node):
+        if (kernel_size >= output_node.shape[1] * 2 and
+                kernel_size >= output_node.shape[2] * 2):
+            return 'valid'
+        return 'same'
 
 
 def shape_compatible(shape1, shape2):
@@ -323,36 +368,68 @@ class Flatten(HyperBlock):
 
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        if len(input_node.shape) > 2:
+            return tf.keras.layers.Flatten()(input_node)
+        return input_node
+
+
+class SpatialReduction(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
-        if len(output_node.shape) > 5:
-            raise ValueError(
-                'Expect the input tensor to have less or equal to 5 '
-                'dimensions, but got {shape}'.format(shape=output_node.shape))
-        # Flatten the input tensor
-        # TODO: Add hp.Choice to use Flatten()
-        if len(output_node.shape) > 2:
-            global_average_pooling = \
-                layer_utils.get_global_average_pooling_layer_class(
-                    output_node.shape)
-            output_node = global_average_pooling()(output_node)
+
+        # No need to reduce.
+        if len(output_node.shape) <= 2:
+            return output_node
+
+        reduction_type = hp.Choice('reduction_type',
+                                   ['flatten',
+                                    'global_max',
+                                    'global_ave'],
+                                   default='global_ave')
+        if reduction_type == 'flatten':
+            output_node = Flatten().build(hp, output_node)
+        elif reduction_type == 'global_max':
+            output_node = layer_utils.get_global_max_pooling_layer(
+                output_node.shape)()(output_node)
+        elif reduction_type == 'global_ave':
+            output_node = layer_utils.get_global_average_pooling_layer(
+                output_node.shape)()(output_node)
         return output_node
 
 
-class Reshape(HyperBlock):
-
-    def __init__(self, output_shape, **kwargs):
-        super().__init__(**kwargs)
-        self.output_shape = output_shape
+class TemporalReduction(HyperBlock):
 
     def build(self, hp, inputs=None):
-        # TODO: Implement reshape layer
-        return inputs
+        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        output_node = input_node
+
+        # No need to reduce.
+        if len(output_node.shape) <= 2:
+            return output_node
+
+        reduction_type = hp.Choice('reduction_type',
+                                   ['flatten',
+                                    'max',
+                                    'ave',
+                                    'min'],
+                                   default='global_ave')
+
+        if reduction_type == 'flatten':
+            output_node = Flatten().build(hp, output_node)
+        elif reduction_type == 'max':
+            output_node = tf.math.reduce_max(output_node, axis=-2)
+        elif reduction_type == 'ave':
+            output_node = tf.math.reduce_mean(output_node, axis=-2)
+        elif reduction_type == 'min':
+            output_node = tf.math.reduce_min(output_node, axis=-2)
+
+        return output_node
 
 
-class TextBlock(HyperBlock):
-
-    def build(self, hp, inputs=None):
-        pass
+class TextBlock(RNNBlock):
+    pass
 
 
 class StructuredBlock(HyperBlock):
