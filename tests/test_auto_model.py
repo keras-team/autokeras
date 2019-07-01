@@ -9,7 +9,7 @@ def tmp_dir(tmpdir_factory):
     return tmpdir_factory.mktemp('test_auto_model')
 
 
-def test_hyper_graph_basic(tmp_dir):
+def test_graph_auto_model_basic(tmp_dir):
     x_train = np.random.rand(100, 32)
     y_train = np.random.rand(100)
 
@@ -116,16 +116,13 @@ def test_input_missing(tmp_dir):
 
 
 def test_auto_model_basic(tmp_dir):
-    x_train = np.random.rand(100, 32)
+    x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100)
 
-    input_node = ak.Input()
-    output_node = input_node
-    output_node = ak.DenseBlock()(output_node)
-    output_node = ak.RegressionHead()(output_node)
-
-    auto_model = ak.GraphAutoModel(input_node, output_node, directory=tmp_dir)
-    ak.const.Constant.NUM_TRAILS = 2
+    auto_model = ak.AutoModel(ak.ImageInput(),
+                              ak.RegressionHead(),
+                              directory=tmp_dir,
+                              max_trials=2)
     auto_model.fit(x_train, y_train, epochs=2)
     result = auto_model.predict(x_train)
 
