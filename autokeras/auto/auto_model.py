@@ -4,96 +4,45 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras.hypermodel import hyper_block
 from autokeras.hypermodel import hyper_head
 from autokeras import layer_utils
 from autokeras import const
 
 
-class AutoModel(kerastuner.HyperModel):
-    """ A AutoModel should be an AutoML solution.
+class GraphAutoModel(kerastuner.HyperModel):
+    """A HyperModel defined by a graph of HyperBlocks.
 
-    It contains the HyperModels and the Tuner.
+    GraphAutoModel is a subclass of HyperModel. Besides the HyperModel properties,
+    it also has a tuner to tune the HyperModel. The user can use it in a similar
+    way to a Keras model since it also has `fit()` and  `predict()` methods.
+
+    The user can specify the high-level neural architecture by connecting the
+    HyperBlocks with the functional API, which is the same as
+    the Keras functional API.
 
     Attributes:
-        inputs: A HyperModel instance. The input node of a the AutoModel.
-        outputs: A HyperModel instance. The output node of the AutoModel.
-        hypermodel: An instance of HyperModelWrap connecting from the inputs to the
-            outputs.
-        tuner: An instance of Tuner.
+        inputs: A list of or a HyperNode instances.
+            The input node(s) of the GraphAutoModel.
+        outputs: A list of or a HyperNode instances.
+            The output node(s) of the GraphAutoModel.
+        max_trials: Int. The maximum number of different models to try.
+        directory: String. The path to the directory
+            for storing the search outputs.
     """
-
-    def __init__(self, directory=None, **kwargs):
-        """
-        """
-        super().__init__(**kwargs)
-        self.inputs = []
-        self.outputs = []
-        self.tuner = None
-        self.directory = directory or const.Constant.TEMP_DIRECTORY
-
-    def build(self, hp):
-        raise NotImplementedError
-
-    def fit(self,
-            x=None,
-            y=None,
-            validation_data=None,
-            trials=None,
-            **kwargs):
-        # Initialize HyperGraph model
-        x = layer_utils.format_inputs(x, 'train_x')
-        y = layer_utils.format_inputs(y, 'train_y')
-
-        # TODO: Set the shapes only if they are not provided by the user when
-        #  initiating the HyperHead or Block.
-        for x_input, input_node in zip(x, self.inputs):
-            input_node.shape = x_input.shape[1:]
-        for y_input, output_node in zip(y, self.outputs):
-            if len(y_input.shape) == 1:
-                y_input = np.reshape(y_input, y_input.shape + (1,))
-            output_node.shape = y_input.shape[1:]
-            output_node.in_hypermodels[0].output_shape = output_node.shape
-
-        # Prepare the dataset
-        if validation_data is None:
-            (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(x, y)
-            validation_data = x_val, y_val
-
-        self.tuner = kerastuner.RandomSearch(
-            hypermodel=self,
-            objective='val_loss',
-            max_trials=trials or const.Constant.NUM_TRIALS,
-            directory=self.directory)
-
-        # TODO: allow early stop if epochs is not specified.
-        self.tuner.search(x=x,
-                          y=y,
-                          validation_data=validation_data,
-                          **kwargs)
-
-    def predict(self, x, **kwargs):
-        """Predict the output for a given testing data. """
-        return self.tuner.get_best_models(1)[0].predict(x, **kwargs)
-
-    def _get_metrics(self):
-        metrics = []
-        for metrics_list in [output_node.in_hypermodels[0].metrics for
-                             output_node in self.outputs
-                             if isinstance(output_node.in_hypermodels[0],
-                                           hyper_head.HyperHead)]:
-            metrics += metrics_list
-        return metrics
-
-
-class GraphAutoModel(AutoModel):
 
     def __init__(self,
                  inputs,
                  outputs,
+                 max_trials=None,
+                 directory=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.inputs = layer_utils.format_inputs(inputs)
         self.outputs = layer_utils.format_inputs(outputs)
+        self.tuner = None
+        self.max_trials = max_trials or const.Constant.NUM_TRAILS
+        self.directory = directory or const.Constant.TEMP_DIRECTORY
         self._node_to_id = {}
         self._nodes = []
         self._hypermodels = []
@@ -120,17 +69,7 @@ class GraphAutoModel(AutoModel):
             [real_nodes[self._node_to_id[output_node]] for output_node in
              self.outputs])
 
-        # Specify hyperparameters from compile(...)
-        optimizer = hp.Choice('optimizer',
-                              ['adam',
-                               'adadelta',
-                               'sgd'])
-
-        model.compile(optimizer=optimizer,
-                      metrics=self._get_metrics(),
-                      loss=self._get_loss())
-
-        return model
+        return self._compiled(hp, model)
 
     def _build_network(self):
         self._node_to_id = {}
@@ -214,9 +153,107 @@ class GraphAutoModel(AutoModel):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
 
+    def fit(self,
+            x=None,
+            y=None,
+            validation_data=None,
+            **kwargs):
+        # Initialize HyperGraph model
+        x = layer_utils.format_inputs(x, 'train_x')
+        y = layer_utils.format_inputs(y, 'train_y')
+
+        # TODO: Set the shapes only if they are not provided by the user when
+        #  initiating the HyperHead or Block.
+        for x_input, input_node in zip(x, self.inputs):
+            input_node.shape = x_input.shape[1:]
+        for y_input, output_node in zip(y, self.outputs):
+            if len(y_input.shape) == 1:
+                y_input = np.reshape(y_input, y_input.shape + (1,))
+            output_node.shape = y_input.shape[1:]
+            output_node.in_hypermodels[0].output_shape = output_node.shape
+
+        # Prepare the dataset
+        if validation_data is None:
+            (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(x, y)
+            validation_data = x_val, y_val
+
+        self.tuner = kerastuner.RandomSearch(
+            hypermodel=self,
+            objective='val_loss',
+            max_trials=self.max_trials,
+            directory=self.directory)
+
+        # TODO: allow early stop if epochs is not specified.
+        self.tuner.search(x=x,
+                          y=y,
+                          validation_data=validation_data,
+                          **kwargs)
+
+    def predict(self, x, **kwargs):
+        """Predict the output for a given testing data. """
+        return self.tuner.get_best_models(1)[0].predict(x, **kwargs)
+
+    def _get_metrics(self):
+        metrics = []
+        for metrics_list in [output_node.in_hypermodels[0].metrics for
+                             output_node in self.outputs
+                             if isinstance(output_node.in_hypermodels[0],
+                                           hyper_head.HyperHead)]:
+            metrics += metrics_list
+        return metrics
+
     def _get_loss(self):
         loss = nest.flatten([output_node.in_hypermodels[0].loss
                              for output_node in self.outputs
                              if isinstance(output_node.in_hypermodels[0],
                                            hyper_head.HyperHead)])
         return loss
+
+    def _compiled(self, hp, model):
+        # Specify hyperparameters from compile(...)
+        optimizer = hp.Choice('optimizer',
+                              ['adam',
+                               'adadelta',
+                               'sgd'])
+
+        model.compile(optimizer=optimizer,
+                      metrics=self._get_metrics(),
+                      loss=self._get_loss())
+
+        return model
+
+
+class AutoModel(GraphAutoModel):
+    """ A HyperModel defined by inputs and outputs.
+
+    AutoModel is a subclass of HyperModel. Besides the HyperModel properties,
+    it also has a tuner to tune the HyperModel. The user can use it in a similar
+    way to a Keras model since it also has `fit()` and  `predict()` methods.
+
+    The user can specify the inputs and outputs of the AutoModel. It will infer
+    the rest of the high-level neural architecture.
+
+    Attributes:
+        inputs: A list of or a HyperNode instance.
+            The input node(s) of a the AutoModel.
+        outputs: A list of or a HyperHead instance.
+            The output head(s) of the AutoModel.
+        max_trials: Int. The maximum number of different models to try.
+        directory: String. The path to a directory for storing the search outputs.
+    """
+
+    def __init__(self,
+                 inputs,
+                 outputs,
+                 **kwargs):
+        inputs = layer_utils.format_inputs(inputs)
+        outputs = layer_utils.format_inputs(outputs)
+        middle_nodes = [input_node.related_block()(input_node)
+                        for input_node in inputs]
+        if len(middle_nodes) > 1:
+            output_node = hyper_block.Merge()(middle_nodes)
+        else:
+            output_node = middle_nodes[0]
+        outputs = [output_blocks(output_node)
+                   for output_blocks in outputs]
+        super().__init__(inputs, outputs, **kwargs)

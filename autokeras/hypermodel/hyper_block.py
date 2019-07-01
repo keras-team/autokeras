@@ -347,3 +347,27 @@ class Reshape(HyperBlock):
     def build(self, hp, inputs=None):
         # TODO: Implement reshape layer
         return inputs
+
+
+class TextBlock(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        pass
+
+
+class StructuredBlock(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        pass
+
+
+class TimeSeriesBlock(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        pass
+
+
+class GeneralBlock(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        pass
