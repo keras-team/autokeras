@@ -26,7 +26,7 @@ class GraphAutoModel(kerastuner.HyperModel):
             The input node(s) of the GraphAutoModel.
         outputs: A list of or a HyperNode instances.
             The output node(s) of the GraphAutoModel.
-        max_trials: Int. The number of different models to try.
+        max_trials: Int. The maximum number of different models to try.
         directory: String. The path to the directory
             for storing the search outputs.
     """
@@ -238,7 +238,7 @@ class AutoModel(GraphAutoModel):
             The input node(s) of a the AutoModel.
         outputs: A list of or a HyperHead instance.
             The output head(s) of the AutoModel.
-        max_trials: Int. The number of models to try.
+        max_trials: Int. The maximum number of different models to try.
         directory: String. The path to a directory for storing the search outputs.
     """
 
