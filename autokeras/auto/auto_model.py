@@ -41,7 +41,7 @@ class GraphAutoModel(kerastuner.HyperModel):
         self.inputs = layer_utils.format_inputs(inputs)
         self.outputs = layer_utils.format_inputs(outputs)
         self.tuner = None
-        self.max_trials = max_trials or const.Constant.NUM_TRAILS
+        self.max_trials = max_trials or const.Constant.NUM_TRIALS
         self.directory = directory or const.Constant.TEMP_DIRECTORY
         self._node_to_id = {}
         self._nodes = []
