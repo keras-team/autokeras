@@ -21,7 +21,7 @@ def test_graph_auto_model_basic(tmp_dir):
                               output_node,
                               directory=tmp_dir,
                               max_trials=1)
-    graph.fit(x_train, y_train, epochs=1)
+    graph.fit(x_train, y_train, epochs=1, validation_data=(x_train, y_train))
     result = graph.predict(x_train)
 
     assert result.shape == (100, 1)
@@ -42,7 +42,11 @@ def test_merge(tmp_dir):
                               output_node,
                               directory=tmp_dir,
                               max_trials=1)
-    graph.fit([x_train, x_train], y_train, epochs=1, batch_size=100, verbose=False)
+    graph.fit([x_train, x_train], y_train,
+              epochs=1,
+              batch_size=100,
+              verbose=False,
+              validation_split=0.5)
     result = graph.predict([x_train, x_train])
 
     assert result.shape == (100, 1)
@@ -70,7 +74,12 @@ def test_preprocessing(tmp_dir):
                               output_node,
                               directory=tmp_dir,
                               max_trials=1)
-    graph.fit([x_train, x_train], y_train, epochs=1, batch_size=100, verbose=False)
+    graph.fit([x_train, x_train], y_train,
+              epochs=1,
+              batch_size=100,
+              validation_data=([x_train, x_train], y_train),
+              validation_split=0.5,
+              verbose=False)
     result = graph.predict([x_train, x_train])
 
     assert result.shape == (100, 1)
@@ -129,7 +138,7 @@ def test_auto_model_basic(tmp_dir):
                               ak.RegressionHead(),
                               directory=tmp_dir,
                               max_trials=2)
-    auto_model.fit(x_train, y_train, epochs=2)
+    auto_model.fit(x_train, y_train, epochs=2, validation_split=0.2)
     result = auto_model.predict(x_train)
 
     assert result.shape == (100, 1)

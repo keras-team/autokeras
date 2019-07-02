@@ -1,8 +1,5 @@
 import tensorflow as tf
-from sklearn import model_selection
 from tensorflow.python.util import nest
-
-from autokeras import const
 
 
 def get_global_average_pooling_layer(shape):
@@ -32,31 +29,6 @@ def format_inputs(inputs, name=None, num=None):
                                                              name=name,
                                                              len=len(inputs)))
     return inputs
-
-
-def split_train_to_valid(x, y):
-    # Generate split index
-    validation_set_size = int(len(x[0]) * const.Constant.VALIDATION_SET_SIZE)
-    validation_set_size = min(validation_set_size, 500)
-    validation_set_size = max(validation_set_size, 1)
-    train_index, valid_index = model_selection.train_test_split(
-        range(len(x[0])),
-        test_size=validation_set_size,
-        random_state=const.Constant.SEED)
-
-    # Split the data
-    x_train = []
-    y_train = []
-    x_val = []
-    y_val = []
-    for temp_x in x:
-        x_train.append(temp_x[train_index])
-        x_val.append(temp_x[valid_index])
-    for temp_y in y:
-        y_train.append(temp_y[train_index])
-        y_val.append(temp_y[valid_index])
-
-    return (x_train, y_train), (x_val, y_val)
 
 
 def get_name_scope():

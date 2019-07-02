@@ -208,11 +208,6 @@ class GraphAutoModel(kerastuner.HyperModel):
             output_node.shape = y_input.shape[1:]
             output_node.in_hypermodels[0].output_shape = output_node.shape
 
-        # Prepare the dataset
-        if validation_data is None:
-            (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(x, y)
-            validation_data = x_val, y_val
-
         self.preprocess(hp=kerastuner.HyperParameters(),
                         x=x,
                         y=y,
@@ -231,7 +226,7 @@ class GraphAutoModel(kerastuner.HyperModel):
 
     def predict(self, x, **kwargs):
         """Predict the output for a given testing data. """
-        x = self.preprocess(self.tuner.get_best_models(1), x)
+        x, _, _ = self.preprocess(self.tuner.get_best_models(1), x)
         y = self.tuner.get_best_models(1)[0].predict(x, **kwargs)
         y = layer_utils.format_inputs(y, self.name)
         y = self._postprocess(y)
@@ -284,12 +279,12 @@ class GraphAutoModel(kerastuner.HyperModel):
         """
         x, y = self._preprocess(hp, x, y)
         if not y:
-            return x
+            return x, None, None
         if not validation_data:
-            return x, y
+            return x, y, None
         val_x, val_y = validation_data
         val_x, val_y = self._preprocess(hp, val_x, val_y)
-        return x, y, val_x, val_y
+        return x, y, (val_x, val_y)
 
     def _preprocess(self, hp, x, y):
         x = layer_utils.format_inputs(x, self.name)
