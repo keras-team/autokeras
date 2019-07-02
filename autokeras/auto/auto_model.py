@@ -228,7 +228,8 @@ class GraphAutoModel(kerastuner.HyperModel):
 
         # Prepare the dataset
         if (all([isinstance(temp_x, np.ndarray) for temp_x in x]) and
-                validation_data is None and
+            all([isinstance(temp_y, np.ndarray) for temp_y in y]) and
+            validation_data is None and
                 validation_split):
             (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(
                 x, y,

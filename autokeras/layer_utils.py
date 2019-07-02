@@ -34,6 +34,8 @@ def format_inputs(inputs, name=None, num=None):
 def split_train_to_valid(x, y, validation_split):
     # Generate split index
     validation_set_size = int(len(x[0]) * validation_split)
+    validation_set_size = max(validation_set_size, 1)
+    validation_set_size = min(validation_set_size, len(x[0]) - 1)
 
     # Split the data
     x_train = []
@@ -54,4 +56,3 @@ def get_name_scope():
     with tf.name_scope('a') as scope:
         name_scope = scope[:-2]
     return name_scope
-
