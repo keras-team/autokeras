@@ -10,9 +10,11 @@ class AutoTuner(kerastuner.Tuner):
         fit_kwargs.update(dict(zip(tf.keras.Model.fit.__code__.co_varnames,
                                    fit_args)))
         fit_args = []
-        x, y, validation_data = self.hypermodel.preprocess(hp,
-                                                           *fit_args,
-                                                           **fit_kwargs)
+        x, y, validation_data = self.hypermodel.preprocess(
+            hp,
+            fit_kwargs.get('x', None),
+            fit_kwargs.get('y', None),
+            fit_kwargs.get('validation_data', None))
         fit_kwargs['x'] = x
         fit_kwargs['y'] = y
         fit_kwargs['validation_data'] = validation_data

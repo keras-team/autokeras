@@ -181,6 +181,7 @@ class GraphAutoModel(kerastuner.HyperModel):
     def fit(self,
             x=None,
             y=None,
+            validation_split=0,
             validation_data=None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
@@ -191,9 +192,26 @@ class GraphAutoModel(kerastuner.HyperModel):
         Args:
             x: Any type compatible with Keras training x. Training data x.
             y: Any type compatible with Keras training y. Training data y.
-            validation_data: Tuple of (val_x, val_y). The same type as x and y.
-                Validation set for the search. If not provided, training data will
-                be split for validation.
+            validation_split: Float between 0 and 1.
+                Fraction of the training data to be used as validation data.
+                The model will set apart this fraction of the training data,
+                will not train on it, and will evaluate
+                the loss and any model metrics
+                on this data at the end of each epoch.
+                The validation data is selected from the last samples
+                in the `x` and `y` data provided, before shuffling. This argument is
+                not supported when `x` is a dataset, dataset iterator, generator or
+               `keras.utils.Sequence` instance.
+            validation_data: Data on which to evaluate
+                the loss and any model metrics at the end of each epoch.
+                The model will not be trained on this data.
+                `validation_data` will override `validation_split`.
+                `validation_data` could be:
+                  - tuple `(x_val, y_val)` of Numpy arrays or tensors
+                  - tuple `(x_val, y_val, val_sample_weights)` of Numpy arrays
+                  - dataset or a dataset iterator
+                For the first two cases, `batch_size` must be provided.
+                For the last case, `validation_steps` must be provided.
         """
         # Initialize HyperGraph model
         x = layer_utils.format_inputs(x, 'train_x')
@@ -208,6 +226,16 @@ class GraphAutoModel(kerastuner.HyperModel):
             output_node.shape = y_input.shape[1:]
             output_node.in_hypermodels[0].output_shape = output_node.shape
 
+        # Prepare the dataset
+        if (all([isinstance(temp_x, np.ndarray) for temp_x in x]) and
+                validation_data is None and
+                validation_split):
+            (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(
+                x, y,
+                validation_split)
+            validation_data = x_val, y_val
+            validation_split = 0
+
         self.preprocess(hp=kerastuner.HyperParameters(),
                         x=x,
                         y=y,
@@ -221,6 +249,7 @@ class GraphAutoModel(kerastuner.HyperModel):
         # TODO: allow early stop if epochs is not specified.
         self.tuner.search(x=x,
                           y=y,
+                          validation_split=validation_split,
                           validation_data=validation_data,
                           **kwargs)
 
@@ -263,7 +292,7 @@ class GraphAutoModel(kerastuner.HyperModel):
 
         return model
 
-    def preprocess(self, hp, x, y=None, validation_data=None, *args, **kwargs):
+    def preprocess(self, hp, x, y=None, validation_data=None):
         """Preprocess the data to be ready for the Keras Model.
 
         Args:
