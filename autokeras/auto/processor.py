@@ -78,7 +78,10 @@ class Normalizer(object):
         data = (data - self.mean) / self.std
         return data
 
-    def _get_min_and_max(value, name):
+    
+class ImageAugment(Normalizer):
+    @staticmethod
+    def __get_min_and_max(value, name):
         if isinstance(value, (tuple, list)):
             if len(value) != 2:
                 raise ValueError(
@@ -91,7 +94,7 @@ class Normalizer(object):
             max_value = 1. + value
         return min_value, max_value
 
-    def augment_image(self,
+    def transform(self,
                       x_train,
                       rotation_range=0,  # either 0, 90, 180, 270
                       random_crop_height=0,  # fraction 0-1
@@ -154,18 +157,18 @@ class Normalizer(object):
                         image = tf.image.rot90(image, k=4)
 
                 if brightness_range:
-                    min_value, max_value = get_min_and_max(
-                        brightness_range, 'brightness_range')
+                    min_value, max_value = self.__get_min_and_max(
+                        brightness_range,
+                        'brightness_range')
                     image = tf.image.random_brightness(image, min_value, max_value)
 
                 if saturation_range:
-                    min_value, max_value = get_min_and_max(
+                    min_value, max_value = self.__get_min_and_max(
                         saturation_range,
                         'saturation_range')
                     image = tf.image.random_saturation(image, min_value, max_value)
-
                 if contrast_range:
-                    min_value, max_value = get_min_and_max(
+                    min_value, max_value = self.__get_min_and_max(
                         contrast_range,
                         'contrast_range')
                     image = tf.image.random_contrast(
