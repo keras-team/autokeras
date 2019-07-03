@@ -123,7 +123,7 @@ class ImageAugment(Normalizer):
         #iterator = dataset.make_one_shot_iterator()
         iterator = tf.compat.v1.data.make_one_shot_iterator(dataset)
         one_element = iterator.get_next()
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
                 batch = sess.run([one_element])
                 image = tf.convert_to_tensor(batch[0])
                 image = tf.cast(image, dtype=tf.float32)
