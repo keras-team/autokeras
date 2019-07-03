@@ -121,7 +121,7 @@ class ImageAugment(Normalizer):
         image = x_train
         image = tf.cast(image, dtype=tf.float32)
         if gaussian_noise:
-            noise = tf.random_normal(shape=tf.shape(image),
+            noise = tf.random.normal(shape=tf.shape(image),
                                      mean=0.0, stddev=1.0, dtype=tf.float32)
             image = tf.add(image, noise)
 
