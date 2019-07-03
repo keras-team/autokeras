@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-from autokeras import layer_utils
+from autokeras import utils
 from autokeras.hypermodel import hyper_block as hb_module
 
 
@@ -82,7 +82,7 @@ class Normalize(HyperPreprocessor):
         self.std = None
 
     def fit(self, hp, data):
-        axis = tuple(range(len(layer_utils.dataset_shape(data)) - 1))
+        axis = tuple(range(len(utils.dataset_shape(data)) - 1))
 
         def sum_up(old_state, new_elem):
             return old_state + new_elem

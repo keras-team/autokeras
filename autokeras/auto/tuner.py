@@ -3,7 +3,7 @@ import copy
 import tensorflow as tf
 import kerastuner
 
-from autokeras import layer_utils
+from autokeras import utils
 
 
 class AutoTuner(kerastuner.Tuner):
@@ -21,7 +21,7 @@ class AutoTuner(kerastuner.Tuner):
             new_fit_kwargs.get('validation_data', None))
 
         new_fit_kwargs['x'], new_fit_kwargs['validation_data'] = \
-            layer_utils.prepare_model_input(
+            utils.prepare_model_input(
                 x=x,
                 y=y,
                 validation_data=validation_data,

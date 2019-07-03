@@ -72,6 +72,7 @@ def input_list_to_dataset(x):
 
 
 def prepare_preprocess(x, y=None, validation_data=None):
+    """Convert each input to a tf.data.Dataset."""
     x = format_inputs(x, 'train_x')
     x = input_list_to_dataset(x)
     if y:
@@ -88,6 +89,7 @@ def prepare_preprocess(x, y=None, validation_data=None):
 
 
 def prepare_model_input(x=None, y=None, validation_data=None, batch_size=32):
+    """Zip multiple tf.data.Dataset into one Dataset."""
     if not y:
         return tf.data.Dataset.zip(tuple(x)).batch(batch_size), None
     if not validation_data:

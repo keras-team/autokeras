@@ -7,7 +7,7 @@ from tensorflow.python.util import nest
 from autokeras.auto import tuner
 from autokeras.hypermodel import hyper_block, processor
 from autokeras.hypermodel import hyper_head
-from autokeras import layer_utils
+from autokeras import utils
 from autokeras import const
 
 
@@ -39,8 +39,8 @@ class GraphAutoModel(kerastuner.HyperModel):
                  directory=None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.inputs = layer_utils.format_inputs(inputs)
-        self.outputs = layer_utils.format_inputs(outputs)
+        self.inputs = utils.format_inputs(inputs)
+        self.outputs = utils.format_inputs(outputs)
         self.tuner = None
         self.max_trials = max_trials or const.Constant.NUM_TRIALS
         self.directory = directory or const.Constant.TEMP_DIRECTORY
@@ -64,7 +64,7 @@ class GraphAutoModel(kerastuner.HyperModel):
                            for input_node in hypermodel.inputs]
             outputs = hypermodel.build(hp,
                                        inputs=temp_inputs)
-            outputs = layer_utils.format_inputs(outputs, hypermodel.name)
+            outputs = utils.format_inputs(outputs, hypermodel.name)
             for output_node, real_output_node in zip(hypermodel.outputs,
                                                      outputs):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
@@ -214,8 +214,8 @@ class GraphAutoModel(kerastuner.HyperModel):
                 For the last case, `validation_steps` must be provided.
         """
         # Initialize HyperGraph model
-        x = layer_utils.format_inputs(x, 'train_x')
-        y = layer_utils.format_inputs(y, 'train_y')
+        x = utils.format_inputs(x, 'train_x')
+        y = utils.format_inputs(y, 'train_y')
 
         y = self._label_encoding(y)
         # TODO: Set the shapes only if they are not provided by the user when
@@ -231,14 +231,14 @@ class GraphAutoModel(kerastuner.HyperModel):
                 all([isinstance(temp_y, np.ndarray) for temp_y in y]) and
                 validation_data is None and
                 validation_split):
-            (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(
+            (x, y), (x_val, y_val) = utils.split_train_to_valid(
                 x, y,
                 validation_split)
             validation_data = x_val, y_val
 
         # TODO: Handle other types of input, zip dataset, tensor, dict.
         # Prepare the dataset
-        x, y, validation_data = layer_utils.prepare_preprocess(x, y, validation_data)
+        x, y, validation_data = utils.prepare_preprocess(x, y, validation_data)
 
         self.preprocess(hp=kerastuner.HyperParameters(),
                         x=x,
@@ -259,11 +259,11 @@ class GraphAutoModel(kerastuner.HyperModel):
 
     def predict(self, x, batch_size=32, **kwargs):
         """Predict the output for a given testing data. """
-        x, _, _ = layer_utils.prepare_preprocess(x)
+        x, _, _ = utils.prepare_preprocess(x)
         x, _, _ = self.preprocess(self.tuner.get_best_models(1), x)
-        x, _ = layer_utils.prepare_model_input(x, x, batch_size=batch_size)
+        x, _ = utils.prepare_model_input(x, x, batch_size=batch_size)
         y = self.tuner.get_best_models(1)[0].predict(x, **kwargs)
-        y = layer_utils.format_inputs(y, self.name)
+        y = utils.format_inputs(y, self.name)
         y = self._postprocess(y)
         if isinstance(y, list) and len(y) == 1:
             y = y[0]
@@ -322,7 +322,7 @@ class GraphAutoModel(kerastuner.HyperModel):
         return x, y, (val_x, val_y)
 
     def _preprocess(self, hp, x, y, fit=False):
-        x = layer_utils.format_inputs(x, self.name)
+        x = utils.format_inputs(x, self.name)
         q = queue.Queue()
         for input_node, data in zip(self.inputs, x):
             q.put((input_node, data))
@@ -333,7 +333,7 @@ class GraphAutoModel(kerastuner.HyperModel):
             if self._is_model_inputs(node):
                 new_x.append((self._node_to_id[node], data))
                 if fit:
-                    node.shape = layer_utils.dataset_shape(data)
+                    node.shape = utils.dataset_shape(data)
 
             for hypermodel in node.out_hypermodels:
                 if isinstance(hypermodel, processor.HyperPreprocessor):
@@ -346,7 +346,7 @@ class GraphAutoModel(kerastuner.HyperModel):
         # Remove the id from the list.
         return_x = []
         for node_id, data in new_x:
-            self._nodes[node_id].shape = layer_utils.dataset_shape(data)
+            self._nodes[node_id].shape = utils.dataset_shape(data)
             return_x.append(data)
         return return_x, y
 
@@ -413,8 +413,8 @@ class AutoModel(GraphAutoModel):
                  inputs,
                  outputs,
                  **kwargs):
-        inputs = layer_utils.format_inputs(inputs)
-        outputs = layer_utils.format_inputs(outputs)
+        inputs = utils.format_inputs(inputs)
+        outputs = utils.format_inputs(outputs)
         middle_nodes = [input_node.related_block()(input_node)
                         for input_node in inputs]
         if len(middle_nodes) > 1:
