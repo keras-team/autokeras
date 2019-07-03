@@ -173,7 +173,7 @@ class ImageAugment(Normalizer):
                          random_crop_width, channels]
             seed = np.random.randint(random_crop_seed)
             target_shape = (target_height, target_width)
-            image = tf.image.resize_images(
+            image = tf.image.resize(
                 tf.random_crop(image, size=crop_size, seed=seed),
                 size=target_shape)
 
