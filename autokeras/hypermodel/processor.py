@@ -71,9 +71,8 @@ class Normalize(HyperPreprocessor):
     """ Perform basic image transformation and augmentation.
 
     # Attributes
-        max_val: the maximum value of all data.
-        mean: the mean value.
-        std: the standard deviation.
+        mean: Tensor. The mean value. Shape: (data last dimension length,)
+        std: Tensor. The standard deviation. Shape is the same as mean.
     """
 
     def __init__(self, **kwargs):
@@ -103,7 +102,7 @@ class Normalize(HyperPreprocessor):
         """ Transform the test data, perform normalization.
 
         # Arguments
-            data: Numpy array. The data to be transformed.
+            data: Tensorflow Dataset. The data to be transformed.
 
         # Returns
             A DataLoader instance.
