@@ -53,7 +53,7 @@ def test_conv_block(tmp_dir):
     assert result.shape == (100, 10)
 
 
-def test_rnn_block(tmp_dir):
+def test_rnn_block():
     x_train = np.random.rand(100, 32, 10, 10)
     y_train = np.random.randint(5, size=100)
     y_train = tf.keras.utils.to_categorical(y_train)
@@ -66,10 +66,11 @@ def test_rnn_block(tmp_dir):
     input_node.shape = (32, 10, 10)
     output_node[0].shape = (5,)
 
-    graph = ak.GraphAutoModel(input_node, output_node, directory=tmp_dir)
+    graph = ak.GraphAutoModel(input_node, output_node)
     model = graph.build(kerastuner.HyperParameters())
     model.fit(x_train, y_train, epochs=1, batch_size=100, verbose=False)
     result = model.predict(x_train)
 
     assert result.shape == (100, 5)
+
 
