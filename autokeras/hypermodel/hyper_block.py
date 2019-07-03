@@ -141,7 +141,8 @@ class RNNBlock(HyperBlock):
                              return_sequences=temp_return_sequences))(output_node)
             else:
                 output_node = in_layer(
-                    feature_size, return_sequences=temp_return_sequences)(output_node)
+                    feature_size,
+                    return_sequences=temp_return_sequences)(output_node)
 
         output_node = self.attention_block(output_node) \
             if attention_mode == 'post' else output_node
