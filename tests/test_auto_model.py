@@ -28,7 +28,7 @@ def test_graph_auto_model_basic(tmp_dir):
 
 
 def test_merge(tmp_dir):
-    x_train = np.random.rand(100, 32)
+    x_train = np.random.rand(100, 33)
     y_train = np.random.rand(100)
 
     input_node1 = ak.Input()

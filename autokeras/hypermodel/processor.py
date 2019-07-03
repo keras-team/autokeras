@@ -1,5 +1,7 @@
+import tensorflow as tf
 import numpy as np
 
+from autokeras import layer_utils
 from autokeras.hypermodel import hyper_block as hb_module
 
 
@@ -80,13 +82,20 @@ class Normalize(HyperPreprocessor):
         self.std = None
 
     def fit(self, hp, data):
-        axis = tuple(range(len(data.shape) - 1))
-        self.mean = np.mean(data,
-                            axis=axis,
-                            keepdims=True).flatten()
-        self.std = np.std(data,
-                          axis=axis,
-                          keepdims=True).flatten()
+        axis = tuple(range(len(layer_utils.dataset_shape(data)) - 1))
+
+        def sum_up(old_state, new_elem):
+            return old_state + new_elem
+
+        def sum_up_sqaure(old_state, new_elem):
+            return old_state + tf.square(new_elem)
+
+        total_sum = data.reduce(np.float64(0), sum_up)
+        self.mean = tf.reduce_mean(total_sum, axis=axis)
+
+        total_sum_square = data.reduce(np.float64(0), sum_up_sqaure)
+        square_mean = tf.reduce_mean(total_sum_square, axis=axis)
+        self.std = tf.sqrt(square_mean - tf.square(self.mean))
 
     def transform(self, hp, data):
         """ Transform the test data, perform normalization.
@@ -98,5 +107,6 @@ class Normalize(HyperPreprocessor):
             A DataLoader instance.
         """
         # channel-wise normalize the image
-        data = (data - self.mean) / self.std
-        return data
+        def normalize(x):
+            return (x - self.mean) / self.std
+        return data.map(normalize)

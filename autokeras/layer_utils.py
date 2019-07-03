@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
@@ -56,3 +57,42 @@ def get_name_scope():
     with tf.name_scope('a') as scope:
         name_scope = scope[:-2]
     return name_scope
+
+
+def dataset_shape(dataset):
+    return tf.compat.v1.data.get_output_shapes(dataset)
+
+
+def input_list_to_dataset(x):
+    new_x = []
+    for temp_x in x:
+        if isinstance(temp_x, np.ndarray):
+            new_x.append(tf.data.Dataset.from_tensor_slices(temp_x))
+    return new_x
+
+
+def prepare_preprocess(x, y=None, validation_data=None):
+    x = format_inputs(x, 'train_x')
+    x = input_list_to_dataset(x)
+    if y:
+        y = format_inputs(y, 'train_y')
+        y = input_list_to_dataset(y)
+    if validation_data:
+        x_val, y_val = validation_data
+        x_val = format_inputs(x_val, 'x_val')
+        y_val = format_inputs(y_val, 'y_val')
+        x_val = input_list_to_dataset(x_val)
+        y_val = input_list_to_dataset(y_val)
+        validation_data = x_val, y_val
+    return x, y, validation_data
+
+
+def prepare_model_input(x=None, y=None, validation_data=None, batch_size=32):
+    if not y:
+        return tf.data.Dataset.zip(tuple(x)).batch(batch_size), None
+    if not validation_data:
+        return tf.data.Dataset.zip((tuple(x), tuple(y))).batch(batch_size), None
+    return tf.data.Dataset.zip(
+        (tuple(x), tuple(y))).batch(batch_size), tf.data.Dataset.zip(
+               (tuple(validation_data[0]),
+                tuple(validation_data[1]))).batch(batch_size)

@@ -226,21 +226,25 @@ class GraphAutoModel(kerastuner.HyperModel):
             output_node.shape = y_input.shape[1:]
             output_node.in_hypermodels[0].output_shape = output_node.shape
 
-        # Prepare the dataset
+        # Split the data with validation_split
         if (all([isinstance(temp_x, np.ndarray) for temp_x in x]) and
-            all([isinstance(temp_y, np.ndarray) for temp_y in y]) and
-            validation_data is None and
+                all([isinstance(temp_y, np.ndarray) for temp_y in y]) and
+                validation_data is None and
                 validation_split):
             (x, y), (x_val, y_val) = layer_utils.split_train_to_valid(
                 x, y,
                 validation_split)
             validation_data = x_val, y_val
-            validation_split = 0
+
+        # TODO: Handle other types of input, zip dataset, tensor, dict.
+        # Prepare the dataset
+        x, y, validation_data = layer_utils.prepare_preprocess(x, y, validation_data)
 
         self.preprocess(hp=kerastuner.HyperParameters(),
                         x=x,
                         y=y,
-                        validation_data=validation_data)
+                        validation_data=validation_data,
+                        fit=True)
         self.tuner = tuner.RandomSearch(
             hypermodel=self,
             objective='val_loss',
@@ -250,17 +254,18 @@ class GraphAutoModel(kerastuner.HyperModel):
         # TODO: allow early stop if epochs is not specified.
         self.tuner.search(x=x,
                           y=y,
-                          validation_split=validation_split,
                           validation_data=validation_data,
                           **kwargs)
 
-    def predict(self, x, **kwargs):
+    def predict(self, x, batch_size=32, **kwargs):
         """Predict the output for a given testing data. """
+        x, _, _ = layer_utils.prepare_preprocess(x)
         x, _, _ = self.preprocess(self.tuner.get_best_models(1), x)
+        x, _ = layer_utils.prepare_model_input(x, x, batch_size=batch_size)
         y = self.tuner.get_best_models(1)[0].predict(x, **kwargs)
         y = layer_utils.format_inputs(y, self.name)
         y = self._postprocess(y)
-        if len(y) == 1:
+        if isinstance(y, list) and len(y) == 1:
             y = y[0]
         return y
 
@@ -293,7 +298,7 @@ class GraphAutoModel(kerastuner.HyperModel):
 
         return model
 
-    def preprocess(self, hp, x, y=None, validation_data=None):
+    def preprocess(self, hp, x, y=None, validation_data=None, fit=False):
         """Preprocess the data to be ready for the Keras Model.
 
         Args:
@@ -307,7 +312,7 @@ class GraphAutoModel(kerastuner.HyperModel):
             A tuple of four preprocessed elements, (x, y, val_x, val_y).
 
         """
-        x, y = self._preprocess(hp, x, y)
+        x, y = self._preprocess(hp, x, y, fit=fit)
         if not y:
             return x, None, None
         if not validation_data:
@@ -316,7 +321,7 @@ class GraphAutoModel(kerastuner.HyperModel):
         val_x, val_y = self._preprocess(hp, val_x, val_y)
         return x, y, (val_x, val_y)
 
-    def _preprocess(self, hp, x, y):
+    def _preprocess(self, hp, x, y, fit=False):
         x = layer_utils.format_inputs(x, self.name)
         q = queue.Queue()
         for input_node, data in zip(self.inputs, x):
@@ -327,19 +332,21 @@ class GraphAutoModel(kerastuner.HyperModel):
             node, data = q.get()
             if self._is_model_inputs(node):
                 new_x.append((self._node_to_id[node], data))
-                node.shape = data.shape[1:]
+                if fit:
+                    node.shape = layer_utils.dataset_shape(data)
 
             for hypermodel in node.out_hypermodels:
                 if isinstance(hypermodel, processor.HyperPreprocessor):
-                    q.put((hypermodel.outputs[0],
-                           hypermodel.fit_transform(hp, data)))
+                    if fit:
+                        hypermodel.fit(hp, data)
+                    q.put((hypermodel.outputs[0], hypermodel.transform(hp, data)))
         # Sort by id.
         new_x = sorted(new_x, key=lambda a: a[0])
 
         # Remove the id from the list.
         return_x = []
         for node_id, data in new_x:
-            self._nodes[node_id].shape = data.shape[1:]
+            self._nodes[node_id].shape = layer_utils.dataset_shape(data)
             return_x.append(data)
         return return_x, y
 

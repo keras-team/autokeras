@@ -1,5 +1,9 @@
+import copy
+
 import tensorflow as tf
 import kerastuner
+
+from autokeras import layer_utils
 
 
 class AutoTuner(kerastuner.Tuner):
@@ -7,18 +11,25 @@ class AutoTuner(kerastuner.Tuner):
 
     def run_trial(self, trial, hp, fit_args, fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
-        fit_kwargs.update(dict(zip(tf.keras.Model.fit.__code__.co_varnames,
+        new_fit_kwargs = copy.copy(fit_kwargs)
+        new_fit_kwargs.update(dict(zip(tf.keras.Model.fit.__code__.co_varnames,
                                    fit_args)))
-        fit_args = []
         x, y, validation_data = self.hypermodel.preprocess(
             hp,
-            fit_kwargs.get('x', None),
-            fit_kwargs.get('y', None),
-            fit_kwargs.get('validation_data', None))
-        fit_kwargs['x'] = x
-        fit_kwargs['y'] = y
-        fit_kwargs['validation_data'] = validation_data
-        super(AutoTuner, self).run_trial(trial, hp, fit_args, fit_kwargs)
+            new_fit_kwargs.get('x', None),
+            new_fit_kwargs.get('y', None),
+            new_fit_kwargs.get('validation_data', None))
+
+        new_fit_kwargs['x'], new_fit_kwargs['validation_data'] = \
+            layer_utils.prepare_model_input(
+                x=x,
+                y=y,
+                validation_data=validation_data,
+                batch_size=fit_kwargs.get('batch_size', 32))
+
+        new_fit_kwargs['batch_size'] = None
+        new_fit_kwargs['y'] = None
+        super(AutoTuner, self).run_trial(trial, hp, [], new_fit_kwargs)
 
     def get_best_hp(self, num_models=1):
         """Returns hyperparameters used to build the best model(s).
