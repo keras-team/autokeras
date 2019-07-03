@@ -3,7 +3,7 @@ import tensorflow as tf
 import kerastuner
 
 from autokeras.hypermodel import hyper_node
-from autokeras import layer_utils
+from autokeras import utils
 from autokeras import const
 
 
@@ -16,7 +16,7 @@ class HyperBlock(kerastuner.HyperModel):
         self._num_output_node = 1
 
     def __call__(self, inputs):
-        self.inputs = layer_utils.format_inputs(inputs, self.name)
+        self.inputs = utils.format_inputs(inputs, self.name)
         for input_node in self.inputs:
             input_node.add_out_hypermodel(self)
         self.outputs = []
@@ -40,7 +40,7 @@ class ResNetBlock(HyperBlock):
 class DenseBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        input_node = utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         output_node = Flatten().build(hp, output_node)
         layer_stack = hp.Choice(
@@ -82,7 +82,7 @@ class RNNBlock(HyperBlock):
         self.return_sequences = return_sequences
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        input_node = utils.format_inputs(inputs, self.name, num=1)[0]
         shape = input_node.shape.as_list()
         if len(shape) < 3:
             raise ValueError(
@@ -131,7 +131,7 @@ class RNNBlock(HyperBlock):
 class ImageBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        input_node = utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
 
         block_type = hp.Choice('block_type',
@@ -150,7 +150,7 @@ class ImageBlock(HyperBlock):
 class ConvBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        input_node = utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
 
         kernel_size = hp.Choice('kernel_size', [3, 5, 7], default=3)
@@ -176,8 +176,8 @@ class ConvBlock(HyperBlock):
 
     @staticmethod
     def _get_padding(kernel_size, output_node):
-        if (kernel_size >= output_node.shape[1] * 2 and
-                kernel_size >= output_node.shape[2] * 2):
+        if (kernel_size * 2 <= output_node.shape[1] and
+                kernel_size * 2 <= output_node.shape[2]):
             return 'valid'
         return 'same'
 
@@ -193,7 +193,7 @@ def shape_compatible(shape1, shape2):
 class Merge(HyperBlock):
 
     def build(self, hp, inputs=None):
-        inputs = layer_utils.format_inputs(inputs, self.name)
+        inputs = utils.format_inputs(inputs, self.name)
         if len(inputs) == 1:
             return inputs
 
@@ -231,7 +231,7 @@ class XceptionBlock(HyperBlock):
     """
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        input_node = utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         channel_axis = 1 \
             if tf.keras.backend.image_data_format() == 'channels_first' else -1
@@ -367,7 +367,7 @@ class XceptionBlock(HyperBlock):
 class Flatten(HyperBlock):
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        input_node = utils.format_inputs(inputs, self.name, num=1)[0]
         if len(input_node.shape) > 2:
             return tf.keras.layers.Flatten()(input_node)
         return input_node
@@ -376,7 +376,7 @@ class Flatten(HyperBlock):
 class SpatialReduction(HyperBlock):
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        input_node = utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
 
         # No need to reduce.
@@ -391,10 +391,10 @@ class SpatialReduction(HyperBlock):
         if reduction_type == 'flatten':
             output_node = Flatten().build(hp, output_node)
         elif reduction_type == 'global_max':
-            output_node = layer_utils.get_global_max_pooling_layer(
+            output_node = utils.get_global_max_pooling_layer(
                 output_node.shape)()(output_node)
         elif reduction_type == 'global_ave':
-            output_node = layer_utils.get_global_average_pooling_layer(
+            output_node = utils.get_global_average_pooling_layer(
                 output_node.shape)()(output_node)
         return output_node
 
@@ -402,7 +402,7 @@ class SpatialReduction(HyperBlock):
 class TemporalReduction(HyperBlock):
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        input_node = utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
 
         # No need to reduce.
