@@ -120,7 +120,8 @@ class ImageAugment(Normalizer):
         batch_num, target_height, target_width, channels = x_train.shape
         dataset = tf.data.Dataset.from_tensor_slices(x_train)
         dataset = dataset.batch(batch_size=batch_num)
-        iterator = dataset.make_one_shot_iterator()
+        #iterator = dataset.make_one_shot_iterator()
+        iterator = tf.compat.v1.data.make_one_shot_iterator(dataset)
         one_element = iterator.get_next()
         with tf.Session() as sess:
                 batch = sess.run([one_element])
