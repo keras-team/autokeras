@@ -118,75 +118,68 @@ class ImageAugment(Normalizer):
                              'width, channel] '
                              'shape tensor or list, but we get %s' % x_train.shape)
         batch_num, target_height, target_width, channels = x_train.shape
-        dataset = tf.data.Dataset.from_tensor_slices(x_train)
-        dataset = dataset.batch(batch_size=batch_num)
-        #iterator = dataset.make_one_shot_iterator()
-        iterator = tf.compat.v1.data.make_one_shot_iterator(dataset)
-        one_element = iterator.get_next()
-        with tf.compat.v1.Session() as sess:
-                batch = sess.run([one_element])
-                image = tf.convert_to_tensor(batch[0])
-                image = tf.cast(image, dtype=tf.float32)
-                if gaussian_noise:
-                    noise = tf.random_normal(shape=tf.shape(image),
-                                             mean=0.0, stddev=1.0, dtype=tf.float32)
-                    image = tf.add(image, noise)
+        image = x_train
+        image = tf.cast(image, dtype=tf.float32)
+        if gaussian_noise:
+            noise = tf.random_normal(shape=tf.shape(image),
+                                     mean=0.0, stddev=1.0, dtype=tf.float32)
+            image = tf.add(image, noise)
 
-                if translation_bottom or translation_left \
-                        or translation_right or translation_top:
-                    x = tf.image.pad_to_bounding_box(image, translation_top,
-                                                     translation_left,
-                                                     target_height +
-                                                     translation_bottom +
-                                                     translation_top,
-                                                     target_width +
-                                                     translation_right +
-                                                     translation_left)
-                    image = tf.image.crop_to_bounding_box(x, translation_bottom,
-                                                          translation_right,
-                                                          target_height,
-                                                          target_width)
+        if translation_bottom or translation_left \
+                or translation_right or translation_top:
+            x = tf.image.pad_to_bounding_box(image, translation_top,
+                                             translation_left,
+                                             target_height +
+                                             translation_bottom +
+                                             translation_top,
+                                             target_width +
+                                             translation_right +
+                                             translation_left)
+            image = tf.image.crop_to_bounding_box(x, translation_bottom,
+                                                  translation_right,
+                                                  target_height,
+                                                  target_width)
 
-                if rotation_range:
-                    if rotation_range == 90:
-                        image = tf.image.rot90(image, k=1)
-                    elif rotation_range == 180:
-                        image = tf.image.rot90(image, k=2)
-                    elif rotation_range == 270:
-                        image = tf.image.rot90(image, k=3)
-                    else:
-                        image = tf.image.rot90(image, k=4)
+        if rotation_range:
+            if rotation_range == 90:
+                image = tf.image.rot90(image, k=1)
+            elif rotation_range == 180:
+                image = tf.image.rot90(image, k=2)
+            elif rotation_range == 270:
+                image = tf.image.rot90(image, k=3)
+            else:
+                image = tf.image.rot90(image, k=4)
 
-                if brightness_range:
-                    min_value, max_value = self.__get_min_and_max(
-                        brightness_range,
-                        'brightness_range')
-                    image = tf.image.random_brightness(image, min_value, max_value)
+        if brightness_range:
+            min_value, max_value = self.__get_min_and_max(
+                brightness_range,
+                'brightness_range')
+            image = tf.image.random_brightness(image, min_value, max_value)
 
-                if saturation_range:
-                    min_value, max_value = self.__get_min_and_max(
-                        saturation_range,
-                        'saturation_range')
-                    image = tf.image.random_saturation(image, min_value, max_value)
-                if contrast_range:
-                    min_value, max_value = self.__get_min_and_max(
-                        contrast_range,
-                        'contrast_range')
-                    image = tf.image.random_contrast(
-                        image, min_value, max_value)
+        if saturation_range:
+            min_value, max_value = self.__get_min_and_max(
+                saturation_range,
+                'saturation_range')
+            image = tf.image.random_saturation(image, min_value, max_value)
+        if contrast_range:
+            min_value, max_value = self.__get_min_and_max(
+                contrast_range,
+                'contrast_range')
+            image = tf.image.random_contrast(
+                image, min_value, max_value)
 
-                if random_crop_height and random_crop_width:
-                    crop_size = [batch_num, random_crop_height,
-                                 random_crop_width, channels]
-                    seed = np.random.randint(random_crop_seed)
-                    target_shape = (target_height, target_width)
-                    image = tf.image.resize_images(
-                        tf.random_crop(image, size=crop_size, seed=seed),
-                        size=target_shape)
+        if random_crop_height and random_crop_width:
+            crop_size = [batch_num, random_crop_height,
+                         random_crop_width, channels]
+            seed = np.random.randint(random_crop_seed)
+            target_shape = (target_height, target_width)
+            image = tf.image.resize_images(
+                tf.random_crop(image, size=crop_size, seed=seed),
+                size=target_shape)
 
-                if horizontal_flip:
-                    image = tf.image.flip_left_right(image)
+        if horizontal_flip:
+            image = tf.image.flip_left_right(image)
 
-                if vertical_flip:
-                    image = tf.image.flip_up_down(image)
+        if vertical_flip:
+            image = tf.image.flip_up_down(image)
         return image
