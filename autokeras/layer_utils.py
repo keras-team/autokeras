@@ -34,16 +34,6 @@ def format_inputs(inputs, name=None, num=None):
     return inputs
 
 
-def attention_block(inputs):
-    time_steps = int(inputs.shape[1])
-    attention_out = tf.keras.layers.Permute((2, 1))(inputs)
-    attention_out = tf.keras.layers.Dense(time_steps,
-                                          activation='softmax')(attention_out)
-    attention_out = tf.keras.layers.Permute((2, 1))(attention_out)
-    mul_attention_out = tf.keras.layers.Multiply()([inputs, attention_out])
-    return mul_attention_out
-
-
 def split_train_to_valid(x, y):
     # Generate split index
     validation_set_size = int(len(x[0]) * const.Constant.VALIDATION_SET_SIZE)

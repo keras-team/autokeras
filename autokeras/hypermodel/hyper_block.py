@@ -81,6 +81,15 @@ class RNNBlock(HyperBlock):
         self.bidirectional = bidirectional
         self.return_sequences = return_sequences
 
+    def attention_block(self, inputs):
+        time_steps = int(inputs.shape[1])
+        attention_out = tf.keras.layers.Permute((2, 1))(inputs)
+        attention_out = tf.keras.layers.Dense(time_steps,
+                                              activation='softmax')(attention_out)
+        attention_out = tf.keras.layers.Permute((2, 1))(attention_out)
+        mul_attention_out = tf.keras.layers.Multiply()([inputs, attention_out])
+        return mul_attention_out
+
     def build(self, hp, inputs=None):
         input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
         shape = input_node.shape.as_list()
