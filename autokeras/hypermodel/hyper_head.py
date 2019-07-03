@@ -51,7 +51,6 @@ class RegressionHead(HyperHead):
             self.loss = 'mean_squared_error'
 
     def build(self, hp, inputs=None):
-        print(inputs)
         input_node = utils.format_inputs(inputs, self.name, num=1)[0]
         output_node = input_node
         output_node = hyper_block.Flatten().build(hp, output_node)

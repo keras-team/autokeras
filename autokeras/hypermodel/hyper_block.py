@@ -176,8 +176,8 @@ class ConvBlock(HyperBlock):
 
     @staticmethod
     def _get_padding(kernel_size, output_node):
-        if (kernel_size >= output_node.shape[1] * 2 and
-                kernel_size >= output_node.shape[2] * 2):
+        if (kernel_size * 2 <= output_node.shape[1] and
+                kernel_size * 2 <= output_node.shape[2]):
             return 'valid'
         return 'same'
 

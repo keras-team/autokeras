@@ -307,6 +307,7 @@ class GraphAutoModel(kerastuner.HyperModel):
             y: Any type compatible with Keras training y. Training data y.
             validation_data: Tuple of (val_x, val_y). The same type as x and y.
                 Validation set for the search.
+            fit: Boolean. Whether to fit the preprocessing layers with x and y.
 
         Returns:
             A tuple of four preprocessed elements, (x, y, val_x, val_y).
