@@ -81,8 +81,8 @@ class Normalize(HyperPreprocessor):
         self.mean = None
         self.std = None
 
-    def fit(self, hp, data):
-        shape = utils.dataset_shape(data)
+    def fit(self, hp, inputs):
+        shape = utils.dataset_shape(inputs)
         axis = tuple(range(len(shape) - 1))
 
         def sum_up(old_state, new_elem):
@@ -91,15 +91,15 @@ class Normalize(HyperPreprocessor):
         def sum_up_sqaure(old_state, new_elem):
             return old_state + tf.square(new_elem)
 
-        num_instance = data.reduce(np.float64(0), lambda x, _: x + 1)
-        total_sum = data.reduce(np.float64(0), sum_up) / num_instance
+        num_instance = inputs.reduce(np.float64(0), lambda x, _: x + 1)
+        total_sum = inputs.reduce(np.float64(0), sum_up) / num_instance
         self.mean = tf.reduce_mean(total_sum, axis=axis)
 
-        total_sum_square = data.reduce(np.float64(0), sum_up_sqaure) / num_instance
+        total_sum_square = inputs.reduce(np.float64(0), sum_up_sqaure) / num_instance
         square_mean = tf.reduce_mean(total_sum_square, axis=axis)
         self.std = tf.sqrt(square_mean - tf.square(self.mean))
 
-    def transform(self, hp, data):
+    def transform(self, hp, inputs):
         """ Transform the test data, perform normalization.
 
         # Arguments
@@ -108,7 +108,19 @@ class Normalize(HyperPreprocessor):
         # Returns
             A DataLoader instance.
         """
+
         # channel-wise normalize the image
         def normalize(x):
             return (x - self.mean) / self.std
-        return data.map(normalize)
+
+        return inputs.map(normalize)
+
+
+class Tokenize(HyperPreprocessor):
+
+    def fit(self, hp, inputs):
+        pass
+
+    def transform(self, hp, inputs):
+        pass
+

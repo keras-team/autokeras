@@ -405,7 +405,8 @@ def sw_ratio(temp_x):
 def meta_model(temp_x, input_node):
     # all inputs, all train_x y, all heads
     # for text data we just follow the rules on that page.
-    # for image, use the num_instance to determine the range of the sizes of the resnet and xception
+    # for image, use the num_instance to determine the range of the sizes of the
+    # resnet and xception
     # use the image size to determine how the down sampling works, e.g. pooling.
     output_node = input_node
     if isinstance(input_node, hyper_node.TextNode):
@@ -416,7 +417,7 @@ def meta_model(temp_x, input_node):
     return output_node
 
 
-class AutoModel(GraphAutoModel):
+class AutoModel(AutoModelBase):
     """ A HyperModel defined by inputs and outputs.
 
     AutoModel is a subclass of HyperModel. Besides the HyperModel properties,
@@ -456,8 +457,8 @@ class AutoModel(GraphAutoModel):
         else:
             output_node = middle_nodes[0]
 
-        outputs = [output_blocks(output_node)
-                   for output_blocks in outputs]
+        self.outputs = utils.format_inputs([output_blocks(output_node)
+                                            for output_blocks in outputs])
 
         self._build_network()
         super(AutoModel, self).fit(x=x,
