@@ -128,10 +128,8 @@ class RNNBlock(HyperBlock):
             attention_choices = ['pre', 'none']
 
         attention_mode = hp.Choice('attention', attention_choices, default='post')
-        output_node = self.attention_block(output_node) if attention_mode == 'pre' else output_node
-
-        print("Hyperparameters => bidirectional : ", bidirectional, ", return_sequences : ", return_sequences,
-              ", attention : ", attention_mode, ", num layers : ", choice_of_layers)
+        output_node = self.attention_block(output_node) \
+            if attention_mode == 'pre' else output_node
 
         for i in range(choice_of_layers):
             temp_return_sequences = True
@@ -142,10 +140,12 @@ class RNNBlock(HyperBlock):
                     in_layer(feature_size,
                              return_sequences=temp_return_sequences))(output_node)
             else:
-                output_node = in_layer(feature_size,
-                                       return_sequences=temp_return_sequences)(output_node)
+                output_node = in_layer(
+                    feature_size, return_sequences=temp_return_sequences)(output_node)
 
-        output_node = self.attention_block(output_node) if attention_mode == 'post' else output_node
+        output_node = self.attention_block(output_node) \
+            if attention_mode == 'post' else output_node
+
         return output_node
 
 
