@@ -190,8 +190,8 @@ class GraphAutoModel(kerastuner.HyperModel):
         validation data.
 
         Args:
-            x: Any type compatible with Keras training x. Training data x.
-            y: Any type compatible with Keras training y. Training data y.
+            x: numpy.ndarray or tensorflow.Dataset. Training data x.
+            y: numpy.ndarray or tensorflow.Dataset. Training data y.
             validation_split: Float between 0 and 1.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
@@ -200,8 +200,7 @@ class GraphAutoModel(kerastuner.HyperModel):
                 on this data at the end of each epoch.
                 The validation data is selected from the last samples
                 in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a dataset, dataset iterator, generator or
-               `keras.utils.Sequence` instance.
+                not supported when `x` is a dataset.
             validation_data: Data on which to evaluate
                 the loss and any model metrics at the end of each epoch.
                 The model will not be trained on this data.
@@ -303,8 +302,8 @@ class GraphAutoModel(kerastuner.HyperModel):
 
         Args:
             hp: HyperParameters. Used to build the HyperModel.
-            x: Any type compatible with Keras training x. Training data x.
-            y: Any type compatible with Keras training y. Training data y.
+            x: tensorflow.data.Dataset. Training data x.
+            y: tensorflow.data.Dataset. Training data y.
             validation_data: Tuple of (val_x, val_y). The same type as x and y.
                 Validation set for the search.
             fit: Boolean. Whether to fit the preprocessing layers with x and y.
