@@ -1,4 +1,5 @@
 tensorflow>=2.0.0b0
+tensorflow-datasets>=1.0.2
 scikit-learn>=0.20.2
 git+git://github.com/keras-team/keras-tuner@master#egg=kerastuner
 pytest>=4.5.0

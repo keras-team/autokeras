@@ -1,7 +1,7 @@
 import tensorflow as tf
+import tensorflow_datasets as tfds
 import numpy as np
 
-from autokeras import utils
 from autokeras.hypermodel import hyper_block as hb_module
 
 
@@ -81,22 +81,14 @@ class Normalize(HyperPreprocessor):
         self.std = None
 
     def fit(self, hp, inputs):
-        shape = utils.dataset_shape(inputs)
-        axis = tuple(range(len(shape) - 1))
-
-        def sum_up(old_state, new_elem):
-            return old_state + new_elem
-
-        def sum_up_sqaure(old_state, new_elem):
-            return old_state + tf.square(new_elem)
-
-        num_instance = inputs.reduce(np.float64(0), lambda x, _: x + 1)
-        total_sum = inputs.reduce(np.float64(0), sum_up) / num_instance
-        self.mean = tf.reduce_mean(total_sum, axis=axis)
-
-        total_sum_square = inputs.reduce(np.float64(0), sum_up_sqaure) / num_instance
-        square_mean = tf.reduce_mean(total_sum_square, axis=axis)
-        self.std = tf.sqrt(square_mean - tf.square(self.mean))
+        data = np.array(list(tfds.as_numpy(inputs)))
+        axis = tuple(range(len(data.shape) - 1))
+        self.mean = np.mean(data,
+                            axis=axis,
+                            keepdims=True).flatten()
+        self.std = np.std(data,
+                          axis=axis,
+                          keepdims=True).flatten()
 
     def transform(self, hp, inputs):
         """ Transform the test data, perform normalization.
@@ -109,24 +101,28 @@ class Normalize(HyperPreprocessor):
         """
 
         # channel-wise normalize the image
-        def normalize(x):
-            return (x - self.mean) / self.std
-
-        return inputs.map(normalize)
+        data = np.array(list(tfds.as_numpy(inputs)))
+        data = (data - self.mean) / self.std
+        return tf.data.Dataset.from_tensor_slices(data)
 
 
 class Tokenize(HyperPreprocessor):
 
-    def __init__(self, **kwargs):
+    def __init__(self, max_len=None, **kwargs):
         super().__init__(**kwargs)
+        self.max_len = max_len
         self.tokenizer = tf.keras.preprocessing.text.Tokenizer()
 
     def fit(self, hp, inputs):
-        def fit_on_texts(x):
-            self.tokenizer.fit_on_texts(x)
-        inputs.map(fit_on_texts)
+        texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
+        self.tokenizer.fit_on_texts(texts)
 
     def transform(self, hp, inputs):
-        def texts_to_sequences(x):
-            self.tokenizer.texts_to_sequences([x])
-        return inputs.map(texts_to_sequences)
+        texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
+        sequences = self.tokenizer.texts_to_sequences(texts)
+        if not self.max_len:
+            self.max_len = max(map(len, sequences))
+        padded = np.zeros((len(sequences), self.max_len))
+        for index, seq in enumerate(sequences):
+            padded[index, :len(seq)] = seq
+        return tf.data.Dataset.from_tensor_slices(padded)
