@@ -130,4 +130,3 @@ class Tokenize(HyperPreprocessor):
         def texts_to_sequences(x):
             self.tokenizer.texts_to_sequences([x])
         return inputs.map(texts_to_sequences)
-

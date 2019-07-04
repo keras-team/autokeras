@@ -21,8 +21,8 @@ class AutoModelBase(kerastuner.HyperModel):
                  directory=None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.inputs = utils.format_inputs(inputs)
-        self.outputs = utils.format_inputs(outputs)
+        self.inputs = nest.flatten(inputs)
+        self.outputs = nest.flatten(outputs)
         self.tuner = None
         self.max_trials = max_trials or const.Constant.NUM_TRIALS
         self.directory = directory or const.Constant.TEMP_DIRECTORY
@@ -45,9 +45,8 @@ class AutoModelBase(kerastuner.HyperModel):
                            for input_node in hypermodel.inputs]
             outputs = hypermodel.build(hp,
                                        inputs=temp_inputs)
-            outputs = utils.format_inputs(outputs, hypermodel.name)
-            for output_node, real_output_node in zip(hypermodel.outputs,
-                                                     outputs):
+            outputs = nest.flatten(outputs)
+            for output_node, real_output_node in zip(hypermodel.outputs, outputs):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
         model = tf.keras.Model(
             [real_nodes[self._node_to_id[input_node]] for input_node in
@@ -171,8 +170,8 @@ class AutoModelBase(kerastuner.HyperModel):
         validation data.
 
         Args:
-            x: Any type compatible with Keras training x. Training data x.
-            y: Any type compatible with Keras training y. Training data y.
+            x: numpy.ndarray or tensorflow.Dataset. Training data x.
+            y: numpy.ndarray or tensorflow.Dataset. Training data y.
             validation_split: Float between 0 and 1.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
@@ -181,8 +180,7 @@ class AutoModelBase(kerastuner.HyperModel):
                 on this data at the end of each epoch.
                 The validation data is selected from the last samples
                 in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a dataset, dataset iterator, generator or
-               `keras.utils.Sequence` instance.
+                not supported when `x` is a dataset.
             validation_data: Data on which to evaluate
                 the loss and any model metrics at the end of each epoch.
                 The model will not be trained on this data.
@@ -195,8 +193,8 @@ class AutoModelBase(kerastuner.HyperModel):
                 For the last case, `validation_steps` must be provided.
         """
         # Initialize HyperGraph model
-        x = utils.format_inputs(x, 'train_x')
-        y = utils.format_inputs(y, 'train_y')
+        x = nest.flatten(x)
+        y = nest.flatten(y)
 
         y = self._label_encoding(y)
         # TODO: Set the shapes only if they are not provided by the user when
@@ -244,7 +242,7 @@ class AutoModelBase(kerastuner.HyperModel):
         x, _, _ = self.preprocess(self.tuner.get_best_models(1), x)
         x, _ = utils.prepare_model_input(x, x, batch_size=batch_size)
         y = self.tuner.get_best_models(1)[0].predict(x, **kwargs)
-        y = utils.format_inputs(y, self.name)
+        y = nest.flatten(y)
         y = self._postprocess(y)
         if isinstance(y, list) and len(y) == 1:
             y = y[0]
@@ -284,8 +282,8 @@ class AutoModelBase(kerastuner.HyperModel):
 
         Args:
             hp: HyperParameters. Used to build the HyperModel.
-            x: Any type compatible with Keras training x. Training data x.
-            y: Any type compatible with Keras training y. Training data y.
+            x: tensorflow.data.Dataset. Training data x.
+            y: tensorflow.data.Dataset. Training data y.
             validation_data: Tuple of (val_x, val_y). The same type as x and y.
                 Validation set for the search.
             fit: Boolean. Whether to fit the preprocessing layers with x and y.
@@ -304,7 +302,7 @@ class AutoModelBase(kerastuner.HyperModel):
         return x, y, (val_x, val_y)
 
     def _preprocess(self, hp, x, y, fit=False):
-        x = utils.format_inputs(x, self.name)
+        x = nest.flatten(x)
         q = queue.Queue()
         for input_node, data in zip(self.inputs, x):
             q.put((input_node, data))
@@ -447,8 +445,8 @@ class AutoModel(AutoModelBase):
             y=None,
             validation_data=None,
             **kwargs):
-        inputs = utils.format_inputs(self.inputs)
-        outputs = utils.format_inputs(self.outputs)
+        inputs = nest.flatten(self.inputs)
+        outputs = nest.flatten(self.outputs)
         middle_nodes = [meta_model(temp_x, input_node)
                         for input_node, temp_x in zip(inputs, x)]
 
@@ -457,8 +455,8 @@ class AutoModel(AutoModelBase):
         else:
             output_node = middle_nodes[0]
 
-        self.outputs = utils.format_inputs([output_blocks(output_node)
-                                            for output_blocks in outputs])
+        self.outputs = nest.flatten([output_blocks(output_node)
+                                     for output_blocks in outputs])
 
         self._build_network()
         super(AutoModel, self).fit(x=x,
