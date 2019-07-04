@@ -15,21 +15,12 @@ def get_global_max_pooling_layer(shape):
             tf.keras.layers.GlobalMaxPool3D][len(shape) - 3]
 
 
-def format_inputs(inputs, name=None, num=None):
+def validate_num_inputs(inputs, num):
     inputs = nest.flatten(inputs)
-    if not isinstance(inputs, list):
-        inputs = [inputs]
-
-    if num is None:
-        return inputs
-
     if not len(inputs) == num:
-        raise ValueError('Expected {num} elements in the '
-                         'inputs list for {name} '
+        raise ValueError('Expected {num} elements in the inputs list '
                          'but received {len} inputs.'.format(num=num,
-                                                             name=name,
                                                              len=len(inputs)))
-    return inputs
 
 
 def split_train_to_valid(x, y, validation_split):
@@ -73,15 +64,15 @@ def input_list_to_dataset(x):
 
 def prepare_preprocess(x, y=None, validation_data=None):
     """Convert each input to a tf.data.Dataset."""
-    x = format_inputs(x, 'train_x')
+    x = nest.flatten(x)
     x = input_list_to_dataset(x)
     if y:
-        y = format_inputs(y, 'train_y')
+        y = nest.flatten(y)
         y = input_list_to_dataset(y)
     if validation_data:
         x_val, y_val = validation_data
-        x_val = format_inputs(x_val, 'x_val')
-        y_val = format_inputs(y_val, 'y_val')
+        x_val = nest.flatten(x_val)
+        y_val = nest.flatten(y_val)
         x_val = input_list_to_dataset(x_val)
         y_val = input_list_to_dataset(y_val)
         validation_data = x_val, y_val
