@@ -19,3 +19,10 @@ tokenizer.fit_on_sequences(sequences)
 
 for mode in ['binary', 'count', 'tfidf', 'freq']:
     matrix = tokenizer.texts_to_matrix(texts, mode)
+    print(matrix)
+
+matrix = tokenizer.texts_to_sequences(texts)
+print(matrix)
+
+matrix = tokenizer.texts_to_sequences(texts[0])
+print(matrix)

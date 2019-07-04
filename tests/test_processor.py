@@ -11,3 +11,13 @@ def test_normalize():
     dataset = tf.data.Dataset.from_tensor_slices(x_train)
     new_dataset = normalize.fit_transform(kerastuner.HyperParameters(), dataset)
     assert isinstance(new_dataset, tf.data.Dataset)
+
+
+def test_tokenize():
+    texts = ['The cat sat on the mat.',
+             'The dog sat on the log.',
+             'Dogs and cats living together.']
+    tokenize = processor.Tokenize()
+    dataset = tf.data.Dataset.from_tensor_slices(texts)
+    new_dataset = tokenize.fit_transform(kerastuner.HyperParameters(), dataset)
+    assert isinstance(new_dataset, tf.data.Dataset)

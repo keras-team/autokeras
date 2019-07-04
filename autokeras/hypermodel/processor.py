@@ -117,9 +117,17 @@ class Normalize(HyperPreprocessor):
 
 class Tokenize(HyperPreprocessor):
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.tokenizer = tf.keras.preprocessing.text.Tokenizer()
+
     def fit(self, hp, inputs):
-        pass
+        def fit_on_texts(x):
+            self.tokenizer.fit_on_texts(x)
+        inputs.map(fit_on_texts)
 
     def transform(self, hp, inputs):
-        pass
+        def texts_to_sequences(x):
+            self.tokenizer.texts_to_sequences([x])
+        return inputs.map(texts_to_sequences)
 
