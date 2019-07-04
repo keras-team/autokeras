@@ -54,7 +54,8 @@ def dataset_shape(dataset):
     return tf.compat.v1.data.get_output_shapes(dataset)
 
 
-def input_list_to_dataset(x):
+def inputs_to_datasets(x):
+    x = nest.flatten(x)
     new_x = []
     for temp_x in x:
         if isinstance(temp_x, np.ndarray):
@@ -64,17 +65,13 @@ def input_list_to_dataset(x):
 
 def prepare_preprocess(x, y=None, validation_data=None):
     """Convert each input to a tf.data.Dataset."""
-    x = nest.flatten(x)
-    x = input_list_to_dataset(x)
+    x = inputs_to_datasets(x)
     if y:
-        y = nest.flatten(y)
-        y = input_list_to_dataset(y)
+        y = inputs_to_datasets(y)
     if validation_data:
         x_val, y_val = validation_data
-        x_val = nest.flatten(x_val)
-        y_val = nest.flatten(y_val)
-        x_val = input_list_to_dataset(x_val)
-        y_val = input_list_to_dataset(y_val)
+        x_val = inputs_to_datasets(x_val)
+        y_val = inputs_to_datasets(y_val)
         validation_data = x_val, y_val
     return x, y, validation_data
 

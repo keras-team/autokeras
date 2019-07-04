@@ -1,4 +1,5 @@
 import copy
+import inspect
 
 import tensorflow as tf
 import kerastuner
@@ -12,8 +13,8 @@ class AutoTuner(kerastuner.Tuner):
     def run_trial(self, trial, hp, fit_args, fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
         new_fit_kwargs = copy.copy(fit_kwargs)
-        new_fit_kwargs.update(dict(zip(tf.keras.Model.fit.__code__.co_varnames,
-                                   fit_args)))
+        new_fit_kwargs.update(
+            dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
         x, y, validation_data = self.hypermodel.preprocess(
             hp,
             new_fit_kwargs.get('x', None),

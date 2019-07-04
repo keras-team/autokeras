@@ -87,14 +87,14 @@ class Normalize(HyperPreprocessor):
         def sum_up(old_state, new_elem):
             return old_state + new_elem
 
-        def sum_up_sqaure(old_state, new_elem):
+        def sum_up_square(old_state, new_elem):
             return old_state + tf.square(new_elem)
 
         num_instance = data.reduce(np.float64(0), lambda x, _: x + 1)
         total_sum = data.reduce(np.float64(0), sum_up) / num_instance
         self.mean = tf.reduce_mean(total_sum, axis=axis)
 
-        total_sum_square = data.reduce(np.float64(0), sum_up_sqaure) / num_instance
+        total_sum_square = data.reduce(np.float64(0), sum_up_square) / num_instance
         square_mean = tf.reduce_mean(total_sum_square, axis=axis)
         self.std = tf.sqrt(square_mean - tf.square(self.mean))
 
