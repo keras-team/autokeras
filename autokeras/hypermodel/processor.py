@@ -1,5 +1,7 @@
+import tensorflow as tf
 import numpy as np
 
+from autokeras import utils
 from autokeras.hypermodel import hyper_block as hb_module
 
 
@@ -69,9 +71,8 @@ class Normalize(HyperPreprocessor):
     """ Perform basic image transformation and augmentation.
 
     # Attributes
-        max_val: the maximum value of all data.
-        mean: the mean value.
-        std: the standard deviation.
+        mean: Tensor. The mean value. Shape: (data last dimension length,)
+        std: Tensor. The standard deviation. Shape is the same as mean.
     """
 
     def __init__(self, **kwargs):
@@ -80,23 +81,33 @@ class Normalize(HyperPreprocessor):
         self.std = None
 
     def fit(self, hp, data):
-        axis = tuple(range(len(data.shape) - 1))
-        self.mean = np.mean(data,
-                            axis=axis,
-                            keepdims=True).flatten()
-        self.std = np.std(data,
-                          axis=axis,
-                          keepdims=True).flatten()
+        shape = utils.dataset_shape(data)
+        axis = tuple(range(len(shape) - 1))
+
+        def sum_up(old_state, new_elem):
+            return old_state + new_elem
+
+        def sum_up_square(old_state, new_elem):
+            return old_state + tf.square(new_elem)
+
+        num_instance = data.reduce(np.float64(0), lambda x, _: x + 1)
+        total_sum = data.reduce(np.float64(0), sum_up) / num_instance
+        self.mean = tf.reduce_mean(total_sum, axis=axis)
+
+        total_sum_square = data.reduce(np.float64(0), sum_up_square) / num_instance
+        square_mean = tf.reduce_mean(total_sum_square, axis=axis)
+        self.std = tf.sqrt(square_mean - tf.square(self.mean))
 
     def transform(self, hp, data):
         """ Transform the test data, perform normalization.
 
         # Arguments
-            data: Numpy array. The data to be transformed.
+            data: Tensorflow Dataset. The data to be transformed.
 
         # Returns
             A DataLoader instance.
         """
         # channel-wise normalize the image
-        data = (data - self.mean) / self.std
-        return data
+        def normalize(x):
+            return (x - self.mean) / self.std
+        return data.map(normalize)
