@@ -112,21 +112,21 @@ class TextToSequenceVector(HyperPreprocessor):
     def __init__(self, max_len=None, **kwargs):
         super().__init__(**kwargs)
         self.max_len = max_len
-        self._tokenizer = tf.keras.preprocessing.text.Tokenizer()
+        self._tokenizer = tf.keras.preprocessing.text.Tokenizer(num_words=20000)
 
     def fit(self, hp, inputs):
         texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
         self._tokenizer.fit_on_texts(texts)
+        sequences = self._tokenizer.texts_to_sequences(texts)
+        if not self.max_len:
+            self.max_len = len(max(sequences, key=len))
 
     def transform(self, hp, inputs):
         texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
         sequences = self._tokenizer.texts_to_sequences(texts)
-        if not self.max_len:
-            self.max_len = max(map(len, sequences))
-        padded = np.zeros((len(sequences), self.max_len))
-        for index, seq in enumerate(sequences):
-            padded[index, :len(seq)] = seq
-        return tf.data.Dataset.from_tensor_slices(padded)
+        sequences = tf.keras.preprocessing.sequence.pad_sequences(sequences,
+                                                                  self.max_len)
+        return tf.data.Dataset.from_tensor_slices(sequences)
 
 
 class TextToNgramVector(HyperPreprocessor):
@@ -134,7 +134,6 @@ class TextToNgramVector(HyperPreprocessor):
         super().__init__(**kwargs)
         self._vectorizer = text.TfidfVectorizer(
             ngram_range=(1, 2),
-            dtype='int32',
             strip_accents='unicode',
             decode_error='replace',
             analyzer='word',
@@ -157,7 +156,7 @@ class TextToNgramVector(HyperPreprocessor):
 
     def transform(self, hp, inputs):
         texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
-        data = self._vectorizer.transform(texts)
+        data = self._vectorizer.transform(texts).toarray()
         if self.selector:
             data = self.selector.transform(data).astype('float32')
         return tf.data.Dataset.from_tensor_slices(data)

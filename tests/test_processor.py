@@ -31,3 +31,13 @@ def test_ngram():
     dataset = tf.data.Dataset.from_tensor_slices(texts)
     new_dataset = tokenize.fit_transform(kerastuner.HyperParameters(), dataset)
     assert isinstance(new_dataset, tf.data.Dataset)
+
+
+def test_ngram_with_labels():
+    texts = ['The cat sat on the mat.',
+             'The dog sat on the log.',
+             'Dogs and cats living together.']
+    tokenize = processor.TextToNgramVector(labels=[1, 0, 1])
+    dataset = tf.data.Dataset.from_tensor_slices(texts)
+    new_dataset = tokenize.fit_transform(kerastuner.HyperParameters(), dataset)
+    assert isinstance(new_dataset, tf.data.Dataset)
