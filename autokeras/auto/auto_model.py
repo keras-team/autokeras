@@ -1,16 +1,16 @@
 import queue
+
 import kerastuner
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras.auto import tuner
-from autokeras.hypermodel import hyper_block
 from autokeras.hypermodel import processor
-from autokeras.hypermodel import hyper_node
 from autokeras.hypermodel import hyper_head
 from autokeras import utils
 from autokeras import const
+from autokeras import meta_model
 
 
 class AutoModelBase(kerastuner.HyperModel):
@@ -396,25 +396,6 @@ class GraphAutoModel(AutoModelBase):
         self._build_network()
 
 
-def sw_ratio(temp_x):
-    return 0
-
-
-def meta_model(temp_x, input_node):
-    # all inputs, all train_x y, all heads
-    # for text data we just follow the rules on that page.
-    # for image, use the num_instance to determine the range of the sizes of the
-    # resnet and xception
-    # use the image size to determine how the down sampling works, e.g. pooling.
-    output_node = input_node
-    if isinstance(input_node, hyper_node.TextNode):
-        if sw_ratio(temp_x) < 1500:
-            pass
-        else:
-            pass
-    return output_node
-
-
 class AutoModel(AutoModelBase):
     """ A HyperModel defined by inputs and outputs.
 
@@ -445,18 +426,10 @@ class AutoModel(AutoModelBase):
             y=None,
             validation_data=None,
             **kwargs):
-        inputs = nest.flatten(self.inputs)
-        outputs = nest.flatten(self.outputs)
-        middle_nodes = [meta_model(temp_x, input_node)
-                        for input_node, temp_x in zip(inputs, x)]
-
-        if len(middle_nodes) > 1:
-            output_node = hyper_block.Merge()(middle_nodes)
-        else:
-            output_node = middle_nodes[0]
-
-        self.outputs = nest.flatten([output_blocks(output_node)
-                                     for output_blocks in outputs])
+        self.outputs = meta_model.assemble(inputs=self.inputs,
+                                           outputs=self.outputs,
+                                           x=x,
+                                           y=y)
 
         self._build_network()
         super(AutoModel, self).fit(x=x,

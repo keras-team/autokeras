@@ -13,3 +13,5 @@ class Constant(object):
         'gru': tf.keras.layers.GRU,
         'lstm': tf.keras.layers.LSTM
     }
+
+    # N-gram Vectorization parameters

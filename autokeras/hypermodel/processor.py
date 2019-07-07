@@ -1,6 +1,8 @@
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import numpy as np
+from sklearn.feature_extraction import text
+from sklearn import feature_selection
 
 from autokeras.hypermodel import hyper_block as hb_module
 
@@ -106,23 +108,56 @@ class Normalize(HyperPreprocessor):
         return tf.data.Dataset.from_tensor_slices(data)
 
 
-class Tokenize(HyperPreprocessor):
-
+class TextToSequenceVector(HyperPreprocessor):
     def __init__(self, max_len=None, **kwargs):
         super().__init__(**kwargs)
         self.max_len = max_len
-        self.tokenizer = tf.keras.preprocessing.text.Tokenizer()
+        self._tokenizer = tf.keras.preprocessing.text.Tokenizer()
 
     def fit(self, hp, inputs):
         texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
-        self.tokenizer.fit_on_texts(texts)
+        self._tokenizer.fit_on_texts(texts)
 
     def transform(self, hp, inputs):
         texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
-        sequences = self.tokenizer.texts_to_sequences(texts)
+        sequences = self._tokenizer.texts_to_sequences(texts)
         if not self.max_len:
             self.max_len = max(map(len, sequences))
         padded = np.zeros((len(sequences), self.max_len))
         for index, seq in enumerate(sequences):
             padded[index, :len(seq)] = seq
         return tf.data.Dataset.from_tensor_slices(padded)
+
+
+class TextToNgramVector(HyperPreprocessor):
+    def __init__(self, labels=None, **kwargs):
+        super().__init__(**kwargs)
+        self._vectorizer = text.TfidfVectorizer(
+            ngram_range=(1, 2),
+            dtype='int32',
+            strip_accents='unicode',
+            decode_error='replace',
+            analyzer='word',
+            min_df=2)
+        self.selector = None
+        self.labels = labels
+        self._max_features = 20000
+        if not labels:
+            self._vectorizer.max_features = self._max_features
+
+    def fit(self, hp, inputs):
+        texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
+        self._vectorizer.fit(texts)
+        data = self._vectorizer.transform(texts)
+        if self.labels:
+            self.selector = feature_selection.SelectKBest(
+                feature_selection.f_classif,
+                k=min(self._max_features, data.shape[1]))
+            self.selector.fit(data, self.labels)
+
+    def transform(self, hp, inputs):
+        texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
+        data = self._vectorizer.transform(texts)
+        if self.selector:
+            data = self.selector.transform(data).astype('float32')
+        return tf.data.Dataset.from_tensor_slices(data)

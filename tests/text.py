@@ -2,6 +2,7 @@ import numpy as np
 
 from tensorflow.python.keras.preprocessing.text import Tokenizer
 
+
 texts = ['The cat sat on the mat.',
          'The dog sat on the log.',
          'Dogs and cats living together.']

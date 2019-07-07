@@ -13,11 +13,21 @@ def test_normalize():
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
-def test_tokenize():
+def test_sequence():
     texts = ['The cat sat on the mat.',
              'The dog sat on the log.',
              'Dogs and cats living together.']
-    tokenize = processor.Tokenize()
+    tokenize = processor.TextToSequenceVector()
+    dataset = tf.data.Dataset.from_tensor_slices(texts)
+    new_dataset = tokenize.fit_transform(kerastuner.HyperParameters(), dataset)
+    assert isinstance(new_dataset, tf.data.Dataset)
+
+
+def test_ngram():
+    texts = ['The cat sat on the mat.',
+             'The dog sat on the log.',
+             'Dogs and cats living together.']
+    tokenize = processor.TextToNgramVector()
     dataset = tf.data.Dataset.from_tensor_slices(texts)
     new_dataset = tokenize.fit_transform(kerastuner.HyperParameters(), dataset)
     assert isinstance(new_dataset, tf.data.Dataset)
