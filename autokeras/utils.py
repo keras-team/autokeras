@@ -110,3 +110,7 @@ def prepare_model_input(x=None, y=None, validation_data=None, batch_size=32):
         (tuple(x), tuple(y))).batch(batch_size), tf.data.Dataset.zip(
         (tuple(validation_data[0]),
          tuple(validation_data[1]))).batch(batch_size)
+
+
+def is_label(y):
+    return len(y.flatten()) == len(y) and len(set(y.flatten())) > 2

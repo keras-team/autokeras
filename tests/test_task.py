@@ -57,3 +57,11 @@ def test_text_classifier(tmp_dir):
     clf = ak.TextClassifier(directory=tmp_dir, max_trials=2)
     clf.fit(train_x, train_y, epochs=2, validation_split=0.2)
     assert clf.predict(test_x).shape == (len(train_x), 1)
+
+
+def test_text_regressor(tmp_dir):
+    (train_x, train_y), (test_x, test_y) = imdb_raw()
+    train_y = np.random.rand(100)
+    clf = ak.TextRegressor(directory=tmp_dir, max_trials=2)
+    clf.fit(train_x, train_y, epochs=2, validation_split=0.2)
+    assert clf.predict(test_x).shape == (len(train_x), 1)

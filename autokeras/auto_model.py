@@ -7,7 +7,8 @@ from tensorflow.python.util import nest
 
 from autokeras.hypermodel import processor
 from autokeras.hypermodel import hyper_head
-from autokeras import utils, tuner
+from autokeras import utils
+from autokeras import tuner
 from autokeras import const
 from autokeras import meta_model
 
@@ -345,7 +346,7 @@ class AutoModelBase(kerastuner.HyperModel):
         for temp_y, output_node in zip(y, self.outputs):
             head = output_node.in_hypermodels[0]
             if (isinstance(head, hyper_head.ClassificationHead) and
-                    self._is_label(temp_y)):
+                    utils.is_label(temp_y)):
                 label_encoder = processor.OneHotEncoder()
                 label_encoder.fit(y)
                 new_y.append(label_encoder.transform(y))
@@ -363,10 +364,6 @@ class AutoModelBase(kerastuner.HyperModel):
             else:
                 new_y.append(temp_y)
         return new_y
-
-    @staticmethod
-    def _is_label(y):
-        return len(y.flatten()) == len(y) and len(set(y.flatten())) > 2
 
 
 class GraphAutoModel(AutoModelBase):

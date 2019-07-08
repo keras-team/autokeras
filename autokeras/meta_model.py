@@ -4,8 +4,11 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import hyper_node, processor
+from autokeras import utils
+from autokeras.hypermodel import hyper_node
+from autokeras.hypermodel import hyper_head
 from autokeras.hypermodel import hyper_block
+from autokeras.hypermodel import processor
 
 
 def get_assembler(input_node):
@@ -58,7 +61,8 @@ class TextAssembler(Assembler):
         sw_ratio = self.sw_ratio(x)
         if isinstance(input_node, hyper_node.TextNode):
             if sw_ratio < 1500:
-                output_node = processor.TextToNgramVector()(output_node)
+                output_node = processor.TextToNgramVector(
+                    labels=self._get_labels(y, outputs))(output_node)
                 output_node = hyper_block.DenseBlock()(output_node)
             else:
                 output_node = processor.TextToSequenceVector()(output_node)
@@ -77,6 +81,22 @@ class TextAssembler(Assembler):
         sequences = tokenizer.texts_to_sequences(x)
         num_words_per_sample = statistics.mean([len(seq) for seq in sequences])
         return num_samples / num_words_per_sample
+
+    @staticmethod
+    def _get_labels(y, outputs):
+        y = nest.flatten(y)
+        outputs = nest.flatten(outputs)
+        labels = None
+        for temp_y, output_block in zip(y, outputs):
+            if isinstance(output_block, hyper_head.ClassificationHead):
+                labels = temp_y
+                break
+        if labels is None:
+            return None
+        if utils.is_label(labels):
+            return labels
+        labels = np.argmax(labels, axis=0)
+        return labels
 
 
 class ImageAssembler(Assembler):
