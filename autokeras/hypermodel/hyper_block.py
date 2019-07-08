@@ -463,6 +463,14 @@ class TemporalReduction(HyperBlock):
 
 
 class EmbeddingBlock(HyperBlock):
+    """Word embedding block for sequences.
+
+    The input should be tokenized sequences with the same length, where each element
+    of a sequence should be the index of the word.
+
+    Attributes:
+        pretrained: Boolean. Use pretrained word embedding.
+    """
 
     def __init__(self, pretrained=None, **kwargs):
         super().__init__(**kwargs)

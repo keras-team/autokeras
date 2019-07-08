@@ -110,6 +110,7 @@ class Normalize(HyperPreprocessor):
 
 
 class TextToSequenceVector(HyperPreprocessor):
+    """Convert raw texts to sequences of word indices."""
     def __init__(self, max_len=None, **kwargs):
         super().__init__(**kwargs)
         self.max_len = max_len
@@ -132,6 +133,7 @@ class TextToSequenceVector(HyperPreprocessor):
 
 
 class TextToNgramVector(HyperPreprocessor):
+    """Convert raw texts to n-gram vectors."""
     def __init__(self, labels=None, **kwargs):
         super().__init__(**kwargs)
         self._vectorizer = text.TfidfVectorizer(

@@ -252,6 +252,8 @@ class AutoModel(kerastuner.HyperModel):
         # Initialize HyperGraph model
         x = nest.flatten(x)
         y = nest.flatten(y)
+        # TODO: check x, y types to be numpy.ndarray or tf.data.Dataset.
+        # TODO: y.reshape(-1, 1) if needed.
         y = self._label_encoding(y)
         # Split the data with validation_split
         if (all([isinstance(temp_x, np.ndarray) for temp_x in x]) and
