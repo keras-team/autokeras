@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.feature_extraction import text
 from sklearn import feature_selection
 
+from autokeras import const
 from autokeras.hypermodel import hyper_block as hb_module
 
 
@@ -112,7 +113,8 @@ class TextToSequenceVector(HyperPreprocessor):
     def __init__(self, max_len=None, **kwargs):
         super().__init__(**kwargs)
         self.max_len = max_len
-        self._tokenizer = tf.keras.preprocessing.text.Tokenizer(num_words=20000)
+        self._tokenizer = tf.keras.preprocessing.text.Tokenizer(
+            num_words=const.Constant.VOCABULARY_SIZE)
 
     def fit(self, hp, inputs):
         texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
@@ -140,7 +142,7 @@ class TextToNgramVector(HyperPreprocessor):
             min_df=2)
         self.selector = None
         self.labels = labels
-        self._max_features = 20000
+        self._max_features = const.Constant.VOCABULARY_SIZE
         if not labels:
             self._vectorizer.max_features = self._max_features
 

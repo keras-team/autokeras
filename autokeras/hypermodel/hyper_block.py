@@ -156,29 +156,46 @@ class ImageBlock(HyperBlock):
 
 class ConvBlock(HyperBlock):
 
+    def __init__(self, separable=None, **kwargs):
+        super().__init__(**kwargs)
+        self.separable = separable
+
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
 
+        separable = self.separable
+        if separable is None:
+            separable = hp.Choice('separable', [True, False], default=False)
+        if separable:
+            conv = utils.get_sep_conv(input_node.shape)
+        else:
+            conv = utils.get_conv(input_node.shape)
+        pool = utils.get_max_pooling(input_node.shape)
+        dropout = utils.get_dropout(input_node.shape)
         kernel_size = hp.Choice('kernel_size', [3, 5, 7], default=3)
+        dropout_rate = hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5)
+
         for i in range(hp.Choice('num_blocks', [1, 2, 3], default=2)):
-            output_node = tf.keras.layers.Conv2D(
+            if dropout_rate > 0:
+                output_node = dropout(dropout_rate)(output_node)
+            output_node = conv(
                 hp.Choice('filters_{i}_1'.format(i=i),
                           [16, 32, 64],
                           default=32),
                 kernel_size,
                 padding=self._get_padding(kernel_size, output_node))(output_node)
 
-            output_node = tf.keras.layers.Conv2D(
+            output_node = conv(
                 hp.Choice('filters_{i}_2'.format(i=i),
                           [16, 32, 64],
                           default=32),
                 kernel_size,
                 padding=self._get_padding(kernel_size, output_node))(output_node)
 
-            output_node = tf.keras.layers.MaxPool2D(
+            output_node = pool(
                 kernel_size - 1,
                 padding=self._get_padding(kernel_size - 1, output_node))(output_node)
         return output_node
@@ -406,10 +423,10 @@ class SpatialReduction(HyperBlock):
         if reduction_type == 'flatten':
             output_node = Flatten().build(hp, output_node)
         elif reduction_type == 'global_max':
-            output_node = utils.get_global_max_pooling_layer(
+            output_node = utils.get_global_max_pooling(
                 output_node.shape)()(output_node)
         elif reduction_type == 'global_ave':
-            output_node = utils.get_global_average_pooling_layer(
+            output_node = utils.get_global_average_pooling(
                 output_node.shape)()(output_node)
         return output_node
 
@@ -443,6 +460,38 @@ class TemporalReduction(HyperBlock):
             output_node = tf.math.reduce_min(output_node, axis=-2)
 
         return output_node
+
+
+class EmbeddingBlock(HyperBlock):
+
+    def __init__(self, pretrained=None, **kwargs):
+        super().__init__(**kwargs)
+        self.pretrained = pretrained
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        pretrained = self.pretrained
+        if pretrained is None:
+            pretrained = hp.Choice('pretrained_embedding',
+                                   [True, False],
+                                   default=False)
+        embedding_dim = hp.Choice('embedding_dim',
+                                  [32, 64, 128, 256, 512],
+                                  default=128)
+        if pretrained:
+            # TODO: load from pretrained weights
+            layer = tf.keras.layers.Embedding(
+                input_dim=input_node.shape[1],
+                output_dim=embedding_dim,
+                input_length=const.Constant.VOCABULARY_SIZE)
+            # weights=[embedding_matrix],
+            # trainable=is_embedding_trainable)
+        else:
+            layer = tf.keras.layers.Embedding(
+                input_dim=input_node.shape[1],
+                output_dim=embedding_dim,
+                input_length=const.Constant.VOCABULARY_SIZE)
+        return layer(input_node)
 
 
 class TextBlock(RNNBlock):

@@ -3,16 +3,40 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 
-def get_global_average_pooling_layer(shape):
+def get_global_average_pooling(shape):
     return [tf.keras.layers.GlobalAveragePooling1D,
             tf.keras.layers.GlobalAveragePooling2D,
             tf.keras.layers.GlobalAveragePooling3D][len(shape) - 3]
 
 
-def get_global_max_pooling_layer(shape):
+def get_global_max_pooling(shape):
     return [tf.keras.layers.GlobalMaxPool1D,
             tf.keras.layers.GlobalMaxPool2D,
             tf.keras.layers.GlobalMaxPool3D][len(shape) - 3]
+
+
+def get_max_pooling(shape):
+    return [tf.keras.layers.MaxPool1D,
+            tf.keras.layers.MaxPool2D,
+            tf.keras.layers.MaxPool3D][len(shape) - 3]
+
+
+def get_conv(shape):
+    return [tf.keras.layers.Conv1D,
+            tf.keras.layers.Conv2D,
+            tf.keras.layers.Conv3D][len(shape) - 3]
+
+
+def get_sep_conv(shape):
+    return [tf.keras.layers.SeparableConv1D,
+            tf.keras.layers.SeparableConv2D,
+            tf.keras.layers.Conv3D][len(shape) - 3]
+
+
+def get_dropout(shape):
+    return [tf.keras.layers.SpatialDropout1D,
+            tf.keras.layers.SpatialDropout2D,
+            tf.keras.layers.SpatialDropout3D][len(shape) - 3]
 
 
 def validate_num_inputs(inputs, num):
@@ -55,7 +79,6 @@ def dataset_shape(dataset):
 
 
 def inputs_to_datasets(x):
-    x = nest.flatten(x)
     new_x = []
     for temp_x in x:
         if isinstance(temp_x, np.ndarray):
@@ -84,5 +107,5 @@ def prepare_model_input(x=None, y=None, validation_data=None, batch_size=32):
         return tf.data.Dataset.zip((tuple(x), tuple(y))).batch(batch_size), None
     return tf.data.Dataset.zip(
         (tuple(x), tuple(y))).batch(batch_size), tf.data.Dataset.zip(
-               (tuple(validation_data[0]),
-                tuple(validation_data[1]))).batch(batch_size)
+        (tuple(validation_data[0]),
+         tuple(validation_data[1]))).batch(batch_size)

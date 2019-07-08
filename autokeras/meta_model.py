@@ -25,7 +25,11 @@ def assemble(inputs, outputs, x, y):
     middle_nodes = []
     for input_node, temp_x in zip(inputs, x):
         assembler = get_assembler(input_node)
-        middle_nodes.append(assembler.assemble(temp_x, input_node, outputs, y))
+        middle_nodes.append(assembler.assemble(
+            x=temp_x,
+            input_node=input_node,
+            y=y,
+            outputs=outputs))
 
     if len(middle_nodes) > 1:
         output_node = hyper_block.Merge()(middle_nodes)
@@ -43,19 +47,24 @@ def assemble(inputs, outputs, x, y):
 
 class Assembler(object):
 
-    def assemble(self, x, input_node, outputs, y):
+    def assemble(self, x, input_node, y, outputs):
         raise NotImplementedError
 
 
 class TextAssembler(Assembler):
 
-    def assemble(self, x, input_node, outputs, y):
+    def assemble(self, x, input_node, y, outputs):
         output_node = input_node
+        sw_ratio = self.sw_ratio(x)
         if isinstance(input_node, hyper_node.TextNode):
-            if self.sw_ratio(x) < 1500:
-                processor.TextToNgramVector()
+            if sw_ratio < 1500:
+                output_node = processor.TextToNgramVector()(output_node)
+                output_node = hyper_block.DenseBlock()(output_node)
             else:
-                pass
+                output_node = processor.TextToSequenceVector()(output_node)
+                output_node = hyper_block.EmbeddingBlock(
+                    pretrained=(sw_ratio < 15000))(output_node)
+                output_node = hyper_block.ConvBlock()(output_node)
         return output_node
 
     @staticmethod
@@ -71,15 +80,15 @@ class TextAssembler(Assembler):
 
 
 class ImageAssembler(Assembler):
-    def assemble(self, x, input_node):
-        pass
+    def assemble(self, x, input_node, y, outputs):
+        return hyper_block.ImageBlock()(input_node)
 
 
 class StructuredAssembler(Assembler):
-    def assemble(self, x, input_node):
+    def assemble(self, x, input_node, y, outputs):
         pass
 
 
 class TimeSeriesAssembler(Assembler):
-    def assemble(self, x, input_node):
+    def assemble(self, x, input_node, y, outputs):
         pass

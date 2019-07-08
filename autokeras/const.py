@@ -14,4 +14,5 @@ class Constant(object):
         'lstm': tf.keras.layers.LSTM
     }
 
-    # N-gram Vectorization parameters
+    # Text
+    VOCABULARY_SIZE = 20000
