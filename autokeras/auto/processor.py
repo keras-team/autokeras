@@ -156,11 +156,11 @@ class ImageAugment(Normalizer):
                 'brightness_range')
             image = tf.image.random_brightness(image, min_value, max_value)
 
-        if saturation_range:
+        '''if saturation_range:
             min_value, max_value = self.__get_min_and_max(
                 saturation_range,
                 'saturation_range')
-            image = tf.image.random_saturation(image, min_value, max_value)
+            image = tf.image.random_saturation(image, min_value, max_value)'''
         if contrast_range:
             min_value, max_value = self.__get_min_and_max(
                 contrast_range,
@@ -174,7 +174,7 @@ class ImageAugment(Normalizer):
             seed = np.random.randint(random_crop_seed)
             target_shape = (target_height, target_width)
             image = tf.image.resize(
-                tf.random_crop(image, size=crop_size, seed=seed),
+                tf.image.random_crop(image, size=crop_size, seed=seed),
                 size=target_shape)
 
         if horizontal_flip:
