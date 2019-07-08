@@ -147,7 +147,9 @@ class TextToNgramVector(HyperPreprocessor):
             self._vectorizer.max_features = self._max_features
 
     def fit(self, hp, inputs):
-        texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
+        texts = np.array(
+            [line.decode('utf-8')
+             for line in tfds.as_numpy(inputs)]).astype(np.str)
         self._vectorizer.fit(texts)
         data = self._vectorizer.transform(texts)
         if self.labels:
@@ -157,7 +159,9 @@ class TextToNgramVector(HyperPreprocessor):
             self.selector.fit(data, self.labels)
 
     def transform(self, hp, inputs):
-        texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
+        texts = np.array(
+            [line.decode('utf-8')
+             for line in tfds.as_numpy(inputs)]).astype(np.str)
         data = self._vectorizer.transform(texts).toarray()
         if self.selector:
             data = self.selector.transform(data).astype('float32')

@@ -79,6 +79,7 @@ def dataset_shape(dataset):
 
 
 def inputs_to_datasets(x):
+    x = nest.flatten(x)
     new_x = []
     for temp_x in x:
         if isinstance(temp_x, np.ndarray):

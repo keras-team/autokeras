@@ -44,7 +44,7 @@ def imdb_raw(num_instances=100):
 
     id_to_word = {value: key for key, value in word_to_id.items()}
     x_train = list(map(lambda sentence: ' '.join(
-        id_to_word[i] for i in sentence), x_train)),
+        id_to_word[i] for i in sentence), x_train))
     x_test = list(map(lambda sentence: ' '.join(
         id_to_word[i] for i in sentence), x_test))
     x_train = np.array(x_train, dtype=np.str)
