@@ -49,12 +49,29 @@ def assemble(inputs, outputs, x, y):
 
 
 class Assembler(object):
+    """Assembles the HyperModels together in AutoModel for different inputs."""
 
     def assemble(self, x, input_node, y, outputs):
+        """Based on the data and node types to select the HyperBlocks.
+
+        Args:
+            x: tf.data.Dataset. Data for the input_node.
+            input_node: HyperNode. The input node for the AutoModel.
+            y: A list of tf.data.Dataset. All the targets for the AutoModel.
+            outputs: A list of HyperHead. The heads of the model.
+
+        Returns:
+            A HyperNode. The output node of the assembled model.
+        """
         raise NotImplementedError
 
 
 class TextAssembler(Assembler):
+    """Assemble the HyperBlocks for text input.
+
+    Implemented according to Google Developer, Machine Learning Guide, Text
+    Classification, Step 2.5: Choose a Model.
+    """
 
     def assemble(self, x, input_node, y, outputs):
         output_node = input_node
@@ -68,13 +85,13 @@ class TextAssembler(Assembler):
                 output_node = processor.TextToSequenceVector()(output_node)
                 output_node = hyper_block.EmbeddingBlock(
                     pretrained=(sw_ratio < 15000))(output_node)
-                output_node = hyper_block.ConvBlock()(output_node)
+                output_node = hyper_block.ConvBlock(separable=True)(output_node)
         return output_node
 
     @staticmethod
     def sw_ratio(x):
-        if isinstance(x, tf.data.Dataset):
-            x = np.array(list(tfds.as_numpy(x))).astype(np.str)
+        x = np.array([line.decode('utf-8')
+                      for line in tfds.as_numpy(x)]).astype(np.str)
         num_samples = len(x)
         tokenizer = tf.keras.preprocessing.text.Tokenizer()
         tokenizer.fit_on_texts(x)
@@ -93,6 +110,7 @@ class TextAssembler(Assembler):
                 break
         if labels is None:
             return None
+        labels = np.array(list(tfds.as_numpy(labels)))
         if utils.is_label(labels):
             return labels
         labels = np.argmax(labels, axis=0)

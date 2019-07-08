@@ -13,7 +13,25 @@ from autokeras import const
 from autokeras import meta_model
 
 
-class AutoModelBase(kerastuner.HyperModel):
+class AutoModel(kerastuner.HyperModel):
+    """ A HyperModel defined by inputs and outputs.
+
+    AutoModel is a subclass of HyperModel. Besides the HyperModel properties,
+    it also has a tuner to tune the HyperModel. The user can use it in a similar
+    way to a Keras model since it also has `fit()` and  `predict()` methods.
+
+    The user can specify the inputs and outputs of the AutoModel. It will infer
+    the rest of the high-level neural architecture.
+
+    Attributes:
+        inputs: A list of or a HyperNode instance.
+            The input node(s) of a the AutoModel.
+        outputs: A list of or a HyperHead instance.
+            The output head(s) of the AutoModel.
+        max_trials: Int. The maximum number of different models to try.
+        directory: String. The path to a directory for storing the search outputs.
+    """
+
     def __init__(self,
                  inputs,
                  outputs,
@@ -158,6 +176,14 @@ class AutoModelBase(kerastuner.HyperModel):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
 
+    def _meta_build(self, x, y):
+        self.outputs = meta_model.assemble(inputs=self.inputs,
+                                           outputs=self.outputs,
+                                           x=x,
+                                           y=y)
+
+        self._build_network()
+
     def fit(self,
             x=None,
             y=None,
@@ -192,33 +218,12 @@ class AutoModelBase(kerastuner.HyperModel):
                 For the first two cases, `batch_size` must be provided.
                 For the last case, `validation_steps` must be provided.
         """
-        # Initialize HyperGraph model
-        x = nest.flatten(x)
-        y = nest.flatten(y)
+        x, y, validation_data = self.prepare_data(x=x,
+                                                  y=y,
+                                                  validation_data=validation_data,
+                                                  validation_split=validation_split)
 
-        y = self._label_encoding(y)
-        # TODO: Set the shapes only if they are not provided by the user when
-        #  initiating the HyperHead or Block.
-        for y_input, output_node in zip(y, self.outputs):
-            if len(y_input.shape) == 1:
-                y_input = np.reshape(y_input, y_input.shape + (1,))
-            output_node.shape = y_input.shape[1:]
-            output_node.in_hypermodels[0].output_shape = output_node.shape
-
-        # Split the data with validation_split
-        if (all([isinstance(temp_x, np.ndarray) for temp_x in x]) and
-                all([isinstance(temp_y, np.ndarray) for temp_y in y]) and
-                validation_data is None and
-                validation_split):
-            (x, y), (x_val, y_val) = utils.split_train_to_valid(
-                x, y,
-                validation_split)
-            validation_data = x_val, y_val
-
-        # TODO: Handle other types of input, zip dataset, tensor, dict.
-        # Prepare the dataset
-        x, y, validation_data = utils.prepare_preprocess(x, y, validation_data)
-
+        self._meta_build(x, y)
         self.preprocess(hp=kerastuner.HyperParameters(),
                         x=x,
                         y=y,
@@ -235,6 +240,32 @@ class AutoModelBase(kerastuner.HyperModel):
                           y=y,
                           validation_data=validation_data,
                           **kwargs)
+
+    def prepare_data(self, x, y, validation_data, validation_split):
+        # Initialize HyperGraph model
+        x = nest.flatten(x)
+        y = nest.flatten(y)
+        y = self._label_encoding(y)
+        # TODO: Set the shapes only if they are not provided by the user when
+        #  initiating the HyperHead or Block.
+        for y_input, output_node in zip(y, self.outputs):
+            if len(y_input.shape) == 1:
+                y_input = np.reshape(y_input, y_input.shape + (1,))
+            output_node.shape = y_input.shape[1:]
+            output_node.in_hypermodels[0].output_shape = output_node.shape
+        # Split the data with validation_split
+        if (all([isinstance(temp_x, np.ndarray) for temp_x in x]) and
+                all([isinstance(temp_y, np.ndarray) for temp_y in y]) and
+                validation_data is None and
+                validation_split):
+            (x, y), (x_val, y_val) = utils.split_train_to_valid(
+                x, y,
+                validation_split)
+            validation_data = x_val, y_val
+        # TODO: Handle other types of input, zip dataset, tensor, dict.
+        # Prepare the dataset
+        x, y, validation_data = utils.prepare_preprocess(x, y, validation_data)
+        return x, y, validation_data
 
     def predict(self, x, batch_size=32, **kwargs):
         """Predict the output for a given testing data. """
@@ -366,7 +397,7 @@ class AutoModelBase(kerastuner.HyperModel):
         return new_y
 
 
-class GraphAutoModel(AutoModelBase):
+class GraphAutoModel(AutoModel):
     """A HyperModel defined by a graph of HyperBlocks.
 
     GraphAutoModel is a subclass of HyperModel. Besides the HyperModel properties,
@@ -391,44 +422,5 @@ class GraphAutoModel(AutoModelBase):
         super(GraphAutoModel, self).__init__(*args, **kwargs)
         self._build_network()
 
-
-class AutoModel(AutoModelBase):
-    """ A HyperModel defined by inputs and outputs.
-
-    AutoModel is a subclass of HyperModel. Besides the HyperModel properties,
-    it also has a tuner to tune the HyperModel. The user can use it in a similar
-    way to a Keras model since it also has `fit()` and  `predict()` methods.
-
-    The user can specify the inputs and outputs of the AutoModel. It will infer
-    the rest of the high-level neural architecture.
-
-    Attributes:
-        inputs: A list of or a HyperNode instance.
-            The input node(s) of a the AutoModel.
-        outputs: A list of or a HyperHead instance.
-            The output head(s) of the AutoModel.
-        max_trials: Int. The maximum number of different models to try.
-        directory: String. The path to a directory for storing the search outputs.
-    """
-
-    def __init__(self,
-                 inputs,
-                 outputs,
-                 **kwargs):
-        super().__init__(inputs, outputs, **kwargs)
-
-    def fit(self,
-            x=None,
-            y=None,
-            validation_data=None,
-            **kwargs):
-        self.outputs = meta_model.assemble(inputs=self.inputs,
-                                           outputs=self.outputs,
-                                           x=x,
-                                           y=y)
-
-        self._build_network()
-        super(AutoModel, self).fit(x=x,
-                                   y=y,
-                                   validation_data=validation_data,
-                                   **kwargs)
+    def _meta_build(self, x, y):
+        pass
