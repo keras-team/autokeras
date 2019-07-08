@@ -19,7 +19,7 @@ def test_image_classifier(tmp_dir):
 
 def test_image_regressor(tmp_dir):
     x_train = np.random.rand(100, 32, 32, 3)
-    y_train = np.random.rand(100)
+    y_train = np.random.rand(100, 1)
     clf = ak.ImageRegressor(directory=tmp_dir, max_trials=2)
     clf.fit(x_train, y_train, epochs=2, validation_split=0.2)
     assert clf.predict(x_train).shape == (100, 1)
@@ -32,9 +32,9 @@ def imdb_raw(num_instances=100):
         num_words=1000,
         index_from=index_offset)
     x_train = x_train[:num_instances]
-    y_train = y_train[:num_instances]
+    y_train = y_train[:num_instances].reshape(-1, 1)
     x_test = x_test[:num_instances]
-    y_test = y_test[:num_instances]
+    y_test = y_test[:num_instances].reshape(-1, 1)
 
     word_to_id = tf.keras.datasets.imdb.get_word_index()
     word_to_id = {k: (v + index_offset) for k, v in word_to_id.items()}
@@ -61,7 +61,7 @@ def test_text_classifier(tmp_dir):
 
 def test_text_regressor(tmp_dir):
     (train_x, train_y), (test_x, test_y) = imdb_raw()
-    train_y = np.random.rand(100)
+    train_y = np.random.rand(100, 1)
     clf = ak.TextRegressor(directory=tmp_dir, max_trials=2)
     clf.fit(train_x, train_y, epochs=2, validation_split=0.2)
     assert clf.predict(test_x).shape == (len(train_x), 1)

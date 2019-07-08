@@ -10,7 +10,7 @@ def tmp_dir(tmpdir_factory):
 
 def test_graph_auto_model_basic(tmp_dir):
     x_train = np.random.rand(100, 32)
-    y_train = np.random.rand(100)
+    y_train = np.random.rand(100, 1)
 
     input_node = ak.Input()
     output_node = input_node
@@ -29,7 +29,7 @@ def test_graph_auto_model_basic(tmp_dir):
 
 def test_merge(tmp_dir):
     x_train = np.random.rand(100, 33)
-    y_train = np.random.rand(100)
+    y_train = np.random.rand(100, 1)
 
     input_node1 = ak.Input()
     input_node2 = ak.Input()
@@ -54,7 +54,7 @@ def test_merge(tmp_dir):
 
 def test_preprocessing(tmp_dir):
     x_train = np.random.rand(100, 32)
-    y_train = np.random.rand(100)
+    y_train = np.random.rand(100, 1)
 
     input_node1 = ak.Input()
     temp_node1 = ak.Normalize()(input_node1)
@@ -132,7 +132,7 @@ def test_input_missing(tmp_dir):
 
 def test_auto_model_basic(tmp_dir):
     x_train = np.random.rand(100, 32, 32, 3)
-    y_train = np.random.rand(100)
+    y_train = np.random.rand(100, 1)
 
     auto_model = ak.AutoModel(ak.ImageInput(),
                               ak.RegressionHead(),

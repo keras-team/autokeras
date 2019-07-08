@@ -6,6 +6,7 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras.hypermodel import processor
+from autokeras.hypermodel import hyper_node
 from autokeras.hypermodel import hyper_head
 from autokeras import utils
 from autokeras import tuner
@@ -61,8 +62,7 @@ class AutoModel(kerastuner.HyperModel):
                 continue
             temp_inputs = [real_nodes[self._node_to_id[input_node]]
                            for input_node in hypermodel.inputs]
-            outputs = hypermodel.build(hp,
-                                       inputs=temp_inputs)
+            outputs = hypermodel.build(hp, inputs=temp_inputs)
             outputs = nest.flatten(outputs)
             for output_node, real_output_node in zip(hypermodel.outputs, outputs):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
@@ -222,8 +222,8 @@ class AutoModel(kerastuner.HyperModel):
                                                   y=y,
                                                   validation_data=validation_data,
                                                   validation_split=validation_split)
-
         self._meta_build(x, y)
+        self._set_output_shapes(y)
         self.preprocess(hp=kerastuner.HyperParameters(),
                         x=x,
                         y=y,
@@ -241,18 +241,18 @@ class AutoModel(kerastuner.HyperModel):
                           validation_data=validation_data,
                           **kwargs)
 
+    def _set_output_shapes(self, y):
+        # TODO: Set the shapes only if they are not provided by the user when
+        #  initiating the HyperHead or Block.
+        for y_input, output_node in zip(y, self.outputs):
+            output_node.shape = utils.dataset_shape(y_input)
+            output_node.in_hypermodels[0].output_shape = output_node.shape
+
     def prepare_data(self, x, y, validation_data, validation_split):
         # Initialize HyperGraph model
         x = nest.flatten(x)
         y = nest.flatten(y)
         y = self._label_encoding(y)
-        # TODO: Set the shapes only if they are not provided by the user when
-        #  initiating the HyperHead or Block.
-        for y_input, output_node in zip(y, self.outputs):
-            if len(y_input.shape) == 1:
-                y_input = np.reshape(y_input, y_input.shape + (1,))
-            output_node.shape = y_input.shape[1:]
-            output_node.in_hypermodels[0].output_shape = output_node.shape
         # Split the data with validation_split
         if (all([isinstance(temp_x, np.ndarray) for temp_x in x]) and
                 all([isinstance(temp_y, np.ndarray) for temp_y in y]) and
@@ -375,7 +375,9 @@ class AutoModel(kerastuner.HyperModel):
         self._label_encoders = []
         new_y = []
         for temp_y, output_node in zip(y, self.outputs):
-            head = output_node.in_hypermodels[0]
+            head = output_node
+            if isinstance(head, hyper_node.Node):
+                head = output_node.in_hypermodels[0]
             if (isinstance(head, hyper_head.ClassificationHead) and
                     utils.is_label(temp_y)):
                 label_encoder = processor.OneHotEncoder()
