@@ -95,21 +95,21 @@ class ImageAugment(Normalizer):
         return min_value, max_value
 
     def transform(self,
-                      x_train,
-                      rotation_range=0,  # either 0, 90, 180, 270
-                      random_crop_height=0,  # fraction 0-1
-                      random_crop_width=0,  # fraction 0-1
-                      random_crop_seed=0,   # positice number
-                      brightness_range=0.,  # fraction 0-1  [X]
-                      saturation_range=0.,  # fraction 0-1  [X]
-                      contrast_range=0.,  # fraction 0-1  [X]
-                      horizontal_flip=False,  # boolean  [X]
-                      vertical_flip=False,
-                      translation_top=0,  # translation_top are the number of pixels.
-                      translation_bottom=0,
-                      translation_left=0,
-                      translation_right=0,
-                      gaussian_noise=False):  # boolean  [X]
+                  x_train,
+                  rotation_range=0,  # either 0, 90, 180, 270
+                  random_crop_height=0,  # fraction 0-1
+                  random_crop_width=0,  # fraction 0-1
+                  random_crop_seed=0,   # positice number
+                  brightness_range=0.,  # fraction 0-1  [X]
+                  saturation_range=0.,  # fraction 0-1  [X]
+                  contrast_range=0.,  # fraction 0-1  [X]
+                  horizontal_flip=False,  # boolean  [X]
+                  vertical_flip=False,
+                  translation_top=0,  # translation_top are the number of pixels.
+                  translation_bottom=0,
+                  translation_left=0,
+                  translation_right=0,
+                  gaussian_noise=False):  # boolean  [X]
         x_train = tf.convert_to_tensor(x_train)
         length_dim = len(x_train.shape)
         if length_dim != 4:
@@ -161,6 +161,7 @@ class ImageAugment(Normalizer):
                 saturation_range,
                 'saturation_range')
             image = tf.image.random_saturation(image, min_value, max_value)'''
+        
         if contrast_range:
             min_value, max_value = self.__get_min_and_max(
                 contrast_range,
