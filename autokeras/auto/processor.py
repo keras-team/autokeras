@@ -78,7 +78,7 @@ class Normalizer(object):
         data = (data - self.mean) / self.std
         return data
 
-    
+
 class ImageAugment(Normalizer):
     @staticmethod
     def __get_min_and_max(value, name):
@@ -161,7 +161,7 @@ class ImageAugment(Normalizer):
                 saturation_range,
                 'saturation_range')
             image = tf.image.random_saturation(image, min_value, max_value)'''
-        
+
         if contrast_range:
             min_value, max_value = self.__get_min_and_max(
                 contrast_range,
