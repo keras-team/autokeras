@@ -101,7 +101,7 @@ class ImageAugment(Normalizer):
                   random_crop_width=0,  # fraction 0-1
                   random_crop_seed=0,   # positice number
                   brightness_range=0.,  # fraction 0-1  [X]
-                  saturation_range=0.,  # fraction 0-1  [X]
+                  saturation_range=0.1,  # fraction 0-1  [X]
                   contrast_range=0.,  # fraction 0-1  [X]
                   horizontal_flip=False,  # boolean  [X]
                   vertical_flip=False,
@@ -156,11 +156,11 @@ class ImageAugment(Normalizer):
                 'brightness_range')
             image = tf.image.random_brightness(image, min_value, max_value)
 
-        '''if saturation_range:
+        if saturation_range:
             min_value, max_value = self.__get_min_and_max(
                 saturation_range,
                 'saturation_range')
-            image = tf.image.random_saturation(image, min_value, max_value)'''
+            image = tf.image.random_saturation(image, min_value, max_value)
 
         if contrast_range:
             min_value, max_value = self.__get_min_and_max(
