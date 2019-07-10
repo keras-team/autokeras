@@ -14,21 +14,25 @@ from autokeras.hypermodel import processor
 def assemble(inputs, outputs, dataset):
     inputs = nest.flatten(inputs)
     outputs = nest.flatten(outputs)
-    middle_nodes = []
-    for input_node, temp_x in zip(inputs, x):
-        middle_node = None
+    assemblers = []
+    for input_node in inputs:
         if isinstance(input_node, hyper_node.TextInput):
-            middle_node = text_assemble(x=temp_x,
-                                        input_node=input_node,
-                                        y=y,
-                                        outputs=outputs)
+            assemblers.append(TextAssembler())
         if isinstance(input_node, hyper_node.ImageInput):
-            pass
+            assemblers.append(ImageAssembler())
         if isinstance(input_node, hyper_node.StructuredInput):
-            pass
+            assemblers.append(StructuredAssembler())
         if isinstance(input_node, hyper_node.TimeSeriesInput):
-            pass
-        middle_nodes.append(middle_node)
+            assemblers.append(TimeSeriesAssembler())
+
+    # Iterate over the dataset to fit the assemblers.
+    for x, y in dataset:
+        for temp_x, assembler in zip(x, assemblers):
+            assembler.update(temp_x)
+
+    middle_nodes = []
+    for input_node, assembler in zip(inputs, assemblers):
+        middle_nodes.append(assembler.assemble(input_node))
 
     if len(middle_nodes) > 1:
         output_node = hyper_block.Merge()(middle_nodes)
@@ -59,25 +63,28 @@ class TextAssembler(Assembler):
         self._num_samples = 0
 
     def update(self, x):
+        """Update the assembler sample by sample.
+
+        Args:
+            x: tf.Tensor. A data instance from input dataset.
+        """
+        x = x.numpy().decode('utf-8')
         self._num_samples += 1
         tokenizer = tf.keras.preprocessing.text.Tokenizer()
         tokenizer.fit_on_texts([x])
-        self._num_words += len(tokenizer.texts_to_sequences([x]))
+        self._num_words += len(tokenizer.texts_to_sequences([x])[0])
 
     def sw_ratio(self):
-        return self._num_samples / self._num_words
+        return self._num_samples * self._num_samples / self._num_words
 
-    def text_assemble(self, input_node):
+    def assemble(self, input_node):
         """Assemble the HyperBlocks for text input.
 
         Implemented according to Google Developer, Machine Learning Guide, Text
         Classification, Step 2.5: Choose a Model.
 
         Args:
-            x: tf.data.Dataset. Data for the input_node.
             input_node: HyperNode. The input node for the AutoModel.
-            y: A list of tf.data.Dataset. All the targets for the AutoModel.
-            outputs: A list of HyperHead. The heads of the model.
 
         Returns:
             A HyperNode. The output node of the assembled model.
@@ -94,3 +101,15 @@ class TextAssembler(Assembler):
                     pretrained=(ratio < 15000))(output_node)
                 output_node = hyper_block.ConvBlock(separable=True)(output_node)
         return output_node
+
+
+class ImageAssembler(Assembler):
+    pass
+
+
+class StructuredAssembler(Assembler):
+    pass
+
+
+class TimeSeriesAssembler(Assembler):
+    pass
