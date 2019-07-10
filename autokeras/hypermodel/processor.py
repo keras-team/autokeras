@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.feature_extraction import text
 from sklearn import feature_selection
 
-from autokeras import const
+from autokeras import const, utils
 from autokeras.hypermodel import hyper_block as hb_module
 
 
@@ -13,14 +13,10 @@ class HyperPreprocessor(hb_module.HyperBlock):
     def build(self, hp, inputs=None):
         return inputs
 
-    def fit_transform(self, hp, inputs):
-        self.fit(hp, inputs)
-        return self.transform(hp, inputs)
-
     def fit(self, hp, inputs):
         raise NotImplementedError
 
-    def transform(self, hp, inputs):
+    def transform(self, x, hp):
         raise NotImplementedError
 
 
@@ -83,17 +79,24 @@ class Normalize(HyperPreprocessor):
         self.mean = None
         self.std = None
 
-    def fit(self, hp, inputs):
-        data = np.array(list(tfds.as_numpy(inputs)))
-        axis = tuple(range(len(data.shape) - 1))
-        self.mean = np.mean(data,
-                            axis=axis,
-                            keepdims=True).flatten()
-        self.std = np.std(data,
-                          axis=axis,
-                          keepdims=True).flatten()
+    def fit(self, dataset, hp):
+        shape = utils.dataset_shape(dataset)
+        axis = tuple(range(len(shape) - 1))
 
-    def transform(self, hp, inputs):
+        def reduce_func(old_state, x):
+            current_sum, current_square_sum, count = old_state
+            current_sum += x
+            current_square_sum += tf.square(x)
+            count += 1
+            return current_sum, current_square_sum, count
+
+        total_sum, total_square_sum, num_instances = dataset.reduce(
+            (np.zeros(shape), np.zeros(shape), np.float64(0)), reduce_func)
+        self.mean = tf.reduce_mean(total_sum / num_instances, axis=axis)
+        square_mean = tf.reduce_mean(total_square_sum / num_instances, axis=axis)
+        self.std = tf.sqrt(square_mean - tf.square(self.mean))
+
+    def transform(self, x, hp):
         """ Transform the test data, perform normalization.
 
         # Arguments
@@ -102,15 +105,12 @@ class Normalize(HyperPreprocessor):
         # Returns
             A DataLoader instance.
         """
-
-        # channel-wise normalize the image
-        data = np.array(list(tfds.as_numpy(inputs)))
-        data = (data - self.mean) / self.std
-        return tf.data.Dataset.from_tensor_slices(data)
+        return (x - self.mean) / self.std
 
 
 class TextToSequenceVector(HyperPreprocessor):
     """Convert raw texts to sequences of word indices."""
+
     def __init__(self, max_len=None, **kwargs):
         super().__init__(**kwargs)
         self.max_len = max_len
@@ -134,7 +134,8 @@ class TextToSequenceVector(HyperPreprocessor):
 
 class TextToNgramVector(HyperPreprocessor):
     """Convert raw texts to n-gram vectors."""
-    def __init__(self, labels=None, **kwargs):
+
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._vectorizer = text.TfidfVectorizer(
             ngram_range=(1, 2),
@@ -143,10 +144,9 @@ class TextToNgramVector(HyperPreprocessor):
             analyzer='word',
             min_df=2)
         self.selector = None
-        self.labels = labels
+        self.labels = None
         self._max_features = const.Constant.VOCABULARY_SIZE
-        if not labels:
-            self._vectorizer.max_features = self._max_features
+        self._vectorizer.max_features = self._max_features
 
     def fit(self, hp, inputs):
         texts = np.array(

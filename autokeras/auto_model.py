@@ -1,3 +1,4 @@
+import functools
 import queue
 
 import kerastuner
@@ -176,11 +177,10 @@ class AutoModel(kerastuner.HyperModel):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
 
-    def _meta_build(self, x, y):
+    def _meta_build(self, dataset):
         self.outputs = meta_model.assemble(inputs=self.inputs,
                                            outputs=self.outputs,
-                                           x=x,
-                                           y=y)
+                                           dataset=dataset)
 
         self._build_network()
 
@@ -218,15 +218,15 @@ class AutoModel(kerastuner.HyperModel):
                 For the first two cases, `batch_size` must be provided.
                 For the last case, `validation_steps` must be provided.
         """
-        x, y, validation_data = self.prepare_data(x=x,
-                                                  y=y,
-                                                  validation_data=validation_data,
-                                                  validation_split=validation_split)
-        self._meta_build(x, y)
+        dataset, validation_data = self.prepare_data(
+            x=x,
+            y=y,
+            validation_data=validation_data,
+            validation_split=validation_split)
+        self._meta_build(dataset)
         self._set_output_shapes(y)
         self.preprocess(hp=kerastuner.HyperParameters(),
-                        x=x,
-                        y=y,
+                        dataset=dataset,
                         validation_data=validation_data,
                         fit=True)
         self.tuner = tuner.RandomSearch(
@@ -266,12 +266,16 @@ class AutoModel(kerastuner.HyperModel):
             validation_data = x_val, y_val
         # TODO: Handle other types of input, zip dataset, tensor, dict.
         # Prepare the dataset
-        x, y, validation_data = utils.prepare_preprocess(x, y, validation_data)
-        return x, y, validation_data
+        dataset = x if isinstance(x, tf.data.Dataset) \
+            else utils.prepare_preprocess(x, y)
+        if not isinstance(validation_data, tf.data.Dataset):
+            x_val, y_val = validation_data
+            validation_data = utils.prepare_preprocess(x_val, y_val)
+        return dataset, validation_data
 
     def predict(self, x, batch_size=32, **kwargs):
         """Predict the output for a given testing data. """
-        x, _, _ = utils.prepare_preprocess(x)
+        x = utils.prepare_preprocess(x)
         x, _, _ = self.preprocess(self.tuner.get_best_models(1), x)
         x, _ = utils.prepare_model_input(x, x, batch_size=batch_size)
         y = self.tuner.get_best_models(1)[0].predict(x, **kwargs)
@@ -310,13 +314,12 @@ class AutoModel(kerastuner.HyperModel):
 
         return model
 
-    def preprocess(self, hp, x, y=None, validation_data=None, fit=False):
+    def preprocess(self, hp, dataset, validation_data=None, fit=False):
         """Preprocess the data to be ready for the Keras Model.
 
         Args:
             hp: HyperParameters. Used to build the HyperModel.
-            x: tensorflow.data.Dataset. Training data x.
-            y: tensorflow.data.Dataset. Training data y.
+            dataset: tensorflow.data.Dataset. Training data.
             validation_data: Tuple of (val_x, val_y). The same type as x and y.
                 Validation set for the search.
             fit: Boolean. Whether to fit the preprocessing layers with x and y.
@@ -325,17 +328,14 @@ class AutoModel(kerastuner.HyperModel):
             A tuple of four preprocessed elements, (x, y, val_x, val_y).
 
         """
-        x, y = self._preprocess(hp, x, y, fit=fit)
-        if not y:
-            return x, None, None
+        dataset = self._preprocess(hp, dataset, fit=fit)
         if not validation_data:
-            return x, y, None
+            return dataset
         val_x, val_y = validation_data
-        val_x, val_y = self._preprocess(hp, val_x, val_y)
-        return x, y, (val_x, val_y)
+        validation_data = self._preprocess(hp, val_x, val_y)
+        return dataset, validation_data
 
-    def _preprocess(self, hp, x, y, fit=False):
-        x = nest.flatten(x)
+    def _preprocess(self, hp, dataset, fit=False):
         q = queue.Queue()
         for input_node, data in zip(self.inputs, x):
             q.put((input_node, data))
@@ -351,8 +351,9 @@ class AutoModel(kerastuner.HyperModel):
             for hypermodel in node.out_hypermodels:
                 if isinstance(hypermodel, processor.HyperPreprocessor):
                     if fit:
-                        hypermodel.fit(hp, data)
-                    q.put((hypermodel.outputs[0], hypermodel.transform(hp, data)))
+                        hypermodel.fit(data, hp)
+                    q.put((hypermodel.outputs[0],
+                           data.map(functools.partial(hypermodel.transform, hp=hp))))
         # Sort by id.
         new_x = sorted(new_x, key=lambda a: a[0])
 

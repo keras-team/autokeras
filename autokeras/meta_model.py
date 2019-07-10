@@ -11,7 +11,7 @@ from autokeras.hypermodel import hyper_block
 from autokeras.hypermodel import processor
 
 
-def assemble(inputs, outputs, x, y):
+def assemble(inputs, outputs, dataset):
     inputs = nest.flatten(inputs)
     outputs = nest.flatten(outputs)
     middle_nodes = []
@@ -44,59 +44,53 @@ def assemble(inputs, outputs, x, y):
     # use the image size to determine how the down sampling works, e.g. pooling.
 
 
-def sw_ratio(x):
-    x = np.array([line.decode('utf-8')
-                  for line in tfds.as_numpy(x)]).astype(np.str)
-    num_samples = len(x)
-    tokenizer = tf.keras.preprocessing.text.Tokenizer()
-    tokenizer.fit_on_texts(x)
-    sequences = tokenizer.texts_to_sequences(x)
-    num_words_per_sample = statistics.mean([len(seq) for seq in sequences])
-    return num_samples / num_words_per_sample
+class Assembler(object):
+    def __init__(self, **kwargs):
+        super(Assembler, self).__init__(**kwargs)
+
+    def update(self, x):
+        pass
 
 
-def get_labels(y, outputs):
-    y = nest.flatten(y)
-    outputs = nest.flatten(outputs)
-    labels = None
-    for temp_y, output_block in zip(y, outputs):
-        if isinstance(output_block, hyper_head.ClassificationHead):
-            labels = temp_y
-            break
-    if labels is None:
-        return None
-    labels = np.array(list(tfds.as_numpy(labels)))
-    if utils.is_label(labels):
-        return labels
-    labels = np.argmax(labels, axis=0)
-    return labels
+class TextAssembler(Assembler):
+    def __init__(self, **kwargs):
+        super(TextAssembler, self).__init__(**kwargs)
+        self._num_words = 0
+        self._num_samples = 0
 
+    def update(self, x):
+        self._num_samples += 1
+        tokenizer = tf.keras.preprocessing.text.Tokenizer()
+        tokenizer.fit_on_texts([x])
+        self._num_words += len(tokenizer.texts_to_sequences([x]))
 
-def text_assemble(x, input_node, y, outputs):
-    """Assemble the HyperBlocks for text input.
+    def sw_ratio(self):
+        return self._num_samples / self._num_words
 
-    Implemented according to Google Developer, Machine Learning Guide, Text
-    Classification, Step 2.5: Choose a Model.
+    def text_assemble(self, input_node):
+        """Assemble the HyperBlocks for text input.
 
-    Args:
-        x: tf.data.Dataset. Data for the input_node.
-        input_node: HyperNode. The input node for the AutoModel.
-        y: A list of tf.data.Dataset. All the targets for the AutoModel.
-        outputs: A list of HyperHead. The heads of the model.
+        Implemented according to Google Developer, Machine Learning Guide, Text
+        Classification, Step 2.5: Choose a Model.
 
-    Returns:
-        A HyperNode. The output node of the assembled model.
-    """
-    output_node = input_node
-    ratio = sw_ratio(x)
-    if isinstance(input_node, hyper_node.TextNode):
-        if ratio < 1500:
-            output_node = processor.TextToNgramVector(
-                labels=get_labels(y, outputs))(output_node)
-            output_node = hyper_block.DenseBlock()(output_node)
-        else:
-            output_node = processor.TextToSequenceVector()(output_node)
-            output_node = hyper_block.EmbeddingBlock(
-                pretrained=(ratio < 15000))(output_node)
-            output_node = hyper_block.ConvBlock(separable=True)(output_node)
-    return output_node
+        Args:
+            x: tf.data.Dataset. Data for the input_node.
+            input_node: HyperNode. The input node for the AutoModel.
+            y: A list of tf.data.Dataset. All the targets for the AutoModel.
+            outputs: A list of HyperHead. The heads of the model.
+
+        Returns:
+            A HyperNode. The output node of the assembled model.
+        """
+        output_node = input_node
+        ratio = self.sw_ratio()
+        if isinstance(input_node, hyper_node.TextNode):
+            if ratio < 1500:
+                output_node = processor.TextToNgramVector()(output_node)
+                output_node = hyper_block.DenseBlock()(output_node)
+            else:
+                output_node = processor.TextToSequenceVector()(output_node)
+                output_node = hyper_block.EmbeddingBlock(
+                    pretrained=(ratio < 15000))(output_node)
+                output_node = hyper_block.ConvBlock(separable=True)(output_node)
+        return output_node
