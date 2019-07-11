@@ -84,29 +84,14 @@ def inputs_to_datasets(x):
     for temp_x in x:
         if isinstance(temp_x, np.ndarray):
             new_x.append(tf.data.Dataset.from_tensor_slices(temp_x))
-    return tf.data.Dataset.zip(new_x)
+    return tf.data.Dataset.zip(tuple(new_x))
 
 
-def prepare_preprocess(x, y=None, validation_data=None):
+def prepare_preprocess(x, y):
     """Convert each input to a tf.data.Dataset."""
     x = inputs_to_datasets(x)
-    if not y:
-        return x, None
-    if y:
-        y = inputs_to_datasets(y)
-    return x, y
-
-
-def prepare_model_input(x=None, y=None, validation_data=None, batch_size=32):
-    """Zip multiple tf.data.Dataset into one Dataset."""
-    if not y:
-        return tf.data.Dataset.zip(tuple(x)).batch(batch_size), None
-    if not validation_data:
-        return tf.data.Dataset.zip((tuple(x), tuple(y))).batch(batch_size), None
-    return tf.data.Dataset.zip(
-        (tuple(x), tuple(y))).batch(batch_size), tf.data.Dataset.zip(
-        (tuple(validation_data[0]),
-         tuple(validation_data[1]))).batch(batch_size)
+    y = inputs_to_datasets(y)
+    return tf.data.Dataset.zip((x, y))
 
 
 def is_label(y):

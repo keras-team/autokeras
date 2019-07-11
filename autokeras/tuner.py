@@ -14,19 +14,13 @@ class AutoTuner(kerastuner.Tuner):
         new_fit_kwargs = copy.copy(fit_kwargs)
         new_fit_kwargs.update(
             dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
-        x, y, validation_data = self.hypermodel.preprocess(
+        dataset, validation_data = self.hypermodel.preprocess(
             hp,
             new_fit_kwargs.get('x', None),
-            new_fit_kwargs.get('y', None),
             new_fit_kwargs.get('validation_data', None))
 
-        new_fit_kwargs['x'], new_fit_kwargs['validation_data'] = \
-            utils.prepare_model_input(
-                x=x,
-                y=y,
-                validation_data=validation_data,
-                batch_size=fit_kwargs.get('batch_size', 32))
-
+        new_fit_kwargs['x'] = dataset
+        new_fit_kwargs['validation_data'] = validation_data
         new_fit_kwargs['batch_size'] = None
         new_fit_kwargs['y'] = None
         super(AutoTuner, self).run_trial(trial, hp, [], new_fit_kwargs)

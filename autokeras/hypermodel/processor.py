@@ -3,6 +3,7 @@ import tensorflow_datasets as tfds
 import numpy as np
 from sklearn.feature_extraction import text
 from sklearn import feature_selection
+from tensorflow.python.util import nest
 
 from autokeras import const, utils
 from autokeras.hypermodel import hyper_block as hb_module
@@ -13,7 +14,7 @@ class HyperPreprocessor(hb_module.HyperBlock):
     def build(self, hp, inputs=None):
         return inputs
 
-    def fit(self, hp, inputs):
+    def update(self, hp, inputs):
         raise NotImplementedError
 
     def transform(self, x, hp):
@@ -76,25 +77,21 @@ class Normalize(HyperPreprocessor):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.sum = 0
+        self.square_sum = 0
+        self.count = 0
         self.mean = None
         self.std = None
 
-    def fit(self, dataset, hp):
-        shape = utils.dataset_shape(dataset)
-        axis = tuple(range(len(shape) - 1))
-
-        def reduce_func(old_state, x):
-            current_sum, current_square_sum, count = old_state
-            current_sum += x
-            current_square_sum += tf.square(x)
-            count += 1
-            return current_sum, current_square_sum, count
-
-        total_sum, total_square_sum, num_instances = dataset.reduce(
-            (np.zeros(shape), np.zeros(shape), np.float64(0)), reduce_func)
-        self.mean = tf.reduce_mean(total_sum / num_instances, axis=axis)
-        square_mean = tf.reduce_mean(total_square_sum / num_instances, axis=axis)
-        self.std = tf.sqrt(square_mean - tf.square(self.mean))
+    def update(self, hp, data):
+        x = nest.flatten(data)[0].numpy()
+        self.sum += x
+        self.square_sum += np.square(x)
+        self.count += 1
+        axis = tuple(range(len(x.shape) - 1))
+        self.mean = np.mean(self.sum / self.count, axis=axis)
+        square_mean = np.mean(self.square_sum / self.count, axis=axis)
+        self.std = np.sqrt(square_mean - np.square(self.mean))
 
     def transform(self, x, hp):
         """ Transform the test data, perform normalization.
@@ -117,7 +114,7 @@ class TextToSequenceVector(HyperPreprocessor):
         self._tokenizer = tf.keras.preprocessing.text.Tokenizer(
             num_words=const.Constant.VOCABULARY_SIZE)
 
-    def fit(self, hp, inputs):
+    def update(self, hp, inputs):
         texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
         self._tokenizer.fit_on_texts(texts)
         sequences = self._tokenizer.texts_to_sequences(texts)
@@ -148,7 +145,7 @@ class TextToNgramVector(HyperPreprocessor):
         self._max_features = const.Constant.VOCABULARY_SIZE
         self._vectorizer.max_features = self._max_features
 
-    def fit(self, hp, inputs):
+    def update(self, hp, inputs):
         texts = np.array(
             [line.decode('utf-8')
              for line in tfds.as_numpy(inputs)]).astype(np.str)

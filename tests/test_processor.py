@@ -12,7 +12,7 @@ def test_normalize():
     x_train = np.random.rand(100, 32, 32, 3)
     dataset = tf.data.Dataset.from_tensor_slices(x_train)
     hp = kerastuner.HyperParameters()
-    normalize.fit(dataset, hp)
+    normalize.update(dataset, hp)
     # dataset.map(lambda x: x - normalize.mean)
     new_dataset = dataset.map(functools.partial(normalize.transform, hp=hp))
     assert isinstance(new_dataset, tf.data.Dataset)

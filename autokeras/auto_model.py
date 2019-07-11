@@ -52,6 +52,8 @@ class AutoModel(kerastuner.HyperModel):
         self._hypermodel_to_id = {}
         self._model_inputs = []
         self._label_encoders = None
+        self._hypermodel_topo_depth = {}
+        self._total_topo_depth = 0
 
     def build(self, hp):
         real_nodes = {}
@@ -114,6 +116,8 @@ class AutoModel(kerastuner.HyperModel):
         # Add the hypermodels in topological order.
         self._hypermodels = []
         self._hypermodel_to_id = {}
+        self._hypermodel_topo_depth = {}
+        depth_count = 0
         while len(hypermodels) != 0:
             new_added = []
             for hypermodel in hypermodels:
@@ -122,6 +126,10 @@ class AutoModel(kerastuner.HyperModel):
                     continue
                 self._add_hypermodel(hypermodel)
                 new_added.append(hypermodel)
+                self._hypermodel_topo_depth[
+                    self._hypermodel_to_id[hypermodel]
+                ] = depth_count
+                # Decrease the in degree of the output nodes.
                 for output_node in hypermodel.outputs:
                     if output_node not in self._node_to_id:
                         continue
@@ -129,6 +137,8 @@ class AutoModel(kerastuner.HyperModel):
                     in_degree[output_node_id] -= 1
             for hypermodel in new_added:
                 hypermodels.remove(hypermodel)
+            depth_count += 1
+        self._total_topo_depth = depth_count
 
         # Set the output shape.
         for output_node in self.outputs:
@@ -224,7 +234,7 @@ class AutoModel(kerastuner.HyperModel):
             validation_data=validation_data,
             validation_split=validation_split)
         self._meta_build(dataset)
-        self._set_output_shapes(y)
+        self._set_output_shapes(dataset)
         self.preprocess(hp=kerastuner.HyperParameters(),
                         dataset=dataset,
                         validation_data=validation_data,
@@ -241,11 +251,12 @@ class AutoModel(kerastuner.HyperModel):
                           validation_data=validation_data,
                           **kwargs)
 
-    def _set_output_shapes(self, y):
+    def _set_output_shapes(self, dataset):
         # TODO: Set the shapes only if they are not provided by the user when
         #  initiating the HyperHead or Block.
-        for y_input, output_node in zip(y, self.outputs):
-            output_node.shape = utils.dataset_shape(y_input)
+        x_shapes, y_shapes = utils.dataset_shape(dataset)
+        for y_shape, output_node in zip(y_shapes, self.outputs):
+            output_node.shape = tuple(y_shape.as_list())
             output_node.in_hypermodels[0].output_shape = output_node.shape
 
     def prepare_data(self, x, y, validation_data, validation_split):
@@ -273,11 +284,10 @@ class AutoModel(kerastuner.HyperModel):
             validation_data = utils.prepare_preprocess(x_val, y_val)
         return dataset, validation_data
 
-    def predict(self, x, batch_size=32, **kwargs):
+    def predict(self, x, **kwargs):
         """Predict the output for a given testing data. """
-        x = utils.prepare_preprocess(x)
-        x, _, _ = self.preprocess(self.tuner.get_best_models(1), x)
-        x, _ = utils.prepare_model_input(x, x, batch_size=batch_size)
+        x = utils.prepare_preprocess(x, x)
+        x = self.preprocess(self.tuner.get_best_hp(1), x)
         y = self.tuner.get_best_models(1)[0].predict(x, **kwargs)
         y = nest.flatten(y)
         y = self._postprocess(y)
@@ -331,38 +341,61 @@ class AutoModel(kerastuner.HyperModel):
         dataset = self._preprocess(hp, dataset, fit=fit)
         if not validation_data:
             return dataset
-        val_x, val_y = validation_data
-        validation_data = self._preprocess(hp, val_x, val_y)
+        validation_data = self._preprocess(hp, validation_data)
         return dataset, validation_data
 
     def _preprocess(self, hp, dataset, fit=False):
-        q = queue.Queue()
-        for input_node, data in zip(self.inputs, x):
-            q.put((input_node, data))
+        # Put hypermodels in groups by depth.
+        hypermodels_by_depth = []
+        for depth in range(self._total_topo_depth):
+            temp_hypermodels = []
+            for hypermodel in self._hypermodels:
+                if (self._hypermodel_topo_depth[
+                    self._hypermodel_to_id[hypermodel]] == depth and
+                        isinstance(hypermodel, processor.HyperPreprocessor)):
+                    temp_hypermodels.append(hypermodel)
+            if not temp_hypermodels:
+                break
+            hypermodels_by_depth.append(temp_hypermodels)
 
-        new_x = []
-        while not q.empty():
-            node, data = q.get()
-            if self._is_model_inputs(node):
-                new_x.append((self._node_to_id[node], data))
-                if fit:
-                    node.shape = utils.dataset_shape(data)
+        input_node_ids = [self._node_to_id[input_node] for input_node in self.inputs]
 
-            for hypermodel in node.out_hypermodels:
-                if isinstance(hypermodel, processor.HyperPreprocessor):
-                    if fit:
-                        hypermodel.fit(data, hp)
-                    q.put((hypermodel.outputs[0],
-                           data.map(functools.partial(hypermodel.transform, hp=hp))))
-        # Sort by id.
-        new_x = sorted(new_x, key=lambda a: a[0])
+        # Iterate the depth.
+        for hypermodels in hypermodels_by_depth:
+            if fit:
+                # Iterate the datasets.
+                for x, y in dataset:
+                    node_id_to_data = {
+                        node_id: temp_x
+                        for temp_x, node_id in zip(x, input_node_ids)
+                    }
+                    for hypermodel in hypermodels:
+                        data = [node_id_to_data[self._node_to_id[input_node]]
+                                for input_node in hypermodel.inputs]
+                        hypermodel.update(hp, data)
 
-        # Remove the id from the list.
-        return_x = []
-        for node_id, data in new_x:
-            self._nodes[node_id].shape = utils.dataset_shape(data)
-            return_x.append(data)
-        return return_x, y
+            def map_func(x):
+                id_to_data = {
+                    node_id: temp_x
+                    for temp_x, node_id in zip(x, input_node_ids)
+                }
+                output_data = {}
+                for id, data in id_to_data.items():
+                    if self._is_model_inputs(self._nodes[id]):
+                        output_data[id] = data
+                for hm in hypermodels:
+                    data = [id_to_data[self._node_to_id[input_node]]
+                            for input_node in hm.inputs]
+                    data = hm.transform(hp, data)
+                    output_data[self._node_to_id[hm.outputs[0]]] = data
+                return tuple(map(
+                    lambda index: output_data[index], sorted(output_data)))
+
+            dataset = dataset.map(map_func)
+            # Build input_node_ids for next depth.
+            input_node_ids = list(sorted([self._node_to_id[hypermodel.outputs[0]]
+                                          for hypermodel in hypermodels]))
+        return dataset
 
     @staticmethod
     def _is_model_inputs(node):
@@ -427,5 +460,5 @@ class GraphAutoModel(AutoModel):
         super(GraphAutoModel, self).__init__(*args, **kwargs)
         self._build_network()
 
-    def _meta_build(self, x, y):
+    def _meta_build(self, dataset):
         pass
