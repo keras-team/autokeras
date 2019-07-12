@@ -133,7 +133,7 @@ class ImageAugment(HyperPreprocessor):
                     'The input of x_train should be a [batch_size, height, '
                     'width, channel] '
                     'shape tensor or list, but we get %s' % inputs.shape)
-            self.batch_num, self.target_height, \ 
+            self.batch_num, self.target_height, \
             self.target_width, self.channels = inputs.shape
             # TODO: Set the arguments if user didn't set
             return inputs
