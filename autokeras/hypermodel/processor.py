@@ -112,7 +112,7 @@ class Normalize(HyperPreprocessor):
             return (x - self.mean) / self.std
         return data.map(normalize)
 
-    
+
 class ImageAugment(HyperPreprocessor):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -133,7 +133,7 @@ class ImageAugment(HyperPreprocessor):
                     'The input of x_train should be a [batch_size, height, '
                     'width, channel] '
                     'shape tensor or list, but we get %s' % inputs.shape)
-            (self.batch_num, self.target_height, 
+            (self.batch_num, self.target_height,
              self.target_width, self.channels) = inputs.shape
             # TODO: Set the arguments if user didn't set
             return inputs
@@ -212,7 +212,7 @@ class ImageAugment(HyperPreprocessor):
         return image
 
     @staticmethod
-    def random_crop(image, hp, batch_num, channels, 
+    def random_crop(image, hp, batch_num, channels,
                     target_height, target_width, random_crop_seed):
         crop_size = [batch_num, hp.Choice('random_crop_height'),
                      hp.Choice('random_crop_width'), channels]
@@ -257,12 +257,12 @@ class ImageAugment(HyperPreprocessor):
             map_func = partial(self.contrast, hp=hp)
             dataset.map(map_func=map_func)
         if hp.Choice('random_crop_height') and hp.Choice('random_crop_width'):
-            map_func = partial(self.random_crop, 
-                               hp=hp, 
-                               batch_num=self.batch_num, 
-                               channels=self.channels, 
+            map_func = partial(self.random_crop,
+                               hp=hp,
+                               batch_num=self.batch_num,
+                               channels=self.channels,
                                target_hight=self.target_height,
-                               target_width=self.target_width, 
+                               target_width=self.target_width,
                                random_crop_seed=Constant.SEED)
             dataset.map(map_func=map_func)
         if hp.Choice('horizontal_crop'):
