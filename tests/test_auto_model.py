@@ -53,7 +53,7 @@ def test_merge(tmp_dir):
 
 
 def test_preprocessing(tmp_dir):
-    x_train = np.random.rand(100, 32)
+    x_train = np.random.rand(100, 33)
     y_train = np.random.rand(100, 1)
 
     input_node1 = ak.Input()

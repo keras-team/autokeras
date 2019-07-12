@@ -55,6 +55,9 @@ class Assembler(object):
     def update(self, x):
         pass
 
+    def assemble(self, input_node):
+        raise NotImplementedError
+
 
 class TextAssembler(Assembler):
     def __init__(self, **kwargs):
@@ -104,7 +107,9 @@ class TextAssembler(Assembler):
 
 
 class ImageAssembler(Assembler):
-    pass
+
+    def assemble(self, input_node):
+        return hyper_block.ImageBlock()(input_node)
 
 
 class StructuredAssembler(Assembler):

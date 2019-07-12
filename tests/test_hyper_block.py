@@ -26,7 +26,7 @@ def test_xception_block(tmp_dir):
 
     graph = ak.GraphAutoModel(input_node, output_node, directory=tmp_dir)
     model = graph.build(kerastuner.HyperParameters())
-    model.update(x_train, y_train, epochs=1, batch_size=100, verbose=False)
+    model.fit(x_train, y_train, epochs=1, batch_size=100, verbose=False)
     result = model.predict(x_train)
 
     assert result.shape == (100, 10)
@@ -47,7 +47,7 @@ def test_conv_block(tmp_dir):
 
     graph = ak.GraphAutoModel(input_node, output_node, directory=tmp_dir)
     model = graph.build(kerastuner.HyperParameters())
-    model.update(x_train, y_train, epochs=1, batch_size=100, verbose=False)
+    model.fit(x_train, y_train, epochs=1, batch_size=100, verbose=False)
     result = model.predict(x_train)
 
     assert result.shape == (100, 10)

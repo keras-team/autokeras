@@ -3,8 +3,6 @@ import inspect
 import tensorflow as tf
 import kerastuner
 
-from autokeras import utils
-
 
 class AutoTuner(kerastuner.Tuner):
     """Modified KerasTuner base class to include preprocessing layers."""
@@ -18,6 +16,12 @@ class AutoTuner(kerastuner.Tuner):
             hp,
             new_fit_kwargs.get('x', None),
             new_fit_kwargs.get('validation_data', None))
+        self.hypermodel.set_node_shapes(dataset)
+
+        # Batching
+        batch_size = new_fit_kwargs.get('batch_size', 32)
+        dataset = dataset.batch(batch_size)
+        validation_data = validation_data.batch(batch_size)
 
         new_fit_kwargs['x'] = dataset
         new_fit_kwargs['validation_data'] = validation_data

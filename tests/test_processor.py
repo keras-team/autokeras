@@ -1,5 +1,3 @@
-import functools
-
 import tensorflow as tf
 import numpy as np
 import kerastuner
@@ -11,10 +9,16 @@ def test_normalize():
     normalize = processor.Normalize()
     x_train = np.random.rand(100, 32, 32, 3)
     dataset = tf.data.Dataset.from_tensor_slices(x_train)
-    hp = kerastuner.HyperParameters()
-    normalize.update(dataset, hp)
-    # dataset.map(lambda x: x - normalize.mean)
-    new_dataset = dataset.map(functools.partial(normalize.transform, hp=hp))
+    normalize.set_hp(kerastuner.HyperParameters())
+    for x in dataset:
+        normalize.update(x)
+
+    def map_func(x):
+        return tf.py_function(normalize.transform,
+                              inp=[x],
+                              Tout=(tf.float64,))
+
+    new_dataset = dataset.map(map_func)
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
@@ -24,7 +28,18 @@ def test_sequence():
              'Dogs and cats living together.']
     tokenize = processor.TextToSequenceVector()
     dataset = tf.data.Dataset.from_tensor_slices(texts)
-    new_dataset = tokenize.fit_transform(kerastuner.HyperParameters(), dataset)
+    tokenize.set_hp(kerastuner.HyperParameters())
+    for x in dataset:
+        tokenize.update(x)
+
+    def map_func(x):
+        return tf.py_function(tokenize.transform,
+                              inp=[x],
+                              Tout=(tf.int64,))
+
+    new_dataset = dataset.map(map_func)
+    for _ in new_dataset:
+        break
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
@@ -34,15 +49,15 @@ def test_ngram():
              'Dogs and cats living together.']
     tokenize = processor.TextToNgramVector()
     dataset = tf.data.Dataset.from_tensor_slices(texts)
-    new_dataset = tokenize.fit_transform(kerastuner.HyperParameters(), dataset)
+    tokenize.set_hp(kerastuner.HyperParameters())
+    for x in dataset:
+        tokenize.update(x)
+
+    def map_func(x):
+        return tf.py_function(tokenize.transform,
+                              inp=[x],
+                              Tout=(tf.float64,))
+
+    new_dataset = dataset.map(map_func)
     assert isinstance(new_dataset, tf.data.Dataset)
 
-
-def test_ngram_with_labels():
-    texts = ['The cat sat on the mat.',
-             'The dog sat on the log.',
-             'Dogs and cats living together.']
-    tokenize = processor.TextToNgramVector(labels=[1, 0, 1])
-    dataset = tf.data.Dataset.from_tensor_slices(texts)
-    new_dataset = tokenize.fit_transform(kerastuner.HyperParameters(), dataset)
-    assert isinstance(new_dataset, tf.data.Dataset)

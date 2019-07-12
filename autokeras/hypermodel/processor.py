@@ -1,24 +1,39 @@
 import tensorflow as tf
-import tensorflow_datasets as tfds
 import numpy as np
 from sklearn.feature_extraction import text
 from sklearn import feature_selection
 from tensorflow.python.util import nest
 
-from autokeras import const, utils
+from autokeras import const
 from autokeras.hypermodel import hyper_block as hb_module
 
 
 class HyperPreprocessor(hb_module.HyperBlock):
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._hp = None
+
     def build(self, hp, inputs=None):
         return inputs
 
-    def update(self, hp, inputs):
+    def set_hp(self, hp):
+        self._hp = hp
+
+    def update(self, x):
         raise NotImplementedError
 
-    def transform(self, x, hp):
+    def transform(self, x):
         raise NotImplementedError
+
+    def output_types(self):
+        raise NotImplementedError
+
+    def output_shape(self):
+        raise NotImplementedError
+
+    def post_fit(self):
+        pass
 
 
 class OneHotEncoder(object):
@@ -83,8 +98,8 @@ class Normalize(HyperPreprocessor):
         self.mean = None
         self.std = None
 
-    def update(self, hp, data):
-        x = nest.flatten(data)[0].numpy()
+    def update(self, x):
+        x = nest.flatten(x)[0].numpy()
         self.sum += x
         self.square_sum += np.square(x)
         self.count += 1
@@ -93,7 +108,7 @@ class Normalize(HyperPreprocessor):
         square_mean = np.mean(self.square_sum / self.count, axis=axis)
         self.std = np.sqrt(square_mean - np.square(self.mean))
 
-    def transform(self, x, hp):
+    def transform(self, x):
         """ Transform the test data, perform normalization.
 
         # Arguments
@@ -102,7 +117,14 @@ class Normalize(HyperPreprocessor):
         # Returns
             A DataLoader instance.
         """
+        x = nest.flatten(x)[0]
         return (x - self.mean) / self.std
+
+    def output_types(self):
+        return tf.float64,
+
+    def output_shape(self):
+        return self.mean.shape
 
 
 class TextToSequenceVector(HyperPreprocessor):
@@ -111,22 +133,30 @@ class TextToSequenceVector(HyperPreprocessor):
     def __init__(self, max_len=None, **kwargs):
         super().__init__(**kwargs)
         self.max_len = max_len
+        self._max_len = 0
         self._tokenizer = tf.keras.preprocessing.text.Tokenizer(
             num_words=const.Constant.VOCABULARY_SIZE)
 
-    def update(self, hp, inputs):
-        texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
-        self._tokenizer.fit_on_texts(texts)
-        sequences = self._tokenizer.texts_to_sequences(texts)
-        if not self.max_len:
-            self.max_len = len(max(sequences, key=len))
+    def update(self, x):
+        sentence = nest.flatten(x)[0].numpy().decode('utf-8')
+        self._tokenizer.fit_on_texts([sentence])
+        sequence = self._tokenizer.texts_to_sequences([sentence])[0]
+        if self.max_len is None:
+            self._max_len = max(self._max_len, len(sequence))
 
-    def transform(self, hp, inputs):
-        texts = np.array(list(tfds.as_numpy(inputs))).astype(np.str)
-        sequences = self._tokenizer.texts_to_sequences(texts)
-        sequences = tf.keras.preprocessing.sequence.pad_sequences(sequences,
-                                                                  self.max_len)
-        return tf.data.Dataset.from_tensor_slices(sequences)
+    def transform(self, x):
+        sentence = nest.flatten(x)[0].numpy().decode('utf-8')
+        sequence = self._tokenizer.texts_to_sequences(sentence)[0]
+        sequence = tf.keras.preprocessing.sequence.pad_sequences(
+            sequence,
+            self.max_len or self._max_len)
+        return sequence
+
+    def output_types(self):
+        return tf.int64,
+
+    def output_shape(self):
+        return self.max_len or self._max_len,
 
 
 class TextToNgramVector(HyperPreprocessor):
@@ -144,24 +174,34 @@ class TextToNgramVector(HyperPreprocessor):
         self.labels = None
         self._max_features = const.Constant.VOCABULARY_SIZE
         self._vectorizer.max_features = self._max_features
+        self._texts = []
+        self._shape = None
 
-    def update(self, hp, inputs):
-        texts = np.array(
-            [line.decode('utf-8')
-             for line in tfds.as_numpy(inputs)]).astype(np.str)
-        self._vectorizer.fit(texts)
-        data = self._vectorizer.transform(texts)
+    def update(self, x):
+        # TODO: Implement a sequential version fit for both
+        #  TfidfVectorizer and SelectKBest
+        self._texts.append(nest.flatten(x)[0].numpy().decode('utf-8'))
+
+    def post_fit(self):
+        self._texts = np.array(self._texts)
+        self._vectorizer.fit(self._texts)
+        data = self._vectorizer.transform(self._texts)
+        self._shape = data.shape[1:]
         if self.labels:
             self.selector = feature_selection.SelectKBest(
                 feature_selection.f_classif,
                 k=min(self._max_features, data.shape[1]))
             self.selector.fit(data, self.labels)
 
-    def transform(self, hp, inputs):
-        texts = np.array(
-            [line.decode('utf-8')
-             for line in tfds.as_numpy(inputs)]).astype(np.str)
-        data = self._vectorizer.transform(texts).toarray()
+    def transform(self, x):
+        sentence = nest.flatten(x)[0].numpy().decode('utf-8')
+        data = self._vectorizer.transform([sentence]).toarray()
         if self.selector:
             data = self.selector.transform(data).astype('float32')
-        return tf.data.Dataset.from_tensor_slices(data)
+        return data[0]
+
+    def output_types(self):
+        return tf.float64,
+
+    def output_shape(self):
+        return self._shape
