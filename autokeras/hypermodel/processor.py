@@ -133,7 +133,8 @@ class ImageAugment(HyperPreprocessor):
                     'The input of x_train should be a [batch_size, height, '
                     'width, channel] '
                     'shape tensor or list, but we get %s' % inputs.shape)
-            self.batch_num, self.target_height, self.target_width, self.channels = inputs.shape
+            self.batch_num, self.target_height, \ 
+            self.target_width, self.channels = inputs.shape
             # TODO: Set the arguments if user didn't set
             return inputs
         else:
@@ -211,7 +212,8 @@ class ImageAugment(HyperPreprocessor):
         return image
 
     @staticmethod
-    def random_crop(image, hp, batch_num, channels, target_height, target_width, random_crop_seed):
+    def random_crop(image, hp, batch_num, channels, 
+                    target_height, target_width, random_crop_seed):
         crop_size = [batch_num, hp.Choice('random_crop_height'),
                      hp.Choice('random_crop_width'), channels]
         seed = np.random.randint(random_crop_seed)
