@@ -133,8 +133,8 @@ class ImageAugment(HyperPreprocessor):
                     'The input of x_train should be a [batch_size, height, '
                     'width, channel] '
                     'shape tensor or list, but we get %s' % inputs.shape)
-            self.batch_num, self.target_height, \
-            self.target_width, self.channels = inputs.shape
+            (self.batch_num, self.target_height, 
+             self.target_width, self.channels) = inputs.shape
             # TODO: Set the arguments if user didn't set
             return inputs
         else:
@@ -257,9 +257,13 @@ class ImageAugment(HyperPreprocessor):
             map_func = partial(self.contrast, hp=hp)
             dataset.map(map_func=map_func)
         if hp.Choice('random_crop_height') and hp.Choice('random_crop_width'):
-            map_func = partial(self.random_crop, hp=hp, batch_num=self.batch_num,
-                               channels=self.channels, target_hight=self.target_height,
-                               target_width=self.target_width, random_crop_seed=Constant.SEED)
+            map_func = partial(self.random_crop, 
+                               hp=hp, 
+                               batch_num=self.batch_num, 
+                               channels=self.channels, 
+                               target_hight=self.target_height,
+                               target_width=self.target_width, 
+                               random_crop_seed=Constant.SEED)
             dataset.map(map_func=map_func)
         if hp.Choice('horizontal_crop'):
             map_func = self.horizontal_flip
