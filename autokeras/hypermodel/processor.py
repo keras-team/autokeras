@@ -9,30 +9,76 @@ from autokeras.hypermodel import hyper_block as hb_module
 
 
 class HyperPreprocessor(hb_module.HyperBlock):
+    """Hyper preprocessing block base class."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._hp = None
 
     def build(self, hp, inputs=None):
+        """Build into part of a Keras Model.
+
+        Since they are for preprocess data before feeding into the Keras Model,
+        they are not part of the Keras Model. They only pass the inputs
+        directly to outputs.
+        """
         return inputs
 
     def set_hp(self, hp):
+        """Set Hyperparameters for the Preprocessor.
+
+        Since the `update` and `transform` function are all for single training
+        instances instead of the entire dataset, the Hyperparameters needs to be
+        set in advance of call them.
+
+        Args:
+            hp: Hyperparameters. The hyperparameters for tuning the preprocessor.
+        """
         self._hp = hp
 
     def update(self, x):
+        """Incrementally fit the preprocessor with a single training instance.
+
+        Args:
+            x: EagerTensor. A single instance in the training dataset.
+        """
         raise NotImplementedError
 
     def transform(self, x):
+        """Incrementally fit the preprocessor with a single training instance.
+
+        Args:
+            x: EagerTensor. A single instance in the training dataset.
+
+        Returns:
+            A transformed instanced which can be converted to a tf.Tensor.
+        """
         raise NotImplementedError
 
     def output_types(self):
+        """The output types of the transformed data, e.g. tf.int64.
+
+        The output types are required by tf.py_function, which is used for transform
+        the dataset into a new one with a map function.
+
+        Returns:
+            A tuple of data types.
+        """
         raise NotImplementedError
 
     def output_shape(self):
+        """The output shape of the transformed data.
+
+        The output shape is needed to build the Keras Model from the AutoModel.
+        The output shape of the preprocessor is the input shape of the Keras Model.
+
+        Returns:
+            A tuple of ints or a TensorShape.
+        """
         raise NotImplementedError
 
     def post_fit(self):
+        """Training process of the preprocessor after update with all instances."""
         pass
 
 
@@ -42,7 +88,7 @@ class OneHotEncoder(object):
     This class provides ways to transform data's classification label into
     vector.
 
-    # Attributes
+    Attributes:
         data: The input data
         num_classes: The number of classes in the classification problem.
         labels: The number of labels.
@@ -97,13 +143,17 @@ class Normalize(HyperPreprocessor):
         self.count = 0
         self.mean = None
         self.std = None
+        self._shape = None
 
     def update(self, x):
         x = nest.flatten(x)[0].numpy()
         self.sum += x
         self.square_sum += np.square(x)
         self.count += 1
-        axis = tuple(range(len(x.shape) - 1))
+        self._shape = x.shape
+
+    def post_fit(self):
+        axis = tuple(range(len(self._shape) - 1))
         self.mean = np.mean(self.sum / self.count, axis=axis)
         square_mean = np.mean(self.square_sum / self.count, axis=axis)
         self.std = np.sqrt(square_mean - np.square(self.mean))

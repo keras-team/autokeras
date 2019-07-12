@@ -26,7 +26,7 @@ class AutoModel(kerastuner.HyperModel):
 
     Attributes:
         inputs: A list of or a HyperNode instance.
-            The input node(s) of a the AutoModel.
+            The input node(s) of the AutoModel.
         outputs: A list of or a HyperHead instance.
             The output head(s) of the AutoModel.
         max_trials: Int. The maximum number of different models to try.
@@ -119,34 +119,34 @@ class AutoModel(kerastuner.HyperModel):
         depth_count = 0
         while len(hypermodels) != 0:
             new_added = []
+
             # Collect hypermodels with in degree 0.
             for hypermodel in hypermodels:
                 if any([in_degree[self._node_to_id[node]]
                         for node in hypermodel.inputs]):
                     continue
                 new_added.append(hypermodel)
+
             # Remove the collected hypermodels from hypermodels.
             for hypermodel in new_added:
                 hypermodels.remove(hypermodel)
-            # Add the collected hypermodels and reduce the output node in degree.
+
             for hypermodel in new_added:
+                # Add the collected hypermodels to the AutoModel.
                 self._add_hypermodel(hypermodel)
                 self._hypermodel_topo_depth[
                     self._hypermodel_to_id[hypermodel]
                 ] = depth_count
+
                 # Decrease the in degree of the output nodes.
                 for output_node in hypermodel.outputs:
                     if output_node not in self._node_to_id:
                         continue
                     output_node_id = self._node_to_id[output_node]
                     in_degree[output_node_id] -= 1
+
             depth_count += 1
         self._total_topo_depth = depth_count
-
-        # Set the output shape.
-        for output_node in self.outputs:
-            hypermodel = output_node.in_hypermodels[0]
-            hypermodel.output_shape = output_node.shape
 
         # Find the model input nodes
         for node in self._nodes:
@@ -335,26 +335,26 @@ class AutoModel(kerastuner.HyperModel):
 
         Args:
             hp: HyperParameters. Used to build the HyperModel.
-            dataset: tensorflow.data.Dataset. Training data.
-            validation_data: Tuple of (val_x, val_y). The same type as x and y.
-                Validation set for the search.
+            dataset: tf.data.Dataset. Training data.
+            validation_data: tf.data.Dataset. Validation data.
             fit: Boolean. Whether to fit the preprocessing layers with x and y.
 
         Returns:
-            A tuple of four preprocessed elements, (x, y, val_x, val_y).
-
+            if validation data is provided.
+            A tuple of two preprocessed tf.data.Dataset, (train, validation).
+            Otherwise, return the training dataset.
         """
         for hypermodel in self._hypermodels:
             if isinstance(hypermodel, processor.HyperPreprocessor):
                 hypermodel.set_hp(hp)
-        dataset = self._preprocess(hp, dataset, fit=fit)
+        dataset = self._preprocess(dataset, fit=fit)
         if not validation_data:
             return dataset
         validation_data = self._preprocess(hp, validation_data)
         return dataset, validation_data
 
-    def _preprocess(self, hp, dataset, fit=False):
-        # Put hypermodels in groups by depth.
+    def _preprocess(self, dataset, fit=False):
+        # Put hypermodels in groups by topological depth.
         hypermodels_by_depth = []
         for depth in range(self._total_topo_depth):
             temp_hypermodels = []
@@ -367,13 +367,14 @@ class AutoModel(kerastuner.HyperModel):
                 break
             hypermodels_by_depth.append(temp_hypermodels)
 
+        # A list of input node ids in the same order as the x in the dataset.
         input_node_ids = [self._node_to_id[input_node] for input_node in self.inputs]
 
         # Iterate the depth.
         for hypermodels in hypermodels_by_depth:
             if fit:
-                # Iterate the dataset.
-                for x, y in dataset:
+                # Iterate the dataset to fit the preprocessors in current depth.
+                for x, _ in dataset:
                     x = nest.flatten(x)
                     node_id_to_data = {
                         node_id: temp_x
@@ -387,10 +388,12 @@ class AutoModel(kerastuner.HyperModel):
             for hypermodel in hypermodels:
                 hypermodel.post_fit()
 
+            # Transform the dataset.
             dataset = dataset.map(functools.partial(
                 self._preprocess_transform,
                 input_node_ids=input_node_ids,
                 hypermodels=hypermodels))
+
             # Build input_node_ids for next depth.
             input_node_ids = list(sorted([self._node_to_id[hypermodel.outputs[0]]
                                           for hypermodel in hypermodels]))
@@ -403,9 +406,11 @@ class AutoModel(kerastuner.HyperModel):
             for temp_x, node_id in zip(x, input_node_ids)
         }
         output_data = {}
-        for id, data in id_to_data.items():
-            if self._is_model_inputs(self._nodes[id]):
-                output_data[id] = data
+        # Keep the Keras Model inputs even they are not inputs to the hypermodels.
+        for node_id, data in id_to_data.items():
+            if self._is_model_inputs(self._nodes[node_id]):
+                output_data[node_id] = data
+        # Transform each x by the corresponding hypermodel
         for hm in hypermodels:
             data = [id_to_data[self._node_to_id[input_node]]
                     for input_node in hm.inputs]

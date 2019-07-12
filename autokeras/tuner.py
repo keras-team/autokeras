@@ -9,9 +9,12 @@ class AutoTuner(kerastuner.Tuner):
 
     def run_trial(self, trial, hp, fit_args, fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
+        # Initialize new fit kwargs for the current trial.
         new_fit_kwargs = copy.copy(fit_kwargs)
         new_fit_kwargs.update(
             dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
+
+        # Preprocess the dataset and set the shapes of the HyperNodes.
         dataset, validation_data = self.hypermodel.preprocess(
             hp,
             new_fit_kwargs.get('x', None),
@@ -23,10 +26,12 @@ class AutoTuner(kerastuner.Tuner):
         dataset = dataset.batch(batch_size)
         validation_data = validation_data.batch(batch_size)
 
+        # Update the new fit kwargs values
         new_fit_kwargs['x'] = dataset
         new_fit_kwargs['validation_data'] = validation_data
         new_fit_kwargs['batch_size'] = None
         new_fit_kwargs['y'] = None
+
         super(AutoTuner, self).run_trial(trial, hp, [], new_fit_kwargs)
 
     def get_best_hp(self, num_models=1):
