@@ -472,17 +472,26 @@ class EmbeddingBlock(HyperBlock):
         pretrained: Boolean. Use pretrained word embedding.
     """
 
-    def __init__(self, pretrained=None, **kwargs):
+    def __init__(self,
+                 pretrained=None,
+                 is_embedding_trainable=None,
+                 **kwargs):
         super().__init__(**kwargs)
         self.pretrained = pretrained
+        self.is_embedding_trainable = is_embedding_trainable
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         pretrained = self.pretrained
         if pretrained is None:
-            pretrained = hp.Choice('pretrained_embedding',
+            pretrained = hp.Choice('pretrained',
                                    [True, False],
                                    default=False)
+        is_embedding_trainable = self.is_embedding_trainable
+        if is_embedding_trainable is None:
+            is_embedding_trainable = hp.Choice('is_embedding_trainable',
+                                               [True, False],
+                                               default=False)
         embedding_dim = hp.Choice('embedding_dim',
                                   [32, 64, 128, 256, 512],
                                   default=128)
@@ -491,14 +500,15 @@ class EmbeddingBlock(HyperBlock):
             layer = tf.keras.layers.Embedding(
                 input_dim=input_node.shape[1],
                 output_dim=embedding_dim,
-                input_length=const.Constant.VOCABULARY_SIZE)
-            # weights=[embedding_matrix],
-            # trainable=is_embedding_trainable)
+                input_length=const.Constant.VOCABULARY_SIZE,
+                trainable=is_embedding_trainable)
+            # weights=[embedding_matrix])
         else:
             layer = tf.keras.layers.Embedding(
                 input_dim=input_node.shape[1],
                 output_dim=embedding_dim,
-                input_length=const.Constant.VOCABULARY_SIZE)
+                input_length=const.Constant.VOCABULARY_SIZE,
+                trainable=is_embedding_trainable)
         return layer(input_node)
 
 

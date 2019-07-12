@@ -1,3 +1,5 @@
+import functools
+
 import kerastuner
 import numpy as np
 import tensorflow as tf
@@ -385,33 +387,36 @@ class AutoModel(kerastuner.HyperModel):
             for hypermodel in hypermodels:
                 hypermodel.post_fit()
 
-            def map_func(x, y):
-                x = nest.flatten(x)
-                id_to_data = {
-                    node_id: temp_x
-                    for temp_x, node_id in zip(x, input_node_ids)
-                }
-                output_data = {}
-                for id, data in id_to_data.items():
-                    if self._is_model_inputs(self._nodes[id]):
-                        output_data[id] = data
-                for hm in hypermodels:
-                    data = [id_to_data[self._node_to_id[input_node]]
-                            for input_node in hm.inputs]
-                    data = tf.py_function(hm.transform,
-                                          inp=nest.flatten(data),
-                                          Tout=hm.output_types())
-                    data = nest.flatten(data)[0]
-                    data.set_shape(hm.output_shape())
-                    output_data[self._node_to_id[hm.outputs[0]]] = data
-                return tuple(map(
-                    lambda index: output_data[index], sorted(output_data))), y
-
-            dataset = dataset.map(map_func)
+            dataset = dataset.map(functools.partial(
+                self._preprocess_transform,
+                input_node_ids=input_node_ids,
+                hypermodels=hypermodels))
             # Build input_node_ids for next depth.
             input_node_ids = list(sorted([self._node_to_id[hypermodel.outputs[0]]
                                           for hypermodel in hypermodels]))
         return dataset
+
+    def _preprocess_transform(self, x, y, input_node_ids, hypermodels):
+        x = nest.flatten(x)
+        id_to_data = {
+            node_id: temp_x
+            for temp_x, node_id in zip(x, input_node_ids)
+        }
+        output_data = {}
+        for id, data in id_to_data.items():
+            if self._is_model_inputs(self._nodes[id]):
+                output_data[id] = data
+        for hm in hypermodels:
+            data = [id_to_data[self._node_to_id[input_node]]
+                    for input_node in hm.inputs]
+            data = tf.py_function(hm.transform,
+                                  inp=nest.flatten(data),
+                                  Tout=hm.output_types())
+            data = nest.flatten(data)[0]
+            data.set_shape(hm.output_shape())
+            output_data[self._node_to_id[hm.outputs[0]]] = data
+        return tuple(map(
+            lambda index: output_data[index], sorted(output_data))), y
 
     @staticmethod
     def _is_model_inputs(node):

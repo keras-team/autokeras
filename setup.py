@@ -7,7 +7,6 @@ setup(
     install_requires=[
         'tensorflow==2.0.0b0',
         'scikit-learn==0.20.2',
-        'tensorflow-datasets==1.0.2',
     ],
     tests_require=[
         'pytest==4.5.0',
