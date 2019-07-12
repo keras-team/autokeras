@@ -350,7 +350,7 @@ class AutoModel(kerastuner.HyperModel):
         dataset = self._preprocess(dataset, fit=fit)
         if not validation_data:
             return dataset
-        validation_data = self._preprocess(hp, validation_data)
+        validation_data = self._preprocess(validation_data)
         return dataset, validation_data
 
     def _preprocess(self, dataset, fit=False):
