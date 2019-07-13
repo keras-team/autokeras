@@ -84,6 +84,15 @@ class RNNBlock(HyperBlock):
         self.bidirectional = bidirectional
         self.return_sequences = return_sequences
 
+    def attention_block(self, inputs):
+        time_steps = int(inputs.shape[1])
+        attention_out = tf.keras.layers.Permute((2, 1))(inputs)
+        attention_out = tf.keras.layers.Dense(time_steps,
+                                              activation='softmax')(attention_out)
+        attention_out = tf.keras.layers.Permute((2, 1))(attention_out)
+        mul_attention_out = tf.keras.layers.Multiply()([inputs, attention_out])
+        return mul_attention_out
+
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
@@ -118,6 +127,15 @@ class RNNBlock(HyperBlock):
                                          [True, False],
                                          default=True)
 
+        if return_sequences:
+            attention_choices = ['pre', 'post', 'none']
+        else:
+            attention_choices = ['pre', 'none']
+
+        attention_mode = hp.Choice('attention', attention_choices, default='post')
+        output_node = self.attention_block(output_node) \
+            if attention_mode == 'pre' else output_node
+
         for i in range(choice_of_layers):
             temp_return_sequences = True
             if i == choice_of_layers - 1:
@@ -127,8 +145,12 @@ class RNNBlock(HyperBlock):
                     in_layer(feature_size,
                              return_sequences=temp_return_sequences))(output_node)
             else:
-                output_node = in_layer(feature_size,
-                                       return_sequences=return_sequences)
+                output_node = in_layer(
+                    feature_size,
+                    return_sequences=temp_return_sequences)(output_node)
+
+        output_node = self.attention_block(output_node) \
+            if attention_mode == 'post' else output_node
 
         return output_node
 
