@@ -1,10 +1,7 @@
 import copy
 import inspect
-
 import tensorflow as tf
 import kerastuner
-
-from autokeras import utils
 
 
 class AutoTuner(kerastuner.Tuner):
@@ -12,24 +9,29 @@ class AutoTuner(kerastuner.Tuner):
 
     def run_trial(self, trial, hp, fit_args, fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
+        # Initialize new fit kwargs for the current trial.
         new_fit_kwargs = copy.copy(fit_kwargs)
         new_fit_kwargs.update(
             dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
-        x, y, validation_data = self.hypermodel.preprocess(
+
+        # Preprocess the dataset and set the shapes of the HyperNodes.
+        dataset, validation_data = self.hypermodel.preprocess(
             hp,
             new_fit_kwargs.get('x', None),
-            new_fit_kwargs.get('y', None),
             new_fit_kwargs.get('validation_data', None))
+        self.hypermodel.set_node_shapes(dataset)
 
-        new_fit_kwargs['x'], new_fit_kwargs['validation_data'] = \
-            utils.prepare_model_input(
-                x=x,
-                y=y,
-                validation_data=validation_data,
-                batch_size=fit_kwargs.get('batch_size', 32))
+        # Batching
+        batch_size = new_fit_kwargs.get('batch_size', 32)
+        dataset = dataset.batch(batch_size)
+        validation_data = validation_data.batch(batch_size)
 
+        # Update the new fit kwargs values
+        new_fit_kwargs['x'] = dataset
+        new_fit_kwargs['validation_data'] = validation_data
         new_fit_kwargs['batch_size'] = None
         new_fit_kwargs['y'] = None
+
         super(AutoTuner, self).run_trial(trial, hp, [], new_fit_kwargs)
 
     def get_best_hp(self, num_models=1):

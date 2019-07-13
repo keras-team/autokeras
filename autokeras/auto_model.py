@@ -1,35 +1,36 @@
-import queue
+import functools
+
 import kerastuner
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.auto import tuner
-from autokeras.hypermodel import hyper_block, processor
+from autokeras.hypermodel import processor
+from autokeras.hypermodel import hyper_node
 from autokeras.hypermodel import hyper_head
 from autokeras import utils
+from autokeras import tuner
 from autokeras import const
+from autokeras import meta_model
 
 
-class GraphAutoModel(kerastuner.HyperModel):
-    """A HyperModel defined by a graph of HyperBlocks.
+class AutoModel(kerastuner.HyperModel):
+    """ A HyperModel defined by inputs and outputs.
 
-    GraphAutoModel is a subclass of HyperModel. Besides the HyperModel properties,
+    AutoModel is a subclass of HyperModel. Besides the HyperModel properties,
     it also has a tuner to tune the HyperModel. The user can use it in a similar
     way to a Keras model since it also has `fit()` and  `predict()` methods.
 
-    The user can specify the high-level neural architecture by connecting the
-    HyperBlocks with the functional API, which is the same as
-    the Keras functional API.
+    The user can specify the inputs and outputs of the AutoModel. It will infer
+    the rest of the high-level neural architecture.
 
     Attributes:
-        inputs: A list of or a HyperNode instances.
-            The input node(s) of the GraphAutoModel.
-        outputs: A list of or a HyperNode instances.
-            The output node(s) of the GraphAutoModel.
+        inputs: A list of or a HyperNode instance.
+            The input node(s) of the AutoModel.
+        outputs: A list of or a HyperHead instance.
+            The output head(s) of the AutoModel.
         max_trials: Int. The maximum number of different models to try.
-        directory: String. The path to the directory
-            for storing the search outputs.
+        directory: String. The path to a directory for storing the search outputs.
     """
 
     def __init__(self,
@@ -49,8 +50,9 @@ class GraphAutoModel(kerastuner.HyperModel):
         self._hypermodels = []
         self._hypermodel_to_id = {}
         self._model_inputs = []
-        self._build_network()
         self._label_encoders = None
+        self._hypermodel_topo_depth = {}
+        self._total_topo_depth = 0
 
     def build(self, hp):
         real_nodes = {}
@@ -62,11 +64,9 @@ class GraphAutoModel(kerastuner.HyperModel):
                 continue
             temp_inputs = [real_nodes[self._node_to_id[input_node]]
                            for input_node in hypermodel.inputs]
-            outputs = hypermodel.build(hp,
-                                       inputs=temp_inputs)
+            outputs = hypermodel.build(hp, inputs=temp_inputs)
             outputs = nest.flatten(outputs)
-            for output_node, real_output_node in zip(hypermodel.outputs,
-                                                     outputs):
+            for output_node, real_output_node in zip(hypermodel.outputs, outputs):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
         model = tf.keras.Model(
             [real_nodes[self._node_to_id[input_node]] for input_node in
@@ -115,26 +115,37 @@ class GraphAutoModel(kerastuner.HyperModel):
         # Add the hypermodels in topological order.
         self._hypermodels = []
         self._hypermodel_to_id = {}
+        self._hypermodel_topo_depth = {}
+        depth_count = 0
         while len(hypermodels) != 0:
             new_added = []
+
+            # Collect hypermodels with in degree 0.
             for hypermodel in hypermodels:
                 if any([in_degree[self._node_to_id[node]]
                         for node in hypermodel.inputs]):
                     continue
-                self._add_hypermodel(hypermodel)
                 new_added.append(hypermodel)
+
+            # Remove the collected hypermodels from hypermodels.
+            for hypermodel in new_added:
+                hypermodels.remove(hypermodel)
+
+            for hypermodel in new_added:
+                # Add the collected hypermodels to the AutoModel.
+                self._add_hypermodel(hypermodel)
+                self._hypermodel_topo_depth[
+                    self._hypermodel_to_id[hypermodel]] = depth_count
+
+                # Decrease the in degree of the output nodes.
                 for output_node in hypermodel.outputs:
                     if output_node not in self._node_to_id:
                         continue
                     output_node_id = self._node_to_id[output_node]
                     in_degree[output_node_id] -= 1
-            for hypermodel in new_added:
-                hypermodels.remove(hypermodel)
 
-        # Set the output shape.
-        for output_node in self.outputs:
-            hypermodel = output_node.in_hypermodels[0]
-            hypermodel.output_shape = output_node.shape
+            depth_count += 1
+        self._total_topo_depth = depth_count
 
         # Find the model input nodes
         for node in self._nodes:
@@ -178,6 +189,13 @@ class GraphAutoModel(kerastuner.HyperModel):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
 
+    def _meta_build(self, dataset):
+        self.outputs = meta_model.assemble(inputs=self.inputs,
+                                           outputs=self.outputs,
+                                           dataset=dataset)
+
+        self._build_network()
+
     def fit(self,
             x=None,
             y=None,
@@ -212,19 +230,46 @@ class GraphAutoModel(kerastuner.HyperModel):
                 For the first two cases, `batch_size` must be provided.
                 For the last case, `validation_steps` must be provided.
         """
+        dataset, validation_data = self.prepare_data(
+            x=x,
+            y=y,
+            validation_data=validation_data,
+            validation_split=validation_split)
+        self._meta_build(dataset)
+        preprocessed_dataset, _ = self.preprocess(
+            hp=kerastuner.HyperParameters(),
+            dataset=dataset,
+            validation_data=validation_data,
+            fit=True)
+        self.set_node_shapes(preprocessed_dataset)
+        self.tuner = tuner.RandomSearch(
+            hypermodel=self,
+            objective='val_loss',
+            max_trials=self.max_trials,
+            directory=self.directory)
+
+        # TODO: allow early stop if epochs is not specified.
+        self.tuner.search(x=dataset,
+                          validation_data=validation_data,
+                          **kwargs)
+
+    def set_node_shapes(self, dataset):
+        # TODO: Set the shapes only if they are not provided by the user when
+        #  initiating the HyperHead or Block.
+        x_shapes, y_shapes = utils.dataset_shape(dataset)
+        for x_shape, input_node in zip(x_shapes, self._model_inputs):
+            input_node.shape = tuple(x_shape.as_list())
+        for y_shape, output_node in zip(y_shapes, self.outputs):
+            output_node.shape = tuple(y_shape.as_list())
+            output_node.in_hypermodels[0].output_shape = output_node.shape
+
+    def prepare_data(self, x, y, validation_data, validation_split):
         # Initialize HyperGraph model
         x = nest.flatten(x)
         y = nest.flatten(y)
-
+        # TODO: check x, y types to be numpy.ndarray or tf.data.Dataset.
+        # TODO: y.reshape(-1, 1) if needed.
         y = self._label_encoding(y)
-        # TODO: Set the shapes only if they are not provided by the user when
-        #  initiating the HyperHead or Block.
-        for y_input, output_node in zip(y, self.outputs):
-            if len(y_input.shape) == 1:
-                y_input = np.reshape(y_input, y_input.shape + (1,))
-            output_node.shape = y_input.shape[1:]
-            output_node.in_hypermodels[0].output_shape = output_node.shape
-
         # Split the data with validation_split
         if (all([isinstance(temp_x, np.ndarray) for temp_x in x]) and
                 all([isinstance(temp_y, np.ndarray) for temp_y in y]) and
@@ -234,33 +279,20 @@ class GraphAutoModel(kerastuner.HyperModel):
                 x, y,
                 validation_split)
             validation_data = x_val, y_val
-
         # TODO: Handle other types of input, zip dataset, tensor, dict.
         # Prepare the dataset
-        x, y, validation_data = utils.prepare_preprocess(x, y, validation_data)
-
-        self.preprocess(hp=kerastuner.HyperParameters(),
-                        x=x,
-                        y=y,
-                        validation_data=validation_data,
-                        fit=True)
-        self.tuner = tuner.RandomSearch(
-            hypermodel=self,
-            objective='val_loss',
-            max_trials=self.max_trials,
-            directory=self.directory)
-
-        # TODO: allow early stop if epochs is not specified.
-        self.tuner.search(x=x,
-                          y=y,
-                          validation_data=validation_data,
-                          **kwargs)
+        dataset = x if isinstance(x, tf.data.Dataset) \
+            else utils.prepare_preprocess(x, y)
+        if not isinstance(validation_data, tf.data.Dataset):
+            x_val, y_val = validation_data
+            validation_data = utils.prepare_preprocess(x_val, y_val)
+        return dataset, validation_data
 
     def predict(self, x, batch_size=32, **kwargs):
         """Predict the output for a given testing data. """
-        x, _, _ = utils.prepare_preprocess(x)
-        x, _, _ = self.preprocess(self.tuner.get_best_models(1), x)
-        x, _ = utils.prepare_model_input(x, x, batch_size=batch_size)
+        x = utils.prepare_preprocess(x, x)
+        x = self.preprocess(self.tuner.get_best_hp(1), x)
+        x = x.batch(batch_size)
         y = self.tuner.get_best_models(1)[0].predict(x, **kwargs)
         y = nest.flatten(y)
         y = self._postprocess(y)
@@ -297,58 +329,98 @@ class GraphAutoModel(kerastuner.HyperModel):
 
         return model
 
-    def preprocess(self, hp, x, y=None, validation_data=None, fit=False):
+    def preprocess(self, hp, dataset, validation_data=None, fit=False):
         """Preprocess the data to be ready for the Keras Model.
 
         Args:
             hp: HyperParameters. Used to build the HyperModel.
-            x: tensorflow.data.Dataset. Training data x.
-            y: tensorflow.data.Dataset. Training data y.
-            validation_data: Tuple of (val_x, val_y). The same type as x and y.
-                Validation set for the search.
+            dataset: tf.data.Dataset. Training data.
+            validation_data: tf.data.Dataset. Validation data.
             fit: Boolean. Whether to fit the preprocessing layers with x and y.
 
         Returns:
-            A tuple of four preprocessed elements, (x, y, val_x, val_y).
-
+            if validation data is provided.
+            A tuple of two preprocessed tf.data.Dataset, (train, validation).
+            Otherwise, return the training dataset.
         """
-        x, y = self._preprocess(hp, x, y, fit=fit)
-        if not y:
-            return x, None, None
+        for hypermodel in self._hypermodels:
+            if isinstance(hypermodel, processor.HyperPreprocessor):
+                hypermodel.set_hp(hp)
+        dataset = self._preprocess(dataset, fit=fit)
         if not validation_data:
-            return x, y, None
-        val_x, val_y = validation_data
-        val_x, val_y = self._preprocess(hp, val_x, val_y)
-        return x, y, (val_x, val_y)
+            return dataset
+        validation_data = self._preprocess(validation_data)
+        return dataset, validation_data
 
-    def _preprocess(self, hp, x, y, fit=False):
+    def _preprocess(self, dataset, fit=False):
+        # Put hypermodels in groups by topological depth.
+        hypermodels_by_depth = []
+        for depth in range(self._total_topo_depth):
+            temp_hypermodels = []
+            for hypermodel in self._hypermodels:
+                if (self._hypermodel_topo_depth[
+                    self._hypermodel_to_id[hypermodel]] == depth and
+                        isinstance(hypermodel, processor.HyperPreprocessor)):
+                    temp_hypermodels.append(hypermodel)
+            if not temp_hypermodels:
+                break
+            hypermodels_by_depth.append(temp_hypermodels)
+
+        # A list of input node ids in the same order as the x in the dataset.
+        input_node_ids = [self._node_to_id[input_node] for input_node in self.inputs]
+
+        # Iterate the depth.
+        for hypermodels in hypermodels_by_depth:
+            if fit:
+                # Iterate the dataset to fit the preprocessors in current depth.
+                for x, _ in dataset:
+                    x = nest.flatten(x)
+                    node_id_to_data = {
+                        node_id: temp_x
+                        for temp_x, node_id in zip(x, input_node_ids)
+                    }
+                    for hypermodel in hypermodels:
+                        data = [node_id_to_data[self._node_to_id[input_node]]
+                                for input_node in hypermodel.inputs]
+                        hypermodel.update(data)
+
+            for hypermodel in hypermodels:
+                hypermodel.finalize()
+
+            # Transform the dataset.
+            dataset = dataset.map(functools.partial(
+                self._preprocess_transform,
+                input_node_ids=input_node_ids,
+                hypermodels=hypermodels))
+
+            # Build input_node_ids for next depth.
+            input_node_ids = list(sorted([self._node_to_id[hypermodel.outputs[0]]
+                                          for hypermodel in hypermodels]))
+        return dataset
+
+    def _preprocess_transform(self, x, y, input_node_ids, hypermodels):
         x = nest.flatten(x)
-        q = queue.Queue()
-        for input_node, data in zip(self.inputs, x):
-            q.put((input_node, data))
-
-        new_x = []
-        while not q.empty():
-            node, data = q.get()
-            if self._is_model_inputs(node):
-                new_x.append((self._node_to_id[node], data))
-                if fit:
-                    node.shape = utils.dataset_shape(data)
-
-            for hypermodel in node.out_hypermodels:
-                if isinstance(hypermodel, processor.HyperPreprocessor):
-                    if fit:
-                        hypermodel.fit(hp, data)
-                    q.put((hypermodel.outputs[0], hypermodel.transform(hp, data)))
-        # Sort by id.
-        new_x = sorted(new_x, key=lambda a: a[0])
-
-        # Remove the id from the list.
-        return_x = []
-        for node_id, data in new_x:
-            self._nodes[node_id].shape = utils.dataset_shape(data)
-            return_x.append(data)
-        return return_x, y
+        id_to_data = {
+            node_id: temp_x
+            for temp_x, node_id in zip(x, input_node_ids)
+        }
+        output_data = {}
+        # Keep the Keras Model inputs even they are not inputs to the hypermodels.
+        for node_id, data in id_to_data.items():
+            if self._is_model_inputs(self._nodes[node_id]):
+                output_data[node_id] = data
+        # Transform each x by the corresponding hypermodel
+        for hm in hypermodels:
+            data = [id_to_data[self._node_to_id[input_node]]
+                    for input_node in hm.inputs]
+            data = tf.py_function(hm.transform,
+                                  inp=nest.flatten(data),
+                                  Tout=hm.output_types())
+            data = nest.flatten(data)[0]
+            data.set_shape(hm.output_shape())
+            output_data[self._node_to_id[hm.outputs[0]]] = data
+        return tuple(map(
+            lambda index: output_data[index], sorted(output_data))), y
 
     @staticmethod
     def _is_model_inputs(node):
@@ -364,9 +436,11 @@ class GraphAutoModel(kerastuner.HyperModel):
         self._label_encoders = []
         new_y = []
         for temp_y, output_node in zip(y, self.outputs):
-            head = output_node.in_hypermodels[0]
+            head = output_node
+            if isinstance(head, hyper_node.Node):
+                head = output_node.in_hypermodels[0]
             if (isinstance(head, hyper_head.ClassificationHead) and
-                    self._is_label(temp_y)):
+                    utils.is_label(temp_y)):
                 label_encoder = processor.OneHotEncoder()
                 label_encoder.fit(y)
                 new_y.append(label_encoder.transform(y))
@@ -385,42 +459,31 @@ class GraphAutoModel(kerastuner.HyperModel):
                 new_y.append(temp_y)
         return new_y
 
-    @staticmethod
-    def _is_label(y):
-        return len(y.flatten()) == len(y) and len(set(y.flatten())) > 2
 
+class GraphAutoModel(AutoModel):
+    """A HyperModel defined by a graph of HyperBlocks.
 
-class AutoModel(GraphAutoModel):
-    """ A HyperModel defined by inputs and outputs.
-
-    AutoModel is a subclass of HyperModel. Besides the HyperModel properties,
+    GraphAutoModel is a subclass of HyperModel. Besides the HyperModel properties,
     it also has a tuner to tune the HyperModel. The user can use it in a similar
     way to a Keras model since it also has `fit()` and  `predict()` methods.
 
-    The user can specify the inputs and outputs of the AutoModel. It will infer
-    the rest of the high-level neural architecture.
+    The user can specify the high-level neural architecture by connecting the
+    HyperBlocks with the functional API, which is the same as
+    the Keras functional API.
 
     Attributes:
-        inputs: A list of or a HyperNode instance.
-            The input node(s) of a the AutoModel.
-        outputs: A list of or a HyperHead instance.
-            The output head(s) of the AutoModel.
+        inputs: A list of or a HyperNode instances.
+            The input node(s) of the GraphAutoModel.
+        outputs: A list of or a HyperNode instances.
+            The output node(s) of the GraphAutoModel.
         max_trials: Int. The maximum number of different models to try.
-        directory: String. The path to a directory for storing the search outputs.
+        directory: String. The path to the directory
+            for storing the search outputs.
     """
 
-    def __init__(self,
-                 inputs,
-                 outputs,
-                 **kwargs):
-        inputs = nest.flatten(inputs)
-        outputs = nest.flatten(outputs)
-        middle_nodes = [input_node.related_block()(input_node)
-                        for input_node in inputs]
-        if len(middle_nodes) > 1:
-            output_node = hyper_block.Merge()(middle_nodes)
-        else:
-            output_node = middle_nodes[0]
-        outputs = [output_blocks(output_node)
-                   for output_blocks in outputs]
-        super().__init__(inputs, outputs, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super(GraphAutoModel, self).__init__(*args, **kwargs)
+        self._build_network()
+
+    def _meta_build(self, dataset):
+        pass

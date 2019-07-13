@@ -19,39 +19,25 @@ class Node(object):
         return tf.keras.Input(shape=self.shape)
 
 
+class TextNode(Node):
+    pass
+
+
 class Input(Node):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    @staticmethod
-    def related_block():
-        return hyper_block.GeneralBlock()
+    pass
 
 
 class ImageInput(Input):
-
-    @staticmethod
-    def related_block():
-        return hyper_block.ImageBlock()
+    pass
 
 
-class TextInput(Input):
-
-    @staticmethod
-    def related_block():
-        return hyper_block.TextBlock()
+class TextInput(Input, TextNode):
+    pass
 
 
 class StructuredInput(Input):
-
-    @staticmethod
-    def related_block():
-        return hyper_block.StructuredBlock()
+    pass
 
 
 class TimeSeriesInput(Input):
-
-    @staticmethod
-    def related_block():
-        return hyper_block.TimeSeriesBlock()
+    pass

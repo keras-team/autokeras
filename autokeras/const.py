@@ -13,3 +13,6 @@ class Constant(object):
         'gru': tf.keras.layers.GRU,
         'lstm': tf.keras.layers.LSTM
     }
+
+    # Text
+    VOCABULARY_SIZE = 20000
