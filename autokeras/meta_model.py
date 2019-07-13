@@ -106,7 +106,7 @@ class TextAssembler(Assembler):
             output_node = processor.TextToNgramVector()(output_node)
             output_node = hyper_block.DenseBlock()(output_node)
         else:
-            output_node = processor.TextToSequenceVector()(output_node)
+            output_node = processor.TextToIntSequence()(output_node)
             output_node = hyper_block.EmbeddingBlock(
                 pretrained=(ratio < 15000))(output_node)
             output_node = hyper_block.ConvBlock(separable=True)(output_node)

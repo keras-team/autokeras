@@ -77,7 +77,7 @@ class HyperPreprocessor(hb_module.HyperBlock):
         """
         raise NotImplementedError
 
-    def post_fit(self):
+    def finalize(self):
         """Training process of the preprocessor after update with all instances."""
         pass
 
@@ -152,7 +152,7 @@ class Normalize(HyperPreprocessor):
         self.count += 1
         self._shape = x.shape
 
-    def post_fit(self):
+    def finalize(self):
         axis = tuple(range(len(self._shape) - 1))
         self.mean = np.mean(self.sum / self.count, axis=axis)
         square_mean = np.mean(self.square_sum / self.count, axis=axis)
@@ -177,7 +177,7 @@ class Normalize(HyperPreprocessor):
         return self.mean.shape
 
 
-class TextToSequenceVector(HyperPreprocessor):
+class TextToIntSequence(HyperPreprocessor):
     """Convert raw texts to sequences of word indices."""
 
     def __init__(self, max_len=None, **kwargs):
@@ -232,7 +232,7 @@ class TextToNgramVector(HyperPreprocessor):
         #  TfidfVectorizer and SelectKBest
         self._texts.append(nest.flatten(x)[0].numpy().decode('utf-8'))
 
-    def post_fit(self):
+    def finalize(self):
         self._texts = np.array(self._texts)
         self._vectorizer.fit(self._texts)
         data = self._vectorizer.transform(self._texts)

@@ -135,8 +135,7 @@ class AutoModel(kerastuner.HyperModel):
                 # Add the collected hypermodels to the AutoModel.
                 self._add_hypermodel(hypermodel)
                 self._hypermodel_topo_depth[
-                    self._hypermodel_to_id[hypermodel]
-                ] = depth_count
+                    self._hypermodel_to_id[hypermodel]] = depth_count
 
                 # Decrease the in degree of the output nodes.
                 for output_node in hypermodel.outputs:
@@ -386,7 +385,7 @@ class AutoModel(kerastuner.HyperModel):
                         hypermodel.update(data)
 
             for hypermodel in hypermodels:
-                hypermodel.post_fit()
+                hypermodel.finalize()
 
             # Transform the dataset.
             dataset = dataset.map(functools.partial(

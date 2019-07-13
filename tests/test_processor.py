@@ -26,7 +26,7 @@ def test_sequence():
     texts = ['The cat sat on the mat.',
              'The dog sat on the log.',
              'Dogs and cats living together.']
-    tokenize = processor.TextToSequenceVector()
+    tokenize = processor.TextToIntSequence()
     dataset = tf.data.Dataset.from_tensor_slices(texts)
     tokenize.set_hp(kerastuner.HyperParameters())
     for x in dataset:

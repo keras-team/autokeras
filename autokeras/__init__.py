@@ -19,7 +19,7 @@ from autokeras.hypermodel.hyper_block import DenseBlock
 from autokeras.hypermodel.hyper_block import EmbeddingBlock
 
 from autokeras.hypermodel.processor import Normalize
-from autokeras.hypermodel.processor import TextToSequenceVector
+from autokeras.hypermodel.processor import TextToIntSequence
 from autokeras.hypermodel.processor import TextToNgramVector
 
 from autokeras.hypermodel.hyper_node import Input
