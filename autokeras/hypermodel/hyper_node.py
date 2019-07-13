@@ -15,46 +15,29 @@ class Node(object):
     def add_out_hypermodel(self, hypermodel):
         self.out_hypermodels.append(hypermodel)
 
-    def build(self, hp):
-        raise NotImplementedError
+    def build(self):
+        return tf.keras.Input(shape=self.shape)
+
+
+class TextNode(Node):
+    pass
 
 
 class Input(Node):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def build(self, hp):
-        return tf.keras.Input(shape=self.shape)
-
-    @staticmethod
-    def related_block():
-        return hyper_block.GeneralBlock()
+    pass
 
 
 class ImageInput(Input):
-
-    @staticmethod
-    def related_block():
-        return hyper_block.ImageBlock()
+    pass
 
 
-class TextInput(Input):
-
-    @staticmethod
-    def related_block():
-        return hyper_block.TextBlock()
+class TextInput(Input, TextNode):
+    pass
 
 
 class StructuredInput(Input):
-
-    @staticmethod
-    def related_block():
-        return hyper_block.StructuredBlock()
+    pass
 
 
 class TimeSeriesInput(Input):
-
-    @staticmethod
-    def related_block():
-        return hyper_block.TimeSeriesBlock()
+    pass

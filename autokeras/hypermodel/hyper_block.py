@@ -1,9 +1,10 @@
 import numpy as np
 import tensorflow as tf
 import kerastuner
+from tensorflow.python.util import nest
 
 from autokeras.hypermodel import hyper_node
-from autokeras import layer_utils
+from autokeras import utils
 from autokeras import const
 
 
@@ -16,7 +17,7 @@ class HyperBlock(kerastuner.HyperModel):
         self._num_output_node = 1
 
     def __call__(self, inputs):
-        self.inputs = layer_utils.format_inputs(inputs, self.name)
+        self.inputs = nest.flatten(inputs)
         for input_node in self.inputs:
             input_node.add_out_hypermodel(self)
         self.outputs = []
@@ -40,7 +41,9 @@ class ResNetBlock(HyperBlock):
 class DenseBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        input_node = inputs[0]
         output_node = input_node
         output_node = Flatten().build(hp, output_node)
         layer_stack = hp.Choice(
@@ -82,7 +85,9 @@ class RNNBlock(HyperBlock):
         self.return_sequences = return_sequences
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        input_node = inputs[0]
         shape = input_node.shape.as_list()
         if len(shape) < 3:
             raise ValueError(
@@ -131,7 +136,9 @@ class RNNBlock(HyperBlock):
 class ImageBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        input_node = inputs[0]
         output_node = input_node
 
         block_type = hp.Choice('block_type',
@@ -149,35 +156,54 @@ class ImageBlock(HyperBlock):
 
 class ConvBlock(HyperBlock):
 
+    def __init__(self, separable=None, **kwargs):
+        super().__init__(**kwargs)
+        self.separable = separable
+
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        input_node = inputs[0]
         output_node = input_node
 
+        separable = self.separable
+        if separable is None:
+            separable = hp.Choice('separable', [True, False], default=False)
+        if separable:
+            conv = utils.get_sep_conv(input_node.shape)
+        else:
+            conv = utils.get_conv(input_node.shape)
+        pool = utils.get_max_pooling(input_node.shape)
+        dropout = utils.get_dropout(input_node.shape)
         kernel_size = hp.Choice('kernel_size', [3, 5, 7], default=3)
+        dropout_rate = hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5)
+
         for i in range(hp.Choice('num_blocks', [1, 2, 3], default=2)):
-            output_node = tf.keras.layers.Conv2D(
+            if dropout_rate > 0:
+                output_node = dropout(dropout_rate)(output_node)
+            output_node = conv(
                 hp.Choice('filters_{i}_1'.format(i=i),
                           [16, 32, 64],
                           default=32),
                 kernel_size,
                 padding=self._get_padding(kernel_size, output_node))(output_node)
 
-            output_node = tf.keras.layers.Conv2D(
+            output_node = conv(
                 hp.Choice('filters_{i}_2'.format(i=i),
                           [16, 32, 64],
                           default=32),
                 kernel_size,
                 padding=self._get_padding(kernel_size, output_node))(output_node)
 
-            output_node = tf.keras.layers.MaxPool2D(
+            output_node = pool(
                 kernel_size - 1,
                 padding=self._get_padding(kernel_size - 1, output_node))(output_node)
         return output_node
 
     @staticmethod
     def _get_padding(kernel_size, output_node):
-        if (kernel_size >= output_node.shape[1] * 2 and
-                kernel_size >= output_node.shape[2] * 2):
+        if (kernel_size * 2 <= output_node.shape[1] and
+                kernel_size * 2 <= output_node.shape[2]):
             return 'valid'
         return 'same'
 
@@ -193,7 +219,7 @@ def shape_compatible(shape1, shape2):
 class Merge(HyperBlock):
 
     def build(self, hp, inputs=None):
-        inputs = layer_utils.format_inputs(inputs, self.name)
+        inputs = nest.flatten(inputs)
         if len(inputs) == 1:
             return inputs
 
@@ -231,7 +257,9 @@ class XceptionBlock(HyperBlock):
     """
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        input_node = inputs[0]
         output_node = input_node
         channel_axis = 1 \
             if tf.keras.backend.image_data_format() == 'channels_first' else -1
@@ -367,7 +395,9 @@ class XceptionBlock(HyperBlock):
 class Flatten(HyperBlock):
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        input_node = inputs[0]
         if len(input_node.shape) > 2:
             return tf.keras.layers.Flatten()(input_node)
         return input_node
@@ -376,7 +406,9 @@ class Flatten(HyperBlock):
 class SpatialReduction(HyperBlock):
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        input_node = inputs[0]
         output_node = input_node
 
         # No need to reduce.
@@ -391,10 +423,10 @@ class SpatialReduction(HyperBlock):
         if reduction_type == 'flatten':
             output_node = Flatten().build(hp, output_node)
         elif reduction_type == 'global_max':
-            output_node = layer_utils.get_global_max_pooling_layer(
+            output_node = utils.get_global_max_pooling(
                 output_node.shape)()(output_node)
         elif reduction_type == 'global_ave':
-            output_node = layer_utils.get_global_average_pooling_layer(
+            output_node = utils.get_global_average_pooling(
                 output_node.shape)()(output_node)
         return output_node
 
@@ -402,7 +434,9 @@ class SpatialReduction(HyperBlock):
 class TemporalReduction(HyperBlock):
 
     def build(self, hp, inputs=None):
-        input_node = layer_utils.format_inputs(inputs, self.name, num=1)[0]
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        input_node = inputs[0]
         output_node = input_node
 
         # No need to reduce.
@@ -426,6 +460,56 @@ class TemporalReduction(HyperBlock):
             output_node = tf.math.reduce_min(output_node, axis=-2)
 
         return output_node
+
+
+class EmbeddingBlock(HyperBlock):
+    """Word embedding block for sequences.
+
+    The input should be tokenized sequences with the same length, where each element
+    of a sequence should be the index of the word.
+
+    Attributes:
+        pretrained: Boolean. Use pretrained word embedding.
+    """
+
+    def __init__(self,
+                 pretrained=None,
+                 is_embedding_trainable=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.pretrained = pretrained
+        self.is_embedding_trainable = is_embedding_trainable
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        pretrained = self.pretrained
+        if pretrained is None:
+            pretrained = hp.Choice('pretrained',
+                                   [True, False],
+                                   default=False)
+        is_embedding_trainable = self.is_embedding_trainable
+        if is_embedding_trainable is None:
+            is_embedding_trainable = hp.Choice('is_embedding_trainable',
+                                               [True, False],
+                                               default=False)
+        embedding_dim = hp.Choice('embedding_dim',
+                                  [32, 64, 128, 256, 512],
+                                  default=128)
+        if pretrained:
+            # TODO: load from pretrained weights
+            layer = tf.keras.layers.Embedding(
+                input_dim=input_node.shape[1],
+                output_dim=embedding_dim,
+                input_length=const.Constant.VOCABULARY_SIZE,
+                trainable=is_embedding_trainable)
+            # weights=[embedding_matrix])
+        else:
+            layer = tf.keras.layers.Embedding(
+                input_dim=input_node.shape[1],
+                output_dim=embedding_dim,
+                input_length=const.Constant.VOCABULARY_SIZE,
+                trainable=is_embedding_trainable)
+        return layer(input_node)
 
 
 class TextBlock(RNNBlock):
