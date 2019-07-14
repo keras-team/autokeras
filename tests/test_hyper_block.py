@@ -64,7 +64,7 @@ def test_conv_block(tmp_dir):
 
 
 def test_rnn_block(tmp_dir):
-    x_train = np.random.rand(100, 32, 10, 10)
+    x_train = np.random.rand(100, 32, 10)
     y_train = np.random.randint(5, size=100)
     y_train = tf.keras.utils.to_categorical(y_train)
 
@@ -73,7 +73,7 @@ def test_rnn_block(tmp_dir):
     output_node = ak.RNNBlock()(output_node)
     output_node = ak.ClassificationHead()(output_node)
 
-    input_node.shape = (32, 10, 10)
+    input_node.shape = (32, 10)
     output_node[0].shape = (5,)
 
     graph = ak.GraphAutoModel(input_node, output_node,
