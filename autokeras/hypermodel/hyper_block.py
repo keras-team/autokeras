@@ -46,25 +46,21 @@ class DenseBlock(HyperBlock):
         input_node = inputs[0]
         output_node = input_node
         output_node = Flatten().build(hp, output_node)
-        layer_stack = hp.Choice(
-            'layer_stack',
-            ['dense-bn-act', 'dense-act'],
-            default='dense-bn-act')
-        dropout_rate = hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5)
+        use_bn = hp.Choice(
+            'use_bn',
+            [True, False],
+            default=False)
+        dropout_rate = hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0)
         for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
             units = hp.Choice(
                 'units_{i}'.format(i=i),
                 [16, 32, 64, 128, 256, 512, 1024],
                 default=32)
-            if layer_stack == 'dense-bn-act':
-                output_node = tf.keras.layers.Dense(units)(output_node)
+            output_node = tf.keras.layers.Dense(units)(output_node)
+            if use_bn:
                 output_node = tf.keras.layers.BatchNormalization()(output_node)
-                output_node = tf.keras.layers.ReLU()(output_node)
-                output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
-            elif layer_stack == 'dense-act':
-                output_node = tf.keras.layers.Dense(units)(output_node)
-                output_node = tf.keras.layers.ReLU()(output_node)
-                output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
+            output_node = tf.keras.layers.ReLU()(output_node)
+            output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         return output_node
 
 
@@ -84,7 +80,8 @@ class RNNBlock(HyperBlock):
         self.bidirectional = bidirectional
         self.return_sequences = return_sequences
 
-    def attention_block(self, inputs):
+    @staticmethod
+    def attention_block(inputs):
         time_steps = int(inputs.shape[1])
         attention_out = tf.keras.layers.Permute((2, 1))(inputs)
         attention_out = tf.keras.layers.Dense(time_steps,
@@ -467,18 +464,18 @@ class TemporalReduction(HyperBlock):
 
         reduction_type = hp.Choice('reduction_type',
                                    ['flatten',
-                                    'max',
-                                    'ave',
-                                    'min'],
+                                    'global_max',
+                                    'global_ave',
+                                    'global_min'],
                                    default='global_ave')
 
         if reduction_type == 'flatten':
             output_node = Flatten().build(hp, output_node)
-        elif reduction_type == 'max':
+        elif reduction_type == 'global_max':
             output_node = tf.math.reduce_max(output_node, axis=-2)
-        elif reduction_type == 'ave':
+        elif reduction_type == 'global_ave':
             output_node = tf.math.reduce_mean(output_node, axis=-2)
-        elif reduction_type == 'min':
+        elif reduction_type == 'global_min':
             output_node = tf.math.reduce_min(output_node, axis=-2)
 
         return output_node
