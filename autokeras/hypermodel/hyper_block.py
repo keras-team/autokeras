@@ -96,22 +96,20 @@ class RNNBlock(HyperBlock):
         attention_out = tf.keras.layers.Permute((2, 1))(attention_out)
         mul_attention_out = tf.keras.layers.Multiply()([inputs, attention_out])
         return mul_attention_out
+        return inputs
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         shape = input_node.shape.as_list()
-        if len(shape) < 3:
+        if len(shape) != 3:
             raise ValueError(
                 "Expect the input tensor to have "
-                "at least 3 dimensions for rnn models, "
+                "exactly 3 dimensions for rnn models, "
                 "but got {shape}".format(shape=input_node.shape))
 
-        # Flatten feature_list to a single dimension.
-        # Final shape 3-D (num_sample , time_steps , features)
-        feature_size = np.prod(shape[2:])
-        input_node = tf.reshape(input_node, [-1, shape[1], feature_size])
+        feature_size = shape[-1]
         output_node = input_node
 
         in_layer = const.Constant.RNN_LAYERS[hp.Choice('rnn_type',
@@ -191,7 +189,6 @@ class ConvBlock(HyperBlock):
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
-
         separable = self.separable
         if separable is None:
             separable = hp.Choice('separable', [True, False], default=False)
@@ -213,14 +210,12 @@ class ConvBlock(HyperBlock):
                           default=32),
                 kernel_size,
                 padding=self._get_padding(kernel_size, output_node))(output_node)
-
             output_node = conv(
                 hp.Choice('filters_{i}_2'.format(i=i),
                           [16, 32, 64],
                           default=32),
                 kernel_size,
                 padding=self._get_padding(kernel_size, output_node))(output_node)
-
             output_node = pool(
                 kernel_size - 1,
                 padding=self._get_padding(kernel_size - 1, output_node))(output_node)
