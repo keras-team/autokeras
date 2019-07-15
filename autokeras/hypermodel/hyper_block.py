@@ -99,17 +99,13 @@ class RNNBlock(HyperBlock):
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         shape = input_node.shape.as_list()
-        if len(shape) < 3:
+        if len(shape) != 3:
             raise ValueError(
                 "Expect the input tensor to have "
-                "at least 3 dimensions for rnn models, "
+                "exactly 3 dimensions for rnn models, "
                 "but got {shape}".format(shape=input_node.shape))
 
-        # Flatten feature_list to a single dimension.
-        # Final shape 3-D (num_sample , time_steps , features)
-        # feature_size = np.prod(shape[2:])
-        # input_node = tf.reshape(input_node, [-1, shape[1], feature_size])
-        feature_size = shape[2]
+        feature_size = shape[-1]
         output_node = input_node
 
         in_layer = const.Constant.RNN_LAYERS[hp.Choice('rnn_type',
@@ -120,7 +116,7 @@ class RNNBlock(HyperBlock):
         bidirectional = self.bidirectional
         if bidirectional is None:
             bidirectional = hp.Choice('bidirectional',
-                                      [True,False],
+                                      [True, False],
                                       default=True)
 
         return_sequences = self.return_sequences
@@ -153,9 +149,6 @@ class RNNBlock(HyperBlock):
 
         output_node = self.attention_block(output_node) \
             if attention_mode == 'post' else output_node
-
-        # Why was this removed ?
-        output_node = Flatten().build(hp, output_node)
 
         return output_node
 
@@ -192,7 +185,6 @@ class ConvBlock(HyperBlock):
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
-        print("node shape passed",output_node.shape)
         separable = self.separable
         if separable is None:
             separable = hp.Choice('separable', [True, False], default=False)
@@ -208,25 +200,21 @@ class ConvBlock(HyperBlock):
         for i in range(hp.Choice('num_blocks', [1, 2, 3], default=2)):
             if dropout_rate > 0:
                 output_node = dropout(dropout_rate)(output_node)
-                print("dropout @ ",i)
             output_node = conv(
                 hp.Choice('filters_{i}_1'.format(i=i),
                           [16, 32, 64],
                           default=32),
                 kernel_size,
                 padding=self._get_padding(kernel_size, output_node))(output_node)
-            print("shape at layer ",i," conv 1 : ", output_node.shape)
             output_node = conv(
                 hp.Choice('filters_{i}_2'.format(i=i),
                           [16, 32, 64],
                           default=32),
                 kernel_size,
                 padding=self._get_padding(kernel_size, output_node))(output_node)
-            print("shape at layer ", i, " conv 2 : ", output_node.shape)
             output_node = pool(
                 kernel_size - 1,
                 padding=self._get_padding(kernel_size - 1, output_node))(output_node)
-            print("shape at layer ", i, " pool : ", output_node.shape)
         return output_node
 
     @staticmethod
