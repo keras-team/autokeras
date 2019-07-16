@@ -255,3 +255,141 @@ class TextToNgramVector(HyperPreprocessor):
 
     def output_shape(self):
         return self._shape
+
+    
+class ImageAugment(HyperPreprocessor):
+
+    def __init__(self,
+                 rotation_range=None,
+                 whether_random_crop=None,
+                 brightness_range=None,  # fraction 0-1  [X]
+                 saturation_range=None,  # fraction 0-1  [X]
+                 contrast_range=None,  # fraction 0-1  [X]
+                 horizontal_flip=None,  # boolean  [X]
+                 vertical_flip=None,
+                 whether_translation=None,
+                 gaussian_noise=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.rotation_range = rotation_range
+        self.whether_random_crop = whether_random_crop
+        self.brightness_range = brightness_range
+        self.saturation_range = saturation_range
+        self.contrast_range = contrast_range
+        self.horizontal_flip = horizontal_flip
+        self.vertical_flip = vertical_flip
+        self.whether_translation = whether_translation
+        self.gaussian_noise = gaussian_noise
+        self._shape = None
+
+    @staticmethod
+    def __get_min_and_max(value, name):
+        if isinstance(value, (tuple, list)):
+            if len(value) != 2:
+                raise ValueError(
+                    'Argument %s expected either a float between 0 and 1, '
+                    'or a tuple of 2 floats between 0 and 1, '
+                    'but got: %s' % (value, name))
+            min_value, max_value = value
+        else:
+            min_value = 1. - value
+            max_value = 1. + value
+        return min_value, max_value
+
+    def transform(self, x):
+        self._shape = x.shape
+        rotation_range = self.rotation_range
+        if rotation_range is None:
+            rotation_range = self._hp.Choice('rotation_range')
+        whether_random_crop = self.whether_random_crop
+        if whether_random_crop is None:
+            whether_random_crop = self._hp.Choice('whether_random_crop')
+        brightness_range = self.brightness_range
+        if brightness_range is None:
+            brightness_range = self._hp.Choice('brightness_range')
+        saturation_range = self._hp.Choice('saturation_range')
+        if saturation_range is None:
+            saturation_range = self._hp.Choice('saturation_range')
+        contrast_range = self.contrast_range
+        if contrast_range is None:
+            contrast_range = self._hp.Choice('contrast_range')
+        horizontal_flip = self.horizontal_flip
+        if horizontal_flip is None:
+            horizontal_flip = self._hp.Choice('horizontal_flip')
+        vertical_flip = self.vertical_flip
+        if vertical_flip is None:
+            vertical_flip = self._hp.Choice('vertical_flip')
+        whether_translation = self.whether_translation
+        if whether_translation is None:
+            whether_translation = self._hp.Choice('whether_translation')
+        gaussian_noise = self.gaussian_noise
+        if gaussian_noise is None:
+            gaussian_noise = self._hp.Choice('gaussian_noise')
+        x = tf.cast(x, dtype=tf.float32)
+        if gaussian_noise:
+            noise = tf.random_normal(shape=tf.shape(x),
+                                     mean=0.0, stddev=1.0, dtype=tf.float32)
+            x = tf.add(x, noise)
+        if whether_translation:
+            x = tf.image.pad_to_bounding_box(x, self._hp.Choice('translation_top'),
+                                             self._hp.Choice('translation_left'),
+                                             self._hp.Choice('target_height') +
+                                             self._hp.Choice('translation_bottom') +
+                                             self._hp.Choice('translation_top'),
+                                             self._hp.Choice('target_width') +
+                                             self._hp.Choice('translation_right') +
+                                             self._hp.Choice('translation_left'))
+            x = tf.image.crop_to_bounding_box(x, self._hp.Choice('translation_bottom'),
+                                              self._hp.Choice('translation_right'),
+                                              self._hp.Choice('target_height'),
+                                              self._hp.Choice('target_width'))
+        if rotation_range:
+            if self._hp.Choice('rotation_range') == 90:
+                x = tf.image.rot90(x, k=1)
+            elif self._hp.Choice('rotation_range') == 180:
+                x = tf.image.rot90(x, k=2)
+            elif self._hp.Choice('rotation_range') == 270:
+                x = tf.image.rot90(x, k=3)
+            else:
+                x = tf.image.rot90(x, k=4)
+        if brightness_range:
+            min_value, max_value = self.__get_min_and_max(
+                self._hp.Choice('brightness_range'),
+                'brightness_range')
+            x = tf.image.random_brightness(x, min_value, max_value)
+        if saturation_range:
+            min_value, max_value = self.__get_min_and_max(
+                self._hp.Choice('saturation_range'),
+                'saturation_range')
+            x = tf.image.random_saturation(x, min_value, max_value)
+        if contrast_range:
+            min_value, max_value = self.__get_min_and_max(
+                self._hp.Choice('contrast_range'),
+                'contrast_range')
+            x = tf.image.random_contrast(
+                x, min_value, max_value)
+        if whether_random_crop:
+            # TODO: No batchsize for x, because x is just one instance like a picture.
+            # TODO: Have a test to see what is the shape of the x
+            crop_size = [self._shape[0], self._hp.Choice('random_crop_height'),
+                         self._hp.Choice('random_crop_width'), self._shape[4]]
+            seed = np.random.randint(self._hp.Choice('random_crop_seed'))
+            target_shape = (self._hp.Choice('target_height'),
+                            self._hp.Choice('target_width'))
+            x = tf.image.resize(
+                tf.image.random_crop(x, size=crop_size, seed=seed),
+                size=target_shape)
+        if horizontal_flip:
+            x = tf.image.flip_left_right(x)
+        if vertical_flip:
+            x = tf.image.flip_up_down(x)
+        return x
+
+    def output_types(self):
+        return tf.float32
+
+    def output_shape(self):
+        return self._shape
+
+    def update(self, x):
+        pass
