@@ -295,7 +295,7 @@ class Merge(HyperBlock):
 
         merge_type = self.merge_type or hp.Choice("merge_type",
                                                   ['add', 'concatenate'],
-                                                  default='Add')
+                                                  default='add')
 
         if not all([shape_compatible(input_node.shape, inputs[0].shape) for
                     input_node in inputs]):

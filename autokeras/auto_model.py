@@ -451,6 +451,8 @@ class AutoModel(kerastuner.HyperModel):
         return new_y
 
     def _postprocess(self, y):
+        if not self._label_encoders:
+            return y
         new_y = []
         for temp_y, label_encoder in zip(y, self._label_encoders):
             if label_encoder:
