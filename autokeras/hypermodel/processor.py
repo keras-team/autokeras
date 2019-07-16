@@ -256,7 +256,7 @@ class TextToNgramVector(HyperPreprocessor):
     def output_shape(self):
         return self._shape
 
-    
+
 class ImageAugment(HyperPreprocessor):
 
     def __init__(self,
@@ -339,7 +339,8 @@ class ImageAugment(HyperPreprocessor):
                                              self._hp.Choice('target_width') +
                                              self._hp.Choice('translation_right') +
                                              self._hp.Choice('translation_left'))
-            x = tf.image.crop_to_bounding_box(x, self._hp.Choice('translation_bottom'),
+            x = tf.image.crop_to_bounding_box(x,
+                                              self._hp.Choice('translation_bottom'),
                                               self._hp.Choice('translation_right'),
                                               self._hp.Choice('target_height'),
                                               self._hp.Choice('target_width'))
@@ -369,8 +370,6 @@ class ImageAugment(HyperPreprocessor):
             x = tf.image.random_contrast(
                 x, min_value, max_value)
         if whether_random_crop:
-            # TODO: No batchsize for x, because x is just one instance like a picture.
-            # TODO: Have a test to see what is the shape of the x
             crop_size = [self._shape[0], self._hp.Choice('random_crop_height'),
                          self._hp.Choice('random_crop_width'), self._shape[4]]
             seed = np.random.randint(self._hp.Choice('random_crop_seed'))
