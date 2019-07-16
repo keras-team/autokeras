@@ -35,17 +35,39 @@ class HyperBlock(kerastuner.HyperModel):
 
 class ResNetBlock(HyperBlock, resnet.HyperResNet):
 
-    def __init__(self, **kwargs):
+    def __init__(self,
+                 version=None,
+                 pooling=None,
+                 **kwargs):
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
+        self.version = version
+        self.pooling = pooling
 
     def build(self, hp, inputs=None):
         self.input_tensor = nest.flatten(inputs)[0]
         self.input_shape = None
+
+        hp.Choice('version', ['v1', 'v2', 'next'], default='v2')
+        hp.Choice('pooling', ['avg', 'max'], default='avg')
+
+        hp.values['version'] = self.version or hp.values['version']
+        hp.values['pooling'] = self.pooling or hp.values['pooling']
+
         model = super(ResNetBlock, self).build(hp)
         return model.outputs
 
 
 class DenseBlock(HyperBlock):
+
+    def __init__(self,
+                 num_layers=None,
+                 use_bn=None,
+                 dropout_rate=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.num_layers = num_layers
+        self.use_bn = use_bn
+        self.dropout_rate = dropout_rate
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -53,12 +75,14 @@ class DenseBlock(HyperBlock):
         input_node = inputs[0]
         output_node = input_node
         output_node = Flatten().build(hp, output_node)
-        use_bn = hp.Choice(
-            'use_bn',
-            [True, False],
-            default=False)
-        dropout_rate = hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0)
-        for i in range(hp.Choice('num_layers', [1, 2, 3], default=2)):
+
+        num_layers = self.num_layers or hp.Choice('num_layers', [1, 2, 3], default=2)
+        use_bn = self.use_bn or hp.Choice('use_bn', [True, False], default=False)
+        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
+                                                      [0, 0.25, 0.5],
+                                                      default=0)
+
+        for i in range(num_layers):
             units = hp.Choice(
                 'units_{i}'.format(i=i),
                 [16, 32, 64, 128, 256, 512, 1024],
@@ -75,17 +99,23 @@ class RNNBlock(HyperBlock):
     """ An RNN HyperBlock.
 
     Attributes:
-        bidirectional: Boolean. If not provided, it would be a tunable variable.
         return_sequences: Boolean.  If not provided, it would be a tunable variable.
+        bidirectional: Boolean. If not provided, it would be a tunable variable.
     """
 
     def __init__(self,
+                 return_sequences=False,
                  bidirectional=None,
-                 return_sequences=None,
+                 attention=None,
+                 num_layers=None,
+                 layer_type=None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.bidirectional = bidirectional
         self.return_sequences = return_sequences
+        self.bidirectional = bidirectional
+        self.attention = attention
+        self.num_layers = num_layers
+        self.layer_type = layer_type
 
     @staticmethod
     def attention_block(inputs):
@@ -104,9 +134,9 @@ class RNNBlock(HyperBlock):
         shape = input_node.shape.as_list()
         if len(shape) < 3:
             raise ValueError(
-                "Expect the input tensor to have "
-                "at least 3 dimensions for rnn models, "
-                "but got {shape}".format(shape=input_node.shape))
+                'Expect the input tensor to have '
+                'at least 3 dimensions for rnn models, '
+                'but got {shape}'.format(shape=input_node.shape))
 
         # Flatten feature_list to a single dimension.
         # Final shape 3-D (num_sample , time_steps , features)
@@ -114,52 +144,46 @@ class RNNBlock(HyperBlock):
         input_node = tf.reshape(input_node, [-1, shape[1], feature_size])
         output_node = input_node
 
-        in_layer = const.Constant.RNN_LAYERS[hp.Choice('rnn_type',
-                                                       ['gru', 'lstm'],
-                                                       default='lstm')]
-        choice_of_layers = hp.Choice('num_layers', [1, 2, 3], default=2)
+        attention_choices = ['pre', 'post', 'none'] if self.return_sequences \
+            else ['pre', 'none']
+        bidirectional = self.bidirectional or hp.Choice('bidirectional',
+                                                        [True, False],
+                                                        default=True)
+        attention = self.attention or hp.Choice('attention',
+                                                attention_choices,
+                                                default='post')
+        layer_type = self.layer_type or hp.Choice('layer_type',
+                                                  ['gru', 'lstm'],
+                                                  default='lstm')
+        num_layers = self.num_layers or hp.Choice('num_layers',
+                                                  [1, 2, 3],
+                                                  default=2)
 
-        bidirectional = self.bidirectional
-        if bidirectional is None:
-            bidirectional = hp.Choice('bidirectional',
-                                      [True, False],
-                                      default=True)
-
-        return_sequences = self.return_sequences
-        if return_sequences is None:
-            return_sequences = hp.Choice('return_sequences',
-                                         [True, False],
-                                         default=True)
-
-        if return_sequences:
-            attention_choices = ['pre', 'post', 'none']
-        else:
-            attention_choices = ['pre', 'none']
-
-        attention_mode = hp.Choice('attention', attention_choices, default='post')
+        in_layer = const.Constant.RNN_LAYERS[layer_type]
         output_node = self.attention_block(output_node) \
-            if attention_mode == 'pre' else output_node
-
-        for i in range(choice_of_layers):
-            temp_return_sequences = True
-            if i == choice_of_layers - 1:
-                temp_return_sequences = return_sequences
+            if attention == 'pre' else output_node
+        for i in range(num_layers):
+            return_sequences = True
+            if i == num_layers - 1:
+                return_sequences = self.return_sequences
             if bidirectional:
                 output_node = tf.keras.layers.Bidirectional(
                     in_layer(feature_size,
-                             return_sequences=temp_return_sequences))(output_node)
+                             return_sequences=return_sequences))(output_node)
             else:
                 output_node = in_layer(
                     feature_size,
-                    return_sequences=temp_return_sequences)(output_node)
-
+                    return_sequences=return_sequences)(output_node)
         output_node = self.attention_block(output_node) \
-            if attention_mode == 'post' else output_node
-
+            if attention == 'post' else output_node
         return output_node
 
 
 class ImageBlock(HyperBlock):
+
+    def __init__(self, block_type=None, **kwargs):
+        super().__init__(**kwargs)
+        self.block_type = block_type
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -167,9 +191,9 @@ class ImageBlock(HyperBlock):
         input_node = inputs[0]
         output_node = input_node
 
-        block_type = hp.Choice('block_type',
-                               ['resnet', 'xception', 'vanilla'],
-                               default='resnet')
+        block_type = self.block_type or hp.Choice('block_type',
+                                                  ['resnet', 'xception', 'vanilla'],
+                                                  default='resnet')
 
         if block_type == 'resnet':
             output_node = ResNetBlock().build(hp, output_node)
@@ -182,8 +206,16 @@ class ImageBlock(HyperBlock):
 
 class ConvBlock(HyperBlock):
 
-    def __init__(self, separable=None, **kwargs):
+    def __init__(self,
+                 kernel_size=None,
+                 dropout_rate=None,
+                 num_blocks=None,
+                 separable=None,
+                 **kwargs):
         super().__init__(**kwargs)
+        self.kernel_size = kernel_size
+        self.dropout_rate = dropout_rate
+        self.num_blocks = num_blocks
         self.separable = separable
 
     def build(self, hp, inputs=None):
@@ -192,19 +224,27 @@ class ConvBlock(HyperBlock):
         input_node = inputs[0]
         output_node = input_node
 
-        separable = self.separable
-        if separable is None:
-            separable = hp.Choice('separable', [True, False], default=False)
+        kernel_size = self.kernel_size or hp.Choice('kernel_size',
+                                                    [3, 5, 7],
+                                                    default=3)
+        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
+                                                      [0, 0.25, 0.5],
+                                                      default=0.5)
+        num_blocks = self.num_blocks or hp.Choice('num_blocks',
+                                                  [1, 2, 3],
+                                                  default=2)
+        separable = self.separable or hp.Choice('separable',
+                                                [True, False],
+                                                default=False)
+
         if separable:
             conv = utils.get_sep_conv(input_node.shape)
         else:
             conv = utils.get_conv(input_node.shape)
         pool = utils.get_max_pooling(input_node.shape)
         dropout = utils.get_dropout(input_node.shape)
-        kernel_size = hp.Choice('kernel_size', [3, 5, 7], default=3)
-        dropout_rate = hp.Choice('dropout_rate', [0, 0.25, 0.5], default=0.5)
 
-        for i in range(hp.Choice('num_blocks', [1, 2, 3], default=2)):
+        for i in range(num_blocks):
             if dropout_rate > 0:
                 output_node = dropout(dropout_rate)(output_node)
             output_node = conv(
@@ -244,10 +284,18 @@ def shape_compatible(shape1, shape2):
 
 class Merge(HyperBlock):
 
+    def __init__(self, merge_type=None, **kwargs):
+        super().__init__(**kwargs)
+        self.merge_type = merge_type
+
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
         if len(inputs) == 1:
             return inputs
+
+        merge_type = self.merge_type or hp.Choice("merge_type",
+                                                  ['add', 'concatenate'],
+                                                  default='Add')
 
         if not all([shape_compatible(input_node.shape, inputs[0].shape) for
                     input_node in inputs]):
@@ -260,14 +308,14 @@ class Merge(HyperBlock):
         #  ) after another layer. Check if the inputs are all of the same
         #  shape
         if all([input_node.shape == inputs[0].shape for input_node in inputs]):
-            if hp.Choice("merge_type", ['Add', 'Concatenate'], default='Add'):
+            if merge_type == 'add':
                 return tf.keras.layers.Add(inputs)
 
-        return tf.keras.layers.Add()(inputs)
+        return tf.keras.layers.Concatenate()(inputs)
 
 
 class XceptionBlock(HyperBlock, xception.HyperXception):
-    """ XceptionBlock
+    """XceptionBlock.
 
     An Xception structure, used for specifying your model with specific datasets.
 
@@ -282,12 +330,43 @@ class XceptionBlock(HyperBlock, xception.HyperXception):
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self,
+                 activation=None,
+                 conv2d_num_filters=None,
+                 kernel_size=None,
+                 initial_strides=None,
+                 num_residual_blocks=None,
+                 pooling=None,
+                 **kwargs):
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
+        self.activation = activation
+        self.conv2d_num_filters = conv2d_num_filters
+        self.kernel_size = kernel_size
+        self.initial_strides = initial_strides
+        self.num_residual_blocks = num_residual_blocks
+        self.pooling = pooling
 
     def build(self, hp, inputs=None):
         self.input_tensor = nest.flatten(inputs)[0]
         self.input_shape = None
+
+        hp.Choice('activation', ['relu', 'selu'])
+        hp.Choice('conv2d_num_filters', [32, 64, 128], default=64)
+        hp.Choice('kernel_size', [3, 5])
+        hp.Choice('initial_strides', [2])
+        hp.Range('num_residual_blocks', 2, 8, default=4)
+        hp.Choice('pooling', ['avg', 'flatten', 'max'])
+
+        hp.values['activation'] = self.activation or hp.values['activation']
+        hp.values['conv2d_num_filters'] = \
+            self.conv2d_num_filters or hp.values['conv2d_num_filters']
+        hp.values['kernel_size'] = self.kernel_size or hp.values['kernel_size']
+        hp.values['initial_strides'] = \
+            self.initial_strides or hp.values['initial_strides']
+        hp.values['num_residual_blocks'] = \
+            self.num_residual_blocks or hp.values['num_residual_blocks']
+        hp.values['pooling'] = self.pooling or hp.values['pooling']
+
         model = super(XceptionBlock, self).build(hp)
         return model.outputs
 
@@ -305,6 +384,10 @@ class Flatten(HyperBlock):
 
 class SpatialReduction(HyperBlock):
 
+    def __init__(self, reduction_type, **kwargs):
+        super().__init__(**kwargs)
+        self.reduction_type = reduction_type
+
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
@@ -315,11 +398,11 @@ class SpatialReduction(HyperBlock):
         if len(output_node.shape) <= 2:
             return output_node
 
-        reduction_type = hp.Choice('reduction_type',
-                                   ['flatten',
-                                    'global_max',
-                                    'global_ave'],
-                                   default='global_ave')
+        reduction_type = self.reduction_type or hp.Choice('reduction_type',
+                                                          ['flatten',
+                                                           'global_max',
+                                                           'global_ave'],
+                                                          default='global_ave')
         if reduction_type == 'flatten':
             output_node = Flatten().build(hp, output_node)
         elif reduction_type == 'global_max':
@@ -333,6 +416,10 @@ class SpatialReduction(HyperBlock):
 
 class TemporalReduction(HyperBlock):
 
+    def __init__(self, reduction_type, **kwargs):
+        super().__init__(**kwargs)
+        self.reduction_type = reduction_type
+
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
@@ -343,12 +430,12 @@ class TemporalReduction(HyperBlock):
         if len(output_node.shape) <= 2:
             return output_node
 
-        reduction_type = hp.Choice('reduction_type',
-                                   ['flatten',
-                                    'global_max',
-                                    'global_ave',
-                                    'global_min'],
-                                   default='global_ave')
+        reduction_type = self.reduction_type or hp.Choice('reduction_type',
+                                                          ['flatten',
+                                                           'global_max',
+                                                           'global_ave',
+                                                           'global_min'],
+                                                          default='global_ave')
 
         if reduction_type == 'flatten':
             output_node = Flatten().build(hp, output_node)
@@ -375,26 +462,25 @@ class EmbeddingBlock(HyperBlock):
     def __init__(self,
                  pretrained=None,
                  is_embedding_trainable=None,
+                 embedding_dim=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.pretrained = pretrained
         self.is_embedding_trainable = is_embedding_trainable
+        self.embedding_dim = embedding_dim
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
-        pretrained = self.pretrained
-        if pretrained is None:
-            pretrained = hp.Choice('pretrained',
-                                   [True, False],
-                                   default=False)
-        is_embedding_trainable = self.is_embedding_trainable
-        if is_embedding_trainable is None:
-            is_embedding_trainable = hp.Choice('is_embedding_trainable',
-                                               [True, False],
-                                               default=False)
-        embedding_dim = hp.Choice('embedding_dim',
-                                  [32, 64, 128, 256, 512],
-                                  default=128)
+        pretrained = self.pretrained or hp.Choice('pretrained',
+                                                  [True, False],
+                                                  default=False)
+        is_embedding_trainable = self.is_embedding_trainable or hp.Choice(
+            'is_embedding_trainable',
+            [True, False],
+            default=False)
+        embedding_dim = self.embedding_dim or hp.Choice('embedding_dim',
+                                                        [32, 64, 128, 256, 512],
+                                                        default=128)
         if pretrained:
             # TODO: load from pretrained weights
             layer = tf.keras.layers.Embedding(
