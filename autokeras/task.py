@@ -12,13 +12,21 @@ class SupervisedImagePipeline(auto_model.AutoModel):
 
 
 class ImageClassifier(SupervisedImagePipeline):
-    def __init__(self, **kwargs):
-        super().__init__(hyper_head.ClassificationHead(), **kwargs)
+
+    def __init__(self, max_trials=None, directory=None, **kwargs):
+        super().__init__(outputs=hyper_head.ClassificationHead(),
+                         max_trials=max_trials,
+                         directory=directory,
+                         **kwargs)
 
 
 class ImageRegressor(SupervisedImagePipeline):
-    def __init__(self, **kwargs):
-        super().__init__(hyper_head.RegressionHead(), **kwargs)
+
+    def __init__(self, max_trials=None, directory=None, **kwargs):
+        super().__init__(hyper_head.RegressionHead(),
+                         max_trials=max_trials,
+                         directory=directory,
+                         **kwargs)
 
 
 class SupervisedTextPipeline(auto_model.AutoModel):
@@ -30,10 +38,18 @@ class SupervisedTextPipeline(auto_model.AutoModel):
 
 
 class TextClassifier(SupervisedTextPipeline):
-    def __init__(self, **kwargs):
-        super().__init__(hyper_head.ClassificationHead(), **kwargs)
+
+    def __init__(self, max_trials=None, directory=None, **kwargs):
+        super().__init__(hyper_head.ClassificationHead(),
+                         max_trials=max_trials,
+                         directory=directory,
+                         **kwargs)
 
 
 class TextRegressor(SupervisedTextPipeline):
-    def __init__(self, **kwargs):
-        super().__init__(hyper_head.RegressionHead(), **kwargs)
+
+    def __init__(self, max_trials=None, directory=None, **kwargs):
+        super().__init__(hyper_head.RegressionHead(),
+                         max_trials=max_trials,
+                         directory=directory,
+                         **kwargs)
