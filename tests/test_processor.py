@@ -61,3 +61,17 @@ def test_ngram():
     new_dataset = dataset.map(map_func)
     assert isinstance(new_dataset, tf.data.Dataset)
 
+
+def test_augment():
+    raw_images = tf.random_normal([1000, 32, 32, 3], mean=-1, stddev=4)
+    augmenter = processor.ImageAugment()
+    dataset = tf.data.Dataset.from_tensor_slices(raw_images)
+    augmenter.set_hp(kerastuner.HyperParameter())
+
+    def map_func(x):
+        return tf.py_function(augmenter.transform,
+                              inp=[x],
+                              Tout=(tf.float32,))
+
+    new_dataset = dataset.map(map_func)
+    assert isinstance(new_dataset, tf.data.Dataset)
