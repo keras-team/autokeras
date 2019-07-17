@@ -12,6 +12,14 @@ class SupervisedImagePipeline(auto_model.AutoModel):
 
 
 class ImageClassifier(SupervisedImagePipeline):
+    """AutoKeras image classification class.
+
+    Attributes:
+        max_trials: Int. The maximum number of different Keras Models to try.
+            The search may finish before reaching the max_trails. Defaults to 100.
+        directory: Str. Path to a directory for storing temporary files during
+            the search. Defaults to None.
+    """
 
     def __init__(self, max_trials=None, directory=None, **kwargs):
         super().__init__(outputs=head.ClassificationHead(),
@@ -21,6 +29,14 @@ class ImageClassifier(SupervisedImagePipeline):
 
 
 class ImageRegressor(SupervisedImagePipeline):
+    """AutoKeras image regression class.
+
+    Attributes:
+        max_trials: Int. The maximum number of different Keras Models to try.
+            The search may finish before reaching the max_trails. Defaults to 100.
+        directory: Str. Path to a directory for storing temporary files during
+            the search. Defaults to None.
+    """
 
     def __init__(self, max_trials=None, directory=None, **kwargs):
         super().__init__(head.RegressionHead(),
@@ -38,6 +54,14 @@ class SupervisedTextPipeline(auto_model.AutoModel):
 
 
 class TextClassifier(SupervisedTextPipeline):
+    """AutoKeras text classification class.
+
+    Attributes:
+        max_trials: Int. The maximum number of different Keras Models to try.
+            The search may finish before reaching the max_trails. Defaults to 100.
+        directory: Str. Path to a directory for storing temporary files during
+            the search. Defaults to None.
+    """
 
     def __init__(self, max_trials=None, directory=None, **kwargs):
         super().__init__(head.ClassificationHead(),
@@ -47,6 +71,14 @@ class TextClassifier(SupervisedTextPipeline):
 
 
 class TextRegressor(SupervisedTextPipeline):
+    """AutoKeras text regression class.
+
+    Attributes:
+        max_trials: Int. The maximum number of different Keras Models to try.
+            The search may finish before reaching the max_trails. Defaults to 100.
+        directory: Str. Path to a directory for storing temporary files during
+            the search. Defaults to None.
+    """
 
     def __init__(self, max_trials=None, directory=None, **kwargs):
         super().__init__(head.RegressionHead(),
