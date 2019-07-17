@@ -63,7 +63,7 @@ def test_ngram():
 
 
 def test_augment():
-    raw_images = tf.random_normal([1000, 32, 32, 3], mean=-1, stddev=4)
+    raw_images = tf.random.normal([1000, 32, 32, 3], mean=-1, stddev=4)
     augmenter = processor.ImageAugment()
     dataset = tf.data.Dataset.from_tensor_slices(raw_images)
     augmenter.set_hp(kerastuner.HyperParameter())
