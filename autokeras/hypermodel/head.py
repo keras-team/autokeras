@@ -6,6 +6,16 @@ from autokeras.hypermodel import block
 
 
 class HyperHead(block.HyperBlock):
+    """Base class for the heads, e.g. classification, regression.
+
+    Attributes:
+        loss: A Keras loss function. Defaults to None. If None, the loss will be
+            infered from the AutoModel.
+        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
+            be infered from the AutoModel.
+        output_shape: Tuple of int(s). Defaults to None. If None, the output shape
+            will be infered from the AutoModel.
+    """
 
     def __init__(self, loss=None, metrics=None, output_shape=None, **kwargs):
         super().__init__(**kwargs)
@@ -22,6 +32,17 @@ class HyperHead(block.HyperBlock):
 
 
 class ClassificationHead(HyperHead):
+    """Classification Dense layers.
+
+    Use sigmoid and binary crossentropy for binary classificaiton and multi-label
+    classification. Use softmax and categorical crossentropy for multi-class
+    (more than 2) classification. Use Accuracy as metrics by default.
+
+    Args:
+        num_classes: Int. Defaults to None.
+        multi_label: Boolean. Defaults to False.
+    """
+
     def __init__(self, num_classes=None, multi_label=False, **kwargs):
         super().__init__(**kwargs)
         self.num_classes = num_classes
@@ -53,6 +74,10 @@ class ClassificationHead(HyperHead):
 
 
 class RegressionHead(HyperHead):
+    """Regression Dense layers.
+
+    Use mean squared error as metrics and loss by default.
+    """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
