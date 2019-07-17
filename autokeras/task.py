@@ -1,12 +1,12 @@
 from autokeras import auto_model
-from autokeras.hypermodel import hyper_head
-from autokeras.hypermodel import hyper_node
+from autokeras.hypermodel import head
+from autokeras.hypermodel import node
 
 
 class SupervisedImagePipeline(auto_model.AutoModel):
 
     def __init__(self, outputs, **kwargs):
-        super().__init__(inputs=hyper_node.ImageInput(),
+        super().__init__(inputs=node.ImageInput(),
                          outputs=outputs,
                          **kwargs)
 
@@ -14,7 +14,7 @@ class SupervisedImagePipeline(auto_model.AutoModel):
 class ImageClassifier(SupervisedImagePipeline):
 
     def __init__(self, max_trials=None, directory=None, **kwargs):
-        super().__init__(outputs=hyper_head.ClassificationHead(),
+        super().__init__(outputs=head.ClassificationHead(),
                          max_trials=max_trials,
                          directory=directory,
                          **kwargs)
@@ -23,7 +23,7 @@ class ImageClassifier(SupervisedImagePipeline):
 class ImageRegressor(SupervisedImagePipeline):
 
     def __init__(self, max_trials=None, directory=None, **kwargs):
-        super().__init__(hyper_head.RegressionHead(),
+        super().__init__(head.RegressionHead(),
                          max_trials=max_trials,
                          directory=directory,
                          **kwargs)
@@ -32,7 +32,7 @@ class ImageRegressor(SupervisedImagePipeline):
 class SupervisedTextPipeline(auto_model.AutoModel):
 
     def __init__(self, outputs, **kwargs):
-        super().__init__(inputs=hyper_node.TextInput(),
+        super().__init__(inputs=node.TextInput(),
                          outputs=outputs,
                          **kwargs)
 
@@ -40,7 +40,7 @@ class SupervisedTextPipeline(auto_model.AutoModel):
 class TextClassifier(SupervisedTextPipeline):
 
     def __init__(self, max_trials=None, directory=None, **kwargs):
-        super().__init__(hyper_head.ClassificationHead(),
+        super().__init__(head.ClassificationHead(),
                          max_trials=max_trials,
                          directory=directory,
                          **kwargs)
@@ -49,7 +49,7 @@ class TextClassifier(SupervisedTextPipeline):
 class TextRegressor(SupervisedTextPipeline):
 
     def __init__(self, max_trials=None, directory=None, **kwargs):
-        super().__init__(hyper_head.RegressionHead(),
+        super().__init__(head.RegressionHead(),
                          max_trials=max_trials,
                          directory=directory,
                          **kwargs)

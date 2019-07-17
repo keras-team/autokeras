@@ -2,10 +2,10 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import utils
-from autokeras.hypermodel import hyper_block
+from autokeras.hypermodel import block
 
 
-class HyperHead(hyper_block.HyperBlock):
+class HyperHead(block.HyperBlock):
 
     def __init__(self, loss=None, metrics=None, output_shape=None, **kwargs):
         super().__init__(**kwargs)
@@ -43,7 +43,7 @@ class ClassificationHead(HyperHead):
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
-        output_node = hyper_block.Flatten().build(hp, output_node)
+        output_node = block.Flatten().build(hp, output_node)
         output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
         if self.loss == 'binary_crossentropy':
             output_node = tf.keras.activations.sigmoid(output_node)
@@ -70,6 +70,6 @@ class RegressionHead(HyperHead):
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
-        output_node = hyper_block.Flatten().build(hp, output_node)
+        output_node = block.Flatten().build(hp, output_node)
         output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
         return output_node

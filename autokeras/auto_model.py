@@ -9,8 +9,8 @@ from autokeras import const
 from autokeras import meta_model
 from autokeras import tuner
 from autokeras import utils
-from autokeras.hypermodel import hyper_head
-from autokeras.hypermodel import hyper_node
+from autokeras.hypermodel import head
+from autokeras.hypermodel import node
 from autokeras.hypermodel import processor
 
 
@@ -305,7 +305,7 @@ class AutoModel(kerastuner.HyperModel):
         for metrics_list in [output_node.in_hypermodels[0].metrics for
                              output_node in self.outputs
                              if isinstance(output_node.in_hypermodels[0],
-                                           hyper_head.HyperHead)]:
+                                           head.HyperHead)]:
             metrics += metrics_list
         return metrics
 
@@ -313,7 +313,7 @@ class AutoModel(kerastuner.HyperModel):
         loss = nest.flatten([output_node.in_hypermodels[0].loss
                              for output_node in self.outputs
                              if isinstance(output_node.in_hypermodels[0],
-                                           hyper_head.HyperHead)])
+                                           head.HyperHead)])
         return loss
 
     def _compiled(self, hp, model):
@@ -436,10 +436,10 @@ class AutoModel(kerastuner.HyperModel):
         self._label_encoders = []
         new_y = []
         for temp_y, output_node in zip(y, self.outputs):
-            head = output_node
-            if isinstance(head, hyper_node.Node):
-                head = output_node.in_hypermodels[0]
-            if (isinstance(head, hyper_head.ClassificationHead) and
+            hyper_head = output_node
+            if isinstance(hyper_head, node.Node):
+                hyper_head = output_node.in_hypermodels[0]
+            if (isinstance(hyper_head, head.ClassificationHead) and
                     utils.is_label(temp_y)):
                 label_encoder = processor.OneHotEncoder()
                 label_encoder.fit(y)

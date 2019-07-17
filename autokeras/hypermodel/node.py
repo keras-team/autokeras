@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from autokeras.hypermodel import hyper_block
+from autokeras.hypermodel import block
 
 
 class Node(object):

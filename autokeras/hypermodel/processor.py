@@ -5,7 +5,7 @@ from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
 
 from autokeras import const
-from autokeras.hypermodel import hyper_block as hb_module
+from autokeras.hypermodel import block as hb_module
 
 
 class HyperPreprocessor(hb_module.HyperBlock):

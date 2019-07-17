@@ -6,14 +6,15 @@ from tensorflow.python.util import nest
 
 from autokeras import const
 from autokeras import utils
-from autokeras.hypermodel import hyper_node
+from autokeras.hypermodel import node
 
 
 class HyperBlock(kerastuner.HyperModel):
     """The base class for different HyperBlock.
 
     The HyperBlock can be connected together to build the search space
-    for an AutoModel.
+    for an AutoModel. Notably, many args in the __init__ function are defaults to
+    be a tunable variable when not specified by the user.
 
     Attributes:
         inputs: A list of input node(s) for the HyperBlock.
@@ -40,40 +41,34 @@ class HyperBlock(kerastuner.HyperModel):
             input_node.add_out_hypermodel(self)
         self.outputs = []
         for _ in range(self._num_output_node):
-            output_node = hyper_node.Node()
+            output_node = node.Node()
             output_node.add_in_hypermodel(self)
             self.outputs.append(output_node)
         return self.outputs
 
     def build(self, hp, inputs=None):
+        """Build the HyperBlock into a real Keras Model.
+
+        The subclasses should overide this function and return the output node.
+
+        Args:
+            hp: Hyperparameters. The hyperparameters for building the model.
+            inputs: A list of input node(s).
+        """
         return super(HyperBlock, self).build(hp)
 
 
-class ResNetBlock(HyperBlock, resnet.HyperResNet):
-
-    def __init__(self,
-                 version=None,
-                 pooling=None,
-                 **kwargs):
-        super().__init__(include_top=False, input_shape=(10,), **kwargs)
-        self.version = version
-        self.pooling = pooling
-
-    def build(self, hp, inputs=None):
-        self.input_tensor = nest.flatten(inputs)[0]
-        self.input_shape = None
-
-        hp.Choice('version', ['v1', 'v2', 'next'], default='v2')
-        hp.Choice('pooling', ['avg', 'max'], default='avg')
-
-        hp.values['version'] = self.version or hp.values['version']
-        hp.values['pooling'] = self.pooling or hp.values['pooling']
-
-        model = super(ResNetBlock, self).build(hp)
-        return model.outputs
-
-
 class DenseBlock(HyperBlock):
+    """HyperBlock for Dense layers.
+
+    Attributes:
+        num_layers: Int. The number of Dense layers in the block.
+            Defaults to tunable.
+        use_bn: Boolean. Whether to use BatchNormalization layers.
+            Defaults to tunable.
+        dropout_rate: Float. The dropout rate for the layers.
+            Defaults to tunable.
+    """
 
     def __init__(self,
                  num_layers=None,
@@ -115,8 +110,9 @@ class RNNBlock(HyperBlock):
     """ An RNN HyperBlock.
 
     Attributes:
-        return_sequences: Boolean.  If not provided, it would be a tunable variable.
-        bidirectional: Boolean. If not provided, it would be a tunable variable.
+        return_sequences: Boolean. Whether to return the last output in the
+            output sequence, or the full sequence. Defaults to False.
+        bidirectional: Boolean. Bidirectional RNN. Defaults to tunable.
     """
 
     def __init__(self,
@@ -193,6 +189,12 @@ class RNNBlock(HyperBlock):
 
 
 class ImageBlock(HyperBlock):
+    """HyperBlock for image data.
+
+    Attributes:
+        block_type: Str. 'resnet', 'xception', 'vanilla'. The type of HyperBlock to
+            use. Defaults to tunable.
+    """
 
     def __init__(self, block_type=None, **kwargs):
         super().__init__(**kwargs)
@@ -218,6 +220,15 @@ class ImageBlock(HyperBlock):
 
 
 class ConvBlock(HyperBlock):
+    """HyperBlock for vanilla ConvNets.
+
+    Attributes:
+        kernel_size: Int. Defaults to Tunable.
+        dropout_rate: Float. Defaults to Tunable.
+        num_blocks: Int. The number of conv blocks. Defaults to Tunable.
+        separable: Boolean. Whether to use separable conv layers.
+            Defaults to Tunable.
+    """
 
     def __init__(self,
                  kernel_size=None,
@@ -285,44 +296,36 @@ class ConvBlock(HyperBlock):
         return 'same'
 
 
-def shape_compatible(shape1, shape2):
-    if len(shape1) != len(shape2):
-        return False
-    # TODO: If they can be the same after passing through any layer,
-    #  they are compatible. e.g. (32, 32, 3), (16, 16, 2) are compatible
-    return shape1[:-1] == shape2[:-1]
+class ResNetBlock(HyperBlock, resnet.HyperResNet):
+    """HyperBlock for ResNet.
 
+    Attributes:
+        version: Str. 'v1', 'v2' or 'next'. The type of ResNet to use.
+            Defaults to tunable.
+        pooling: Str. 'avg', 'max'. The type of pooling layer to use.
+            Defaults to tunable.
+    """
 
-class Merge(HyperBlock):
-
-    def __init__(self, merge_type=None, **kwargs):
-        super().__init__(**kwargs)
-        self.merge_type = merge_type
+    def __init__(self,
+                 version=None,
+                 pooling=None,
+                 **kwargs):
+        super().__init__(include_top=False, input_shape=(10,), **kwargs)
+        self.version = version
+        self.pooling = pooling
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
-        if len(inputs) == 1:
-            return inputs
+        self.input_tensor = nest.flatten(inputs)[0]
+        self.input_shape = None
 
-        merge_type = self.merge_type or hp.Choice("merge_type",
-                                                  ['add', 'concatenate'],
-                                                  default='add')
+        hp.Choice('version', ['v1', 'v2', 'next'], default='v2')
+        hp.Choice('pooling', ['avg', 'max'], default='avg')
 
-        if not all([shape_compatible(input_node.shape, inputs[0].shape) for
-                    input_node in inputs]):
-            new_inputs = []
-            for input_node in inputs:
-                new_inputs.append(Flatten().build(hp, input_node))
-            inputs = new_inputs
+        hp.values['version'] = self.version or hp.values['version']
+        hp.values['pooling'] = self.pooling or hp.values['pooling']
 
-        # TODO: Even inputs have different shape[-1], they can still be Add(
-        #  ) after another layer. Check if the inputs are all of the same
-        #  shape
-        if all([input_node.shape == inputs[0].shape for input_node in inputs]):
-            if merge_type == 'add':
-                return tf.keras.layers.Add(inputs)
-
-        return tf.keras.layers.Concatenate()(inputs)
+        model = super(ResNetBlock, self).build(hp)
+        return model.outputs
 
 
 class XceptionBlock(HyperBlock, xception.HyperXception):
@@ -339,6 +342,13 @@ class XceptionBlock(HyperBlock, xception.HyperXception):
     The size of this architecture could be decided by `HyperParameters`, to get an
     architecture with a half, an identical, or a double size of the original one.
 
+    Attributes:
+        activation: Str. 'selu' or 'relu'. Defaults to tunable.
+        conv2d_num_filters: Int. Defaults to tunable.
+        kernel_size: Int. Defaults to tunable.
+        initial_strides: Int. Defaults to tunable.
+        num_residual_blocks: Int. Defaults to tunable.
+        pooling: Str. 'ave', 'flatten', or 'max'. Defaults to tunable.
     """
 
     def __init__(self,
@@ -382,6 +392,46 @@ class XceptionBlock(HyperBlock, xception.HyperXception):
         return model.outputs
 
 
+def shape_compatible(shape1, shape2):
+    if len(shape1) != len(shape2):
+        return False
+    # TODO: If they can be the same after passing through any layer,
+    #  they are compatible. e.g. (32, 32, 3), (16, 16, 2) are compatible
+    return shape1[:-1] == shape2[:-1]
+
+
+class Merge(HyperBlock):
+
+    def __init__(self, merge_type=None, **kwargs):
+        super().__init__(**kwargs)
+        self.merge_type = merge_type
+
+    def build(self, hp, inputs=None):
+        inputs = nest.flatten(inputs)
+        if len(inputs) == 1:
+            return inputs
+
+        merge_type = self.merge_type or hp.Choice("merge_type",
+                                                  ['add', 'concatenate'],
+                                                  default='add')
+
+        if not all([shape_compatible(input_node.shape, inputs[0].shape) for
+                    input_node in inputs]):
+            new_inputs = []
+            for input_node in inputs:
+                new_inputs.append(Flatten().build(hp, input_node))
+            inputs = new_inputs
+
+        # TODO: Even inputs have different shape[-1], they can still be Add(
+        #  ) after another layer. Check if the inputs are all of the same
+        #  shape
+        if all([input_node.shape == inputs[0].shape for input_node in inputs]):
+            if merge_type == 'add':
+                return tf.keras.layers.Add(inputs)
+
+        return tf.keras.layers.Concatenate()(inputs)
+
+
 class Flatten(HyperBlock):
 
     def build(self, hp, inputs=None):
@@ -394,6 +444,12 @@ class Flatten(HyperBlock):
 
 
 class SpatialReduction(HyperBlock):
+    """Reduce the dimension of a spatial tensor, e.g. image, to a vector.
+
+    Attributes:
+        reduction_type: Str. 'flatten', 'global_max' or 'global_ave'.
+            Defaults to tunable.
+    """
 
     def __init__(self, reduction_type, **kwargs):
         super().__init__(**kwargs)
@@ -426,6 +482,12 @@ class SpatialReduction(HyperBlock):
 
 
 class TemporalReduction(HyperBlock):
+    """Reduce the dimension of a temporal tensor, e.g. output of RNN, to a vector.
+
+    Attributes:
+        reduction_type: Str. 'flatten', 'global_max', 'global_ave', 'global_min'.
+            Defaults to tunable.
+    """
 
     def __init__(self, reduction_type, **kwargs):
         super().__init__(**kwargs)
@@ -467,7 +529,9 @@ class EmbeddingBlock(HyperBlock):
     of a sequence should be the index of the word.
 
     Attributes:
-        pretrained: Boolean. Use pretrained word embedding.
+        pretrained: Boolean. Use pretrained word embedding. Defaults to tunable.
+        is_embedding_trainable: Boolean. Defaults to tunable.
+        embedding_dim: Int. Defaults to None.
     """
 
     def __init__(self,
