@@ -1,7 +1,5 @@
 import tensorflow as tf
 
-from autokeras.hypermodel import block
-
 
 class Node(object):
     def __init__(self, shape=None):
