@@ -147,7 +147,7 @@ class RNNBlock(HyperBlock):
                                                         default=True)
         attention = self.attention or hp.Choice('attention',
                                                 attention_choices,
-                                                default='post')
+                                                default='none')
         layer_type = self.layer_type or hp.Choice('layer_type',
                                                   ['gru', 'lstm'],
                                                   default='lstm')
