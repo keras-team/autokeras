@@ -1,6 +1,6 @@
 from autokeras import auto_model
-from autokeras.hypermodel import hyper_node
 from autokeras.hypermodel import hyper_head
+from autokeras.hypermodel import hyper_node
 
 
 class SupervisedImagePipeline(auto_model.AutoModel):

@@ -1,7 +1,7 @@
-import tensorflow as tf
 import numpy as np
-from sklearn.feature_extraction import text
+import tensorflow as tf
 from sklearn import feature_selection
+from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
 
 from autokeras import const

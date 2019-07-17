@@ -1,8 +1,8 @@
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import hyper_block
 from autokeras import utils
+from autokeras.hypermodel import hyper_block
 
 
 class HyperHead(hyper_block.HyperBlock):

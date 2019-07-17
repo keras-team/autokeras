@@ -1,8 +1,9 @@
 from unittest import mock
 
 import numpy as np
-import tensorflow as tf
 import pytest
+import tensorflow as tf
+
 import autokeras as ak
 
 

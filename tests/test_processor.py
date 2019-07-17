@@ -1,6 +1,6 @@
-import tensorflow as tf
-import numpy as np
 import kerastuner
+import numpy as np
+import tensorflow as tf
 
 from autokeras.hypermodel import processor
 
@@ -60,4 +60,3 @@ def test_ngram():
 
     new_dataset = dataset.map(map_func)
     assert isinstance(new_dataset, tf.data.Dataset)
-

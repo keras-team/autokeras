@@ -1,7 +1,8 @@
 from unittest import mock
 
-import pytest
 import numpy as np
+import pytest
+
 import autokeras as ak
 
 

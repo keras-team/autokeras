@@ -1,7 +1,8 @@
 import copy
 import inspect
-import tensorflow as tf
+
 import kerastuner
+import tensorflow as tf
 
 
 class AutoTuner(kerastuner.Tuner):

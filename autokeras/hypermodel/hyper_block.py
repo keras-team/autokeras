@@ -1,15 +1,24 @@
-import tensorflow as tf
 import kerastuner
+import tensorflow as tf
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import hyper_node
-from autokeras import utils
 from autokeras import const
+from autokeras import utils
+from autokeras.hypermodel import hyper_node
 
 
 class HyperBlock(kerastuner.HyperModel):
+    """The base class for different HyperBlock.
+
+    The HyperBlock can be connected together to build the search space
+    for an AutoModel.
+
+    Attributes:
+        inputs: A list of input node(s) for the HyperBlock.
+        outputs: A list of output node(s) for the HyperBlock.
+    """
 
     def __init__(self, **kwargs):
         super(HyperBlock, self).__init__(**kwargs)
@@ -18,6 +27,14 @@ class HyperBlock(kerastuner.HyperModel):
         self._num_output_node = 1
 
     def __call__(self, inputs):
+        """Functional API.
+
+        Args:
+            inputs: A list of input node(s) or a single input node for the block.
+
+        Returns:
+            list: A list of output node(s) of the HyperBlock.
+        """
         self.inputs = nest.flatten(inputs)
         for input_node in self.inputs:
             input_node.add_out_hypermodel(self)

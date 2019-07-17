@@ -1,10 +1,10 @@
 from unittest import mock
 
-import autokeras as ak
-import pytest
-
 import numpy as np
+import pytest
 import tensorflow as tf
+
+import autokeras as ak
 
 
 @pytest.fixture(scope='module')
@@ -109,4 +109,3 @@ def test_rnn_block(tmp_dir):
     result = graph.predict(x_train)
 
     assert result.shape == (100, 5)
-
