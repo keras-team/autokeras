@@ -8,6 +8,8 @@
 /mkdocs/docs/temp
 
 .DS_Store
+.vscode
+settings.json
 .idea
 .pytest_cache
 /experiments
