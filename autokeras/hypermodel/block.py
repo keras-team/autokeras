@@ -176,6 +176,9 @@ class RNNBlock(HyperBlock):
 class ImageBlock(HyperBlock):
     """HyperBlock for image data.
 
+    The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
+    which is controlled by a hyperparameter, 'block_type'.
+
     # Arguments
         block_type: Str. 'resnet', 'xception', 'vanilla'. The type of HyperBlock to
             use. If left unspecified, it will be tuned automatically.
@@ -390,7 +393,12 @@ def shape_compatible(shape1, shape2):
 
 
 class Merge(HyperBlock):
+    """Merge block to merge multiple nodes into one.
 
+    # Arguments
+        merge_type: Str. 'add' or 'concatenate'. If left unspecified, it will be
+            tuned automatically.
+    """
     def __init__(self, merge_type=None, **kwargs):
         super().__init__(**kwargs)
         self.merge_type = merge_type
@@ -422,6 +430,7 @@ class Merge(HyperBlock):
 
 
 class Flatten(HyperBlock):
+    """Flatten the input tensor with Keras Flatten layer."""
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -436,7 +445,7 @@ class SpatialReduction(HyperBlock):
     """Reduce the dimension of a spatial tensor, e.g. image, to a vector.
 
     # Arguments
-        reduction_type: Str. 'flatten', 'global_max' or 'global_ave'.
+        reduction_type: Str. 'flatten', 'global_max' or 'global_avg'.
             If left unspecified, it will be tuned automatically.
     """
 
@@ -464,7 +473,7 @@ class SpatialReduction(HyperBlock):
         elif reduction_type == 'global_max':
             output_node = utils.get_global_max_pooling(
                 output_node.shape)()(output_node)
-        elif reduction_type == 'global_ave':
+        elif reduction_type == 'global_avg':
             output_node = utils.get_global_average_pooling(
                 output_node.shape)()(output_node)
         return output_node
@@ -474,7 +483,7 @@ class TemporalReduction(HyperBlock):
     """Reduce the dimension of a temporal tensor, e.g. output of RNN, to a vector.
 
     # Arguments
-        reduction_type: Str. 'flatten', 'global_max' or 'global_ave'. If left
+        reduction_type: Str. 'flatten', 'global_max' or 'global_avg'. If left
             unspecified, it will be tuned automatically.
     """
 
@@ -495,14 +504,14 @@ class TemporalReduction(HyperBlock):
         reduction_type = self.reduction_type or hp.Choice('reduction_type',
                                                           ['flatten',
                                                            'global_max',
-                                                           'global_ave'],
-                                                          default='global_ave')
+                                                           'global_avg'],
+                                                          default='global_avg')
 
         if reduction_type == 'flatten':
             output_node = Flatten().build(hp, output_node)
         elif reduction_type == 'global_max':
             output_node = tf.math.reduce_max(output_node, axis=-2)
-        elif reduction_type == 'global_ave':
+        elif reduction_type == 'global_avg':
             output_node = tf.math.reduce_mean(output_node, axis=-2)
         elif reduction_type == 'global_min':
             output_node = tf.math.reduce_min(output_node, axis=-2)
@@ -517,32 +526,25 @@ class EmbeddingBlock(HyperBlock):
     of a sequence should be the index of the word.
 
     # Arguments
-        pretrained: Boolean. Use pretrained word embedding. If left unspecified, it
-            will be tuned automatically.
-        is_embedding_trainable: Boolean. If left unspecified, it will be tuned
-            automatically.
-        embedding_dim: Int. Defaults to None.
+        pretrained: Str. 'no pretrained', 'glove'. Use pretrained word embedding.
+            If left unspecified, it will be tuned automatically.
+        embedding_dim: Int. If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self,
                  pretrained=None,
-                 is_embedding_trainable=None,
                  embedding_dim=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.pretrained = pretrained
-        self.is_embedding_trainable = is_embedding_trainable
         self.embedding_dim = embedding_dim
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
+        # TODO: support more pretrained embedding layers.
         pretrained = self.pretrained or hp.Choice('pretrained',
-                                                  [True, False],
+                                                  ['no pretrained', 'glove'],
                                                   default=False)
-        is_embedding_trainable = self.is_embedding_trainable or hp.Choice(
-            'is_embedding_trainable',
-            [True, False],
-            default=False)
         embedding_dim = self.embedding_dim or hp.Choice('embedding_dim',
                                                         [32, 64, 128, 256, 512],
                                                         default=128)
@@ -551,35 +553,37 @@ class EmbeddingBlock(HyperBlock):
             layer = tf.keras.layers.Embedding(
                 input_dim=input_node.shape[1],
                 output_dim=embedding_dim,
-                input_length=const.Constant.VOCABULARY_SIZE,
-                trainable=is_embedding_trainable)
+                input_length=const.Constant.VOCABULARY_SIZE)
+            # trainable=False,
             # weights=[embedding_matrix])
         else:
             layer = tf.keras.layers.Embedding(
                 input_dim=input_node.shape[1],
                 output_dim=embedding_dim,
                 input_length=const.Constant.VOCABULARY_SIZE,
-                trainable=is_embedding_trainable)
+                trainable=True)
         return layer(input_node)
 
 
-class TextBlock(RNNBlock):
-    pass
+class TextBlock(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        raise NotImplementedError
 
 
 class StructuredDataBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        pass
+        raise NotImplementedError
 
 
 class TimeSeriesBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        pass
+        raise NotImplementedError
 
 
 class GeneralBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
-        pass
+        raise NotImplementedError

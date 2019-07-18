@@ -41,10 +41,18 @@ class ClassificationHead(HyperHead):
     # Arguments
         num_classes: Int. Defaults to None.
         multi_label: Boolean. Defaults to False.
+        loss: A Keras loss function. Defaults to None. If None, the loss will be
+            inferred from the AutoModel.
+        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
+            be inferred from the AutoModel.
     """
 
-    def __init__(self, num_classes=None, multi_label=False, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self,
+                 num_classes=None,
+                 multi_label=False,
+                 loss=None,
+                 metrics=None):
+        super().__init__(loss=loss, metrics=metrics)
         self.num_classes = num_classes
         self.multi_label = multi_label
         if not self.metrics:
@@ -60,6 +68,11 @@ class ClassificationHead(HyperHead):
         return super(ClassificationHead, self).loss
 
     def build(self, hp, inputs=None):
+        if self.num_classes and self.output_shape[-1] != self.num_classes:
+            raise ValueError(
+                'The data doesn\'t match the num_classes. '
+                'Expecting {} but got {}'.format(self.num_classes,
+                                                 self.output_shape[-1]))
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
@@ -79,8 +92,12 @@ class RegressionHead(HyperHead):
     Use mean squared error as metrics and loss by default.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self,
+                 output_dim=None,
+                 loss=None,
+                 metrics=None):
+        super().__init__(loss=loss, metrics=metrics)
+        self.output_dim = output_dim
         if not self.metrics:
             self.metrics = ['mean_squared_error']
 
@@ -91,6 +108,11 @@ class RegressionHead(HyperHead):
         return super(RegressionHead, self).loss
 
     def build(self, hp, inputs=None):
+        if self.output_dim and self.output_shape[-1] != self.output_dim:
+            raise ValueError(
+                'The data doesn\'t match the output_dim. '
+                'Expecting {} but got {}'.format(self.output_dim,
+                                                 self.output_shape[-1]))
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
