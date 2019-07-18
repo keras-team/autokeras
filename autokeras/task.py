@@ -14,7 +14,7 @@ class SupervisedImagePipeline(auto_model.AutoModel):
 class ImageClassifier(SupervisedImagePipeline):
     """AutoKeras image classification class.
 
-    Attributes:
+    # Arguments
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trails. Defaults to 100.
         directory: Str. Path to a directory for storing temporary files during
@@ -31,7 +31,7 @@ class ImageClassifier(SupervisedImagePipeline):
 class ImageRegressor(SupervisedImagePipeline):
     """AutoKeras image regression class.
 
-    Attributes:
+    # Arguments
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trails. Defaults to 100.
         directory: Str. Path to a directory for storing temporary files during
@@ -56,7 +56,7 @@ class SupervisedTextPipeline(auto_model.AutoModel):
 class TextClassifier(SupervisedTextPipeline):
     """AutoKeras text classification class.
 
-    Attributes:
+    # Arguments
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trails. Defaults to 100.
         directory: Str. Path to a directory for storing temporary files during
@@ -73,7 +73,7 @@ class TextClassifier(SupervisedTextPipeline):
 class TextRegressor(SupervisedTextPipeline):
     """AutoKeras text regression class.
 
-    Attributes:
+    # Arguments
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trails. Defaults to 100.
         directory: Str. Path to a directory for storing temporary files during

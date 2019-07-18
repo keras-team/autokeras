@@ -31,7 +31,7 @@ class HyperPreprocessor(hb_module.HyperBlock):
         instances instead of the entire dataset, the Hyperparameters needs to be
         set in advance of call them.
 
-        Args:
+        # Arguments
             hp: Hyperparameters. The hyperparameters for tuning the preprocessor.
         """
         self._hp = hp
@@ -39,7 +39,7 @@ class HyperPreprocessor(hb_module.HyperBlock):
     def update(self, x):
         """Incrementally fit the preprocessor with a single training instance.
 
-        Args:
+        # Arguments
             x: EagerTensor. A single instance in the training dataset.
         """
         raise NotImplementedError
@@ -47,7 +47,7 @@ class HyperPreprocessor(hb_module.HyperBlock):
     def transform(self, x):
         """Incrementally fit the preprocessor with a single training instance.
 
-        Args:
+        # Arguments
             x: EagerTensor. A single instance in the training dataset.
 
         Returns:
@@ -61,7 +61,7 @@ class HyperPreprocessor(hb_module.HyperBlock):
         The output types are required by tf.py_function, which is used for transform
         the dataset into a new one with a map function.
 
-        Returns:
+        # Returns
             A tuple of data types.
         """
         raise NotImplementedError
@@ -72,8 +72,8 @@ class HyperPreprocessor(hb_module.HyperBlock):
         The output shape is needed to build the Keras Model from the AutoModel.
         The output shape of the preprocessor is the input shape of the Keras Model.
 
-        Returns:
-            A tuple of ints or a TensorShape.
+        # Returns
+            A tuple of int(s) or a TensorShape.
         """
         raise NotImplementedError
 
@@ -88,7 +88,7 @@ class OneHotEncoder(object):
     This class provides ways to transform data's classification label into
     vector.
 
-    Attributes:
+    # Arguments
         data: The input data
         num_classes: The number of classes in the classification problem.
         labels: The number of labels.
@@ -131,7 +131,7 @@ class OneHotEncoder(object):
 class Normalize(HyperPreprocessor):
     """ Perform basic image transformation and augmentation.
 
-    # Attributes
+    # Arguments
         mean: Tensor. The mean value. Shape: (data last dimension length,)
         std: Tensor. The standard deviation. Shape is the same as mean.
     """

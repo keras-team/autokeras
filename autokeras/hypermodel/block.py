@@ -16,7 +16,7 @@ class HyperBlock(kerastuner.HyperModel):
     for an AutoModel. Notably, many args in the __init__ function are defaults to
     be a tunable variable when not specified by the user.
 
-    Attributes:
+    # Arguments
         inputs: A list of input node(s) for the HyperBlock.
         outputs: A list of output node(s) for the HyperBlock.
     """
@@ -30,10 +30,10 @@ class HyperBlock(kerastuner.HyperModel):
     def __call__(self, inputs):
         """Functional API.
 
-        Args:
+        # Arguments
             inputs: A list of input node(s) or a single input node for the block.
 
-        Returns:
+        # Returns
             list: A list of output node(s) of the HyperBlock.
         """
         self.inputs = nest.flatten(inputs)
@@ -51,7 +51,7 @@ class HyperBlock(kerastuner.HyperModel):
 
         The subclasses should overide this function and return the output node.
 
-        Args:
+        # Arguments
             hp: Hyperparameters. The hyperparameters for building the model.
             inputs: A list of input node(s).
         """
@@ -61,23 +61,23 @@ class HyperBlock(kerastuner.HyperModel):
 class DenseBlock(HyperBlock):
     """HyperBlock for Dense layers.
 
-    Attributes:
+    # Arguments
         num_layers: Int. The number of Dense layers in the block.
-            Defaults to tunable.
+            If left unspecified, it will be tuned automatically.
         use_bn: Boolean. Whether to use BatchNormalization layers.
-            Defaults to tunable.
+            If left unspecified, it will be tuned automatically.
         dropout_rate: Float. The dropout rate for the layers.
-            Defaults to tunable.
+            If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self,
                  num_layers=None,
-                 use_bn=None,
+                 use_batchnorm=None,
                  dropout_rate=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.num_layers = num_layers
-        self.use_bn = use_bn
+        self.use_batchnorm = use_batchnorm
         self.dropout_rate = dropout_rate
 
     def build(self, hp, inputs=None):
@@ -88,7 +88,8 @@ class DenseBlock(HyperBlock):
         output_node = Flatten().build(hp, output_node)
 
         num_layers = self.num_layers or hp.Choice('num_layers', [1, 2, 3], default=2)
-        use_bn = self.use_bn or hp.Choice('use_bn', [True, False], default=False)
+        use_bn = self.use_batchnorm or hp.Choice('use_batchnorm', [True, False],
+                                                 default=False)
         dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
                                                       [0, 0.25, 0.5],
                                                       default=0)
@@ -107,37 +108,30 @@ class DenseBlock(HyperBlock):
 
 
 class RNNBlock(HyperBlock):
-    """ An RNN HyperBlock.
+    """An RNN HyperBlock.
 
-    Attributes:
+    # Arguments
         return_sequences: Boolean. Whether to return the last output in the
             output sequence, or the full sequence. Defaults to False.
-        bidirectional: Boolean. Bidirectional RNN. Defaults to tunable.
+        bidirectional: Boolean. Bidirectional RNN. If left unspecified, it will be
+            tuned automatically.
+        num_layers: Int. The number of layers in RNN. If left unspecified, it will
+            be tuned automatically.
+        layer_type: Str. 'gru' or 'lstm'. If left unspecified, it will be tuned
+            automatically.
     """
 
     def __init__(self,
                  return_sequences=False,
                  bidirectional=None,
-                 attention=None,
                  num_layers=None,
                  layer_type=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.return_sequences = return_sequences
         self.bidirectional = bidirectional
-        self.attention = attention
         self.num_layers = num_layers
         self.layer_type = layer_type
-
-    @staticmethod
-    def attention_block(inputs):
-        time_steps = int(inputs.shape[1])
-        attention_out = tf.keras.layers.Permute((2, 1))(inputs)
-        attention_out = tf.keras.layers.Dense(time_steps,
-                                              activation='softmax')(attention_out)
-        attention_out = tf.keras.layers.Permute((2, 1))(attention_out)
-        mul_attention_out = tf.keras.layers.Multiply()([inputs, attention_out])
-        return mul_attention_out
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -153,14 +147,9 @@ class RNNBlock(HyperBlock):
         feature_size = shape[-1]
         output_node = input_node
 
-        attention_choices = ['pre', 'post', 'none'] if self.return_sequences \
-            else ['pre', 'none']
         bidirectional = self.bidirectional or hp.Choice('bidirectional',
                                                         [True, False],
                                                         default=True)
-        attention = self.attention or hp.Choice('attention',
-                                                attention_choices,
-                                                default='none')
         layer_type = self.layer_type or hp.Choice('layer_type',
                                                   ['gru', 'lstm'],
                                                   default='lstm')
@@ -169,8 +158,6 @@ class RNNBlock(HyperBlock):
                                                   default=2)
 
         in_layer = const.Constant.RNN_LAYERS[layer_type]
-        output_node = self.attention_block(output_node) \
-            if attention == 'pre' else output_node
         for i in range(num_layers):
             return_sequences = True
             if i == num_layers - 1:
@@ -183,17 +170,15 @@ class RNNBlock(HyperBlock):
                 output_node = in_layer(
                     feature_size,
                     return_sequences=return_sequences)(output_node)
-        output_node = self.attention_block(output_node) \
-            if attention == 'post' else output_node
         return output_node
 
 
 class ImageBlock(HyperBlock):
     """HyperBlock for image data.
 
-    Attributes:
+    # Arguments
         block_type: Str. 'resnet', 'xception', 'vanilla'. The type of HyperBlock to
-            use. Defaults to tunable.
+            use. If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self, block_type=None, **kwargs):
@@ -222,12 +207,13 @@ class ImageBlock(HyperBlock):
 class ConvBlock(HyperBlock):
     """HyperBlock for vanilla ConvNets.
 
-    Attributes:
-        kernel_size: Int. Defaults to Tunable.
-        dropout_rate: Float. Defaults to Tunable.
-        num_blocks: Int. The number of conv blocks. Defaults to Tunable.
+    # Arguments
+        kernel_size: Int. If left unspecified, it will be tuned automatically.
+        dropout_rate: Float. If left unspecified, it will be tuned automatically.
+        num_blocks: Int. The number of conv blocks. If left unspecified, it will be
+            tuned automatically.
         separable: Boolean. Whether to use separable conv layers.
-            Defaults to Tunable.
+            If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self,
@@ -299,11 +285,11 @@ class ConvBlock(HyperBlock):
 class ResNetBlock(HyperBlock, resnet.HyperResNet):
     """HyperBlock for ResNet.
 
-    Attributes:
+    # Arguments
         version: Str. 'v1', 'v2' or 'next'. The type of ResNet to use.
-            Defaults to tunable.
+            If left unspecified, it will be tuned automatically.
         pooling: Str. 'avg', 'max'. The type of pooling layer to use.
-            Defaults to tunable.
+            If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self,
@@ -342,13 +328,16 @@ class XceptionBlock(HyperBlock, xception.HyperXception):
     The size of this architecture could be decided by `HyperParameters`, to get an
     architecture with a half, an identical, or a double size of the original one.
 
-    Attributes:
-        activation: Str. 'selu' or 'relu'. Defaults to tunable.
-        conv2d_num_filters: Int. Defaults to tunable.
-        kernel_size: Int. Defaults to tunable.
-        initial_strides: Int. Defaults to tunable.
-        num_residual_blocks: Int. Defaults to tunable.
-        pooling: Str. 'ave', 'flatten', or 'max'. Defaults to tunable.
+    # Arguments
+        activation: Str. 'selu' or 'relu'. If left unspecified, it will be tuned
+            automatically.
+        conv2d_num_filters: Int. If left unspecified, it will be tuned automatically.
+        kernel_size: Int. If left unspecified, it will be tuned automatically.
+        initial_strides: Int. If left unspecified, it will be tuned automatically.
+        num_residual_blocks: Int. If left unspecified, it will be tuned
+            automatically.
+        pooling: Str. 'ave', 'flatten', or 'max'. If left unspecified, it will be
+            tuned automatically.
     """
 
     def __init__(self,
@@ -411,7 +400,7 @@ class Merge(HyperBlock):
         if len(inputs) == 1:
             return inputs
 
-        merge_type = self.merge_type or hp.Choice("merge_type",
+        merge_type = self.merge_type or hp.Choice('merge_type',
                                                   ['add', 'concatenate'],
                                                   default='add')
 
@@ -446,9 +435,47 @@ class Flatten(HyperBlock):
 class SpatialReduction(HyperBlock):
     """Reduce the dimension of a spatial tensor, e.g. image, to a vector.
 
-    Attributes:
+    # Arguments
         reduction_type: Str. 'flatten', 'global_max' or 'global_ave'.
-            Defaults to tunable.
+            If left unspecified, it will be tuned automatically.
+    """
+
+    def __init__(self, reduction_type, **kwargs):
+        super().__init__(**kwargs)
+        self.reduction_type = reduction_type
+
+    def build(self, hp, inputs=None):
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        input_node = inputs[0]
+        output_node = input_node
+
+        # No need to reduce.
+        if len(output_node.shape) <= 2:
+            return output_node
+
+        reduction_type = self.reduction_type or hp.Choice('reduction_type',
+                                                          ['flatten',
+                                                           'global_max',
+                                                           'global_avg'],
+                                                          default='global_avg')
+        if reduction_type == 'flatten':
+            output_node = Flatten().build(hp, output_node)
+        elif reduction_type == 'global_max':
+            output_node = utils.get_global_max_pooling(
+                output_node.shape)()(output_node)
+        elif reduction_type == 'global_ave':
+            output_node = utils.get_global_average_pooling(
+                output_node.shape)()(output_node)
+        return output_node
+
+
+class TemporalReduction(HyperBlock):
+    """Reduce the dimension of a temporal tensor, e.g. output of RNN, to a vector.
+
+    # Arguments
+        reduction_type: Str. 'flatten', 'global_max' or 'global_ave'. If left
+            unspecified, it will be tuned automatically.
     """
 
     def __init__(self, reduction_type, **kwargs):
@@ -470,45 +497,6 @@ class SpatialReduction(HyperBlock):
                                                            'global_max',
                                                            'global_ave'],
                                                           default='global_ave')
-        if reduction_type == 'flatten':
-            output_node = Flatten().build(hp, output_node)
-        elif reduction_type == 'global_max':
-            output_node = utils.get_global_max_pooling(
-                output_node.shape)()(output_node)
-        elif reduction_type == 'global_ave':
-            output_node = utils.get_global_average_pooling(
-                output_node.shape)()(output_node)
-        return output_node
-
-
-class TemporalReduction(HyperBlock):
-    """Reduce the dimension of a temporal tensor, e.g. output of RNN, to a vector.
-
-    Attributes:
-        reduction_type: Str. 'flatten', 'global_max', 'global_ave', 'global_min'.
-            Defaults to tunable.
-    """
-
-    def __init__(self, reduction_type, **kwargs):
-        super().__init__(**kwargs)
-        self.reduction_type = reduction_type
-
-    def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
-        utils.validate_num_inputs(inputs, 1)
-        input_node = inputs[0]
-        output_node = input_node
-
-        # No need to reduce.
-        if len(output_node.shape) <= 2:
-            return output_node
-
-        reduction_type = self.reduction_type or hp.Choice('reduction_type',
-                                                          ['flatten',
-                                                           'global_max',
-                                                           'global_ave',
-                                                           'global_min'],
-                                                          default='global_ave')
 
         if reduction_type == 'flatten':
             output_node = Flatten().build(hp, output_node)
@@ -528,9 +516,11 @@ class EmbeddingBlock(HyperBlock):
     The input should be tokenized sequences with the same length, where each element
     of a sequence should be the index of the word.
 
-    Attributes:
-        pretrained: Boolean. Use pretrained word embedding. Defaults to tunable.
-        is_embedding_trainable: Boolean. Defaults to tunable.
+    # Arguments
+        pretrained: Boolean. Use pretrained word embedding. If left unspecified, it
+            will be tuned automatically.
+        is_embedding_trainable: Boolean. If left unspecified, it will be tuned
+            automatically.
         embedding_dim: Int. Defaults to None.
     """
 
@@ -577,7 +567,7 @@ class TextBlock(RNNBlock):
     pass
 
 
-class StructuredBlock(HyperBlock):
+class StructuredDataBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
         pass

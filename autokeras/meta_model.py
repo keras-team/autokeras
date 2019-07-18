@@ -9,12 +9,12 @@ from autokeras.hypermodel import processor
 def assemble(inputs, outputs, dataset):
     """Assemble the HyperBlocks based on the dataset and input output nodes.
 
-    Args:
+    # Arguments
         inputs: A list of InputNode. The input nodes of the AutoModel.
         outputs: A list of HyperHead. The heads of the AutoModel.
         dataset: tf.data.Dataset. The training dataset.
 
-    Returns:
+    # Returns
         A list of HyperNode. The output nodes of the AutoModel.
     """
     inputs = nest.flatten(inputs)
@@ -59,7 +59,7 @@ class Assembler(object):
     def update(self, x):
         """Update the assembler sample by sample.
 
-        Args:
+        # Arguments
             x: tf.Tensor. A data instance from input dataset.
         """
         pass
@@ -67,10 +67,10 @@ class Assembler(object):
     def assemble(self, input_node):
         """Assemble the HyperBlocks for text input.
 
-        Args:
+        # Arguments
             input_node: HyperNode. The input node for the AutoModel.
 
-        Returns:
+        # Returns
             A HyperNode. The output node of the assembled model.
         """
         raise NotImplementedError

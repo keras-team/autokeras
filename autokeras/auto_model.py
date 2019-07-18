@@ -24,7 +24,7 @@ class AutoModel(kerastuner.HyperModel):
     The user can specify the inputs and outputs of the AutoModel. It will infer
     the rest of the high-level neural architecture.
 
-    Attributes:
+    # Arguments
         inputs: A list of or a HyperNode instance.
             The input node(s) of the AutoModel.
         outputs: A list of or a HyperHead instance.
@@ -207,7 +207,7 @@ class AutoModel(kerastuner.HyperModel):
         It will search for the best model based on the performances on
         validation data.
 
-        Args:
+        # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x.
             y: numpy.ndarray or tensorflow.Dataset. Training data y.
             validation_split: Float between 0 and 1.
@@ -332,13 +332,13 @@ class AutoModel(kerastuner.HyperModel):
     def preprocess(self, hp, dataset, validation_data=None, fit=False):
         """Preprocess the data to be ready for the Keras Model.
 
-        Args:
+        # Arguments
             hp: HyperParameters. Used to build the HyperModel.
             dataset: tf.data.Dataset. Training data.
             validation_data: tf.data.Dataset. Validation data.
             fit: Boolean. Whether to fit the preprocessing layers with x and y.
 
-        Returns:
+        # Returns
             if validation data is provided.
             A tuple of two preprocessed tf.data.Dataset, (train, validation).
             Otherwise, return the training dataset.
@@ -473,7 +473,7 @@ class GraphAutoModel(AutoModel):
     HyperBlocks with the functional API, which is the same as
     the Keras functional API.
 
-    Attributes:
+    # Arguments
         inputs: A list of or a HyperNode instances.
             The input node(s) of the GraphAutoModel.
         outputs: A list of or a HyperNode instances.
