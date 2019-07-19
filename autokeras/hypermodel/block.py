@@ -593,6 +593,7 @@ class TimeSeriesBlock(HyperBlock):
 
 
 class GeneralBlock(HyperBlock):
+    """A general neural network block when the input type is unknown. """
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
