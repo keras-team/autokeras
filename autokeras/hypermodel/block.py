@@ -156,8 +156,12 @@ class RNNBlock(HyperBlock):
         num_layers = self.num_layers or hp.Choice('num_layers',
                                                   [1, 2, 3],
                                                   default=2)
-
-        in_layer = const.Constant.RNN_LAYERS[layer_type]
+        rnn_layers = {
+            'vanilla': tf.keras.layers.SimpleRNN,
+            'gru': tf.keras.layers.GRU,
+            'lstm': tf.keras.layers.LSTM
+        }
+        in_layer = rnn_layers[layer_type]
         for i in range(num_layers):
             return_sequences = True
             if i == num_layers - 1:
@@ -526,8 +530,9 @@ class EmbeddingBlock(HyperBlock):
     of a sequence should be the index of the word.
 
     # Arguments
-        pretrained: Str. 'no pretrained', 'glove'. Use pretrained word embedding.
-            If left unspecified, it will be tuned automatically.
+        pretrained: Str. 'no pretrained', 'glove', 'fasttext' or 'word2vec'. Use
+            pretrained word embedding. If left unspecified, it will be tuned
+            automatically.
         embedding_dim: Int. If left unspecified, it will be tuned automatically.
     """
 
@@ -542,8 +547,12 @@ class EmbeddingBlock(HyperBlock):
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         # TODO: support more pretrained embedding layers.
+        # glove, fasttext, and word2vec
         pretrained = self.pretrained or hp.Choice('pretrained',
-                                                  ['no pretrained', 'glove'],
+                                                  ['no pretrained',
+                                                   'glove',
+                                                   'fasttext',
+                                                   'word2vec'],
                                                   default=False)
         embedding_dim = self.embedding_dim or hp.Choice('embedding_dim',
                                                         [32, 64, 128, 256, 512],

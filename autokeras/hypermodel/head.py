@@ -39,7 +39,7 @@ class ClassificationHead(HyperHead):
     (more than 2) classification. Use Accuracy as metrics by default.
 
     # Arguments
-        num_classes: Int. Defaults to None.
+        num_classes: Int. Defaults to None. If None, it will infer from the data.
         multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to None. If None, the loss will be
             inferred from the AutoModel.
@@ -90,6 +90,15 @@ class RegressionHead(HyperHead):
     """Regression Dense layers.
 
     Use mean squared error as metrics and loss by default.
+
+    # Arguments
+        output_dim: Int. The number of output dimensions. Defaults to None.
+            If None, it will infer from the data.
+        multi_label: Boolean. Defaults to False.
+        loss: A Keras loss function. Defaults to None. If None, the loss will be
+            inferred from the AutoModel.
+        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
+            be inferred from the AutoModel.
     """
 
     def __init__(self,

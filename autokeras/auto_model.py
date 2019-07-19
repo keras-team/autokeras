@@ -30,21 +30,26 @@ class AutoModel(kerastuner.HyperModel):
         outputs: A list of or a HyperHead instance.
             The output head(s) of the AutoModel.
         max_trials: Int. The maximum number of different models to try.
+            Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
+            Defaults to './tmp'.
+        seed: Int. Random seed.
     """
 
     def __init__(self,
                  inputs,
                  outputs,
-                 max_trials=None,
-                 directory=None,
+                 max_trials=100,
+                 directory='./tmp',
+                 seed=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self.tuner = None
-        self.max_trials = max_trials or const.Constant.NUM_TRIALS
-        self.directory = directory or const.Constant.TEMP_DIRECTORY
+        self.max_trials = max_trials
+        self.directory = directory
+        self.seed = seed
         self._node_to_id = {}
         self._nodes = []
         self._hypermodels = []
@@ -246,7 +251,8 @@ class AutoModel(kerastuner.HyperModel):
             hypermodel=self,
             objective='val_loss',
             max_trials=self.max_trials,
-            directory=self.directory)
+            directory=self.directory,
+            seed=self.seed)
 
         # TODO: allow early stop if epochs is not specified.
         self.tuner.search(x=dataset,
