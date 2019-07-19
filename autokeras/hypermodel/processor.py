@@ -345,11 +345,11 @@ class ImageAugment(HyperPreprocessor):
                                               self._hp.Choice('target_height'),
                                               self._hp.Choice('target_width'))
         if rotation_range:
-            if self._hp.Choice('rotation_range') == 90:
+            if rotation_range == 90:
                 x = tf.image.rot90(x, k=1)
-            elif self._hp.Choice('rotation_range') == 180:
+            elif rotation_range == 180:
                 x = tf.image.rot90(x, k=2)
-            elif self._hp.Choice('rotation_range') == 270:
+            elif rotation_range == 270:
                 x = tf.image.rot90(x, k=3)
             else:
                 x = tf.image.rot90(x, k=4)
