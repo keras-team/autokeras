@@ -21,10 +21,12 @@ class ImageClassifier(SupervisedImagePipeline):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
+        name: String. The name of the AutoModel. Defaults to 'image_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
-        directory: Str. Path to a directory for storing temporary files during
-            the search. Defaults to './tmp'.
+        directory: String. The path to a directory for storing the search outputs.
+            Defaults to None, which would create a folder with the name of the
+            AutoModel in the current directory.
         seed: Int. Random seed.
     """
 
@@ -33,8 +35,9 @@ class ImageClassifier(SupervisedImagePipeline):
                  multi_label=False,
                  loss=None,
                  metrics=None,
+                 name='image_classifier',
                  max_trials=100,
-                 directory='./tmp',
+                 directory=None,
                  seed=None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
@@ -57,10 +60,12 @@ class ImageRegressor(SupervisedImagePipeline):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
+        name: String. The name of the AutoModel. Defaults to 'image_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
-            The search may finish before reaching the max_trails. Defaults to 100.
-        directory: Str. Path to a directory for storing temporary files during
-            the search. Defaults to './tmp'.
+            The search may finish before reaching the max_trials. Defaults to 100.
+        directory: String. The path to a directory for storing the search outputs.
+            Defaults to None, which would create a folder with the name of the
+            AutoModel in the current directory.
         seed: Int. Random seed.
     """
 
@@ -68,8 +73,9 @@ class ImageRegressor(SupervisedImagePipeline):
                  output_dim=None,
                  loss=None,
                  metrics=None,
+                 name='image_regressor',
                  max_trials=100,
-                 directory='./tmp',
+                 directory=None,
                  seed=None):
         super().__init__(
             outputs=head.RegressionHead(output_dim=output_dim,
@@ -98,10 +104,12 @@ class TextClassifier(SupervisedTextPipeline):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
+        name: String. The name of the AutoModel. Defaults to 'image_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
-        directory: Str. Path to a directory for storing temporary files during
-            the search. Defaults to './tmp'.
+        directory: String. The path to a directory for storing the search outputs.
+            Defaults to None, which would create a folder with the name of the
+            AutoModel in the current directory.
         seed: Int. Random seed.
     """
 
@@ -110,8 +118,9 @@ class TextClassifier(SupervisedTextPipeline):
                  multi_label=False,
                  loss=None,
                  metrics=None,
+                 name='text_classifier',
                  max_trials=100,
-                 directory='./tmp',
+                 directory=None,
                  seed=None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
@@ -134,10 +143,12 @@ class TextRegressor(SupervisedTextPipeline):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
+        name: String. The name of the AutoModel. Defaults to 'image_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
-            The search may finish before reaching the max_trails. Defaults to 100.
-        directory: Str. Path to a directory for storing temporary files during
-            the search. Defaults to './tmp'.
+            The search may finish before reaching the max_trials. Defaults to 100.
+        directory: String. The path to a directory for storing the search outputs.
+            Defaults to None, which would create a folder with the name of the
+            AutoModel in the current directory.
         seed: Int. Random seed.
     """
 
@@ -145,8 +156,9 @@ class TextRegressor(SupervisedTextPipeline):
                  output_dim=None,
                  loss=None,
                  metrics=None,
+                 name='text_regressor',
                  max_trials=100,
-                 directory='./tmp',
+                 directory=None,
                  seed=None):
         super().__init__(
             outputs=head.RegressionHead(output_dim=output_dim,

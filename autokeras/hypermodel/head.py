@@ -45,18 +45,22 @@ class ClassificationHead(HyperHead):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
+        dropout_rate: Float. The dropout rate for the layers.
+            If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self,
                  num_classes=None,
                  multi_label=False,
                  loss=None,
-                 metrics=None):
+                 metrics=None,
+                 dropout_rate=None):
         super().__init__(loss=loss, metrics=metrics)
         self.num_classes = num_classes
         self.multi_label = multi_label
         if not self.metrics:
             self.metrics = ['accuracy']
+        self.dropout_rate = dropout_rate
 
     @property
     def loss(self):
@@ -77,6 +81,13 @@ class ClassificationHead(HyperHead):
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
+
+        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
+                                                      [0, 0.25, 0.5],
+                                                      default=0)
+
+        if dropout_rate > 0:
+            output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         output_node = block.Flatten().build(hp, output_node)
         output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
         if self.loss == 'binary_crossentropy':
@@ -99,16 +110,20 @@ class RegressionHead(HyperHead):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
+        dropout_rate: Float. The dropout rate for the layers.
+            If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self,
                  output_dim=None,
                  loss=None,
-                 metrics=None):
+                 metrics=None,
+                 dropout_rate=None):
         super().__init__(loss=loss, metrics=metrics)
         self.output_dim = output_dim
         if not self.metrics:
             self.metrics = ['mean_squared_error']
+        self.dropout_rate = dropout_rate
 
     @property
     def loss(self):
@@ -126,6 +141,13 @@ class RegressionHead(HyperHead):
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
+
+        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
+                                                      [0, 0.25, 0.5],
+                                                      default=0)
+
+        if dropout_rate > 0:
+            output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         output_node = block.Flatten().build(hp, output_node)
         output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
         return output_node

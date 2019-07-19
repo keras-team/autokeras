@@ -29,20 +29,23 @@ class AutoModel(kerastuner.HyperModel):
             The input node(s) of the AutoModel.
         outputs: A list of or a HyperHead instance.
             The output head(s) of the AutoModel.
-        max_trials: Int. The maximum number of different models to try.
-            Defaults to 100.
+        name: String. The name of the AutoModel. Defaults to 'auto_model'.
+        max_trials: Int. The maximum number of different Keras Models to try.
+            The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
-            Defaults to './tmp'.
+            Defaults to None, which would create a folder with the name of the
+            AutoModel in the current directory.
         seed: Int. Random seed.
     """
 
     def __init__(self,
                  inputs,
                  outputs,
+                 name='auto_model',
                  max_trials=100,
-                 directory='./tmp',
+                 directory=None,
                  seed=None):
-        super().__init__(name='AutoModel')
+        super().__init__(name=name)
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self.tuner = None
@@ -252,7 +255,8 @@ class AutoModel(kerastuner.HyperModel):
             objective='val_loss',
             max_trials=self.max_trials,
             directory=self.directory,
-            seed=self.seed)
+            seed=self.seed,
+            project_name=self.name)
 
         # TODO: allow early stop if epochs is not specified.
         self.tuner.search(x=dataset,
@@ -297,7 +301,7 @@ class AutoModel(kerastuner.HyperModel):
     def predict(self, x, batch_size=32, **kwargs):
         """Predict the output for a given testing data.
 
-        # Arguments:
+        # Arguments
             x: tf.data.Dataset or numpy.ndarray. Testing data.
             batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
@@ -490,21 +494,26 @@ class GraphAutoModel(AutoModel):
             The input node(s) of the GraphAutoModel.
         outputs: A list of or a HyperNode instances.
             The output node(s) of the GraphAutoModel.
-        max_trials: Int. The maximum number of different models to try.
-        directory: String. The path to the directory
-            for storing the search outputs.
+        name: String. The name of the AutoModel. Defaults to 'auto_graph_model'.
+        max_trials: Int. The maximum number of different Keras Models to try.
+            The search may finish before reaching the max_trials. Defaults to 100.
+        directory: String. The path to a directory for storing the search outputs.
+            Defaults to None, which would create a folder with the name of the
+            AutoModel in the current directory.
         seed: Int. Random seed.
     """
 
     def __init__(self,
                  inputs,
                  outputs,
+                 name='auto_graph_model',
                  max_trials=100,
                  directory='./tmp',
                  seed=None):
         super(GraphAutoModel, self).__init__(
             inputs=inputs,
             outputs=outputs,
+            name=name,
             max_trials=max_trials,
             directory=directory,
             seed=seed

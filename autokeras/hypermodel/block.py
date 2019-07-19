@@ -117,7 +117,7 @@ class RNNBlock(HyperBlock):
             tuned automatically.
         num_layers: Int. The number of layers in RNN. If left unspecified, it will
             be tuned automatically.
-        layer_type: Str. 'gru' or 'lstm'. If left unspecified, it will be tuned
+        layer_type: String. 'gru' or 'lstm'. If left unspecified, it will be tuned
             automatically.
     """
 
@@ -157,7 +157,6 @@ class RNNBlock(HyperBlock):
                                                   [1, 2, 3],
                                                   default=2)
         rnn_layers = {
-            'vanilla': tf.keras.layers.SimpleRNN,
             'gru': tf.keras.layers.GRU,
             'lstm': tf.keras.layers.LSTM
         }
@@ -184,8 +183,8 @@ class ImageBlock(HyperBlock):
     which is controlled by a hyperparameter, 'block_type'.
 
     # Arguments
-        block_type: Str. 'resnet', 'xception', 'vanilla'. The type of HyperBlock to
-            use. If left unspecified, it will be tuned automatically.
+        block_type: String. 'resnet', 'xception', 'vanilla'. The type of HyperBlock
+            to use. If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self, block_type=None, **kwargs):
@@ -216,7 +215,6 @@ class ConvBlock(HyperBlock):
 
     # Arguments
         kernel_size: Int. If left unspecified, it will be tuned automatically.
-        dropout_rate: Float. If left unspecified, it will be tuned automatically.
         num_blocks: Int. The number of conv blocks. If left unspecified, it will be
             tuned automatically.
         separable: Boolean. Whether to use separable conv layers.
@@ -225,13 +223,11 @@ class ConvBlock(HyperBlock):
 
     def __init__(self,
                  kernel_size=None,
-                 dropout_rate=None,
                  num_blocks=None,
                  separable=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.kernel_size = kernel_size
-        self.dropout_rate = dropout_rate
         self.num_blocks = num_blocks
         self.separable = separable
 
@@ -244,9 +240,6 @@ class ConvBlock(HyperBlock):
         kernel_size = self.kernel_size or hp.Choice('kernel_size',
                                                     [3, 5, 7],
                                                     default=3)
-        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
-                                                      [0, 0.25, 0.5],
-                                                      default=0.5)
         num_blocks = self.num_blocks or hp.Choice('num_blocks',
                                                   [1, 2, 3],
                                                   default=2)
@@ -259,11 +252,8 @@ class ConvBlock(HyperBlock):
         else:
             conv = utils.get_conv(input_node.shape)
         pool = utils.get_max_pooling(input_node.shape)
-        dropout = utils.get_dropout(input_node.shape)
 
         for i in range(num_blocks):
-            if dropout_rate > 0:
-                output_node = dropout(dropout_rate)(output_node)
             output_node = conv(
                 hp.Choice('filters_{i}_1'.format(i=i),
                           [16, 32, 64],
@@ -293,9 +283,9 @@ class ResNetBlock(HyperBlock, resnet.HyperResNet):
     """HyperBlock for ResNet.
 
     # Arguments
-        version: Str. 'v1', 'v2' or 'next'. The type of ResNet to use.
+        version: String. 'v1', 'v2' or 'next'. The type of ResNet to use.
             If left unspecified, it will be tuned automatically.
-        pooling: Str. 'avg', 'max'. The type of pooling layer to use.
+        pooling: String. 'avg', 'max'. The type of pooling layer to use.
             If left unspecified, it will be tuned automatically.
     """
 
@@ -336,29 +326,23 @@ class XceptionBlock(HyperBlock, xception.HyperXception):
     architecture with a half, an identical, or a double size of the original one.
 
     # Arguments
-        activation: Str. 'selu' or 'relu'. If left unspecified, it will be tuned
+        activation: String. 'selu' or 'relu'. If left unspecified, it will be tuned
             automatically.
-        conv2d_num_filters: Int. If left unspecified, it will be tuned automatically.
-        kernel_size: Int. If left unspecified, it will be tuned automatically.
         initial_strides: Int. If left unspecified, it will be tuned automatically.
         num_residual_blocks: Int. If left unspecified, it will be tuned
             automatically.
-        pooling: Str. 'ave', 'flatten', or 'max'. If left unspecified, it will be
+        pooling: String. 'ave', 'flatten', or 'max'. If left unspecified, it will be
             tuned automatically.
     """
 
     def __init__(self,
                  activation=None,
-                 conv2d_num_filters=None,
-                 kernel_size=None,
                  initial_strides=None,
                  num_residual_blocks=None,
                  pooling=None,
                  **kwargs):
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
         self.activation = activation
-        self.conv2d_num_filters = conv2d_num_filters
-        self.kernel_size = kernel_size
         self.initial_strides = initial_strides
         self.num_residual_blocks = num_residual_blocks
         self.pooling = pooling
@@ -368,16 +352,11 @@ class XceptionBlock(HyperBlock, xception.HyperXception):
         self.input_shape = None
 
         hp.Choice('activation', ['relu', 'selu'])
-        hp.Choice('conv2d_num_filters', [32, 64, 128], default=64)
-        hp.Choice('kernel_size', [3, 5])
         hp.Choice('initial_strides', [2])
         hp.Range('num_residual_blocks', 2, 8, default=4)
         hp.Choice('pooling', ['avg', 'flatten', 'max'])
 
         hp.values['activation'] = self.activation or hp.values['activation']
-        hp.values['conv2d_num_filters'] = \
-            self.conv2d_num_filters or hp.values['conv2d_num_filters']
-        hp.values['kernel_size'] = self.kernel_size or hp.values['kernel_size']
         hp.values['initial_strides'] = \
             self.initial_strides or hp.values['initial_strides']
         hp.values['num_residual_blocks'] = \
@@ -400,7 +379,7 @@ class Merge(HyperBlock):
     """Merge block to merge multiple nodes into one.
 
     # Arguments
-        merge_type: Str. 'add' or 'concatenate'. If left unspecified, it will be
+        merge_type: String. 'add' or 'concatenate'. If left unspecified, it will be
             tuned automatically.
     """
     def __init__(self, merge_type=None, **kwargs):
@@ -449,7 +428,7 @@ class SpatialReduction(HyperBlock):
     """Reduce the dimension of a spatial tensor, e.g. image, to a vector.
 
     # Arguments
-        reduction_type: Str. 'flatten', 'global_max' or 'global_avg'.
+        reduction_type: String. 'flatten', 'global_max' or 'global_avg'.
             If left unspecified, it will be tuned automatically.
     """
 
@@ -487,7 +466,7 @@ class TemporalReduction(HyperBlock):
     """Reduce the dimension of a temporal tensor, e.g. output of RNN, to a vector.
 
     # Arguments
-        reduction_type: Str. 'flatten', 'global_max' or 'global_avg'. If left
+        reduction_type: String. 'flatten', 'global_max' or 'global_avg'. If left
             unspecified, it will be tuned automatically.
     """
 
@@ -530,34 +509,34 @@ class EmbeddingBlock(HyperBlock):
     of a sequence should be the index of the word.
 
     # Arguments
-        pretrained: Str. 'no pretrained', 'glove', 'fasttext' or 'word2vec'. Use
-            pretrained word embedding. If left unspecified, it will be tuned
-            automatically.
+        pretraining: String. 'random' (use random weights instead any pretrained
+            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
+            If left unspecified, it will be tuned automatically.
         embedding_dim: Int. If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self,
-                 pretrained=None,
+                 pretraining=None,
                  embedding_dim=None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.pretrained = pretrained
+        self.pretraining = pretraining
         self.embedding_dim = embedding_dim
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         # TODO: support more pretrained embedding layers.
         # glove, fasttext, and word2vec
-        pretrained = self.pretrained or hp.Choice('pretrained',
-                                                  ['no pretrained',
-                                                   'glove',
-                                                   'fasttext',
-                                                   'word2vec'],
-                                                  default=False)
+        pretraining = self.pretraining or hp.Choice('pretraining',
+                                                    ['random',
+                                                     'glove',
+                                                     'fasttext',
+                                                     'word2vec'],
+                                                    default=False)
         embedding_dim = self.embedding_dim or hp.Choice('embedding_dim',
                                                         [32, 64, 128, 256, 512],
                                                         default=128)
-        if pretrained:
+        if pretraining:
             # TODO: load from pretrained weights
             layer = tf.keras.layers.Embedding(
                 input_dim=input_node.shape[1],
