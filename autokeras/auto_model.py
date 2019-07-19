@@ -41,9 +41,8 @@ class AutoModel(kerastuner.HyperModel):
                  outputs,
                  max_trials=100,
                  directory='./tmp',
-                 seed=None,
-                 **kwargs):
-        super().__init__(**kwargs)
+                 seed=None):
+        super().__init__(name='AutoModel')
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self.tuner = None
@@ -234,6 +233,7 @@ class AutoModel(kerastuner.HyperModel):
                   - dataset or a dataset iterator
                 For the first two cases, `batch_size` must be provided.
                 For the last case, `validation_steps` must be provided.
+            **kwargs: Any arguments supported by keras.Model.fit.
         """
         dataset, validation_data = self.prepare_data(
             x=x,
@@ -295,7 +295,13 @@ class AutoModel(kerastuner.HyperModel):
         return dataset, validation_data
 
     def predict(self, x, batch_size=32, **kwargs):
-        """Predict the output for a given testing data. """
+        """Predict the output for a given testing data.
+
+        # Arguments:
+            x: tf.data.Dataset or numpy.ndarray. Testing data.
+            batch_size: Int. Defaults to 32.
+            **kwargs: Any arguments supported by keras.Model.predict.
+        """
         x = utils.prepare_preprocess(x, x)
         x = self.preprocess(self.tuner.get_best_hp(1), x)
         x = x.batch(batch_size)
@@ -487,10 +493,22 @@ class GraphAutoModel(AutoModel):
         max_trials: Int. The maximum number of different models to try.
         directory: String. The path to the directory
             for storing the search outputs.
+        seed: Int. Random seed.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(GraphAutoModel, self).__init__(*args, **kwargs)
+    def __init__(self,
+                 inputs,
+                 outputs,
+                 max_trials=100,
+                 directory='./tmp',
+                 seed=None):
+        super(GraphAutoModel, self).__init__(
+            inputs=inputs,
+            outputs=outputs,
+            max_trials=max_trials,
+            directory=directory,
+            seed=seed
+        )
         self._build_network()
 
     def _meta_build(self, dataset):
