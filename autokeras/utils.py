@@ -97,10 +97,10 @@ def prepare_preprocess(x, y):
 def is_label(y):
     """Check if the targets are one-hot encoded or plain labels.
 
-    Args:
+    # Arguments
         y: numpy.ndarray. The targets.
 
-    Returns:
+    # Returns
         Boolean. Whether the targets are plain label, not encoded.
     """
     return len(y.flatten()) == len(y) and len(set(y.flatten())) > 2

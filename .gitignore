@@ -8,6 +8,8 @@
 /mkdocs/docs/temp
 
 .DS_Store
+.vscode
+settings.json
 .idea
 .pytest_cache
 /experiments
@@ -58,6 +60,7 @@ htmlcov/
 .tox/
 .coverage
 .coverage.*
+cov.xml
 .cache
 nosetests.xml
 coverage.xml

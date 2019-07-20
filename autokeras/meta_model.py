@@ -1,33 +1,33 @@
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import hyper_node
-from autokeras.hypermodel import hyper_block
+from autokeras.hypermodel import block
+from autokeras.hypermodel import node
 from autokeras.hypermodel import processor
 
 
 def assemble(inputs, outputs, dataset):
     """Assemble the HyperBlocks based on the dataset and input output nodes.
 
-    Args:
+    # Arguments
         inputs: A list of InputNode. The input nodes of the AutoModel.
         outputs: A list of HyperHead. The heads of the AutoModel.
         dataset: tf.data.Dataset. The training dataset.
 
-    Returns:
+    # Returns
         A list of HyperNode. The output nodes of the AutoModel.
     """
     inputs = nest.flatten(inputs)
     outputs = nest.flatten(outputs)
     assemblers = []
     for input_node in inputs:
-        if isinstance(input_node, hyper_node.TextInput):
+        if isinstance(input_node, node.TextInput):
             assemblers.append(TextAssembler())
-        if isinstance(input_node, hyper_node.ImageInput):
+        if isinstance(input_node, node.ImageInput):
             assemblers.append(ImageAssembler())
-        if isinstance(input_node, hyper_node.StructuredInput):
+        if isinstance(input_node, node.StructuredInput):
             assemblers.append(StructuredDataAssembler())
-        if isinstance(input_node, hyper_node.TimeSeriesInput):
+        if isinstance(input_node, node.TimeSeriesInput):
             assemblers.append(TimeSeriesAssembler())
 
     # Iterate over the dataset to fit the assemblers.
@@ -42,7 +42,7 @@ def assemble(inputs, outputs, dataset):
 
     # Merge the middle nodes.
     if len(middle_nodes) > 1:
-        output_node = hyper_block.Merge()(middle_nodes)
+        output_node = block.Merge()(middle_nodes)
     else:
         output_node = middle_nodes[0]
 
@@ -59,7 +59,7 @@ class Assembler(object):
     def update(self, x):
         """Update the assembler sample by sample.
 
-        Args:
+        # Arguments
             x: tf.Tensor. A data instance from input dataset.
         """
         pass
@@ -67,10 +67,10 @@ class Assembler(object):
     def assemble(self, input_node):
         """Assemble the HyperBlocks for text input.
 
-        Args:
+        # Arguments
             input_node: HyperNode. The input node for the AutoModel.
 
-        Returns:
+        # Returns
             A HyperNode. The output node of the assembled model.
         """
         raise NotImplementedError
@@ -100,16 +100,16 @@ class TextAssembler(Assembler):
     def assemble(self, input_node):
         output_node = input_node
         ratio = self.sw_ratio()
-        if not isinstance(input_node, hyper_node.TextNode):
+        if not isinstance(input_node, node.TextNode):
             raise ValueError('The input_node should be a TextNode.')
         if ratio < 1500:
             output_node = processor.TextToNgramVector()(output_node)
-            output_node = hyper_block.DenseBlock()(output_node)
+            output_node = block.DenseBlock()(output_node)
         else:
             output_node = processor.TextToIntSequence()(output_node)
-            output_node = hyper_block.EmbeddingBlock(
+            output_node = block.EmbeddingBlock(
                 pretrained=(ratio < 15000))(output_node)
-            output_node = hyper_block.ConvBlock(separable=True)(output_node)
+            output_node = block.ConvBlock(separable=True)(output_node)
         return output_node
 
 
@@ -119,7 +119,7 @@ class ImageAssembler(Assembler):
         # for image, use the num_instance to determine the range of the sizes of the
         # resnet and xception
         # use the image size to determine how the down sampling works, e.g. pooling.
-        return hyper_block.ImageBlock()(input_node)
+        return block.ImageBlock()(input_node)
 
 
 class StructuredDataAssembler(Assembler):

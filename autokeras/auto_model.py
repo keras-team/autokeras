@@ -5,13 +5,13 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import processor
-from autokeras.hypermodel import hyper_node
-from autokeras.hypermodel import hyper_head
-from autokeras import utils
-from autokeras import tuner
 from autokeras import const
 from autokeras import meta_model
+from autokeras import tuner
+from autokeras import utils
+from autokeras.hypermodel import head
+from autokeras.hypermodel import node
+from autokeras.hypermodel import processor
 
 
 class AutoModel(kerastuner.HyperModel):
@@ -24,27 +24,34 @@ class AutoModel(kerastuner.HyperModel):
     The user can specify the inputs and outputs of the AutoModel. It will infer
     the rest of the high-level neural architecture.
 
-    Attributes:
+    # Arguments
         inputs: A list of or a HyperNode instance.
             The input node(s) of the AutoModel.
         outputs: A list of or a HyperHead instance.
             The output head(s) of the AutoModel.
-        max_trials: Int. The maximum number of different models to try.
+        name: String. The name of the AutoModel. Defaults to 'auto_model'.
+        max_trials: Int. The maximum number of different Keras Models to try.
+            The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
+            Defaults to None, which would create a folder with the name of the
+            AutoModel in the current directory.
+        seed: Int. Random seed.
     """
 
     def __init__(self,
                  inputs,
                  outputs,
-                 max_trials=None,
+                 name='auto_model',
+                 max_trials=100,
                  directory=None,
-                 **kwargs):
-        super().__init__(**kwargs)
+                 seed=None):
+        super().__init__(name=name)
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self.tuner = None
-        self.max_trials = max_trials or const.Constant.NUM_TRIALS
-        self.directory = directory or const.Constant.TEMP_DIRECTORY
+        self.max_trials = max_trials
+        self.directory = directory
+        self.seed = seed
         self._node_to_id = {}
         self._nodes = []
         self._hypermodels = []
@@ -207,7 +214,7 @@ class AutoModel(kerastuner.HyperModel):
         It will search for the best model based on the performances on
         validation data.
 
-        Args:
+        # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x.
             y: numpy.ndarray or tensorflow.Dataset. Training data y.
             validation_split: Float between 0 and 1.
@@ -229,6 +236,7 @@ class AutoModel(kerastuner.HyperModel):
                   - dataset or a dataset iterator
                 For the first two cases, `batch_size` must be provided.
                 For the last case, `validation_steps` must be provided.
+            **kwargs: Any arguments supported by keras.Model.fit.
         """
         dataset, validation_data = self.prepare_data(
             x=x,
@@ -246,7 +254,9 @@ class AutoModel(kerastuner.HyperModel):
             hypermodel=self,
             objective='val_loss',
             max_trials=self.max_trials,
-            directory=self.directory)
+            directory=self.directory,
+            seed=self.seed,
+            project_name=self.name)
 
         # TODO: allow early stop if epochs is not specified.
         self.tuner.search(x=dataset,
@@ -289,7 +299,13 @@ class AutoModel(kerastuner.HyperModel):
         return dataset, validation_data
 
     def predict(self, x, batch_size=32, **kwargs):
-        """Predict the output for a given testing data. """
+        """Predict the output for a given testing data.
+
+        # Arguments
+            x: tf.data.Dataset or numpy.ndarray. Testing data.
+            batch_size: Int. Defaults to 32.
+            **kwargs: Any arguments supported by keras.Model.predict.
+        """
         x = utils.prepare_preprocess(x, x)
         x = self.preprocess(self.tuner.get_best_hp(1), x)
         x = x.batch(batch_size)
@@ -305,7 +321,7 @@ class AutoModel(kerastuner.HyperModel):
         for metrics_list in [output_node.in_hypermodels[0].metrics for
                              output_node in self.outputs
                              if isinstance(output_node.in_hypermodels[0],
-                                           hyper_head.HyperHead)]:
+                                           head.HyperHead)]:
             metrics += metrics_list
         return metrics
 
@@ -313,7 +329,7 @@ class AutoModel(kerastuner.HyperModel):
         loss = nest.flatten([output_node.in_hypermodels[0].loss
                              for output_node in self.outputs
                              if isinstance(output_node.in_hypermodels[0],
-                                           hyper_head.HyperHead)])
+                                           head.HyperHead)])
         return loss
 
     def _compiled(self, hp, model):
@@ -332,13 +348,13 @@ class AutoModel(kerastuner.HyperModel):
     def preprocess(self, hp, dataset, validation_data=None, fit=False):
         """Preprocess the data to be ready for the Keras Model.
 
-        Args:
+        # Arguments
             hp: HyperParameters. Used to build the HyperModel.
             dataset: tf.data.Dataset. Training data.
             validation_data: tf.data.Dataset. Validation data.
             fit: Boolean. Whether to fit the preprocessing layers with x and y.
 
-        Returns:
+        # Returns
             if validation data is provided.
             A tuple of two preprocessed tf.data.Dataset, (train, validation).
             Otherwise, return the training dataset.
@@ -436,10 +452,10 @@ class AutoModel(kerastuner.HyperModel):
         self._label_encoders = []
         new_y = []
         for temp_y, output_node in zip(y, self.outputs):
-            head = output_node
-            if isinstance(head, hyper_node.Node):
-                head = output_node.in_hypermodels[0]
-            if (isinstance(head, hyper_head.ClassificationHead) and
+            hyper_head = output_node
+            if isinstance(hyper_head, node.Node):
+                hyper_head = output_node.in_hypermodels[0]
+            if (isinstance(hyper_head, head.ClassificationHead) and
                     utils.is_label(temp_y)):
                 label_encoder = processor.OneHotEncoder()
                 label_encoder.fit(y)
@@ -451,6 +467,8 @@ class AutoModel(kerastuner.HyperModel):
         return new_y
 
     def _postprocess(self, y):
+        if not self._label_encoders:
+            return y
         new_y = []
         for temp_y, label_encoder in zip(y, self._label_encoders):
             if label_encoder:
@@ -471,18 +489,35 @@ class GraphAutoModel(AutoModel):
     HyperBlocks with the functional API, which is the same as
     the Keras functional API.
 
-    Attributes:
+    # Arguments
         inputs: A list of or a HyperNode instances.
             The input node(s) of the GraphAutoModel.
         outputs: A list of or a HyperNode instances.
             The output node(s) of the GraphAutoModel.
-        max_trials: Int. The maximum number of different models to try.
-        directory: String. The path to the directory
-            for storing the search outputs.
+        name: String. The name of the AutoModel. Defaults to 'graph_auto_model'.
+        max_trials: Int. The maximum number of different Keras Models to try.
+            The search may finish before reaching the max_trials. Defaults to 100.
+        directory: String. The path to a directory for storing the search outputs.
+            Defaults to None, which would create a folder with the name of the
+            AutoModel in the current directory.
+        seed: Int. Random seed.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(GraphAutoModel, self).__init__(*args, **kwargs)
+    def __init__(self,
+                 inputs,
+                 outputs,
+                 name='graph_auto_model',
+                 max_trials=100,
+                 directory=None,
+                 seed=None):
+        super(GraphAutoModel, self).__init__(
+            inputs=inputs,
+            outputs=outputs,
+            name=name,
+            max_trials=max_trials,
+            directory=directory,
+            seed=seed
+        )
         self._build_network()
 
     def _meta_build(self, dataset):

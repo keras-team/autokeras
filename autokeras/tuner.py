@@ -1,7 +1,8 @@
 import copy
 import inspect
-import tensorflow as tf
+
 import kerastuner
+import tensorflow as tf
 
 
 class AutoTuner(kerastuner.Tuner):
@@ -37,12 +38,12 @@ class AutoTuner(kerastuner.Tuner):
     def get_best_hp(self, num_models=1):
         """Returns hyperparameters used to build the best model(s).
 
-        Args:
+        # Arguments
             num_models (int, optional): Number of best models, whose building
                 HyperParameters to return. Models will be returned in sorted order
                 starting from the best. Defaults to 1.
 
-        Returns:
+        # Returns
             List of HyperParameter instances.
         """
         best_trials = self._get_best_trials(num_models)
