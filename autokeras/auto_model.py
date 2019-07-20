@@ -508,7 +508,7 @@ class GraphAutoModel(AutoModel):
                  outputs,
                  name='auto_graph_model',
                  max_trials=100,
-                 directory='./tmp',
+                 directory=None,
                  seed=None):
         super(GraphAutoModel, self).__init__(
             inputs=inputs,
