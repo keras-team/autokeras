@@ -494,7 +494,7 @@ class GraphAutoModel(AutoModel):
             The input node(s) of the GraphAutoModel.
         outputs: A list of or a HyperNode instances.
             The output node(s) of the GraphAutoModel.
-        name: String. The name of the AutoModel. Defaults to 'auto_graph_model'.
+        name: String. The name of the AutoModel. Defaults to 'graph_auto_model'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
@@ -506,7 +506,7 @@ class GraphAutoModel(AutoModel):
     def __init__(self,
                  inputs,
                  outputs,
-                 name='auto_graph_model',
+                 name='graph_auto_model',
                  max_trials=100,
                  directory=None,
                  seed=None):
