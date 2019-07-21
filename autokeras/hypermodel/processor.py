@@ -300,37 +300,47 @@ class ImageAugment(HyperPreprocessor):
         self._shape = x.shape
         rotation_range = self.rotation_range
         if rotation_range is None:
-            rotation_range = self._hp.Choice('rotation_range')
+            rotation_range = self._hp.Range('rotation_range', 0, 1)
         whether_random_crop = self.whether_random_crop
         if whether_random_crop is None:
-            whether_random_crop = self._hp.Choice('whether_random_crop')
+            whether_random_crop = self._hp.Choice('whether_random_crop',
+                                                  [True, False],
+                                                  default=True)
         brightness_range = self.brightness_range
         if brightness_range is None:
-            brightness_range = self._hp.Choice('brightness_range')
-        saturation_range = self._hp.Choice('saturation_range')
+            brightness_range = self._hp.Range('brightness_range', 0, 1)
+        saturation_range = self._hp.Range('saturation_range', 0, 1)
         if saturation_range is None:
-            saturation_range = self._hp.Choice('saturation_range')
+            saturation_range = self._hp.Range('saturation_range', 0, 1)
         contrast_range = self.contrast_range
         if contrast_range is None:
-            contrast_range = self._hp.Choice('contrast_range')
+            contrast_range = self._hp.Range('contrast_range', 0, 1)
         horizontal_flip = self.horizontal_flip
         if horizontal_flip is None:
-            horizontal_flip = self._hp.Choice('horizontal_flip')
+            horizontal_flip = self._hp.Choice('horizontal_flip',
+                                              [True, False],
+                                              default=True)
         vertical_flip = self.vertical_flip
         if vertical_flip is None:
-            vertical_flip = self._hp.Choice('vertical_flip')
+            vertical_flip = self._hp.Choice('vertical_flip',
+                                            [True, False],
+                                            default=True)
         whether_translation = self.whether_translation
         if whether_translation is None:
-            whether_translation = self._hp.Choice('whether_translation')
+            whether_translation = self._hp.Choice('whether_translation',
+                                                  [True, False],
+                                                  default=True)
         gaussian_noise = self.gaussian_noise
         if gaussian_noise is None:
-            gaussian_noise = self._hp.Choice('gaussian_noise')
+            gaussian_noise = self._hp.Choice('gaussian_noise',
+                                             [True, False],
+                                             default=True)
         x = tf.cast(x, dtype=tf.float32)
         if gaussian_noise:
             noise = tf.random_normal(shape=tf.shape(x),
                                      mean=0.0, stddev=1.0, dtype=tf.float32)
             x = tf.add(x, noise)
-        if whether_translation:
+        '''if whether_translation:
             x = tf.image.pad_to_bounding_box(x, self._hp.Choice('translation_top'),
                                              self._hp.Choice('translation_left'),
                                              self._hp.Choice('target_height') +
@@ -343,7 +353,7 @@ class ImageAugment(HyperPreprocessor):
                                               self._hp.Choice('translation_bottom'),
                                               self._hp.Choice('translation_right'),
                                               self._hp.Choice('target_height'),
-                                              self._hp.Choice('target_width'))
+                                              self._hp.Choice('target_width'))'''
         if rotation_range:
             if rotation_range == 90:
                 x = tf.image.rot90(x, k=1)
