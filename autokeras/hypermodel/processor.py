@@ -260,7 +260,7 @@ class TextToNgramVector(HyperPreprocessor):
 class ImageAugment(HyperPreprocessor):
 
     def __init__(self,
-                 rotation_range=None,
+                 '''rotation_range=None,
                  whether_random_crop=None,
                  brightness_range=None,  # fraction 0-1  [X]
                  saturation_range=None,  # fraction 0-1  [X]
@@ -268,18 +268,18 @@ class ImageAugment(HyperPreprocessor):
                  horizontal_flip=None,  # boolean  [X]
                  vertical_flip=None,
                  whether_translation=None,
-                 gaussian_noise=None,
+                 gaussian_noise=None,'''
                  **kwargs):
         super().__init__(**kwargs)
-        self.rotation_range = rotation_range
-        self.whether_random_crop = whether_random_crop
-        self.brightness_range = brightness_range
-        self.saturation_range = saturation_range
-        self.contrast_range = contrast_range
-        self.horizontal_flip = horizontal_flip
-        self.vertical_flip = vertical_flip
-        self.whether_translation = whether_translation
-        self.gaussian_noise = gaussian_noise
+        self.rotation_range = 90
+        self.whether_random_crop = True
+        self.brightness_range = 0.3
+        self.saturation_range = 0.4
+        self.contrast_range = 0.3
+        self.horizontal_flip = True
+        self.vertical_flip = True
+        self.whether_translation = True
+        self.gaussian_noise = True
         self._shape = None
 
     @staticmethod
