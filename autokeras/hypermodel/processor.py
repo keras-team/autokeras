@@ -300,7 +300,9 @@ class ImageAugment(HyperPreprocessor):
         self._shape = x.shape
         rotation_range = self.rotation_range
         if rotation_range is None:
-            rotation_range = self._hp.Range('rotation_range', 0, 1)
+            rotation_range = self._hp.Choice('rotation_range',
+                                             [90, 180, 270, 0],
+                                             default=90)
         whether_random_crop = self.whether_random_crop
         if whether_random_crop is None:
             whether_random_crop = self._hp.Choice('whether_random_crop',
