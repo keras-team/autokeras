@@ -74,7 +74,7 @@ def test_augment():
                                        whether_translation=True,
                                        gaussian_noise=True)
     dataset = tf.data.Dataset.from_tensor_slices(raw_images)
-    augmenter.set_hp(kerastuner.HyperParameter())
+    #augmenter.set_hp(kerastuner.HyperParameter())
 
     def map_func(x):
         return tf.py_function(augmenter.transform,
