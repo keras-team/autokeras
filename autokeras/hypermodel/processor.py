@@ -283,7 +283,7 @@ class ImageAugment(HyperPreprocessor):
         self._shape = None
 
     @staticmethod
-    def __get_min_and_max(value, name):
+    def _get_min_and_max(value, name):
         if isinstance(value, (tuple, list)):
             if len(value) != 2:
                 raise ValueError(
