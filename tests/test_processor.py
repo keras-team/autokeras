@@ -64,15 +64,7 @@ def test_ngram():
 
 def test_augment():
     raw_images = tf.random.normal([1000, 32, 32, 3], mean=-1, stddev=4)
-    augmenter = processor.ImageAugment('''rotation_range=90,
-                                       whether_random_crop=True,
-                                       brightness_range=0.3,
-                                       saturation_range=0.4,
-                                       contrast_range=0.3,
-                                       horizontal_flip=True,
-                                       vertical_flip=True,
-                                       whether_translation=True,
-                                       gaussian_noise=True''')
+    augmenter = processor.ImageAugment()
     dataset = tf.data.Dataset.from_tensor_slices(raw_images)
     augmenter.set_hp(kerastuner.HyperParameter())
 
