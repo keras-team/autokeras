@@ -1,5 +1,3 @@
-import tensorflow as tf
-
 
 class Constant(object):
     # Text

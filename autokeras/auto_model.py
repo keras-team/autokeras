@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras import const
 from autokeras import meta_model
 from autokeras import tuner
 from autokeras import utils
