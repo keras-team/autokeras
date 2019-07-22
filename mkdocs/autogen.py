@@ -183,10 +183,10 @@ def add_doc_definition(doc, definition, temp_str):
 
 def get_func_comments(function_definitions):
     doc = ''
-    for f in function_definitions:
-        temp_str = to_md(parse_func_string(ast.get_docstring(f)))
+    for func_def in function_definitions:
+        temp_str = to_md(parse_func_string(ast.get_docstring(func_def)))
         if temp_str != '':
-            doc = add_doc_definition(doc, f, temp_str)
+            doc = add_doc_definition(doc, func_def, temp_str)
     return doc
 
 
