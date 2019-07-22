@@ -1,7 +1,7 @@
 import os
 from graphviz import Digraph
 
-from autokeras import pickle_from_file
+from autokeras.utils import pickle_from_file
 
 
 def to_pdf(graph, path):
