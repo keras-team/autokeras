@@ -126,7 +126,7 @@ Hello world.
 
 
 
-   
+
     Args:
         big_table: An open Bigtable Table instance.
         keys: A sequence of strings representing the key of each table row
@@ -141,6 +141,14 @@ Hello world.
     """
 
 
+def add_doc_comment(doc, comment_dict, comment):
+    doc += '#####' + comment + '\n'
+    for arg, des in comment_dict[comment].items():
+        doc += '* **' + arg + '**: ' + des + '\n\n'
+
+    return doc
+
+
 def to_md(comment_dict):
     doc = ''
     if 'short_description' in comment_dict:
@@ -152,14 +160,10 @@ def to_md(comment_dict):
         doc += '\n'
 
     if 'Args' in comment_dict and comment_dict['Args'] is not None:
-        doc += '#####Args\n'
-        for arg, des in comment_dict['Args'].items():
-            doc += '* **' + arg + '**: ' + des + '\n\n'
+        doc = add_doc_comment(doc, comment_dict, 'Args')
 
     if 'Attributes' in comment_dict and comment_dict['Attributes'] is not None:
-        doc += '#####Attributes\n'
-        for arg, des in comment_dict['Attributes'].items():
-            doc += '* **' + arg + '**: ' + des + '\n\n'
+        doc = add_doc_comment(doc, comment_dict, 'Attributes')
 
     if 'Returns' in comment_dict and comment_dict['Returns'] is not None:
         doc += '#####Returns\n'
@@ -172,13 +176,17 @@ def to_md(comment_dict):
     return doc
 
 
+def add_doc_definition(doc, definition, temp_str):
+    doc += '###' + definition.name + '\n' + temp_str
+    return doc
+
+
 def get_func_comments(function_definitions):
     doc = ''
     for f in function_definitions:
         temp_str = to_md(parse_func_string(ast.get_docstring(f)))
         if temp_str != '':
-            doc += '###' + f.name + '\n' + temp_str
-
+            doc = add_doc_definition(doc, f, temp_str)
     return doc
 
 
@@ -195,7 +203,7 @@ def get_comments_str(file_name):
         method_definitions = [node for node in class_def.body if isinstance(node, ast.FunctionDef)]
         temp_str += get_func_comments(method_definitions)
         if temp_str != '':
-            doc += '##' + class_def.name + '\n' + temp_str
+            doc = add_doc_definition(doc, class_def, temp_str)
     return doc
 
 
