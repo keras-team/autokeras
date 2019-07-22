@@ -357,21 +357,21 @@ class ImageAugment(HyperPreprocessor):
                 x = tf.image.rot90(x, k=4)
         if brightness_range:
             min_value, max_value = self.__get_min_and_max(
-                self._hp.Choice('brightness_range'),
+                brightness_range,
                 'brightness_range')
             x = tf.image.random_brightness(x, min_value, max_value)
         if saturation_range:
             min_value, max_value = self.__get_min_and_max(
-                self._hp.Choice('saturation_range'),
+                saturation_range,
                 'saturation_range')
             x = tf.image.random_saturation(x, min_value, max_value)
         if contrast_range:
             min_value, max_value = self.__get_min_and_max(
-                self._hp.Choice('contrast_range'),
+                contrast_range,
                 'contrast_range')
             x = tf.image.random_contrast(
                 x, min_value, max_value)
-        if whether_random_crop:
+        '''if whether_random_crop:
             crop_size = [self._shape[0], self._hp.Choice('random_crop_height'),
                          self._hp.Choice('random_crop_width'), self._shape[4]]
             seed = np.random.randint(self._hp.Choice('random_crop_seed'))
@@ -379,7 +379,7 @@ class ImageAugment(HyperPreprocessor):
                             self._hp.Choice('target_width'))
             x = tf.image.resize(
                 tf.image.random_crop(x, size=crop_size, seed=seed),
-                size=target_shape)
+                size=target_shape)'''
         if horizontal_flip:
             x = tf.image.flip_left_right(x)
         if vertical_flip:
