@@ -289,7 +289,7 @@ class ImageAugment(HyperPreprocessor):
     def transform(self, x):
         self._shape = x.shape
         rotation_range = self.rotation_range
-        if rotation_range is None:
+        '''if rotation_range is None:
             rotation_range = self._hp.Choice('rotation_range',
                                              [90, 180, 270, 0],
                                              default=90)
@@ -311,8 +311,8 @@ class ImageAugment(HyperPreprocessor):
         if horizontal_flip is None:
             horizontal_flip = self._hp.Choice('horizontal_flip',
                                               [True, False],
-                                              default=True)
-        vertical_flip = self.vertical_flip
+                                              default=True)'''
+        '''vertical_flip = self.vertical_flip
         if vertical_flip is None:
             vertical_flip = self._hp.Choice('vertical_flip',
                                             [True, False],
@@ -326,7 +326,7 @@ class ImageAugment(HyperPreprocessor):
         if gaussian_noise is None:
             gaussian_noise = self._hp.Choice('gaussian_noise',
                                              [True, False],
-                                             default=True)
+                                             default=True)'''
         x = tf.cast(x, dtype=tf.float32)
         if gaussian_noise:
             noise = tf.random_normal(shape=tf.shape(x),
@@ -355,7 +355,7 @@ class ImageAugment(HyperPreprocessor):
                 x = tf.image.rot90(x, k=3)
             else:
                 x = tf.image.rot90(x, k=4)
-        if brightness_range:
+        '''if brightness_range:
             min_value, max_value = self.__get_min_and_max(
                 brightness_range,
                 'brightness_range')
@@ -370,7 +370,7 @@ class ImageAugment(HyperPreprocessor):
                 contrast_range,
                 'contrast_range')
             x = tf.image.random_contrast(
-                x, min_value, max_value)
+                x, min_value, max_value)'''
         '''if whether_random_crop:
             crop_size = [self._shape[0], self._hp.Choice('random_crop_height'),
                          self._hp.Choice('random_crop_width'), self._shape[4]]
