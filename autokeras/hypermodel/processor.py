@@ -380,10 +380,10 @@ class ImageAugment(HyperPreprocessor):
             x = tf.image.resize(
                 tf.image.random_crop(x, size=crop_size, seed=seed),
                 size=target_shape)'''
-        if horizontal_flip:
+        '''if horizontal_flip:
             x = tf.image.flip_left_right(x)
         if vertical_flip:
-            x = tf.image.flip_up_down(x)
+            x = tf.image.flip_up_down(x)'''
         return x
 
     def output_types(self):
