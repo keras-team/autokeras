@@ -298,6 +298,7 @@ class ImageAugment(HyperPreprocessor):
 
     def transform(self, x):
         self._shape = x.shape
+        target_height, target_width, channels = self._shape
         rotation_range = self.rotation_range
         if rotation_range is None:
             rotation_range = self._hp.Choice('rotation_range',
@@ -380,15 +381,16 @@ class ImageAugment(HyperPreprocessor):
                 contrast_range,
                 'contrast_range')
             x = tf.image.random_contrast(x, min_value, max_value)
-        '''if whether_random_crop:
-            crop_size = [self._shape[0], self._hp.Choice('random_crop_height'),
-                         self._hp.Choice('random_crop_width'), self._shape[4]]
+        if whether_random_crop:
+            crop_size = [self._shape[0],
+                         self._hp.Choice('random_crop_height'),
+                         self._hp.Choice('random_crop_width'),
+                         self._shape[4]]
             seed = np.random.randint(self._hp.Choice('random_crop_seed'))
-            target_shape = (self._hp.Choice('target_height'),
-                            self._hp.Choice('target_width'))
+            target_shape = (target_height，target_width)
             x = tf.image.resize(
                 tf.image.random_crop(x, size=crop_size, seed=seed),
-                size=target_shape)'''
+                size=target_shape)
         if horizontal_flip:
             x = tf.image.flip_left_right(x)
         if vertical_flip:
