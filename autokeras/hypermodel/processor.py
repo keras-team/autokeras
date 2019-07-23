@@ -259,17 +259,27 @@ class TextToNgramVector(HyperPreprocessor):
 
 class ImageAugment(HyperPreprocessor):
 
-    def __init__(self, **kwargs):
+    def __init__(self,
+                 rotation_range=None,
+                 whether_random_crop=None,
+                 brightness_range=None,  # fraction 0-1  [X]
+                 saturation_range=None,  # fraction 0-1  [X]
+                 contrast_range=None,  # fraction 0-1  [X]
+                 horizontal_flip=None,  # boolean  [X]
+                 vertical_flip=None,
+                 whether_translation=None,
+                 gaussian_noise=None,
+                 **kwargs):
         super().__init__(**kwargs)
-        self.rotation_range = 90
-        self.whether_random_crop = True
-        self.brightness_range = 0.3
-        self.saturation_range = 0.4
-        self.contrast_range = 0.3
-        self.horizontal_flip = True
-        self.vertical_flip = True
-        self.whether_translation = True
-        self.gaussian_noise = True
+        self.rotation_range = rotation_range
+        self.whether_random_crop = whether_random_crop
+        self.brightness_range = brightness_range
+        self.saturation_range = saturation_range
+        self.contrast_range = contrast_range
+        self.horizontal_flip = horizontal_flip
+        self.vertical_flip = vertical_flip
+        self.whether_translation = whether_translation
+        self.gaussian_noise = gaussian_noise
         self._shape = None
 
     @staticmethod
@@ -289,7 +299,7 @@ class ImageAugment(HyperPreprocessor):
     def transform(self, x):
         self._shape = x.shape
         rotation_range = self.rotation_range
-        '''if rotation_range is None:
+        if rotation_range is None:
             rotation_range = self._hp.Choice('rotation_range',
                                              [90, 180, 270, 0],
                                              default=90)
@@ -311,8 +321,8 @@ class ImageAugment(HyperPreprocessor):
         if horizontal_flip is None:
             horizontal_flip = self._hp.Choice('horizontal_flip',
                                               [True, False],
-                                              default=True)'''
-        '''vertical_flip = self.vertical_flip
+                                              default=True)
+        vertical_flip = self.vertical_flip
         if vertical_flip is None:
             vertical_flip = self._hp.Choice('vertical_flip',
                                             [True, False],
@@ -326,7 +336,7 @@ class ImageAugment(HyperPreprocessor):
         if gaussian_noise is None:
             gaussian_noise = self._hp.Choice('gaussian_noise',
                                              [True, False],
-                                             default=True)'''
+                                             default=True)
         x = tf.cast(x, dtype=tf.float32)
         if gaussian_noise:
             noise = tf.random_normal(shape=tf.shape(x),
@@ -355,7 +365,7 @@ class ImageAugment(HyperPreprocessor):
                 x = tf.image.rot90(x, k=3)
             else:
                 x = tf.image.rot90(x, k=4)
-        '''if brightness_range:
+        if brightness_range:
             min_value, max_value = self.__get_min_and_max(
                 brightness_range,
                 'brightness_range')
@@ -369,8 +379,7 @@ class ImageAugment(HyperPreprocessor):
             min_value, max_value = self.__get_min_and_max(
                 contrast_range,
                 'contrast_range')
-            x = tf.image.random_contrast(
-                x, min_value, max_value)'''
+            x = tf.image.random_contrast(x, min_value, max_value)
         '''if whether_random_crop:
             crop_size = [self._shape[0], self._hp.Choice('random_crop_height'),
                          self._hp.Choice('random_crop_width'), self._shape[4]]
@@ -380,10 +389,10 @@ class ImageAugment(HyperPreprocessor):
             x = tf.image.resize(
                 tf.image.random_crop(x, size=crop_size, seed=seed),
                 size=target_shape)'''
-        '''if horizontal_flip:
+        if horizontal_flip:
             x = tf.image.flip_left_right(x)
         if vertical_flip:
-            x = tf.image.flip_up_down(x)'''
+            x = tf.image.flip_up_down(x)
         return x
 
     def output_types(self):
