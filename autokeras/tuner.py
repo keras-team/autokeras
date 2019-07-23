@@ -16,6 +16,8 @@ class AutoTuner(kerastuner.Tuner):
             dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
 
         # Preprocess the dataset and set the shapes of the HyperNodes.
+        # TODO: Always do it in the fit mode. Different hp may result in different
+        # input data for certain preprocessor.
         dataset, validation_data = self.hypermodel.preprocess(
             hp,
             new_fit_kwargs.get('x', None),

@@ -11,6 +11,15 @@ from autokeras.hypermodel import block as hb_module
 class HyperPreprocessor(hb_module.HyperBlock):
     """Hyper preprocessing block base class."""
 
+    # TODO: Implement save and load, Since each trial they may be fit with different
+    # data because the preprocessors before the current preprocessor may change. So
+    # they need to be saved and loaded for prediction, otherwise the prediction
+    # cannot be done.
+
+    # TODO: It needs to know if it is in fit mode or predict mode. the behavior may
+    # be different. e.g. Image Augmentation should only augment the dataset when in
+    # fit mode.
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._hp = None
