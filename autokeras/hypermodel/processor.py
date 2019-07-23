@@ -312,7 +312,7 @@ class ImageAugment(HyperPreprocessor):
         brightness_range = self.brightness_range
         if brightness_range is None:
             brightness_range = self._hp.Range('brightness_range', 0, 1)
-        saturation_range = self._hp.Range('saturation_range', 0, 1)
+        saturation_range = self.saturation_range
         if saturation_range is None:
             saturation_range = self._hp.Range('saturation_range', 0, 1)
         contrast_range = self.contrast_range
@@ -382,10 +382,9 @@ class ImageAugment(HyperPreprocessor):
                 'contrast_range')
             x = tf.image.random_contrast(x, min_value, max_value)
         if whether_random_crop:
-            crop_size = [self._shape[0],
-                         self._hp.Choice('random_crop_height'),
+            crop_size = [self._hp.Choice('random_crop_height'),
                          self._hp.Choice('random_crop_width'),
-                         self._shape[4]]
+                         channels]
             seed = np.random.randint(self._hp.Choice('random_crop_seed'))
             target_shape = (target_height，target_width)
             x = tf.image.resize(
