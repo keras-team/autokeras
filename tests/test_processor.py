@@ -66,15 +66,7 @@ def test_augment():
     raw_images = tf.random.normal([1000, 32, 32, 3], mean=-1, stddev=4)
     augmenter = processor.ImageAugment()
     dataset = tf.data.Dataset.from_tensor_slices(raw_images)
-    augmenter.set_hp(kerastuner.HyperParameter(None))
-    '''augmenter.set_hp(kerastuner.HyperParameter('whether_random_crop'))
-    augmenter.set_hp(kerastuner.HyperParameter('brightness_range'))
-    augmenter.set_hp(kerastuner.HyperParameter('saturation_range'))
-    augmenter.set_hp(kerastuner.HyperParameter('contrast_range'))
-    augmenter.set_hp(kerastuner.HyperParameter('horizontal_flip'))
-    augmenter.set_hp(kerastuner.HyperParameter('vertical_flip'))
-    augmenter.set_hp(kerastuner.HyperParameter('vertical_flip'))'''
-
+    augmenter.set_hp(kerastuner.HyperParameters())
     def map_func(x):
         return tf.py_function(augmenter.transform,
                               inp=[x],
