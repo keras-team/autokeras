@@ -54,11 +54,10 @@ class AutoModel(object):
         self._label_encoders = None
 
     def _meta_build(self, dataset):
-        self.outputs = meta_model.assemble(inputs=self.inputs,
-                                           outputs=self.outputs,
-                                           dataset=dataset)
-
-        self.hypermodel = graph.GraphHyperModel(self.inputs, self.outputs)
+        self.hypermodel = meta_model.assemble(inputs=self.inputs,
+                                              outputs=self.outputs,
+                                              dataset=dataset)
+        self.outputs = self.hypermodel.outputs
 
     def fit(self,
             x=None,

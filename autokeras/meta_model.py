@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras.hypermodel import block
+from autokeras.hypermodel import graph
 from autokeras.hypermodel import node
 from autokeras.hypermodel import processor
 
@@ -46,8 +47,9 @@ def assemble(inputs, outputs, dataset):
     else:
         output_node = middle_nodes[0]
 
-    return nest.flatten([output_blocks(output_node)
-                         for output_blocks in outputs])
+    outputs = nest.flatten([output_blocks(output_node)
+                            for output_blocks in outputs])
+    return graph.GraphHyperModel(inputs, outputs)
 
 
 class Assembler(object):
