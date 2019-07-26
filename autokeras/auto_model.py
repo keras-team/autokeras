@@ -170,7 +170,7 @@ class AutoModel(object):
         for temp_y, output_node in zip(y, self.outputs):
             hyper_head = output_node
             if isinstance(hyper_head, node.Node):
-                hyper_head = output_node.in_hypermodels[0]
+                hyper_head = output_node.in_blocks[0]
             if (isinstance(hyper_head, head.ClassificationHead) and
                     utils.is_label(temp_y)):
                 label_encoder = processor.OneHotEncoder()

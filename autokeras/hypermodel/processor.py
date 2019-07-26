@@ -5,10 +5,10 @@ from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
 
 from autokeras import const
-from autokeras.hypermodel import block as hb_module
+from autokeras.hypermodel import block
 
 
-class HyperPreprocessor(hb_module.HyperBlock):
+class HyperPreprocessor(block.Block):
     """Hyper preprocessing block base class."""
 
     # TODO: Implement save and load, Since each trial they may be fit with different

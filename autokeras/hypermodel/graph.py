@@ -7,8 +7,8 @@ from tensorflow.python.util import nest
 
 from autokeras import utils
 from autokeras.hypermodel import head
+from autokeras.hypermodel import hyperblock
 from autokeras.hypermodel import processor
-from autokeras.hypermodel import composite
 
 
 class GraphHyperModel(kerastuner.HyperModel):
@@ -18,34 +18,33 @@ class GraphHyperModel(kerastuner.HyperModel):
         self.outputs = nest.flatten(outputs)
         self._node_to_id = {}
         self._nodes = []
-        self._hypermodels = []
-        self._hypermodel_to_id = {}
+        self._blocks = []
+        self._block_to_id = {}
         self._model_inputs = []
-        self._hypermodel_topo_depth = {}
+        self._block_topo_depth = {}
         self._total_topo_depth = 0
         self._build_network()
         self._plain_graph_hm = None
 
     def hyper_build(self, hp):
-        if not any([isinstance(hypermodel, composite.CompositeHyperBlock)
-                    for hypermodel in self._hypermodels]):
+        if not any([isinstance(block, hyperblock.HyperBlock)
+                    for block in self._blocks]):
             return
         inputs = copy.copy(self.inputs)
         old_node_to_new = {}
         for input_node, old_input_node in zip(inputs, self.inputs):
             input_node.clear_edges()
             old_node_to_new[old_input_node] = input_node
-        for old_hypermodel in self._hypermodels:
-            hypermodel = copy.copy(old_hypermodel)
-            hypermodel.clear_nodes()
+        for old_block in self._blocks:
+            block = copy.copy(old_block)
+            block.clear_nodes()
             inputs = [old_node_to_new[input_node]
-                      for input_node in old_hypermodel.inputs]
-            if isinstance(old_hypermodel, composite.CompositeHyperBlock):
-                outputs = hypermodel.build(hp, inputs=inputs)
+                      for input_node in old_block.inputs]
+            if isinstance(old_block, hyperblock.HyperBlock):
+                outputs = block.build(hp, inputs=inputs)
             else:
-                outputs = hypermodel(inputs)
-            for output_node, old_output_node in zip(outputs,
-                                                    old_hypermodel.outputs):
+                outputs = block(inputs)
+            for output_node, old_output_node in zip(outputs, old_block.outputs):
                 old_node_to_new[old_output_node] = output_node
         inputs = []
         for input_node in self.inputs:
@@ -56,21 +55,21 @@ class GraphHyperModel(kerastuner.HyperModel):
         self._plain_graph_hm = GraphHyperModel(inputs, outputs)
 
     def build(self, hp):
-        if any([isinstance(hypermodel, composite.CompositeHyperBlock)
-                for hypermodel in self._hypermodels]):
+        if any([isinstance(block, hyperblock.HyperBlock)
+                for block in self._blocks]):
             return self._plain_graph_hm.build(hp)
         real_nodes = {}
         for input_node in self._model_inputs:
             node_id = self._node_to_id[input_node]
             real_nodes[node_id] = input_node.build()
-        for hypermodel in self._hypermodels:
-            if isinstance(hypermodel, processor.HyperPreprocessor):
+        for block in self._blocks:
+            if isinstance(block, processor.HyperPreprocessor):
                 continue
             temp_inputs = [real_nodes[self._node_to_id[input_node]]
-                           for input_node in hypermodel.inputs]
-            outputs = hypermodel.build(hp, inputs=temp_inputs)
+                           for input_node in block.inputs]
+            outputs = block.build(hp, inputs=temp_inputs)
             outputs = nest.flatten(outputs)
-            for output_node, real_output_node in zip(hypermodel.outputs, outputs):
+            for output_node, real_output_node in zip(block.outputs, outputs):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
         model = tf.keras.Model(
             [real_nodes[self._node_to_id[input_node]] for input_node in
@@ -88,7 +87,7 @@ class GraphHyperModel(kerastuner.HyperModel):
             input_node.shape = tuple(x_shape.as_list())
         for y_shape, output_node in zip(y_shapes, self.outputs):
             output_node.shape = tuple(y_shape.as_list())
-            output_node.in_hypermodels[0].output_shape = output_node.shape
+            output_node.in_blocks[0].output_shape = output_node.shape
 
     def set_node_shapes(self, dataset):
         x_shapes, y_shapes = utils.dataset_shape(dataset)
@@ -96,7 +95,7 @@ class GraphHyperModel(kerastuner.HyperModel):
             input_node.shape = tuple(x_shape.as_list())
         for y_shape, output_node in zip(y_shapes, self.outputs):
             output_node.shape = tuple(y_shape.as_list())
-            output_node.in_hypermodels[0].output_shape = output_node.shape
+            output_node.in_blocks[0].output_shape = output_node.shape
 
     def _build_network(self):
         self._node_to_id = {}
@@ -111,56 +110,56 @@ class GraphHyperModel(kerastuner.HyperModel):
             if node not in self._node_to_id:
                 raise ValueError('Inputs and outputs not connected.')
 
-        # Find the hypermodels.
-        hypermodels = set()
+        # Find the blocks.
+        blocks = set()
         for input_node in self._nodes:
-            for hypermodel in input_node.out_hypermodels:
+            for block in input_node.out_blocks:
                 if any([output_node in self._node_to_id
-                        for output_node in hypermodel.outputs]):
-                    hypermodels.add(hypermodel)
+                        for output_node in block.outputs]):
+                    blocks.add(block)
 
-        # Check if all the inputs of the hypermodels are set as inputs.
-        for hypermodel in hypermodels:
-            for input_node in hypermodel.inputs:
+        # Check if all the inputs of the blocks are set as inputs.
+        for block in blocks:
+            for input_node in block.inputs:
                 if input_node not in self._node_to_id:
                     raise ValueError('A required input is missing for HyperModel '
-                                     '{name}.'.format(name=hypermodel.name))
+                                     '{name}.'.format(name=block.name))
 
         # Calculate the in degree of all the nodes
         in_degree = [0] * len(self._nodes)
         for node_id, node in enumerate(self._nodes):
             in_degree[node_id] = len([
-                hypermodel
-                for hypermodel in node.in_hypermodels if hypermodel in hypermodels
+                block
+                for block in node.in_blocks if block in blocks
             ])
 
-        # Add the hypermodels in topological order.
-        self._hypermodels = []
-        self._hypermodel_to_id = {}
-        self._hypermodel_topo_depth = {}
+        # Add the blocks in topological order.
+        self._blocks = []
+        self._block_to_id = {}
+        self._block_topo_depth = {}
         depth_count = 0
-        while len(hypermodels) != 0:
+        while len(blocks) != 0:
             new_added = []
 
-            # Collect hypermodels with in degree 0.
-            for hypermodel in hypermodels:
+            # Collect blocks with in degree 0.
+            for block in blocks:
                 if any([in_degree[self._node_to_id[node]]
-                        for node in hypermodel.inputs]):
+                        for node in block.inputs]):
                     continue
-                new_added.append(hypermodel)
+                new_added.append(block)
 
-            # Remove the collected hypermodels from hypermodels.
-            for hypermodel in new_added:
-                hypermodels.remove(hypermodel)
+            # Remove the collected blocks from blocks.
+            for block in new_added:
+                blocks.remove(block)
 
-            for hypermodel in new_added:
-                # Add the collected hypermodels to the AutoModel.
-                self._add_hypermodel(hypermodel)
-                self._hypermodel_topo_depth[
-                    self._hypermodel_to_id[hypermodel]] = depth_count
+            for block in new_added:
+                # Add the collected blocks to the AutoModel.
+                self._add_block(block)
+                self._block_topo_depth[
+                    self._block_to_id[block]] = depth_count
 
                 # Decrease the in degree of the output nodes.
-                for output_node in hypermodel.outputs:
+                for output_node in block.outputs:
                     if output_node not in self._node_to_id:
                         continue
                     output_node_id = self._node_to_id[output_node]
@@ -186,8 +185,8 @@ class GraphHyperModel(kerastuner.HyperModel):
         if input_node in outputs:
             outputs_reached = True
 
-        for hypermodel in input_node.out_hypermodels:
-            for output_node in hypermodel.outputs:
+        for block in input_node.out_blocks:
+            for output_node in block.outputs:
                 if output_node in in_stack_nodes:
                     raise ValueError('The network has a cycle.')
                 if output_node not in visited_nodes:
@@ -201,11 +200,11 @@ class GraphHyperModel(kerastuner.HyperModel):
 
         in_stack_nodes.remove(input_node)
 
-    def _add_hypermodel(self, hypermodel):
-        if hypermodel not in self._hypermodels:
-            hypermodel_id = len(self._hypermodels)
-            self._hypermodel_to_id[hypermodel] = hypermodel_id
-            self._hypermodels.append(hypermodel)
+    def _add_block(self, block):
+        if block not in self._blocks:
+            block_id = len(self._blocks)
+            self._block_to_id[block] = block_id
+            self._blocks.append(block)
 
     def _add_node(self, input_node):
         if input_node not in self._node_to_id:
@@ -213,18 +212,18 @@ class GraphHyperModel(kerastuner.HyperModel):
 
     def _get_metrics(self):
         metrics = []
-        for metrics_list in [output_node.in_hypermodels[0].metrics for
+        for metrics_list in [output_node.in_blocks[0].metrics for
                              output_node in self.outputs
-                             if isinstance(output_node.in_hypermodels[0],
-                                           head.HyperHead)]:
+                             if isinstance(output_node.in_blocks[0],
+                                           head.Head)]:
             metrics += metrics_list
         return metrics
 
     def _get_loss(self):
-        loss = nest.flatten([output_node.in_hypermodels[0].loss
+        loss = nest.flatten([output_node.in_blocks[0].loss
                              for output_node in self.outputs
-                             if isinstance(output_node.in_hypermodels[0],
-                                           head.HyperHead)])
+                             if isinstance(output_node.in_blocks[0],
+                                           head.Head)])
         return loss
 
     def _compiled(self, hp, model):
@@ -256,9 +255,9 @@ class GraphHyperModel(kerastuner.HyperModel):
         """
         if self._plain_graph_hm:
             return self._plain_graph_hm.preprocess(hp, dataset, validation_data, fit)
-        for hypermodel in self._hypermodels:
-            if isinstance(hypermodel, processor.HyperPreprocessor):
-                hypermodel.set_hp(hp)
+        for block in self._blocks:
+            if isinstance(block, processor.HyperPreprocessor):
+                block.set_hp(hp)
         dataset = self._preprocess(dataset, fit=fit)
         if not validation_data:
             return dataset
@@ -266,27 +265,27 @@ class GraphHyperModel(kerastuner.HyperModel):
         return dataset, validation_data
 
     def _preprocess(self, dataset, fit=False):
-        # Put hypermodels in groups by topological depth.
+        # Put blocks in groups by topological depth.
         # TODO: Dynamically process the topology instead of pregenerated. The
         # topology may change due to different hp. Some block may require multiple
         # rounds, some may require zero round.
-        hypermodels_by_depth = []
+        blocks_by_depth = []
         for depth in range(self._total_topo_depth):
-            temp_hypermodels = []
-            for hypermodel in self._hypermodels:
-                if (self._hypermodel_topo_depth[
-                    self._hypermodel_to_id[hypermodel]] == depth and
-                        isinstance(hypermodel, processor.HyperPreprocessor)):
-                    temp_hypermodels.append(hypermodel)
-            if not temp_hypermodels:
+            temp_blocks = []
+            for block in self._blocks:
+                if (self._block_topo_depth[
+                    self._block_to_id[block]] == depth and
+                        isinstance(block, processor.HyperPreprocessor)):
+                    temp_blocks.append(block)
+            if not temp_blocks:
                 break
-            hypermodels_by_depth.append(temp_hypermodels)
+            blocks_by_depth.append(temp_blocks)
 
         # A list of input node ids in the same order as the x in the dataset.
         input_node_ids = [self._node_to_id[input_node] for input_node in self.inputs]
 
         # Iterate the depth.
-        for hypermodels in hypermodels_by_depth:
+        for blocks in blocks_by_depth:
             if fit:
                 # Iterate the dataset to fit the preprocessors in current depth.
                 for x, _ in dataset:
@@ -295,39 +294,39 @@ class GraphHyperModel(kerastuner.HyperModel):
                         node_id: temp_x
                         for temp_x, node_id in zip(x, input_node_ids)
                     }
-                    for hypermodel in hypermodels:
+                    for block in blocks:
                         data = [node_id_to_data[self._node_to_id[input_node]]
-                                for input_node in hypermodel.inputs]
-                        hypermodel.update(data)
+                                for input_node in block.inputs]
+                        block.update(data)
 
-            for hypermodel in hypermodels:
-                hypermodel.finalize()
-                nest.flatten(hypermodel.outputs)[0].shape = hypermodel.output_shape
+            for block in blocks:
+                block.finalize()
+                nest.flatten(block.outputs)[0].shape = block.output_shape
 
             # Transform the dataset.
             dataset = dataset.map(functools.partial(
                 self._preprocess_transform,
                 input_node_ids=input_node_ids,
-                hypermodels=hypermodels))
+                blocks=blocks))
 
             # Build input_node_ids for next depth.
-            input_node_ids = list(sorted([self._node_to_id[hypermodel.outputs[0]]
-                                          for hypermodel in hypermodels]))
+            input_node_ids = list(sorted([self._node_to_id[block.outputs[0]]
+                                          for block in blocks]))
         return dataset
 
-    def _preprocess_transform(self, x, y, input_node_ids, hypermodels):
+    def _preprocess_transform(self, x, y, input_node_ids, blocks):
         x = nest.flatten(x)
         id_to_data = {
             node_id: temp_x
             for temp_x, node_id in zip(x, input_node_ids)
         }
         output_data = {}
-        # Keep the Keras Model inputs even they are not inputs to the hypermodels.
+        # Keep the Keras Model inputs even they are not inputs to the blocks.
         for node_id, data in id_to_data.items():
             if self._is_model_inputs(self._nodes[node_id]):
                 output_data[node_id] = data
-        # Transform each x by the corresponding hypermodel
-        for hm in hypermodels:
+        # Transform each x by the corresponding block.
+        for hm in blocks:
             data = [id_to_data[self._node_to_id[input_node]]
                     for input_node in hm.inputs]
             data = tf.py_function(hm.transform,
@@ -341,10 +340,10 @@ class GraphHyperModel(kerastuner.HyperModel):
 
     @staticmethod
     def _is_model_inputs(node):
-        for hypermodel in node.in_hypermodels:
-            if not isinstance(hypermodel, processor.HyperPreprocessor):
+        for block in node.in_blocks:
+            if not isinstance(block, processor.HyperPreprocessor):
                 return False
-        for hypermodel in node.out_hypermodels:
-            if not isinstance(hypermodel, processor.HyperPreprocessor):
+        for block in node.out_blocks:
+            if not isinstance(block, processor.HyperPreprocessor):
                 return True
         return False

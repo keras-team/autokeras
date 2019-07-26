@@ -1,17 +1,18 @@
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import block, node
+from autokeras.hypermodel import block
+from autokeras.hypermodel import node
 from autokeras.hypermodel import processor
 
 
-class CompositeHyperBlock(block.HyperBlock):
+class HyperBlock(block.Block):
 
     def build(self, hp, inputs=None):
         """Build the HyperModel instead of Keras Model."""
         raise NotImplementedError
 
 
-class ImageBlock(CompositeHyperBlock):
+class ImageBlock(HyperBlock):
     """HyperBlock for image data.
 
     The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
@@ -43,7 +44,7 @@ class ImageBlock(CompositeHyperBlock):
         return output_node
 
 
-class TextBlock(CompositeHyperBlock):
+class TextBlock(HyperBlock):
 
     def __init__(self, vectorizer=None, pretraining=None, **kwargs):
         super().__init__(**kwargs)
@@ -69,19 +70,19 @@ class TextBlock(CompositeHyperBlock):
         return output_node
 
 
-class StructuredDataBlock(CompositeHyperBlock):
+class StructuredDataBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
 
 
-class TimeSeriesBlock(CompositeHyperBlock):
+class TimeSeriesBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
 
 
-class GeneralBlock(CompositeHyperBlock):
+class GeneralBlock(HyperBlock):
     """A general neural network block when the input type is unknown. """
 
     def build(self, hp, inputs=None):

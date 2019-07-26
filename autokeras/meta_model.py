@@ -1,10 +1,9 @@
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import composite, block
+from autokeras.hypermodel import block, hyperblock
 from autokeras.hypermodel import graph
 from autokeras.hypermodel import node
-from autokeras.hypermodel import processor
 
 
 def assemble(inputs, outputs, dataset):
@@ -84,6 +83,7 @@ class TextAssembler(Assembler):
     Implemented according to Google Developer, Machine Learning Guide,
     Text Classification, Step 2.5: Choose a Model.
     """
+
     def __init__(self, **kwargs):
         super(TextAssembler, self).__init__(**kwargs)
         self._num_words = 0
@@ -112,8 +112,8 @@ class TextAssembler(Assembler):
             if ratio < 15000:
                 pretraining = 'glove'
 
-        return composite.TextBlock(vectorizer=vectorizer,
-                                   pretraining=pretraining)(input_node)
+        return hyperblock.TextBlock(vectorizer=vectorizer,
+                                    pretraining=pretraining)(input_node)
 
 
 class ImageAssembler(Assembler):
@@ -122,7 +122,7 @@ class ImageAssembler(Assembler):
         # for image, use the num_instance to determine the range of the sizes of the
         # resnet and xception
         # use the image size to determine how the down sampling works, e.g. pooling.
-        return composite.ImageBlock()(input_node)
+        return hyperblock.ImageBlock()(input_node)
 
 
 class StructuredDataAssembler(Assembler):

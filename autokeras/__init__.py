@@ -2,9 +2,9 @@ from autokeras.auto_model import AutoModel
 from autokeras.auto_model import GraphAutoModel
 from autokeras.const import Constant
 from autokeras.hypermodel.block import ConvBlock
+from autokeras.hypermodel.hyperblock import ImageBlock
 from autokeras.hypermodel.block import DenseBlock
 from autokeras.hypermodel.block import EmbeddingBlock
-from autokeras.hypermodel.composite import ImageBlock
 from autokeras.hypermodel.block import Merge
 from autokeras.hypermodel.block import ResNetBlock
 from autokeras.hypermodel.block import RNNBlock

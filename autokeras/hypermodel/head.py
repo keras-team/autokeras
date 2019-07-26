@@ -5,7 +5,7 @@ from autokeras import utils
 from autokeras.hypermodel import block
 
 
-class HyperHead(block.HyperBlock):
+class Head(block.Block):
     """Base class for the heads, e.g. classification, regression.
 
     # Arguments
@@ -31,7 +31,7 @@ class HyperHead(block.HyperBlock):
         return self._loss
 
 
-class ClassificationHead(HyperHead):
+class ClassificationHead(Head):
     """Classification Dense layers.
 
     Use sigmoid and binary crossentropy for binary classification and multi-label
@@ -97,7 +97,7 @@ class ClassificationHead(HyperHead):
         return output_node
 
 
-class RegressionHead(HyperHead):
+class RegressionHead(Head):
     """Regression Dense layers.
 
     Use mean squared error as metrics and loss by default.

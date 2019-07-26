@@ -16,7 +16,7 @@ def set_hp_value(hp, name, value):
     hp.values[full_name] = value or hp.values[full_name]
 
 
-class HyperBlock(kerastuner.HyperModel):
+class Block(kerastuner.HyperModel):
     """The base class for different HyperBlock.
 
     The HyperBlock can be connected together to build the search space
@@ -59,11 +59,11 @@ class HyperBlock(kerastuner.HyperModel):
         """
         self.inputs = nest.flatten(inputs)
         for input_node in self.inputs:
-            input_node.add_out_hypermodel(self)
+            input_node.add_out_block(self)
         self.outputs = []
         for _ in range(self._num_output_node):
             output_node = node.Node()
-            output_node.add_in_hypermodel(self)
+            output_node.add_in_block(self)
             self.outputs.append(output_node)
         return self.outputs
 
@@ -83,7 +83,7 @@ class HyperBlock(kerastuner.HyperModel):
         self.outputs = None
 
 
-class DenseBlock(HyperBlock):
+class DenseBlock(Block):
     """HyperBlock for Dense layers.
 
     # Arguments
@@ -132,7 +132,7 @@ class DenseBlock(HyperBlock):
         return output_node
 
 
-class RNNBlock(HyperBlock):
+class RNNBlock(Block):
     """An RNN HyperBlock.
 
     # Arguments
@@ -201,7 +201,7 @@ class RNNBlock(HyperBlock):
         return output_node
 
 
-class ConvBlock(HyperBlock):
+class ConvBlock(Block):
     """HyperBlock for vanilla ConvNets.
 
     # Arguments
@@ -270,7 +270,7 @@ class ConvBlock(HyperBlock):
         return 'same'
 
 
-class ResNetBlock(HyperBlock, resnet.HyperResNet):
+class ResNetBlock(Block, resnet.HyperResNet):
     """HyperBlock for ResNet.
 
     # Arguments
@@ -302,7 +302,7 @@ class ResNetBlock(HyperBlock, resnet.HyperResNet):
         return model.outputs
 
 
-class XceptionBlock(HyperBlock, xception.HyperXception):
+class XceptionBlock(Block, xception.HyperXception):
     """XceptionBlock.
 
     An Xception structure, used for specifying your model with specific datasets.
@@ -364,7 +364,7 @@ def shape_compatible(shape1, shape2):
     return shape1[:-1] == shape2[:-1]
 
 
-class Merge(HyperBlock):
+class Merge(Block):
     """Merge block to merge multiple nodes into one.
 
     # Arguments
@@ -401,7 +401,7 @@ class Merge(HyperBlock):
         return tf.keras.layers.Concatenate()(inputs)
 
 
-class Flatten(HyperBlock):
+class Flatten(Block):
     """Flatten the input tensor with Keras Flatten layer."""
 
     def build(self, hp, inputs=None):
@@ -413,7 +413,7 @@ class Flatten(HyperBlock):
         return input_node
 
 
-class SpatialReduction(HyperBlock):
+class SpatialReduction(Block):
     """Reduce the dimension of a spatial tensor, e.g. image, to a vector.
 
     # Arguments
@@ -451,7 +451,7 @@ class SpatialReduction(HyperBlock):
         return output_node
 
 
-class TemporalReduction(HyperBlock):
+class TemporalReduction(Block):
     """Reduce the dimension of a temporal tensor, e.g. output of RNN, to a vector.
 
     # Arguments
@@ -491,7 +491,7 @@ class TemporalReduction(HyperBlock):
         return output_node
 
 
-class EmbeddingBlock(HyperBlock):
+class EmbeddingBlock(Block):
     """Word embedding block for sequences.
 
     The input should be tokenized sequences with the same length, where each element
