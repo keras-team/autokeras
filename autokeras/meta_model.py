@@ -1,8 +1,9 @@
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import block, hyperblock
+from autokeras.hypermodel import block
 from autokeras.hypermodel import graph
+from autokeras.hypermodel import hyperblock
 from autokeras.hypermodel import node
 
 
