@@ -280,6 +280,7 @@ class ImageAugment(HyperPreprocessor):
         self.vertical_flip = vertical_flip
         self.whether_translation = whether_translation
         self.gaussian_noise = gaussian_noise
+        
         self._shape = None
 
     @staticmethod
@@ -386,7 +387,7 @@ class ImageAugment(HyperPreprocessor):
                          self._hp.Choice('random_crop_width'),
                          channels]
             seed = np.random.randint(self._hp.Choice('random_crop_seed'))
-            target_shape = (target_height，target_width)
+            target_shape = (target_height, target_width)
             x = tf.image.resize(
                 tf.image.random_crop(x, size=crop_size, seed=seed),
                 size=target_shape)
