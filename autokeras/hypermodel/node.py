@@ -17,6 +17,10 @@ class Node(object):
     def build(self):
         return tf.keras.Input(shape=self.shape)
 
+    def clear_edges(self):
+        self.in_hypermodels = []
+        self.out_hypermodels = []
+
 
 class TextNode(Node):
     pass

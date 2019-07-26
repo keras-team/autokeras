@@ -15,7 +15,7 @@ from autokeras.hypermodel import processor
 class AutoModel(object):
     """ A Model defined by inputs and outputs.
 
-    AutoModel has a HyperModel and a tuner to tune the HyperModel.
+    AutoModel has a HyperModel and a Tuner to tune the HyperModel.
     The user can use it in a similar way to a Keras model since it
     also has `fit()` and  `predict()` methods.
 
@@ -100,12 +100,14 @@ class AutoModel(object):
             validation_data=validation_data,
             validation_split=validation_split)
         self._meta_build(dataset)
+        self.hypermodel.set_io_shapes(dataset)
+        hp = kerastuner.HyperParameters()
+        self.hypermodel.hyper_build(hp)
         preprocessed_dataset, _ = self.hypermodel.preprocess(
             hp=kerastuner.HyperParameters(),
             dataset=dataset,
             validation_data=validation_data,
             fit=True)
-        self.hypermodel.set_node_shapes(preprocessed_dataset)
         self.tuner = tuner.RandomSearch(
             hypermodel=self.hypermodel,
             objective='val_loss',

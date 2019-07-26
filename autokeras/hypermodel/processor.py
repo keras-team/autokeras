@@ -75,6 +75,7 @@ class HyperPreprocessor(hb_module.HyperBlock):
         """
         raise NotImplementedError
 
+    @property
     def output_shape(self):
         """The output shape of the transformed data.
 
@@ -182,8 +183,9 @@ class Normalize(HyperPreprocessor):
     def output_types(self):
         return tf.float64,
 
+    @property
     def output_shape(self):
-        return self.mean.shape
+        return self.inputs[0].shape
 
 
 class TextToIntSequence(HyperPreprocessor):
@@ -214,6 +216,7 @@ class TextToIntSequence(HyperPreprocessor):
     def output_types(self):
         return tf.int64,
 
+    @property
     def output_shape(self):
         return self.max_len or self._max_len,
 
@@ -262,5 +265,6 @@ class TextToNgramVector(HyperPreprocessor):
     def output_types(self):
         return tf.float64,
 
+    @property
     def output_shape(self):
         return self._shape

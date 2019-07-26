@@ -16,13 +16,12 @@ class AutoTuner(kerastuner.Tuner):
             dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
 
         # Preprocess the dataset and set the shapes of the HyperNodes.
-        # TODO: Always do it in the fit mode. Different hp may result in different
-        # input data for certain preprocessor.
+        self.hypermodel.hyper_build(hp)
         dataset, validation_data = self.hypermodel.preprocess(
             hp,
             new_fit_kwargs.get('x', None),
-            new_fit_kwargs.get('validation_data', None))
-        self.hypermodel.set_node_shapes(dataset)
+            new_fit_kwargs.get('validation_data', None),
+            fit=True)
 
         # Batching
         batch_size = new_fit_kwargs.get('batch_size', 32)

@@ -1,3 +1,4 @@
+import copy
 import functools
 
 import kerastuner
@@ -7,6 +8,7 @@ from tensorflow.python.util import nest
 from autokeras import utils
 from autokeras.hypermodel import head
 from autokeras.hypermodel import processor
+from autokeras.hypermodel import composite
 
 
 class GraphHyperModel(kerastuner.HyperModel):
@@ -22,8 +24,41 @@ class GraphHyperModel(kerastuner.HyperModel):
         self._hypermodel_topo_depth = {}
         self._total_topo_depth = 0
         self._build_network()
+        self._plain_graph_hm = None
+
+    def hyper_build(self, hp):
+        if not any([isinstance(hypermodel, composite.CompositeHyperBlock)
+                    for hypermodel in self._hypermodels]):
+            return
+        inputs = copy.copy(self.inputs)
+        old_node_to_new = {}
+        for input_node, old_input_node in zip(inputs, self.inputs):
+            input_node.clear_edges()
+            old_node_to_new[old_input_node] = input_node
+        for old_hypermodel in self._hypermodels:
+            hypermodel = copy.copy(old_hypermodel)
+            hypermodel.clear_nodes()
+            inputs = [old_node_to_new[input_node]
+                      for input_node in old_hypermodel.inputs]
+            if isinstance(old_hypermodel, composite.CompositeHyperBlock):
+                outputs = hypermodel.build(hp, inputs=inputs)
+            else:
+                outputs = hypermodel(inputs)
+            for output_node, old_output_node in zip(outputs,
+                                                    old_hypermodel.outputs):
+                old_node_to_new[old_output_node] = output_node
+        inputs = []
+        for input_node in self.inputs:
+            inputs.append(old_node_to_new[input_node])
+        outputs = []
+        for output_node in self.outputs:
+            outputs.append(old_node_to_new[output_node])
+        self._plain_graph_hm = GraphHyperModel(inputs, outputs)
 
     def build(self, hp):
+        if any([isinstance(hypermodel, composite.CompositeHyperBlock)
+                for hypermodel in self._hypermodels]):
+            return self._plain_graph_hm.build(hp)
         real_nodes = {}
         for input_node in self._model_inputs:
             node_id = self._node_to_id[input_node]
@@ -45,9 +80,17 @@ class GraphHyperModel(kerastuner.HyperModel):
 
         return self._compiled(hp, model)
 
-    def set_node_shapes(self, dataset):
+    def set_io_shapes(self, dataset):
         # TODO: Set the shapes only if they are not provided by the user when
         #  initiating the HyperHead or Block.
+        x_shapes, y_shapes = utils.dataset_shape(dataset)
+        for x_shape, input_node in zip(x_shapes, self.inputs):
+            input_node.shape = tuple(x_shape.as_list())
+        for y_shape, output_node in zip(y_shapes, self.outputs):
+            output_node.shape = tuple(y_shape.as_list())
+            output_node.in_hypermodels[0].output_shape = output_node.shape
+
+    def set_node_shapes(self, dataset):
         x_shapes, y_shapes = utils.dataset_shape(dataset)
         for x_shape, input_node in zip(x_shapes, self._model_inputs):
             input_node.shape = tuple(x_shape.as_list())
@@ -211,6 +254,8 @@ class GraphHyperModel(kerastuner.HyperModel):
             A tuple of two preprocessed tf.data.Dataset, (train, validation).
             Otherwise, return the training dataset.
         """
+        if self._plain_graph_hm:
+            return self._plain_graph_hm.preprocess(hp, dataset, validation_data, fit)
         for hypermodel in self._hypermodels:
             if isinstance(hypermodel, processor.HyperPreprocessor):
                 hypermodel.set_hp(hp)
@@ -257,6 +302,7 @@ class GraphHyperModel(kerastuner.HyperModel):
 
             for hypermodel in hypermodels:
                 hypermodel.finalize()
+                nest.flatten(hypermodel.outputs)[0].shape = hypermodel.output_shape
 
             # Transform the dataset.
             dataset = dataset.map(functools.partial(
@@ -288,7 +334,7 @@ class GraphHyperModel(kerastuner.HyperModel):
                                   inp=nest.flatten(data),
                                   Tout=hm.output_types())
             data = nest.flatten(data)[0]
-            data.set_shape(hm.output_shape())
+            data.set_shape(hm.output_shape)
             output_data[self._node_to_id[hm.outputs[0]]] = data
         return tuple(map(
             lambda index: output_data[index], sorted(output_data))), y

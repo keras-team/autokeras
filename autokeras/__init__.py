@@ -4,7 +4,7 @@ from autokeras.const import Constant
 from autokeras.hypermodel.block import ConvBlock
 from autokeras.hypermodel.block import DenseBlock
 from autokeras.hypermodel.block import EmbeddingBlock
-from autokeras.hypermodel.block import ImageBlock
+from autokeras.hypermodel.composite import ImageBlock
 from autokeras.hypermodel.block import Merge
 from autokeras.hypermodel.block import ResNetBlock
 from autokeras.hypermodel.block import RNNBlock

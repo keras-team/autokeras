@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import block
+from autokeras.hypermodel import composite, block
 from autokeras.hypermodel import graph
 from autokeras.hypermodel import node
 from autokeras.hypermodel import processor
@@ -100,19 +100,20 @@ class TextAssembler(Assembler):
         return self._num_samples * self._num_samples / self._num_words
 
     def assemble(self, input_node):
-        output_node = input_node
         ratio = self.sw_ratio()
         if not isinstance(input_node, node.TextNode):
             raise ValueError('The input_node should be a TextNode.')
+        vectorizer = None
+        pretraining = 'random'
         if ratio < 1500:
-            output_node = processor.TextToNgramVector()(output_node)
-            output_node = block.DenseBlock()(output_node)
+            vectorizer = 'ngram'
         else:
-            output_node = processor.TextToIntSequence()(output_node)
-            output_node = block.EmbeddingBlock(
-                pretrained=(ratio < 15000))(output_node)
-            output_node = block.ConvBlock(separable=True)(output_node)
-        return output_node
+            vectorizer = 'sequence'
+            if ratio < 15000:
+                pretraining = 'glove'
+
+        return composite.TextBlock(vectorizer=vectorizer,
+                                   pretraining=pretraining)(input_node)
 
 
 class ImageAssembler(Assembler):
@@ -121,7 +122,7 @@ class ImageAssembler(Assembler):
         # for image, use the num_instance to determine the range of the sizes of the
         # resnet and xception
         # use the image size to determine how the down sampling works, e.g. pooling.
-        return block.ImageBlock()(input_node)
+        return composite.ImageBlock()(input_node)
 
 
 class StructuredDataAssembler(Assembler):
