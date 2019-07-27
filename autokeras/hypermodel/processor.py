@@ -1,7 +1,13 @@
 import numpy as np
 import tensorflow as tf
+import scipy.sparse as sp
+import re
+import array
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
+from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
+from sklearn.externals.six import moves
+from collections import defaultdict
 from tensorflow.python.util import nest
 
 from autokeras import const
