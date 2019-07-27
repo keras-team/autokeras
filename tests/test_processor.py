@@ -60,3 +60,25 @@ def test_ngram():
 
     new_dataset = dataset.map(map_func)
     assert isinstance(new_dataset, tf.data.Dataset)
+
+    
+def test_ngram():
+    texts = ['The cat sat on the mat.',
+             'The dog sat on the log.',
+             'Dogs and cats living together.']
+    tfe.enable_eager_execution()
+    tokenize = processor.TextToNgramVector()
+    dataset = tf.data.Dataset.from_tensor_slices(texts)
+    tokenize.set_hp(kerastuner.HyperParameters())
+    for x in dataset:
+        tokenize.update(x)
+    tokenize.finalize()
+    def map_func(x):
+        return tf.py_function(tokenize.transform,
+                              inp=[x],
+                              Tout=(tf.float64,))
+
+    new_dataset = dataset.map(map_func)
+    for _ in new_dataset:
+        break
+    assert isinstance(new_dataset, tf.data.Dataset)
