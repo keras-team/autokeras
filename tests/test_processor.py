@@ -1,7 +1,7 @@
 import kerastuner
 import numpy as np
 import tensorflow as tf
-import tensorflow.contrib.eager as tfe
+import tf.contrib.eager as tfe
 
 from autokeras.hypermodel import processor
 
