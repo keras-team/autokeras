@@ -28,11 +28,12 @@ class Block(kerastuner.HyperModel):
         automatically with the class name.
     """
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, name=None, **kwargs):
+        super().__init__(**kwargs)
         if not name:
             prefix = self.__class__.__name__
             name = prefix + '_' + str(tf.keras.backend.get_uid(prefix))
-        super().__init__(name=name, **kwargs)
+        self.name = name
         self.inputs = None
         self.outputs = None
         self._num_output_node = 1
