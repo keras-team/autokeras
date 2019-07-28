@@ -17,22 +17,22 @@ def set_hp_value(hp, name, value):
 
 
 class Block(kerastuner.HyperModel):
-    """The base class for different HyperBlock.
+    """The base class for different Block.
 
-    The HyperBlock can be connected together to build the search space
+    The Block can be connected together to build the search space
     for an AutoModel. Notably, many args in the __init__ function are defaults to
     be a tunable variable when not specified by the user.
 
     # Arguments
-        inputs: A list of input node(s) for the HyperBlock.
-        outputs: A list of output node(s) for the HyperBlock.
+        name: String. The name of the block. If unspecified, it will be set
+        automatically with the class name.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if not self.name:
+    def __init__(self, name, **kwargs):
+        if not name:
             prefix = self.__class__.__name__
-            self.name = prefix + '_' + str(tf.keras.backend.get_uid(prefix))
+            name = prefix + '_' + str(tf.keras.backend.get_uid(prefix))
+        super().__init__(name=name, **kwargs)
         self.inputs = None
         self.outputs = None
         self._num_output_node = 1
@@ -55,7 +55,7 @@ class Block(kerastuner.HyperModel):
             inputs: A list of input node(s) or a single input node for the block.
 
         # Returns
-            list: A list of output node(s) of the HyperBlock.
+            list: A list of output node(s) of the Block.
         """
         self.inputs = nest.flatten(inputs)
         for input_node in self.inputs:
@@ -68,7 +68,7 @@ class Block(kerastuner.HyperModel):
         return self.outputs
 
     def build(self, hp, inputs=None):
-        """Build the HyperBlock into a real Keras Model.
+        """Build the Block into a real Keras Model.
 
         The subclasses should overide this function and return the output node.
 
@@ -84,7 +84,7 @@ class Block(kerastuner.HyperModel):
 
 
 class DenseBlock(Block):
-    """HyperBlock for Dense layers.
+    """Block for Dense layers.
 
     # Arguments
         num_layers: Int. The number of Dense layers in the block.
@@ -133,7 +133,7 @@ class DenseBlock(Block):
 
 
 class RNNBlock(Block):
-    """An RNN HyperBlock.
+    """An RNN Block.
 
     # Arguments
         return_sequences: Boolean. Whether to return the last output in the
@@ -202,7 +202,7 @@ class RNNBlock(Block):
 
 
 class ConvBlock(Block):
-    """HyperBlock for vanilla ConvNets.
+    """Block for vanilla ConvNets.
 
     # Arguments
         kernel_size: Int. If left unspecified, it will be tuned automatically.
@@ -271,7 +271,7 @@ class ConvBlock(Block):
 
 
 class ResNetBlock(Block, resnet.HyperResNet):
-    """HyperBlock for ResNet.
+    """Block for ResNet.
 
     # Arguments
         version: String. 'v1', 'v2' or 'next'. The type of ResNet to use.

@@ -8,7 +8,12 @@ from autokeras.hypermodel import processor
 class HyperBlock(block.Block):
 
     def build(self, hp, inputs=None):
-        """Build the HyperModel instead of Keras Model."""
+        """Build the HyperModel instead of Keras Model.
+
+        # Arguments
+            hp: Hyperparameters. The hyperparameters for building the model.
+            inputs: A list of instances of Node.
+        """
         raise NotImplementedError
 
 

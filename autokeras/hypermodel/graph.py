@@ -12,6 +12,13 @@ from autokeras.hypermodel import processor
 
 
 class GraphHyperModel(kerastuner.HyperModel):
+    """A HyperModel based on connected HyperBlocks.
+
+    # Arguments
+        inputs: A list of input node(s) for the GraphHyperModel.
+        outputs: A list of output node(s) for the GraphHyperModel.
+        name: String. The name of the GraphHyperModel.
+    """
     def __init__(self, inputs, outputs, name=None):
         super().__init__(name=name)
         self.inputs = nest.flatten(inputs)
@@ -27,6 +34,7 @@ class GraphHyperModel(kerastuner.HyperModel):
         self._plain_graph_hm = None
 
     def hyper_build(self, hp):
+        """Build a GraphHyperModel with no HyperBlock but only Block."""
         if not any([isinstance(block, hyperblock.HyperBlock)
                     for block in self._blocks]):
             return
@@ -80,18 +88,15 @@ class GraphHyperModel(kerastuner.HyperModel):
         return self._compiled(hp, model)
 
     def set_io_shapes(self, dataset):
+        """Set the input and output shapes to the nodes.
+
+        Args:
+            dataset: tf.data.Dataset. The input dataset before preprocessing.
+        """
         # TODO: Set the shapes only if they are not provided by the user when
         #  initiating the HyperHead or Block.
         x_shapes, y_shapes = utils.dataset_shape(dataset)
         for x_shape, input_node in zip(x_shapes, self.inputs):
-            input_node.shape = tuple(x_shape.as_list())
-        for y_shape, output_node in zip(y_shapes, self.outputs):
-            output_node.shape = tuple(y_shape.as_list())
-            output_node.in_blocks[0].output_shape = output_node.shape
-
-    def set_node_shapes(self, dataset):
-        x_shapes, y_shapes = utils.dataset_shape(dataset)
-        for x_shape, input_node in zip(x_shapes, self._model_inputs):
             input_node.shape = tuple(x_shape.as_list())
         for y_shape, output_node in zip(y_shapes, self.outputs):
             output_node.shape = tuple(y_shape.as_list())

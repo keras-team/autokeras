@@ -103,7 +103,7 @@ class AutoModel(object):
         self.hypermodel.set_io_shapes(dataset)
         hp = kerastuner.HyperParameters()
         self.hypermodel.hyper_build(hp)
-        preprocessed_dataset, _ = self.hypermodel.preprocess(
+        self.hypermodel.preprocess(
             hp=kerastuner.HyperParameters(),
             dataset=dataset,
             validation_data=validation_data,
