@@ -66,7 +66,6 @@ def test_ngram():
     texts = ['The cat sat on the mat.',
              'The dog sat on the log.',
              'Dogs and cats living together.']
-    tf.contrib.eager.enable_eager_execution()
     tokenize = processor.TextToNgramVector()
     dataset = tf.data.Dataset.from_tensor_slices(texts)
     tokenize.set_hp(kerastuner.HyperParameters())
