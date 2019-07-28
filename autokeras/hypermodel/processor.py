@@ -280,7 +280,6 @@ class ImageAugment(HyperPreprocessor):
         self.vertical_flip = vertical_flip
         self.whether_translation = whether_translation
         self.gaussian_noise = gaussian_noise
-        
         self._shape = None
 
     @staticmethod
