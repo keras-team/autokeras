@@ -1,7 +1,8 @@
-tensorflow>=2.0.0b0
+tensorflow>=2.0.0b1
 scikit-learn>=0.20.2
 numpy==1.16.1
 git+git://github.com/keras-team/keras-tuner@master#egg=kerastuner
+numpy==1.16.1
 pytest>=4.5.0
 pytest-pep8
 pytest-xdist
