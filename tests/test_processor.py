@@ -1,7 +1,6 @@
 import kerastuner
 import numpy as np
 import tensorflow as tf
-import tf.contrib.eager as tfe
 
 from autokeras.hypermodel import processor
 
@@ -67,7 +66,7 @@ def test_ngram():
     texts = ['The cat sat on the mat.',
              'The dog sat on the log.',
              'Dogs and cats living together.']
-    tfe.enable_eager_execution()
+    tf.contrib.eager.enable_eager_execution()
     tokenize = processor.TextToNgramVector()
     dataset = tf.data.Dataset.from_tensor_slices(texts)
     tokenize.set_hp(kerastuner.HyperParameters())
