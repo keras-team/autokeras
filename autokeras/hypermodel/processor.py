@@ -361,4 +361,4 @@ class TextToNgramVector(HyperPreprocessor):
         return tf.float64,
 
     def output_shape(self):
-        return self.result.shape
+        return np.shape(self.result)
