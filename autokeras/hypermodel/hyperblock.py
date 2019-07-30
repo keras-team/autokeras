@@ -2,7 +2,7 @@ from tensorflow.python.util import nest
 
 from autokeras.hypermodel import block
 from autokeras.hypermodel import node
-from autokeras.hypermodel import processor
+from autokeras.hypermodel import preprocessor
 
 
 class HyperBlock(block.Block):
@@ -65,10 +65,10 @@ class TextBlock(HyperBlock):
         if not isinstance(input_node, node.TextNode):
             raise ValueError('The input_node should be a TextNode.')
         if vectorizer == 'ngram':
-            output_node = processor.TextToNgramVector()(output_node)
+            output_node = preprocessor.TextToNgramVector()(output_node)
             output_node = block.DenseBlock()(output_node)
         else:
-            output_node = processor.TextToIntSequence()(output_node)
+            output_node = preprocessor.TextToIntSequence()(output_node)
             output_node = block.EmbeddingBlock(
                 pretraining=self.pretraining)(output_node)
             output_node = block.ConvBlock(separable=True)(output_node)

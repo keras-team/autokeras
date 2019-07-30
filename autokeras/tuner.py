@@ -61,6 +61,12 @@ class AutoTuner(kerastuner.Tuner):
     def get_best_trials(self, num_trials=1):
         return super()._get_best_trials(num_trials)
 
+    def load_trial(self, trial):
+        self.hypermodel.hyper_build(trial.hyperparameters)
+        filename = '%s-preprocessors' % trial.trial_id
+        path = os.path.join(trial.directory, filename)
+        self.hypermodel.load_preprocessors(path)
+
 
 class RandomSearch(AutoTuner, kerastuner.RandomSearch):
     """KerasTuner RandomSearch with preprocessing layer tuning."""

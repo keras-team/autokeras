@@ -15,9 +15,9 @@ from autokeras.hypermodel.hyperblock import TextBlock
 from autokeras.hypermodel.node import ImageInput
 from autokeras.hypermodel.node import Input
 from autokeras.hypermodel.node import TextInput
-from autokeras.hypermodel.processor import Normalize
-from autokeras.hypermodel.processor import TextToIntSequence
-from autokeras.hypermodel.processor import TextToNgramVector
+from autokeras.hypermodel.preprocessor import Normalize
+from autokeras.hypermodel.preprocessor import TextToIntSequence
+from autokeras.hypermodel.preprocessor import TextToNgramVector
 from autokeras.task import ImageClassifier
 from autokeras.task import ImageRegressor
 from autokeras.task import TextClassifier

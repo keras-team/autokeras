@@ -5,13 +5,14 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+import autokeras.utils
 from autokeras import meta_model
 from autokeras import tuner
 from autokeras import utils
 from autokeras.hypermodel import graph
 from autokeras.hypermodel import head
 from autokeras.hypermodel import node
-from autokeras.hypermodel import processor
+from autokeras.hypermodel import preprocessor
 
 
 class AutoModel(object):
@@ -157,12 +158,10 @@ class AutoModel(object):
             **kwargs: Any arguments supported by keras.Model.predict.
         """
         best_model = self.tuner.get_best_models(1)[0]
-        best_hp = self.tuner.get_best_hp(1)[0]
         best_trial = self.tuner.get_best_trials(1)[0]
-        filename = '%s-preprocessors' % best_trial.trial_id
-        path = os.path.join(best_trial.directory, filename)
+        best_hp = best_trial.hyperparameters
 
-        self.hypermodel.load_preprocessors(path)
+        self.tuner.load_trial(best_trial)
         x = utils.prepare_preprocess(x, x)
         x = self.hypermodel.preprocess(best_hp, x)
         x = x.batch(batch_size)
@@ -182,7 +181,7 @@ class AutoModel(object):
                 hyper_head = output_node.in_blocks[0]
             if (isinstance(hyper_head, head.ClassificationHead) and
                     utils.is_label(temp_y)):
-                label_encoder = processor.OneHotEncoder()
+                label_encoder = utils.OneHotEncoder()
                 label_encoder.fit(y)
                 new_y.append(label_encoder.transform(y))
                 self._label_encoders.append(label_encoder)

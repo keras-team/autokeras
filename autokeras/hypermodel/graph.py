@@ -8,7 +8,7 @@ from tensorflow.python.util import nest
 from autokeras import utils
 from autokeras.hypermodel import head
 from autokeras.hypermodel import hyperblock
-from autokeras.hypermodel import processor
+from autokeras.hypermodel import preprocessor
 
 
 class GraphHyperModel(kerastuner.HyperModel):
@@ -73,7 +73,7 @@ class GraphHyperModel(kerastuner.HyperModel):
             node_id = self._node_to_id[input_node]
             real_nodes[node_id] = input_node.build()
         for block in self._blocks:
-            if isinstance(block, processor.HyperPreprocessor):
+            if isinstance(block, preprocessor.Preprocessor):
                 continue
             temp_inputs = [real_nodes[self._node_to_id[input_node]]
                            for input_node in block.inputs]
@@ -261,7 +261,7 @@ class GraphHyperModel(kerastuner.HyperModel):
         if self.contains_hyper_block():
             return self._plain_graph_hm.preprocess(hp, dataset, validation_data, fit)
         for block in self._blocks:
-            if isinstance(block, processor.HyperPreprocessor):
+            if isinstance(block, preprocessor.Preprocessor):
                 block.set_hp(hp)
         dataset = self._preprocess(dataset, fit=fit)
         if not validation_data:
@@ -280,7 +280,7 @@ class GraphHyperModel(kerastuner.HyperModel):
             for block in self._blocks:
                 if (self._block_topo_depth[
                     self._block_to_id[block]] == depth and
-                        isinstance(block, processor.HyperPreprocessor)):
+                        isinstance(block, preprocessor.Preprocessor)):
                     temp_blocks.append(block)
             if not temp_blocks:
                 break
@@ -312,14 +312,15 @@ class GraphHyperModel(kerastuner.HyperModel):
             dataset = dataset.map(functools.partial(
                 self._preprocess_transform,
                 input_node_ids=input_node_ids,
-                blocks=blocks))
+                blocks=blocks,
+                fit=fit))
 
             # Build input_node_ids for next depth.
             input_node_ids = list(sorted([self._node_to_id[block.outputs[0]]
                                           for block in blocks]))
         return dataset
 
-    def _preprocess_transform(self, x, y, input_node_ids, blocks):
+    def _preprocess_transform(self, x, y, input_node_ids, blocks, fit=False):
         x = nest.flatten(x)
         id_to_data = {
             node_id: temp_x
@@ -334,7 +335,7 @@ class GraphHyperModel(kerastuner.HyperModel):
         for hm in blocks:
             data = [id_to_data[self._node_to_id[input_node]]
                     for input_node in hm.inputs]
-            data = tf.py_function(hm.transform,
+            data = tf.py_function(functools.partial(hm.transform, fit=fit),
                                   inp=nest.flatten(data),
                                   Tout=hm.output_types())
             data = nest.flatten(data)[0]
@@ -346,10 +347,10 @@ class GraphHyperModel(kerastuner.HyperModel):
     @staticmethod
     def _is_model_inputs(node):
         for block in node.in_blocks:
-            if not isinstance(block, processor.HyperPreprocessor):
+            if not isinstance(block, preprocessor.Preprocessor):
                 return False
         for block in node.out_blocks:
-            if not isinstance(block, processor.HyperPreprocessor):
+            if not isinstance(block, preprocessor.Preprocessor):
                 return True
         return False
 
@@ -364,7 +365,7 @@ class GraphHyperModel(kerastuner.HyperModel):
             return
         preprocessors = {}
         for block in self._blocks:
-            if isinstance(block, processor.HyperPreprocessor):
+            if isinstance(block, preprocessor.Preprocessor):
                 preprocessors[block.name] = block.get_weights()
         utils.pickle_to_file(preprocessors, path)
 
