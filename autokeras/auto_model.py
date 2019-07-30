@@ -1,3 +1,5 @@
+import os
+
 import kerastuner
 import numpy as np
 import tensorflow as tf
@@ -154,10 +156,17 @@ class AutoModel(object):
             batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
         """
+        best_model = self.tuner.get_best_models(1)[0]
+        best_hp = self.tuner.get_best_hp(1)[0]
+        best_trial = self.tuner.get_best_trials(1)[0]
+        filename = '%s-preprocessors' % best_trial.trial_id
+        path = os.path.join(best_trial.directory, filename)
+
+        self.hypermodel.load_preprocessors(path)
         x = utils.prepare_preprocess(x, x)
-        x = self.hypermodel.preprocess(self.tuner.get_best_hp(1), x)
+        x = self.hypermodel.preprocess(best_hp, x)
         x = x.batch(batch_size)
-        y = self.tuner.get_best_models(1)[0].predict(x, **kwargs)
+        y = best_model.predict(x, **kwargs)
         y = nest.flatten(y)
         y = self._postprocess(y)
         if isinstance(y, list) and len(y) == 1:
@@ -226,7 +235,7 @@ class GraphAutoModel(AutoModel):
                  max_trials=100,
                  directory=None,
                  seed=None):
-        super(GraphAutoModel, self).__init__(
+        super().__init__(
             inputs=inputs,
             outputs=outputs,
             name=name,

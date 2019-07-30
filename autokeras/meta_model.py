@@ -56,7 +56,7 @@ class Assembler(object):
     """Base class for data type specific assemblers."""
 
     def __init__(self, **kwargs):
-        super(Assembler, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def update(self, x):
         """Update the assembler sample by sample.
@@ -86,7 +86,7 @@ class TextAssembler(Assembler):
     """
 
     def __init__(self, **kwargs):
-        super(TextAssembler, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._num_words = 0
         self._num_samples = 0
 
@@ -104,7 +104,6 @@ class TextAssembler(Assembler):
         ratio = self.sw_ratio()
         if not isinstance(input_node, node.TextNode):
             raise ValueError('The input_node should be a TextNode.')
-        vectorizer = None
         pretraining = 'random'
         if ratio < 1500:
             vectorizer = 'ngram'

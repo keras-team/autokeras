@@ -69,7 +69,7 @@ class ClassificationHead(Head):
                 self._loss = 'binary_crossentropy'
             else:
                 self._loss = 'categorical_crossentropy'
-        return super(ClassificationHead, self).loss
+        return super().loss
 
     def build(self, hp, inputs=None):
         if self.num_classes and self.output_shape[-1] != self.num_classes:
@@ -129,7 +129,7 @@ class RegressionHead(Head):
     def loss(self):
         if not self._loss:
             self._loss = 'mean_squared_error'
-        return super(RegressionHead, self).loss
+        return super().loss
 
     def build(self, hp, inputs=None):
         if self.output_dim and self.output_shape[-1] != self.output_dim:

@@ -33,10 +33,13 @@ class GraphHyperModel(kerastuner.HyperModel):
         self._build_network()
         self._plain_graph_hm = None
 
+    def contains_hyper_block(self):
+        return any([isinstance(block, hyperblock.HyperBlock)
+                    for block in self._blocks])
+
     def hyper_build(self, hp):
         """Build a GraphHyperModel with no HyperBlock but only Block."""
-        if not any([isinstance(block, hyperblock.HyperBlock)
-                    for block in self._blocks]):
+        if not self.contains_hyper_block():
             return
         inputs = copy.copy(self.inputs)
         old_node_to_new = {}
@@ -63,8 +66,7 @@ class GraphHyperModel(kerastuner.HyperModel):
         self._plain_graph_hm = GraphHyperModel(inputs, outputs)
 
     def build(self, hp):
-        if any([isinstance(block, hyperblock.HyperBlock)
-                for block in self._blocks]):
+        if self.contains_hyper_block():
             return self._plain_graph_hm.build(hp)
         real_nodes = {}
         for input_node in self._model_inputs:
@@ -134,9 +136,7 @@ class GraphHyperModel(kerastuner.HyperModel):
         in_degree = [0] * len(self._nodes)
         for node_id, node in enumerate(self._nodes):
             in_degree[node_id] = len([
-                block
-                for block in node.in_blocks if block in blocks
-            ])
+                block for block in node.in_blocks if block in blocks])
 
         # Add the blocks in topological order.
         self._blocks = []
@@ -258,7 +258,7 @@ class GraphHyperModel(kerastuner.HyperModel):
             A tuple of two preprocessed tf.data.Dataset, (train, validation).
             Otherwise, return the training dataset.
         """
-        if self._plain_graph_hm:
+        if self.contains_hyper_block():
             return self._plain_graph_hm.preprocess(hp, dataset, validation_data, fit)
         for block in self._blocks:
             if isinstance(block, processor.HyperPreprocessor):
@@ -352,3 +352,22 @@ class GraphHyperModel(kerastuner.HyperModel):
             if not isinstance(block, processor.HyperPreprocessor):
                 return True
         return False
+
+    def save_preprocessors(self, path):
+        preprocessors = {}
+        for block in self._blocks:
+            if isinstance(block, processor.HyperPreprocessor):
+                preprocessors[block.name] = block.get_weights()
+        utils.pickle_to_file(preprocessors, path)
+
+    def load_preprocessors(self, path):
+        preprocessors = utils.pickle_from_file(path)
+        for name, weights in preprocessors:
+            block = self._get_block(name)
+            block.set_weights(weights)
+
+    def _get_block(self, name):
+        for block in self._blocks:
+            if block.name == name:
+                return block
+        return None

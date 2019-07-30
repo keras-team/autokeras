@@ -1,3 +1,5 @@
+import pickle
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
@@ -104,3 +106,13 @@ def is_label(y):
         Boolean. Whether the targets are plain label, not encoded.
     """
     return len(y.flatten()) == len(y) and len(set(y.flatten())) > 2
+
+
+def pickle_from_file(path):
+    """Load the pickle file from the provided path and returns the object."""
+    return pickle.load(open(path, 'rb'))
+
+
+def pickle_to_file(obj, path):
+    """Save the pickle file to the specified path."""
+    pickle.dump(obj, open(path, 'wb'))

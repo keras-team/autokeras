@@ -91,6 +91,12 @@ class HyperPreprocessor(block.Block):
         """Training process of the preprocessor after update with all instances."""
         pass
 
+    def get_weights(self):
+        pass
+
+    def set_weights(self):
+        pass
+
 
 class OneHotEncoder(object):
     """A class that can format data.

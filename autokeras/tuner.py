@@ -1,3 +1,4 @@
+import os
 import copy
 import inspect
 
@@ -22,6 +23,7 @@ class AutoTuner(kerastuner.Tuner):
             new_fit_kwargs.get('x', None),
             new_fit_kwargs.get('validation_data', None),
             fit=True)
+        self._save_preprocessors(trial.trial_id, trial.directory)
 
         # Batching
         batch_size = new_fit_kwargs.get('batch_size', 32)
@@ -34,7 +36,7 @@ class AutoTuner(kerastuner.Tuner):
         new_fit_kwargs['batch_size'] = None
         new_fit_kwargs['y'] = None
 
-        super(AutoTuner, self).run_trial(trial, hp, [], new_fit_kwargs)
+        super().run_trial(trial, hp, [], new_fit_kwargs)
 
     def get_best_hp(self, num_models=1):
         """Returns hyperparameters used to build the best model(s).
@@ -50,6 +52,14 @@ class AutoTuner(kerastuner.Tuner):
         best_trials = self._get_best_trials(num_models)
         return [trial.hyperparameters.copy()
                 for trial in best_trials]
+
+    def _save_preprocessors(self, trial_id, base_directory='.'):
+        filename = '%s-preprocessors' % trial_id
+        path = os.path.join(base_directory, filename)
+        self.hypermodel.save_preprocessors(path)
+
+    def get_best_trials(self, num_trials=1):
+        return super()._get_best_trials(num_trials)
 
 
 class RandomSearch(AutoTuner, kerastuner.RandomSearch):
