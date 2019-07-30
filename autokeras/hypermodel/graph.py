@@ -354,6 +354,14 @@ class GraphHyperModel(kerastuner.HyperModel):
         return False
 
     def save_preprocessors(self, path):
+        """Save the preprocessors in the hypermodel in a single file.
+
+        Args:
+            path: String. The path to a single file.
+        """
+        if self.contains_hyper_block():
+            self._plain_graph_hm.save_preprocessors(path)
+            return
         preprocessors = {}
         for block in self._blocks:
             if isinstance(block, processor.HyperPreprocessor):
@@ -361,8 +369,16 @@ class GraphHyperModel(kerastuner.HyperModel):
         utils.pickle_to_file(preprocessors, path)
 
     def load_preprocessors(self, path):
+        """Load the preprocessors in the hypermodel from a single file.
+
+        Args:
+            path: String. The path to a single file.
+        """
+        if self.contains_hyper_block():
+            self._plain_graph_hm.load_preprocessors(path)
+            return
         preprocessors = utils.pickle_from_file(path)
-        for name, weights in preprocessors:
+        for name, weights in preprocessors.items():
             block = self._get_block(name)
             block.set_weights(weights)
 

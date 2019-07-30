@@ -94,7 +94,7 @@ class HyperPreprocessor(block.Block):
     def get_weights(self):
         pass
 
-    def set_weights(self):
+    def set_weights(self, weights):
         pass
 
 
@@ -193,6 +193,22 @@ class Normalize(HyperPreprocessor):
     def output_shape(self):
         return self.inputs[0].shape
 
+    def get_weights(self):
+        return {'sum': self.sum,
+                'square_sum': self.square_sum,
+                'count': self.count,
+                'mean': self.mean,
+                'std': self.std,
+                '_shape': self._shape}
+
+    def set_weights(self, weights):
+        self.sum = weights['sum']
+        self.square_sum = weights['square_sum']
+        self.count = weights['count']
+        self.mean = weights['mean']
+        self.std = weights['std']
+        self._shape = weights['_shape']
+
 
 class TextToIntSequence(HyperPreprocessor):
     """Convert raw texts to sequences of word indices."""
@@ -226,9 +242,20 @@ class TextToIntSequence(HyperPreprocessor):
     def output_shape(self):
         return self.max_len or self._max_len,
 
+    def get_weights(self):
+        return {'max_len': self.max_len,
+                '_max_len': self._max_len,
+                '_tokenizer': self._tokenizer}
+
+    def set_weights(self, weights):
+        self.max_len = weights['max_len']
+        self._max_len = weights['_max_len']
+        self._tokenizer = weights['_tokenizer']
+
 
 class TextToNgramVector(HyperPreprocessor):
     """Convert raw texts to n-gram vectors."""
+    # TODO: Implement save and load.
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
