@@ -90,11 +90,11 @@ class RNNBlock(block_module.Block):
     """
 
     def __init__(self,
-                 return_sequences=True,
+                 return_sequences=False,
                  bidirectional=None,
                  num_layers=None,
                  layer_type=None,
-                 attention=None,
+                 attention=True,
                  **kwargs):
         super().__init__(**kwargs)
         self.return_sequences = return_sequences
@@ -163,11 +163,16 @@ class RNNBlock(block_module.Block):
                     in_layer(feature_size,
                              return_sequences=return_sequences))(output_node)
             else:
-                output_node = in_layer(
-                    feature_size,
-                    return_sequences=return_sequences)(output_node)
-                output_node = self.attention_over_time(
-                    output_node) if attention else output_node
+                if attention:
+                    output_node = in_layer(
+                        feature_size,
+                        return_sequences=return_sequences)(output_node)
+                    output_node = self.attention_over_time(
+                        output_node) if return_sequences else output_node
+                else:
+                    output_node = in_layer(
+                        feature_size,
+                        return_sequences=return_sequences)(output_node)
         return output_node
 
 
