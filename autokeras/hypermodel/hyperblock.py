@@ -6,6 +6,24 @@ from autokeras.hypermodel import preprocessor
 
 
 class HyperBlock(block.Block):
+    """HyperBlock uses hyperparameters to decide inner Block graph.
+
+    A HyperBlock should be build into connected Blocks instead of individual Keras
+    layers. The main purpose of creating the HyperBlock class is for the ease of
+    parsing the graph for preprocessors. The graph would be hard to parse if a Block,
+    whose inner structure is decided by hyperparameters dynamically, contains both
+    preprocessors and Keras layers.
+
+    When the preprocessing layers of Keras are ready to cover all the preprocessors
+    in AutoKeras, the preprocessors should be handled by the Keras Model. The
+    HyperBlock class should be removed. The subclasses should extend Block class
+    directly and the build function should build connected Keras layers instead of
+    Blocks.
+
+    # Arguments
+        name: String. The name of the block. If unspecified, it will be set
+        automatically with the class name.
+    """
 
     def build(self, hp, inputs=None):
         """Build the HyperModel instead of Keras Model.
@@ -13,6 +31,9 @@ class HyperBlock(block.Block):
         # Arguments
             hp: Hyperparameters. The hyperparameters for building the model.
             inputs: A list of instances of Node.
+
+        # Returns
+            An Node instance, the output node of the output Block.
         """
         raise NotImplementedError
 
