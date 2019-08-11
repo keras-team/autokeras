@@ -118,6 +118,9 @@ class TextAssembler(Assembler):
 
 class ImageAssembler(Assembler):
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def assemble(self, input_node):
         # for image, use the num_instance to determine the range of the sizes of the
         # resnet and xception
