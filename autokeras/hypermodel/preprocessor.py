@@ -83,10 +83,10 @@ class Preprocessor(block.Block):
         """Training process of the preprocessor after update with all instances."""
         pass
 
-    def get_weights(self):
+    def get_state(self):
         pass
 
-    def set_weights(self, weights):
+    def set_state(self, state):
         pass
 
 
@@ -139,7 +139,7 @@ class Normalize(Preprocessor):
     def output_shape(self):
         return self.inputs[0].shape
 
-    def get_weights(self):
+    def get_state(self):
         return {'sum': self.sum,
                 'square_sum': self.square_sum,
                 'count': self.count,
@@ -147,13 +147,13 @@ class Normalize(Preprocessor):
                 'std': self.std,
                 '_shape': self._shape}
 
-    def set_weights(self, weights):
-        self.sum = weights['sum']
-        self.square_sum = weights['square_sum']
-        self.count = weights['count']
-        self.mean = weights['mean']
-        self.std = weights['std']
-        self._shape = weights['_shape']
+    def set_state(self, state):
+        self.sum = state['sum']
+        self.square_sum = state['square_sum']
+        self.count = state['count']
+        self.mean = state['mean']
+        self.std = state['std']
+        self._shape = state['_shape']
 
 
 class TextToIntSequence(Preprocessor):
@@ -188,15 +188,15 @@ class TextToIntSequence(Preprocessor):
     def output_shape(self):
         return self.max_len or self._max_len,
 
-    def get_weights(self):
+    def get_state(self):
         return {'max_len': self.max_len,
                 '_max_len': self._max_len,
                 '_tokenizer': self._tokenizer}
 
-    def set_weights(self, weights):
-        self.max_len = weights['max_len']
-        self._max_len = weights['_max_len']
-        self._tokenizer = weights['_tokenizer']
+    def set_state(self, state):
+        self.max_len = state['max_len']
+        self._max_len = state['_max_len']
+        self._tokenizer = state['_tokenizer']
 
 
 class TextToNgramVector(Preprocessor):
@@ -248,7 +248,7 @@ class TextToNgramVector(Preprocessor):
     def output_shape(self):
         return self._shape
 
-    def get_weights(self):
+    def get_state(self):
         return {'_vectorizer': self._vectorizer,
                 'selector': self.selector,
                 'labels': self.labels,
@@ -256,11 +256,11 @@ class TextToNgramVector(Preprocessor):
                 '_texts': self._texts,
                 '_shape': self._shape}
 
-    def set_weights(self, weights):
-        self._vectorizer = weights['_vectorizer']
-        self.selector = weights['selector']
-        self.labels = weights['labels']
-        self._max_features = weights['_max_features']
+    def set_state(self, state):
+        self._vectorizer = state['_vectorizer']
+        self.selector = state['selector']
+        self.labels = state['labels']
+        self._max_features = state['_max_features']
         self._vectorizer.max_features = self._max_features
-        self._texts = weights['_texts']
-        self._shape = weights['_shape']
+        self._texts = state['_texts']
+        self._shape = state['_shape']

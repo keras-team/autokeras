@@ -366,7 +366,7 @@ class GraphHyperModel(kerastuner.HyperModel):
         preprocessors = {}
         for block in self._blocks:
             if isinstance(block, preprocessor.Preprocessor):
-                preprocessors[block.name] = block.get_weights()
+                preprocessors[block.name] = block.get_state()
         utils.pickle_to_file(preprocessors, path)
 
     def load_preprocessors(self, path):
@@ -379,9 +379,9 @@ class GraphHyperModel(kerastuner.HyperModel):
             self._plain_graph_hm.load_preprocessors(path)
             return
         preprocessors = utils.pickle_from_file(path)
-        for name, weights in preprocessors.items():
+        for name, state in preprocessors.items():
             block = self._get_block(name)
-            block.set_weights(weights)
+            block.set_state(state)
 
     def _get_block(self, name):
         for block in self._blocks:
