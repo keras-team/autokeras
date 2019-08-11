@@ -1,5 +1,8 @@
 import kerastuner
 import tensorflow as tf
+import os
+import numpy as np
+from keras.utils.data_utils import get_file
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
 from tensorflow.python.util import nest
@@ -538,6 +541,28 @@ class EmbeddingBlock(HyperBlock):
                                                         default=128)
         if pretraining:
             # TODO: load from pretrained weights
+            embedding_matrix = np.zeros((input_node.shape[1] + 1, embedding_dim))
+            if pretraining == 'glove':
+                dirname = 'glove.6B.100d.txt'
+                origin = 'http://nlp.stanford.edu/data/glove.6B.zip'
+                path = get_file(dirname, origin=origin, untar=True)
+                embeddings_index = {}
+                f = open(os.path.join(path, 'glove.6B.100d.txt'))
+                for line in f:
+                    values = line.split()
+                    word = values[0]
+                    coefs = np.asarray(values[1:], dtype='float32')
+                    embeddings_index[word] = coefs
+                f.close()
+                for word, i in input_node.items():
+                    embedding_vector = embeddings_index.get(word)
+                    if embedding_vector is not None:
+                        # words not found in embedding index will be all-zeros.
+                        embedding_matrix[i] = embedding_vector
+            elif pretraining == 'word2vec':
+                pass
+            elif pretraining == 'fasttext':
+                pass
             layer = tf.keras.layers.Embedding(
                 input_dim=input_node.shape[1],
                 output_dim=embedding_dim,
