@@ -33,6 +33,7 @@ class Block(kerastuner.HyperModel):
         if not name:
             prefix = self.__class__.__name__
             name = prefix + '_' + str(tf.keras.backend.get_uid(prefix))
+            name = utils.to_snake_case(name)
         self.name = name
         self.inputs = None
         self.outputs = None
