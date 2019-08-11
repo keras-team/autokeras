@@ -1,3 +1,5 @@
+import types
+
 import kerastuner
 import tensorflow as tf
 from kerastuner.applications import resnet
@@ -9,23 +11,44 @@ from autokeras import utils
 from autokeras.hypermodel import node
 
 
-class HyperBlock(kerastuner.HyperModel):
-    """The base class for different HyperBlock.
+def set_hp_value(hp, name, value):
+    full_name = hp._get_full_name(name)
+    hp.values[full_name] = value or hp.values[full_name]
 
-    The HyperBlock can be connected together to build the search space
+
+class Block(kerastuner.HyperModel):
+    """The base class for different Block.
+
+    The Block can be connected together to build the search space
     for an AutoModel. Notably, many args in the __init__ function are defaults to
     be a tunable variable when not specified by the user.
 
     # Arguments
-        inputs: A list of input node(s) for the HyperBlock.
-        outputs: A list of output node(s) for the HyperBlock.
+        name: String. The name of the block. If unspecified, it will be set
+        automatically with the class name.
     """
 
-    def __init__(self, **kwargs):
-        super(HyperBlock, self).__init__(**kwargs)
+    def __init__(self, name=None, **kwargs):
+        super().__init__(**kwargs)
+        if not name:
+            prefix = self.__class__.__name__
+            name = prefix + '_' + str(tf.keras.backend.get_uid(prefix))
+            name = utils.to_snake_case(name)
+        self.name = name
         self.inputs = None
         self.outputs = None
         self._num_output_node = 1
+
+    def __new__(cls, *args, **kwargs):
+        obj = super().__new__(cls)
+        build_fn = obj.build
+
+        def build_wrapper(obj, hp, *args, **kwargs):
+            with hp.name_scope(obj.name):
+                return build_fn(hp, *args, **kwargs)
+
+        obj.build = types.MethodType(build_wrapper, obj)
+        return obj
 
     def __call__(self, inputs):
         """Functional API.
@@ -34,20 +57,20 @@ class HyperBlock(kerastuner.HyperModel):
             inputs: A list of input node(s) or a single input node for the block.
 
         # Returns
-            list: A list of output node(s) of the HyperBlock.
+            list: A list of output node(s) of the Block.
         """
         self.inputs = nest.flatten(inputs)
         for input_node in self.inputs:
-            input_node.add_out_hypermodel(self)
+            input_node.add_out_block(self)
         self.outputs = []
         for _ in range(self._num_output_node):
             output_node = node.Node()
-            output_node.add_in_hypermodel(self)
+            output_node.add_in_block(self)
             self.outputs.append(output_node)
         return self.outputs
 
     def build(self, hp, inputs=None):
-        """Build the HyperBlock into a real Keras Model.
+        """Build the Block into a real Keras Model.
 
         The subclasses should overide this function and return the output node.
 
@@ -55,11 +78,15 @@ class HyperBlock(kerastuner.HyperModel):
             hp: Hyperparameters. The hyperparameters for building the model.
             inputs: A list of input node(s).
         """
-        return super(HyperBlock, self).build(hp)
+        return super().build(hp)
+
+    def clear_nodes(self):
+        self.inputs = None
+        self.outputs = None
 
 
-class DenseBlock(HyperBlock):
-    """HyperBlock for Dense layers.
+class DenseBlock(Block):
+    """Block for Dense layers.
 
     # Arguments
         num_layers: Int. The number of Dense layers in the block.
@@ -107,8 +134,8 @@ class DenseBlock(HyperBlock):
         return output_node
 
 
-class RNNBlock(HyperBlock):
-    """An RNN HyperBlock.
+class RNNBlock(Block):
+    """An RNN Block.
 
     # Arguments
         return_sequences: Boolean. Whether to return the last output in the
@@ -176,42 +203,8 @@ class RNNBlock(HyperBlock):
         return output_node
 
 
-class ImageBlock(HyperBlock):
-    """HyperBlock for image data.
-
-    The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
-    which is controlled by a hyperparameter, 'block_type'.
-
-    # Arguments
-        block_type: String. 'resnet', 'xception', 'vanilla'. The type of HyperBlock
-            to use. If left unspecified, it will be tuned automatically.
-    """
-
-    def __init__(self, block_type=None, **kwargs):
-        super().__init__(**kwargs)
-        self.block_type = block_type
-
-    def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
-        utils.validate_num_inputs(inputs, 1)
-        input_node = inputs[0]
-        output_node = input_node
-
-        block_type = self.block_type or hp.Choice('block_type',
-                                                  ['resnet', 'xception', 'vanilla'],
-                                                  default='resnet')
-
-        if block_type == 'resnet':
-            output_node = ResNetBlock().build(hp, output_node)
-        elif block_type == 'xception':
-            output_node = XceptionBlock().build(hp, output_node)
-        elif block_type == 'vanilla':
-            output_node = ConvBlock().build(hp, output_node)
-        return output_node
-
-
-class ConvBlock(HyperBlock):
-    """HyperBlock for vanilla ConvNets.
+class ConvBlock(Block):
+    """Block for vanilla ConvNets.
 
     # Arguments
         kernel_size: Int. If left unspecified, it will be tuned automatically.
@@ -279,8 +272,8 @@ class ConvBlock(HyperBlock):
         return 'same'
 
 
-class ResNetBlock(HyperBlock, resnet.HyperResNet):
-    """HyperBlock for ResNet.
+class ResNetBlock(Block, resnet.HyperResNet):
+    """Block for ResNet.
 
     # Arguments
         version: String. 'v1', 'v2' or 'next'. The type of ResNet to use.
@@ -304,14 +297,14 @@ class ResNetBlock(HyperBlock, resnet.HyperResNet):
         hp.Choice('version', ['v1', 'v2', 'next'], default='v2')
         hp.Choice('pooling', ['avg', 'max'], default='avg')
 
-        hp.values['version'] = self.version or hp.values['version']
-        hp.values['pooling'] = self.pooling or hp.values['pooling']
+        set_hp_value(hp, 'version', self.version)
+        set_hp_value(hp, 'pooling', self.pooling)
 
-        model = super(ResNetBlock, self).build(hp)
+        model = super().build(hp)
         return model.outputs
 
 
-class XceptionBlock(HyperBlock, xception.HyperXception):
+class XceptionBlock(Block, xception.HyperXception):
     """XceptionBlock.
 
     An Xception structure, used for specifying your model with specific datasets.
@@ -356,14 +349,12 @@ class XceptionBlock(HyperBlock, xception.HyperXception):
         hp.Range('num_residual_blocks', 2, 8, default=4)
         hp.Choice('pooling', ['avg', 'flatten', 'max'])
 
-        hp.values['activation'] = self.activation or hp.values['activation']
-        hp.values['initial_strides'] = \
-            self.initial_strides or hp.values['initial_strides']
-        hp.values['num_residual_blocks'] = \
-            self.num_residual_blocks or hp.values['num_residual_blocks']
-        hp.values['pooling'] = self.pooling or hp.values['pooling']
+        set_hp_value(hp, 'activation', self.activation)
+        set_hp_value(hp, 'initial_strides', self.initial_strides)
+        set_hp_value(hp, 'num_residual_blocks', self.num_residual_blocks)
+        set_hp_value(hp, 'pooling', self.pooling)
 
-        model = super(XceptionBlock, self).build(hp)
+        model = super().build(hp)
         return model.outputs
 
 
@@ -375,7 +366,7 @@ def shape_compatible(shape1, shape2):
     return shape1[:-1] == shape2[:-1]
 
 
-class Merge(HyperBlock):
+class Merge(Block):
     """Merge block to merge multiple nodes into one.
 
     # Arguments
@@ -412,7 +403,7 @@ class Merge(HyperBlock):
         return tf.keras.layers.Concatenate()(inputs)
 
 
-class Flatten(HyperBlock):
+class Flatten(Block):
     """Flatten the input tensor with Keras Flatten layer."""
 
     def build(self, hp, inputs=None):
@@ -424,7 +415,7 @@ class Flatten(HyperBlock):
         return input_node
 
 
-class SpatialReduction(HyperBlock):
+class SpatialReduction(Block):
     """Reduce the dimension of a spatial tensor, e.g. image, to a vector.
 
     # Arguments
@@ -462,7 +453,7 @@ class SpatialReduction(HyperBlock):
         return output_node
 
 
-class TemporalReduction(HyperBlock):
+class TemporalReduction(Block):
     """Reduce the dimension of a temporal tensor, e.g. output of RNN, to a vector.
 
     # Arguments
@@ -502,7 +493,7 @@ class TemporalReduction(HyperBlock):
         return output_node
 
 
-class EmbeddingBlock(HyperBlock):
+class EmbeddingBlock(Block):
     """Word embedding block for sequences.
 
     The input should be tokenized sequences with the same length, where each element
@@ -551,28 +542,3 @@ class EmbeddingBlock(HyperBlock):
                 input_length=const.Constant.VOCABULARY_SIZE,
                 trainable=True)
         return layer(input_node)
-
-
-class TextBlock(HyperBlock):
-
-    def build(self, hp, inputs=None):
-        raise NotImplementedError
-
-
-class StructuredDataBlock(HyperBlock):
-
-    def build(self, hp, inputs=None):
-        raise NotImplementedError
-
-
-class TimeSeriesBlock(HyperBlock):
-
-    def build(self, hp, inputs=None):
-        raise NotImplementedError
-
-
-class GeneralBlock(HyperBlock):
-    """A general neural network block when the input type is unknown. """
-
-    def build(self, hp, inputs=None):
-        raise NotImplementedError

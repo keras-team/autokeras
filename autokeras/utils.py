@@ -1,3 +1,6 @@
+import pickle
+import re
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
@@ -104,3 +107,74 @@ def is_label(y):
         Boolean. Whether the targets are plain label, not encoded.
     """
     return len(y.flatten()) == len(y) and len(set(y.flatten())) > 2
+
+
+def pickle_from_file(path):
+    """Load the pickle file from the provided path and returns the object."""
+    return pickle.load(open(path, 'rb'))
+
+
+def pickle_to_file(obj, path):
+    """Save the pickle file to the specified path."""
+    pickle.dump(obj, open(path, 'wb'))
+
+
+def to_snake_case(name):
+    intermediate = re.sub('(.)([A-Z][a-z0-9]+)', r'\1_\2', name)
+    insecure = re.sub('([a-z])([A-Z])', r'\1_\2', intermediate).lower()
+    # If the class is private the name starts with "_" which is not secure
+    # for creating scopes. We prefix the name with "private" in this case.
+    if insecure[0] != '_':
+        return insecure
+    return 'private' + insecure
+
+
+class OneHotEncoder(object):
+    """A class that can format data.
+
+    This class provides ways to transform data's classification label into vector.
+
+    # Attributes
+        num_classes: The number of classes in the classification problem.
+    """
+
+    def __init__(self):
+        self.num_classes = 0
+        self._labels = None
+        self._label_to_vec = {}
+        self._int_to_label = {}
+
+    def fit(self, data):
+        """Create mapping from label to vector, and vector to label.
+
+        # Arguments
+            data: list or numpy.ndarray. The labels.
+        """
+        data = np.array(data).flatten()
+        self._labels = set(data)
+        self.num_classes = len(self._labels)
+        for index, label in enumerate(self._labels):
+            vec = np.array([0] * self.num_classes)
+            vec[index] = 1
+            self._label_to_vec[label] = vec
+            self._int_to_label[index] = label
+
+    def transform(self, data):
+        """Get vector for every element in the data array.
+
+        # Arguments
+            data: list or numpy.ndarray. The labels.
+        """
+        data = np.array(data)
+        if len(data.shape) > 1:
+            data = data.flatten()
+        return np.array(list(map(lambda x: self._label_to_vec[x], data)))
+
+    def inverse_transform(self, data):
+        """Get label for every element in data.
+
+        # Arguments
+            data: numpy.ndarray. The output probabilities of the classification head.
+        """
+        return np.array(list(map(lambda x: self._int_to_label[x],
+                                 np.argmax(np.array(data), axis=1))))

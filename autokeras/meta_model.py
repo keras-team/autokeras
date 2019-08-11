@@ -2,8 +2,9 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras.hypermodel import block
+from autokeras.hypermodel import graph
+from autokeras.hypermodel import hyperblock
 from autokeras.hypermodel import node
-from autokeras.hypermodel import processor
 
 
 def assemble(inputs, outputs, dataset):
@@ -46,15 +47,16 @@ def assemble(inputs, outputs, dataset):
     else:
         output_node = middle_nodes[0]
 
-    return nest.flatten([output_blocks(output_node)
-                         for output_blocks in outputs])
+    outputs = nest.flatten([output_blocks(output_node)
+                            for output_blocks in outputs])
+    return graph.GraphHyperModel(inputs, outputs)
 
 
 class Assembler(object):
     """Base class for data type specific assemblers."""
 
     def __init__(self, **kwargs):
-        super(Assembler, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def update(self, x):
         """Update the assembler sample by sample.
@@ -82,8 +84,9 @@ class TextAssembler(Assembler):
     Implemented according to Google Developer, Machine Learning Guide,
     Text Classification, Step 2.5: Choose a Model.
     """
+
     def __init__(self, **kwargs):
-        super(TextAssembler, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._num_words = 0
         self._num_samples = 0
 
@@ -98,19 +101,19 @@ class TextAssembler(Assembler):
         return self._num_samples * self._num_samples / self._num_words
 
     def assemble(self, input_node):
-        output_node = input_node
         ratio = self.sw_ratio()
         if not isinstance(input_node, node.TextNode):
             raise ValueError('The input_node should be a TextNode.')
+        pretraining = 'random'
         if ratio < 1500:
-            output_node = processor.TextToNgramVector()(output_node)
-            output_node = block.DenseBlock()(output_node)
+            vectorizer = 'ngram'
         else:
-            output_node = processor.TextToIntSequence()(output_node)
-            output_node = block.EmbeddingBlock(
-                pretrained=(ratio < 15000))(output_node)
-            output_node = block.ConvBlock(separable=True)(output_node)
-        return output_node
+            vectorizer = 'sequence'
+            if ratio < 15000:
+                pretraining = 'glove'
+
+        return hyperblock.TextBlock(vectorizer=vectorizer,
+                                    pretraining=pretraining)(input_node)
 
 
 class ImageAssembler(Assembler):
@@ -119,7 +122,7 @@ class ImageAssembler(Assembler):
         # for image, use the num_instance to determine the range of the sizes of the
         # resnet and xception
         # use the image size to determine how the down sampling works, e.g. pooling.
-        return block.ImageBlock()(input_node)
+        return hyperblock.ImageBlock()(input_node)
 
 
 class StructuredDataAssembler(Assembler):
