@@ -62,11 +62,11 @@ class ImageBlock(HyperBlock):
                                                   default='resnet')
 
         if block_type == 'resnet':
-            output_node = block.ResNetBlock()(output_node)
+            output_node = block.ResNetBlock(name=block_type)(output_node)
         elif block_type == 'xception':
-            output_node = block.XceptionBlock()(output_node)
+            output_node = block.XceptionBlock(name=block_type)(output_node)
         elif block_type == 'vanilla':
-            output_node = block.ConvBlock().build(output_node)
+            output_node = block.ConvBlock(name=block_type).build(output_node)
         return output_node
 
 

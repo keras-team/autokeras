@@ -122,7 +122,10 @@ class ImageAssembler(Assembler):
         # for image, use the num_instance to determine the range of the sizes of the
         # resnet and xception
         # use the image size to determine how the down sampling works, e.g. pooling.
-        return hyperblock.ImageBlock()(input_node)
+        input_shape = input_node.shape
+        block = hyperblock.ImageBlock()
+        block.
+        return block(input_node)
 
 
 class StructuredDataAssembler(Assembler):
