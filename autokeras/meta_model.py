@@ -32,9 +32,11 @@ def assemble(inputs, outputs, dataset):
             assemblers.append(TimeSeriesAssembler())
 
     # Iterate over the dataset to fit the assemblers.
+    hps = []
     for x, _ in dataset:
         for temp_x, assembler in zip(x, assemblers):
             assembler.update(temp_x)
+            hps += assembler.hps
 
     # Assemble the model with assemblers.
     middle_nodes = []
@@ -49,7 +51,9 @@ def assemble(inputs, outputs, dataset):
 
     outputs = nest.flatten([output_blocks(output_node)
                             for output_blocks in outputs])
-    return graph.GraphHyperModel(inputs, outputs)
+    hm = graph.GraphHyperModel(inputs, outputs)
+    hm.set_hps(hps)
+    return hm
 
 
 class Assembler(object):
@@ -57,6 +61,7 @@ class Assembler(object):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.hps = []
 
     def update(self, x):
         """Update the assembler sample by sample.
@@ -120,14 +125,28 @@ class ImageAssembler(Assembler):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self._shape = None
+        self._num_samples = 0
+
+    def update(self, x):
+        self._shape = x.shape
+        self._num_samples += 1
 
     def assemble(self, input_node):
         # for image, use the num_instance to determine the range of the sizes of the
         # resnet and xception
         # use the image size to determine how the down sampling works, e.g. pooling.
-        input_shape = input_node.shape
         block = hyperblock.ImageBlock()
-        block.
+        if self._num_samples < 10000 and max(self._shape[0], self._shape[1]) <= 32:
+            self.hps.append(('Choice',
+                             [block.name + '_resnet/v1/conv4_depth', [6]],
+                             {'default': 6}))
+            self.hps.append(('Choice',
+                             [block.name + '_resnet/v2/conv4_depth', [6]],
+                             {'default': 6}))
+            self.hps.append(('Choice',
+                             [block.name + '_resnet/next/conv4_depth', [6]],
+                             {'default': 6}))
         return block(input_node)
 
 

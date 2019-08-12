@@ -32,6 +32,7 @@ class GraphHyperModel(kerastuner.HyperModel):
         self._total_topo_depth = 0
         self._build_network()
         self._plain_graph_hm = None
+        self._hps = []
 
     def contains_hyper_block(self):
         return any([isinstance(block, hyperblock.HyperBlock)
@@ -68,6 +69,7 @@ class GraphHyperModel(kerastuner.HyperModel):
     def build(self, hp):
         if self.contains_hyper_block():
             return self._plain_graph_hm.build(hp)
+        self._init_hps(hp)
         real_nodes = {}
         for input_node in self._model_inputs:
             node_id = self._node_to_id[input_node]
@@ -388,3 +390,10 @@ class GraphHyperModel(kerastuner.HyperModel):
             if block.name == name:
                 return block
         return None
+
+    def set_hps(self, hps):
+        self._hps = hps
+
+    def _init_hps(self, hp):
+        for hp_type, hp_args, hp_kwargs in self._hps:
+            getattr(hp, hp_type)(*hp_args, **hp_kwargs)
