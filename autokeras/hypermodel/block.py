@@ -2,7 +2,6 @@ import kerastuner
 import tensorflow as tf
 import os
 import numpy as np
-from tensorflow.keras.utils.data_utils import get_file
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
 from tensorflow.python.util import nest
@@ -545,7 +544,7 @@ class EmbeddingBlock(HyperBlock):
             if pretraining == 'glove':
                 dirname = 'glove.6B.100d.txt'
                 origin = 'http://nlp.stanford.edu/data/glove.6B.zip'
-                path = get_file(dirname, origin=origin, untar=True)
+                path = tf.keras.utils.data_utils.get_file(dirname, origin=origin, untar=True)
                 embeddings_index = {}
                 f = open(os.path.join(path, 'glove.6B.100d.txt'))
                 for line in f:
