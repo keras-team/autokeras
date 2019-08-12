@@ -2,7 +2,7 @@ import kerastuner
 import tensorflow as tf
 import os
 import numpy as np
-from keras.utils.data_utils import get_file
+from tensorflow.keras.utils.data_utils import get_file
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
 from tensorflow.python.util import nest
