@@ -11,7 +11,7 @@ setup(
         'numpy==1.16.1',
     ],
     tests_require=[
-        'pytest==4.5.0',
+        'pytest==5.0.1',
         'pytest-pep8',
         'pytest-xdist',
         'pytest-cov',
