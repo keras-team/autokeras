@@ -1,14 +1,14 @@
-import tensorflow as tf
 import numpy as np
-from sklearn.feature_extraction import text
+import tensorflow as tf
 from sklearn import feature_selection
+from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
 
 from autokeras import const
-from autokeras.hypermodel import hyper_block as hb_module
+from autokeras.hypermodel import block
 
 
-class HyperPreprocessor(hb_module.HyperBlock):
+class Preprocessor(block.Block):
     """Hyper preprocessing block base class."""
 
     def __init__(self, **kwargs):
@@ -31,7 +31,7 @@ class HyperPreprocessor(hb_module.HyperBlock):
         instances instead of the entire dataset, the Hyperparameters needs to be
         set in advance of call them.
 
-        Args:
+        # Arguments
             hp: Hyperparameters. The hyperparameters for tuning the preprocessor.
         """
         self._hp = hp
@@ -39,16 +39,17 @@ class HyperPreprocessor(hb_module.HyperBlock):
     def update(self, x):
         """Incrementally fit the preprocessor with a single training instance.
 
-        Args:
+        # Arguments
             x: EagerTensor. A single instance in the training dataset.
         """
         raise NotImplementedError
 
-    def transform(self, x):
+    def transform(self, x, fit=False):
         """Incrementally fit the preprocessor with a single training instance.
 
-        Args:
+        # Arguments
             x: EagerTensor. A single instance in the training dataset.
+            fit: Boolean. Whether it is in fit mode.
 
         Returns:
             A transformed instanced which can be converted to a tf.Tensor.
@@ -61,19 +62,20 @@ class HyperPreprocessor(hb_module.HyperBlock):
         The output types are required by tf.py_function, which is used for transform
         the dataset into a new one with a map function.
 
-        Returns:
+        # Returns
             A tuple of data types.
         """
         raise NotImplementedError
 
+    @property
     def output_shape(self):
         """The output shape of the transformed data.
 
         The output shape is needed to build the Keras Model from the AutoModel.
         The output shape of the preprocessor is the input shape of the Keras Model.
 
-        Returns:
-            A tuple of ints or a TensorShape.
+        # Returns
+            A tuple of int(s) or a TensorShape.
         """
         raise NotImplementedError
 
@@ -81,57 +83,17 @@ class HyperPreprocessor(hb_module.HyperBlock):
         """Training process of the preprocessor after update with all instances."""
         pass
 
+    def get_state(self):
+        pass
 
-class OneHotEncoder(object):
-    """A class that can format data.
-
-    This class provides ways to transform data's classification label into
-    vector.
-
-    Attributes:
-        data: The input data
-        num_classes: The number of classes in the classification problem.
-        labels: The number of labels.
-        label_to_vec: Mapping from label to vector.
-        int_to_label: Mapping from int to label.
-    """
-
-    def __init__(self):
-        """Initialize a OneHotEncoder"""
-        self.data = None
-        self.num_classes = 0
-        self.labels = None
-        self.label_to_vec = {}
-        self.int_to_label = {}
-
-    def fit(self, data):
-        """Create mapping from label to vector, and vector to label."""
-        data = np.array(data).flatten()
-        self.labels = set(data)
-        self.num_classes = len(self.labels)
-        for index, label in enumerate(self.labels):
-            vec = np.array([0] * self.num_classes)
-            vec[index] = 1
-            self.label_to_vec[label] = vec
-            self.int_to_label[index] = label
-
-    def transform(self, data):
-        """Get vector for every element in the data array."""
-        data = np.array(data)
-        if len(data.shape) > 1:
-            data = data.flatten()
-        return np.array(list(map(lambda x: self.label_to_vec[x], data)))
-
-    def inverse_transform(self, data):
-        """Get label for every element in data."""
-        return np.array(list(map(lambda x: self.int_to_label[x],
-                                 np.argmax(np.array(data), axis=1))))
+    def set_state(self, state):
+        pass
 
 
-class Normalize(HyperPreprocessor):
+class Normalize(Preprocessor):
     """ Perform basic image transformation and augmentation.
 
-    # Attributes
+    # Arguments
         mean: Tensor. The mean value. Shape: (data last dimension length,)
         std: Tensor. The standard deviation. Shape is the same as mean.
     """
@@ -158,7 +120,7 @@ class Normalize(HyperPreprocessor):
         square_mean = np.mean(self.square_sum / self.count, axis=axis)
         self.std = np.sqrt(square_mean - np.square(self.mean))
 
-    def transform(self, x):
+    def transform(self, x, fit=False):
         """ Transform the test data, perform normalization.
 
         # Arguments
@@ -173,11 +135,28 @@ class Normalize(HyperPreprocessor):
     def output_types(self):
         return tf.float64,
 
+    @property
     def output_shape(self):
-        return self.mean.shape
+        return self.inputs[0].shape
+
+    def get_state(self):
+        return {'sum': self.sum,
+                'square_sum': self.square_sum,
+                'count': self.count,
+                'mean': self.mean,
+                'std': self.std,
+                '_shape': self._shape}
+
+    def set_state(self, state):
+        self.sum = state['sum']
+        self.square_sum = state['square_sum']
+        self.count = state['count']
+        self.mean = state['mean']
+        self.std = state['std']
+        self._shape = state['_shape']
 
 
-class TextToIntSequence(HyperPreprocessor):
+class TextToIntSequence(Preprocessor):
     """Convert raw texts to sequences of word indices."""
 
     def __init__(self, max_len=None, **kwargs):
@@ -194,7 +173,7 @@ class TextToIntSequence(HyperPreprocessor):
         if self.max_len is None:
             self._max_len = max(self._max_len, len(sequence))
 
-    def transform(self, x):
+    def transform(self, x, fit=False):
         sentence = nest.flatten(x)[0].numpy().decode('utf-8')
         sequence = self._tokenizer.texts_to_sequences(sentence)[0]
         sequence = tf.keras.preprocessing.sequence.pad_sequences(
@@ -205,12 +184,24 @@ class TextToIntSequence(HyperPreprocessor):
     def output_types(self):
         return tf.int64,
 
+    @property
     def output_shape(self):
         return self.max_len or self._max_len,
 
+    def get_state(self):
+        return {'max_len': self.max_len,
+                '_max_len': self._max_len,
+                '_tokenizer': self._tokenizer}
 
-class TextToNgramVector(HyperPreprocessor):
+    def set_state(self, state):
+        self.max_len = state['max_len']
+        self._max_len = state['_max_len']
+        self._tokenizer = state['_tokenizer']
+
+
+class TextToNgramVector(Preprocessor):
     """Convert raw texts to n-gram vectors."""
+    # TODO: Implement save and load.
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -243,7 +234,7 @@ class TextToNgramVector(HyperPreprocessor):
                 k=min(self._max_features, data.shape[1]))
             self.selector.fit(data, self.labels)
 
-    def transform(self, x):
+    def transform(self, x, fit=False):
         sentence = nest.flatten(x)[0].numpy().decode('utf-8')
         data = self._vectorizer.transform([sentence]).toarray()
         if self.selector:
@@ -253,8 +244,26 @@ class TextToNgramVector(HyperPreprocessor):
     def output_types(self):
         return tf.float64,
 
+    @property
     def output_shape(self):
         return self._shape
+
+    def get_state(self):
+        return {'_vectorizer': self._vectorizer,
+                'selector': self.selector,
+                'labels': self.labels,
+                '_max_features': self._max_features,
+                '_texts': self._texts,
+                '_shape': self._shape}
+
+    def set_state(self, state):
+        self._vectorizer = state['_vectorizer']
+        self.selector = state['selector']
+        self.labels = state['labels']
+        self._max_features = state['_max_features']
+        self._vectorizer.max_features = self._max_features
+        self._texts = state['_texts']
+        self._shape = state['_shape']
 
 
 class ImageAugment(HyperPreprocessor):
@@ -296,7 +305,9 @@ class ImageAugment(HyperPreprocessor):
             max_value = 1. + value
         return min_value, max_value
 
-    def transform(self, x):
+    def transform(self, x, fit=False):
+        if not fit:
+            return x
         self._shape = x.shape
         target_height, target_width, channels = self._shape
         rotation_range = self.rotation_range

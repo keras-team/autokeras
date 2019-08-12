@@ -1,7 +1,9 @@
+import os
 import copy
 import inspect
-import tensorflow as tf
+
 import kerastuner
+import tensorflow as tf
 
 
 class AutoTuner(kerastuner.Tuner):
@@ -15,11 +17,13 @@ class AutoTuner(kerastuner.Tuner):
             dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
 
         # Preprocess the dataset and set the shapes of the HyperNodes.
+        self.hypermodel.hyper_build(hp)
         dataset, validation_data = self.hypermodel.preprocess(
             hp,
             new_fit_kwargs.get('x', None),
-            new_fit_kwargs.get('validation_data', None))
-        self.hypermodel.set_node_shapes(dataset)
+            new_fit_kwargs.get('validation_data', None),
+            fit=True)
+        self._save_preprocessors(trial.trial_id, trial.directory)
 
         # Batching
         batch_size = new_fit_kwargs.get('batch_size', 32)
@@ -32,22 +36,36 @@ class AutoTuner(kerastuner.Tuner):
         new_fit_kwargs['batch_size'] = None
         new_fit_kwargs['y'] = None
 
-        super(AutoTuner, self).run_trial(trial, hp, [], new_fit_kwargs)
+        super().run_trial(trial, hp, [], new_fit_kwargs)
 
     def get_best_hp(self, num_models=1):
         """Returns hyperparameters used to build the best model(s).
 
-        Args:
+        # Arguments
             num_models (int, optional): Number of best models, whose building
                 HyperParameters to return. Models will be returned in sorted order
                 starting from the best. Defaults to 1.
 
-        Returns:
+        # Returns
             List of HyperParameter instances.
         """
         best_trials = self._get_best_trials(num_models)
         return [trial.hyperparameters.copy()
                 for trial in best_trials]
+
+    def _save_preprocessors(self, trial_id, base_directory='.'):
+        filename = '%s-preprocessors' % trial_id
+        path = os.path.join(base_directory, filename)
+        self.hypermodel.save_preprocessors(path)
+
+    def get_best_trials(self, num_trials=1):
+        return super()._get_best_trials(num_trials)
+
+    def load_trial(self, trial):
+        self.hypermodel.hyper_build(trial.hyperparameters)
+        filename = '%s-preprocessors' % trial.trial_id
+        path = os.path.join(trial.directory, filename)
+        self.hypermodel.load_preprocessors(path)
 
 
 class RandomSearch(AutoTuner, kerastuner.RandomSearch):

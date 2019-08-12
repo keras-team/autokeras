@@ -1,5 +1,8 @@
-import pytest
+from unittest import mock
+
 import numpy as np
+import pytest
+
 import autokeras as ak
 
 
@@ -52,7 +55,9 @@ def test_merge(tmp_dir):
     assert result.shape == (100, 1)
 
 
-def test_preprocessing(tmp_dir):
+@mock.patch('kerastuner.engine.tuner.Tuner.search',
+            side_effect=lambda *args, **kwargs: None)
+def test_preprocessing(_, tmp_dir):
     x_train = np.random.rand(100, 33)
     y_train = np.random.rand(100, 1)
 
@@ -80,9 +85,6 @@ def test_preprocessing(tmp_dir):
               validation_data=([x_train, x_train], y_train),
               validation_split=0.5,
               verbose=False)
-    result = graph.predict([x_train, x_train])
-
-    assert result.shape == (100, 1)
 
 
 def test_input_output_disconnect(tmp_dir):
@@ -130,7 +132,9 @@ def test_input_missing(tmp_dir):
     assert str(info.value).startswith('A required input is missing for HyperModel')
 
 
-def test_auto_model_basic(tmp_dir):
+@mock.patch('kerastuner.engine.tuner.Tuner.search',
+            side_effect=lambda *args, **kwargs: None)
+def test_auto_model_basic(_, tmp_dir):
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
 
@@ -139,6 +143,3 @@ def test_auto_model_basic(tmp_dir):
                               directory=tmp_dir,
                               max_trials=2)
     auto_model.fit(x_train, y_train, epochs=2, validation_split=0.2)
-    result = auto_model.predict(x_train)
-
-    assert result.shape == (100, 1)

@@ -1,12 +1,14 @@
 from distutils.core import setup
+
 from setuptools import find_packages
 
 setup(
     name='autokeras',
     packages=find_packages(exclude=('tests',)),
     install_requires=[
-        'tensorflow==2.0.0b0',
+        'tensorflow==2.0.0b1',
         'scikit-learn==0.20.2',
+        'numpy==1.16.1',
     ],
     tests_require=[
         'pytest==4.5.0',

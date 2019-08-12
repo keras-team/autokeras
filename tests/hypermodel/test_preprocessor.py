@@ -1,12 +1,12 @@
-import tensorflow as tf
-import numpy as np
 import kerastuner
+import numpy as np
+import tensorflow as tf
 
-from autokeras.hypermodel import processor
+from autokeras.hypermodel import preprocessor
 
 
 def test_normalize():
-    normalize = processor.Normalize()
+    normalize = preprocessor.Normalize()
     x_train = np.random.rand(100, 32, 32, 3)
     dataset = tf.data.Dataset.from_tensor_slices(x_train)
     normalize.set_hp(kerastuner.HyperParameters())
@@ -26,7 +26,7 @@ def test_sequence():
     texts = ['The cat sat on the mat.',
              'The dog sat on the log.',
              'Dogs and cats living together.']
-    tokenize = processor.TextToIntSequence()
+    tokenize = preprocessor.TextToIntSequence()
     dataset = tf.data.Dataset.from_tensor_slices(texts)
     tokenize.set_hp(kerastuner.HyperParameters())
     for x in dataset:
@@ -47,7 +47,7 @@ def test_ngram():
     texts = ['The cat sat on the mat.',
              'The dog sat on the log.',
              'Dogs and cats living together.']
-    tokenize = processor.TextToNgramVector()
+    tokenize = preprocessor.TextToNgramVector()
     dataset = tf.data.Dataset.from_tensor_slices(texts)
     tokenize.set_hp(kerastuner.HyperParameters())
     for x in dataset:
@@ -67,6 +67,7 @@ def test_augment():
     augmenter = processor.ImageAugment()
     dataset = tf.data.Dataset.from_tensor_slices(raw_images)
     augmenter.set_hp(kerastuner.HyperParameters())
+
     def map_func(x):
         return tf.py_function(augmenter.transform,
                               inp=[x],

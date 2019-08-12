@@ -360,14 +360,14 @@ Function ```detector.predict()``` requires the path to the image. If the ```outp
 
 
 ### Sentiment Analysis tutorial.
-[[source]]( https://github.com/keras-team/autokeras/blob/master/autokeras/pretrained/text_classifier.py)
+[[source]](https://github.com/keras-team/autokeras/blob/master/examples/pretrained_models/text_models/sentiment_analysis_example.py)
 
 
 The sentiment analysis module provides an interface to find the sentiment of any text. The pretrained model is obtained by training [Google AI’s BERT model]( https://arxiv.org/abs/1810.04805) on [IMDb dataset]( http://ai.stanford.edu/~amaas/data/sentiment/). 
 
 Let’s import the `SentimentAnalysis` module from *text_classifier.py*. It is derived from the super class `TextClassifier` which is the child class of `Pretrained` class.
 ```python
-from autokeras.pretrained.text_classifier import SentimentAnalysis
+from autokeras import SentimentAnalysis
 sentiment_analysis = SentimentAnalysis()
 ```
 During initialization of `SentimentAnalysis`, the pretrained model is loaded into memory i.e. CPU’s or GPU’s, if available.
@@ -383,14 +383,14 @@ If you run *sentiment_analysis_example.py*, you should get an output value of 0.
 
 
 ### Topic Classification tutorial.
-[[source]]( https://github.com/keras-team/autokeras/blob/master/autokeras/pretrained/text_classifier.py)
+[[source]](https://github.com/keras-team/autokeras/blob/master/examples/pretrained_models/text_models/topic_classifier_example.py)
 
 
 The topic classifier module provides an interface to find the topic of any text. The pretrained model is obtained by training [Google AI’s BERT model]( https://arxiv.org/abs/1810.04805) on [AGNews dataset](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html). 
 
 Let’s import the `TopicClassifier` module from *text_classifier.py*. It is derived from the super class `TextClassifier` which is the child class of `Pretrained` class. 
 ```python
-from autokeras.pretrained.text_classifier import TopicClassifier
+from autokeras import TopicClassifier
 topic_classifier = TopicClassifier()
 ```
 During initialization of `TopicClassifier`, the pretrained model is loaded into memory i.e. CPU’s or GPU’s, if available.
@@ -405,7 +405,7 @@ If you run *topic_classifier_example.py*, you should see the predict function re
 
 
 ### Voice generator tutorial.
-[[source]]( https://github.com/keras-team/autokeras/blob/master/autokeras/pretrained/voice_generator/voice_generator.py)
+[[source]](https://github.com/keras-team/autokeras/blob/master/examples/pretrained_models/voice_generation/voice_generator_example.py)
 
 The voice generator is a refactor of [deepvoice3](https://github.com/r9y9/deepvoice3_pytorch). 
 The structure contains three main parts:
@@ -419,7 +419,7 @@ For more details, please refer the original paper:
 
 Example:
 ````python
-from autokeras.pretrained import VoiceGenerator
+from autokeras import VoiceGenerator
 voice_generator = VoiceGenerator()
 text = "The approximation of pi is 3.14"
 voice_generator.predict(text, "test.wav")
@@ -505,7 +505,7 @@ spect = parser.parse_audio("test.wav").contiguous()
 After this we will have the audio parsed as torch tensor in variable `spect`. Then we can use the following to recognize the voice:
 
 ````python
-from autokeras.pretrained import VoiceRecognizer
+from autokeras import VoiceRecognizer
 voice_recognizer = VoiceRecognizer()
 print(voice_recognizer.predict(audio_data=spect))
 ````
