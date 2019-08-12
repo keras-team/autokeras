@@ -28,20 +28,17 @@ results = clf.predict(x_test)
 
 ## Cite this work
 
-Auto-Keras: An Efficient Neural Architecture Search System.
-Haifeng Jin, Qingquan Song, and Xia Hu.
-[arXiv:1806.10282](https://arxiv.org/abs/1806.10282).
+Jin, Haifeng, Qingquan Song, and Xia Hu. "Auto-keras: An efficient neural architecture search system." Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining. ACM, 2019. ([Download](https://www.kdd.org/kdd2019/accepted-papers/view/auto-keras-an-efficient-neural-architecture-search-system))
 
 Biblatex entry:
 
-    @online{jin2018efficient,
-      author       = {Haifeng Jin and Qingquan Song and Xia Hu},
-      title        = {Auto-Keras: An Efficient Neural Architecture Search System},
-      date         = {2018-06-27},
-      year         = {2018},
-      eprintclass  = {cs.LG},
-      eprinttype   = {arXiv},
-      eprint       = {cs.LG/1806.10282},
+    @inproceedings{jin2019auto,
+      title={Auto-Keras: An Efficient Neural Architecture Search System},
+      author={Jin, Haifeng and Song, Qingquan and Hu, Xia},
+      booktitle={Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining},
+      pages={1946--1956},
+      year={2019},
+      organization={ACM}
     }
 
 ## Community
