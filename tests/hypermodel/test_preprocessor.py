@@ -6,7 +6,7 @@ from autokeras.hypermodel import preprocessor
 
 
 def test_normalize():
-    normalize = preprocessor.Normalize()
+    normalize = preprocessor.Normalization()
     x_train = np.random.rand(100, 32, 32, 3)
     dataset = tf.data.Dataset.from_tensor_slices(x_train)
     normalize.set_hp(kerastuner.HyperParameters())
@@ -64,7 +64,7 @@ def test_ngram():
 
 def test_augment():
     raw_images = tf.random.normal([1000, 32, 32, 3], mean=-1, stddev=4)
-    augmenter = processor.ImageAugment()
+    augmenter = preprocessor.ImageAugmentation()
     dataset = tf.data.Dataset.from_tensor_slices(raw_images)
     augmenter.set_hp(kerastuner.HyperParameters())
 

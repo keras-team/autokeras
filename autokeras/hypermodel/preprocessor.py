@@ -90,7 +90,7 @@ class Preprocessor(block.Block):
         pass
 
 
-class Normalize(Preprocessor):
+class Normalization(Preprocessor):
     """ Perform basic image transformation and augmentation.
 
     # Arguments
@@ -266,7 +266,7 @@ class TextToNgramVector(Preprocessor):
         self._shape = state['_shape']
 
 
-class ImageAugment(HyperPreprocessor):
+class ImageAugmentation(Preprocessor):
 
     def __init__(self,
                  rotation_range=None,

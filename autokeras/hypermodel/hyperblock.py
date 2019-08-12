@@ -61,6 +61,8 @@ class ImageBlock(HyperBlock):
                                                   ['resnet', 'xception', 'vanilla'],
                                                   default='resnet')
 
+        output_node = preprocessor.Normalization()(output_node)
+        output_node = preprocessor.ImageAugmentation()(output_node)
         if block_type == 'resnet':
             output_node = block.ResNetBlock()(output_node)
         elif block_type == 'xception':
