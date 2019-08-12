@@ -276,7 +276,6 @@ class ImageAugmentation(Preprocessor):
                  contrast_range=None,  # fraction 0-1  [X]
                  horizontal_flip=None,  # boolean  [X]
                  vertical_flip=None,
-                 whether_translation=None,
                  gaussian_noise=None,
                  **kwargs):
         super().__init__(**kwargs)
@@ -287,7 +286,6 @@ class ImageAugmentation(Preprocessor):
         self.contrast_range = contrast_range
         self.horizontal_flip = horizontal_flip
         self.vertical_flip = vertical_flip
-        self.whether_translation = whether_translation
         self.gaussian_noise = gaussian_noise
         self._shape = None
 
@@ -339,11 +337,6 @@ class ImageAugmentation(Preprocessor):
             vertical_flip = self._hp.Choice('vertical_flip',
                                             [True, False],
                                             default=True)
-        whether_translation = self.whether_translation
-        if whether_translation is None:
-            whether_translation = self._hp.Choice('whether_translation',
-                                                  [True, False],
-                                                  default=True)
         gaussian_noise = self.gaussian_noise
         if gaussian_noise is None:
             gaussian_noise = self._hp.Choice('gaussian_noise',
@@ -354,20 +347,6 @@ class ImageAugmentation(Preprocessor):
             noise = tf.random_normal(shape=tf.shape(x),
                                      mean=0.0, stddev=1.0, dtype=tf.float32)
             x = tf.add(x, noise)
-        '''if whether_translation:
-            x = tf.image.pad_to_bounding_box(x, self._hp.Choice('translation_top'),
-                                             self._hp.Choice('translation_left'),
-                                             self._hp.Choice('target_height') +
-                                             self._hp.Choice('translation_bottom') +
-                                             self._hp.Choice('translation_top'),
-                                             self._hp.Choice('target_width') +
-                                             self._hp.Choice('translation_right') +
-                                             self._hp.Choice('translation_left'))
-            x = tf.image.crop_to_bounding_box(x,
-                                              self._hp.Choice('translation_bottom'),
-                                              self._hp.Choice('translation_right'),
-                                              self._hp.Choice('target_height'),
-                                              self._hp.Choice('target_width'))'''
         if rotation_range:
             if rotation_range == 90:
                 x = tf.image.rot90(x, k=1)
@@ -411,7 +390,7 @@ class ImageAugmentation(Preprocessor):
         return tf.float32
 
     def output_shape(self):
-        return self._shape
+        return self.inputs[0].shape
 
     def update(self, x):
         pass
