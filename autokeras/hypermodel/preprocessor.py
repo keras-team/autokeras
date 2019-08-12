@@ -390,7 +390,7 @@ class ImageAugmentation(Preprocessor):
         return tf.float32
 
     def output_shape(self):
-        return self.inputs[0].shape
+        return np.shape(self.inputs[0])
 
     def update(self, x):
         pass
