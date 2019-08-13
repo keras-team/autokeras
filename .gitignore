@@ -4,8 +4,7 @@
 *.pth
 
 # Mkdocs
-/docs/
-/mkdocs/docs/temp
+/docs/sources
 
 .DS_Store
 .vscode

@@ -1,0 +1,27 @@
+site_name: AutoKeras
+theme:
+  favicon: '/img/favicon.png'
+  logo: '/img/logo_white.svg'
+  name: 'material'
+  palette:
+    primary: 'red'
+    accent: 'red'
+
+docs_dir: sources
+repo_url: https://github.com/keras-team/autokeras
+site_url: http://autokeras.com
+edit_uri: ""
+site_description: 'Documentation for AutoKeras.'
+google_analytics: ['UA-44322747-3', 'autokeras.com']
+
+nav:
+    - Home: index.md
+    - Getting Started: start.md
+    - Docker: docker.md
+    - Contributing Guide: contributing.md
+    - Neural Architecture Search: nas.md
+    - Documentation:
+      - auto_model: auto_model.md
+      - hypermodel:
+        - block: hypermodel/block.md
+    - About: about.md
