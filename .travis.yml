@@ -18,6 +18,8 @@ jobs:
         - flake8 tests
     - stage: deploy
       script:
+        - pip install -e .[tests] --progress-bar off
+        - pip install git+git://github.com/keras-team/keras-tuner@master#egg=keras-tuner
         - pip install mkdocs
         - pip install mkdocs-material
         - sh shell/docs.sh
