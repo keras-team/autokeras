@@ -20,7 +20,7 @@ jobs:
       script:
         - pip install mkdocs
         - pip install mkdocs-material
-        - sh docs.sh
+        - sh shell/docs.sh
       deploy:
         - provider: pages
           skip-cleanup: true
