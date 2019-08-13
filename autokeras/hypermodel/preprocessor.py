@@ -357,17 +357,17 @@ class ImageAugmentation(Preprocessor):
             else:
                 x = tf.image.rot90(x, k=4)
         if brightness_range:
-            min_value, max_value = self.__get_min_and_max(
+            min_value, max_value = self._get_min_and_max(
                 brightness_range,
                 'brightness_range')
             x = tf.image.random_brightness(x, min_value, max_value)
         if saturation_range:
-            min_value, max_value = self.__get_min_and_max(
+            min_value, max_value = self._get_min_and_max(
                 saturation_range,
                 'saturation_range')
             x = tf.image.random_saturation(x, min_value, max_value)
         if contrast_range:
-            min_value, max_value = self.__get_min_and_max(
+            min_value, max_value = self._get_min_and_max(
                 contrast_range,
                 'contrast_range')
             x = tf.image.random_contrast(x, min_value, max_value)
