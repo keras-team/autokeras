@@ -5,6 +5,7 @@ jobs:
   include:
     - stage: test
       script:
+        - pip install -e .[tests] --progress-bar off
         - pip install codacy-coverage
         - pytest tests --cov=autokeras --cov-report xml:coverage.xml
         - python-codacy-coverage -r coverage.xml
