@@ -9,7 +9,7 @@ jobs:
         - pip install codacy-coverage
         - pytest tests --cov=autokeras --cov-report xml:coverage.xml
         - python-codacy-coverage -r coverage.xml
-    - stage: pep8
+    -
       script:
         - pip install -e .[tests] --progress-bar off
         - pytest autokeras/ --pep8
