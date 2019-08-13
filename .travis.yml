@@ -14,7 +14,8 @@ jobs:
       script:
         - pip install -e .[tests] --progress-bar off
         - pip install git+git://github.com/keras-team/keras-tuner@master#egg=keras-tuner
-        - pytest autokeras/ --pep8
+        - flake8 autokeras
+        - flake8 tests
     - stage: deploy
       script:
         - pip install mkdocs

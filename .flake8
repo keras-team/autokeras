@@ -1,0 +1,30 @@
+[flake8]
+
+ignore =
+    # defaults flake8 ignores
+    E121,E123,E126,E226,E24,E704,W503,W504
+    # Function name should be lowercase
+    N802
+    # imported but unused
+    F401
+    # class name should use CapWords convention
+    N801
+    # lowercase ... imported as non lowercase
+    N812
+    # do not use bare 'except'
+    E722
+    # trailing whitespace
+    W291
+    # constant ... imported as non constant
+    N811
+    # local variable is assigned to but never used
+    F841
+    # variable ... in function should be lowercase
+    N806
+    # blank line at end of file
+    W391
+    # undefined name
+    F821
+
+
+max-line-length = 85
