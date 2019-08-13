@@ -18,6 +18,10 @@ setup(
     ],
     extras_require={
         'tests': ['pytest>=4.4.0',
+<<<<<<< HEAD
+=======
+                  'pytest-pep8',
+>>>>>>> master
                   'pytest-xdist',
                   'pytest-cov',
                   ],
