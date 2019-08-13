@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 cd mkdocs
-sh build.sh
+python autogen.py
+mkdocs build
+echo "autokeras.com" > ../docs/site/CNAME

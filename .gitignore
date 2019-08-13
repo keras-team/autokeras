@@ -5,6 +5,7 @@
 
 # Mkdocs
 /docs/sources
+/docs/site
 
 .DS_Store
 .vscode
