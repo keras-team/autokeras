@@ -388,7 +388,7 @@ class ImageAugmentation(Preprocessor):
 
     def output_types(self):
         return tf.float32
-    
+
     @property
     def output_shape(self):
         return self.inputs[0].shape
