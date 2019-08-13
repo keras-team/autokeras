@@ -4,18 +4,6 @@ from setuptools import find_packages
 
 setup(
     name='autokeras',
-    packages=find_packages(exclude=('tests',)),
-    install_requires=[
-        'tensorflow>=2.0.0b1',
-        'scikit-learn',
-        'numpy==1.16.1',
-    ],
-    tests_require=[
-        'pytest',
-        'pytest-pep8',
-        'pytest-xdist',
-        'pytest-cov',
-    ],
     version='1.0.0a0',
     description='AutoML for deep learning',
     author='Data Analytics at Texas A&M (DATA) Lab, Keras Team',
@@ -24,4 +12,17 @@ setup(
     download_url='https://github.com/keras-team/autokeras/archive/1.0.0.tar.gz',
     keywords=['AutoML', 'keras'],
     classifiers=[]
+    install_requires=[
+        'tensorflow>=2.0.0b1',
+        'scikit-learn',
+        'numpy==1.16.1',
+    ],
+    extras_require={
+        'tests': ['pytest',
+                  'pytest-pep8',
+                  'pytest-xdist',
+                  'pytest-cov',
+                  ],
+    },
+    packages=find_packages(exclude=('tests',)),
 )
