@@ -332,8 +332,8 @@ class ImageAugmentation(Preprocessor):
         whether_contrast_range = self.whether_contrast_range
         if whether_contrast_range is None:
             whether_contrast_range = self._hp.Choice('whether_contrast_range',
-                                                       [True, False],
-                                                       default=True)
+                                                      [True, False],
+                                                      default=True)
         horizontal_flip = self.horizontal_flip
         if horizontal_flip is None:
             horizontal_flip = self._hp.Choice('horizontal_flip',
