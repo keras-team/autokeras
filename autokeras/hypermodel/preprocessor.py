@@ -353,7 +353,7 @@ class ImageAugmentation(Preprocessor):
         if gaussian_noise:
             noise = tf.random_normal(shape=tf.shape(x),
                                      mean=0.0, stddev=1.0, dtype=tf.float32)
-            x = tf.add(x, noise)
+                                     x = tf.add(x, noise)
         if rotation_range:
             if rotation_range == 90:
                 x = tf.image.rot90(x, k=1)
