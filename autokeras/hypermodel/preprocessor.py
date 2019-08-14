@@ -380,7 +380,7 @@ class ImageAugmentation(Preprocessor):
             x = tf.image.random_saturation(x, min_value, max_value)
         if whether_contrast_range:
             contrast_range = random.random()
-            min_value, max_value = self.__get_min_and_max(
+            min_value, max_value = self._get_min_and_max(
                 contrast_range,
                 'contrast_range')
             x = tf.image.random_contrast(x, min_value, max_value)
