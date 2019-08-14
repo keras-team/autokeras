@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from autokeras.hypermodel import preprocessor
-
+from autokeras.hypermodel import block
 
 def test_normalize():
     normalize = preprocessor.Normalization()
@@ -66,8 +66,13 @@ def test_augment():
     raw_images = tf.random.normal([1000, 32, 32, 3], mean=-1, stddev=4)
     augmenter = preprocessor.ImageAugmentation()
     dataset = tf.data.Dataset.from_tensor_slices(raw_images)
-    augmenter.set_hp(kerastuner.HyperParameters())
-
+    hp = kerastuner.HyperParameters()
+    block.set_hp_value(hp, 'whether_rotation_range', True)
+    block.set_hp_value(hp, 'whether_random_crop', True)
+    block.set_hp_value(hp, 'whether_brightness_range', True)
+    block.set_hp_value(hp, 'whether_saturation_range', True)
+    block.set_hp_value(hp, 'whether_contrast_range', True)
+    augmenter.set_hp(hp)
     def map_func(x):
         return tf.py_function(augmenter.transform,
                               inp=[x],
