@@ -350,7 +350,12 @@ class ImageAugmentation(Preprocessor):
                                              [True, False],
                                              default=True)
         x = tf.cast(x, dtype=tf.float32)
-        # TODO: GAUSSIAN NOISE
+        if gaussian_noise:
+            noise = tf.random_normal(shape=tf.shape(x),
+                                     mean=0.0,
+                                     stddev=1.0,
+                                     dtype=tf.float32)
+            x = tf.add(x, noise)
         if whether_rotation_range:
             rotation_range = np.random.randint(low=1, high=5)
             if rotation_range == 1:
