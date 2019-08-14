@@ -74,7 +74,7 @@ def test_augment():
     block.set_hp_value(hp, 'whether_saturation_range', True)
     block.set_hp_value(hp, 'whether_contrast_range', True)
     augmenter.set_hp(hp)
-    
+
     def map_func(x):
         return tf.py_function(augmenter.transform,
                               inp=[x],
