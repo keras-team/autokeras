@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import random
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
@@ -271,7 +272,7 @@ class ImageAugmentation(Preprocessor):
     def __init__(self,
                  rotation_range=None,
                  whether_random_crop=None,
-                 brightness_range=None,  # fraction 0-1  [X]
+                 whether_brightness_range=None,  # fraction 0-1  [X]
                  saturation_range=None,  # fraction 0-1  [X]
                  contrast_range=None,  # fraction 0-1  [X]
                  horizontal_flip=None,  # boolean  [X]
@@ -281,7 +282,7 @@ class ImageAugmentation(Preprocessor):
         super().__init__(**kwargs)
         self.rotation_range = rotation_range
         self.whether_random_crop = whether_random_crop
-        self.brightness_range = brightness_range
+        self.whether_brightness_range = whether_brightness_range
         self.saturation_range = saturation_range
         self.contrast_range = contrast_range
         self.horizontal_flip = horizontal_flip
@@ -318,9 +319,11 @@ class ImageAugmentation(Preprocessor):
             whether_random_crop = self._hp.Choice('whether_random_crop',
                                                   [True, False],
                                                   default=True)
-        brightness_range = self.brightness_range
-        if brightness_range is None:
-            brightness_range = self._hp.Range('brightness_range', 0, 1)
+        whether_brightness_range = self.whether_brightness_range
+        if whether_brightness_range is None:
+            whether_brightness_range = self._hp.Choice('whether_brightness_range',
+                                                  [True, False],
+                                                  default=True)
         saturation_range = self.saturation_range
         if saturation_range is None:
             saturation_range = self._hp.Range('saturation_range', 0, 1)
@@ -356,7 +359,8 @@ class ImageAugmentation(Preprocessor):
                 x = tf.image.rot90(x, k=3)
             else:
                 x = tf.image.rot90(x, k=4)
-        if brightness_range:
+        if whether_brightness_range:
+            brightness_range = random.random()
             min_value, max_value = self._get_min_and_max(
                 brightness_range,
                 'brightness_range')
