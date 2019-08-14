@@ -270,7 +270,7 @@ class TextToNgramVector(Preprocessor):
 class ImageAugmentation(Preprocessor):
 
     def __init__(self,
-                 rotation_range=None,
+                 whether_rotation_range=None,
                  whether_random_crop=None,
                  whether_brightness_range=None,  # fraction 0-1  [X]
                  whether_saturation_range=None,  # fraction 0-1  [X]
@@ -280,7 +280,7 @@ class ImageAugmentation(Preprocessor):
                  gaussian_noise=None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.rotation_range = rotation_range
+        self.whether_rotation_range = whether_rotation_range
         self.whether_random_crop = whether_random_crop
         self.whether_brightness_range = whether_brightness_range
         self.whether_saturation_range = whether_saturation_range
@@ -309,11 +309,11 @@ class ImageAugmentation(Preprocessor):
             return x
         self._shape = x.shape
         target_height, target_width, channels = self._shape
-        rotation_range = self.rotation_range
-        if rotation_range is None:
-            rotation_range = self._hp.Choice('rotation_range',
-                                             [90, 180, 270, 0],
-                                             default=90)
+        whether_rotation_range = self.whether_rotation_range
+        if whether_rotation_range is None:
+            whether_rotation_range = self._hp.Choice('whether_rotation_range',
+                                                     [True, False],
+                                                     default=True)
         whether_random_crop = self.whether_random_crop
         if whether_random_crop is None:
             whether_random_crop = self._hp.Choice('whether_random_crop',
@@ -353,12 +353,13 @@ class ImageAugmentation(Preprocessor):
         if gaussian_noise:
             noise = tf.random_normal(shape=tf.shape(x), mean=0.0, stddev=1.0, dtype=tf.float32)
             x = tf.add(x, noise)
-        if rotation_range:
-            if rotation_range == 90:
+        if whether_rotation_range:
+            rotation_range = np.random.randint(low=1, high=5)
+            if rotation_range == 1:
                 x = tf.image.rot90(x, k=1)
-            elif rotation_range == 180:
+            elif rotation_range == 2:
                 x = tf.image.rot90(x, k=2)
-            elif rotation_range == 270:
+            elif rotation_range == 3:
                 x = tf.image.rot90(x, k=3)
             else:
                 x = tf.image.rot90(x, k=4)
