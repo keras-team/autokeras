@@ -270,17 +270,17 @@ class TextToNgramVector(Preprocessor):
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
     # Arguments
-        whether_rotation_range: Boolean. Whether to rotate the image.
-        whether_random_crop: Boolean. Whether to crop the image randomly.
-        whether_brightness_range: Boolean. Whether to tune the brightness of the image.
-        whether_saturation_range: Boolean. Whether to tune the saturation of the image.
-        whether_contrast_range: Boolean. Whether to tune the contrast of the image.
-        whether_translation: Boolean. Whether to translate the image.
-        horizontal_flip: Boolean. Whether to flip the image horizontally.
-        vertical_flip: Boolean. Whether to flip the image vertically.
-        gaussian_noise: Boolean. Whether to add some gaussian noise to the image.
+        whether_rotation_range: Boolean. Whether rotate the image.
+        whether_random_crop: Boolean. Whether crop the image randomly.
+        whether_brightness_range: Boolean. Whether tune the brightness of the image.
+        whether_saturation_range: Boolean. Whether tune the saturation of the image.
+        whether_contrast_range: Boolean. Whether tune the contrast of the image.
+        whether_translation: Boolean. Whether translate the image.
+        horizontal_flip: Boolean. Whether flip the image horizontally.
+        vertical_flip: Boolean. Whether flip the image vertically.
+        gaussian_noise: Boolean. Whether add some gaussian noise to the image.
     """
-    
+
     def __init__(self,
                  whether_rotation_range=None,
                  whether_random_crop=None,
