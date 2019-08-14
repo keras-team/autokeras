@@ -273,7 +273,7 @@ class ImageAugmentation(Preprocessor):
                  rotation_range=None,
                  whether_random_crop=None,
                  whether_brightness_range=None,  # fraction 0-1  [X]
-                 saturation_range=None,  # fraction 0-1  [X]
+                 whether_saturation_range=None,  # fraction 0-1  [X]
                  contrast_range=None,  # fraction 0-1  [X]
                  horizontal_flip=None,  # boolean  [X]
                  vertical_flip=None,
@@ -283,7 +283,7 @@ class ImageAugmentation(Preprocessor):
         self.rotation_range = rotation_range
         self.whether_random_crop = whether_random_crop
         self.whether_brightness_range = whether_brightness_range
-        self.saturation_range = saturation_range
+        self.whether_saturation_range = whether_saturation_range
         self.contrast_range = contrast_range
         self.horizontal_flip = horizontal_flip
         self.vertical_flip = vertical_flip
@@ -322,11 +322,13 @@ class ImageAugmentation(Preprocessor):
         whether_brightness_range = self.whether_brightness_range
         if whether_brightness_range is None:
             whether_brightness_range = self._hp.Choice('whether_brightness_range',
-                                                  [True, False],
-                                                  default=True)
-        saturation_range = self.saturation_range
-        if saturation_range is None:
-            saturation_range = self._hp.Range('saturation_range', 0, 1)
+                                                       [True, False],
+                                                       default=True)
+        whether_saturation_range = self.whether_saturation_range
+        if whether_saturation_range is None:
+            whether_saturation_range = self._hp.Choice('whether_saturation_range',
+                                                       [True, False],
+                                                       default=True)
         contrast_range = self.contrast_range
         if contrast_range is None:
             contrast_range = self._hp.Range('contrast_range', 0, 1)
@@ -365,7 +367,8 @@ class ImageAugmentation(Preprocessor):
                 brightness_range,
                 'brightness_range')
             x = tf.image.random_brightness(x, min_value, max_value)
-        if saturation_range:
+        if whether_saturation_range:
+            saturation_range = random.random()
             min_value, max_value = self._get_min_and_max(
                 saturation_range,
                 'saturation_range')
