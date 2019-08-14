@@ -274,7 +274,7 @@ class ImageAugmentation(Preprocessor):
                  whether_random_crop=None,
                  whether_brightness_range=None,  # fraction 0-1  [X]
                  whether_saturation_range=None,  # fraction 0-1  [X]
-                 contrast_range=None,  # fraction 0-1  [X]
+                 whether_contrast_range=None,  # fraction 0-1  [X]
                  horizontal_flip=None,  # boolean  [X]
                  vertical_flip=None,
                  gaussian_noise=None,
@@ -284,7 +284,7 @@ class ImageAugmentation(Preprocessor):
         self.whether_random_crop = whether_random_crop
         self.whether_brightness_range = whether_brightness_range
         self.whether_saturation_range = whether_saturation_range
-        self.contrast_range = contrast_range
+        self.whether_contrast_range = whether_contrast_range
         self.horizontal_flip = horizontal_flip
         self.vertical_flip = vertical_flip
         self.gaussian_noise = gaussian_noise
@@ -329,9 +329,11 @@ class ImageAugmentation(Preprocessor):
             whether_saturation_range = self._hp.Choice('whether_saturation_range',
                                                        [True, False],
                                                        default=True)
-        contrast_range = self.contrast_range
-        if contrast_range is None:
-            contrast_range = self._hp.Range('contrast_range', 0, 1)
+        whether_contrast_range = self.whether_contrast_range
+        if whether_contrast_range is None:
+            whether_contrast_range = self._hp.Choice('whether_contrast_range',
+                                                       [True, False],
+                                                       default=True)
         horizontal_flip = self.horizontal_flip
         if horizontal_flip is None:
             horizontal_flip = self._hp.Choice('horizontal_flip',
@@ -373,8 +375,9 @@ class ImageAugmentation(Preprocessor):
                 saturation_range,
                 'saturation_range')
             x = tf.image.random_saturation(x, min_value, max_value)
-        if contrast_range:
-            min_value, max_value = self._get_min_and_max(
+        if whether_contrast_range:
+            contrast_range = random.random()
+            min_value, max_value = self.__get_min_and_max(
                 contrast_range,
                 'contrast_range')
             x = tf.image.random_contrast(x, min_value, max_value)
