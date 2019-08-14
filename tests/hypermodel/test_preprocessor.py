@@ -5,6 +5,7 @@ import tensorflow as tf
 from autokeras.hypermodel import preprocessor
 from autokeras.hypermodel import block
 
+
 def test_normalize():
     normalize = preprocessor.Normalization()
     x_train = np.random.rand(100, 32, 32, 3)
@@ -73,6 +74,7 @@ def test_augment():
     block.set_hp_value(hp, 'whether_saturation_range', True)
     block.set_hp_value(hp, 'whether_contrast_range', True)
     augmenter.set_hp(hp)
+    
     def map_func(x):
         return tf.py_function(augmenter.transform,
                               inp=[x],
