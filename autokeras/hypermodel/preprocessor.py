@@ -272,10 +272,11 @@ class ImageAugmentation(Preprocessor):
     def __init__(self,
                  whether_rotation_range=None,
                  whether_random_crop=None,
-                 whether_brightness_range=None,  # fraction 0-1  [X]
-                 whether_saturation_range=None,  # fraction 0-1  [X]
-                 whether_contrast_range=None,  # fraction 0-1  [X]
-                 horizontal_flip=None,  # boolean  [X]
+                 whether_brightness_range=None,
+                 whether_saturation_range=None,
+                 whether_contrast_range=None,
+                 whether_translation=None,
+                 horizontal_flip=None,
                  vertical_flip=None,
                  gaussian_noise=None,
                  **kwargs):
@@ -285,6 +286,7 @@ class ImageAugmentation(Preprocessor):
         self.whether_brightness_range = whether_brightness_range
         self.whether_saturation_range = whether_saturation_range
         self.whether_contrast_range = whether_contrast_range
+        self.whether_translation = whether_translation
         self.horizontal_flip = horizontal_flip
         self.vertical_flip = vertical_flip
         self.gaussian_noise = gaussian_noise
@@ -334,6 +336,11 @@ class ImageAugmentation(Preprocessor):
             whether_contrast_range = self._hp.Choice('whether_contrast_range',
                                                      [True, False],
                                                      default=True)
+        whether_translation = self.whether_translation
+        if whether_translation is None:
+            whether_translation = self._hp.Choice('whether_translation',
+                                                  [True, False],
+                                                  default=True)
         horizontal_flip = self.horizontal_flip
         if horizontal_flip is None:
             horizontal_flip = self._hp.Choice('horizontal_flip',
@@ -393,6 +400,14 @@ class ImageAugmentation(Preprocessor):
             x = tf.image.resize(
                 tf.image.random_crop(x, size=crop_size, seed=seed),
                 size=target_shape)
+        if whether_translation:
+            offset_height = np.random.randint(low=1, high=target_height)
+            offset_width = np.random.randint(low=1, high=target_width)
+            x = tf.image.pad_to_bounding_box(x,
+                                             offset_height,
+                                             offset_width,
+                                             target_height,
+                                             target_width)
         if horizontal_flip:
             x = tf.image.flip_left_right(x)
         if vertical_flip:
