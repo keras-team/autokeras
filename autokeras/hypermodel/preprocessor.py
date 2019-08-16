@@ -270,7 +270,8 @@ class TextToNgramVector(Preprocessor):
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
     # Arguments
-        whether_rotation_range: Boolean. Whether rotate the image.
+        rotation_range: Int. Degree range for random rotations.
+            If unspecified, it will be tuned automatically.
         whether_random_crop: Boolean. Whether crop the image randomly.
         whether_brightness_range: Boolean. Whether tune the brightness of the image.
         whether_saturation_range: Boolean. Whether tune the saturation of the image.
@@ -282,7 +283,7 @@ class ImageAugmentation(Preprocessor):
     """
 
     def __init__(self,
-                 whether_rotation_range=None,
+                 rotation_range=None,
                  whether_random_crop=None,
                  whether_brightness_range=None,
                  whether_saturation_range=None,
@@ -293,7 +294,7 @@ class ImageAugmentation(Preprocessor):
                  gaussian_noise=None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.whether_rotation_range = whether_rotation_range
+        self.rotation_range = rotation_range
         self.whether_random_crop = whether_random_crop
         self.whether_brightness_range = whether_brightness_range
         self.whether_saturation_range = whether_saturation_range
@@ -323,11 +324,15 @@ class ImageAugmentation(Preprocessor):
             return x
         self._shape = x.shape
         target_height, target_width, channels = self._shape
-        whether_rotation_range = self.whether_rotation_range
-        if whether_rotation_range is None:
-            whether_rotation_range = self._hp.Choice('whether_rotation_range',
-                                                     [True, False],
-                                                     default=True)
+        rotation_range = self.rotation_range or self._hp.Choice('rotation_range',
+                                                                [0, 360],
+                                                                default=True)
+        if rotation_range > 0:
+            for _ in range(int(rotation_times)):
+                x = tf.image.rot90(
+                    x,
+                    k=int(np.random.randint(low=0, high=rotation_range) / 90))
+
         whether_random_crop = self.whether_random_crop
         if whether_random_crop is None:
             whether_random_crop = self._hp.Choice('whether_random_crop',
@@ -375,16 +380,6 @@ class ImageAugmentation(Preprocessor):
                                      stddev=1.0,
                                      dtype=tf.float32)
             x = tf.add(x, noise)
-        if whether_rotation_range:
-            rotation_range = np.random.randint(low=1, high=5)
-            if rotation_range == 1:
-                x = tf.image.rot90(x, k=1)
-            elif rotation_range == 2:
-                x = tf.image.rot90(x, k=2)
-            elif rotation_range == 3:
-                x = tf.image.rot90(x, k=3)
-            else:
-                x = tf.image.rot90(x, k=4)
         if whether_brightness_range:
             brightness_range = random.random()
             min_value, max_value = self._get_min_and_max(
