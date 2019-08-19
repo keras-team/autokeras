@@ -270,12 +270,11 @@ class TextToNgramVector(Preprocessor):
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
     # Arguments
-        rotation_range: Int. Degree range for random rotations.
-            If unspecified, it will be tuned automatically.
+        rotation_range: Int. The value can only be 0, 90, or 180. Degree range for random rotations. Default...
         whether_random_crop: Boolean. Whether crop the image randomly.
-        whether_brightness_range: Boolean. Whether tune the brightness of the image.
-        whether_saturation_range: Boolean. Whether tune the saturation of the image.
-        whether_contrast_range: Boolean. Whether tune the contrast of the image.
+        brightness_range: Boolean. Whether tune the brightness of the image.
+        saturation_range: Boolean. Whether tune the saturation of the image.
+        contrast_range: Boolean. Whether tune the contrast of the image.
         whether_translation: Boolean. Whether translate the image.
         horizontal_flip: Boolean. Whether flip the image horizontally.
         vertical_flip: Boolean. Whether flip the image vertically.
@@ -283,15 +282,15 @@ class ImageAugmentation(Preprocessor):
     """
 
     def __init__(self,
-                 rotation_range=None,
-                 whether_random_crop=None,
-                 whether_brightness_range=None,
-                 whether_saturation_range=None,
-                 whether_contrast_range=None,
-                 whether_translation=None,
-                 horizontal_flip=None,
-                 vertical_flip=None,
-                 gaussian_noise=None,
+                 rotation_range=180,
+                 random_crop=True,
+                 brightness_range=None,  # Change default value to some float. No hp is used.
+                 saturation_range=None,
+                 contrast_range=None,
+                 translation=True,
+                 horizontal_flip=True,
+                 vertical_flip=True,
+                 gaussian_noise=True,
                  **kwargs):
         super().__init__(**kwargs)
         self.rotation_range = rotation_range
@@ -325,13 +324,15 @@ class ImageAugmentation(Preprocessor):
         self._shape = x.shape
         target_height, target_width, channels = self._shape
         rotation_range = self.rotation_range or self._hp.Choice('rotation_range',
-                                                                [0, 360],
+                                                                [0, 90, 180],
                                                                 default=True)
-        if rotation_range > 0:
-            for _ in range(int(rotation_times)):
-                x = tf.image.rot90(
-                    x,
-                    k=int(np.random.randint(low=0, high=rotation_range) / 90))
+        if rotation_range == 0:
+            k_choices = {0}
+        elif rotation_range == 90:
+            k_choices = {0, 1, 3}
+        elif rotation_range == 180:
+            k_choices = {0, 1, 2, 3}
+        x = tf.image.rot90(x, k=random in k_choices)
 
         whether_random_crop = self.whether_random_crop
         if whether_random_crop is None:
