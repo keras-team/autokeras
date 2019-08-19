@@ -1,4 +1,4 @@
-<img src="https://github.com/keras-team/autokeras/blob/master/logo.png?raw=true" alt="drawing" width="400px" style="display: block; margin-left: auto; margin-right: auto"/>
+<img src="https://autokeras.com/img/row_red.svg" alt="drawing" width="400px" style="display: block; margin-left: auto; margin-right: auto"/>
 
 [![Build Status](https://travis-ci.org/keras-team/autokeras.svg?branch=master)](https://travis-ci.org/keras-team/autokeras)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/620bd322918c476aa33230ec911a4301)](https://www.codacy.com/app/jhfjhfj1/autokeras?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=keras-team/autokeras&amp;utm_campaign=Badge_Grade)
@@ -7,13 +7,24 @@
 
 Official Website: [autokeras.com](https://autokeras.com)
 
+##
+
 Auto-Keras is an open source software library for automated machine learning (AutoML).
 It is developed by <a href="http://faculty.cs.tamu.edu/xiahu/index.html" target="_blank" rel="nofollow">DATA Lab</a> at Texas A&M University and community contributors.
-The ultimate goal of AutoML is to provide easily accessible deep learning tools to domain experts with limited data science or machine learning background. 
+The ultimate goal of AutoML is to provide easily accessible deep learning tools to domain experts with limited data science or machine learning background.
 Auto-Keras provides functions to automatically search for architecture and hyperparameters of deep learning models.
 
 **Now we are refactoring the code on `master` branch for the next release.
 Please use the `legacy` branch if you want to checkout the 0.4 version.**
+
+## Installation
+
+To install the package, please use the `pip` installation as follows:
+
+    pip3 install autokeras
+
+**Note:** currently, Auto-Keras is only compatible with: **Python 3.6**.
+
 ## Example
 
 Here is a short example of using the package.
@@ -28,20 +39,17 @@ results = clf.predict(x_test)
 
 ## Cite this work
 
-Auto-Keras: An Efficient Neural Architecture Search System.
-Haifeng Jin, Qingquan Song, and Xia Hu.
-[arXiv:1806.10282](https://arxiv.org/abs/1806.10282).
+Haifeng Jin, Qingquan Song, and Xia Hu. "Auto-keras: An efficient neural architecture search system." Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining. ACM, 2019. ([Download](https://www.kdd.org/kdd2019/accepted-papers/view/auto-keras-an-efficient-neural-architecture-search-system))
 
 Biblatex entry:
 
-    @online{jin2018efficient,
-      author       = {Haifeng Jin and Qingquan Song and Xia Hu},
-      title        = {Auto-Keras: An Efficient Neural Architecture Search System},
-      date         = {2018-06-27},
-      year         = {2018},
-      eprintclass  = {cs.LG},
-      eprinttype   = {arXiv},
-      eprint       = {cs.LG/1806.10282},
+    @inproceedings{jin2019auto,
+      title={Auto-Keras: An Efficient Neural Architecture Search System},
+      author={Jin, Haifeng and Song, Qingquan and Hu, Xia},
+      booktitle={Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining},
+      pages={1946--1956},
+      year={2019},
+      organization={ACM}
     }
 
 ## Community
@@ -56,7 +64,7 @@ You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) fo
 You can follow the [Contributing Guide](https://autokeras.com/temp/contribute/) for details.
 The easist way to contribute is to resolve the issues with the "[call for contributors](https://github.com/keras-team/autokeras/labels/call%20for%20contributors)" tag.
 They are friendly to beginners.
- 
+
 ## Support Auto-Keras
 
 We accept donations on [Open Collective](https://opencollective.com/autokeras).
@@ -77,4 +85,4 @@ appreciated.
 
 ## Acknowledgements
 
-The authors gratefully acknowledge the D3M program of the Defense Advanced Research Projects Agency (DARPA) administered through AFRL contract FA8750-17-2-0116; the Texas A&M College of Engineering, and Texas A&M. 
+The authors gratefully acknowledge the D3M program of the Defense Advanced Research Projects Agency (DARPA) administered through AFRL contract FA8750-17-2-0116; the Texas A&M College of Engineering, and Texas A&M.
