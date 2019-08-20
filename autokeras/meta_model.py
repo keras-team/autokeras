@@ -7,13 +7,14 @@ from autokeras.hypermodel import hyperblock
 from autokeras.hypermodel import node
 
 
-def assemble(inputs, outputs, dataset):
+def assemble(inputs, outputs, dataset, seed=None):
     """Assemble the HyperBlocks based on the dataset and input output nodes.
 
     # Arguments
         inputs: A list of InputNode. The input nodes of the AutoModel.
         outputs: A list of HyperHead. The heads of the AutoModel.
         dataset: tf.data.Dataset. The training dataset.
+        seed: Int. Random seed.
 
     # Returns
         A list of HyperNode. The output nodes of the AutoModel.
@@ -25,7 +26,7 @@ def assemble(inputs, outputs, dataset):
         if isinstance(input_node, node.TextInput):
             assemblers.append(TextAssembler())
         if isinstance(input_node, node.ImageInput):
-            assemblers.append(ImageAssembler())
+            assemblers.append(ImageAssembler(seed=seed))
         if isinstance(input_node, node.StructuredInput):
             assemblers.append(StructuredDataAssembler())
         if isinstance(input_node, node.TimeSeriesInput):
@@ -122,7 +123,7 @@ class ImageAssembler(Assembler):
         # for image, use the num_instance to determine the range of the sizes of the
         # resnet and xception
         # use the image size to determine how the down sampling works, e.g. pooling.
-        return hyperblock.ImageBlock()(input_node)
+        return hyperblock.ImageBlock(seed=seed)(input_node)
 
 
 class StructuredDataAssembler(Assembler):

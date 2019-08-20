@@ -20,6 +20,8 @@ def test_normalize():
                               Tout=(tf.float64,))
 
     new_dataset = dataset.map(map_func)
+    for _ in new_dataset:
+        pass
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
@@ -40,7 +42,7 @@ def test_sequence():
 
     new_dataset = dataset.map(map_func)
     for _ in new_dataset:
-        break
+        pass
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
@@ -60,19 +62,16 @@ def test_ngram():
                               Tout=(tf.float64,))
 
     new_dataset = dataset.map(map_func)
+    for _ in new_dataset:
+        pass
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
 def test_augment():
     raw_images = tf.random.normal([1000, 32, 32, 3], mean=-1, stddev=4)
-    augmenter = preprocessor.ImageAugmentation()
+    augmenter = preprocessor.ImageAugmentation(seed=5)
     dataset = tf.data.Dataset.from_tensor_slices(raw_images)
     hp = kerastuner.HyperParameters()
-    block.set_hp_value(hp, 'whether_rotation_range', True)
-    block.set_hp_value(hp, 'whether_random_crop', True)
-    block.set_hp_value(hp, 'whether_brightness_range', True)
-    block.set_hp_value(hp, 'whether_saturation_range', True)
-    block.set_hp_value(hp, 'whether_contrast_range', True)
     augmenter.set_hp(hp)
 
     def map_func(x):
@@ -81,4 +80,6 @@ def test_augment():
                               Tout=(tf.float32,))
 
     new_dataset = dataset.map(map_func)
+    for _ in new_dataset:
+        pass
     assert isinstance(new_dataset, tf.data.Dataset)

@@ -270,21 +270,26 @@ class TextToNgramVector(Preprocessor):
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
     # Arguments
-        rotation_range: Int. The value can only be 0, 90, or 180. Degree range for random rotations. Default...
-        whether_random_crop: Boolean. Whether crop the image randomly.
-        brightness_range: Boolean. Whether tune the brightness of the image.
-        saturation_range: Boolean. Whether tune the saturation of the image.
-        contrast_range: Boolean. Whether tune the contrast of the image.
-        whether_translation: Boolean. Whether translate the image.
+        rotation_range: Int. The value can only be 0, 90, or 180.
+            Degree range for random rotations. Default to 180.
+        random_crop: Boolean. Whether crop the image randomly. Default to True.
+        brightness_range: Positive int.
+            Serve as 'max_delta' in tf.image.random_brightness. Default to 0.5.
+        saturation_range: Positive int or Tuple.
+            Serve as the bound of the tf.image.random_saturation. Default to 0.5.
+        contrast_range: Positive int or Tuple.
+            Serve as the bound of the tf.image.random_contrast. Default to 0.5.
+        translation: Boolean. Whether translate the image.
         horizontal_flip: Boolean. Whether flip the image horizontally.
         vertical_flip: Boolean. Whether flip the image vertically.
         gaussian_noise: Boolean. Whether add some gaussian noise to the image.
+        seed: Int. Seed for tf.image.random_*(). Default to None.
     """
 
     def __init__(self,
                  rotation_range=180,
                  random_crop=True,
-                 brightness_range=0.5,  # Change default value to some float. No hp is used.
+                 brightness_range=0.5,
                  saturation_range=0.5,
                  contrast_range=0.5,
                  translation=True,
