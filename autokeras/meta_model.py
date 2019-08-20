@@ -119,7 +119,7 @@ class TextAssembler(Assembler):
 
 class ImageAssembler(Assembler):
 
-    def assemble(self, input_node):
+    def assemble(self, input_node, seed=None):
         # for image, use the num_instance to determine the range of the sizes of the
         # resnet and xception
         # use the image size to determine how the down sampling works, e.g. pooling.
