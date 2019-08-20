@@ -158,29 +158,6 @@ PAGES = [
 
 ROOT = 'http://autokeras.com/'
 
-template_np_implementation = """# Numpy implementation
-
-    ```python
-{{code}}
-    ```
-"""
-
-template_hidden_np_implementation = """# Numpy implementation
-
-    <details>
-    <summary>Show the Numpy implementation</summary>
-
-    ```python
-{{code}}
-    ```
-
-    </details>
-"""
-
-if sys.version[0] == '2':
-    reload(sys)
-    sys.setdefaultencoding('utf8')
-
 keras_dir = pathlib.Path(__file__).resolve().parents[1]
 
 
@@ -405,23 +382,6 @@ def process_docstring(docstring):
     return docstring
 
 
-def add_np_implementation(function, docstring):
-    np_implementation = getattr(numpy_backend, function.__name__)
-    code = inspect.getsource(np_implementation)
-    code_lines = code.split('\n')
-    for i in range(len(code_lines)):
-        if code_lines[i]:
-            # if there is something on the line, add 8 spaces.
-            code_lines[i] = '        ' + code_lines[i]
-    code = '\n'.join(code_lines[:-1])
-
-    if len(code_lines) < 10:
-        section = template_np_implementation.replace('{{code}}', code)
-    else:
-        section = template_hidden_np_implementation.replace('{{code}}', code)
-    return docstring.replace('{{np_implementation}}', section)
-
-
 def read_file(path):
     with open(path) as f:
         return f.read()
@@ -448,9 +408,6 @@ def render_function(function, method=True):
     subblocks.append(code_snippet(signature))
     docstring = function.__doc__
     if docstring:
-        if ('backend' in signature and
-                '{{np_implementation}}' in docstring):
-            docstring = add_np_implementation(function, docstring)
         subblocks.append(process_docstring(docstring))
     return '\n\n'.join(subblocks)
 

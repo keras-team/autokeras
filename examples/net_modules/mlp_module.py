@@ -22,7 +22,10 @@ if __name__ == '__main__':
     x_test = np.squeeze(x_test.reshape((x_test.shape[0], -1)))
     y_train, y_encoder = transform_y(y_train)
     y_test, _ = transform_y(y_test)
-    mlpModule = MlpModule(loss=classification_loss, metric=Accuracy, searcher_args={}, verbose=True)
+    mlp_module = MlpModule(loss=classification_loss,
+                           metric=Accuracy,
+                           searcher_args={},
+                           verbose=True)
     # specify the fit args
     data_transformer = DataTransformerMlp(x_train)
     train_data = data_transformer.transform_train(x_train, y_train)
@@ -33,8 +36,8 @@ if __name__ == '__main__':
         "train_data": train_data,
         "test_data": test_data
     }
-    mlpModule.fit(n_output_node=fit_args.get("n_output_node"),
-                  input_shape=fit_args.get("input_shape"),
-                  train_data=fit_args.get("train_data"),
-                  test_data=fit_args.get("test_data"),
-                  time_limit=24 * 60 * 60)
+    mlp_module.fit(n_output_node=fit_args.get("n_output_node"),
+                   input_shape=fit_args.get("input_shape"),
+                   train_data=fit_args.get("train_data"),
+                   test_data=fit_args.get("test_data"),
+                   time_limit=24 * 60 * 60)

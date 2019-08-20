@@ -23,8 +23,6 @@ ignore =
     N806
     # blank line at end of file
     W391
-    # undefined name
-    F821
 
 
 max-line-length = 85
