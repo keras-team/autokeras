@@ -346,7 +346,7 @@ class XceptionBlock(Block, xception.HyperXception):
 
         hp.Choice('activation', ['relu', 'selu'])
         hp.Choice('initial_strides', [2])
-        hp.Range('num_residual_blocks', 2, 8, default=4)
+        hp.Int('num_residual_blocks', 2, 8, default=4)
         hp.Choice('pooling', ['avg', 'flatten', 'max'])
 
         set_hp_value(hp, 'activation', self.activation)

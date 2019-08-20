@@ -12,6 +12,7 @@ jobs:
         - if ! [[ -z $CODACY_PROJECT_TOKEN ]]; then
             python-codacy-coverage -r coverage.xml;
           fi
+        - pip install python-coveralls && coveralls
     -
       script:
         - pip install -e .[tests] --progress-bar off

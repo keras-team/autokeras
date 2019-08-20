@@ -14,7 +14,7 @@ setup(
     install_requires=[
         'tensorflow>=2.0.0b1',
         'scikit-learn',
-        'numpy==1.16.1',
+        'numpy',
     ],
     extras_require={
         'tests': ['pytest>=4.4.0',
