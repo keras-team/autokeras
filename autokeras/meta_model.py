@@ -138,7 +138,7 @@ class ImageAssembler(Assembler):
         # use the image size to determine how the down sampling works, e.g. pooling.
         block = hyperblock.ImageBlock()
         if max(self._shape[0], self._shape[1]) < 32:
-            if self._num_samples < 10000 and:
+            if self._num_samples < 10000:
                 self.hps.append(('Choice',
                                 [block.name + '_resnet/v1/conv4_depth', [6]],
                                 {'default': 6}))

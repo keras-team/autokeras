@@ -1,18 +1,29 @@
+import numpy as np
+import kerastuner
+import autokeras as ak
+
+
 def test_set_hp():
     x_train = np.random.rand(100, 32)
     y_train = np.random.rand(100, 1)
 
-    input_node = ak.Input()
+    input_node = ak.Input((32,))
     output_node = input_node
     output_node = ak.DenseBlock()(output_node)
-    output_node = ak.RegressionHead()(output_node)
+    head = ak.RegressionHead()
+    head.output_shape = (1,)
+    output_node = head(output_node)
 
-    graph = ak.hypermodel.graph.GraphHyperModel(
-        input_node,
-        output_node,
-        directory=tmp_dir,
-        max_trials=1)
-    graph.fit(x_train, y_train, epochs=1, validation_data=(x_train, y_train))
-    result = graph.predict(x_train)
+    graph = ak.hypermodel.graph.GraphHyperModel(input_node, output_node)
+    graph.set_hps([('Choice',
+                    ['dense_block_1/num_layers', [6]],
+                    {'default': 6})])
+    hp = kerastuner.HyperParameters()
+    graph.build(hp)
 
-    assert result.shape == (100, 1)
+    for single_hp in hp.space:
+        if single_hp.name == 'dense_block_1/num_layers':
+            assert len(single_hp.values) == 1
+            assert single_hp.values[0] == 6
+            return
+    assert False
