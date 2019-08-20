@@ -137,16 +137,20 @@ class ImageAssembler(Assembler):
         # resnet and xception
         # use the image size to determine how the down sampling works, e.g. pooling.
         block = hyperblock.ImageBlock()
-        if self._num_samples < 10000 and max(self._shape[0], self._shape[1]) <= 32:
-            self.hps.append(('Choice',
-                             [block.name + '_resnet/v1/conv4_depth', [6]],
-                             {'default': 6}))
-            self.hps.append(('Choice',
-                             [block.name + '_resnet/v2/conv4_depth', [6]],
-                             {'default': 6}))
-            self.hps.append(('Choice',
-                             [block.name + '_resnet/next/conv4_depth', [6]],
-                             {'default': 6}))
+        if max(self._shape[0], self._shape[1]) < 32:
+            if self._num_samples < 10000 and:
+                self.hps.append(('Choice',
+                                [block.name + '_resnet/v1/conv4_depth', [6]],
+                                {'default': 6}))
+                self.hps.append(('Choice',
+                                [block.name + '_resnet/v2/conv4_depth', [6]],
+                                {'default': 6}))
+                self.hps.append(('Choice',
+                                [block.name + '_resnet/next/conv4_depth', [6]],
+                                {'default': 6}))
+                self.hps.append(('Range',
+                                [block.name + '_xception/num_residual_blocks', 2, 4],
+                                {'default': 4}))
         return block(input_node)
 
 
