@@ -281,7 +281,7 @@ class ImageAugmentation(Preprocessor):
         gaussian_noise: Boolean. Whether add some gaussian noise to the image.
     """
 
-        def __init__(self,
+    def __init__(self,
                  rotation_range=180,
                  random_crop=True,
                  brightness_range=0.5,  # Change default value to some float. No hp is used.
