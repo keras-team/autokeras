@@ -20,7 +20,10 @@ if __name__ == '__main__':
     x_test = x_test.reshape(x_test.shape + (1,))
     y_train, y_encoder = transform_y(y_train)
     y_test, _ = transform_y(y_test)
-    cnnModule = CnnModule(loss=classification_loss, metric=Accuracy, searcher_args={}, verbose=True)
+    cnn_module = CnnModule(loss=classification_loss,
+                           metric=Accuracy,
+                           searcher_args={},
+                           verbose=True)
     # specify the fit args
     data_transformer = ImageDataTransformer(x_train, augment=True)
     train_data = data_transformer.transform_train(x_train, y_train)
@@ -31,8 +34,8 @@ if __name__ == '__main__':
         "train_data": train_data,
         "test_data": test_data
     }
-    cnnModule.fit(n_output_node=fit_args.get("n_output_node"),
-                  input_shape=fit_args.get("input_shape"),
-                  train_data=fit_args.get("train_data"),
-                  test_data=fit_args.get("test_data"),
-                  time_limit=24 * 60 * 60)
+    cnn_module.fit(n_output_node=fit_args.get("n_output_node"),
+                   input_shape=fit_args.get("input_shape"),
+                   train_data=fit_args.get("train_data"),
+                   test_data=fit_args.get("test_data"),
+                   time_limit=24 * 60 * 60)
