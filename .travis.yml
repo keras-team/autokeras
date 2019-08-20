@@ -9,7 +9,9 @@ jobs:
         - pip install git+git://github.com/keras-team/keras-tuner@master#egg=keras-tuner
         - pip install codacy-coverage
         - pytest tests --cov=autokeras --cov-report xml:coverage.xml
-        - python-codacy-coverage -r coverage.xml
+        - if [[ -z $CODACY_PROJECT_TOKEN ]]; then
+            python-codacy-coverage -r coverage.xml;
+          fi
     -
       script:
         - pip install -e .[tests] --progress-bar off
