@@ -21,9 +21,13 @@ def load_audio(path):
 class SpectrogramParser:
     def __init__(self, audio_conf, normalize=False, augment=False):
         """
-        Parses audio file into spectrogram with optional normalization and various augmentations
-        :param audio_conf: Dictionary containing the sample rate, window and the window length/stride in seconds
-        :param normalize(default False):  Apply standard mean and deviation normalization to audio tensor
+        Parses audio file into spectrogram with optional normalization
+        and various augmentations
+
+        :param audio_conf: Dictionary containing the sample rate,
+            window and the window length/stride in seconds
+        :param normalize(default False):  Apply standard mean and
+            deviation normalization to audio tensor
         :param augment(default False):  Apply random tempo and gain perturbations
         """
         super(SpectrogramParser, self).__init__()
@@ -61,7 +65,8 @@ if __name__ == '__main__':
     # First we need to parse the audio into tensor format
 
     # 1. initialize the parser as SpectrogramParser with audio_conf in Constant;
-    parser = SpectrogramParser(Constant.VOICE_RECONGINIZER_AUDIO_CONF, normalize=True)
+    parser = SpectrogramParser(Constant.VOICE_RECONGINIZER_AUDIO_CONF,
+                               normalize=True)
     # 2. given the audio path to the parser and parse the audio in the following way;
     spect = parser.parse_audio("data/test.wav").contiguous()
     voice_recognizer = VoiceRecognizer()

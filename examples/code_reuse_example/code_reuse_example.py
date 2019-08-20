@@ -31,8 +31,8 @@ model = Net(50, 100, 10)
 n_instance = 100
 batch_size = 32
 
-train_x = np.random.random((n_instance, 50))
-test_x = np.random.random((n_instance, 50))
+train_x = torch.Tensor(np.random.random((n_instance, 50)))
+test_x = torch.Tensor(np.random.random((n_instance, 50)))
 train_y = np.random.randint(0, 9, n_instance)
 test_y = np.random.randint(0, 9, n_instance)
 print(train_x.shape)
@@ -40,12 +40,16 @@ print(train_y.shape)
 
 encoder = OneHotEncoder()
 encoder.fit(train_y)
-train_y = encoder.transform(train_y)
-test_y = encoder.transform(test_y)
+train_y = torch.Tensor(encoder.transform(train_y))
+test_y = torch.Tensor(encoder.transform(test_y))
 
 compose_list = Compose([])
-train_data = DataLoader(MultiTransformDataset(torch.Tensor(train_x), torch.Tensor(train_y), compose_list), batch_size=batch_size, shuffle=False)
-test_data = DataLoader(MultiTransformDataset(torch.Tensor(test_x), torch.Tensor(test_y), compose_list), batch_size=batch_size, shuffle=False)
+train_data = DataLoader(MultiTransformDataset(train_x, train_y, compose_list),
+                        batch_size=batch_size,
+                        shuffle=False)
+test_data = DataLoader(MultiTransformDataset(test_x, test_y, compose_list),
+                       batch_size=batch_size,
+                       shuffle=False)
 
 model_trainer = ModelTrainer(model,
                              loss_function=classification_loss,
