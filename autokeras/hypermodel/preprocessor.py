@@ -291,23 +291,25 @@ class ImageAugmentation(Preprocessor):
                  horizontal_flip=True,
                  vertical_flip=True,
                  gaussian_noise=True,
-                 crop_seed=None,
+                 seed=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.rotation_range = rotation_range
         self.random_crop = random_crop
         self.brightness_range = brightness_range
-        self.saturation_range = saturation_range
-        self.contrast_range = contrast_range
+        self.saturation_range = self._get_min_and_max(saturation_range,
+                                                      'saturation_range')
+        self.contrast_range = self._get_min_and_max(contrast_range,
+                                                    'contrast_range')
         self.translation = translation
         self.horizontal_flip = horizontal_flip
         self.vertical_flip = vertical_flip
         self.gaussian_noise = gaussian_noise
-        self.crop_seed = crop_seed
+        self.seed = seed
         self._shape = None
 
     @staticmethod
-    def __get_min_and_max(value, name):
+    def _get_min_and_max(value, name):
         if isinstance(value, (tuple, list)):
             if len(value) != 2:
                 raise ValueError(
@@ -318,7 +320,7 @@ class ImageAugmentation(Preprocessor):
         else:
             min_value = 1. - value
             max_value = 1. + value
-        return min_value, max_value
+        return (min_value, max_value)
 
     def transform(self, x, fit=False):
         if not fit:
@@ -344,29 +346,22 @@ class ImageAugmentation(Preprocessor):
                          channels]
             target_shape = (target_height, target_width)
             x = tf.image.resize(
-                tf.image.random_crop(x, size=crop_size, seed=self.crop_seed),
+                tf.image.random_crop(x, size=crop_size, seed=self.seed),
                 size=target_shape)
 
         brightness_range = self.brightness_range
-        if brightness_range is not 0:
-            min_value, max_value = self._get_min_and_max(
-                brightness_range,
-                'brightness_range')
-            x = tf.image.random_brightness(x, min_value, max_value)
+        if brightness_range != 0:
+            x = tf.image.random_brightness(x, self.brightness_range, self.seed)
 
         saturation_range = self.saturation_range
-        if saturation_range is not 0:
-            min_value, max_value = self._get_min_and_max(
-                saturation_range,
-                'saturation_range')
-            x = tf.image.random_saturation(x, min_value, max_value)
+        if saturation_range != 0:
+            min_value, max_value = self.saturation_range
+            x = tf.image.random_saturation(x, min_value, max_value, self.seed)
 
         contrast_range = self.contrast_range
-        if contrast_range is not 0:
-            min_value, max_value = self._get_min_and_max(
-                contrast_range,
-                'saturation_range')
-            x = tf.image.random_contrast(x, min_value, max_value)
+        if contrast_range != 0:
+            min_value, max_value = self.contrast_range
+            x = tf.image.random_contrast(x, min_value, max_value, self.seed)
 
         translation = self.translation
         if translation:
@@ -396,7 +391,7 @@ class ImageAugmentation(Preprocessor):
         return x
 
     def output_types(self):
-        return tf.float32
+        return tf.float64,
 
     @property
     def output_shape(self):
@@ -404,3 +399,29 @@ class ImageAugmentation(Preprocessor):
 
     def update(self, x):
         pass
+
+    def get_state(self):
+        return {'rotation_range': self.rotation_range,
+                'random_crop': self.random_crop,
+                'brightness_range': self.brightness_range,
+                'saturation_range': self.saturation_range,
+                'contrast_range': self.contrast_range,
+                'translation': self.translation,
+                'horizontal_flip': self.horizontal_flip,
+                'vertical_flip': self.vertical_flip,
+                'gaussian_noise': self.gaussian_noise,
+                'seed': self.seed,
+                '_shape': self._shape}
+
+    def set_state(self, state):
+        self.rotation_range = state['rotation_range']
+        self.random_crop = state['random_crop']
+        self.brightness_range = state['brightness_range']
+        self.saturation_range = state['saturation_range']
+        self.contrast_range = state['contrast_range']
+        self.translation = state['translation']
+        self.horizontal_flip = state['horizontal_flip']
+        self.vertical_flip = state['vertical_flip']
+        self.gaussian_noise = state['gaussian_noise']
+        self.seed = state['seed']
+        self._shape = state['_shape']
