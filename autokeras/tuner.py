@@ -4,6 +4,7 @@ import inspect
 
 import kerastuner
 import tensorflow as tf
+from tensorflow.keras.callbacks import EarlyStopping
 
 
 class AutoTuner(kerastuner.Tuner):
@@ -36,6 +37,10 @@ class AutoTuner(kerastuner.Tuner):
         new_fit_kwargs['batch_size'] = None
         new_fit_kwargs['y'] = None
 
+        # Add earlystopping callback if necessary
+        callbacks = new_fit_kwargs.get('callbacks', [])[:]
+        new_fit_kwargs['callbacks'] = self.add_earlystopping_callback(callbacks)
+
         super().run_trial(trial, hp, [], new_fit_kwargs)
 
     def get_best_hp(self, num_models=1):
@@ -66,6 +71,31 @@ class AutoTuner(kerastuner.Tuner):
         filename = '%s-preprocessors' % trial.trial_id
         path = os.path.join(trial.directory, filename)
         self.hypermodel.load_preprocessors(path)
+
+    @staticmethod
+    def add_earlystopping_callback(callbacks):
+        if callbacks:
+            try:
+                callbacks = copy.deepcopy(callbacks)
+            except:
+                raise ValueError(
+                    'All callbacks used during a search '
+                    'should be deep-copyable (since they are '
+                    'reused across executions). '
+                    'It is not possible to do `copy.deepcopy(%s)`' %
+                    (callbacks,))
+
+            ealy_stopping_exist = False
+            for callback in callbacks:
+                if callback.__class__.__name__ == 'EarlyStopping':
+                    ealy_stopping_exist = True
+                    break
+            if not ealy_stopping_exist:
+                callbacks.append(EarlyStopping(patience=2))
+        else:
+            callbacks = [EarlyStopping(patience=2)]
+
+        return callbacks
 
 
 class RandomSearch(AutoTuner, kerastuner.RandomSearch):
