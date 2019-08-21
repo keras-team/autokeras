@@ -65,7 +65,7 @@ class ImageBlock(HyperBlock):
         if hp.Choice('normalize', [True, False], default=True):
             output_node = preprocessor.Normalization()(output_node)
         if hp.Choice('augment', [True, False], default=True):
-            output_node = preprocessor.ImageAugmentation(seed=seed)(output_node)
+            output_node = preprocessor.ImageAugmentation(seed=self.seed)(output_node)
         if block_type == 'resnet':
             output_node = block.ResNetBlock()(output_node)
         elif block_type == 'xception':

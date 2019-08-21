@@ -119,11 +119,14 @@ class TextAssembler(Assembler):
 
 class ImageAssembler(Assembler):
 
-    def assemble(self, input_node, seed=None):
+    def __init__(self, seed=None):
+        self.seed = seed
+
+    def assemble(self, input_node):
         # for image, use the num_instance to determine the range of the sizes of the
         # resnet and xception
         # use the image size to determine how the down sampling works, e.g. pooling.
-        return hyperblock.ImageBlock(seed=seed)(input_node)
+        return hyperblock.ImageBlock(seed=self.seed)(input_node)
 
 
 class StructuredDataAssembler(Assembler):
