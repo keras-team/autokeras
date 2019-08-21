@@ -1,5 +1,7 @@
-import numpy as np
 import kerastuner
+import numpy as np
+from kerastuner.engine import hyperparameters as hp_module
+
 import autokeras as ak
 
 
@@ -16,9 +18,7 @@ def test_set_hp():
 
     graph = ak.hypermodel.graph.GraphHyperModel(input_node, output_node)
     hp = kerastuner.HyperParameters()
-    graph.set_hps([('Choice',
-                    ['num_layers', [6]],
-                    {'default': 6})])
+    graph.set_hps([hp_module.Choice('num_layers', [6], default=6)])
     with hp.name_scope('dense_block_1'):
         graph.build(hp)
 

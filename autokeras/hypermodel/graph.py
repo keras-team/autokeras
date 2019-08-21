@@ -395,5 +395,8 @@ class GraphHyperModel(kerastuner.HyperModel):
         self._hps = hps
 
     def _init_hps(self, hp):
-        for hp_type, hp_args, hp_kwargs in self._hps:
-            getattr(hp, hp_type)(*hp_args, **hp_kwargs)
+        for single_hp in self._hps:
+            name = single_hp.name
+            if name not in hp.values:
+                hp.space.append(single_hp)
+                hp.values[name] = single_hp.value
