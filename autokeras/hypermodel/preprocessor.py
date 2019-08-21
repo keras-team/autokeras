@@ -371,10 +371,14 @@ class ImageAugmentation(Preprocessor):
 
         translation = self.translation
         if translation:
-            pad_top = np.random.randint(low=0, high=max(int(target_height*0.3), 1))
-            pad_left = np.random.randint(low=0, high=max(int(target_width*0.3), 1))
-            pad_bottom = np.random.randint(low=0, high=max(int(target_height*0.3), 1))
-            pad_right = np.random.randint(low=0, high=max(int(target_width*0.3), 1))
+            pad_top = np.random.randint(low=0,
+                                        high=max(int(target_height*0.3), 1))
+            pad_left = np.random.randint(low=0,
+                                         high=max(int(target_width*0.3), 1))
+            pad_bottom = np.random.randint(low=0,
+                                           high=max(int(target_height*0.3), 1))
+            pad_right = np.random.randint(low=0,
+                                          high=max(int(target_width*0.3), 1))
             x = tf.image.pad_to_bounding_box(x, pad_top, pad_left,
                                              target_height + pad_bottom + pad_top, 
                                              target_width + pad_right + pad_left)
