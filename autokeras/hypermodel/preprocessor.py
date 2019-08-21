@@ -330,16 +330,17 @@ class ImageAugmentation(Preprocessor):
     def transform(self, x, fit=False):
         if not fit:
             return x
+        np.random.seed(self.seed)
         self._shape = x.shape
         target_height, target_width, channels = self._shape
         rotation_range = self.rotation_range
         k_choices = {}
         if rotation_range == 0:
-            k_choices = {0}
+            k_choices = [0]
         elif rotation_range == 90:
-            k_choices = {0, 1, 3}
+            k_choices = [0, 1, 3]
         elif rotation_range == 180:
-            k_choices = {0, 1, 2, 3}
+            k_choices = [0, 1, 2, 3]
         x = tf.image.rot90(x, k=random.choice(k_choices))
 
         random_crop = self.random_crop
@@ -369,14 +370,14 @@ class ImageAugmentation(Preprocessor):
             x = tf.image.random_contrast(x, min_value, max_value, self.seed)
 
         translation = self.translation
-        if translation:
-            offset_height = np.random.randint(low=1, high=target_height)
-            offset_width = np.random.randint(low=1, high=target_width)
-            x = tf.image.pad_to_bounding_box(x,
-                                             offset_height,
-                                             offset_width,
-                                             target_height,
-                                             target_width)
+        # if translation:
+        #     offset_height = np.random.randint(low=0, high=target_height)
+        #     offset_width = np.random.randint(low=0, high=target_width)
+        #     x = tf.image.pad_to_bounding_box(x,
+        #                                      offset_height,
+        #                                      offset_width,
+        #                                      target_height,
+        #                                      target_width)
 
         horizontal_flip = self.horizontal_flip
         if horizontal_flip:
@@ -387,12 +388,12 @@ class ImageAugmentation(Preprocessor):
             x = tf.image.flip_up_down(x)
 
         gaussian_noise = self.gaussian_noise
-        if gaussian_noise:
-            noise = tf.random_normal(shape=tf.shape(x),
-                                     mean=0.0,
-                                     stddev=1.0,
-                                     dtype=tf.float32)
-            x = tf.add(x, noise)
+        # if gaussian_noise:
+        #     noise = tf.random_normal(shape=tf.shape(x),
+        #                              mean=0.0,
+        #                              stddev=1.0,
+        #                              dtype=tf.float32)
+        #     x = tf.add(x, noise)
         return x
 
     def output_types(self):

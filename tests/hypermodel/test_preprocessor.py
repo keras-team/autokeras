@@ -1,3 +1,4 @@
+import functools
 import kerastuner
 import numpy as np
 import tensorflow as tf
@@ -14,6 +15,9 @@ def test_normalize():
     for x in dataset:
         normalize.update(x)
     normalize.finalize()
+    normalize.set_state(normalize.get_state())
+    for a in dataset:
+        normalize.transform(a)
 
     def map_func(x):
         return tf.py_function(normalize.transform,
@@ -36,6 +40,9 @@ def test_sequence():
     for x in dataset:
         tokenize.update(x)
     tokenize.finalize()
+    tokenize.set_state(tokenize.get_state())
+    for a in dataset:
+        tokenize.transform(a)
 
     def map_func(x):
         return tf.py_function(tokenize.transform,
@@ -58,6 +65,9 @@ def test_ngram():
     for x in dataset:
         tokenize.update(x)
     tokenize.finalize()
+    tokenize.set_state(tokenize.get_state())
+    for a in dataset:
+        tokenize.transform(a)
 
     def map_func(x):
         return tf.py_function(tokenize.transform,
@@ -72,13 +82,16 @@ def test_ngram():
 
 def test_augment():
     raw_images = tf.random.normal([1000, 32, 32, 3], mean=-1, stddev=4)
-    augmenter = preprocessor.ImageAugmentation(seed=5)
+    augment = preprocessor.ImageAugmentation(seed=5)
     dataset = tf.data.Dataset.from_tensor_slices(raw_images)
     hp = kerastuner.HyperParameters()
-    augmenter.set_hp(hp)
+    augment.set_hp(hp)
+    augment.set_state(augment.get_state())
+    for a in dataset:
+        augment.transform(a, True)
 
     def map_func(x):
-        return tf.py_function(augmenter.transform,
+        return tf.py_function(functools.partial(augment.transform, fit=True),
                               inp=[x],
                               Tout=(tf.float32,))
 
