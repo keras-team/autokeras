@@ -390,13 +390,13 @@ class ImageAugmentation(Preprocessor):
             x = tf.image.flip_up_down(x)
 
         gaussian_noise = self.gaussian_noise
-        if gaussian_noise:
+        """ if gaussian_noise:
             noise = tf.random.normal(shape=tf.shape(x),
                                      mean=0.0,
                                      stddev=1.0,
                                      seed=self.seed,
                                      dtype=tf.float32)
-            x = tf.add(x, noise)
+            x = tf.add(x, noise) """
         return x
 
     def output_types(self):
