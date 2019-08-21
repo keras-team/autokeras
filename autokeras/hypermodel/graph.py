@@ -399,4 +399,4 @@ class GraphHyperModel(kerastuner.HyperModel):
             name = single_hp.name
             if name not in hp.values:
                 hp.space.append(single_hp)
-                hp.values[name] = single_hp.value
+                hp.values[name] = single_hp.default
