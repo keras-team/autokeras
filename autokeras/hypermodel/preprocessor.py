@@ -370,14 +370,16 @@ class ImageAugmentation(Preprocessor):
             x = tf.image.random_contrast(x, min_value, max_value, self.seed)
 
         translation = self.translation
-        # if translation:
-        #     offset_height = np.random.randint(low=0, high=target_height)
-        #     offset_width = np.random.randint(low=0, high=target_width)
-        #     x = tf.image.pad_to_bounding_box(x,
-        #                                      offset_height,
-        #                                      offset_width,
-        #                                      target_height,
-        #                                      target_width)
+        if translation:
+            pad_top = np.random.randint(low=0, high=target_height)
+            pad_left = np.random.randint(low=0, high=target_width)
+            pad_bottom = np.random.randint(low=0, high=target_height)
+            pad_right = np.random.randint(low=0, high=target_width)
+            x = tf.image.pad_to_bounding_box(x, pad_top, pad_left,
+                                             target_height + pad_bottom + pad_top, 
+                                             target_width + pad_right + pad_left)
+            x = tf.image.crop_to_bounding_box(x, pad_bottom, pad_right,
+                                              target_height, target_width)
 
         horizontal_flip = self.horizontal_flip
         if horizontal_flip:
