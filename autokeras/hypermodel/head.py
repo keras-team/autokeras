@@ -83,7 +83,7 @@ class ClassificationHead(Head):
         output_node = input_node
 
         dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
-                                                      [0, 0.25, 0.5],
+                                                      [0.0, 0.25, 0.5],
                                                       default=0)
 
         if dropout_rate > 0:
@@ -143,7 +143,7 @@ class RegressionHead(Head):
         output_node = input_node
 
         dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
-                                                      [0, 0.25, 0.5],
+                                                      [0.0, 0.25, 0.5],
                                                       default=0)
 
         if dropout_rate > 0:
