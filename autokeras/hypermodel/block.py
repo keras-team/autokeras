@@ -118,7 +118,7 @@ class DenseBlock(Block):
         use_bn = self.use_batchnorm or hp.Choice('use_batchnorm', [True, False],
                                                  default=False)
         dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
-                                                      [0, 0.25, 0.5],
+                                                      [0.0, 0.25, 0.5],
                                                       default=0)
 
         for i in range(num_layers):
