@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.util import nest
+import numpy as np
 
 from autokeras.hypermodel import block
 from autokeras.hypermodel import graph
@@ -126,7 +127,54 @@ class ImageAssembler(Assembler):
 
 
 class StructuredDataAssembler(Assembler):
-    pass
+
+    def __init__(self):
+        self.data_types = []
+        self.count_nan = None
+        self.count_numerical = None
+        self.count_categorical = None
+        self.count_unique_numerical = []
+        self.num_col = None
+
+    def update(self, x):
+        # TODO: Calculate the statistics.
+        x = nest.flatten(x)[0].numpy()
+        if self.num_col is None:
+            self.num_col = len(x)
+            self.count_nan = np.zeros(self.num_col)
+            self.count_numerical = np.zeros(self.num_col)
+            self.count_categorical = np.zeros(self.num_col)
+            for i in range(len(x)):
+                self.count_unique_numerical.append({})
+        for i in range(self.num_col):
+            x[i] = x[i].decode('utf-8')
+            if x[i] == 'nan':
+                self.count_nan[i] += 1
+            elif x[i] == 'True':
+                self.count_categorical[i] += 1
+            elif x[i] == 'False':
+                self.count_categorical[i] += 1
+            else:
+                try:
+                    tmp_num = float(x[i])
+                    self.count_numerical[i] += 1
+                    if tmp_num not in self.count_unique_numerical[i]:
+                        self.count_unique_numerical[i][tmp_num] = 1
+                    else:
+                        self.count_unique_numerical[i][tmp_num] += 1
+                except ValueError:
+                    self.count_categorical[i] += 1
+
+    def assemble(self, input_node):
+        # TODO: Infer the types of the columns. And pass them to StructuredDataBlock.
+        for i in range(self.num_col):
+            if self.count_categorical[i] > 0:
+                self.data_types.append('categorical')
+            elif len(self.count_unique_numerical[i])/self.count_numerical[i] < 0.05:
+                self.data_types.append('categorical')
+            else:
+                self.data_types.append('numerical')
+        return hyperblock.StructuredDataBlock(self.data_types)(input_node)
 
 
 class TimeSeriesAssembler(Assembler):

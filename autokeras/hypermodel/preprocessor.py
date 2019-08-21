@@ -264,3 +264,9 @@ class TextToNgramVector(Preprocessor):
         self._vectorizer.max_features = self._max_features
         self._texts = state['_texts']
         self._shape = state['_shape']
+
+
+class FeatureEngineering(Preprocessor):
+    # TODO:
+    def __init__(self, column_types, max_columns=1000):
+        pass

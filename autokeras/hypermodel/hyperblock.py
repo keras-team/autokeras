@@ -97,6 +97,9 @@ class TextBlock(HyperBlock):
 
 
 class StructuredDataBlock(HyperBlock):
+    # TODO:
+    def __init__(self, column_types):
+        super().__init__()
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
