@@ -394,7 +394,7 @@ class ImageAugmentation(Preprocessor):
             noise = tf.random.normal(shape=tf.shape(x),
                                      mean=0.0,
                                      stddev=1.0,
-                                     seed=self.seed
+                                     seed=self.seed,
                                      dtype=tf.float32)
             x = tf.add(x, noise)
         return x
