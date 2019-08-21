@@ -4,7 +4,6 @@ import inspect
 
 import kerastuner
 import tensorflow as tf
-from tensorflow.keras.callbacks import EarlyStopping
 
 
 class AutoTuner(kerastuner.Tuner):
@@ -74,26 +73,25 @@ class AutoTuner(kerastuner.Tuner):
 
     @staticmethod
     def add_earlystopping_callback(callbacks):
-        if callbacks:
-            try:
-                callbacks = copy.deepcopy(callbacks)
-            except:
-                raise ValueError(
-                    'All callbacks used during a search '
-                    'should be deep-copyable (since they are '
-                    'reused across executions). '
-                    'It is not possible to do `copy.deepcopy(%s)`' %
-                    (callbacks,))
+        if not callbacks:
+            callbacks = []
+        try:
+            callbacks = copy.deepcopy(callbacks)
+        except:
+            raise ValueError(
+                'All callbacks used during a search '
+                'should be deep-copyable (since they are '
+                'reused across executions). '
+                'It is not possible to do `copy.deepcopy(%s)`' %
+                (callbacks,))
 
-            ealy_stopping_exist = False
-            for callback in callbacks:
-                if callback.__class__.__name__ == 'EarlyStopping':
-                    ealy_stopping_exist = True
-                    break
-            if not ealy_stopping_exist:
-                callbacks.append(EarlyStopping(patience=2))
-        else:
-            callbacks = [EarlyStopping(patience=2)]
+        early_stopping_exist = False
+        for callback in callbacks:
+            if isinstance(callback, tf.keras.callbacks.EarlyStopping):
+                early_stopping_exist = True
+                break
+        if not early_stopping_exist:
+            callbacks.append(tf.keras.callbacks.EarlyStopping(patience=30))
 
         return callbacks
 
