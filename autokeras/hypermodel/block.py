@@ -12,7 +12,7 @@ from autokeras.hypermodel import node
 
 
 def set_hp_value(hp, name, value):
-    full_name = hp._get_full_name(name)
+    full_name = hp._get_name(name)
     hp.values[full_name] = value or hp.values[full_name]
 
 

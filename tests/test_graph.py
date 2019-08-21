@@ -15,11 +15,12 @@ def test_set_hp():
     output_node = head(output_node)
 
     graph = ak.hypermodel.graph.GraphHyperModel(input_node, output_node)
-    graph.set_hps([('Choice',
-                    ['dense_block_1/num_layers', [6]],
-                    {'default': 6})])
     hp = kerastuner.HyperParameters()
-    graph.build(hp)
+    graph.set_hps([('Choice',
+                    ['num_layers', [6]],
+                    {'default': 6})])
+    with hp.name_scope('dense_block_1'):
+        graph.build(hp)
 
     for single_hp in hp.space:
         if single_hp.name == 'dense_block_1/num_layers':
