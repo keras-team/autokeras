@@ -122,6 +122,7 @@ class TextAssembler(Assembler):
 
 
 class ImageAssembler(Assembler):
+    """Assembles the ImageBlock based on training dataset."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -133,9 +134,6 @@ class ImageAssembler(Assembler):
         self._num_samples += 1
 
     def assemble(self, input_node):
-        # for image, use the num_instance to determine the range of the sizes of the
-        # resnet and xception
-        # use the image size to determine how the down sampling works, e.g. pooling.
         block = hyperblock.ImageBlock()
         if max(self._shape[0], self._shape[1]) < 32:
             if self._num_samples < 10000:
