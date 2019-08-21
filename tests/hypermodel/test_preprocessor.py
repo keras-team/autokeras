@@ -13,6 +13,7 @@ def test_normalize():
     normalize.set_hp(kerastuner.HyperParameters())
     for x in dataset:
         normalize.update(x)
+    normalize.finalize()
 
     def map_func(x):
         return tf.py_function(normalize.transform,
@@ -34,6 +35,7 @@ def test_sequence():
     tokenize.set_hp(kerastuner.HyperParameters())
     for x in dataset:
         tokenize.update(x)
+    tokenize.finalize()
 
     def map_func(x):
         return tf.py_function(tokenize.transform,
@@ -55,6 +57,7 @@ def test_ngram():
     tokenize.set_hp(kerastuner.HyperParameters())
     for x in dataset:
         tokenize.update(x)
+    tokenize.finalize()
 
     def map_func(x):
         return tf.py_function(tokenize.transform,
