@@ -126,17 +126,15 @@ class TextAssembler(Assembler):
 class ImageAssembler(Assembler):
     """Assembles the ImageBlock based on training dataset."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
+        self.seed = seed
         self._shape = None
         self._num_samples = 0
 
     def update(self, x):
         self._shape = x.shape
         self._num_samples += 1
-
-    def __init__(self, seed=None):
-        self.seed = seed
 
     def assemble(self, input_node):
         block = hyperblock.ImageBlock(seed=self.seed)
