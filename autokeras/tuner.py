@@ -88,6 +88,7 @@ class AutoTuner(kerastuner.Tuner):
 
         if not [callback for callback in callbacks
                 if isinstance(callback, tf.keras.callbacks.EarlyStopping)]:
+            # The patience is set to 30 based on human experience.
             callbacks.append(tf.keras.callbacks.EarlyStopping(patience=30))
 
         return callbacks
