@@ -218,7 +218,7 @@ class TextToNgramVector(Preprocessor):
         self._texts = []
         self._shape = None
 
-    def update(self, x):
+    def update(self, x, y=None):
         # TODO: Implement a sequential version fit for both
         #  TfidfVectorizer and SelectKBest
         self._texts.append(nest.flatten(x)[0].numpy().decode('utf-8'))
@@ -264,3 +264,37 @@ class TextToNgramVector(Preprocessor):
         self._vectorizer.max_features = self._max_features
         self._texts = state['_texts']
         self._shape = state['_shape']
+
+
+class LgbmModule(Preprocessor):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data = []
+        self.label = []
+        pass
+
+    def update(self, x, y=None):
+        pass
+        # TODO:y = one-hot
+
+    def finalize(self):
+        pass
+        # TODO:decode y
+
+    def transform(self, x, fit=False):
+        pass
+        # TODO:encode y
+
+    def output_types(self):
+        pass
+
+    @property
+    def output_shape(self):
+        pass
+
+    def get_state(self):
+        pass
+
+    def set_state(self, state):
+        pass

@@ -542,3 +542,34 @@ class EmbeddingBlock(Block):
                 input_length=const.Constant.VOCABULARY_SIZE,
                 trainable=True)
         return layer(input_node)
+
+
+class IdentityLayer(tf.keras.layers.Layer):
+    def compute_output_signature(self, input_signature):
+        return input_signature
+
+    def call(self, inputs, *args, **kwargs):
+        return tf.identity(inputs)
+
+
+class IdentityBlock(Block):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        pass
+
+    def build(self, hp, inputs=None):
+        idlayer = IdentityLayer()
+        return idlayer(inputs)
+
+
+if __name__ == '__main__':
+    # idlayer = IdentityLayer()
+    # inputs = tf.keras.Input(shape=(10, 5))
+    # output = idlayer(inputs)
+    # model = tf.keras.Model(inputs, output)
+    # model.compile(optimizer='adam',
+    #               loss='categorical_crossentropy',
+    #               metrics=['accuracy'])
+    # x = tf.zeros([100, 10, 5])
+    # y = tf.zeros([100, 10, 5])
+    # model.fit(x, y, epochs=10)
