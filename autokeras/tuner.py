@@ -37,7 +37,7 @@ class AutoTuner(kerastuner.Tuner):
         new_fit_kwargs['y'] = None
 
         # Add earlystopping callback if necessary
-        callbacks = new_fit_kwargs.get('callbacks', [])[:]
+        callbacks = new_fit_kwargs.get('callbacks', [])
         new_fit_kwargs['callbacks'] = self.add_earlystopping_callback(callbacks)
 
         super().run_trial(trial, hp, [], new_fit_kwargs)
