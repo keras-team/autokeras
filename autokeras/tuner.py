@@ -75,6 +75,7 @@ class AutoTuner(kerastuner.Tuner):
     def add_earlystopping_callback(callbacks):
         if not callbacks:
             callbacks = []
+
         try:
             callbacks = copy.deepcopy(callbacks)
         except:
@@ -85,12 +86,8 @@ class AutoTuner(kerastuner.Tuner):
                 'It is not possible to do `copy.deepcopy(%s)`' %
                 (callbacks,))
 
-        early_stopping_exist = False
-        for callback in callbacks:
-            if isinstance(callback, tf.keras.callbacks.EarlyStopping):
-                early_stopping_exist = True
-                break
-        if not early_stopping_exist:
+        if not [callback for callback in callbacks
+                if isinstance(callback, tf.keras.callbacks.EarlyStopping)]:
             callbacks.append(tf.keras.callbacks.EarlyStopping(patience=30))
 
         return callbacks
