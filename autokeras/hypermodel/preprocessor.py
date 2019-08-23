@@ -276,14 +276,20 @@ class ImageAugmentation(Preprocessor):
         random_crop: Boolean. Whether to crop the image randomly. Default to True.
         brightness_range: Positive float.
             Serve as 'max_delta' in tf.image.random_brightness. Default to 0.5.
+            Equivalent to adjust brightness using a 'delta' randomly picked in
+            the interval [-max_delta, max_delta).
         saturation_range: Positive float or Tuple.
-            Serve as the bound of the tf.image.random_saturation. Default to 0.5.
+            If given a positive float, _get_min_and_max() will automated generate
+            a tuple for saturation range. If given a tuple directly, it will serve
+            as a range for picking a brightness shift value from. Default to 0.5.
         contrast_range: Positive float or Tuple.
-            Serve as the bound of the tf.image.random_contrast. Default to 0.5.
+            If given a positive float, _get_min_and_max() will automated generate
+            a tuple for contrast range. If given a tuple directly, it will serve
+            as a range for picking a contrast shift value from. Default to 0.5.
         translation: Boolean. Whether to translate the image.
         horizontal_flip: Boolean. Whether to flip the image horizontally.
         vertical_flip: Boolean. Whether to flip the image vertically.
-        gaussian_noise: Boolean. Whether to add some gaussian noise to the image.
+        gaussian_noise: Boolean. Whether to add gaussian noise to the image.
         seed: Int. Seed for tf.image.random_*(). Default to None.
     """
 
@@ -411,7 +417,7 @@ class ImageAugmentation(Preprocessor):
     def output_shape(self):
         return self.inputs[0].shape
 
-    def update(self, x):
+    def update(self, x, y=None):
         pass
 
     def get_state(self):
