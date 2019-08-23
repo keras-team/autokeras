@@ -46,9 +46,10 @@ class SpectrogramParser:
         win_length = n_fft
         hop_length = int(self.sample_rate * self.window_stride)
         # STFT
-        D = librosa.stft(y, n_fft=n_fft, hop_length=hop_length,
-                         win_length=win_length, window=self.window)
-        spect, _ = librosa.magphase(D)
+        spect, _ = librosa.magphase(librosa.stft(y, n_fft=n_fft,
+                                                 hop_length=hop_length,
+                                                 win_length=win_length,
+                                                 window=self.window))
         # S = log(S+1)
         spect = np.log1p(spect)
         spect = torch.FloatTensor(spect)
