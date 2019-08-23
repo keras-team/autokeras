@@ -26,12 +26,12 @@ def test_structured_data_assembler():
         [6, True, 'ab'],
     ])
     data = np.array([
-        [1, True, 'ab',1.1],
-        [1, False, 'cd',2.2],
-        [1, True, 'ef',2.1],
-        [1, True, 'gh','a'],
-        [1, False, np.nan,3.3],
-        [1, True, 'ab',3.4],
+        [1, True, 'ab', 1.1],
+        [1, False, 'cd', 2.2],
+        [1, True, 'ef', 2.1],
+        [1, True, 'gh', 'a'],
+        [1, False, np.nan, 3.3],
+        [1, True, 'ab', 3.4],
         [1, True, 'ab', 1.1],
         [1, False, 'cd', 2.2],
         [1, True, 'ef', 2.1],
@@ -54,7 +54,6 @@ def test_structured_data_assembler():
     dataset = tf.data.Dataset.from_tensor_slices(data)
     assembler = meta_model.StructuredDataAssembler()
     for line in dataset:
-        print('updating'+repr(line)+'...')
         assembler.update(line)
 
     assembler.assemble(node.Input())

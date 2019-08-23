@@ -168,6 +168,7 @@ class TextRegressor(SupervisedTextPipeline):
             directory=directory,
             seed=seed)
 
+
 class SupervisedStructuredDataPipeline(auto_model.AutoModel):
     
     def __init__(self, outputs, **kwargs):
@@ -186,7 +187,8 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
-        name: String. The name of the AutoModel. Defaults to 'structured_data_classifier'.
+        name: String. The name of the AutoModel. Defaults to 
+            'structured_data_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
@@ -195,14 +197,14 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
         seed: Int. Random seed.
     """
     def __init__(self,
-                num_classes=None,
-                multi_label=False,
-                loss=None,
-                metrics=None,
-                name='structured_data_classifier',
-                max_trials=100,
-                directory=None,
-                seed=None):
+                 num_classes=None,
+                 multi_label=False,
+                 loss=None,
+                 metrics=None,
+                 name='structured_data_classifier',
+                 max_trials=100,
+                 directory=None,
+                 seed=None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
                                             multi_label=multi_label,
@@ -224,7 +226,8 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
-        name: String. The name of the AutoModel. Defaults to 'structured_data_classifier'.
+        name: String. The name of the AutoModel. Defaults to 
+            'structured_data_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
