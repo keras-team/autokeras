@@ -46,12 +46,24 @@ class ImageBlock(HyperBlock):
 
     # Arguments
         block_type: String. 'resnet', 'xception', 'vanilla'. The type of HyperBlock
-            to use. If left unspecified, it will be tuned automatically.
+            to use. If unspecified, it will be tuned automatically.
+        normalize: Boolean. Whether to channel-wise normalize the images.
+            If unspecified, it will be tuned automatically.
+        augment: Boolean. Whether to do image augmentation. If unspecified,
+            it will be tuned automatically.
     """
 
-    def __init__(self, block_type=None, **kwargs):
+    def __init__(self,
+                 block_type=None,
+                 normalize=True,
+                 augment=True,
+                 seed=None,
+                 **kwargs):
         super().__init__(**kwargs)
         self.block_type = block_type
+        self.normalize = normalize
+        self.augment = augment
+        self.seed = seed
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
@@ -61,6 +73,14 @@ class ImageBlock(HyperBlock):
                                                   ['resnet', 'xception', 'vanilla'],
                                                   default='resnet')
 
+        normalize = self.normalize or hp.Choice('normalize',
+                                                [True, False],
+                                                default=True)
+        augment = self.augment or hp.Choice('augment', [True, False], default=True)
+        if normalize:
+            output_node = preprocessor.Normalization()(output_node)
+        if augment:
+            output_node = preprocessor.ImageAugmentation(seed=self.seed)(output_node)
         sub_block_name = self.name + '_' + block_type
         if block_type == 'resnet':
             output_node = block.ResNetBlock(name=sub_block_name)(output_node)

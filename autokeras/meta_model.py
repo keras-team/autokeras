@@ -9,13 +9,14 @@ from autokeras.hypermodel import hyperblock
 from autokeras.hypermodel import node
 
 
-def assemble(inputs, outputs, dataset):
+def assemble(inputs, outputs, dataset, seed=None):
     """Assemble the HyperBlocks based on the dataset and input output nodes.
 
     # Arguments
         inputs: A list of InputNode. The input nodes of the AutoModel.
         outputs: A list of HyperHead. The heads of the AutoModel.
         dataset: tf.data.Dataset. The training dataset.
+        seed: Int. Random seed.
 
     # Returns
         A list of HyperNode. The output nodes of the AutoModel.
@@ -27,7 +28,7 @@ def assemble(inputs, outputs, dataset):
         if isinstance(input_node, node.TextInput):
             assemblers.append(TextAssembler())
         if isinstance(input_node, node.ImageInput):
-            assemblers.append(ImageAssembler())
+            assemblers.append(ImageAssembler(seed=seed))
         if isinstance(input_node, node.StructuredInput):
             assemblers.append(StructuredDataAssembler())
         if isinstance(input_node, node.TimeSeriesInput):
@@ -126,8 +127,9 @@ class TextAssembler(Assembler):
 class ImageAssembler(Assembler):
     """Assembles the ImageBlock based on training dataset."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
+        self.seed = seed
         self._shape = None
         self._num_samples = 0
 
@@ -136,7 +138,7 @@ class ImageAssembler(Assembler):
         self._num_samples += 1
 
     def assemble(self, input_node):
-        block = hyperblock.ImageBlock()
+        block = hyperblock.ImageBlock(seed=self.seed)
         if max(self._shape[0], self._shape[1]) < 32:
             if self._num_samples < 10000:
                 self.hps.append(hp_module.Choice(
