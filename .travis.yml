@@ -18,7 +18,7 @@ jobs:
         - pip install -e .[tests] --progress-bar off
         - pip install git+git://github.com/keras-team/keras-tuner@master#egg=keras-tuner
         - flake8
-    - stage: deploy
+    -
       script:
         - pip install -e .[tests] --progress-bar off
         - pip install git+git://github.com/keras-team/keras-tuner@master#egg=keras-tuner
@@ -34,7 +34,7 @@ jobs:
           target-branch: gh-pages
           on:
             branch: master
-    -
+    - stage: deploy
       script:
         - python --version
       deploy:

@@ -61,7 +61,7 @@ You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) fo
 
 ## Contributing Code
 
-You can follow the [Contributing Guide](https://autokeras.com/temp/contribute/) for details.
+You can follow the [Contributing Guide](https://autokeras.com/contributing/) for details.
 The easist way to contribute is to resolve the issues with the "[call for contributors](https://github.com/keras-team/autokeras/labels/call%20for%20contributors)" tag.
 They are friendly to beginners.
 

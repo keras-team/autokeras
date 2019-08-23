@@ -37,11 +37,12 @@ class Preprocessor(block.Block):
         """
         self._hp = hp
 
-    def update(self, x):
+    def update(self, x, y=None):
         """Incrementally fit the preprocessor with a single training instance.
 
         # Arguments
             x: EagerTensor. A single instance in the training dataset.
+            y: EagerTensor. The targets of the tasks. Defaults to None.
         """
         raise NotImplementedError
 
@@ -108,7 +109,7 @@ class Normalization(Preprocessor):
         self.std = None
         self._shape = None
 
-    def update(self, x):
+    def update(self, x, y=None):
         x = nest.flatten(x)[0].numpy()
         self.sum += x
         self.square_sum += np.square(x)
@@ -167,7 +168,7 @@ class TextToIntSequence(Preprocessor):
         self._tokenizer = tf.keras.preprocessing.text.Tokenizer(
             num_words=const.Constant.VOCABULARY_SIZE)
 
-    def update(self, x):
+    def update(self, x, y=None):
         sentence = nest.flatten(x)[0].numpy().decode('utf-8')
         self._tokenizer.fit_on_texts([sentence])
         sequence = self._tokenizer.texts_to_sequences([sentence])[0]
@@ -219,7 +220,7 @@ class TextToNgramVector(Preprocessor):
         self._texts = []
         self._shape = None
 
-    def update(self, x):
+    def update(self, x, y=None):
         # TODO: Implement a sequential version fit for both
         #  TfidfVectorizer and SelectKBest
         self._texts.append(nest.flatten(x)[0].numpy().decode('utf-8'))
