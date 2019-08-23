@@ -8,6 +8,7 @@ from autokeras.hypermodel.block import Merge
 from autokeras.hypermodel.block import ResNetBlock
 from autokeras.hypermodel.block import RNNBlock
 from autokeras.hypermodel.block import XceptionBlock
+from autokeras.hypermodel.block import IdentityBlock
 from autokeras.hypermodel.head import ClassificationHead
 from autokeras.hypermodel.head import RegressionHead
 from autokeras.hypermodel.hyperblock import ImageBlock
@@ -18,6 +19,7 @@ from autokeras.hypermodel.node import TextInput
 from autokeras.hypermodel.preprocessor import Normalize
 from autokeras.hypermodel.preprocessor import TextToIntSequence
 from autokeras.hypermodel.preprocessor import TextToNgramVector
+from autokeras.hypermodel.preprocessor import LgbmModule
 from autokeras.task import ImageClassifier
 from autokeras.task import ImageRegressor
 from autokeras.task import TextClassifier

@@ -178,8 +178,8 @@ class AutoModel(object):
             if (isinstance(hyper_head, head.ClassificationHead) and
                     utils.is_label(temp_y)):
                 label_encoder = utils.OneHotEncoder()
-                label_encoder.fit(y)
-                new_y.append(label_encoder.transform(y))
+                label_encoder.fit_with_labels(y)
+                new_y.append(label_encoder.encode(y))
                 self._label_encoders.append(label_encoder)
             else:
                 new_y.append(temp_y)
@@ -192,7 +192,7 @@ class AutoModel(object):
         new_y = []
         for temp_y, label_encoder in zip(y, self._label_encoders):
             if label_encoder:
-                new_y.append(label_encoder.inverse_transform(temp_y))
+                new_y.append(label_encoder.decode(temp_y))
             else:
                 new_y.append(temp_y)
         return new_y

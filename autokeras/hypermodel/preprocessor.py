@@ -1,10 +1,13 @@
 import numpy as np
 import tensorflow as tf
+import lightgbm as lgb
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
+from tensorflow.python.keras.utils import to_categorical
 
 from autokeras import const
+from autokeras import utils
 from autokeras.hypermodel import block
 
 
@@ -273,26 +276,52 @@ class LgbmModule(Preprocessor):
         super().__init__(**kwargs)
         self.data = []
         self.label = []
-        pass
+        self.param = dict()
+        self._one_hot_encoder = None
+        self.y_shape = None
 
     def update(self, x, y=None):
-        pass
-        # TODO:y = one-hot
+        x = nest.flatten(x)[0].numpy()
+        self.y_shape = np.shape(y)
+        y = nest.flatten(y)[0].numpy()
+        self.data.append(x)
+
+        if not self._one_hot_encoder:
+            self._one_hot_encoder = utils.OneHotEncoder()
+            self._one_hot_encoder.fit_with_one_hot_encoded(np.array([x]))
+        self.label.append(self._one_hot_encoder.decode(y))
 
     def finalize(self):
-        pass
-        # TODO:decode y
+        self.data = np.asarray(self.data)
+        self.label = np.asarray(self.label)
+        train_data = lgb.Dataset(self.data, self.label)
+        validation_data = train_data.create_valid('validation.svm')
+        self.param.update({'boosting_type': ['gbdt'],
+                           'min_child_weight': [5],
+                           'min_split_gain': [1.0],
+                           'subsample': [0.8],
+                           'colsample_bytree': [0.6],
+                           'max_depth': [10],
+                           'num_leaves': [70],
+                           'learning_rate': [0.04]})
+        self.param['metric'] = 'auc'
+        num_round = 10
+        bst = lgb.train(self.param, train_data, num_round,
+                        valid_sets=[validation_data])
+        bst.save_model('lgbmodel')
 
     def transform(self, x, fit=False):
-        pass
-        # TODO:encode y
+        bst = lgb.Booster(model_file='lgbmodel')
+        ypred = bst.predict(x.numpy())
+        y = self._one_hot_encoder.encode(ypred)
+        return y
 
     def output_types(self):
-        pass
+        return tf.int32,
 
     @property
     def output_shape(self):
-        pass
+        return self.y_shape
 
     def get_state(self):
         pass
