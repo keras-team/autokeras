@@ -55,7 +55,8 @@ class AutoModel(object):
     def _meta_build(self, dataset):
         self.hypermodel = meta_model.assemble(inputs=self.inputs,
                                               outputs=self.outputs,
-                                              dataset=dataset)
+                                              dataset=dataset,
+                                              seed=self.seed)
         self.outputs = self.hypermodel.outputs
 
     def fit(self,

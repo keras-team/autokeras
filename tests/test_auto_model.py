@@ -62,14 +62,14 @@ def test_preprocessing(_, tmp_dir):
     y_train = np.random.rand(100, 1)
 
     input_node1 = ak.Input()
-    temp_node1 = ak.Normalize()(input_node1)
+    temp_node1 = ak.Normalization()(input_node1)
     output_node1 = ak.DenseBlock()(temp_node1)
 
-    output_node3 = ak.Normalize()(temp_node1)
+    output_node3 = ak.Normalization()(temp_node1)
     output_node3 = ak.DenseBlock()(output_node3)
 
     input_node2 = ak.Input()
-    output_node2 = ak.Normalize()(input_node2)
+    output_node2 = ak.Normalization()(input_node2)
     output_node2 = ak.DenseBlock()(output_node2)
 
     output_node = ak.Merge()([output_node1, output_node2, output_node3])
