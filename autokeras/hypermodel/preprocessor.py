@@ -272,17 +272,17 @@ class ImageAugmentation(Preprocessor):
     # Arguments
         rotation_range: Int. The value can only be 0, 90, or 180.
             Degree range for random rotations. Default to 180.
-        random_crop: Boolean. Whether crop the image randomly. Default to True.
-        brightness_range: Positive int.
+        random_crop: Boolean. Whether to crop the image randomly. Default to True.
+        brightness_range: Positive float.
             Serve as 'max_delta' in tf.image.random_brightness. Default to 0.5.
-        saturation_range: Positive int or Tuple.
+        saturation_range: Positive float or Tuple.
             Serve as the bound of the tf.image.random_saturation. Default to 0.5.
-        contrast_range: Positive int or Tuple.
+        contrast_range: Positive float or Tuple.
             Serve as the bound of the tf.image.random_contrast. Default to 0.5.
-        translation: Boolean. Whether translate the image.
-        horizontal_flip: Boolean. Whether flip the image horizontally.
-        vertical_flip: Boolean. Whether flip the image vertically.
-        gaussian_noise: Boolean. Whether add some gaussian noise to the image.
+        translation: Boolean. Whether to translate the image.
+        horizontal_flip: Boolean. Whether to flip the image horizontally.
+        vertical_flip: Boolean. Whether to flip the image vertically.
+        gaussian_noise: Boolean. Whether to add some gaussian noise to the image.
         seed: Int. Seed for tf.image.random_*(). Default to None.
     """
 
