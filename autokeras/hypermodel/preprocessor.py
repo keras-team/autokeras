@@ -281,7 +281,7 @@ class ImageAugmentation(Preprocessor):
         saturation_range: Positive float or Tuple.
             If given a positive float, _get_min_and_max() will automated generate
             a tuple for saturation range. If given a tuple directly, it will serve
-            as a range for picking a brightness shift value from. Default to 0.5.
+            as a range for picking a saturation shift value from. Default to 0.5.
         contrast_range: Positive float or Tuple.
             If given a positive float, _get_min_and_max() will automated generate
             a tuple for contrast range. If given a tuple directly, it will serve
