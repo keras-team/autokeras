@@ -273,7 +273,7 @@ class TextToNgramVector(Preprocessor):
 class LgbmModule(Preprocessor):
     """Collect data, train and test the LightGBM."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, task, **kwargs):
         super().__init__(**kwargs)
         self.data = []
         self.label = []
@@ -281,6 +281,7 @@ class LgbmModule(Preprocessor):
         self.param = dict()
         self._one_hot_encoder = None
         self.y_shape = None
+        self.task = task
 
     def update(self, x, y=None):
         y = nest.flatten(y)[0].numpy()
@@ -304,11 +305,12 @@ class LgbmModule(Preprocessor):
                            'colsample_bytree': [0.6],
                            'max_depth': [10],
                            'num_leaves': [70],
-                           'learning_rate': [0.04]})
+                           'learning_rate': [0.04],})
         self.param['metric'] = 'auc'
         num_round = 10
         # self.lgbm = lgb.train(self.param, train_data, num_round)
-        self.lgbm.set_params(objective='regression')
+        self.lgbm.set_params(objective=self.task)
+        print(label)
         self.lgbm.fit(X=np.asarray(self.data), y=label)
 
     def transform(self, x, fit=False):
@@ -329,7 +331,8 @@ class LgbmModule(Preprocessor):
 
     def set_state(self, state):
         pass
-        
+
+
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
     # Arguments

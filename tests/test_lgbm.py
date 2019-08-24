@@ -13,18 +13,18 @@ def test_lgbm(tmp_dir):
     x_train = np.random.rand(10, 32)
     y_train = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                        [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
                         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+                        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0]])
 
     input_node = ak.Input()
     output_node = input_node
-    output_node = ak.LgbmModule()(output_node)
+    output_node = ak.LgbmModule(task='multiclass')(output_node)
     block = ak.IdentityBlock()
     output_node = block(output_node)
     output_node = ak.EmptyHead(loss='categorical_crossentropy',
