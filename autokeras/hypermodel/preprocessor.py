@@ -83,10 +83,19 @@ class Preprocessor(block.Block):
         """Training process of the preprocessor after update with all instances."""
         pass
 
-    def get_state(self):
+    def get_config(self):
+        return {}
+
+    def set_config(self, config):
         pass
 
-    def set_state(self, state):
+    def clear_weights(self):
+        pass
+
+    def get_weights(self):
+        return {}
+
+    def set_weights(self, weights):
         pass
 
 
@@ -139,7 +148,7 @@ class Normalize(Preprocessor):
     def output_shape(self):
         return self.inputs[0].shape
 
-    def get_state(self):
+    def get_config(self):
         return {'sum': self.sum,
                 'square_sum': self.square_sum,
                 'count': self.count,
@@ -147,13 +156,13 @@ class Normalize(Preprocessor):
                 'std': self.std,
                 '_shape': self._shape}
 
-    def set_state(self, state):
-        self.sum = state['sum']
-        self.square_sum = state['square_sum']
-        self.count = state['count']
-        self.mean = state['mean']
-        self.std = state['std']
-        self._shape = state['_shape']
+    def set_config(self, config):
+        self.sum = config['sum']
+        self.square_sum = config['square_sum']
+        self.count = config['count']
+        self.mean = config['mean']
+        self.std = config['std']
+        self._shape = config['_shape']
 
 
 class TextToIntSequence(Preprocessor):
@@ -188,15 +197,15 @@ class TextToIntSequence(Preprocessor):
     def output_shape(self):
         return self.max_len or self._max_len,
 
-    def get_state(self):
+    def get_config(self):
         return {'max_len': self.max_len,
                 '_max_len': self._max_len,
                 '_tokenizer': self._tokenizer}
 
-    def set_state(self, state):
-        self.max_len = state['max_len']
-        self._max_len = state['_max_len']
-        self._tokenizer = state['_tokenizer']
+    def set_config(self, config):
+        self.max_len = config['max_len']
+        self._max_len = config['_max_len']
+        self._tokenizer = config['_tokenizer']
 
 
 class TextToNgramVector(Preprocessor):
@@ -248,7 +257,7 @@ class TextToNgramVector(Preprocessor):
     def output_shape(self):
         return self._shape
 
-    def get_state(self):
+    def get_config(self):
         return {'_vectorizer': self._vectorizer,
                 'selector': self.selector,
                 'labels': self.labels,
@@ -256,11 +265,11 @@ class TextToNgramVector(Preprocessor):
                 '_texts': self._texts,
                 '_shape': self._shape}
 
-    def set_state(self, state):
-        self._vectorizer = state['_vectorizer']
-        self.selector = state['selector']
-        self.labels = state['labels']
-        self._max_features = state['_max_features']
+    def set_config(self, config):
+        self._vectorizer = config['_vectorizer']
+        self.selector = config['selector']
+        self.labels = config['labels']
+        self._max_features = config['_max_features']
         self._vectorizer.max_features = self._max_features
-        self._texts = state['_texts']
-        self._shape = state['_shape']
+        self._texts = config['_texts']
+        self._shape = config['_shape']
