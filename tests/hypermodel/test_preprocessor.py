@@ -15,7 +15,11 @@ def test_normalize():
         normalize.update(x)
     normalize.finalize()
     normalize.set_config(normalize.get_config())
-    normalize.set_weights(normalize.get_weights())
+
+    weights = normalize.get_weights()
+    normalize.clear_weights()
+    normalize.set_weights(weights)
+
     for a in dataset:
         normalize.transform(a)
 
@@ -41,7 +45,11 @@ def test_sequence():
         tokenize.update(x)
     tokenize.finalize()
     tokenize.set_config(tokenize.get_config())
-    tokenize.set_weights(tokenize.get_weights())
+
+    weights = tokenize.get_weights()
+    tokenize.clear_weights()
+    tokenize.set_weights(weights)
+
     for a in dataset:
         tokenize.transform(a)
 
@@ -67,7 +75,11 @@ def test_ngram():
         tokenize.update(x)
     tokenize.finalize()
     tokenize.set_config(tokenize.get_config())
-    tokenize.set_weights(tokenize.get_weights())
+
+    weights = tokenize.get_weights()
+    tokenize.clear_weights()
+    tokenize.set_weights(weights)
+
     for a in dataset:
         tokenize.transform(a)
 

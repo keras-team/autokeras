@@ -150,7 +150,7 @@ class Normalization(Preprocessor):
     def output_shape(self):
         return self.inputs[0].shape
 
-    def get_config(self):
+    def get_weights(self):
         return {'sum': self.sum,
                 'square_sum': self.square_sum,
                 'count': self.count,
@@ -158,13 +158,21 @@ class Normalization(Preprocessor):
                 'std': self.std,
                 '_shape': self._shape}
 
-    def set_config(self, config):
-        self.sum = config['sum']
-        self.square_sum = config['square_sum']
-        self.count = config['count']
-        self.mean = config['mean']
-        self.std = config['std']
-        self._shape = config['_shape']
+    def set_weights(self, weights):
+        self.sum = weights['sum']
+        self.square_sum = weights['square_sum']
+        self.count = weights['count']
+        self.mean = weights['mean']
+        self.std = weights['std']
+        self._shape = weights['_shape']
+
+    def clear_weights(self):
+        self.sum = 0
+        self.square_sum = 0
+        self.count = 0
+        self.mean = None
+        self.std = None
+        self._shape = None
 
 
 class TextToIntSequence(Preprocessor):
@@ -200,19 +208,27 @@ class TextToIntSequence(Preprocessor):
         return self.max_len or self._max_len,
 
     def get_config(self):
-        return {'max_len': self.max_len,
-                '_max_len': self._max_len,
-                '_tokenizer': self._tokenizer}
+        return {'max_len': self.max_len}
 
     def set_config(self, config):
         self.max_len = config['max_len']
-        self._max_len = config['_max_len']
-        self._tokenizer = config['_tokenizer']
+
+    def get_weights(self):
+        return {'_max_len': self._max_len,
+                '_tokenizer': self._tokenizer}
+
+    def set_weights(self, weights):
+        self._max_len = weights['_max_len']
+        self._tokenizer = weights['_tokenizer']
+
+    def clear_weights(self):
+        self._max_len = 0
+        self._tokenizer = tf.keras.preprocessing.text.Tokenizer(
+            num_words=const.Constant.VOCABULARY_SIZE)
 
 
 class TextToNgramVector(Preprocessor):
     """Convert raw texts to n-gram vectors."""
-    # TODO: Implement save and load.
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -259,7 +275,7 @@ class TextToNgramVector(Preprocessor):
     def output_shape(self):
         return self._shape
 
-    def get_config(self):
+    def get_weights(self):
         return {'_vectorizer': self._vectorizer,
                 'selector': self.selector,
                 'labels': self.labels,
@@ -267,14 +283,28 @@ class TextToNgramVector(Preprocessor):
                 '_texts': self._texts,
                 '_shape': self._shape}
 
-    def set_config(self, config):
-        self._vectorizer = config['_vectorizer']
-        self.selector = config['selector']
-        self.labels = config['labels']
-        self._max_features = config['_max_features']
+    def set_weights(self, weights):
+        self._vectorizer = weights['_vectorizer']
+        self.selector = weights['selector']
+        self.labels = weights['labels']
+        self._max_features = weights['_max_features']
         self._vectorizer.max_features = self._max_features
-        self._texts = config['_texts']
-        self._shape = config['_shape']
+        self._texts = weights['_texts']
+        self._shape = weights['_shape']
+
+    def clear_weights(self):
+        self._vectorizer = text.TfidfVectorizer(
+            ngram_range=(1, 2),
+            strip_accents='unicode',
+            decode_error='replace',
+            analyzer='word',
+            min_df=2)
+        self.selector = None
+        self.labels = None
+        self._max_features = const.Constant.VOCABULARY_SIZE
+        self._vectorizer.max_features = self._max_features
+        self._texts = []
+        self._shape = None
 
 
 class ImageAugmentation(Preprocessor):

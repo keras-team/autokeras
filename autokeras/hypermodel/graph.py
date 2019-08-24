@@ -369,6 +369,7 @@ class GraphHyperModel(kerastuner.HyperModel):
         for block in self._blocks:
             if isinstance(block, preprocessor.Preprocessor):
                 configs[block.name] = block.get_config()
+                weights[block.name] = block.get_weights()
         preprocessors = {'configs': configs, 'weights': weights}
         utils.pickle_to_file(preprocessors, path)
 
