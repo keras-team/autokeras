@@ -6,6 +6,8 @@ from keras.datasets import mnist
 x_image = x_train.reshape(x_train.shape + (1,))
 x_test = x_test.reshape(x_test.shape + (1,))
 
+y_regression = np.random()
+
 # Build model and train.
 automodel = ak.AutoModel(
    inputs=[ak.ImageInput(),
