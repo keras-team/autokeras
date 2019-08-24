@@ -22,7 +22,9 @@ nav:
     - Contributing Guide: contributing.md
     - Neural Architecture Search: nas.md
     - Documentation:
+      - Task API: task.md
       - AutoModel: auto_model.md
       - GraphAutoModel: graph_auto_model.md
-      - Blocks: block.md
+      - Block: block.md
+      - Head: head.md
     - About: about.md

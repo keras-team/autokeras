@@ -11,7 +11,9 @@ import sys
 import six
 import autokeras
 from autokeras import auto_model
+from autokeras import task
 from autokeras.hypermodel import block
+from autokeras.hypermodel import head
 from autokeras.hypermodel import hyperblock
 
 try:
@@ -138,15 +140,16 @@ PAGES = [
                     block.Merge],
     },
     {
-        'page': 'block.md',
-        'classes': [hyperblock.ImageBlock,
-                    hyperblock.TextBlock,
-                    hyperblock.StructuredDataBlock,
-                    block.ResNetBlock,
-                    block.XceptionBlock,
-                    block.ConvBlock,
-                    block.RNNBlock,
-                    block.Merge],
+        'page': 'task.md',
+        'classes': [task.ImageClassifier,
+                    task.ImageRegressor,
+                    task.TextClassifier,
+                    task.TextRegressor],
+    },
+    {
+        'page': 'head.md',
+        'classes': [head.ClassificationHead,
+                    head.RegressionHead],
     },
     # {
     #     'page': 'hypermodel/block.md',
