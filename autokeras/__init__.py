@@ -17,7 +17,7 @@ from autokeras.hypermodel.hyperblock import TextBlock
 from autokeras.hypermodel.node import ImageInput
 from autokeras.hypermodel.node import Input
 from autokeras.hypermodel.node import TextInput
-from autokeras.hypermodel.preprocessor import Normalize
+from autokeras.hypermodel.preprocessor import Normalization
 from autokeras.hypermodel.preprocessor import TextToIntSequence
 from autokeras.hypermodel.preprocessor import TextToNgramVector
 from autokeras.hypermodel.preprocessor import LgbmModule
