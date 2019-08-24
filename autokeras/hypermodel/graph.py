@@ -392,6 +392,15 @@ class GraphHyperModel(kerastuner.HyperModel):
             block = self._get_block(name)
             block.set_weights(weight)
 
+    def clear_preprocessors(self):
+        """Clear the preprocessors' weights in the hypermodel."""
+        if self.contains_hyper_block():
+            self._plain_graph_hm.clear_preprocessors()
+            return
+        for block in self._blocks:
+            if isinstance(block, preprocessor.Preprocessor):
+                block.clear_weights()
+
     def _get_block(self, name):
         for block in self._blocks:
             if block.name == name:

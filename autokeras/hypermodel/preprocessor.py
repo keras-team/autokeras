@@ -86,18 +86,39 @@ class Preprocessor(block.Block):
         pass
 
     def get_config(self):
+        """Get the configuration of the preprocessor.
+
+        # Returns
+            A dictionary of configurations of the preprocessor.
+        """
         return {}
 
     def set_config(self, config):
+        """Set the configuration of the preprocessor.
+
+        # Arguments
+            config: A dictionary of the configurations of the preprocessor.
+        """
         pass
 
     def clear_weights(self):
+        """Delete the trained weights of the preprocessor."""
         pass
 
     def get_weights(self):
+        """Get the trained weights of the preprocessor
+
+        # Returns
+            A dictionary of trained weights of the preprocessor.
+        """
         return {}
 
     def set_weights(self, weights):
+        """Set the trained weights of the preprocessor
+
+        # Arguments
+            weights: A dictionary of trained weights of the preprocessor.
+        """
         pass
 
 

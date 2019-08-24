@@ -41,6 +41,7 @@ class AutoTuner(kerastuner.Tuner):
         new_fit_kwargs['callbacks'] = self.add_earlystopping_callback(callbacks)
 
         super().run_trial(trial, hp, [], new_fit_kwargs)
+        self.hypermodel.clear_preprocessors()
 
     def get_best_hp(self, num_models=1):
         """Returns hyperparameters used to build the best model(s).
