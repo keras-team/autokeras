@@ -1,10 +1,7 @@
 import numpy as np
 import tensorflow as tf
-<<<<<<< HEAD
 import lightgbm as lgb
-=======
 import random
->>>>>>> c66fc7be562ee4f704adedcfd935cb9522cf2e1d
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
@@ -273,7 +270,6 @@ class TextToNgramVector(Preprocessor):
         self._shape = state['_shape']
 
 
-<<<<<<< HEAD
 class LgbmModule(Preprocessor):
     """Collect data, train and test the LightGBM."""
 
@@ -333,7 +329,7 @@ class LgbmModule(Preprocessor):
 
     def set_state(self, state):
         pass
-=======
+        
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
     # Arguments
@@ -511,4 +507,3 @@ class ImageAugmentation(Preprocessor):
         self.gaussian_noise = state['gaussian_noise']
         self.seed = state['seed']
         self._shape = state['_shape']
->>>>>>> c66fc7be562ee4f704adedcfd935cb9522cf2e1d
