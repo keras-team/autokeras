@@ -549,10 +549,16 @@ class IdentityLayer(tf.keras.layers.Layer):
         return input_signature
 
     def call(self, inputs, *args, **kwargs):
-        return tf.identity(inputs)
+        return tf.identity(nest.flatten(inputs)[0])
 
 
 class IdentityBlock(Block):
+    """Identity block for LgbmModule preprocessor.
+
+        The input could be anything.
+        Return output with the same shape and contents as input.
+    """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         pass

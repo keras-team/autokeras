@@ -170,7 +170,7 @@ class OneHotEncoder(object):
         """
         data = np.array(data)
         if not self.num_classes:
-            self.num_classes = data.shape[1]
+            self.num_classes = data.shape[0]
         self._labels = set(range(self.num_classes))
         for label in self._labels:
             vec = np.array([0] * self.num_classes)

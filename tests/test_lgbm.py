@@ -10,14 +10,25 @@ def tmp_dir(tmpdir_factory):
 
 
 def test_lgbm(tmp_dir):
-    x_train = np.random.rand(2, 32)
-    y_train = np.array([[1,0,0,0,0,0,0,0,0,0],[1,0,0,0,0,0,0,0,0,0]])
+    x_train = np.random.rand(10, 32)
+    y_train = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
 
     input_node = ak.Input()
     output_node = input_node
     output_node = ak.LgbmModule()(output_node)
-    output_node = ak.IdentityBlock()(output_node)
-    output_node = ak.ClassificationHead()(output_node)
+    block = ak.IdentityBlock()
+    output_node = block(output_node)
+    output_node = ak.EmptyHead(loss='categorical_crossentropy',
+                               metrics=['accuracy'])(output_node)
 
     auto_model = ak.GraphAutoModel(input_node,
                                    output_node,
@@ -26,5 +37,6 @@ def test_lgbm(tmp_dir):
     auto_model.fit(x_train, y_train, epochs=1,
                    validation_data=(x_train, y_train))
     result = auto_model.predict(x_train)
-
-    assert result.shape == (100, 10)
+    auto_model.tuner.get_best_models()[0].summary()
+    print(result)
+    assert result.shape == (10, 10)

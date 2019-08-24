@@ -4,7 +4,6 @@ import lightgbm as lgb
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
-from tensorflow.python.keras.utils import to_categorical
 
 from autokeras import const
 from autokeras import utils
@@ -271,31 +270,32 @@ class TextToNgramVector(Preprocessor):
 
 
 class LgbmModule(Preprocessor):
+    """Collect data, train and test the LightGBM."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.data = []
         self.label = []
+        self.lgbm = lgb.LGBMModel()
         self.param = dict()
         self._one_hot_encoder = None
         self.y_shape = None
 
     def update(self, x, y=None):
-        x = nest.flatten(x)[0].numpy()
-        self.y_shape = np.shape(y)
         y = nest.flatten(y)[0].numpy()
-        self.data.append(x)
-
+        self.data.append(nest.flatten(x)[0].numpy())
         if not self._one_hot_encoder:
             self._one_hot_encoder = utils.OneHotEncoder()
-            self._one_hot_encoder.fit_with_one_hot_encoded(np.array([x]))
-        self.label.append(self._one_hot_encoder.decode(y))
+            self._one_hot_encoder.fit_with_one_hot_encoded(np.array(y))
+        self.y_shape = np.shape(y)
+        y = y.reshape(1, -1)
+        self.label.append(nest.flatten(self._one_hot_encoder.decode(y))[0])
 
     def finalize(self):
-        self.data = np.asarray(self.data)
-        self.label = np.asarray(self.label)
-        train_data = lgb.Dataset(self.data, self.label)
-        validation_data = train_data.create_valid('validation.svm')
+        label = np.array(self.label).flatten()
+        # train_data = lgb.Dataset(np.asarray(self.data), label)
+        # TODO：Split and add validation data.
+        # TODO: Set hp for parameters below.
         self.param.update({'boosting_type': ['gbdt'],
                            'min_child_weight': [5],
                            'min_split_gain': [1.0],
@@ -306,14 +306,14 @@ class LgbmModule(Preprocessor):
                            'learning_rate': [0.04]})
         self.param['metric'] = 'auc'
         num_round = 10
-        bst = lgb.train(self.param, train_data, num_round,
-                        valid_sets=[validation_data])
-        bst.save_model('lgbmodel')
+        # self.lgbm = lgb.train(self.param, train_data, num_round)
+        self.lgbm.set_params(objective='regression')
+        self.lgbm.fit(X=np.asarray(self.data), y=label)
 
     def transform(self, x, fit=False):
-        bst = lgb.Booster(model_file='lgbmodel')
-        ypred = bst.predict(x.numpy())
+        ypred = [self.lgbm.predict(x.numpy().reshape((1, -1)))]
         y = self._one_hot_encoder.encode(ypred)
+        y = y.reshape((-1))
         return y
 
     def output_types(self):
