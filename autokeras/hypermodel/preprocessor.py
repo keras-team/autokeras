@@ -429,7 +429,7 @@ class ImageAugmentation(Preprocessor):
     def update(self, x, y=None):
         pass
 
-    def get_state(self):
+    def get_config(self):
         return {'rotation_range': self.rotation_range,
                 'random_crop': self.random_crop,
                 'brightness_range': self.brightness_range,
@@ -442,15 +442,15 @@ class ImageAugmentation(Preprocessor):
                 'seed': self.seed,
                 '_shape': self._shape}
 
-    def set_state(self, state):
-        self.rotation_range = state['rotation_range']
-        self.random_crop = state['random_crop']
-        self.brightness_range = state['brightness_range']
-        self.saturation_range = state['saturation_range']
-        self.contrast_range = state['contrast_range']
-        self.translation = state['translation']
-        self.horizontal_flip = state['horizontal_flip']
-        self.vertical_flip = state['vertical_flip']
-        self.gaussian_noise = state['gaussian_noise']
-        self.seed = state['seed']
-        self._shape = state['_shape']
+    def set_config(self, config):
+        self.rotation_range = config['rotation_range']
+        self.random_crop = config['random_crop']
+        self.brightness_range = config['brightness_range']
+        self.saturation_range = config['saturation_range']
+        self.contrast_range = config['contrast_range']
+        self.translation = config['translation']
+        self.horizontal_flip = config['horizontal_flip']
+        self.vertical_flip = config['vertical_flip']
+        self.gaussian_noise = config['gaussian_noise']
+        self.seed = config['seed']
+        self._shape = config['_shape']

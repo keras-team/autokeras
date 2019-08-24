@@ -4,7 +4,6 @@ import numpy as np
 import tensorflow as tf
 
 from autokeras.hypermodel import preprocessor
-from autokeras.hypermodel import block
 
 
 def test_normalize():
@@ -15,7 +14,8 @@ def test_normalize():
     for x in dataset:
         normalize.update(x)
     normalize.finalize()
-    normalize.set_state(normalize.get_state())
+    normalize.set_config(normalize.get_config())
+    normalize.set_weights(normalize.get_weights())
     for a in dataset:
         normalize.transform(a)
 
@@ -40,7 +40,8 @@ def test_sequence():
     for x in dataset:
         tokenize.update(x)
     tokenize.finalize()
-    tokenize.set_state(tokenize.get_state())
+    tokenize.set_config(tokenize.get_config())
+    tokenize.set_weights(tokenize.get_weights())
     for a in dataset:
         tokenize.transform(a)
 
@@ -65,7 +66,8 @@ def test_ngram():
     for x in dataset:
         tokenize.update(x)
     tokenize.finalize()
-    tokenize.set_state(tokenize.get_state())
+    tokenize.set_config(tokenize.get_config())
+    tokenize.set_weights(tokenize.get_weights())
     for a in dataset:
         tokenize.transform(a)
 
@@ -86,7 +88,7 @@ def test_augment():
     dataset = tf.data.Dataset.from_tensor_slices(raw_images)
     hp = kerastuner.HyperParameters()
     augment.set_hp(hp)
-    augment.set_state(augment.get_state())
+    augment.set_config(augment.get_config())
     for a in dataset:
         augment.transform(a, True)
 

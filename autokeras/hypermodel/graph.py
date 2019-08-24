@@ -384,9 +384,12 @@ class GraphHyperModel(kerastuner.HyperModel):
         preprocessors = utils.pickle_from_file(path)
         configs = preprocessors['configs']
         weights = preprocessors['weights']
-        for name, state in preprocessors.items():
+        for name, config in configs.items():
             block = self._get_block(name)
-            block.set_config(state)
+            block.set_config(config)
+        for name, weight in weights.items():
+            block = self._get_block(name)
+            block.set_weights(weight)
 
     def _get_block(self, name):
         for block in self._blocks:
