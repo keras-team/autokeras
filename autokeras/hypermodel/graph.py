@@ -295,16 +295,15 @@ class GraphHyperModel(kerastuner.HyperModel):
         for blocks in blocks_by_depth:
             if fit:
                 # Iterate the dataset to fit the preprocessors in current depth.
-                for x, _ in dataset:
+                for x, y in dataset:
                     x = nest.flatten(x)
                     node_id_to_data = {
-                        node_id: temp_x
-                        for temp_x, node_id in zip(x, input_node_ids)
+                        node_id: temp_x for temp_x, node_id in zip(x, input_node_ids)
                     }
                     for block in blocks:
                         data = [node_id_to_data[self._node_to_id[input_node]]
                                 for input_node in block.inputs]
-                        block.update(data)
+                        block.update(data, y=y)
 
             for block in blocks:
                 block.finalize()

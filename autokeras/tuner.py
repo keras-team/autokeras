@@ -36,6 +36,10 @@ class AutoTuner(kerastuner.Tuner):
         new_fit_kwargs['batch_size'] = None
         new_fit_kwargs['y'] = None
 
+        # Add earlystopping callback if necessary
+        callbacks = new_fit_kwargs.get('callbacks', [])
+        new_fit_kwargs['callbacks'] = self.add_earlystopping_callback(callbacks)
+
         super().run_trial(trial, hp, [], new_fit_kwargs)
 
     def get_best_hp(self, num_models=1):
@@ -66,6 +70,28 @@ class AutoTuner(kerastuner.Tuner):
         filename = '%s-preprocessors' % trial.trial_id
         path = os.path.join(trial.directory, filename)
         self.hypermodel.load_preprocessors(path)
+
+    @staticmethod
+    def add_earlystopping_callback(callbacks):
+        if not callbacks:
+            callbacks = []
+
+        try:
+            callbacks = copy.deepcopy(callbacks)
+        except:
+            raise ValueError(
+                'All callbacks used during a search '
+                'should be deep-copyable (since they are '
+                'reused across executions). '
+                'It is not possible to do `copy.deepcopy(%s)`' %
+                (callbacks,))
+
+        if not [callback for callback in callbacks
+                if isinstance(callback, tf.keras.callbacks.EarlyStopping)]:
+            # The patience is set to 30 based on human experience.
+            callbacks.append(tf.keras.callbacks.EarlyStopping(patience=30))
+
+        return callbacks
 
 
 class RandomSearch(AutoTuner, kerastuner.RandomSearch):
