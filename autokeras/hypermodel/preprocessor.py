@@ -108,7 +108,7 @@ class Preprocessor(block.Block):
         pass
 
     def get_weights(self):
-        """Get the trained weights of the preprocessor
+        """Get the trained weights of the preprocessor.
 
         # Returns
             A dictionary of trained weights of the preprocessor.
@@ -116,7 +116,7 @@ class Preprocessor(block.Block):
         return {}
 
     def set_weights(self, weights):
-        """Set the trained weights of the preprocessor
+        """Set the trained weights of the preprocessor.
 
         # Arguments
             weights: A dictionary of trained weights of the preprocessor.
@@ -520,7 +520,7 @@ class ImageAugmentation(Preprocessor):
             pad_right = np.random.randint(low=0,
                                           high=max(int(target_width*0.3), 1))
             x = tf.image.pad_to_bounding_box(x, pad_top, pad_left,
-                                             target_height + pad_bottom + pad_top, 
+                                             target_height + pad_bottom + pad_top,
                                              target_width + pad_right + pad_left)
             x = tf.image.crop_to_bounding_box(x, pad_bottom, pad_right,
                                               target_height, target_width)
