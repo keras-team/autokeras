@@ -545,6 +545,8 @@ class EmbeddingBlock(Block):
 
 
 class IdentityLayer(tf.keras.layers.Layer):
+    """A Keras Layer returns the inputs."""
+
     def compute_output_signature(self, input_signature):
         return input_signature
 
@@ -555,14 +557,9 @@ class IdentityLayer(tf.keras.layers.Layer):
 class IdentityBlock(Block):
     """Identity block for LgbmModule preprocessor.
 
-        The input could be anything.
-        Return output with the same shape and contents as input.
+    The input could be anything. Return output with the same shape and contents
+    as input.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        pass
-
     def build(self, hp, inputs=None):
-        idlayer = IdentityLayer()
-        return idlayer(inputs)
+        return IdentityLayer(inputs)

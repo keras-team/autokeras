@@ -354,9 +354,9 @@ class LgbmClassifier(Preprocessor):
     def update(self, x, y=None):
         """ Store the train data and decode.
 
-                # Arguments
-                    x: The data to be stored.
-                    y: The label to be stored.
+        # Arguments
+            x: Eager Tensor. The data to be stored.
+            y: Eager Tensor. The label to be stored.
         """
         y = nest.flatten(y)[0].numpy()
         self.data.append(nest.flatten(x)[0].numpy())
@@ -386,11 +386,11 @@ class LgbmClassifier(Preprocessor):
     def transform(self, x, fit=False):
         """ Transform the data using well-trained LGBM classifier.
 
-                # Arguments
-                    x: The data to be transformed.
+        # Arguments
+            x: Eager Tensor. The data to be transformed.
 
-                # Returns
-                    y: The predicted label of x.
+        # Returns
+            Eager Tensor. The predicted label of x.
          """
         ypred = [self.lgbm.predict(x.numpy().reshape((1, -1)))]
         y = self._one_hot_encoder.encode(ypred)
