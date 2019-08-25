@@ -6,9 +6,6 @@ import autokeras as ak
 
 
 def test_set_hp():
-    x_train = np.random.rand(100, 32)
-    y_train = np.random.rand(100, 1)
-
     input_node = ak.Input((32,))
     output_node = input_node
     output_node = ak.DenseBlock()(output_node)
