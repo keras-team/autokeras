@@ -39,9 +39,11 @@ class EmptyHead(Head):
         # Arguments
             loss: A Keras loss function. Defaults to None. If None, the loss will be
                 inferred from the AutoModel.
-            metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
+            metrics: A list of Keras metrics. Defaults to None.
+                If None, the metrics will
                 be inferred from the AutoModel.
-            output_shape: Tuple of int(s). Defaults to None. If None, the output shape
+            output_shape: Tuple of int(s). Defaults to None.
+                If None, the output shape
                 will be inferred from the AutoModel.
         """
 
