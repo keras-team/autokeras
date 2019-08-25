@@ -331,7 +331,17 @@ class TextToNgramVector(Preprocessor):
 
 
 class LgbmClassifier(Preprocessor):
-    """Collect data, train and test the LightGBM."""
+    """Collect data, train and test the LightGBM for classification task.
+
+    Input data are np.array etc. np.random.rand(example_number, feature_number).
+    Input labels are encoded labels in np.array form
+    etc. np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).
+    Outputs are predicted encoded labels in np.array form.
+
+    The instance of this LgbmClassifier class must be followed by
+    an IdentityBlock and an EmptyHead.
+    """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -342,6 +352,12 @@ class LgbmClassifier(Preprocessor):
         self.y_shape = None
 
     def update(self, x, y=None):
+        """ Store the train data and decode.
+
+                # Arguments
+                    x: The data to be stored.
+                    y: The label to be stored.
+        """
         y = nest.flatten(y)[0].numpy()
         self.data.append(nest.flatten(x)[0].numpy())
         self._one_hot_encoder.fit_with_one_hot_encoded(np.array(y))
@@ -350,6 +366,7 @@ class LgbmClassifier(Preprocessor):
         self.label.append(nest.flatten(self._one_hot_encoder.decode(y))[0])
 
     def finalize(self):
+        """ Train the LGBM classifier with the data and label stored."""
         label = np.array(self.label).flatten()
         # TODO: Set hp for parameters below.
         param = {'boosting_type': ['gbdt'],
@@ -367,6 +384,14 @@ class LgbmClassifier(Preprocessor):
         self.label = []
 
     def transform(self, x, fit=False):
+        """ Transform the data using well-trained LGBM classifier.
+
+                # Arguments
+                    x: The data to be transformed.
+
+                # Returns
+                    y: The predicted label of x.
+         """
         ypred = [self.lgbm.predict(x.numpy().reshape((1, -1)))]
         y = self._one_hot_encoder.encode(ypred)
         y = y.reshape((-1))
