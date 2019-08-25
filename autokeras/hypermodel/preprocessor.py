@@ -484,7 +484,7 @@ class ImageAugmentation(Preprocessor):
         else:
             min_value = 1. - value
             max_value = 1. + value
-        return (min_value, max_value)
+        return min_value, max_value
 
     def transform(self, x, fit=False):
         if not fit:
