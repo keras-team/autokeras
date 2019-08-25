@@ -387,7 +387,7 @@ class ImageAugmentation(Preprocessor):
             pad_right = np.random.randint(low=0,
                                           high=max(int(target_width*0.3), 1))
             x = tf.image.pad_to_bounding_box(x, pad_top, pad_left,
-                                             target_height + pad_bottom + pad_top, 
+                                             target_height + pad_bottom + pad_top,
                                              target_width + pad_right + pad_left)
             x = tf.image.crop_to_bounding_box(x, pad_bottom, pad_right,
                                               target_height, target_width)
