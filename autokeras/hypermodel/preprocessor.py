@@ -353,14 +353,14 @@ class LgbmClassifier(Preprocessor):
         label = np.array(self.label).flatten()
         # TODO: Set hp for parameters below.
         param = {'boosting_type': ['gbdt'],
-                      'min_child_weight': [5],
-                      'min_split_gain': [1.0],
-                      'subsample': [0.8],
-                      'colsample_bytree': [0.6],
-                      'max_depth': [10],
-                      'num_leaves': [70],
-                      'learning_rate': [0.04],
-                      'eval_metric': 'logloss'}
+                 'min_child_weight': [5],
+                 'min_split_gain': [1.0],
+                 'subsample': [0.8],
+                 'colsample_bytree': [0.6],
+                 'max_depth': [10],
+                 'num_leaves': [70],
+                 'learning_rate': [0.04],
+                 'eval_metric': 'logloss'}
         self.lgbm.set_params(**param)
         self.lgbm.fit(X=np.asarray(self.data), y=label)
         self.data = []
