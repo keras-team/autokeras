@@ -330,44 +330,41 @@ class TextToNgramVector(Preprocessor):
         self._shape = None
 
 
-class LgbmModule(Preprocessor):
+class LgbmClassifier(Preprocessor):
     """Collect data, train and test the LightGBM."""
 
-    def __init__(self, task, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.data = []
         self.label = []
         self.lgbm = lgb.LGBMClassifier()
-        self.param = dict()
-        self._one_hot_encoder = None
+        self._one_hot_encoder = utils.OneHotEncoder()
         self.y_shape = None
-        self.task = task
 
     def update(self, x, y=None):
         y = nest.flatten(y)[0].numpy()
         self.data.append(nest.flatten(x)[0].numpy())
-        if not self._one_hot_encoder:
-            self._one_hot_encoder = utils.OneHotEncoder()
-            self._one_hot_encoder.fit_with_one_hot_encoded(np.array(y))
+        self._one_hot_encoder.fit_with_one_hot_encoded(np.array(y))
         self.y_shape = np.shape(y)
         y = y.reshape(1, -1)
         self.label.append(nest.flatten(self._one_hot_encoder.decode(y))[0])
 
     def finalize(self):
         label = np.array(self.label).flatten()
-        # TODO：Split and add validation data.
         # TODO: Set hp for parameters below.
-        self.param.update({'boosting_type': ['gbdt'],
-                           'min_child_weight': [5],
-                           'min_split_gain': [1.0],
-                           'subsample': [0.8],
-                           'colsample_bytree': [0.6],
-                           'max_depth': [10],
-                           'num_leaves': [70],
-                           'learning_rate': [0.04],
-                           'eval_metric': 'logloss'})
-        self.lgbm.set_params(**self.param)
+        param = {'boosting_type': ['gbdt'],
+                      'min_child_weight': [5],
+                      'min_split_gain': [1.0],
+                      'subsample': [0.8],
+                      'colsample_bytree': [0.6],
+                      'max_depth': [10],
+                      'num_leaves': [70],
+                      'learning_rate': [0.04],
+                      'eval_metric': 'logloss'}
+        self.lgbm.set_params(**param)
         self.lgbm.fit(X=np.asarray(self.data), y=label)
+        self.data = []
+        self.label = []
 
     def transform(self, x, fit=False):
         ypred = [self.lgbm.predict(x.numpy().reshape((1, -1)))]
@@ -382,23 +379,20 @@ class LgbmModule(Preprocessor):
     def output_shape(self):
         return self.y_shape
 
-    def get_config(self):
-        pass
-
-    def set_config(self, config):
-        pass
-
     def set_weights(self, weights):
-        pass
-        # TODO:
+        self.lgbm = weights['lgbm']
+        self._one_hot_encoder = weights['_one_hot_encoder']
+        self.y_shape = weights['y_shape']
 
     def get_weights(self):
-        pass
-        # TODO:
+        return {'lgbm': self.lgbm,
+                '_one_hot_encoder': self._one_hot_encoder,
+                'y_shape': self.y_shape}
 
     def clear_weights(self):
-        self.data = []
-        self.label = []
+        self.lgbm = lgb.LGBMClassifier()
+        self._one_hot_encoder = utils.OneHotEncoder()
+        self.y_shape = None
 
 
 class ImageAugmentation(Preprocessor):

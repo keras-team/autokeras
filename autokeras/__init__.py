@@ -20,7 +20,6 @@ from autokeras.hypermodel.node import TextInput
 from autokeras.hypermodel.preprocessor import Normalization
 from autokeras.hypermodel.preprocessor import TextToIntSequence
 from autokeras.hypermodel.preprocessor import TextToNgramVector
-from autokeras.hypermodel.preprocessor import LgbmModule
 from autokeras.task import ImageClassifier
 from autokeras.task import ImageRegressor
 from autokeras.task import TextClassifier
