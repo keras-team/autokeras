@@ -337,7 +337,7 @@ class LgbmModule(Preprocessor):
         super().__init__(**kwargs)
         self.data = []
         self.label = []
-        self.lgbm = lgb.LGBMModel()
+        self.lgbm = lgb.LGBMClassifier()
         self.param = dict()
         self._one_hot_encoder = None
         self.y_shape = None
@@ -355,7 +355,6 @@ class LgbmModule(Preprocessor):
 
     def finalize(self):
         label = np.array(self.label).flatten()
-        # train_data = lgb.Dataset(np.asarray(self.data), label)
         # TODO：Split and add validation data.
         # TODO: Set hp for parameters below.
         self.param.update({'boosting_type': ['gbdt'],
@@ -365,12 +364,9 @@ class LgbmModule(Preprocessor):
                            'colsample_bytree': [0.6],
                            'max_depth': [10],
                            'num_leaves': [70],
-                           'learning_rate': [0.04],})
-        self.param['metric'] = 'auc'
-        num_round = 10
-        # self.lgbm = lgb.train(self.param, train_data, num_round)
-        self.lgbm.set_params(objective=self.task)
-        print(label)
+                           'learning_rate': [0.04],
+                           'eval_metric': 'logloss'})
+        self.lgbm.set_params(**self.param)
         self.lgbm.fit(X=np.asarray(self.data), y=label)
 
     def transform(self, x, fit=False):
@@ -386,11 +382,23 @@ class LgbmModule(Preprocessor):
     def output_shape(self):
         return self.y_shape
 
-    def get_state(self):
+    def get_config(self):
         pass
 
-    def set_state(self, state):
+    def set_config(self, config):
         pass
+
+    def set_weights(self, weights):
+        pass
+        # TODO:
+
+    def get_weights(self):
+        pass
+        # TODO:
+
+    def clear_weights(self):
+        self.data = []
+        self.label = []
 
 
 class ImageAugmentation(Preprocessor):

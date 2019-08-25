@@ -123,6 +123,12 @@ class StructuredDataBlock(HyperBlock):
         raise NotImplementedError
 
 
+class LgbmClassifierBlock(HyperBlock):
+
+    def build(self, hp, inputs=None):
+        raise NotImplementedError
+
+
 class TimeSeriesBlock(HyperBlock):
 
     def build(self, hp, inputs=None):

@@ -10,7 +10,7 @@ def tmp_dir(tmpdir_factory):
 
 
 def test_lgbm(tmp_dir):
-    x_train = np.random.rand(10, 32)
+    x_train = np.random.rand(11, 32)
     y_train = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                         [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -20,6 +20,7 @@ def test_lgbm(tmp_dir):
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
                         [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
                         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
                         [0, 0, 0, 1, 0, 0, 0, 0, 0, 0]])
 
     input_node = ak.Input()
@@ -39,4 +40,4 @@ def test_lgbm(tmp_dir):
     result = auto_model.predict(x_train)
     auto_model.tuner.get_best_models()[0].summary()
     print(result)
-    assert result.shape == (10, 10)
+    assert result.shape == (11, 10)
