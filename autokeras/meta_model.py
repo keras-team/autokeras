@@ -194,6 +194,9 @@ class StructuredDataAssembler(Assembler):
                         self.count_unique_numerical[i][tmp_num] += 1
                 except ValueError:
                     self.count_categorical[i] += 1
+        # print('x is ')
+        # print(x)
+        # print('typeof x is '+repr(x))
 
     def assemble(self, input_node):
         # TODO: Infer the types of the columns. And pass them to StructuredDataBlock.
@@ -204,6 +207,7 @@ class StructuredDataAssembler(Assembler):
                 self.data_types.append('categorical')
             else:
                 self.data_types.append('numerical')
+        print(self.data_types)
         return hyperblock.StructuredDataBlock(self.data_types)(input_node)
 
 
