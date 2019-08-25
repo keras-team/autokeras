@@ -23,7 +23,6 @@ class AutoTuner(kerastuner.Tuner):
             new_fit_kwargs.get('x', None),
             new_fit_kwargs.get('validation_data', None),
             fit=True)
-        self._save_preprocessors(trial.trial_id, trial.directory)
 
         # Batching
         batch_size = new_fit_kwargs.get('batch_size', 32)
@@ -57,10 +56,12 @@ class AutoTuner(kerastuner.Tuner):
         return [trial.hyperparameters.copy()
                 for trial in best_trials]
 
-    def _save_preprocessors(self, trial_id, base_directory='.'):
-        filename = '%s-preprocessors' % trial_id
-        path = os.path.join(base_directory, filename)
+    def on_trial_end(self, trial):
+        super().on_trial_end(trial)
+        filename = '%s-preprocessors' % trial.trial_id
+        path = os.path.join(trial.directory, filename)
         self.hypermodel.save_preprocessors(path)
+        self.hypermodel.clear_preprocessors()
 
     def get_best_trials(self, num_trials=1):
         return super()._get_best_trials(num_trials)

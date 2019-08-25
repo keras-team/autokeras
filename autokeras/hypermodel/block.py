@@ -72,7 +72,7 @@ class Block(kerastuner.HyperModel):
     def build(self, hp, inputs=None):
         """Build the Block into a real Keras Model.
 
-        The subclasses should overide this function and return the output node.
+        The subclasses should override this function and return the output node.
 
         # Arguments
             hp: Hyperparameters. The hyperparameters for building the model.

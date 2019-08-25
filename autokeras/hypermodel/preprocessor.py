@@ -85,10 +85,40 @@ class Preprocessor(block.Block):
         """Training process of the preprocessor after update with all instances."""
         pass
 
-    def get_state(self):
+    def get_config(self):
+        """Get the configuration of the preprocessor.
+
+        # Returns
+            A dictionary of configurations of the preprocessor.
+        """
+        return {}
+
+    def set_config(self, config):
+        """Set the configuration of the preprocessor.
+
+        # Arguments
+            config: A dictionary of the configurations of the preprocessor.
+        """
         pass
 
-    def set_state(self, state):
+    def clear_weights(self):
+        """Delete the trained weights of the preprocessor."""
+        pass
+
+    def get_weights(self):
+        """Get the trained weights of the preprocessor.
+
+        # Returns
+            A dictionary of trained weights of the preprocessor.
+        """
+        return {}
+
+    def set_weights(self, weights):
+        """Set the trained weights of the preprocessor.
+
+        # Arguments
+            weights: A dictionary of trained weights of the preprocessor.
+        """
         pass
 
 
@@ -141,7 +171,7 @@ class Normalization(Preprocessor):
     def output_shape(self):
         return self.inputs[0].shape
 
-    def get_state(self):
+    def get_weights(self):
         return {'sum': self.sum,
                 'square_sum': self.square_sum,
                 'count': self.count,
@@ -149,13 +179,21 @@ class Normalization(Preprocessor):
                 'std': self.std,
                 '_shape': self._shape}
 
-    def set_state(self, state):
-        self.sum = state['sum']
-        self.square_sum = state['square_sum']
-        self.count = state['count']
-        self.mean = state['mean']
-        self.std = state['std']
-        self._shape = state['_shape']
+    def set_weights(self, weights):
+        self.sum = weights['sum']
+        self.square_sum = weights['square_sum']
+        self.count = weights['count']
+        self.mean = weights['mean']
+        self.std = weights['std']
+        self._shape = weights['_shape']
+
+    def clear_weights(self):
+        self.sum = 0
+        self.square_sum = 0
+        self.count = 0
+        self.mean = None
+        self.std = None
+        self._shape = None
 
 
 class TextToIntSequence(Preprocessor):
@@ -190,20 +228,28 @@ class TextToIntSequence(Preprocessor):
     def output_shape(self):
         return self.max_len or self._max_len,
 
-    def get_state(self):
-        return {'max_len': self.max_len,
-                '_max_len': self._max_len,
+    def get_config(self):
+        return {'max_len': self.max_len}
+
+    def set_config(self, config):
+        self.max_len = config['max_len']
+
+    def get_weights(self):
+        return {'_max_len': self._max_len,
                 '_tokenizer': self._tokenizer}
 
-    def set_state(self, state):
-        self.max_len = state['max_len']
-        self._max_len = state['_max_len']
-        self._tokenizer = state['_tokenizer']
+    def set_weights(self, weights):
+        self._max_len = weights['_max_len']
+        self._tokenizer = weights['_tokenizer']
+
+    def clear_weights(self):
+        self._max_len = 0
+        self._tokenizer = tf.keras.preprocessing.text.Tokenizer(
+            num_words=const.Constant.VOCABULARY_SIZE)
 
 
 class TextToNgramVector(Preprocessor):
     """Convert raw texts to n-gram vectors."""
-    # TODO: Implement save and load.
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -250,7 +296,7 @@ class TextToNgramVector(Preprocessor):
     def output_shape(self):
         return self._shape
 
-    def get_state(self):
+    def get_weights(self):
         return {'_vectorizer': self._vectorizer,
                 'selector': self.selector,
                 'labels': self.labels,
@@ -258,14 +304,28 @@ class TextToNgramVector(Preprocessor):
                 '_texts': self._texts,
                 '_shape': self._shape}
 
-    def set_state(self, state):
-        self._vectorizer = state['_vectorizer']
-        self.selector = state['selector']
-        self.labels = state['labels']
-        self._max_features = state['_max_features']
+    def set_weights(self, weights):
+        self._vectorizer = weights['_vectorizer']
+        self.selector = weights['selector']
+        self.labels = weights['labels']
+        self._max_features = weights['_max_features']
         self._vectorizer.max_features = self._max_features
-        self._texts = state['_texts']
-        self._shape = state['_shape']
+        self._texts = weights['_texts']
+        self._shape = weights['_shape']
+
+    def clear_weights(self):
+        self._vectorizer = text.TfidfVectorizer(
+            ngram_range=(1, 2),
+            strip_accents='unicode',
+            decode_error='replace',
+            analyzer='word',
+            min_df=2)
+        self.selector = None
+        self.labels = None
+        self._max_features = const.Constant.VOCABULARY_SIZE
+        self._vectorizer.max_features = self._max_features
+        self._texts = []
+        self._shape = None
 
 
 class ImageAugmentation(Preprocessor):
@@ -420,7 +480,7 @@ class ImageAugmentation(Preprocessor):
     def update(self, x, y=None):
         pass
 
-    def get_state(self):
+    def get_config(self):
         return {'rotation_range': self.rotation_range,
                 'random_crop': self.random_crop,
                 'brightness_range': self.brightness_range,
@@ -433,18 +493,18 @@ class ImageAugmentation(Preprocessor):
                 'seed': self.seed,
                 '_shape': self._shape}
 
-    def set_state(self, state):
-        self.rotation_range = state['rotation_range']
-        self.random_crop = state['random_crop']
-        self.brightness_range = state['brightness_range']
-        self.saturation_range = state['saturation_range']
-        self.contrast_range = state['contrast_range']
-        self.translation = state['translation']
-        self.horizontal_flip = state['horizontal_flip']
-        self.vertical_flip = state['vertical_flip']
-        self.gaussian_noise = state['gaussian_noise']
-        self.seed = state['seed']
-        self._shape = state['_shape']
+    def set_config(self, config):
+        self.rotation_range = config['rotation_range']
+        self.random_crop = config['random_crop']
+        self.brightness_range = config['brightness_range']
+        self.saturation_range = config['saturation_range']
+        self.contrast_range = config['contrast_range']
+        self.translation = config['translation']
+        self.horizontal_flip = config['horizontal_flip']
+        self.vertical_flip = config['vertical_flip']
+        self.gaussian_noise = config['gaussian_noise']
+        self.seed = config['seed']
+        self._shape = config['_shape']
 
 
 class FeatureEngineering(Preprocessor):
@@ -689,3 +749,4 @@ class FeatureEngineering(Preprocessor):
         self.high_level2_col = state['high_level2_col']
         self.high_level_cat_cat = state['high_level_cat_cat']
         self.high_level_num_cat = state['high_level_num_cat']
+

@@ -115,6 +115,7 @@ class AutoModel(object):
             directory=self.directory,
             seed=self.seed,
             project_name=self.name)
+        self.hypermodel.clear_preprocessors()
 
         # TODO: allow early stop if epochs is not specified.
         self.tuner.search(x=dataset,
