@@ -562,4 +562,4 @@ class IdentityBlock(Block):
     """
 
     def build(self, hp, inputs=None):
-        return IdentityLayer(inputs)
+        return IdentityLayer()(inputs)
