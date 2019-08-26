@@ -1,9 +1,18 @@
 import functools
 import kerastuner
 import numpy as np
+import pytest
 import tensorflow as tf
 
+import autokeras as ak
 from autokeras.hypermodel import preprocessor
+from autokeras.hypermodel import block
+from autokeras.hypermodel import head
+
+
+@pytest.fixture(scope='module')
+def tmp_dir(tmpdir_factory):
+    return tmpdir_factory.mktemp('test_lgbm_classifier')
 
 
 def test_normalize():
@@ -113,3 +122,36 @@ def test_augment():
     for _ in new_dataset:
         pass
     assert isinstance(new_dataset, tf.data.Dataset)
+
+
+def test_lgbm_classifier(tmp_dir):
+    x_train = np.random.rand(11, 32)
+    y_train = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                        [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0]])
+
+    input_node = ak.Input()
+    output_node = input_node
+    output_node = preprocessor.LightGBMClassifier()(output_node)
+    output_node = block.IdentityBlock()(output_node)
+    output_node = head.EmptyHead(loss='categorical_crossentropy',
+                                 metrics=['accuracy'])(output_node)
+
+    auto_model = ak.GraphAutoModel(input_node,
+                                   output_node,
+                                   directory=tmp_dir,
+                                   max_trials=1)
+    auto_model.fit(x_train, y_train, epochs=1,
+                   validation_data=(x_train, y_train))
+    result = auto_model.predict(x_train)
+    auto_model.tuner.get_best_models()[0].summary()
+    print(result)
+    assert result.shape == (11, 10)

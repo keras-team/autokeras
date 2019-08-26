@@ -1,11 +1,13 @@
 import numpy as np
 import tensorflow as tf
+import lightgbm as lgb
 import random
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
 
 from autokeras import const
+from autokeras import utils
 from autokeras.hypermodel import block
 
 
@@ -325,6 +327,96 @@ class TextToNgramVector(Preprocessor):
         self.shape = None
 
 
+class LightGBMClassifier(Preprocessor):
+    """Collect data, train and test the LightGBM for classification task.
+
+    Input data are np.array etc. np.random.rand(example_number, feature_number).
+    Input labels are encoded labels in np.array form
+    etc. np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).
+    Outputs are predicted encoded labels in np.array form.
+
+    The instance of this LightGBMClassifier class must be followed by
+    an IdentityBlock and an EmptyHead.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data = []
+        self.label = []
+        self.lgbm = lgb.LGBMClassifier()
+        self._one_hot_encoder = utils.OneHotEncoder()
+        self.y_shape = None
+
+    def update(self, x, y=None):
+        """ Store the train data and decode.
+
+        # Arguments
+            x: Eager Tensor. The data to be stored.
+            y: Eager Tensor. The label to be stored.
+        """
+        y = nest.flatten(y)[0].numpy()
+        self.data.append(nest.flatten(x)[0].numpy())
+        self._one_hot_encoder.fit_with_one_hot_encoded(np.array(y))
+        self.y_shape = np.shape(y)
+        y = y.reshape(1, -1)
+        self.label.append(nest.flatten(self._one_hot_encoder.decode(y))[0])
+
+    def finalize(self):
+        """ Train the LGBM classifier with the data and label stored."""
+        label = np.array(self.label).flatten()
+        # TODO: Set hp for parameters below.
+        param = {'boosting_type': ['gbdt'],
+                 'min_child_weight': [5],
+                 'min_split_gain': [1.0],
+                 'subsample': [0.8],
+                 'colsample_bytree': [0.6],
+                 'max_depth': [10],
+                 'num_leaves': [70],
+                 'learning_rate': [0.04],
+                 'eval_metric': 'logloss'}
+        self.lgbm.set_params(**param)
+        self.lgbm.fit(X=np.asarray(self.data), y=label)
+        self.data = []
+        self.label = []
+
+    def transform(self, x, fit=False):
+        """ Transform the data using well-trained LGBM classifier.
+
+        # Arguments
+            x: Eager Tensor. The data to be transformed.
+
+        # Returns
+            Eager Tensor. The predicted label of x.
+         """
+        ypred = [self.lgbm.predict(x.numpy().reshape((1, -1)))]
+        y = self._one_hot_encoder.encode(ypred)
+        y = y.reshape((-1))
+        return y
+
+    def output_types(self):
+        return tf.int32,
+
+    @property
+    def output_shape(self):
+        return self.y_shape
+
+    def set_weights(self, weights):
+        self.lgbm = weights['lgbm']
+        self._one_hot_encoder = weights['_one_hot_encoder']
+        self.y_shape = weights['y_shape']
+
+    def get_weights(self):
+        return {'lgbm': self.lgbm,
+                '_one_hot_encoder': self._one_hot_encoder,
+                'y_shape': self.y_shape}
+
+    def clear_weights(self):
+        self.lgbm = lgb.LGBMClassifier()
+        self._one_hot_encoder = utils.OneHotEncoder()
+        self.y_shape = None
+
+
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
     # Arguments
@@ -389,7 +481,7 @@ class ImageAugmentation(Preprocessor):
         else:
             min_value = 1. - value
             max_value = 1. + value
-        return (min_value, max_value)
+        return min_value, max_value
 
     def transform(self, x, fit=False):
         if not fit:
