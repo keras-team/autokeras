@@ -428,7 +428,7 @@ class LightGBMRegressor(Preprocessor):
     etc. np.array([1.1, 2.1, 4.2, 0.3, 2.4, 8.5, 7.3, 8.4, 9.4, 4.3]).
     Outputs are predicted value in np.array form.
 
-    The instance of this LgbmRegressor class must be followed by
+    The instance of this LightGBMRegressor class must be followed by
     an IdentityBlock and an EmptyHead.
     """
 
