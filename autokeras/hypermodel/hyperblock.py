@@ -142,6 +142,24 @@ class LightGBMClassifierBlock(HyperBlock):
         return output_node
 
 
+class LightGBMRegressorBlock(HyperBlock):
+
+    def __init__(self, loss='categorical_crossentropy',
+                 metrics='accuracy', **kwargs):
+        super().__init__(**kwargs)
+        self.loss = loss
+        self.metrics = metrics
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        output_node = input_node
+        output_node = preprocessor.LightGBMRegressor()(output_node)
+        output_node = block.IdentityBlock()(output_node)
+        output_node = head.EmptyHead(loss=self.loss,
+                                     metrics=[self.metrics])(output_node)
+        return output_node
+
+
 class TimeSeriesBlock(HyperBlock):
 
     def build(self, hp, inputs=None):

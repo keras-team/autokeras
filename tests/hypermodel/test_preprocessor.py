@@ -153,7 +153,6 @@ def test_lgbm_classifier(tmp_dir):
                    validation_data=(x_train, y_train))
     result = auto_model.predict(x_train)
     auto_model.tuner.get_best_models()[0].summary()
-    print(result)
     assert result.shape == (11, 10)
 
 
