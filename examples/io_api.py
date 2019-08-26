@@ -1,3 +1,4 @@
+import numpy as np
 import autokeras as ak
 from keras.datasets import mnist
 
@@ -6,7 +7,8 @@ from keras.datasets import mnist
 x_image = x_train.reshape(x_train.shape + (1,))
 x_test = x_test.reshape(x_test.shape + (1,))
 
-y_regression = np.random()
+x_structured = np.random.rand(x_train.shape[0], 100)
+y_regression = np.random.rand(x_train.shape[0], 1)
 
 # Build model and train.
 automodel = ak.AutoModel(
