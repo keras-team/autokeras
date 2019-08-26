@@ -6,6 +6,8 @@ import tensorflow as tf
 
 import autokeras as ak
 from autokeras.hypermodel import preprocessor
+from autokeras.hypermodel import block
+from autokeras.hypermodel import head
 
 
 @pytest.fixture(scope='module')
@@ -138,10 +140,10 @@ def test_lgbm(tmp_dir):
 
     input_node = ak.Input()
     output_node = input_node
-    output_node = ak.hypermodel.preprocessor.LightGBMClassifier()(output_node)
-    output_node = ak.IdentityBlock()(output_node)
-    output_node = ak.EmptyHead(loss='categorical_crossentropy',
-                               metrics=['accuracy'])(output_node)
+    output_node = preprocessor.LightGBMClassifier()(output_node)
+    output_node = block.IdentityBlock()(output_node)
+    output_node = head.EmptyHead(loss='categorical_crossentropy',
+                                 metrics=['accuracy'])(output_node)
 
     auto_model = ak.GraphAutoModel(input_node,
                                    output_node,
