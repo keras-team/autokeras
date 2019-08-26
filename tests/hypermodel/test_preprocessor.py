@@ -138,7 +138,7 @@ def test_lgbm(tmp_dir):
 
     input_node = ak.Input()
     output_node = input_node
-    output_node = ak.hypermodel.preprocessor.LgbmClassifier()(output_node)
+    output_node = ak.hypermodel.preprocessor.LightGBMClassifier()(output_node)
     output_node = ak.IdentityBlock()(output_node)
     output_node = ak.EmptyHead(loss='categorical_crossentropy',
                                metrics=['accuracy'])(output_node)
