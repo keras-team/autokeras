@@ -123,7 +123,7 @@ class StructuredDataBlock(HyperBlock):
         raise NotImplementedError
 
 
-class LgbmClassifierBlock(HyperBlock):
+class LightGBMClassifierBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
