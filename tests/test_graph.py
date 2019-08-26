@@ -1,5 +1,4 @@
 import kerastuner
-import numpy as np
 from kerastuner.engine import hyperparameters as hp_module
 
 import autokeras as ak
