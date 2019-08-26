@@ -9,7 +9,7 @@ from autokeras import ImageDataTransformer
 def transform_y(y_train):
     # Transform y_train.
     y_encoder = OneHotEncoder()
-    y_encoder.fit(y_train)
+    y_encoder.fit_with_labels(y_train)
     y_train = y_encoder.transform(y_train)
     return y_train, y_encoder
 
@@ -34,8 +34,8 @@ if __name__ == '__main__':
         "train_data": train_data,
         "test_data": test_data
     }
-    cnn_module.fit(n_output_node=fit_args.get("n_output_node"),
-                   input_shape=fit_args.get("input_shape"),
-                   train_data=fit_args.get("train_data"),
-                   test_data=fit_args.get("test_data"),
-                   time_limit=24 * 60 * 60)
+    cnn_module.fit_with_labels(n_output_node=fit_args.get("n_output_node"),
+                               input_shape=fit_args.get("input_shape"),
+                               train_data=fit_args.get("train_data"),
+                               test_data=fit_args.get("test_data"),
+                               time_limit=24 * 60 * 60)

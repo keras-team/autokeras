@@ -134,18 +134,18 @@ class OneHotEncoder(object):
 
     This class provides ways to transform data's classification label into vector.
 
-    # Attributes
+    # Arguments
         num_classes: The number of classes in the classification problem.
     """
 
-    def __init__(self):
+    def __init__(self, num_classes=None):
         super().__init__()
-        self.num_classes = 0
+        self.num_classes = num_classes
         self._labels = None
         self._label_to_vec = {}
         self._int_to_label = {}
 
-    def fit(self, data):
+    def fit_with_labels(self, data):
         """Create mapping from label to vector, and vector to label.
 
         # Arguments
@@ -153,14 +153,33 @@ class OneHotEncoder(object):
         """
         data = np.array(data).flatten()
         self._labels = set(data)
-        self.num_classes = len(self._labels)
+        if not self.num_classes:
+            self.num_classes = len(self._labels)
+        if self.num_classes < len(self._labels):
+            raise ValueError('More classes in data than specified.')
         for index, label in enumerate(self._labels):
             vec = np.array([0] * self.num_classes)
             vec[index] = 1
             self._label_to_vec[label] = vec
             self._int_to_label[index] = label
 
-    def transform(self, data):
+    def fit_with_one_hot_encoded(self, data):
+        """Create mapping from label to vector, and vector to label from one-hot.
+
+        # Arguments
+            data: numpy.ndarray. The one-hot encoded labels.
+        """
+        data = np.array(data)
+        if not self.num_classes:
+            self.num_classes = data.shape[0]
+        self._labels = set(range(self.num_classes))
+        for label in self._labels:
+            vec = np.array([0] * self.num_classes)
+            vec[label] = 1
+            self._label_to_vec[label] = vec
+            self._int_to_label[label] = label
+
+    def encode(self, data):
         """Get vector for every element in the data array.
 
         # Arguments
@@ -171,7 +190,7 @@ class OneHotEncoder(object):
             data = data.flatten()
         return np.array(list(map(lambda x: self._label_to_vec[x], data)))
 
-    def inverse_transform(self, data):
+    def decode(self, data):
         """Get label for every element in data.
 
         # Arguments

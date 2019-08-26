@@ -31,6 +31,30 @@ class Head(block.Block):
         return self._loss
 
 
+class EmptyHead(Head):
+    """An empty head that do nothing but return the inputs.
+
+    # Arguments
+        loss: A Keras loss function. Defaults to None. If None, the loss will be
+            inferred from the AutoModel.
+        metrics: A list of Keras metrics. Defaults to None.
+            If None, the metrics will
+            be inferred from the AutoModel.
+        output_shape: Tuple of int(s). Defaults to None.
+            If None, the output shape
+            will be inferred from the AutoModel.
+    """
+
+    def __init__(self, loss=None, metrics=None, output_shape=None, **kwargs):
+        super().__init__(**kwargs)
+        self.output_shape = output_shape
+        self._loss = loss
+        self.metrics = metrics
+
+    def build(self, hp, inputs=None):
+        return inputs
+
+
 class ClassificationHead(Head):
     """Classification Dense layers.
 

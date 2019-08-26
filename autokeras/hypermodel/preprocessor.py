@@ -3,13 +3,14 @@ import random
 
 import numpy as np
 import tensorflow as tf
+import lightgbm as lgb
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
 
 from autokeras import const
-from autokeras.hypermodel import block
 from autokeras import utils
+from autokeras.hypermodel import block
 
 
 class Preprocessor(block.Block):
@@ -140,17 +141,17 @@ class Normalization(Preprocessor):
         self.count = 0
         self.mean = None
         self.std = None
-        self._shape = None
+        self.shape = None
 
     def update(self, x, y=None):
         x = nest.flatten(x)[0].numpy()
         self.sum += x
         self.square_sum += np.square(x)
         self.count += 1
-        self._shape = x.shape
+        self.shape = x.shape
 
     def finalize(self):
-        axis = tuple(range(len(self._shape) - 1))
+        axis = tuple(range(len(self.shape) - 1))
         self.mean = np.mean(self.sum / self.count, axis=axis)
         square_mean = np.mean(self.square_sum / self.count, axis=axis)
         self.std = np.sqrt(square_mean - np.square(self.mean))
@@ -180,7 +181,7 @@ class Normalization(Preprocessor):
                 'count': self.count,
                 'mean': self.mean,
                 'std': self.std,
-                '_shape': self._shape}
+                'shape': self.shape}
 
     def set_weights(self, weights):
         self.sum = weights['sum']
@@ -188,7 +189,7 @@ class Normalization(Preprocessor):
         self.count = weights['count']
         self.mean = weights['mean']
         self.std = weights['std']
-        self._shape = weights['_shape']
+        self.shape = weights['shape']
 
     def clear_weights(self):
         self.sum = 0
@@ -196,7 +197,7 @@ class Normalization(Preprocessor):
         self.count = 0
         self.mean = None
         self.std = None
-        self._shape = None
+        self.shape = None
 
 
 class TextToIntSequence(Preprocessor):
@@ -205,23 +206,23 @@ class TextToIntSequence(Preprocessor):
     def __init__(self, max_len=None, **kwargs):
         super().__init__(**kwargs)
         self.max_len = max_len
-        self._max_len = 0
-        self._tokenizer = tf.keras.preprocessing.text.Tokenizer(
+        self.max_len_in_data = 0
+        self.tokenizer = tf.keras.preprocessing.text.Tokenizer(
             num_words=const.Constant.VOCABULARY_SIZE)
 
     def update(self, x, y=None):
         sentence = nest.flatten(x)[0].numpy().decode('utf-8')
-        self._tokenizer.fit_on_texts([sentence])
-        sequence = self._tokenizer.texts_to_sequences([sentence])[0]
+        self.tokenizer.fit_on_texts([sentence])
+        sequence = self.tokenizer.texts_to_sequences([sentence])[0]
         if self.max_len is None:
-            self._max_len = max(self._max_len, len(sequence))
+            self.max_len_in_data = max(self.max_len_in_data, len(sequence))
 
     def transform(self, x, fit=False):
         sentence = nest.flatten(x)[0].numpy().decode('utf-8')
-        sequence = self._tokenizer.texts_to_sequences(sentence)[0]
+        sequence = self.tokenizer.texts_to_sequences(sentence)[0]
         sequence = tf.keras.preprocessing.sequence.pad_sequences(
             sequence,
-            self.max_len or self._max_len)
+            self.max_len or self.max_len_in_data)
         return sequence
 
     def output_types(self):
@@ -229,7 +230,7 @@ class TextToIntSequence(Preprocessor):
 
     @property
     def output_shape(self):
-        return self.max_len or self._max_len,
+        return self.max_len or self.max_len_in_data,
 
     def get_config(self):
         return {'max_len': self.max_len}
@@ -238,16 +239,16 @@ class TextToIntSequence(Preprocessor):
         self.max_len = config['max_len']
 
     def get_weights(self):
-        return {'_max_len': self._max_len,
-                '_tokenizer': self._tokenizer}
+        return {'max_len_in_data': self.max_len_in_data,
+                'tokenizer': self.tokenizer}
 
     def set_weights(self, weights):
-        self._max_len = weights['_max_len']
-        self._tokenizer = weights['_tokenizer']
+        self.max_len_in_data = weights['max_len_in_data']
+        self.tokenizer = weights['tokenizer']
 
     def clear_weights(self):
-        self._max_len = 0
-        self._tokenizer = tf.keras.preprocessing.text.Tokenizer(
+        self.max_len_in_data = 0
+        self.tokenizer = tf.keras.preprocessing.text.Tokenizer(
             num_words=const.Constant.VOCABULARY_SIZE)
 
 
@@ -256,7 +257,7 @@ class TextToNgramVector(Preprocessor):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._vectorizer = text.TfidfVectorizer(
+        self.vectorizer = text.TfidfVectorizer(
             ngram_range=(1, 2),
             strip_accents='unicode',
             decode_error='replace',
@@ -264,10 +265,9 @@ class TextToNgramVector(Preprocessor):
             min_df=2)
         self.selector = None
         self.labels = None
-        self._max_features = const.Constant.VOCABULARY_SIZE
-        self._vectorizer.max_features = self._max_features
+        self.vectorizer.max_features = const.Constant.VOCABULARY_SIZE
         self._texts = []
-        self._shape = None
+        self.shape = None
 
     def update(self, x, y=None):
         # TODO: Implement a sequential version fit for both
@@ -276,18 +276,18 @@ class TextToNgramVector(Preprocessor):
 
     def finalize(self):
         self._texts = np.array(self._texts)
-        self._vectorizer.fit(self._texts)
-        data = self._vectorizer.transform(self._texts)
-        self._shape = data.shape[1:]
+        self.vectorizer.fit(self._texts)
+        data = self.vectorizer.transform(self._texts)
+        self.shape = data.shape[1:]
         if self.labels:
             self.selector = feature_selection.SelectKBest(
                 feature_selection.f_classif,
-                k=min(self._max_features, data.shape[1]))
+                k=min(self.vectorizer.max_features, data.shape[1]))
             self.selector.fit(data, self.labels)
 
     def transform(self, x, fit=False):
         sentence = nest.flatten(x)[0].numpy().decode('utf-8')
-        data = self._vectorizer.transform([sentence]).toarray()
+        data = self.vectorizer.transform([sentence]).toarray()
         if self.selector:
             data = self.selector.transform(data).astype('float32')
         return data[0]
@@ -297,27 +297,26 @@ class TextToNgramVector(Preprocessor):
 
     @property
     def output_shape(self):
-        return self._shape
+        return self.shape
 
     def get_weights(self):
-        return {'_vectorizer': self._vectorizer,
+        return {'vectorizer': self.vectorizer,
                 'selector': self.selector,
                 'labels': self.labels,
-                '_max_features': self._max_features,
-                '_texts': self._texts,
-                '_shape': self._shape}
+                'max_features': self.vectorizer.max_features,
+                'texts': self._texts,
+                'shape': self.shape}
 
     def set_weights(self, weights):
-        self._vectorizer = weights['_vectorizer']
+        self.vectorizer = weights['vectorizer']
         self.selector = weights['selector']
         self.labels = weights['labels']
-        self._max_features = weights['_max_features']
-        self._vectorizer.max_features = self._max_features
-        self._texts = weights['_texts']
-        self._shape = weights['_shape']
+        self.vectorizer.max_features = weights['max_features']
+        self._texts = weights['texts']
+        self.shape = weights['shape']
 
     def clear_weights(self):
-        self._vectorizer = text.TfidfVectorizer(
+        self.vectorizer = text.TfidfVectorizer(
             ngram_range=(1, 2),
             strip_accents='unicode',
             decode_error='replace',
@@ -325,10 +324,99 @@ class TextToNgramVector(Preprocessor):
             min_df=2)
         self.selector = None
         self.labels = None
-        self._max_features = const.Constant.VOCABULARY_SIZE
-        self._vectorizer.max_features = self._max_features
+        self.vectorizer.max_features = const.Constant.VOCABULARY_SIZE
         self._texts = []
-        self._shape = None
+        self.shape = None
+
+
+class LightGBMClassifier(Preprocessor):
+    """Collect data, train and test the LightGBM for classification task.
+
+    Input data are np.array etc. np.random.rand(example_number, feature_number).
+    Input labels are encoded labels in np.array form
+    etc. np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).
+    Outputs are predicted encoded labels in np.array form.
+
+    The instance of this LgbmClassifier class must be followed by
+    an IdentityBlock and an EmptyHead.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data = []
+        self.label = []
+        self.lgbm = lgb.LGBMClassifier()
+        self._one_hot_encoder = utils.OneHotEncoder()
+        self.y_shape = None
+
+    def update(self, x, y=None):
+        """ Store the train data and decode.
+
+        # Arguments
+            x: Eager Tensor. The data to be stored.
+            y: Eager Tensor. The label to be stored.
+        """
+        y = nest.flatten(y)[0].numpy()
+        self.data.append(nest.flatten(x)[0].numpy())
+        self._one_hot_encoder.fit_with_one_hot_encoded(np.array(y))
+        self.y_shape = np.shape(y)
+        y = y.reshape(1, -1)
+        self.label.append(nest.flatten(self._one_hot_encoder.decode(y))[0])
+
+    def finalize(self):
+        """ Train the LGBM classifier with the data and label stored."""
+        label = np.array(self.label).flatten()
+        # TODO: Set hp for parameters below.
+        param = {'boosting_type': ['gbdt'],
+                 'min_child_weight': [5],
+                 'min_split_gain': [1.0],
+                 'subsample': [0.8],
+                 'colsample_bytree': [0.6],
+                 'max_depth': [10],
+                 'num_leaves': [70],
+                 'learning_rate': [0.04],
+                 'eval_metric': 'logloss'}
+        self.lgbm.set_params(**param)
+        self.lgbm.fit(X=np.asarray(self.data), y=label)
+        self.data = []
+        self.label = []
+
+    def transform(self, x, fit=False):
+        """ Transform the data using well-trained LGBM classifier.
+
+        # Arguments
+            x: Eager Tensor. The data to be transformed.
+
+        # Returns
+            Eager Tensor. The predicted label of x.
+         """
+        ypred = [self.lgbm.predict(x.numpy().reshape((1, -1)))]
+        y = self._one_hot_encoder.encode(ypred)
+        y = y.reshape((-1))
+        return y
+
+    def output_types(self):
+        return tf.int32,
+
+    @property
+    def output_shape(self):
+        return self.y_shape
+
+    def set_weights(self, weights):
+        self.lgbm = weights['lgbm']
+        self._one_hot_encoder = weights['_one_hot_encoder']
+        self.y_shape = weights['y_shape']
+
+    def get_weights(self):
+        return {'lgbm': self.lgbm,
+                '_one_hot_encoder': self._one_hot_encoder,
+                'y_shape': self.y_shape}
+
+    def clear_weights(self):
+        self.lgbm = lgb.LGBMClassifier()
+        self._one_hot_encoder = utils.OneHotEncoder()
+        self.y_shape = None
 
 
 class ImageAugmentation(Preprocessor):
@@ -381,7 +469,7 @@ class ImageAugmentation(Preprocessor):
         self.vertical_flip = vertical_flip
         self.gaussian_noise = gaussian_noise
         self.seed = seed
-        self._shape = None
+        self.shape = None
 
     @staticmethod
     def _get_min_and_max(value, name):
@@ -395,14 +483,14 @@ class ImageAugmentation(Preprocessor):
         else:
             min_value = 1. - value
             max_value = 1. + value
-        return (min_value, max_value)
+        return min_value, max_value
 
     def transform(self, x, fit=False):
         if not fit:
             return x
         np.random.seed(self.seed)
-        self._shape = x.shape
-        target_height, target_width, channels = self._shape
+        self.shape = x.shape
+        target_height, target_width, channels = self.shape
         rotation_range = self.rotation_range
         k_choices = {}
         if rotation_range == 0:
@@ -494,7 +582,7 @@ class ImageAugmentation(Preprocessor):
                 'vertical_flip': self.vertical_flip,
                 'gaussian_noise': self.gaussian_noise,
                 'seed': self.seed,
-                '_shape': self._shape}
+                'shape': self.shape}
 
     def set_config(self, config):
         self.rotation_range = config['rotation_range']
@@ -507,7 +595,7 @@ class ImageAugmentation(Preprocessor):
         self.vertical_flip = config['vertical_flip']
         self.gaussian_noise = config['gaussian_noise']
         self.seed = config['seed']
-        self._shape = config['_shape']
+        self.shape = config['shape']
 
 
 class FeatureEngineering(Preprocessor):
@@ -712,3 +800,4 @@ class FeatureEngineering(Preprocessor):
         self.num_rows = config['row_num']
         self.column_types = config['column_types']
         self.max_columns = config['max_columns']
+

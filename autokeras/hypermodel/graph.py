@@ -305,9 +305,9 @@ class GraphHyperModel(kerastuner.HyperModel):
                                 for input_node in block.inputs]
                         block.update(data, y=y)
 
-            for block in blocks:
-                block.finalize()
-                nest.flatten(block.outputs)[0].shape = block.output_shape
+                for block in blocks:
+                    block.finalize()
+                    nest.flatten(block.outputs)[0].shape = block.output_shape
 
             # Transform the dataset.
             dataset = dataset.map(functools.partial(
