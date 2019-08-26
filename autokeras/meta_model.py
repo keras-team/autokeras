@@ -26,7 +26,7 @@ def assemble(inputs, outputs, dataset):
             assemblers.append(TextAssembler())
         if isinstance(input_node, node.ImageInput):
             assemblers.append(ImageAssembler())
-        if isinstance(input_node, node.StructuredInput):
+        if isinstance(input_node, node.StructuredDataInput):
             assemblers.append(StructuredDataAssembler())
         if isinstance(input_node, node.TimeSeriesInput):
             assemblers.append(TimeSeriesAssembler())
