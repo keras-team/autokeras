@@ -12,7 +12,7 @@ from autokeras.hypermodel import head
 
 @pytest.fixture(scope='module')
 def tmp_dir(tmpdir_factory):
-    return tmpdir_factory.mktemp('test_lgbm')
+    return tmpdir_factory.mktemp('test_lgbm_classifier')
 
 
 def test_normalize():
@@ -124,7 +124,7 @@ def test_augment():
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
-def test_lgbm(tmp_dir):
+def test_lgbm_classifier(tmp_dir):
     x_train = np.random.rand(11, 32)
     y_train = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
