@@ -420,6 +420,85 @@ class LightGBMClassifier(Preprocessor):
         self.y_shape = None
 
 
+class LightGBMRegressor(Preprocessor):
+    """Collect data, train and test the LightGBM for regression task.
+
+    Input data are np.array etc. np.random.rand(example_number, feature_number).
+    Input value are real number in np.array form
+    etc. np.array([1.1, 2.1, 4.2, 0.3, 2.4, 8.5, 7.3, 8.4, 9.4, 4.3]).
+    Outputs are predicted value in np.array form.
+
+    The instance of this LgbmRegressor class must be followed by
+    an IdentityBlock and an EmptyHead.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data = []
+        self.label = []
+        self.lgbm = lgb.LGBMRegressor()
+        self.y_shape = None
+
+    def update(self, x, y=None):
+        """ Store the train data.
+
+        # Arguments
+            x: Eager Tensor. The data to be stored.
+            y: Eager Tensor. The value to be stored.
+        """
+        self.data.append(nest.flatten(x)[0].numpy())
+        self.y_shape = np.shape(y)
+        self.label.append(nest.flatten(y))
+
+    def finalize(self):
+        """ Train the LGBM regressor with the data and value stored."""
+        label = np.array(self.label).flatten()
+        # TODO: Set hp for parameters below.
+        param = {'boosting_type': ['gbdt'],
+                 'min_child_weight': [5],
+                 'min_split_gain': [1.0],
+                 'subsample': [0.8],
+                 'colsample_bytree': [0.6],
+                 'max_depth': [10],
+                 'num_leaves': [70],
+                 'learning_rate': [0.04]}
+        self.lgbm.set_params(**param)
+        self.lgbm.fit(X=np.asarray(self.data), y=label)
+        self.data = []
+        self.label = []
+
+    def transform(self, x, fit=False):
+        """ Transform the data using well-trained LGBM regressor.
+
+        # Arguments
+            x: Eager Tensor. The data to be transformed.
+
+        # Returns
+            Eager Tensor. The predicted value of x.
+         """
+        ypred = [self.lgbm.predict(x.numpy().reshape((1, -1)))]
+        return ypred
+
+    def output_types(self):
+        return tf.int32,
+
+    @property
+    def output_shape(self):
+        return self.y_shape
+
+    def set_weights(self, weights):
+        self.lgbm = weights['lgbm']
+        self.y_shape = weights['y_shape']
+
+    def get_weights(self):
+        return {'lgbm': self.lgbm,
+                'y_shape': self.y_shape}
+
+    def clear_weights(self):
+        self.lgbm = lgb.LGBMRegressor()
+        self.y_shape = None
+
+
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
     # Arguments
