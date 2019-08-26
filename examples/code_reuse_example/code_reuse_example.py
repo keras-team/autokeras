@@ -68,4 +68,3 @@ with torch.no_grad():
 output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
 predicted = encoder.decode(output)
 print(predicted)
-

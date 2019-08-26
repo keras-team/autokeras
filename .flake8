@@ -13,16 +13,8 @@ ignore =
     N812
     # do not use bare 'except'
     E722
-    # trailing whitespace
-    W291
     # constant ... imported as non constant
     N811
-    # local variable is assigned to but never used
-    F841
-    # variable ... in function should be lowercase
-    N806
-    # blank line at end of file
-    W391
 
 
 max-line-length = 85
