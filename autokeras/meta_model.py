@@ -167,7 +167,7 @@ class StructuredDataAssembler(Assembler):
         self.num_col = None
 
     def update(self, x):
-        # TODO: Calculate the statistics.
+        # calculate the statistics.
         x = nest.flatten(x)[0].numpy()
         if self.num_col is None:
             self.num_col = len(x)
@@ -194,12 +194,9 @@ class StructuredDataAssembler(Assembler):
                         self.count_unique_numerical[i][tmp_num] += 1
                 except ValueError:
                     self.count_categorical[i] += 1
-        # print('x is ')
-        # print(x)
-        # print('typeof x is '+repr(x))
 
     def assemble(self, input_node):
-        # TODO: Infer the types of the columns. And pass them to StructuredDataBlock.
+        # Infer the types of the columns. And pass them to StructuredDataBlock.
         for i in range(self.num_col):
             if self.count_categorical[i] > 0:
                 self.data_types.append('categorical')
@@ -207,7 +204,6 @@ class StructuredDataAssembler(Assembler):
                 self.data_types.append('categorical')
             else:
                 self.data_types.append('numerical')
-        print(self.data_types)
         return hyperblock.StructuredDataBlock(self.data_types)(input_node)
 
 

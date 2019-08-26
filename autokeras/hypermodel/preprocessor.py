@@ -1,12 +1,15 @@
+import collections
+import random
+
 import numpy as np
 import tensorflow as tf
-import random
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
 
 from autokeras import const
 from autokeras.hypermodel import block
+from autokeras import utils
 
 
 class Preprocessor(block.Block):
@@ -511,171 +514,133 @@ class FeatureEngineering(Preprocessor):
     # TODO:
     def __init__(self, column_types, max_columns=1000, **kwargs):
         super().__init__(**kwargs)
-        self.column_num = len(column_types)
-        self.row_num = 0
+        self.column_types = column_types
+        self.max_columns = max_columns
+        self.num_columns = len(column_types)
+        self.num_rows = 0
         self._shape = None
+        # A list of categorical column indices.
         self.categorical_col = []
+        # A list of numerical column indices.
         self.numerical_col = []
-        self.categorical_to_int_label = {}
-        self.each_cat_num = {}
-        self.total_cat_num = {}
+        self.label_encoders = {}
+        self.value_counters = {}
         self.categorical_categorical = {}
         self.numerical_categorical = {}
         self.count_frequency = {}
-        self.count_num_cat_mean = {}
-        self.high_level1 = 32
-        self.high_level2 = 100
         self.high_level1_col = []  # less than 32
         self.high_level2_col = []  # more than 100
         self.high_level_cat_cat = {}
         self.high_level_num_cat = {}
 
-        for col in range(self.column_num):
-            if column_types[col] == 'categorical':
-                self.categorical_col.append(col)
+        for index, column_type in enumerate(self.column_types):
+            if column_type == 'categorical':
+                self.categorical_col.append(index)
+            elif column_type == 'numerical':
+                self.numerical_col.append(index)
             else:
-                self.numerical_col.append(col)
+                raise ValueError('Unsupported column type: '
+                                 '{type}'.format(type=column_type))
 
-        for i, cat_col_index1 in enumerate(self.categorical_col):
-            self.categorical_to_int_label[cat_col_index1] = {}
-            self.each_cat_num[cat_col_index1] = {}
+        for index, cat_col_index1 in enumerate(self.categorical_col):
+            self.label_encoders[cat_col_index1] = utils.LabelEncoder()
+            self.value_counters[cat_col_index1] = collections.defaultdict(lambda: 0)
             self.count_frequency[cat_col_index1] = {}
-            for cat_col_index2 in self.categorical_col[i+1:]:
-                self.categorical_categorical[(cat_col_index1, cat_col_index2)] = {}
+            for cat_col_index2 in self.categorical_col[index + 1:]:
+                self.categorical_categorical[(
+                    cat_col_index1,
+                    cat_col_index2)] = collections.defaultdict(lambda: 0)
             for num_col_index in self.numerical_col:
-                self.numerical_categorical[(num_col_index, cat_col_index1)] = {}
-                self.count_num_cat_mean[(num_col_index, cat_col_index1)] = {}
+                self.numerical_categorical[(
+                    num_col_index,
+                    cat_col_index1)] = collections.defaultdict(lambda: 0)
 
     def update(self, x, y=None):
-        # debug
-        print('updating row# : ' + repr(self.row_num))
-        self.row_num += 1
+        self.num_rows += 1
         x = nest.flatten(x)[0].numpy()
+        for index in range(len(x)):
+            x[index] = x[index].decode('utf-8')
 
-        for col_index in range(self.column_num):
-            x[col_index] = x[col_index].decode('utf-8')
-            if col_index in self.numerical_col:
-                if x[col_index] == 'nan':
-                    x[col_index] = 0.0
-                else:
-                    x[col_index] = float(x[col_index])
-            else:
-                if x[col_index] == 'nan':
-                    x[col_index] = 0
+        self._impute(x)
 
         for col_index in self.categorical_col:
             key = str(x[col_index])
-            if key in self.categorical_to_int_label[col_index]:
-                self.each_cat_num[col_index][key] += 1
-            else:
-                new_value = len(self.categorical_to_int_label[col_index])
-                self.categorical_to_int_label[col_index][key] = new_value
-                self.each_cat_num[col_index][key] = 1
+            self.label_encoders[col_index].update(key)
+            self.value_counters[col_index][key] += 1
 
         for col_index1, col_index2 in self.categorical_categorical.keys():
             key = (str(x[col_index1]), str(x[col_index2]))
-            if key in self.categorical_categorical[(col_index1, col_index2)]:
-                self.categorical_categorical[(col_index1, col_index2)][key] += 1
-            else:
-                self.categorical_categorical[(col_index1, col_index2)][key] = 1
+            self.categorical_categorical[(col_index1, col_index2)][key] += 1
 
         for num_col_index, cat_col_index in self.numerical_categorical.keys():
             key = str(x[cat_col_index])
             v = x[num_col_index]
-            if key in self.numerical_categorical[(num_col_index, cat_col_index)]:
-                self.numerical_categorical[(num_col_index, cat_col_index)][key] += v
-            else:
-                self.numerical_categorical[(num_col_index, cat_col_index)][key] = v
-        # # debug
-        # print('column_num = ' + repr(self.column_num))
-        # print('row_num = ' + repr(self.row_num))
-        # print('categorical_col = ' + repr(self.categorical_col))
-        # print('numerical_col = ' + repr(self.numerical_col))
-        # print('categorical_to_int_label = ' + repr(self.categorical_to_int_label))
-        # print('each_cat_num = ' + repr(self.each_cat_num))
-        # print('total_cat_num = ' + repr(self.total_cat_num))
-        # print('categorical_categorical = ' + repr(self.categorical_categorical))
-        # print('numerical_categorical = ' + repr(self.numerical_categorical))
-        # print('count_frequency = ' + repr(self.count_frequency))
-        # print('count_num_cat_mean = ' + repr(self.count_num_cat_mean))
-        # print('high_level1_col = ' + repr(self.high_level1_col))
-        # print('high_level2_col = ' + repr(self.high_level2_col))
-        # print('high_level_cat_cat = ' + repr(self.high_level_cat_cat))
-        # print('high_level_num_cat = ' + repr(self.high_level_num_cat))
+            self.numerical_categorical[(num_col_index, cat_col_index)][key] += v
 
     def transform(self, x, fit=False):
-
         x = nest.flatten(x)[0].numpy()
-        # debug
-        print('transforming data : ' + repr(x))
-        for col_index in range(self.column_num):
-            x[col_index] = x[col_index].decode('utf-8')
-            if col_index in self.numerical_col:
-                if x[col_index] == 'nan':
-                    x[col_index] = 0.0
-                else:
-                    x[col_index] = float(x[col_index])
-            else:
-                if x[col_index] == 'nan':
-                    x[col_index] = 0
 
-        add_column = []
+        for index in range(len(x)):
+            x[index] = x[index].decode('utf-8')
+        self._impute(x)
+
+        new_values = []
         # append frequency
         for col_index in self.high_level1_col:
             cat_name = str(x[col_index])
-            add_column.append(self.count_frequency[col_index][cat_name])
+            new_values.append(self.count_frequency[col_index][cat_name])
 
         # append cat-cat value
         for key, value in self.high_level_cat_cat.items():
             col_index1, col_index2 = key
             pair = (str(x[col_index1]), str(x[col_index2]))
-            add_column.append(value[pair])
+            new_values.append(value[pair])
 
         # append num-cat value
         for key, value in self.high_level_num_cat.items():
             num_col_index, cat_col_index = key
             cat_name = str(x[cat_col_index])
-            add_column.append(value[cat_name])
-        add_column_array = np.array(add_column)
+            new_values.append(value[cat_name])
 
         # LabelEncoding
         for col_index in self.categorical_col:
             key = str(x[col_index])
-            x[col_index] = self.categorical_to_int_label[col_index][key]
+            x[col_index] = self.label_encoders[col_index].transform(key)
 
-        self._shape = (self.row_num, len(np.hstack((x, add_column_array))))
-        print('transform to ->->-> ')
-        print(np.hstack((x, add_column_array)))
-        return np.hstack((x, add_column_array))
+        self._shape = (self.num_rows, len(np.hstack((x, np.array(new_values)))))
+        return np.hstack((x, np.array(new_values)))
+
+    def _impute(self, x):
+        for col_index in range(self.num_columns):
+            if col_index in self.numerical_col:
+                if x[col_index] == 'nan':
+                    x[col_index] = 0.0
+                else:
+                    x[col_index] = float(x[col_index])
+            else:
+                if x[col_index] == 'nan':
+                    x[col_index] = 0
 
     def finalize(self):
-        # debug
-        print('finalizing...')
         # divide column according to category number of the column
-        for col_index in self.each_cat_num.keys():
-            cat_num = len(self.each_cat_num[col_index])
-            self.total_cat_num[col_index] = cat_num
-            # debug
-            print('col_index is '+repr(col_index)+' and cat_num is ' + repr(cat_num))
-            if cat_num <= self.high_level1:
+        for col_index in self.value_counters.keys():
+            num_cat = len(self.value_counters[col_index])
+            if num_cat <= 32:
                 continue
-            # calculate frequency 
-            elif cat_num <= self.high_level2:
+            # calculate frequency
+            elif num_cat <= 100:
                 self.high_level1_col.append(col_index)
-                for key, value in self.each_cat_num[col_index].items():
-                    self.count_frequency[col_index][key] = \
-                                                        value/(self.row_num*cat_num)
+                self.count_frequency[col_index] = {
+                    key: value / (self.num_rows * num_cat)
+                    for key, value in self.value_counters[col_index].items()}
             else:
                 self.high_level2_col.append(col_index)
 
         self.high_level2_col.sort()
-        # debug
-        print('high_level1_col = ' + repr(self.high_level1_col))
-        print('high_level2_col = ' + repr(self.high_level2_col))
 
-        for i, cat_col_index1 in enumerate(self.high_level2_col):
+        for index, cat_col_index1 in enumerate(self.high_level2_col):
             # extract high level columns from cat-cat dict
-            for cat_col_index2 in self.high_level2_col[i+1:]:
+            for cat_col_index2 in self.high_level2_col[index + 1:]:
                 pair = (cat_col_index1, cat_col_index2)
                 self.high_level_cat_cat[pair] = self.categorical_categorical[pair]
 
@@ -684,24 +649,8 @@ class FeatureEngineering(Preprocessor):
                 pair = (num_col_index, cat_col_index1)
                 self.high_level_num_cat[pair] = self.numerical_categorical[pair]
                 for key, value in self.high_level_num_cat[pair].items():
-                    new_value = value/self.each_cat_num[cat_col_index1][key]
-                    self.high_level_num_cat[pair][key] = new_value
-        # debug
-        print('column_num = ' + repr(self.column_num))
-        print('row_num = ' + repr(self.row_num))
-        print('categorical_col = ' + repr(self.categorical_col))
-        print('numerical_col = ' + repr(self.numerical_col))
-        print('categorical_to_int_label = ' + repr(self.categorical_to_int_label))
-        print('each_cat_num = ' + repr(self.each_cat_num))
-        print('total_cat_num = ' + repr(self.total_cat_num))
-        print('categorical_categorical = ' + repr(self.categorical_categorical))
-        print('numerical_categorical = ' + repr(self.numerical_categorical))
-        print('count_frequency = ' + repr(self.count_frequency))
-        print('count_num_cat_mean = ' + repr(self.count_num_cat_mean))
-        print('high_level1_col = ' + repr(self.high_level1_col))
-        print('high_level2_col = ' + repr(self.high_level2_col))
-        print('high_level_cat_cat = ' + repr(self.high_level_cat_cat))
-        print('high_level_num_cat = ' + repr(self.high_level_num_cat))
+                    self.high_level_num_cat[pair][key] /= self.value_counters[
+                        cat_col_index1][key]
 
     def output_types(self):
         return tf.float64,
@@ -710,43 +659,56 @@ class FeatureEngineering(Preprocessor):
     def output_shape(self):
         return self._shape
 
-    def get_state(self):
-        return {'column_num': self.column_num,
-                'row_num': self.row_num,
-                '_shape': self._shape,
+    def get_weights(self):
+        return {'_shape': self._shape,
                 'categorical_col': self.categorical_col,
                 'numerical_col': self.numerical_col,
-                'categorical_to_int_label': self.categorical_to_int_label,
-                'each_cat_num': self.each_cat_num,
-                'total_cat_num': self.total_cat_num,
+                'label_encoders': self.label_encoders,
+                'value_counters': self.value_counters,
                 'categorical_categorical': self.categorical_categorical,
                 'numerical_categorical': self.numerical_categorical,
                 'count_frequency': self.count_frequency,
-                'count_num_cat_mean': self.count_num_cat_mean,
-                'high_level1': self.high_level1,
-                'high_level2': self.high_level2,
                 'high_level1_col': self.high_level1_col,
                 'high_level2_col': self.high_level2_col,
                 'high_level_cat_cat': self.high_level_cat_cat,
                 'high_level_num_cat': self.high_level_num_cat}
 
-    def set_state(self, state):
-        self.column_num = state['column_num']
-        self.row_num = state['row_num']
-        self._shape = state['_shape']
-        self.categorical_col = state['categorical_col']
-        self.numerical_col = state['numerical_col']
-        self.categorical_to_int_label = state['categorical_to_int_label']
-        self.each_cat_num = state['each_cat_num']
-        self.total_cat_num = state['total_cat_num']
-        self.categorical_categorical = state['categorical_categorical']
-        self.numerical_categorical = state['numerical_categorical']
-        self.count_frequency = state['count_frequency']
-        self.count_num_cat_mean = state['count_num_cat_mean']
-        self.high_level1 = 32
-        self.high_level2 = 100
-        self.high_level1_col = state['high_level1_col']
-        self.high_level2_col = state['high_level2_col']
-        self.high_level_cat_cat = state['high_level_cat_cat']
-        self.high_level_num_cat = state['high_level_num_cat']
+    def set_weights(self, weights):
+        self._shape = weights['_shape']
+        self.categorical_col = weights['categorical_col']
+        self.numerical_col = weights['numerical_col']
+        self.label_encoders = weights['label_encoders']
+        self.value_counters = weights['value_counters']
+        self.categorical_categorical = weights['categorical_categorical']
+        self.numerical_categorical = weights['numerical_categorical']
+        self.count_frequency = weights['count_frequency']
+        self.high_level1_col = weights['high_level1_col']
+        self.high_level2_col = weights['high_level2_col']
+        self.high_level_cat_cat = weights['high_level_cat_cat']
+        self.high_level_num_cat = weights['high_level_num_cat']
 
+    def clear_weights(self):
+        self._shape = None
+        self.categorical_col = []
+        self.numerical_col = []
+        self.label_encoders = {}
+        self.value_counters = {}
+        self.categorical_categorical = {}
+        self.numerical_categorical = {}
+        self.count_frequency = {}
+        self.high_level1_col = []  # less than 32
+        self.high_level2_col = []  # more than 100
+        self.high_level_cat_cat = {}
+        self.high_level_num_cat = {}
+
+    def get_config(self):
+        return {'column_num': self.num_columns,
+                'row_num': self.num_rows,
+                'column_types': self.column_types,
+                'max_columns': self.max_columns}
+
+    def set_config(self, config):
+        self.num_columns = config['column_num']
+        self.num_rows = config['row_num']
+        self.column_types = config['column_types']
+        self.max_columns = config['max_columns']
