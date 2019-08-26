@@ -330,7 +330,7 @@ class TextToNgramVector(Preprocessor):
         self._shape = None
 
 
-class LgbmClassifier(Preprocessor):
+class LightGBMClassifier(Preprocessor):
     """Collect data, train and test the LightGBM for classification task.
 
     Input data are np.array etc. np.random.rand(example_number, feature_number).
