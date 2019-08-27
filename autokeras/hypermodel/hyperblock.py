@@ -74,10 +74,12 @@ class ImageBlock(HyperBlock):
                                                   ['resnet', 'xception', 'vanilla'],
                                                   default='resnet')
 
-        normalize = self.normalize or hp.Choice('normalize',
-                                                [True, False],
-                                                default=True)
-        augment = self.augment or hp.Choice('augment', [True, False], default=True)
+        normalize = self.normalize
+        if normalize is None:
+            normalize = hp.Choice('normalize', [True, False], default=True)
+        augment = self.augment
+        if augment is None:
+            augment = hp.Choice('augment', [True, False], default=True)
         if normalize:
             output_node = preprocessor.Normalization()(output_node)
         if augment:
@@ -138,6 +140,24 @@ class StructuredDataBlock(HyperBlock):
                 column_types=self.column_types)(output_node)
         lgbm_classifier = LightGBMClassifierBlock()
         output_node = lgbm_classifier.build(hp=hp, inputs=output_node)
+        return output_node
+
+
+class LightGBMClassifierBlock(HyperBlock):
+
+    def __init__(self, loss='categorical_crossentropy',
+                 metrics='accuracy', **kwargs):
+        super().__init__(**kwargs)
+        self.loss = loss
+        self.metrics = metrics
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        output_node = input_node
+        output_node = preprocessor.LightGBMClassifier()(output_node)
+        output_node = block.IdentityBlock()(output_node)
+        output_node = head.EmptyHead(loss=self.loss,
+                                     metrics=[self.metrics])(output_node)
         return output_node
 
 

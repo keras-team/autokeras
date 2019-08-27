@@ -204,7 +204,7 @@ def test_feature_engineering():
         print(i)
 
 
-def test_lgbm(tmp_dir):
+def test_lgbm_classifier(tmp_dir):
     x_train = np.random.rand(11, 32)
     y_train = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -235,4 +235,6 @@ def test_lgbm(tmp_dir):
     auto_model.tuner.get_best_models()[0].summary()
     print(result)
     assert result.shape == (11, 10)
+
+
 test_feature_engineering()

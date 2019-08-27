@@ -2,6 +2,7 @@ import collections
 import random
 
 import numpy as np
+import warnings
 import tensorflow as tf
 import lightgbm as lgb
 from sklearn import feature_selection
@@ -11,6 +12,10 @@ from tensorflow.python.util import nest
 from autokeras import const
 from autokeras import utils
 from autokeras.hypermodel import block
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import lightgbm as lgb
 
 
 class Preprocessor(block.Block):
@@ -338,7 +343,7 @@ class LightGBMClassifier(Preprocessor):
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).
     Outputs are predicted encoded labels in np.array form.
 
-    The instance of this LgbmClassifier class must be followed by
+    The instance of this LightGBMClassifier class must be followed by
     an IdentityBlock and an EmptyHead.
     """
 
