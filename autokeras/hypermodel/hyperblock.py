@@ -125,7 +125,9 @@ class StructuredDataBlock(HyperBlock):
 
 
 class LightGBMClassifierBlock(HyperBlock):
-    """HyperBlock for tabular data with LightGBM classifier.
+    """Structured data classification with LightGBM.
+
+    It can be used with preprocessors, but not other blocks or heads.
 
     # Arguments
         metrics: String. The type of the model's metrics. If unspecified,
@@ -149,7 +151,9 @@ class LightGBMClassifierBlock(HyperBlock):
 
 
 class LightGBMRegressorBlock(HyperBlock):
-    """HyperBlock for tabular data with LightGBM regressor.
+    """Structured data regression with LightGBM.
+
+    It can be used with preprocessors, but not other blocks or heads.
 
     # Arguments
         metrics: String. The type of the model's metrics. If unspecified,
