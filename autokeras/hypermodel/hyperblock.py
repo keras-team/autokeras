@@ -122,10 +122,15 @@ class TextBlock(HyperBlock):
 
 class StructuredDataBlock(HyperBlock):
 
-    def __init__(self, column_types, feature_engineering=True, **kwargs):
+    def __init__(self,
+                 column_types,
+                 feature_engineering=True,
+                 include_head=True,
+                 **kwargs):
         super().__init__()
         self.feature_engineering = feature_engineering
         self.column_types = column_types
+        self.include_head = include_head
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
@@ -138,7 +143,7 @@ class StructuredDataBlock(HyperBlock):
         if feature_engineering:
             output_node = preprocessor.FeatureEngineering(
                 column_types=self.column_types)(output_node)
-        lgbm_classifier = LightGBMClassifierBlock()
+        lgbm_classifier = LightGBMClassifierBlock(include_head=self.include_head)
         output_node = lgbm_classifier.build(hp=hp, inputs=output_node)
         return output_node
 
@@ -163,19 +168,23 @@ class LightGBMClassifierBlock(HyperBlock):
 
 class LightGBMClassifierBlock(HyperBlock):
 
-    def __init__(self, loss='categorical_crossentropy',
-                 metrics='accuracy', **kwargs):
+    def __init__(self,
+                 loss='categorical_crossentropy',
+                 metrics='accuracy',
+                 include_head=True,
+                 **kwargs):
         super().__init__(**kwargs)
         self.loss = loss
         self.metrics = metrics
+        self.include_head = include_head
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         output_node = preprocessor.LightGBMClassifier()(output_node)
         output_node = block.IdentityBlock()(output_node)
-        output_node = head.EmptyHead(loss=self.loss,
-                                     metrics=[self.metrics])(output_node)
+        if self.include_head:
+            output_node = head.EmptyHead(self.loss, self.metrics)(output_node)
         return output_node
 
 

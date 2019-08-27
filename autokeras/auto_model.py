@@ -144,6 +144,8 @@ class AutoModel(object):
             else utils.prepare_preprocess(x, y)
         if not isinstance(validation_data, tf.data.Dataset):
             x_val, y_val = validation_data
+            # TODO: see if encoding is needed in advance instead of judge twice.
+            y_val = self._label_encoding(y_val)
             validation_data = utils.prepare_preprocess(x_val, y_val)
         return dataset, validation_data
 
@@ -171,6 +173,7 @@ class AutoModel(object):
         return y
 
     def _label_encoding(self, y):
+        y = nest.flatten(y)
         self._label_encoders = []
         new_y = []
         for temp_y, output_node in zip(y, self.outputs):

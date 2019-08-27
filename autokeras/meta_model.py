@@ -207,7 +207,8 @@ class StructuredDataAssembler(Assembler):
                 self.data_types.append('numerical')
         # debug
         print('data_types are ' + repr(self.data_types))
-        return hyperblock.StructuredDataBlock(self.data_types)(input_node)
+        return hyperblock.StructuredDataBlock(self.data_types,
+                                              include_head=False)(input_node)
 
 
 class TimeSeriesAssembler(Assembler):

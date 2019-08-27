@@ -175,3 +175,19 @@ class RegressionHead(Head):
         output_node = block.Flatten().build(hp, output_node)
         output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
         return output_node
+
+
+class EmptyClassificationHead(EmptyHead, ClassificationHead):
+
+    def __init__(self, metrics=None, **kwargs):
+        super().__init__(metrics=metrics, **kwargs)
+        if not self.metrics:
+            self.metrics = ['accuracy']
+
+
+class EmptyRegressionHead(EmptyHead, RegressionHead):
+
+    def __init__(self, metrics=None, **kwargs):
+        super().__init__(metrics=metrics, **kwargs)
+        if not self.metrics:
+            self.metrics = ['mean_squared_error']
