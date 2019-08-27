@@ -5,7 +5,7 @@ import pytest
 import tensorflow as tf
 
 import autokeras as ak
-from autokeras.task import StructuredDataClassifier
+
 @pytest.fixture(scope='module')
 def tmp_dir(tmpdir_factory):
     return tmpdir_factory.mktemp('test_image')
@@ -131,10 +131,10 @@ def test_structured_data_classifier(tmp_dir):
     # x_train, x_test = data[:num_train], data[num_train:]
     x_train = data
     x_test = data
-    y = np.random.randint(0, 10, num_data)
+    y = np.random.randint(0, 3, num_data)
     # y_train, _ = y[:num_train], y[num_train:]
     y_train = y
-    clf = StructuredDataClassifier(directory=tmp_dir, max_trials=1)
+    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=3)
     clf.fit(x_train, y_train, epochs=2, validation_data=(
         x_train, y_train))
     assert clf.predict(x_test).shape == (len(x_train), 1)
