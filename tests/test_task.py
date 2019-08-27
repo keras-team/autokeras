@@ -6,6 +6,7 @@ import tensorflow as tf
 
 import autokeras as ak
 
+
 @pytest.fixture(scope='module')
 def tmp_dir(tmpdir_factory):
     return tmpdir_factory.mktemp('test_image')

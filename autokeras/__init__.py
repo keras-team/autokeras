@@ -13,6 +13,7 @@ from autokeras.hypermodel.head import RegressionHead
 from autokeras.hypermodel.hyperblock import ImageBlock
 from autokeras.hypermodel.hyperblock import TextBlock
 from autokeras.hypermodel.hyperblock import LightGBMClassifierBlock
+from autokeras.hypermodel.hyperblock import LightGBMRegressorBlock
 from autokeras.hypermodel.node import ImageInput
 from autokeras.hypermodel.node import Input
 from autokeras.hypermodel.node import TextInput
