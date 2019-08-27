@@ -170,7 +170,7 @@ class TextRegressor(SupervisedTextPipeline):
 
 
 class SupervisedStructuredDataPipeline(auto_model.AutoModel):
-    
+
     def __init__(self, outputs, **kwargs):
         super().__init__(inputs=node.StructuredInput(),
                          outputs=outputs,
@@ -187,7 +187,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
-        name: String. The name of the AutoModel. Defaults to 
+        name: String. The name of the AutoModel. Defaults to
             'structured_data_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -226,7 +226,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
-        name: String. The name of the AutoModel. Defaults to 
+        name: String. The name of the AutoModel. Defaults to
             'structured_data_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.

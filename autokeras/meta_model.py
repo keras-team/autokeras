@@ -33,7 +33,7 @@ def assemble(inputs, outputs, dataset, seed=None):
             assemblers.append(StructuredDataAssembler())
         if isinstance(input_node, node.TimeSeriesInput):
             assemblers.append(TimeSeriesAssembler())
-
+    print('assemblers are : ' + repr(assemblers))
     # Iterate over the dataset to fit the assemblers.
     hps = []
     for x, _ in dataset:
@@ -158,7 +158,8 @@ class ImageAssembler(Assembler):
 
 class StructuredDataAssembler(Assembler):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.data_types = []
         self.count_nan = None
         self.count_numerical = None
@@ -204,6 +205,8 @@ class StructuredDataAssembler(Assembler):
                 self.data_types.append('categorical')
             else:
                 self.data_types.append('numerical')
+        # debug
+        print('data_types are ' + repr(self.data_types))
         return hyperblock.StructuredDataBlock(self.data_types)(input_node)
 
 

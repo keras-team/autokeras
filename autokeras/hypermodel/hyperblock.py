@@ -119,12 +119,26 @@ class TextBlock(HyperBlock):
 
 
 class StructuredDataBlock(HyperBlock):
-    # TODO:
-    def __init__(self, column_types):
+
+    def __init__(self, column_types, feature_engineering=True, **kwargs):
         super().__init__()
+        self.feature_engineering = feature_engineering
+        self.column_types = column_types
 
     def build(self, hp, inputs=None):
-        raise NotImplementedError
+        input_node = nest.flatten(inputs)[0]
+        output_node = input_node
+        feature_engineering = self.feature_engineering
+        if feature_engineering is None:
+            feature_engineering = hp.Choice('feature_engineering',
+                                            [True, False],
+                                            default=True)
+        if feature_engineering:
+            output_node = preprocessor.FeatureEngineering(
+                column_types=self.column_types)(output_node)
+        lgbm_classifier = LightGBMClassifierBlock()
+        output_node = lgbm_classifier.build(hp=hp, inputs=output_node)
+        return output_node
 
 
 class LightGBMClassifierBlock(HyperBlock):

@@ -598,8 +598,12 @@ class ImageAugmentation(Preprocessor):
         self.shape = config['shape']
 
 
+def return_zero():
+    return 0
+
+
 class FeatureEngineering(Preprocessor):
-    # TODO:
+
     def __init__(self, column_types, max_columns=1000, **kwargs):
         super().__init__(**kwargs)
         self.column_types = column_types
@@ -616,10 +620,12 @@ class FeatureEngineering(Preprocessor):
         self.categorical_categorical = {}
         self.numerical_categorical = {}
         self.count_frequency = {}
-        self.high_level1_col = []  # less than 32
+        self.high_level1_col = []  # more than 32, less than 100
         self.high_level2_col = []  # more than 100
         self.high_level_cat_cat = {}
         self.high_level_num_cat = {}
+        # debug
+        self.transform_count = 0
 
         for index, column_type in enumerate(self.column_types):
             if column_type == 'categorical':
@@ -632,16 +638,17 @@ class FeatureEngineering(Preprocessor):
 
         for index, cat_col_index1 in enumerate(self.categorical_col):
             self.label_encoders[cat_col_index1] = utils.LabelEncoder()
-            self.value_counters[cat_col_index1] = collections.defaultdict(lambda: 0)
+            self.value_counters[cat_col_index1] = collections.defaultdict(
+                return_zero)
             self.count_frequency[cat_col_index1] = {}
             for cat_col_index2 in self.categorical_col[index + 1:]:
                 self.categorical_categorical[(
                     cat_col_index1,
-                    cat_col_index2)] = collections.defaultdict(lambda: 0)
+                    cat_col_index2)] = collections.defaultdict(return_zero)
             for num_col_index in self.numerical_col:
                 self.numerical_categorical[(
                     num_col_index,
-                    cat_col_index1)] = collections.defaultdict(lambda: 0)
+                    cat_col_index1)] = collections.defaultdict(return_zero)
 
     def update(self, x, y=None):
         self.num_rows += 1
@@ -667,7 +674,9 @@ class FeatureEngineering(Preprocessor):
 
     def transform(self, x, fit=False):
         x = nest.flatten(x)[0].numpy()
-
+        # debug
+        self.transform_count += 1
+        # print('transforming # ' + repr(self.transform_count) + ' : ' + repr(x))
         for index in range(len(x)):
             x[index] = x[index].decode('utf-8')
         self._impute(x)
@@ -696,6 +705,9 @@ class FeatureEngineering(Preprocessor):
             x[col_index] = self.label_encoders[col_index].transform(key)
 
         self._shape = (self.num_rows, len(np.hstack((x, np.array(new_values)))))
+        # debug
+        # print('transform to ->->->')
+        # print(np.hstack((x, np.array(new_values))))
         return np.hstack((x, np.array(new_values)))
 
     def _impute(self, x):
@@ -713,15 +725,15 @@ class FeatureEngineering(Preprocessor):
         # divide column according to category number of the column
         for col_index in self.value_counters.keys():
             num_cat = len(self.value_counters[col_index])
-            if num_cat <= 32:
-                continue
+            # if num_cat <= 32:
+            #     continue
             # calculate frequency
-            elif num_cat <= 100:
+            if num_cat > 32 and num_cat <= 100:
                 self.high_level1_col.append(col_index)
                 self.count_frequency[col_index] = {
                     key: value / (self.num_rows * num_cat)
                     for key, value in self.value_counters[col_index].items()}
-            else:
+            elif num_cat > 100:
                 self.high_level2_col.append(col_index)
 
         self.high_level2_col.sort()
@@ -739,6 +751,20 @@ class FeatureEngineering(Preprocessor):
                 for key, value in self.high_level_num_cat[pair].items():
                     self.high_level_num_cat[pair][key] /= self.value_counters[
                         cat_col_index1][key]
+        # debug
+        print('column_num = ' + repr(self.num_columns))
+        print('row_num = ' + repr(self.num_rows))
+        print('categorical_col = ' + repr(self.categorical_col))
+        print('numerical_col = ' + repr(self.numerical_col))
+        print('label_encoders = ' + repr(self.label_encoders))
+        print('value_counters = ' + repr(self.value_counters))
+        print('categorical_categorical = ' + repr(self.categorical_categorical))
+        print('numerical_categorical = ' + repr(self.numerical_categorical))
+        print('count_frequency = ' + repr(self.count_frequency))
+        print('high_level1_col = ' + repr(self.high_level1_col))
+        print('high_level2_col = ' + repr(self.high_level2_col))
+        print('high_level_cat_cat = ' + repr(self.high_level_cat_cat))
+        print('high_level_num_cat = ' + repr(self.high_level_num_cat))
 
     def output_types(self):
         return tf.float64,
@@ -749,6 +775,7 @@ class FeatureEngineering(Preprocessor):
 
     def get_weights(self):
         return {'_shape': self._shape,
+                'num_rows': self.num_rows,
                 'categorical_col': self.categorical_col,
                 'numerical_col': self.numerical_col,
                 'label_encoders': self.label_encoders,
@@ -763,6 +790,7 @@ class FeatureEngineering(Preprocessor):
 
     def set_weights(self, weights):
         self._shape = weights['_shape']
+        self.num_rows = weights['num_rows']
         self.categorical_col = weights['categorical_col']
         self.numerical_col = weights['numerical_col']
         self.label_encoders = weights['label_encoders']
@@ -777,6 +805,7 @@ class FeatureEngineering(Preprocessor):
 
     def clear_weights(self):
         self._shape = None
+        self.num_rows = 0
         self.categorical_col = []
         self.numerical_col = []
         self.label_encoders = {}
@@ -791,13 +820,10 @@ class FeatureEngineering(Preprocessor):
 
     def get_config(self):
         return {'column_num': self.num_columns,
-                'row_num': self.num_rows,
                 'column_types': self.column_types,
                 'max_columns': self.max_columns}
 
     def set_config(self, config):
         self.num_columns = config['column_num']
-        self.num_rows = config['row_num']
         self.column_types = config['column_types']
         self.max_columns = config['max_columns']
-

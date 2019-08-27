@@ -161,6 +161,7 @@ def test_feature_engineering():
         for g in size:
             career_size.append(c+'_'+g)
 
+    np.random.seed(0)
     col_bool = np.random.choice(boolean, data_num).reshape(data_num, 1)
     col_num_to_cat = np.random.randint(20, 41, size=data_num).reshape(data_num, 1)
     col_float = 100*np.random.random(data_num,).reshape(data_num, 1)
@@ -234,3 +235,4 @@ def test_lgbm(tmp_dir):
     auto_model.tuner.get_best_models()[0].summary()
     print(result)
     assert result.shape == (11, 10)
+test_feature_engineering()
