@@ -336,7 +336,7 @@ class LightGBMClassifier(Preprocessor):
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).
     Outputs are predicted encoded labels in np.array form.
 
-    The instance of this LgbmClassifier class must be followed by
+    The instance of this LightGBMClassifier class must be followed by
     an IdentityBlock and an EmptyHead.
     """
 
