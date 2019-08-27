@@ -4,7 +4,6 @@ import random
 import numpy as np
 import warnings
 import tensorflow as tf
-import lightgbm as lgb
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
