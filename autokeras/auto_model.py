@@ -164,7 +164,6 @@ class AutoModel(object):
         x = self.hypermodel.preprocess(best_hp, x)
         x = x.batch(batch_size)
         y = best_model.predict(x, **kwargs)
-        y = nest.flatten(y)
         y = self._postprocess(y)
         if isinstance(y, list) and len(y) == 1:
             y = y[0]
@@ -189,6 +188,7 @@ class AutoModel(object):
         return new_y
 
     def _postprocess(self, y):
+        y = nest.flatten(y)
         if not self._label_encoders:
             return y
         new_y = []
