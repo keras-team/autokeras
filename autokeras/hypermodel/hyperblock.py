@@ -125,37 +125,47 @@ class StructuredDataBlock(HyperBlock):
 
 
 class LightGBMClassifierBlock(HyperBlock):
+    """[summary]
 
-    def __init__(self, loss='categorical_crossentropy',
-                 metrics='accuracy', **kwargs):
+    # Arguments
+        metrics:
+    """
+
+    def __init__(self, metrics=None, **kwargs):
         super().__init__(**kwargs)
-        self.loss = loss
         self.metrics = metrics
+        if self.metrics is None:
+            self.metrics = ['accuracy']
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         output_node = preprocessor.LightGBMClassifier()(output_node)
         output_node = block.IdentityBlock()(output_node)
-        output_node = head.EmptyHead(loss=self.loss,
+        output_node = head.EmptyHead(loss='categorical_crossentropy',
                                      metrics=[self.metrics])(output_node)
         return output_node
 
 
 class LightGBMRegressorBlock(HyperBlock):
+    """[summary]
 
-    def __init__(self, loss='categorical_crossentropy',
-                 metrics='accuracy', **kwargs):
+    # Arguments
+        metrics:
+    """
+
+    def __init__(self, metrics=None, **kwargs):
         super().__init__(**kwargs)
-        self.loss = loss
         self.metrics = metrics
+        if self.metrics is None:
+            self.metrics = ['mean_squared_error']
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         output_node = preprocessor.LightGBMRegressor()(output_node)
         output_node = block.IdentityBlock()(output_node)
-        output_node = head.EmptyHead(loss=self.loss,
+        output_node = head.EmptyHead(loss='mean_squared_error',
                                      metrics=[self.metrics])(output_node)
         return output_node
 

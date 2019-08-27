@@ -262,7 +262,7 @@ class TextToNgramVector(Preprocessor):
             analyzer='word',
             min_df=2)
         self.selector = None
-        self.labels = None
+        self.targets = None
         self.vectorizer.max_features = const.Constant.VOCABULARY_SIZE
         self._texts = []
         self.shape = None
@@ -277,11 +277,11 @@ class TextToNgramVector(Preprocessor):
         self.vectorizer.fit(self._texts)
         data = self.vectorizer.transform(self._texts)
         self.shape = data.shape[1:]
-        if self.labels:
+        if self.targets:
             self.selector = feature_selection.SelectKBest(
                 feature_selection.f_classif,
                 k=min(self.vectorizer.max_features, data.shape[1]))
-            self.selector.fit(data, self.labels)
+            self.selector.fit(data, self.targets)
 
     def transform(self, x, fit=False):
         sentence = nest.flatten(x)[0].numpy().decode('utf-8')
@@ -300,7 +300,7 @@ class TextToNgramVector(Preprocessor):
     def get_weights(self):
         return {'vectorizer': self.vectorizer,
                 'selector': self.selector,
-                'labels': self.labels,
+                'targets': self.targets,
                 'max_features': self.vectorizer.max_features,
                 'texts': self._texts,
                 'shape': self.shape}
@@ -308,7 +308,7 @@ class TextToNgramVector(Preprocessor):
     def set_weights(self, weights):
         self.vectorizer = weights['vectorizer']
         self.selector = weights['selector']
-        self.labels = weights['labels']
+        self.targets = weights['targets']
         self.vectorizer.max_features = weights['max_features']
         self._texts = weights['texts']
         self.shape = weights['shape']
@@ -321,13 +321,61 @@ class TextToNgramVector(Preprocessor):
             analyzer='word',
             min_df=2)
         self.selector = None
-        self.labels = None
+        self.targets = None
         self.vectorizer.max_features = const.Constant.VOCABULARY_SIZE
         self._texts = []
         self.shape = None
 
 
-class LightGBMClassifier(Preprocessor):
+class LightGBMModel(Preprocessor):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data = []
+        self.targets = []
+        self.y_shape = None
+        self.lgbm = None
+
+    def transform(self, x, fit=False):
+        """ Transform the data using well-trained LightGBM regressor.
+
+        # Arguments
+            x: Eager Tensor. The data to be transformed.
+
+        # Returns
+            Eager Tensor. The predicted value of x.
+         """
+        return [self.lgbm.predict(x.numpy().reshape((1, -1)))]
+
+    def get_params(self):
+        return {'boosting_type': ['gbdt'],
+                'min_child_weight': [5],
+                'min_split_gain': [1.0],
+                'subsample': [0.8],
+                'colsample_bytree': [0.6],
+                'max_depth': [10],
+                'num_leaves': [70],
+                'learning_rate': [0.04]}
+
+    def finalize(self):
+        """ Train the LightGBM model with the data and value stored."""
+        target = np.array(self.targets).flatten()
+        # TODO: Set hp for parameters below.
+        self.lgbm.set_params(**self.get_params())
+        self.lgbm.fit(X=np.asarray(self.data), y=target)
+        self.data = []
+        self.targets = []
+
+    @property
+    def output_shape(self):
+        return self.y_shape
+
+    def set_weights(self, weights):
+        self.lgbm = weights['lgbm']
+        self.y_shape = weights['y_shape']
+
+
+class LightGBMClassifier(LightGBMModel):
     """Collect data, train and test the LightGBM for classification task.
 
     Input data are np.array etc. np.random.rand(example_number, feature_number).
@@ -342,11 +390,8 @@ class LightGBMClassifier(Preprocessor):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.data = []
-        self.label = []
         self.lgbm = lgb.LGBMClassifier()
         self._one_hot_encoder = utils.OneHotEncoder()
-        self.y_shape = None
 
     def update(self, x, y=None):
         """ Store the train data and decode.
@@ -360,36 +405,23 @@ class LightGBMClassifier(Preprocessor):
         self._one_hot_encoder.fit_with_one_hot_encoded(np.array(y))
         self.y_shape = np.shape(y)
         y = y.reshape(1, -1)
-        self.label.append(nest.flatten(self._one_hot_encoder.decode(y))[0])
+        self.targets.append(nest.flatten(self._one_hot_encoder.decode(y))[0])
 
-    def finalize(self):
-        """ Train the LGBM classifier with the data and label stored."""
-        label = np.array(self.label).flatten()
-        # TODO: Set hp for parameters below.
-        param = {'boosting_type': ['gbdt'],
-                 'min_child_weight': [5],
-                 'min_split_gain': [1.0],
-                 'subsample': [0.8],
-                 'colsample_bytree': [0.6],
-                 'max_depth': [10],
-                 'num_leaves': [70],
-                 'learning_rate': [0.04],
-                 'eval_metric': 'logloss'}
-        self.lgbm.set_params(**param)
-        self.lgbm.fit(X=np.asarray(self.data), y=label)
-        self.data = []
-        self.label = []
+    def get_params(self):
+        params = super().get_params()
+        params['eval_metric'] = 'logloss'
+        return params
 
     def transform(self, x, fit=False):
-        """ Transform the data using well-trained LGBM classifier.
+        """ Transform the data using well-trained LightGBM classifier.
 
         # Arguments
             x: Eager Tensor. The data to be transformed.
 
         # Returns
             Eager Tensor. The predicted label of x.
-         """
-        ypred = [self.lgbm.predict(x.numpy().reshape((1, -1)))]
+        """
+        ypred = super().transform(x, fit)
         y = self._one_hot_encoder.encode(ypred)
         y = y.reshape((-1))
         return y
@@ -397,14 +429,9 @@ class LightGBMClassifier(Preprocessor):
     def output_types(self):
         return tf.int32,
 
-    @property
-    def output_shape(self):
-        return self.y_shape
-
     def set_weights(self, weights):
-        self.lgbm = weights['lgbm']
+        super().set_weights(weights)
         self._one_hot_encoder = weights['_one_hot_encoder']
-        self.y_shape = weights['y_shape']
 
     def get_weights(self):
         return {'lgbm': self.lgbm,
@@ -417,7 +444,7 @@ class LightGBMClassifier(Preprocessor):
         self.y_shape = None
 
 
-class LightGBMRegressor(Preprocessor):
+class LightGBMRegressor(LightGBMModel):
     """Collect data, train and test the LightGBM for regression task.
 
     Input data are np.array etc. np.random.rand(example_number, feature_number).
@@ -431,10 +458,7 @@ class LightGBMRegressor(Preprocessor):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.data = []
-        self.label = []
         self.lgbm = lgb.LGBMRegressor()
-        self.y_shape = None
 
     def update(self, x, y=None):
         """ Store the train data.
@@ -445,47 +469,10 @@ class LightGBMRegressor(Preprocessor):
         """
         self.data.append(nest.flatten(x)[0].numpy())
         self.y_shape = np.shape(y)
-        self.label.append(nest.flatten(y))
-
-    def finalize(self):
-        """ Train the LGBM regressor with the data and value stored."""
-        label = np.array(self.label).flatten()
-        # TODO: Set hp for parameters below.
-        param = {'boosting_type': ['gbdt'],
-                 'min_child_weight': [5],
-                 'min_split_gain': [1.0],
-                 'subsample': [0.8],
-                 'colsample_bytree': [0.6],
-                 'max_depth': [10],
-                 'num_leaves': [70],
-                 'learning_rate': [0.04]}
-        self.lgbm.set_params(**param)
-        self.lgbm.fit(X=np.asarray(self.data), y=label)
-        self.data = []
-        self.label = []
-
-    def transform(self, x, fit=False):
-        """ Transform the data using well-trained LGBM regressor.
-
-        # Arguments
-            x: Eager Tensor. The data to be transformed.
-
-        # Returns
-            Eager Tensor. The predicted value of x.
-         """
-        ypred = [self.lgbm.predict(x.numpy().reshape((1, -1)))]
-        return ypred
+        self.targets.append(nest.flatten(y))
 
     def output_types(self):
-        return tf.int32,
-
-    @property
-    def output_shape(self):
-        return self.y_shape
-
-    def set_weights(self, weights):
-        self.lgbm = weights['lgbm']
-        self.y_shape = weights['y_shape']
+        return tf.float64,
 
     def get_weights(self):
         return {'lgbm': self.lgbm,
@@ -498,6 +485,7 @@ class LightGBMRegressor(Preprocessor):
 
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
+
     # Arguments
         rotation_range: Int. The value can only be 0, 90, or 180.
             Degree range for random rotations. Default to 180.

@@ -163,8 +163,8 @@ def test_lgbm_regressor(tmp_dir):
     output_node = input_node
     output_node = preprocessor.LightGBMRegressor()(output_node)
     output_node = block.IdentityBlock()(output_node)
-    output_node = head.EmptyHead(loss='categorical_crossentropy',
-                                 metrics=['accuracy'])(output_node)
+    output_node = head.EmptyHead(loss='mean_squared_error',
+                                 metrics=['mean_squared_error'])(output_node)
 
     auto_model = ak.GraphAutoModel(input_node,
                                    output_node,
