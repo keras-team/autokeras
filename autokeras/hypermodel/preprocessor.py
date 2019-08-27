@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-import lightgbm as lgb
+import warnings
 import random
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
@@ -9,6 +9,10 @@ from tensorflow.python.util import nest
 from autokeras import const
 from autokeras import utils
 from autokeras.hypermodel import block
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import lightgbm as lgb
 
 
 class Preprocessor(block.Block):
