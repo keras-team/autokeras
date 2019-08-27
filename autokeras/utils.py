@@ -106,7 +106,7 @@ def is_label(y):
     # Returns
         Boolean. Whether the targets are plain label, not encoded.
     """
-    return len(y.flatten()) == len(y) and len(set(y.flatten())) > 2
+    return len(y.flatten()) == len(y) and len(set(y.flatten())) >= 2
 
 
 def pickle_from_file(path):
