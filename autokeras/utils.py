@@ -106,7 +106,7 @@ def is_label(y):
     # Returns
         Boolean. Whether the targets are plain label, not encoded.
     """
-    return len(y.flatten()) == len(y) and len(set(y.flatten())) > 2
+    return len(y.flatten()) == len(y)
 
 
 def pickle_from_file(path):
@@ -196,4 +196,4 @@ class OneHotEncoder(object):
             data: numpy.ndarray. The output probabilities of the classification head.
         """
         return np.array(list(map(lambda x: self._int_to_label[x],
-                                 np.argmax(np.array(data), axis=1))))
+                                 np.argmax(np.array(data), axis=1)))).reshape(-1, 1)
