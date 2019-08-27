@@ -74,10 +74,12 @@ class ImageBlock(HyperBlock):
                                                   ['resnet', 'xception', 'vanilla'],
                                                   default='resnet')
 
-        normalize = self.normalize or hp.Choice('normalize',
-                                                [True, False],
-                                                default=True)
-        augment = self.augment or hp.Choice('augment', [True, False], default=True)
+        normalize = self.normalize
+        if normalize is None:
+            normalize = hp.Choice('normalize', [True, False], default=True)
+        augment = self.augment
+        if augment is None:
+            augment = hp.Choice('augment', [True, False], default=True)
         if normalize:
             output_node = preprocessor.Normalization()(output_node)
         if augment:

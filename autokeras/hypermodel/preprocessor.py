@@ -1,6 +1,6 @@
 import numpy as np
-import tensorflow as tf
 import warnings
+import tensorflow as tf
 import random
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
