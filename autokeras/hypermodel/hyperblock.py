@@ -139,7 +139,7 @@ class LightGBMClassifierBlock(HyperBlock):
     def __init__(self, metrics=None, **kwargs):
         super().__init__(**kwargs)
         self.metrics = metrics
-        if not self.metrics:
+        if self.metrics is None:
             self.metrics = ['accuracy']
 
     def build(self, hp, inputs=None):
@@ -165,7 +165,7 @@ class LightGBMRegressorBlock(HyperBlock):
     def __init__(self, metrics=None, **kwargs):
         super().__init__(**kwargs)
         self.metrics = metrics
-        if not self.metrics:
+        if self.metrics is None:
             self.metrics = ['mean_squared_error']
 
     def build(self, hp, inputs=None):
