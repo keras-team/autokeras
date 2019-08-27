@@ -74,7 +74,7 @@ def test_text_regressor(tmp_dir):
 def test_structured_data_classifier(tmp_dir):
     # generate high_level dataset
     num_data = 500
-    num_train = 200
+    # num_train = 200
     num_features = 8
     num_nan = 100
     data = []
@@ -128,9 +128,12 @@ def test_structured_data_classifier(tmp_dir):
         row = np.random.randint(0, num_data)
         col = np.random.randint(0, num_features)
         data[row][col] = np.nan
-    x_train, x_test = data[:num_train], data[num_train:]
-    y = np.random.randint(0, 10, 100)
-    y_train, _ = y[:num_train], y[num_train:]
+    # x_train, x_test = data[:num_train], data[num_train:]
+    x_train = data
+    x_test = data
+    y = np.random.randint(0, 10, num_data)
+    # y_train, _ = y[:num_train], y[num_train:]
+    y_train = y
     clf = StructuredDataClassifier(directory=tmp_dir, max_trials=1)
     clf.fit(x_train, y_train, epochs=2, validation_data=(
         x_train, y_train))

@@ -197,7 +197,7 @@ class OneHotEncoder(object):
             data: numpy.ndarray. The output probabilities of the classification head.
         """
         return np.array(list(map(lambda x: self._int_to_label[x],
-                                 np.argmax(np.array(data), axis=1))))
+                                 np.argmax(np.array(data), axis=1)))).reshape(-1, 1)
 
 
 class LabelEncoder(object):
