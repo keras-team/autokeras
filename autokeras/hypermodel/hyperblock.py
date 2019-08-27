@@ -125,10 +125,11 @@ class StructuredDataBlock(HyperBlock):
 
 
 class LightGBMClassifierBlock(HyperBlock):
-    """[summary]
+    """HyperBlock for tabular data with LightGBM classifier.
 
     # Arguments
-        metrics:
+        metrics: String. The type of the model's metrics. If unspecified,
+            it will be 'accuracy' for classification task.
     """
 
     def __init__(self, metrics=None, **kwargs):
@@ -148,10 +149,11 @@ class LightGBMClassifierBlock(HyperBlock):
 
 
 class LightGBMRegressorBlock(HyperBlock):
-    """[summary]
+    """HyperBlock for tabular data with LightGBM regressor.
 
     # Arguments
-        metrics:
+        metrics: String. The type of the model's metrics. If unspecified,
+            it will be 'mean_squared_error' for regression task.
     """
 
     def __init__(self, metrics=None, **kwargs):

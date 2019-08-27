@@ -49,7 +49,6 @@ class EmptyHead(Head):
         super().__init__(**kwargs)
         self.output_shape = output_shape
         self._loss = loss
-        # TODO: Initialize Loss Here?
         self.metrics = metrics
 
     def build(self, hp, inputs=None):
