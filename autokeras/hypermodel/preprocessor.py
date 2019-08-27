@@ -328,6 +328,13 @@ class TextToNgramVector(Preprocessor):
 
 
 class LightGBMModel(Preprocessor):
+    """The base class for LightGBMClassifier and LightGBMRegressor."""
+
+    def update(self, x, y=None):
+        raise NotImplementedError
+
+    def output_types(self):
+        raise NotImplementedError
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -344,7 +351,7 @@ class LightGBMModel(Preprocessor):
 
         # Returns
             Eager Tensor. The predicted value of x.
-         """
+        """
         return [self.lgbm.predict(x.numpy().reshape((1, -1)))]
 
     def get_params(self):
@@ -385,7 +392,7 @@ class LightGBMClassifier(LightGBMModel):
     Outputs are predicted encoded labels in np.array form.
 
     The instance of this LightGBMClassifier class must be followed by
-    an IdentityBlock and an EmptyHead.
+    an IdentityBlock and an EmptyHead as shown in LightGBMClassifierBlock class.
     """
 
     def __init__(self, **kwargs):
@@ -453,7 +460,7 @@ class LightGBMRegressor(LightGBMModel):
     Outputs are predicted value in np.array form.
 
     The instance of this LightGBMRegressor class must be followed by
-    an IdentityBlock and an EmptyHead.
+    an IdentityBlock and an EmptyHead as shown in LightGBMRegressorBlock class.
     """
 
     def __init__(self, **kwargs):
