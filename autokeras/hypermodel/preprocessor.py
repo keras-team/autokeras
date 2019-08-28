@@ -898,7 +898,7 @@ class FeatureEngineering(Preprocessor):
         self.categorical_categorical = {}
         self.numerical_categorical = {}
         self.count_frequency = {}
-        self.high_level1_col = []  # less than 32
+        self.high_level1_col = []  # more than 32, less than 100
         self.high_level2_col = []  # more than 100
         self.high_level_cat_cat = {}
         self.high_level_num_cat = {}

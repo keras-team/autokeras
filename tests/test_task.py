@@ -72,11 +72,9 @@ def test_text_regressor(tmp_dir):
     assert clf.predict(test_x).shape == (len(train_x), 1)
 
 
-def test_structured_data_classifier(tmp_dir):
+def structured_data(num_data=500):
     # generate high_level dataset
-    num_data = 500
-    # num_train = 200
-    num_features = 8
+    num_feature = 8
     num_nan = 100
     data = []
     # 12 classes
@@ -109,6 +107,7 @@ def test_structured_data_classifier(tmp_dir):
             career_color.append(c+'_'+r)
         for g in size:
             career_size.append(c+'_'+g)
+
     np.random.seed(0)
     col_bool = np.random.choice(boolean, num_data).reshape(num_data, 1)
     col_num_to_cat = np.random.randint(20, 41, size=num_data).reshape(num_data, 1)
@@ -127,84 +126,46 @@ def test_structured_data_classifier(tmp_dir):
     # generate np.nan data
     for i in range(num_nan):
         row = np.random.randint(0, num_data)
-        col = np.random.randint(0, num_features)
+        col = np.random.randint(0, num_feature)
         data[row][col] = np.nan
+    return data
+
+
+def test_structured_data_classifier(tmp_dir):
+    num_data = 500
+    data = structured_data(num_data)
     # x_train, x_test = data[:num_train], data[num_train:]
     x_train = data
-    x_test = data
+    # x_test = data
     y = np.random.randint(0, 3, num_data)
     # y_train, _ = y[:num_train], y[num_train:]
     y_train = y
     clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=3)
     clf.fit(x_train, y_train, epochs=2, validation_data=(
         x_train, y_train))
-    assert clf.predict(x_test).shape == (len(x_train), 1)
 
 
-def test_structured_data_regressor(tmp_dir):
-    # generate high_level dataset
-    num_data = 500
-    # num_train = 200
-    num_features = 8
-    num_nan = 100
-    data = []
-    # 12 classes
-    career = ['doctor', 'nurse', 'driver', 'chef', 'teacher', 'writer',
-              'actress', 'engineer', 'lawyer', 'realtor', 'agent', 'pilot']
-    # 15 classes
-    states = ['CA', 'FL', 'GA', 'IL', 'MD',
-              'MA', 'MI', 'MN', 'NJ', 'NY',
-              'NC', 'PA', 'TX', 'UT', 'VA']
-    # 13 classes
-    years = ['first', 'second', 'third', 'fourth', 'fifth',
-             'sixth', 'seventh', 'eighth', 'ninth', 'tenth',
-             'eleventh', 'twelfth', 'thirteenth']
-    # 10 classes
-    color = ['red', 'orange', 'yellow', 'green', 'blue',
-             'purple', 'beige', 'pink', 'silver', 'gold']
-    # 3 classes
-    size = ['S', 'M', 'L']
-    boolean = ['True', 'False']
-    career_states = []  # 180 classes
-    career_years = []  # 156 classes
-    career_color = []  # 120 classes
-    career_size = []  # 36 classes
-    for c in career:
-        for s in states:
-            career_states.append(c+'_'+s)
-        for y in years:
-            career_years.append(c+'_'+y)
-        for r in color:
-            career_color.append(c+'_'+r)
-        for g in size:
-            career_size.append(c+'_'+g)
-    np.random.seed(0)
-    col_bool = np.random.choice(boolean, num_data).reshape(num_data, 1)
-    col_num_to_cat = np.random.randint(20, 41, size=num_data).reshape(num_data, 1)
-    col_float = 100*np.random.random(num_data,).reshape(num_data, 1)
-    col_int = np.random.randint(2000, 4000, size=num_data).reshape(num_data, 1)
-    col_morethan_32 = np.random.choice(career_size, num_data).reshape(num_data, 1)
-    col1_morethan_100 = np.random.choice(career_states,
-                                         num_data).reshape(num_data, 1)
-    col2_morethan_100 = np.random.choice(career_years,
-                                         num_data).reshape(num_data, 1)
-    col3_morethan_100 = np.random.choice(career_color,
-                                         num_data).reshape(num_data, 1)
-    data = np.concatenate((col_bool, col_num_to_cat, col_float, col_int,
-                           col_morethan_32, col1_morethan_100, col2_morethan_100,
-                           col3_morethan_100), axis=1)
-    # generate np.nan data
-    for i in range(num_nan):
-        row = np.random.randint(0, num_data)
-        col = np.random.randint(0, num_features)
-        data[row][col] = np.nan
-    # x_train, x_test = data[:num_train], data[num_train:]
-    x_train = data
-    x_test = data
-    y = np.random.random(num_data,)
-    # y_train, _ = y[:num_train], y[num_train:]
-    y_train = y
-    clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=3)
+# def test_structured_data_regressor(tmp_dir):
+#     num_data = 500
+#     data = structured_data(num_data)
+#     # x_train, x_test = data[:num_train], data[num_train:]
+#     x_train = data
+#     # x_test = data
+#     y = np.random.random(num_data,)
+#     # y_train, _ = y[:num_train], y[num_train:]
+#     y_train = y
+#     clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=3)
+#     clf.fit(x_train, y_train, epochs=2, validation_data=(
+#         x_train, y_train))
+
+
+def test_structured_data_classifier_transform_new_data(tmp_dir):
+    num_data = 200
+    num_train = 100
+    data = structured_data(num_data)
+    x_train, x_test = data[:num_train], data[num_train:]
+    y = np.random.randint(0, 3, num_data)
+    y_train, y_test = y[:num_train], y[num_train:]
+    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=3)
     clf.fit(x_train, y_train, epochs=2, validation_data=(
-        x_train, y_train))
-    assert clf.predict(x_test).shape == (len(x_train), 1)
+        x_test, y_test))
