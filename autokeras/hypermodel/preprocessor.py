@@ -346,7 +346,7 @@ class LightGBMModel(Preprocessor):
         super().__init__(**kwargs)
         self.data = []
         self.targets = []
-        self.y_shape = None
+        self._output_shape = None
         self.lgbm = None
 
     def transform(self, x, fit=False):
@@ -362,13 +362,14 @@ class LightGBMModel(Preprocessor):
 
     def get_params(self):
         return {'boosting_type': ['gbdt'],
-                'min_child_weight': [5],
+                'min_child_weight': 5,
                 'min_split_gain': [1.0],
                 'subsample': [0.8],
-                'colsample_bytree': [0.6],
-                'max_depth': [10],
+                'colsample_bytree': 0.6,
+                'max_depth': 10,
                 'num_leaves': [70],
-                'learning_rate': [0.04]}
+                'learning_rate': 0.01,
+                'n_estimators': 50}
 
     def finalize(self):
         """ Train the LightGBM model with the data and value stored."""
@@ -381,11 +382,11 @@ class LightGBMModel(Preprocessor):
 
     @property
     def output_shape(self):
-        return self.y_shape
+        return self._output_shape
 
     def set_weights(self, weights):
         self.lgbm = weights['lgbm']
-        self.y_shape = weights['y_shape']
+        self._output_shape = weights['output_shape']
 
 
 class LightGBMClassifier(LightGBMModel):
@@ -416,7 +417,7 @@ class LightGBMClassifier(LightGBMModel):
         y = nest.flatten(y)[0].numpy()
         self.data.append(nest.flatten(x)[0].numpy())
         self._one_hot_encoder.fit_with_one_hot_encoded(np.array(y))
-        self.y_shape = np.shape(y)
+        self._output_shape = np.shape(y)
         y = y.reshape(1, -1)
         self.targets.append(nest.flatten(self._one_hot_encoder.decode(y))[0])
 
@@ -440,7 +441,7 @@ class LightGBMClassifier(LightGBMModel):
         return y
 
     def output_types(self):
-        return tf.int32,
+        return (tf.int32,)
 
     def set_weights(self, weights):
         super().set_weights(weights)
@@ -449,12 +450,12 @@ class LightGBMClassifier(LightGBMModel):
     def get_weights(self):
         return {'lgbm': self.lgbm,
                 '_one_hot_encoder': self._one_hot_encoder,
-                'y_shape': self.y_shape}
+                'output_shape': self._output_shape}
 
     def clear_weights(self):
         self.lgbm = lgb.LGBMClassifier()
         self._one_hot_encoder = utils.OneHotEncoder()
-        self.y_shape = None
+        self._output_shape = None
 
 
 class LightGBMRegressor(LightGBMModel):
@@ -481,19 +482,19 @@ class LightGBMRegressor(LightGBMModel):
             y: Eager Tensor. The value to be stored.
         """
         self.data.append(nest.flatten(x)[0].numpy())
-        self.y_shape = np.shape(y)
+        self._output_shape = np.shape(y)
         self.targets.append(nest.flatten(y))
 
     def output_types(self):
-        return tf.float64,
+        return (tf.float64,)
 
     def get_weights(self):
         return {'lgbm': self.lgbm,
-                'y_shape': self.y_shape}
+                'output_shape': self._output_shape}
 
     def clear_weights(self):
         self.lgbm = lgb.LGBMRegressor()
-        self.y_shape = None
+        self._output_shape = None
 
 
 class ImageAugmentation(Preprocessor):

@@ -233,5 +233,25 @@ def test_lgbm_classifier(tmp_dir):
                    validation_data=(x_train, y_train))
     result = auto_model.predict(x_train)
     auto_model.tuner.get_best_models()[0].summary()
-    print(result)
     assert result.shape == (11, 10)
+
+
+def test_lgbm_regressor(tmp_dir):
+    x_train = np.random.rand(11, 32)
+    y_train = np.array([1.1, 2.1, 4.2, 0.3, 2.4, 8.5, 7.3, 8.4, 9.4, 4.3])
+    input_node = ak.Input()
+    output_node = input_node
+    output_node = preprocessor.LightGBMRegressor()(output_node)
+    output_node = block.IdentityBlock()(output_node)
+    output_node = head.EmptyHead(loss='mean_squared_error',
+                                 metrics=['mean_squared_error'])(output_node)
+
+    auto_model = ak.GraphAutoModel(input_node,
+                                   output_node,
+                                   directory=tmp_dir,
+                                   max_trials=1)
+    auto_model.fit(x_train, y_train, epochs=1,
+                   validation_data=(x_train, y_train))
+    result = auto_model.predict(x_train)
+    auto_model.tuner.get_best_models()[0].summary()
+    assert result.shape == (11, 1)
