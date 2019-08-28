@@ -143,7 +143,7 @@ class StructuredDataBlock(HyperBlock):
         if feature_engineering:
             output_node = preprocessor.FeatureEngineering(
                 column_types=self.column_types)(output_node)
-        lgbm_classifier = LightGBMClassifierBlock(include_head=self.include_head)
+        lgbm_classifier = LightGBMClassifierBlock()
         output_node = lgbm_classifier.build(hp=hp, inputs=output_node)
         return output_node
 
