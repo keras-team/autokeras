@@ -763,25 +763,31 @@ class FeatureEngineering(Preprocessor):
         # append frequency
         for col_index in self.high_level1_col:
             cat_name = str(x[col_index])
-            new_values.append(self.count_frequency[col_index][cat_name])
+            new_value = self.count_frequency[col_index][cat_name] if \
+                cat_name in self.count_frequency[col_index] else -1
+            new_values.append(new_value)
 
         # append cat-cat value
         for key, value in self.high_level_cat_cat.items():
             col_index1, col_index2 = key
             pair = (str(x[col_index1]), str(x[col_index2]))
-            new_values.append(value[pair])
+            new_value = value[pair] if pair in value else -1
+            new_values.append(new_value)
 
         # append num-cat value
         for key, value in self.high_level_num_cat.items():
             num_col_index, cat_col_index = key
             cat_name = str(x[cat_col_index])
-            new_values.append(value[cat_name])
+            new_value = value[cat_name] if cat_name in value else -1
+            new_values.append(new_value)
 
         # LabelEncoding
         for col_index in self.categorical_col:
             key = str(x[col_index])
-            x[col_index] = self.label_encoders[col_index].transform(key)
-
+            try:
+                x[col_index] = self.label_encoders[col_index].transform(key)
+            except KeyError:
+                x[col_index] = -1
         self._shape = (self.num_rows, len(np.hstack((x, np.array(new_values)))))
         # debug
         # print('transform to ->->->')
