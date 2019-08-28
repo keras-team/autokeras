@@ -181,7 +181,6 @@ def test_feature_engineering():
         row = np.random.randint(0, data_num)
         col = np.random.randint(0, feature_num)
         data[row][col] = np.nan
-    print(data[:20])
     dataset = tf.data.Dataset.from_tensor_slices(data)
     feature = preprocessor.FeatureEngineering([
         'categorical', 'categorical', 'numerical', 'numerical', 'categorical',
@@ -199,9 +198,7 @@ def test_feature_engineering():
                               inp=[x],
                               Tout=(tf.float64,))
     new_dataset = dataset.map(map_func)
-    print('new_dataset is ')
-    for i in new_dataset:
-        print(i)
+    assert isinstance(new_dataset, tf.data.Dataset)
 
 
 def test_feature_engineering_fix_keyerror():
@@ -261,7 +258,7 @@ def test_feature_engineering_fix_keyerror():
         row = np.random.randint(0, data_num)
         col = np.random.randint(0, feature_num)
         data[row][col] = np.nan
-    print(data[:20])
+
     dataset = tf.data.Dataset.from_tensor_slices(data)
     feature = preprocessor.FeatureEngineering([
         'categorical', 'categorical', 'numerical', 'numerical', 'categorical',
@@ -279,9 +276,8 @@ def test_feature_engineering_fix_keyerror():
                               inp=[x],
                               Tout=(tf.float64,))
     new_dataset = dataset.map(map_func)
-    print('new_dataset is ')
-    for i in new_dataset:
-        print(i)
+    assert isinstance(new_dataset, tf.data.Dataset)
+
 
 def test_lgbm_classifier(tmp_dir):
     x_train = np.random.rand(11, 32)

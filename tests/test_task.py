@@ -140,23 +140,23 @@ def test_structured_data_classifier(tmp_dir):
     y = np.random.randint(0, 3, num_data)
     # y_train, _ = y[:num_train], y[num_train:]
     y_train = y
-    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=3)
+    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=1)
     clf.fit(x_train, y_train, epochs=2, validation_data=(
         x_train, y_train))
 
 
-# def test_structured_data_regressor(tmp_dir):
-#     num_data = 500
-#     data = structured_data(num_data)
-#     # x_train, x_test = data[:num_train], data[num_train:]
-#     x_train = data
-#     # x_test = data
-#     y = np.random.random(num_data,)
-#     # y_train, _ = y[:num_train], y[num_train:]
-#     y_train = y
-#     clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=3)
-#     clf.fit(x_train, y_train, epochs=2, validation_data=(
-#         x_train, y_train))
+def test_structured_data_regressor(tmp_dir):
+    num_data = 500
+    data = structured_data(num_data)
+    # x_train, x_test = data[:num_train], data[num_train:]
+    x_train = data
+    # x_test = data
+    y = np.random.random(num_data,)
+    # y_train, _ = y[:num_train], y[num_train:]
+    y_train = y
+    clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=2)
+    clf.fit(x_train, y_train, epochs=2, validation_data=(
+        x_train, y_train))
 
 
 def test_structured_data_classifier_transform_new_data(tmp_dir):
@@ -166,6 +166,6 @@ def test_structured_data_classifier_transform_new_data(tmp_dir):
     x_train, x_test = data[:num_train], data[num_train:]
     y = np.random.randint(0, 3, num_data)
     y_train, y_test = y[:num_train], y[num_train:]
-    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=3)
+    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=2)
     clf.fit(x_train, y_train, epochs=2, validation_data=(
         x_test, y_test))

@@ -33,10 +33,12 @@ def assemble(inputs, outputs, dataset, seed=None):
             assemblers.append(StructuredDataAssembler())
         if isinstance(input_node, node.TimeSeriesInput):
             assemblers.append(TimeSeriesAssembler())
-    print('assemblers are : ' + repr(assemblers))
     # Iterate over the dataset to fit the assemblers.
     hps = []
-    for x, _ in dataset:
+    structured_data_classification = True
+    for x, y in dataset:
+        if y[0].dtype == tf.float32 or y[0].dtype == tf.float64:
+            structured_data_classification = False
         for temp_x, assembler in zip(x, assemblers):
             assembler.update(temp_x)
             hps += assembler.hps
@@ -44,7 +46,12 @@ def assemble(inputs, outputs, dataset, seed=None):
     # Assemble the model with assemblers.
     middle_nodes = []
     for input_node, assembler in zip(inputs, assemblers):
-        middle_nodes.append(assembler.assemble(input_node))
+        if isinstance(assembler, StructuredDataAssembler):
+            task = 'classification' if structured_data_classification is True\
+                 else 'regression'
+            middle_nodes.append(assembler.assemble(input_node, task=task))
+        else:
+            middle_nodes.append(assembler.assemble(input_node))
 
     # Merge the middle nodes.
     if len(middle_nodes) > 1:
@@ -196,7 +203,7 @@ class StructuredDataAssembler(Assembler):
                 except ValueError:
                     self.count_categorical[i] += 1
 
-    def assemble(self, input_node):
+    def assemble(self, input_node, task):
         # Infer the types of the columns. And pass them to StructuredDataBlock.
         for i in range(self.num_col):
             if self.count_categorical[i] > 0:
@@ -205,11 +212,10 @@ class StructuredDataAssembler(Assembler):
                 self.data_types.append('categorical')
             else:
                 self.data_types.append('numerical')
-        # debug
-        print('data_types are ' + repr(self.data_types))
-        return hyperblock.StructuredDataClassifierBlock(self.data_types,
-                                                        # include_head=False)(input_node)
-                                                        )(input_node)
+        return hyperblock.StructuredDataBlock(self.data_types,
+                                              task=task
+                                              # include_head=False)(input_node)
+                                              )(input_node)
 
 
 class TimeSeriesAssembler(Assembler):
