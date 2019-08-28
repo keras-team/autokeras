@@ -149,24 +149,54 @@ class StructuredDataBlock(HyperBlock):
 
 
 class LightGBMClassifierBlock(HyperBlock):
+    """Structured data classification with LightGBM.
 
-    def __init__(self,
-                 loss='categorical_crossentropy',
-                 metrics='accuracy',
-                 include_head=True,
-                 **kwargs):
+    It can be used with preprocessors, but not other blocks or heads.
+
+    # Arguments
+        metrics: String. The type of the model's metrics. If unspecified,
+            it will be 'accuracy' for classification task.
+    """
+
+    def __init__(self, metrics=None, **kwargs):
         super().__init__(**kwargs)
-        self.loss = loss
         self.metrics = metrics
-        self.include_head = include_head
+        if self.metrics is None:
+            self.metrics = ['accuracy']
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         output_node = preprocessor.LightGBMClassifier()(output_node)
         output_node = block.IdentityBlock()(output_node)
-        if self.include_head:
-            output_node = head.EmptyHead(self.loss, self.metrics)(output_node)
+        output_node = head.EmptyHead(loss='categorical_crossentropy',
+                                     metrics=[self.metrics])(output_node)
+        return output_node
+
+
+class LightGBMRegressorBlock(HyperBlock):
+    """Structured data regression with LightGBM.
+
+    It can be used with preprocessors, but not other blocks or heads.
+
+    # Arguments
+        metrics: String. The type of the model's metrics. If unspecified,
+            it will be 'mean_squared_error' for regression task.
+    """
+
+    def __init__(self, metrics=None, **kwargs):
+        super().__init__(**kwargs)
+        self.metrics = metrics
+        if self.metrics is None:
+            self.metrics = ['mean_squared_error']
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        output_node = input_node
+        output_node = preprocessor.LightGBMRegressor()(output_node)
+        output_node = block.IdentityBlock()(output_node)
+        output_node = head.EmptyHead(loss='mean_squared_error',
+                                     metrics=[self.metrics])(output_node)
         return output_node
 
 
