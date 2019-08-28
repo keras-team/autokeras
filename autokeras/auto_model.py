@@ -145,7 +145,6 @@ class AutoModel(object):
         if not isinstance(validation_data, tf.data.Dataset):
             x_val, y_val = validation_data
             # TODO: see if encoding is needed in advance instead of judge twice.
-            y_val = self._label_encoding(y_val)
             validation_data = utils.prepare_preprocess(x_val, y_val)
         return dataset, validation_data
 
