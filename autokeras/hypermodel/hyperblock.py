@@ -124,7 +124,7 @@ class StructuredDataBlock(HyperBlock):
 
     def __init__(self,
                  column_types,
-                 task = None,
+                 task=None,
                  feature_engineering=True,
                  # include_head=True,
                  **kwargs):

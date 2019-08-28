@@ -78,4 +78,4 @@ def test_structured_data_assembler():
     for line in dataset:
         assembler.update(line)
 
-    assembler.assemble(node.Input(),task='classification')
+    assembler.assemble(node.Input(), task='classification')
