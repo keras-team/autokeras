@@ -1,7 +1,7 @@
 from tensorflow.python.util import nest
 
 from autokeras.hypermodel import block
-from autokeras.hypermodel import head
+from autokeras.hypermodel import head as head_module
 from autokeras.hypermodel import node
 from autokeras.hypermodel import preprocessor
 
@@ -120,34 +120,6 @@ class TextBlock(HyperBlock):
         return output_node
 
 
-class StructuredDataBlock(HyperBlock):
-
-    def __init__(self,
-                 column_types,
-                 feature_engineering=True,
-                 include_head=True,
-                 **kwargs):
-        super().__init__()
-        self.feature_engineering = feature_engineering
-        self.column_types = column_types
-        self.include_head = include_head
-
-    def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
-        output_node = input_node
-        feature_engineering = self.feature_engineering
-        if feature_engineering is None:
-            feature_engineering = hp.Choice('feature_engineering',
-                                            [True, False],
-                                            default=True)
-        if feature_engineering:
-            output_node = preprocessor.FeatureEngineering(
-                column_types=self.column_types)(output_node)
-        lgbm_classifier = LightGBMClassifierBlock()
-        output_node = lgbm_classifier.build(hp=hp, inputs=output_node)
-        return output_node
-
-
 class LightGBMClassifierBlock(HyperBlock):
     """Structured data classification with LightGBM.
 
@@ -169,8 +141,8 @@ class LightGBMClassifierBlock(HyperBlock):
         output_node = input_node
         output_node = preprocessor.LightGBMClassifier()(output_node)
         output_node = block.IdentityBlock()(output_node)
-        output_node = head.EmptyHead(loss='categorical_crossentropy',
-                                     metrics=[self.metrics])(output_node)
+        output_node = head_module.EmptyHead(loss='categorical_crossentropy',
+                                            metrics=self.metrics)(output_node)
         return output_node
 
 
@@ -195,9 +167,113 @@ class LightGBMRegressorBlock(HyperBlock):
         output_node = input_node
         output_node = preprocessor.LightGBMRegressor()(output_node)
         output_node = block.IdentityBlock()(output_node)
-        output_node = head.EmptyHead(loss='mean_squared_error',
-                                     metrics=[self.metrics])(output_node)
+        output_node = head_module.EmptyHead(loss='mean_squared_error',
+                                            metrics=self.metrics)(output_node)
         return output_node
+
+
+class SupervisedStructuredDataPipelineBlock(HyperBlock):
+
+    def __init__(self,
+                 column_types,
+                 feature_engineering=True,
+                 module_type=None,
+                 head=None,
+                 lightgbm_block=None,
+                 **kwargs):
+        super().__init__()
+        self.column_types = column_types
+        self.feature_engineering = feature_engineering
+        self.module_type = module_type
+        self.head = head
+        self.lightgbm_block = lightgbm_block
+
+    def build_feature_engineering(self, hp, input_node):
+        output_node = input_node
+        feature_engineering = self.feature_engineering
+        if feature_engineering is None:
+            feature_engineering = hp.Choice('feature_engineering',
+                                            [True, False],
+                                            default=True)
+        if feature_engineering:
+            output_node = preprocessor.FeatureEngineering(
+                column_types=self.column_types)(output_node)
+        return output_node
+
+    def build_body(self, hp, input_node):
+        module_type = self.module_type or hp.Choice('module_type',
+                                                    ['dense', 'lightgbm'],
+                                                    default='lightgbm')
+        if module_type == 'dense':
+            output_node = block.DenseBlock()(input_node)
+            output_node = self.head(output_node)
+        elif module_type == 'lightgbm':
+            output_node = self.lightgbm_block.build(hp, input_node)
+        else:
+            raise ValueError('Unsupported module'
+                             'type: {module_type}'.format(
+                                 module_type=module_type))
+        return output_node
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        output_node = self.build_feature_engineering(hp, input_node)
+        return self.build_body(hp, output_node)
+
+
+class StructuredDataBlock(SupervisedStructuredDataPipelineBlock):
+
+    def __init__(self,
+                 column_types,
+                 feature_engineering=True,
+                 name=None,
+                 **kwargs):
+        super().__init__(column_types=column_types,
+                         feature_engineering=feature_engineering,
+                         **kwargs)
+
+    def build_body(self, hp, input_node):
+        return block.DenseBlock()(input_node)
+
+
+class StructuredDataClassifierBlock(StructuredDataBlock):
+
+    def __init__(self,
+                 column_types,
+                 feature_engineering=True,
+                 module_type=None,
+                 loss=None,
+                 metrics=None,
+                 **kwargs):
+        self.loss = loss
+        self.metrics = metrics
+        super().__init__(
+            column_types=column_types,
+            feature_engineering=feature_engineering,
+            module_type=module_type,
+            head=head_module.ClassificationHead(loss=self.loss,
+                                                metrics=self.metrics),
+            lightgbm_block=LightGBMClassifierBlock(metrics=self.metrics))
+
+
+class StructuredDataRegressorBlock(StructuredDataBlock):
+
+    def __init__(self,
+                 column_types,
+                 feature_engineering=True,
+                 module_type=None,
+                 loss=None,
+                 metrics=None,
+                 **kwargs):
+        self.loss = loss
+        self.metrics = metrics
+        super().__init__(
+            column_types=column_types,
+            feature_engineering=feature_engineering,
+            module_type=module_type,
+            head=head_module.RegressionHead(loss=self.loss,
+                                            metrics=self.metrics),
+            lightgbm_block=LightGBMRegressorBlock(metrics=self.metrics))
 
 
 class TimeSeriesBlock(HyperBlock):
