@@ -683,6 +683,16 @@ def return_zero():
 
 
 class FeatureEngineering(Preprocessor):
+    """A preprocessor block does feature engineering for the data.
+
+    # Arguments
+        column_types: A list of strings. The length of the list should be the same
+            as the number of columns of the data. The strings in the list are
+            specifying the types of the columns. They should either be 'numerical'
+            or 'categorical'.
+        max_columns: Int. The maximum number of columns after feature engineering.
+            Defaults to 1000.
+    """
 
     def __init__(self, column_types, max_columns=1000, **kwargs):
         super().__init__(**kwargs)

@@ -181,6 +181,11 @@ class ImageAssembler(Assembler):
 
 
 class StructuredDataAssembler(Assembler):
+    """Assembler for structured data. which infers the column types for the data.
+
+    A column will be judged as categorical if the number of different values is less
+    than 5% of the number of instances.
+    """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

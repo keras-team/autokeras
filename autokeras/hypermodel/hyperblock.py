@@ -183,6 +183,7 @@ class LightGBMRegressorBlock(HyperBlock):
 
 
 class SupervisedStructuredDataPipelineBlock(HyperBlock):
+    """Base class for StructuredDataClassifier(Regressor)Block."""
 
     def __init__(self,
                  column_types,
@@ -237,11 +238,23 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
 
 
 class StructuredDataBlock(SupervisedStructuredDataPipelineBlock):
+    """A block for structured data.
+
+    It searches for whether to use feature engineering. The data is then
+    processed with DenseBlock.
+
+    # Arguments
+        column_types: A list of strings. The length of the list should be the same
+            as the number of columns of the data. The strings in the list are
+            specifying the types of the columns. They should either be 'numerical'
+            or 'categorical'.
+        feature_engineering: Boolean. Whether to use feature engineering for the
+            data. If is None, it would be tunable. Defaults to True.
+    """
 
     def __init__(self,
                  column_types,
                  feature_engineering=True,
-                 name=None,
                  **kwargs):
         super().__init__(column_types=column_types,
                          feature_engineering=feature_engineering,
@@ -252,11 +265,32 @@ class StructuredDataBlock(SupervisedStructuredDataPipelineBlock):
 
 
 class StructuredDataClassifierBlock(SupervisedStructuredDataPipelineBlock):
+    """A block for structured data classification.
+
+    It cannot be connected with any other block downwards. It searches for whether
+    to use feature engineering for the data, and to use DenseBlock and
+    ClassificationHead or the LightGBMClassifierBlock.
+
+    # Arguments
+        column_types: A list of strings. The length of the list should be the same
+            as the number of columns of the data. The strings in the list are
+            specifying the types of the columns. They should either be 'numerical'
+            or 'categorical'.
+        feature_engineering: Boolean. Whether to use feature engineering for the
+            data. If is None, it would be tunable. Defaults to True.
+        loss: Keras loss function. The loss function for ClassificationHead.
+        metrics: A list of Keras metrics. The metrics to use to evaluate the
+            classification.
+        head: ClassificationHead. The ClassificationHead to use with DenseBlock.
+            If unspecified, it would use the default args for the ClassificationHead.
+            If specify both head and metrics, the metrics will only be used for
+            LightGBM, the head with its metrics will be directly used for DenseBlock.
+            If only specified the head, the same metrics will be used for LightGBM.
+    """
 
     def __init__(self,
                  column_types,
                  feature_engineering=True,
-                 module_type=None,
                  loss=None,
                  metrics=None,
                  head=None,
@@ -272,17 +306,37 @@ class StructuredDataClassifierBlock(SupervisedStructuredDataPipelineBlock):
         super().__init__(
             column_types=column_types,
             feature_engineering=feature_engineering,
-            module_type=module_type,
             head=self.head,
             lightgbm_block=LightGBMClassifierBlock(metrics=self.metrics))
 
 
 class StructuredDataRegressorBlock(SupervisedStructuredDataPipelineBlock):
+    """A block for structured data regression.
+
+    It cannot be connected with any other block downwards. It searches for whether
+    to use feature engineering for the data, and to use DenseBlock and
+    RegressionHead or the LightGBMRegressorBlock.
+
+    # Arguments
+        column_types: A list of strings. The length of the list should be the same
+            as the number of columns of the data. The strings in the list are
+            specifying the types of the columns. They should either be 'numerical'
+            or 'categorical'.
+        feature_engineering: Boolean. Whether to use feature engineering for the
+            data. If is None, it would be tunable. Defaults to True.
+        loss: Keras loss function. The loss function for RegressionHead.
+        metrics: A list of Keras metrics. The metrics to use to evaluate the
+            regression.
+        head: RegressionHead. The RegressionHead to use with DenseBlock.
+            If unspecified, it would use the default args for the RegressionHead.
+            If specify both head and metrics, the metrics will only be used for
+            LightGBM, the head with its metrics will be directly used for DenseBlock.
+            If only specified the head, the same metrics will be used for LightGBM.
+    """
 
     def __init__(self,
                  column_types,
                  feature_engineering=True,
-                 module_type=None,
                  loss=None,
                  metrics=None,
                  head=None,
@@ -298,7 +352,6 @@ class StructuredDataRegressorBlock(SupervisedStructuredDataPipelineBlock):
         super().__init__(
             column_types=column_types,
             feature_engineering=feature_engineering,
-            module_type=module_type,
             head=self.head,
             lightgbm_block=LightGBMRegressorBlock(metrics=self.metrics))
 
