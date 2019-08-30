@@ -24,3 +24,5 @@ from autokeras.task import ImageClassifier
 from autokeras.task import ImageRegressor
 from autokeras.task import TextClassifier
 from autokeras.task import TextRegressor
+from autokeras.task import StructuredDataClassifier
+from autokeras.task import StructuredDataRegressor

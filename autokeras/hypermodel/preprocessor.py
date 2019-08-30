@@ -703,8 +703,6 @@ class FeatureEngineering(Preprocessor):
         self.high_level2_col = []  # more than 100
         self.high_level_cat_cat = {}
         self.high_level_num_cat = {}
-        # debug
-        self.transform_count = 0
 
         for index, column_type in enumerate(self.column_types):
             if column_type == 'categorical':
@@ -753,9 +751,7 @@ class FeatureEngineering(Preprocessor):
 
     def transform(self, x, fit=False):
         x = nest.flatten(x)[0].numpy()
-        # debug
-        self.transform_count += 1
-        # print('transforming # ' + repr(self.transform_count) + ' : ' + repr(x))
+
         for index in range(len(x)):
             x[index] = x[index].decode('utf-8')
         self._impute(x)
@@ -764,29 +760,32 @@ class FeatureEngineering(Preprocessor):
         # append frequency
         for col_index in self.high_level1_col:
             cat_name = str(x[col_index])
-            new_values.append(self.count_frequency[col_index][cat_name])
+            new_value = self.count_frequency[col_index][cat_name] if \
+                cat_name in self.count_frequency[col_index] else -1
+            new_values.append(new_value)
 
         # append cat-cat value
         for key, value in self.high_level_cat_cat.items():
             col_index1, col_index2 = key
             pair = (str(x[col_index1]), str(x[col_index2]))
-            new_values.append(value[pair])
+            new_value = value[pair] if pair in value else -1
+            new_values.append(new_value)
 
         # append num-cat value
         for key, value in self.high_level_num_cat.items():
             num_col_index, cat_col_index = key
             cat_name = str(x[cat_col_index])
-            new_values.append(value[cat_name])
+            new_value = value[cat_name] if cat_name in value else -1
+            new_values.append(new_value)
 
         # LabelEncoding
         for col_index in self.categorical_col:
             key = str(x[col_index])
-            x[col_index] = self.label_encoders[col_index].transform(key)
-
+            try:
+                x[col_index] = self.label_encoders[col_index].transform(key)
+            except KeyError:
+                x[col_index] = -1
         self._shape = (self.num_rows, len(np.hstack((x, np.array(new_values)))))
-        # debug
-        # print('transform to ->->->')
-        # print(np.hstack((x, np.array(new_values))))
         return np.hstack((x, np.array(new_values)))
 
     def _impute(self, x):
@@ -830,20 +829,6 @@ class FeatureEngineering(Preprocessor):
                 for key, value in self.high_level_num_cat[pair].items():
                     self.high_level_num_cat[pair][key] /= self.value_counters[
                         cat_col_index1][key]
-        # debug
-        print('column_num = ' + repr(self.num_columns))
-        print('row_num = ' + repr(self.num_rows))
-        print('categorical_col = ' + repr(self.categorical_col))
-        print('numerical_col = ' + repr(self.numerical_col))
-        print('label_encoders = ' + repr(self.label_encoders))
-        print('value_counters = ' + repr(self.value_counters))
-        print('categorical_categorical = ' + repr(self.categorical_categorical))
-        print('numerical_categorical = ' + repr(self.numerical_categorical))
-        print('count_frequency = ' + repr(self.count_frequency))
-        print('high_level1_col = ' + repr(self.high_level1_col))
-        print('high_level2_col = ' + repr(self.high_level2_col))
-        print('high_level_cat_cat = ' + repr(self.high_level_cat_cat))
-        print('high_level_num_cat = ' + repr(self.high_level_num_cat))
 
     def output_types(self):
         return tf.float64,
@@ -892,7 +877,7 @@ class FeatureEngineering(Preprocessor):
         self.categorical_categorical = {}
         self.numerical_categorical = {}
         self.count_frequency = {}
-        self.high_level1_col = []  # less than 32
+        self.high_level1_col = []  # more than 32, less than 100
         self.high_level2_col = []  # more than 100
         self.high_level_cat_cat = {}
         self.high_level_num_cat = {}

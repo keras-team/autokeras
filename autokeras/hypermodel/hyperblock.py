@@ -120,6 +120,43 @@ class TextBlock(HyperBlock):
         return output_node
 
 
+<<<<<<< HEAD
+=======
+class StructuredDataBlock(HyperBlock):
+
+    def __init__(self,
+                 column_types,
+                 task=None,
+                 feature_engineering=True,
+                 # include_head=True,
+                 **kwargs):
+        super().__init__()
+        self.feature_engineering = feature_engineering
+        self.column_types = column_types
+        self.task = task
+        # self.include_head = include_head
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        output_node = input_node
+        feature_engineering = self.feature_engineering
+        if feature_engineering is None:
+            feature_engineering = hp.Choice('feature_engineering',
+                                            [True, False],
+                                            default=True)
+        if feature_engineering:
+            output_node = preprocessor.FeatureEngineering(
+                column_types=self.column_types)(output_node)
+        if self.task == 'classification':
+            lgbm_classifier = LightGBMClassifierBlock()
+            output_node = lgbm_classifier.build(hp=hp, inputs=output_node)
+        else:
+            lgbm_regressor = LightGBMRegressorBlock()
+            output_node = lgbm_regressor.build(hp=hp, inputs=output_node)
+        return output_node
+
+
+>>>>>>> ad31842f11bf2d51f2974cf6cc0afa22ee2365dc
 class LightGBMClassifierBlock(HyperBlock):
     """Structured data classification with LightGBM.
 
