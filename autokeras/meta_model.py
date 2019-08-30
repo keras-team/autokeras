@@ -38,10 +38,7 @@ def assemble(inputs, outputs, dataset, seed=None):
 
     # Iterate over the dataset to fit the assemblers.
     hps = []
-    structured_data_classification = True
     for x, y in dataset:
-        if y[0].dtype == tf.float32 or y[0].dtype == tf.float64:
-            structured_data_classification = False
         for temp_x, assembler in zip(x, assemblers):
             assembler.update(temp_x)
             hps += assembler.hps
@@ -63,12 +60,7 @@ def assemble(inputs, outputs, dataset, seed=None):
     # Assemble the model with assemblers.
     middle_nodes = []
     for input_node, assembler in zip(inputs, assemblers):
-        if isinstance(assembler, StructuredDataAssembler):
-            task = 'classification' if structured_data_classification is True\
-                 else 'regression'
-            middle_nodes.append(assembler.assemble(input_node, task=task))
-        else:
-            middle_nodes.append(assembler.assemble(input_node))
+        middle_nodes.append(assembler.assemble(input_node))
 
     # Merge the middle nodes.
     if len(middle_nodes) > 1:
@@ -234,7 +226,7 @@ class StructuredDataAssembler(Assembler):
             else:
                 self.column_types.append('numerical')
 
-    def assemble(self, input_node, task):
+    def assemble(self, input_node):
         self.infer_column_types()
         return hyperblock.StructuredDataBlock(self.column_types)(input_node)
 
