@@ -481,9 +481,10 @@ class LightGBMRegressor(LightGBMModel):
             x: Eager Tensor. The data to be stored.
             y: Eager Tensor. The value to be stored.
         """
+        y = nest.flatten(y)[0]
         self.data.append(nest.flatten(x)[0].numpy())
         self._output_shape = np.shape(y)
-        self.targets.append(nest.flatten(y))
+        self.targets.append(y)
 
     def output_types(self):
         return (tf.float64,)

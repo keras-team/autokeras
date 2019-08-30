@@ -151,7 +151,7 @@ def test_structured_data_regressor(tmp_dir):
     # x_train, x_test = data[:num_train], data[num_train:]
     x_train = data
     # x_test = data
-    y = np.random.random(num_data,)
+    y = np.random.rand(num_data, 1)
     # y_train, _ = y[:num_train], y[num_train:]
     y_train = y
     clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=2)

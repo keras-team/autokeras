@@ -314,6 +314,7 @@ def test_lgbm_classifier(tmp_dir):
 def test_lgbm_regressor(tmp_dir):
     x_train = np.random.rand(11, 32)
     y_train = np.array([1.1, 2.1, 4.2, 0.3, 2.4, 8.5, 7.3, 8.4, 9.4, 4.3])
+    y_train = y_train.reshape(-1, 1)
     input_node = ak.Input()
     output_node = input_node
     output_node = preprocessor.LightGBMRegressor()(output_node)
