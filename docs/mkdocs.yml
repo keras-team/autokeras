@@ -16,8 +16,7 @@ google_analytics: ['UA-44322747-3', 'autokeras.com']
 
 nav:
     - Home: index.md
-    - Getting Started: start.md
-    - Tutorial for 1.0: tutorial.md
+    - Getting Started: tutorial.md
     - Docker: docker.md
     - Contributing Guide: contributing.md
     - Documentation:
