@@ -20,7 +20,6 @@ nav:
     - Tutorial for 1.0: tutorial.md
     - Docker: docker.md
     - Contributing Guide: contributing.md
-    - Neural Architecture Search: nas.md
     - Documentation:
       - Task API: task.md
       - AutoModel: auto_model.md

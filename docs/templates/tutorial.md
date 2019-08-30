@@ -1,8 +1,5 @@
 # AutoKeras 1.0 Tutorial
 
-**This is only a draft tutorial. 1.0 version has not been released yet.
-The work is in progress on master branch.**
-
 In AutoKeras, there are 3 levels of APIs: task API, IO API, and functional API.
 
 ## Task API
@@ -30,7 +27,7 @@ See the [documentation of Task API](/task) for more details.
 
 ## IO API
 
-The following code example shows how to use IO API for multi-modal and multi-task scenarios.
+The following code example shows how to use IO API for multi-modal and multi-task scenarios using [AutoModel](/auto_model)
 
 ```python
 import numpy as np
@@ -57,7 +54,49 @@ automodel.fit([x_image, x_structured],
 
 ```
 
+Now we support `ImageInput`, `TextInput`, and `StructuredDataInput`.
+
 ## Functional API
 
+You can also define your own neural architecture with the predefined blocks and [GraphAutoModel](/graph_auto_model).
+
 ```python
+import autokeras as ak
+import numpy as np
+import tensorflow as tf
+from keras.datasets import mnist
+
+# Prepare the data.
+(x_train, y_classification), (x_test, y_test) = mnist.load_data()
+x_image = x_train.reshape(x_train.shape + (1,))
+x_test = x_test.reshape(x_test.shape + (1,))
+
+x_structured = np.random.rand(x_train.shape[0], 100)
+y_regression = np.random.rand(x_train.shape[0], 1)
+
+# Build model and train.
+inputs = ak.ImageInput(shape=(28, 28, 1))
+outputs1 = ak.ResNetBlock(version='next')(inputs)
+outputs2 = ak.XceptionBlock()(inputs)
+image_outputs = ak.Merge()((outputs1, outputs2))
+
+structured_inputs = ak.StructuredInput()
+structured_outputs = ak.DenseBlock()(structured_inputs)
+merged_outputs = ak.Merge()((image_outputs, structured_outputs))
+
+classification_outputs = ak.ClassificationHead()(merged_outputs)
+regression_outputs = ak.RegressionHead()(merged_outputs)
+automodel = ak.GraphAutoModel(inputs=inputs,
+                              outputs=[regression_outputs,
+                                       classification_outputs])
+
+automodel.fit((x_image, x_structured),
+              (y_regression, y_classification),
+              trials=100,
+              epochs=200,
+              callbacks=[tf.keras.callbacks.EarlyStopping(),
+                         tf.keras.callbacks.LearningRateScheduler()])
+
 ```
+
+For complete list of blocks, please checkout the documentation [here](/block).

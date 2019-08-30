@@ -14,14 +14,14 @@ It is developed by <a href="http://faculty.cs.tamu.edu/xiahu/index.html" target=
 The ultimate goal of AutoML is to provide easily accessible deep learning tools to domain experts with limited data science or machine learning background.
 Auto-Keras provides functions to automatically search for architecture and hyperparameters of deep learning models.
 
-**Now we are refactoring the code on `master` branch for the next release.
-Please use the `legacy` branch if you want to checkout the 0.4 version.**
+# AutoKeras 1.0 is coming soon!
 
 ## Installation
 
 To install the package, please use the `pip` installation as follows:
 
-    pip3 install autokeras
+    pip3 install autokeras # for 0.4 version
+    pip3 install git+git://github.com/keras-team/autokeras@master#egg=autokeras # for 1.0 version
 
 **Note:** currently, Auto-Keras is only compatible with: **Python 3.6**.
 
@@ -36,6 +36,8 @@ clf = ak.ImageClassifier()
 clf.fit(x_train, y_train)
 results = clf.predict(x_test)
 ```
+
+For detailed tutorial, please check [here](https://autokeras.com/tutorial/).
 
 ## Cite this work
 

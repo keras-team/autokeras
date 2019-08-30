@@ -16,7 +16,7 @@ from autokeras.hypermodel.hyperblock import LightGBMClassifierBlock
 from autokeras.hypermodel.hyperblock import LightGBMRegressorBlock
 from autokeras.hypermodel.node import ImageInput
 from autokeras.hypermodel.node import Input
-from autokeras.hypermodel.node import StructuredDataInput
+from autokeras.hypermodel.node import StructuredInput
 from autokeras.hypermodel.node import TextInput
 from autokeras.hypermodel.preprocessor import Normalization
 from autokeras.hypermodel.preprocessor import TextToIntSequence

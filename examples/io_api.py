@@ -13,7 +13,7 @@ y_regression = np.random.rand(x_train.shape[0], 1)
 # Build model and train.
 automodel = ak.AutoModel(
    inputs=[ak.ImageInput(),
-           ak.StructuredDataInput()],
+           ak.StructuredInput()],
    outputs=[ak.RegressionHead(metrics=['mae']),
             ak.ClassificationHead(loss='categorical_crossentropy',
                                   metrics=['accuracy'])])
