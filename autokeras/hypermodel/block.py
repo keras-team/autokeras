@@ -12,7 +12,7 @@ from autokeras.hypermodel import node
 
 
 def set_hp_value(hp, name, value):
-    full_name = hp._get_full_name(name)
+    full_name = hp._get_name(name)
     hp.values[full_name] = value or hp.values[full_name]
 
 
@@ -72,7 +72,7 @@ class Block(kerastuner.HyperModel):
     def build(self, hp, inputs=None):
         """Build the Block into a real Keras Model.
 
-        The subclasses should overide this function and return the output node.
+        The subclasses should override this function and return the output node.
 
         # Arguments
             hp: Hyperparameters. The hyperparameters for building the model.
@@ -115,10 +115,11 @@ class DenseBlock(Block):
         output_node = Flatten().build(hp, output_node)
 
         num_layers = self.num_layers or hp.Choice('num_layers', [1, 2, 3], default=2)
-        use_bn = self.use_batchnorm or hp.Choice('use_batchnorm', [True, False],
-                                                 default=False)
+        use_batchnorm = self.use_batchnorm
+        if use_batchnorm is None:
+            use_batchnorm = hp.Choice('use_batchnorm', [True, False], default=False)
         dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
-                                                      [0, 0.25, 0.5],
+                                                      [0.0, 0.25, 0.5],
                                                       default=0)
 
         for i in range(num_layers):
@@ -127,7 +128,7 @@ class DenseBlock(Block):
                 [16, 32, 64, 128, 256, 512, 1024],
                 default=32)
             output_node = tf.keras.layers.Dense(units)(output_node)
-            if use_bn:
+            if use_batchnorm:
                 output_node = tf.keras.layers.BatchNormalization()(output_node)
             output_node = tf.keras.layers.ReLU()(output_node)
             output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
@@ -174,9 +175,9 @@ class RNNBlock(Block):
         feature_size = shape[-1]
         output_node = input_node
 
-        bidirectional = self.bidirectional or hp.Choice('bidirectional',
-                                                        [True, False],
-                                                        default=True)
+        bidirectional = self.bidirectional
+        if bidirectional is None:
+            bidirectional = hp.Choice('bidirectional', [True, False], default=True)
         layer_type = self.layer_type or hp.Choice('layer_type',
                                                   ['gru', 'lstm'],
                                                   default='lstm')
@@ -236,9 +237,9 @@ class ConvBlock(Block):
         num_blocks = self.num_blocks or hp.Choice('num_blocks',
                                                   [1, 2, 3],
                                                   default=2)
-        separable = self.separable or hp.Choice('separable',
-                                                [True, False],
-                                                default=False)
+        separable = self.separable
+        if separable is None:
+            self.separable = hp.Choice('separable', [True, False], default=False)
 
         if separable:
             conv = utils.get_sep_conv(input_node.shape)
@@ -542,3 +543,24 @@ class EmbeddingBlock(Block):
                 input_length=const.Constant.VOCABULARY_SIZE,
                 trainable=True)
         return layer(input_node)
+
+
+class IdentityLayer(tf.keras.layers.Layer):
+    """A Keras Layer returns the inputs."""
+
+    def compute_output_signature(self, input_signature):
+        return input_signature
+
+    def call(self, inputs, *args, **kwargs):
+        return tf.identity(nest.flatten(inputs)[0])
+
+
+class IdentityBlock(Block):
+    """Identity block for LgbmModule preprocessor.
+
+    The input could be anything. Return output with the same shape and contents
+    as input.
+    """
+
+    def build(self, hp, inputs=None):
+        return IdentityLayer()(inputs)

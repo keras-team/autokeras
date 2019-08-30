@@ -15,6 +15,7 @@ setup(
         'tensorflow>=2.0.0b1',
         'scikit-learn',
         'numpy',
+        'lightgbm',
     ],
     extras_require={
         'tests': ['pytest>=4.4.0',

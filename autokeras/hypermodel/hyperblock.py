@@ -1,6 +1,7 @@
 from tensorflow.python.util import nest
 
 from autokeras.hypermodel import block
+from autokeras.hypermodel import head
 from autokeras.hypermodel import node
 from autokeras.hypermodel import preprocessor
 
@@ -46,12 +47,24 @@ class ImageBlock(HyperBlock):
 
     # Arguments
         block_type: String. 'resnet', 'xception', 'vanilla'. The type of HyperBlock
-            to use. If left unspecified, it will be tuned automatically.
+            to use. If unspecified, it will be tuned automatically.
+        normalize: Boolean. Whether to channel-wise normalize the images.
+            If unspecified, it will be tuned automatically.
+        augment: Boolean. Whether to do image augmentation. If unspecified,
+            it will be tuned automatically.
     """
 
-    def __init__(self, block_type=None, **kwargs):
+    def __init__(self,
+                 block_type=None,
+                 normalize=True,
+                 augment=True,
+                 seed=None,
+                 **kwargs):
         super().__init__(**kwargs)
         self.block_type = block_type
+        self.normalize = normalize
+        self.augment = augment
+        self.seed = seed
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
@@ -61,12 +74,23 @@ class ImageBlock(HyperBlock):
                                                   ['resnet', 'xception', 'vanilla'],
                                                   default='resnet')
 
+        normalize = self.normalize
+        if normalize is None:
+            normalize = hp.Choice('normalize', [True, False], default=True)
+        augment = self.augment
+        if augment is None:
+            augment = hp.Choice('augment', [True, False], default=True)
+        if normalize:
+            output_node = preprocessor.Normalization()(output_node)
+        if augment:
+            output_node = preprocessor.ImageAugmentation(seed=self.seed)(output_node)
+        sub_block_name = self.name + '_' + block_type
         if block_type == 'resnet':
-            output_node = block.ResNetBlock()(output_node)
+            output_node = block.ResNetBlock(name=sub_block_name)(output_node)
         elif block_type == 'xception':
-            output_node = block.XceptionBlock()(output_node)
+            output_node = block.XceptionBlock(name=sub_block_name)(output_node)
         elif block_type == 'vanilla':
-            output_node = block.ConvBlock().build(output_node)
+            output_node = block.ConvBlock(name=sub_block_name).build(output_node)
         return output_node
 
 
@@ -100,6 +124,58 @@ class StructuredDataBlock(HyperBlock):
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
+
+
+class LightGBMClassifierBlock(HyperBlock):
+    """Structured data classification with LightGBM.
+
+    It can be used with preprocessors, but not other blocks or heads.
+
+    # Arguments
+        metrics: String. The type of the model's metrics. If unspecified,
+            it will be 'accuracy' for classification task.
+    """
+
+    def __init__(self, metrics=None, **kwargs):
+        super().__init__(**kwargs)
+        self.metrics = metrics
+        if self.metrics is None:
+            self.metrics = ['accuracy']
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        output_node = input_node
+        output_node = preprocessor.LightGBMClassifier()(output_node)
+        output_node = block.IdentityBlock()(output_node)
+        output_node = head.EmptyHead(loss='categorical_crossentropy',
+                                     metrics=[self.metrics])(output_node)
+        return output_node
+
+
+class LightGBMRegressorBlock(HyperBlock):
+    """Structured data regression with LightGBM.
+
+    It can be used with preprocessors, but not other blocks or heads.
+
+    # Arguments
+        metrics: String. The type of the model's metrics. If unspecified,
+            it will be 'mean_squared_error' for regression task.
+    """
+
+    def __init__(self, metrics=None, **kwargs):
+        super().__init__(**kwargs)
+        self.metrics = metrics
+        if self.metrics is None:
+            self.metrics = ['mean_squared_error']
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        output_node = input_node
+        output_node = preprocessor.LightGBMRegressor()(output_node)
+        output_node = block.IdentityBlock()(output_node)
+        output_node = head.EmptyHead(loss='mean_squared_error',
+                                     metrics=[self.metrics])(output_node)
+        return output_node
 
 
 class TimeSeriesBlock(HyperBlock):

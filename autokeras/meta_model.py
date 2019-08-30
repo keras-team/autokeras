@@ -1,4 +1,5 @@
 import tensorflow as tf
+from kerastuner.engine import hyperparameters as hp_module
 from tensorflow.python.util import nest
 
 from autokeras.hypermodel import block
@@ -7,13 +8,14 @@ from autokeras.hypermodel import hyperblock
 from autokeras.hypermodel import node
 
 
-def assemble(inputs, outputs, dataset):
+def assemble(inputs, outputs, dataset, seed=None):
     """Assemble the HyperBlocks based on the dataset and input output nodes.
 
     # Arguments
         inputs: A list of InputNode. The input nodes of the AutoModel.
         outputs: A list of HyperHead. The heads of the AutoModel.
         dataset: tf.data.Dataset. The training dataset.
+        seed: Int. Random seed.
 
     # Returns
         A list of HyperNode. The output nodes of the AutoModel.
@@ -26,15 +28,18 @@ def assemble(inputs, outputs, dataset):
             assemblers.append(TextAssembler())
         if isinstance(input_node, node.ImageInput):
             assemblers.append(ImageAssembler())
+            assemblers.append(ImageAssembler(seed=seed))
         if isinstance(input_node, node.StructuredDataInput):
             assemblers.append(StructuredDataAssembler())
         if isinstance(input_node, node.TimeSeriesInput):
             assemblers.append(TimeSeriesAssembler())
 
     # Iterate over the dataset to fit the assemblers.
+    hps = []
     for x, _ in dataset:
         for temp_x, assembler in zip(x, assemblers):
             assembler.update(temp_x)
+            hps += assembler.hps
 
     # Assemble the model with assemblers.
     middle_nodes = []
@@ -49,7 +54,9 @@ def assemble(inputs, outputs, dataset):
 
     outputs = nest.flatten([output_blocks(output_node)
                             for output_blocks in outputs])
-    return graph.GraphHyperModel(inputs, outputs)
+    hm = graph.GraphHyperModel(inputs, outputs)
+    hm.set_hps(hps)
+    return hm
 
 
 class Assembler(object):
@@ -57,6 +64,7 @@ class Assembler(object):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.hps = []
 
     def update(self, x):
         """Update the assembler sample by sample.
@@ -117,12 +125,35 @@ class TextAssembler(Assembler):
 
 
 class ImageAssembler(Assembler):
+    """Assembles the ImageBlock based on training dataset."""
+
+    def __init__(self, seed=None, **kwargs):
+        super().__init__(**kwargs)
+        self.seed = seed
+        self._shape = None
+        self._num_samples = 0
+
+    def update(self, x):
+        self._shape = x.shape
+        self._num_samples += 1
 
     def assemble(self, input_node):
-        # for image, use the num_instance to determine the range of the sizes of the
-        # resnet and xception
-        # use the image size to determine how the down sampling works, e.g. pooling.
-        return hyperblock.ImageBlock()(input_node)
+        block = hyperblock.ImageBlock(seed=self.seed)
+        if max(self._shape[0], self._shape[1]) < 32:
+            if self._num_samples < 10000:
+                self.hps.append(hp_module.Choice(
+                                block.name + '_resnet/v1/conv4_depth', [6],
+                                default=6))
+                self.hps.append(hp_module.Choice(
+                                block.name + '_resnet/v2/conv4_depth', [6],
+                                default=6))
+                self.hps.append(hp_module.Choice(
+                                block.name + '_resnet/next/conv4_depth', [6],
+                                default=6))
+                self.hps.append(hp_module.Int(
+                                block.name + '_xception/num_residual_blocks', 2, 4,
+                                default=4))
+        return block(input_node)
 
 
 class StructuredDataAssembler(Assembler):

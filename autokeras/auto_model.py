@@ -55,7 +55,8 @@ class AutoModel(object):
     def _meta_build(self, dataset):
         self.hypermodel = meta_model.assemble(inputs=self.inputs,
                                               outputs=self.outputs,
-                                              dataset=dataset)
+                                              dataset=dataset,
+                                              seed=self.seed)
         self.outputs = self.hypermodel.outputs
 
     def fit(self,
@@ -114,6 +115,7 @@ class AutoModel(object):
             directory=self.directory,
             seed=self.seed,
             project_name=self.name)
+        self.hypermodel.clear_preprocessors()
 
         # TODO: allow early stop if epochs is not specified.
         self.tuner.search(x=dataset,
@@ -162,7 +164,6 @@ class AutoModel(object):
         x = self.hypermodel.preprocess(best_hp, x)
         x = x.batch(batch_size)
         y = best_model.predict(x, **kwargs)
-        y = nest.flatten(y)
         y = self._postprocess(y)
         if isinstance(y, list) and len(y) == 1:
             y = y[0]
@@ -178,8 +179,8 @@ class AutoModel(object):
             if (isinstance(hyper_head, head.ClassificationHead) and
                     utils.is_label(temp_y)):
                 label_encoder = utils.OneHotEncoder()
-                label_encoder.fit(y)
-                new_y.append(label_encoder.transform(y))
+                label_encoder.fit_with_labels(y)
+                new_y.append(label_encoder.encode(y))
                 self._label_encoders.append(label_encoder)
             else:
                 new_y.append(temp_y)
@@ -187,12 +188,13 @@ class AutoModel(object):
         return new_y
 
     def _postprocess(self, y):
+        y = nest.flatten(y)
         if not self._label_encoders:
             return y
         new_y = []
         for temp_y, label_encoder in zip(y, self._label_encoders):
             if label_encoder:
-                new_y.append(label_encoder.inverse_transform(temp_y))
+                new_y.append(label_encoder.decode(temp_y))
             else:
                 new_y.append(temp_y)
         return new_y

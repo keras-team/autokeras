@@ -32,6 +32,7 @@ class GraphHyperModel(kerastuner.HyperModel):
         self._total_topo_depth = 0
         self._build_network()
         self._plain_graph_hm = None
+        self._hps = []
 
     def contains_hyper_block(self):
         return any([isinstance(block, hyperblock.HyperBlock)
@@ -68,6 +69,7 @@ class GraphHyperModel(kerastuner.HyperModel):
     def build(self, hp):
         if self.contains_hyper_block():
             return self._plain_graph_hm.build(hp)
+        self._init_hps(hp)
         real_nodes = {}
         for input_node in self._model_inputs:
             node_id = self._node_to_id[input_node]
@@ -293,20 +295,19 @@ class GraphHyperModel(kerastuner.HyperModel):
         for blocks in blocks_by_depth:
             if fit:
                 # Iterate the dataset to fit the preprocessors in current depth.
-                for x, _ in dataset:
+                for x, y in dataset:
                     x = nest.flatten(x)
                     node_id_to_data = {
-                        node_id: temp_x
-                        for temp_x, node_id in zip(x, input_node_ids)
+                        node_id: temp_x for temp_x, node_id in zip(x, input_node_ids)
                     }
                     for block in blocks:
                         data = [node_id_to_data[self._node_to_id[input_node]]
                                 for input_node in block.inputs]
-                        block.update(data)
+                        block.update(data, y=y)
 
-            for block in blocks:
-                block.finalize()
-                nest.flatten(block.outputs)[0].shape = block.output_shape
+                for block in blocks:
+                    block.finalize()
+                    nest.flatten(block.outputs)[0].shape = block.output_shape
 
             # Transform the dataset.
             dataset = dataset.map(functools.partial(
@@ -363,10 +364,13 @@ class GraphHyperModel(kerastuner.HyperModel):
         if self.contains_hyper_block():
             self._plain_graph_hm.save_preprocessors(path)
             return
-        preprocessors = {}
+        configs = {}
+        weights = {}
         for block in self._blocks:
             if isinstance(block, preprocessor.Preprocessor):
-                preprocessors[block.name] = block.get_state()
+                configs[block.name] = block.get_config()
+                weights[block.name] = block.get_weights()
+        preprocessors = {'configs': configs, 'weights': weights}
         utils.pickle_to_file(preprocessors, path)
 
     def load_preprocessors(self, path):
@@ -379,12 +383,36 @@ class GraphHyperModel(kerastuner.HyperModel):
             self._plain_graph_hm.load_preprocessors(path)
             return
         preprocessors = utils.pickle_from_file(path)
-        for name, state in preprocessors.items():
+        configs = preprocessors['configs']
+        weights = preprocessors['weights']
+        for name, config in configs.items():
             block = self._get_block(name)
-            block.set_state(state)
+            block.set_config(config)
+        for name, weight in weights.items():
+            block = self._get_block(name)
+            block.set_weights(weight)
+
+    def clear_preprocessors(self):
+        """Clear the preprocessors' weights in the hypermodel."""
+        if self.contains_hyper_block():
+            self._plain_graph_hm.clear_preprocessors()
+            return
+        for block in self._blocks:
+            if isinstance(block, preprocessor.Preprocessor):
+                block.clear_weights()
 
     def _get_block(self, name):
         for block in self._blocks:
             if block.name == name:
                 return block
         return None
+
+    def set_hps(self, hps):
+        self._hps = hps
+
+    def _init_hps(self, hp):
+        for single_hp in self._hps:
+            name = single_hp.name
+            if name not in hp.values:
+                hp.space.append(single_hp)
+                hp.values[name] = single_hp.default

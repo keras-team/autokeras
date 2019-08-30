@@ -39,7 +39,7 @@ print(train_x.shape)
 print(train_y.shape)
 
 encoder = OneHotEncoder()
-encoder.fit(train_y)
+encoder.fit_with_labels(train_y)
 train_y = torch.Tensor(encoder.transform(train_y))
 test_y = torch.Tensor(encoder.transform(test_y))
 
@@ -66,6 +66,5 @@ with torch.no_grad():
     for index, (inputs, _) in enumerate(test_data):
         outputs.append(model(inputs).numpy())
 output = reduce(lambda x, y: np.concatenate((x, y)), outputs)
-predicted = encoder.inverse_transform(output)
+predicted = encoder.decode(output)
 print(predicted)
-
