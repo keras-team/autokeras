@@ -22,9 +22,15 @@ class HyperBlock(block.Block):
     Blocks.
 
     # Arguments
+        output_shape: Tuple of int(s). Defaults to None. If None, the output shape
+            will be inferred from the AutoModel.
         name: String. The name of the block. If unspecified, it will be set
-        automatically with the class name.
+            automatically with the class name.
     """
+
+    def __init__(self, output_shape=None, **kwargs):
+        super().__init__(**kwargs)
+        self.output_shape = output_shape
 
     def build(self, hp, inputs=None):
         """Build the HyperModel instead of Keras Model.
@@ -120,43 +126,6 @@ class TextBlock(HyperBlock):
         return output_node
 
 
-<<<<<<< HEAD
-=======
-class StructuredDataBlock(HyperBlock):
-
-    def __init__(self,
-                 column_types,
-                 task=None,
-                 feature_engineering=True,
-                 # include_head=True,
-                 **kwargs):
-        super().__init__()
-        self.feature_engineering = feature_engineering
-        self.column_types = column_types
-        self.task = task
-        # self.include_head = include_head
-
-    def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
-        output_node = input_node
-        feature_engineering = self.feature_engineering
-        if feature_engineering is None:
-            feature_engineering = hp.Choice('feature_engineering',
-                                            [True, False],
-                                            default=True)
-        if feature_engineering:
-            output_node = preprocessor.FeatureEngineering(
-                column_types=self.column_types)(output_node)
-        if self.task == 'classification':
-            lgbm_classifier = LightGBMClassifierBlock()
-            output_node = lgbm_classifier.build(hp=hp, inputs=output_node)
-        else:
-            lgbm_regressor = LightGBMRegressorBlock()
-            output_node = lgbm_regressor.build(hp=hp, inputs=output_node)
-        return output_node
-
-
->>>>>>> ad31842f11bf2d51f2974cf6cc0afa22ee2365dc
 class LightGBMClassifierBlock(HyperBlock):
     """Structured data classification with LightGBM.
 
@@ -178,8 +147,10 @@ class LightGBMClassifierBlock(HyperBlock):
         output_node = input_node
         output_node = preprocessor.LightGBMClassifier()(output_node)
         output_node = block.IdentityBlock()(output_node)
-        output_node = head_module.EmptyHead(loss='categorical_crossentropy',
-                                            metrics=self.metrics)(output_node)
+        output_node = head_module.EmptyHead(
+            loss='categorical_crossentropy',
+            metrics=self.metrics,
+            output_shape=self.output_shape)(output_node)
         return output_node
 
 
@@ -204,8 +175,10 @@ class LightGBMRegressorBlock(HyperBlock):
         output_node = input_node
         output_node = preprocessor.LightGBMRegressor()(output_node)
         output_node = block.IdentityBlock()(output_node)
-        output_node = head_module.EmptyHead(loss='mean_squared_error',
-                                            metrics=self.metrics)(output_node)
+        output_node = head_module.EmptyHead(
+            loss='mean_squared_error',
+            metrics=self.metrics,
+            output_shape=self.output_shape)(output_node)
         return output_node
 
 
@@ -229,8 +202,9 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
         output_node = input_node
         feature_engineering = self.feature_engineering
         if feature_engineering is None:
+            # TODO: If False, use plain label encoding.
             feature_engineering = hp.Choice('feature_engineering',
-                                            [True, False],
+                                            [True],
                                             default=True)
         if feature_engineering:
             output_node = preprocessor.FeatureEngineering(
@@ -243,8 +217,10 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
                                                     default='lightgbm')
         if module_type == 'dense':
             output_node = block.DenseBlock()(input_node)
+            self.head.output_shape = self.output_shape
             output_node = self.head(output_node)
         elif module_type == 'lightgbm':
+            self.lightgbm_block.output_shape = self.output_shape
             output_node = self.lightgbm_block.build(hp, input_node)
         else:
             raise ValueError('Unsupported module'
@@ -255,7 +231,9 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         output_node = self.build_feature_engineering(hp, input_node)
-        return self.build_body(hp, output_node)
+        output_node = self.build_body(hp, output_node)
+        nest.flatten(output_node)[0].shape = self.output_shape
+        return output_node
 
 
 class StructuredDataBlock(SupervisedStructuredDataPipelineBlock):
@@ -273,7 +251,7 @@ class StructuredDataBlock(SupervisedStructuredDataPipelineBlock):
         return block.DenseBlock()(input_node)
 
 
-class StructuredDataClassifierBlock(StructuredDataBlock):
+class StructuredDataClassifierBlock(SupervisedStructuredDataPipelineBlock):
 
     def __init__(self,
                  column_types,
@@ -281,19 +259,25 @@ class StructuredDataClassifierBlock(StructuredDataBlock):
                  module_type=None,
                  loss=None,
                  metrics=None,
+                 head=None,
                  **kwargs):
         self.loss = loss
         self.metrics = metrics
+        self.head = head
+        if self.metrics is None and isinstance(self.head, head_module.Head):
+            self.metrics = head.metrics
+        if self.head is None:
+            self.head = head_module.ClassificationHead(loss=self.loss,
+                                                       metrics=self.metrics)
         super().__init__(
             column_types=column_types,
             feature_engineering=feature_engineering,
             module_type=module_type,
-            head=head_module.ClassificationHead(loss=self.loss,
-                                                metrics=self.metrics),
+            head=self.head,
             lightgbm_block=LightGBMClassifierBlock(metrics=self.metrics))
 
 
-class StructuredDataRegressorBlock(StructuredDataBlock):
+class StructuredDataRegressorBlock(SupervisedStructuredDataPipelineBlock):
 
     def __init__(self,
                  column_types,
@@ -301,15 +285,21 @@ class StructuredDataRegressorBlock(StructuredDataBlock):
                  module_type=None,
                  loss=None,
                  metrics=None,
+                 head=None,
                  **kwargs):
         self.loss = loss
         self.metrics = metrics
+        self.head = head
+        if self.metrics is None and isinstance(self.head, head_module.Head):
+            self.metrics = head.metrics
+        if self.head is None:
+            self.head = head_module.RegressionHead(loss=self.loss,
+                                                   metrics=self.metrics),
         super().__init__(
             column_types=column_types,
             feature_engineering=feature_engineering,
             module_type=module_type,
-            head=head_module.RegressionHead(loss=self.loss,
-                                            metrics=self.metrics),
+            head=self.head,
             lightgbm_block=LightGBMRegressorBlock(metrics=self.metrics))
 
 

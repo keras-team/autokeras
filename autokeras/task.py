@@ -170,7 +170,7 @@ class TextRegressor(SupervisedTextPipeline):
 class SupervisedStructuredDataPipeline(auto_model.AutoModel):
 
     def __init__(self, outputs, **kwargs):
-        super().__init__(inputs=node.StructuredInput(),
+        super().__init__(inputs=node.StructuredDataInput(),
                          outputs=outputs,
                          **kwargs)
 

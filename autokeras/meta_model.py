@@ -5,6 +5,7 @@ import numpy as np
 
 from autokeras.hypermodel import block
 from autokeras.hypermodel import graph
+from autokeras.hypermodel import head
 from autokeras.hypermodel import hyperblock
 from autokeras.hypermodel import node
 
@@ -23,16 +24,18 @@ def assemble(inputs, outputs, dataset, seed=None):
     """
     inputs = nest.flatten(inputs)
     outputs = nest.flatten(outputs)
+
     assemblers = []
     for input_node in inputs:
         if isinstance(input_node, node.TextInput):
             assemblers.append(TextAssembler())
         if isinstance(input_node, node.ImageInput):
             assemblers.append(ImageAssembler(seed=seed))
-        if isinstance(input_node, node.StructuredInput):
+        if isinstance(input_node, node.StructuredDataInput):
             assemblers.append(StructuredDataAssembler())
         if isinstance(input_node, node.TimeSeriesInput):
             assemblers.append(TimeSeriesAssembler())
+
     # Iterate over the dataset to fit the assemblers.
     hps = []
     structured_data_classification = True
@@ -42,6 +45,20 @@ def assemble(inputs, outputs, dataset, seed=None):
         for temp_x, assembler in zip(x, assemblers):
             assembler.update(temp_x)
             hps += assembler.hps
+
+    # Single structured data classification or regression.
+    if (len(inputs) == 1 and len(outputs) == 1 and
+            isinstance(inputs[0], node.StructuredDataInput)):
+        assemblers[0].infer_column_types()
+        if isinstance(outputs[0], head.ClassificationHead):
+            output_block = hyperblock.StructuredDataClassifierBlock(
+                column_types=assemblers[0].column_types,
+                head=outputs[0])
+        else:
+            output_block = hyperblock.StructuredDataRegressorBlock(
+                column_types=assemblers[0].column_types,
+                head=outputs[0])
+        return graph.GraphHyperModel(inputs, output_block(inputs))
 
     # Assemble the model with assemblers.
     middle_nodes = []
@@ -167,7 +184,7 @@ class StructuredDataAssembler(Assembler):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.data_types = []
+        self.column_types = []
         self.count_nan = None
         self.count_numerical = None
         self.count_categorical = None
@@ -203,16 +220,18 @@ class StructuredDataAssembler(Assembler):
                 except ValueError:
                     self.count_categorical[i] += 1
 
-    def assemble(self, input_node, task):
-        # Infer the types of the columns. And pass them to StructuredDataBlock.
+    def infer_column_types(self):
         for i in range(self.num_col):
             if self.count_categorical[i] > 0:
-                self.data_types.append('categorical')
+                self.column_types.append('categorical')
             elif len(self.count_unique_numerical[i])/self.count_numerical[i] < 0.05:
-                self.data_types.append('categorical')
+                self.column_types.append('categorical')
             else:
-                self.data_types.append('numerical')
-        return hyperblock.StructuredDataBlock(self.data_types)(input_node)
+                self.column_types.append('numerical')
+
+    def assemble(self, input_node, task):
+        self.infer_column_types()
+        return hyperblock.StructuredDataBlock(self.column_types)(input_node)
 
 
 class TimeSeriesAssembler(Assembler):
