@@ -785,7 +785,6 @@ class FeatureEngineering(Preprocessor):
                 x[col_index] = self.label_encoders[col_index].transform(key)
             except KeyError:
                 x[col_index] = -1
-        self._shape = (self.num_rows, len(np.hstack((x, np.array(new_values)))))
         return np.hstack((x, np.array(new_values)))
 
     def _impute(self, x):
@@ -829,6 +828,11 @@ class FeatureEngineering(Preprocessor):
                 for key, value in self.high_level_num_cat[pair].items():
                     self.high_level_num_cat[pair][key] /= self.value_counters[
                         cat_col_index1][key]
+
+        self._shape = (len(self.column_types)
+                       + len(self.high_level1_col)
+                       + len(self.high_level_cat_cat)
+                       + len(self.high_level_num_cat),)
 
     def output_types(self):
         return tf.float64,

@@ -226,13 +226,13 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
             raise ValueError('Unsupported module'
                              'type: {module_type}'.format(
                                  module_type=module_type))
+        nest.flatten(output_node)[0].shape = self.output_shape
         return output_node
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         output_node = self.build_feature_engineering(hp, input_node)
         output_node = self.build_body(hp, output_node)
-        nest.flatten(output_node)[0].shape = self.output_shape
         return output_node
 
 
