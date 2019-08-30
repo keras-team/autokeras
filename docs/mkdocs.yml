@@ -17,11 +17,13 @@ google_analytics: ['UA-44322747-3', 'autokeras.com']
 nav:
     - Home: index.md
     - Getting Started: start.md
+    - Tutorial for 1.0: tutorial.md
     - Docker: docker.md
     - Contributing Guide: contributing.md
-    - Neural Architecture Search: nas.md
     - Documentation:
-      - auto_model: auto_model.md
-      - hypermodel:
-        - block: hypermodel/block.md
+      - Task API: task.md
+      - AutoModel: auto_model.md
+      - GraphAutoModel: graph_auto_model.md
+      - Block: block.md
+      - Head: head.md
     - About: about.md
