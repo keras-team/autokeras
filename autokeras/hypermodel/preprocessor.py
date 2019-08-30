@@ -173,7 +173,7 @@ class Normalization(Preprocessor):
         return (x - self.mean) / self.std
 
     def output_types(self):
-        return tf.float64,
+        return (tf.float64,)
 
     @property
     def output_shape(self):
@@ -230,7 +230,7 @@ class TextToIntSequence(Preprocessor):
         return sequence
 
     def output_types(self):
-        return tf.int64,
+        return (tf.int64,)
 
     @property
     def output_shape(self):
@@ -297,7 +297,7 @@ class TextToNgramVector(Preprocessor):
         return data[0]
 
     def output_types(self):
-        return tf.float64,
+        return (tf.float64,)
 
     @property
     def output_shape(self):
@@ -641,7 +641,7 @@ class ImageAugmentation(Preprocessor):
         return x
 
     def output_types(self):
-        return tf.float64,
+        return (tf.float64,)
 
     @property
     def output_shape(self):
@@ -835,7 +835,7 @@ class FeatureEngineering(Preprocessor):
                        + len(self.high_level_num_cat),)
 
     def output_types(self):
-        return tf.float64,
+        return (tf.float64,)
 
     @property
     def output_shape(self):
