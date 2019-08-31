@@ -171,7 +171,7 @@ class Normalization(Preprocessor):
         return (x - self.mean) / self.std
 
     def output_types(self):
-        return tf.float64,
+        return tf.float32,
 
     @property
     def output_shape(self):
@@ -595,7 +595,7 @@ class ImageAugmentation(Preprocessor):
             x = tf.image.random_brightness(x, self.brightness_range, self.seed)
 
         saturation_range = self.saturation_range
-        if saturation_range != 0:
+        if saturation_range != 0 and channels == 3:
             min_value, max_value = self.saturation_range
             x = tf.image.random_saturation(x, min_value, max_value, self.seed)
 
@@ -639,7 +639,7 @@ class ImageAugmentation(Preprocessor):
         return x
 
     def output_types(self):
-        return tf.float64,
+        return tf.float32,
 
     @property
     def output_shape(self):

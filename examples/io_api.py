@@ -9,7 +9,7 @@ x_test = x_test.reshape(x_test.shape + (1,))
 
 x_structured = np.random.rand(x_train.shape[0], 100)
 y_regression = np.random.rand(x_train.shape[0], 1)
-
+y_classification = y_classification.reshape(-1, 1)
 # Build model and train.
 automodel = ak.AutoModel(
    inputs=[ak.ImageInput(),
