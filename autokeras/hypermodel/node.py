@@ -38,7 +38,7 @@ class TextInput(Input, TextNode):
     pass
 
 
-class StructuredInput(Input):
+class StructuredDataInput(Input):
     pass
 
 

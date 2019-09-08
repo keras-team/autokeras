@@ -8,6 +8,7 @@ import autokeras as ak
 from autokeras.hypermodel import preprocessor
 from autokeras.hypermodel import block
 from autokeras.hypermodel import head
+from ..common import structured_data
 
 
 @pytest.fixture(scope='module')
@@ -124,6 +125,50 @@ def test_augment():
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
+def test_feature_engineering():
+    data = structured_data()
+    dataset = tf.data.Dataset.from_tensor_slices(data)
+    feature = preprocessor.FeatureEngineering([
+        'categorical', 'categorical', 'numerical', 'numerical', 'categorical',
+        'categorical', 'categorical', 'categorical'])
+    feature.set_hp(kerastuner.HyperParameters())
+    for x in dataset:
+        feature.update(x)
+    feature.finalize()
+    feature.set_config(feature.get_config())
+    for a in dataset:
+        feature.transform(a)
+
+    def map_func(x):
+        return tf.py_function(feature.transform,
+                              inp=[x],
+                              Tout=(tf.float64,))
+    new_dataset = dataset.map(map_func)
+    assert isinstance(new_dataset, tf.data.Dataset)
+
+
+def test_feature_engineering_fix_keyerror():
+    data = structured_data(100)
+    dataset = tf.data.Dataset.from_tensor_slices(data)
+    feature = preprocessor.FeatureEngineering([
+        'categorical', 'categorical', 'numerical', 'numerical', 'categorical',
+        'categorical', 'categorical', 'categorical'])
+    feature.set_hp(kerastuner.HyperParameters())
+    for x in dataset:
+        feature.update(x)
+    feature.finalize()
+    feature.set_config(feature.get_config())
+    for a in dataset:
+        feature.transform(a)
+
+    def map_func(x):
+        return tf.py_function(feature.transform,
+                              inp=[x],
+                              Tout=(tf.float64,))
+    new_dataset = dataset.map(map_func)
+    assert isinstance(new_dataset, tf.data.Dataset)
+
+
 def test_lgbm_classifier(tmp_dir):
     x_train = np.random.rand(11, 32)
     y_train = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -159,6 +204,7 @@ def test_lgbm_classifier(tmp_dir):
 def test_lgbm_regressor(tmp_dir):
     x_train = np.random.rand(11, 32)
     y_train = np.array([1.1, 2.1, 4.2, 0.3, 2.4, 8.5, 7.3, 8.4, 9.4, 4.3])
+    y_train = y_train.reshape(-1, 1)
     input_node = ak.Input()
     output_node = input_node
     output_node = preprocessor.LightGBMRegressor()(output_node)

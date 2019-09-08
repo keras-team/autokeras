@@ -139,6 +139,7 @@ class OneHotEncoder(object):
     """
 
     def __init__(self, num_classes=None):
+        super().__init__()
         self.num_classes = num_classes
         self._labels = None
         self._label_to_vec = {}
@@ -197,3 +198,19 @@ class OneHotEncoder(object):
         """
         return np.array(list(map(lambda x: self._int_to_label[x],
                                  np.argmax(np.array(data), axis=1)))).reshape(-1, 1)
+
+
+class LabelEncoder(object):
+
+    def __init__(self):
+        super().__init__()
+        self.num_labels = 0
+        self._label_to_int = {}
+
+    def update(self, x):
+        if x not in self._label_to_int:
+            self._label_to_int[x] = self.num_labels
+            self.num_labels += 1
+
+    def transform(self, x):
+        return self._label_to_int[x]
