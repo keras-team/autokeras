@@ -173,7 +173,7 @@ class Normalization(Preprocessor):
         return (x - self.mean) / self.std
 
     def output_types(self):
-        return (tf.float64,)
+        return (tf.float32,)
 
     @property
     def output_shape(self):
@@ -441,7 +441,7 @@ class LightGBMClassifier(LightGBMModel):
         return y
 
     def output_types(self):
-        return (tf.int32,)
+        return (tf.int64,)
 
     def set_weights(self, weights):
         super().set_weights(weights)
@@ -642,7 +642,7 @@ class ImageAugmentation(Preprocessor):
         return x
 
     def output_types(self):
-        return (tf.float64,)
+        return (tf.float32,)
 
     @property
     def output_shape(self):
@@ -741,8 +741,8 @@ class FeatureEngineering(Preprocessor):
     def update(self, x, y=None):
         self.num_rows += 1
         x = nest.flatten(x)[0].numpy()
-        for index in range(len(x)):
-            x[index] = x[index].decode('utf-8')
+        #for index in range(len(x)):
+         #   x[index] = x[index].decode('utf-8')
 
         self._impute(x)
 
@@ -763,8 +763,8 @@ class FeatureEngineering(Preprocessor):
     def transform(self, x, fit=False):
         x = nest.flatten(x)[0].numpy()
 
-        for index in range(len(x)):
-            x[index] = x[index].decode('utf-8')
+        #for index in range(len(x)):
+         #   x[index] = x[index].decode('utf-8')
         self._impute(x)
 
         new_values = []

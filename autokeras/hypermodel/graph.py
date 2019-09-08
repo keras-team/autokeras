@@ -1,5 +1,6 @@
 import copy
 import functools
+import numpy as np
 
 import kerastuner
 import tensorflow as tf
