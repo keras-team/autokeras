@@ -4,18 +4,25 @@ from keras.datasets import mnist
 
 # Prepare the data.
 (x_train, y_classification), (x_test, y_test) = mnist.load_data()
+
+data_slice = 200
+x_train = x_train[:data_slice]
+y_classification = y_classification[:data_slice]
+x_test = x_test[:data_slice]
+y_test = y_test[:data_slice]
+
 x_image = x_train.reshape(x_train.shape + (1,))
 x_test = x_test.reshape(x_test.shape + (1,))
-
 x_structured = np.random.rand(x_train.shape[0], 100)
 y_regression = np.random.rand(x_train.shape[0], 1)
 y_classification = y_classification.reshape(-1, 1)
 # Build model and train.
 automodel = ak.AutoModel(
-   inputs=[ak.ImageInput(),
-           ak.StructuredInput()],
-   outputs=[ak.RegressionHead(metrics=['mae']),
-            ak.ClassificationHead(loss='categorical_crossentropy',
-                                  metrics=['accuracy'])])
+    inputs=[ak.ImageInput(),
+            ak.StructuredInput()],
+    outputs=[ak.RegressionHead(metrics=['mae']),
+             ak.ClassificationHead(loss='categorical_crossentropy',
+                                   metrics=['accuracy'])])
 automodel.fit([x_image, x_structured],
-              [y_regression, y_classification])
+              [y_regression, y_classification],
+              validation_split=0.2)
