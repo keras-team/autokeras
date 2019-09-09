@@ -841,9 +841,9 @@ class FeatureEngineering(Preprocessor):
                         cat_col_index1][key]
 
         self.shape = (len(self.column_types)
-                       + len(self.high_level1_col)
-                       + len(self.high_level_cat_cat)
-                       + len(self.high_level_num_cat),)
+                      + len(self.high_level1_col)
+                      + len(self.high_level_cat_cat)
+                      + len(self.high_level_num_cat),)
 
     def output_types(self):
         return (tf.float64,)
