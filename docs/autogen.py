@@ -11,7 +11,10 @@ import sys
 import six
 import autokeras
 from autokeras import auto_model
+from autokeras import task
 from autokeras.hypermodel import block
+from autokeras.hypermodel import head
+from autokeras.hypermodel import hyperblock
 
 try:
     import pathlib
@@ -114,6 +117,11 @@ PAGES = [
                 auto_model.AutoModel.fit,
                 auto_model.AutoModel.predict,
             ]),
+        ]
+    },
+    {
+        'page': 'graph_auto_model.md',
+        'classes': [
             (auto_model.GraphAutoModel, [
                 auto_model.GraphAutoModel.fit,
                 auto_model.GraphAutoModel.predict,
@@ -121,8 +129,27 @@ PAGES = [
         ]
     },
     {
-        'page': 'hypermodel/block.md',
-        'all_module_classes': [block],
+        'page': 'block.md',
+        'classes': [hyperblock.ImageBlock,
+                    hyperblock.TextBlock,
+                    hyperblock.StructuredDataBlock,
+                    block.ResNetBlock,
+                    block.XceptionBlock,
+                    block.ConvBlock,
+                    block.RNNBlock,
+                    block.Merge],
+    },
+    {
+        'page': 'task.md',
+        'classes': [task.ImageClassifier,
+                    task.ImageRegressor,
+                    task.TextClassifier,
+                    task.TextRegressor],
+    },
+    {
+        'page': 'head.md',
+        'classes': [head.ClassificationHead,
+                    head.RegressionHead],
     },
     # {
     #     'page': 'hypermodel/block.md',

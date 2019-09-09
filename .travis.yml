@@ -6,7 +6,6 @@ jobs:
     - stage: test
       script:
         - pip install -e .[tests] --progress-bar off
-        - pip install git+git://github.com/keras-team/keras-tuner@master#egg=keras-tuner
         - pip install codacy-coverage
         - pytest tests --cov=autokeras --cov-report xml:coverage.xml
         - if ! [[ -z $CODACY_PROJECT_TOKEN ]]; then
@@ -16,12 +15,10 @@ jobs:
     -
       script:
         - pip install -e .[tests] --progress-bar off
-        - pip install git+git://github.com/keras-team/keras-tuner@master#egg=keras-tuner
         - flake8
     -
       script:
         - pip install -e .[tests] --progress-bar off
-        - pip install git+git://github.com/keras-team/keras-tuner@master#egg=keras-tuner
         - pip install mkdocs
         - pip install mkdocs-material
         - sh shell/docs.sh
