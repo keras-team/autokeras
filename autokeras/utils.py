@@ -92,6 +92,11 @@ def inputs_to_datasets(x):
 
 def prepare_preprocess(x, y):
     """Convert each input to a tf.data.Dataset."""
+    # TODO:Code below are only for test, remember to clean!
+    #x = np.array(x).astype(np.float32)
+    #y = np.array(y).astype(np.float32)
+    #print(x.shape)
+    # TODO:Code above are only for test, remember to clean!
     x = inputs_to_datasets(x)
     y = inputs_to_datasets(y)
     return tf.data.Dataset.zip((x, y))

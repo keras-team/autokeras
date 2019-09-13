@@ -29,13 +29,13 @@ merged_outputs = ak.Merge()((structured_outputs, image_outputs))
 
 classification_outputs = ak.ClassificationHead()(merged_outputs)
 regression_outputs = ak.RegressionHead()(merged_outputs)
-automodel = ak.GraphAutoModel(inputs=inputs,
+automodel = ak.GraphAutoModel(inputs=[inputs, structured_inputs],
                               outputs=[regression_outputs,
                                        classification_outputs])
 
 automodel.fit((x_image, x_structured),
               (y_regression, y_classification),
-              trials=100,
+              # trials=100,
               validation_split=0.2,
               epochs=200,
               callbacks=[tf.keras.callbacks.EarlyStopping()])
