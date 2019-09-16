@@ -7,10 +7,13 @@ from keras.datasets import mnist
 (x_train, y_classification), (x_test, y_test) = mnist.load_data()
 data_slice = 200
 x_train = x_train[:data_slice]
+print(x_train.dtype)
 y_classification = y_classification[:data_slice]
 x_test = x_test[:data_slice]
 y_test = y_test[:data_slice]
-
+x_train = x_train.astype(np.float64)
+x_test = x_test.astype(np.float64)
+print(x_train.dtype)
 # x_image = np.reshape(x_train, (200, 28, 28, 1))
 # x_test = np.reshape(x_test, (200, 28, 28, 1))
 x_image = x_train.reshape(x_train.shape + (1,))
