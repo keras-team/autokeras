@@ -765,7 +765,7 @@ class FeatureEngineering(Preprocessor):
 
         # for index in range(len(x)):
         #   x[index] = x[index].decode('utf-8')
-        self._impute(x)
+        self.fill_missing(x)
 
         new_values = []
         # append frequency
