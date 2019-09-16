@@ -700,7 +700,7 @@ class FeatureEngineering(Preprocessor):
         self.max_columns = max_columns
         self.num_columns = len(column_types)
         self.num_rows = 0
-        self._shape = None
+        self.shape = None
         # A list of categorical column indices.
         self.categorical_col = []
         # A list of numerical column indices.
@@ -741,10 +741,10 @@ class FeatureEngineering(Preprocessor):
     def update(self, x, y=None):
         self.num_rows += 1
         x = nest.flatten(x)[0].numpy()
-        #for index in range(len(x)):
-         #   x[index] = x[index].decode('utf-8')
+        # for index in range(len(x)):
+        #    x[index] = x[index].decode('utf-8')
 
-        self._impute(x)
+        self.fill_missing(x)
 
         for col_index in self.categorical_col:
             key = str(x[col_index])
@@ -763,8 +763,8 @@ class FeatureEngineering(Preprocessor):
     def transform(self, x, fit=False):
         x = nest.flatten(x)[0].numpy()
 
-        #for index in range(len(x)):
-         #   x[index] = x[index].decode('utf-8')
+        # for index in range(len(x)):
+        #   x[index] = x[index].decode('utf-8')
         self._impute(x)
 
         new_values = []
@@ -798,7 +798,7 @@ class FeatureEngineering(Preprocessor):
                 x[col_index] = -1
         return np.hstack((x, np.array(new_values)))
 
-    def _impute(self, x):
+    def fill_missing(self, x):
         for col_index in range(self.num_columns):
             if col_index in self.numerical_col:
                 if x[col_index] == 'nan':
@@ -832,7 +832,7 @@ class FeatureEngineering(Preprocessor):
                 pair = (cat_col_index1, cat_col_index2)
                 self.high_level_cat_cat[pair] = self.categorical_categorical[pair]
 
-            # extract high level columns from num-cat dict and calculte mean
+            # extract high level columns from num-cat dict and calculate mean
             for num_col_index in self.numerical_col:
                 pair = (num_col_index, cat_col_index1)
                 self.high_level_num_cat[pair] = self.numerical_categorical[pair]
@@ -840,20 +840,20 @@ class FeatureEngineering(Preprocessor):
                     self.high_level_num_cat[pair][key] /= self.value_counters[
                         cat_col_index1][key]
 
-        self._shape = (len(self.column_types)
-                       + len(self.high_level1_col)
-                       + len(self.high_level_cat_cat)
-                       + len(self.high_level_num_cat),)
+        self.shape = (len(self.column_types)
+                      + len(self.high_level1_col)
+                      + len(self.high_level_cat_cat)
+                      + len(self.high_level_num_cat),)
 
     def output_types(self):
         return (tf.float64,)
 
     @property
     def output_shape(self):
-        return self._shape
+        return self.shape
 
     def get_weights(self):
-        return {'_shape': self._shape,
+        return {'shape': self.shape,
                 'num_rows': self.num_rows,
                 'categorical_col': self.categorical_col,
                 'numerical_col': self.numerical_col,
@@ -868,7 +868,7 @@ class FeatureEngineering(Preprocessor):
                 'high_level_num_cat': self.high_level_num_cat}
 
     def set_weights(self, weights):
-        self._shape = weights['_shape']
+        self.shape = weights['shape']
         self.num_rows = weights['num_rows']
         self.categorical_col = weights['categorical_col']
         self.numerical_col = weights['numerical_col']
@@ -883,7 +883,7 @@ class FeatureEngineering(Preprocessor):
         self.high_level_num_cat = weights['high_level_num_cat']
 
     def clear_weights(self):
-        self._shape = None
+        self.shape = None
         self.num_rows = 0
         self.categorical_col = []
         self.numerical_col = []
