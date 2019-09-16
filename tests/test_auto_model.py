@@ -58,8 +58,8 @@ def test_merge(tmp_dir):
 @mock.patch('kerastuner.engine.tuner.Tuner.search',
             side_effect=lambda *args, **kwargs: None)
 def test_preprocessing(_, tmp_dir):
-    x_train = np.random.rand(100, 33).astype(np.float32)
-    y_train = np.random.rand(100, 1).astype(np.float32)
+    x_train = np.random.rand(100, 33)
+    y_train = np.random.rand(100, 1)
 
     input_node1 = ak.Input()
     temp_node1 = ak.Normalization()(input_node1)
@@ -135,8 +135,8 @@ def test_input_missing(tmp_dir):
 @mock.patch('kerastuner.engine.tuner.Tuner.search',
             side_effect=lambda *args, **kwargs: None)
 def test_auto_model_basic(_, tmp_dir):
-    x_train = np.random.rand(100, 32, 32, 3).astype(np.float32)
-    y_train = np.random.rand(100, 1).astype(np.float32)
+    x_train = np.random.rand(100, 32, 32, 3)
+    y_train = np.random.rand(100, 1)
 
     auto_model = ak.AutoModel(ak.ImageInput(),
                               ak.RegressionHead(),
