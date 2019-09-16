@@ -60,7 +60,7 @@ class ImageRegressor(SupervisedImagePipeline):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
-        name: String. The name of the AutoModel. Defaults to 'image_classifier'.
+        name: String. The name of the AutoModel. Defaults to 'image_regressor'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
@@ -104,7 +104,7 @@ class TextClassifier(SupervisedTextPipeline):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
-        name: String. The name of the AutoModel. Defaults to 'image_classifier'.
+        name: String. The name of the AutoModel. Defaults to 'text_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
@@ -143,7 +143,7 @@ class TextRegressor(SupervisedTextPipeline):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
-        name: String. The name of the AutoModel. Defaults to 'image_classifier'.
+        name: String. The name of the AutoModel. Defaults to 'text_regressor'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
