@@ -194,14 +194,12 @@ class AutoModel(object):
 
     def _postprocess(self, y):
         y = nest.flatten(y)
-        if not self._label_encoders:
-            return y
         new_y = []
         for temp_y, head_block in zip(y, self.heads):
-            if head_block.label_encoder:
-                new_y.append(head_block.label_encoder.decode(temp_y))
-            else:
-                new_y.append(temp_y)
+            if isinstance(head_block, head.ClassificationHead):
+                if head_block.label_encoder:
+                    temp_y = head_block.label_encoder.decode(temp_y)
+            new_y.append(temp_y)
         return new_y
 
 

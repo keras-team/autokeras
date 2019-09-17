@@ -143,7 +143,9 @@ class ClassificationHead(Head):
         self.label_encoder.fit_with_labels(y)
 
     def transform(self, y):
-        return super().transform(self.label_encoder.encode(y))
+        if self.label_encoder:
+            y = self.label_encoder.encode(y)
+        return super().transform(y)
 
 
 class RegressionHead(Head):

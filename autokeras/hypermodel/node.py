@@ -36,6 +36,8 @@ class Input(Node):
         if isinstance(x, tf.data.Dataset):
             return x
         if isinstance(x, np.ndarray):
+            if x.dtype == np.float64:
+                x = x.astype(np.float32)
             return tf.data.Dataset.from_tensor_slices(x)
         raise ValueError('Unsupported type {type} for '
                          '{name}.'.format(type=type(x),
@@ -48,8 +50,6 @@ class ImageInput(Input):
         if isinstance(x, np.ndarray):
             if len(x.shape) == 3:
                 x = x.reshape(-1, 1)
-            if x.dtype == np.float64:
-                x = x.astype(np.float32)
         return super().transform(x)
 
 
