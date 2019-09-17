@@ -694,10 +694,13 @@ class FeatureEngineering(Preprocessor):
             Defaults to 1000.
     """
 
-    def __init__(self, column_types, max_columns=1000, **kwargs):
+    def __init__(self, column_types, column_names, max_columns=1000, **kwargs):
+        # TODO: support partial column_types, i.e., the size of the dict is smaller
+        # than the number of the columns.
         super().__init__(**kwargs)
         self.column_types = column_types
         self.max_columns = max_columns
+        self.column_names = column_names
         self.num_columns = len(column_types)
         self.num_rows = 0
         self.shape = None
@@ -715,11 +718,11 @@ class FeatureEngineering(Preprocessor):
         self.high_level_cat_cat = {}
         self.high_level_num_cat = {}
 
-        for index, column_type in enumerate(self.column_types):
+        for column_name, column_type in self.column_types.items():
             if column_type == 'categorical':
-                self.categorical_col.append(index)
+                self.categorical_col.append(self.column_names.index(column_name))
             elif column_type == 'numerical':
-                self.numerical_col.append(index)
+                self.numerical_col.append(self.column_names.index(column_name))
             else:
                 raise ValueError('Unsupported column type: '
                                  '{type}'.format(type=column_type))

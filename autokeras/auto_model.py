@@ -1,8 +1,9 @@
-import kerastuner
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+import kerastuner
 from autokeras import meta_model
 from autokeras import tuner
 from autokeras import utils
@@ -126,6 +127,21 @@ class AutoModel(object):
         # Initialize HyperGraph model
         x = nest.flatten(x)
         y = nest.flatten(y)
+        if type(x[0]) is pd.DataFrame:
+            # convert x,y,validation_data to tf.Dataset
+            x = tf.data.Dataset.from_tensor_slices(
+                x[0].values.astype(np.unicode))
+            # x = tf.data.Dataset.zip(tuple(x))
+            x_val, y_val = validation_data
+            validation_data = tf.data.Dataset.from_tensor_slices(
+                (x_val.values.astype(np.unicode), y_val.values))
+            y = self._label_encoding(y[0].values)
+            y = utils.inputs_to_datasets(y)
+            dataset = tf.data.Dataset.zip(((x,), y))
+            for line in dataset:
+                print('=============================================')
+                print(line)
+            return dataset, validation_data
         # TODO: check x, y types to be numpy.ndarray or tf.data.Dataset.
         # TODO: y.reshape(-1, 1) if needed.
         y = self._label_encoding(y)
@@ -140,6 +156,7 @@ class AutoModel(object):
             validation_data = x_val, y_val
         # TODO: Handle other types of input, zip dataset, tensor, dict.
         # Prepare the dataset
+        # dataset = tf.data.Dataset.zip((x, y)) ?
         dataset = x if isinstance(x, tf.data.Dataset) \
             else utils.prepare_preprocess(x, y)
         if not isinstance(validation_data, tf.data.Dataset):

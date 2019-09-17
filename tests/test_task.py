@@ -5,7 +5,7 @@ import pytest
 import tensorflow as tf
 
 import autokeras as ak
-from .common import structured_data
+from tests.common import structured_data
 
 
 @pytest.fixture(scope='module')
@@ -111,3 +111,17 @@ def test_structured_data_classifier_transform_new_data(tmp_dir):
     clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=2)
     clf.fit(x_train, y_train, epochs=2, validation_data=(
         x_test, y_test))
+
+
+def test_structured_data_from_csv_classifier(tmp_dir):
+    TRAIN_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
+    TEST_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
+
+    train_file_path = tf.keras.utils.get_file("train.csv", TRAIN_DATA_URL)
+    test_file_path = tf.keras.utils.get_file("eval.csv", TEST_DATA_URL)
+    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=2)
+    clf.fit(x=train_file_path, y='survived', epochs=2, validation_data=test_file_path)
+
+tmp_dir = r'E:\CS_Study\summer intern\autokeras_test_model'
+#test_structured_data_classifier(tmp_dir)
+test_structured_data_from_csv_classifier(tmp_dir)

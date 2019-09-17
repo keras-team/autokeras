@@ -39,7 +39,9 @@ class TextInput(Input, TextNode):
 
 
 class StructuredDataInput(Input):
-    pass
+    def __init__(self, column_names=None):  # not None?
+        self.column_names = column_names
+        super().__init__()
 
 
 class TimeSeriesInput(Input):

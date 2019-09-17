@@ -1,3 +1,5 @@
+import pandas as pd
+
 from autokeras import auto_model
 from autokeras.hypermodel import head
 from autokeras.hypermodel import node
@@ -170,9 +172,36 @@ class TextRegressor(SupervisedTextPipeline):
 class SupervisedStructuredDataPipeline(auto_model.AutoModel):
 
     def __init__(self, outputs, **kwargs):
+        # TODO: support customized column_types.
         super().__init__(inputs=node.StructuredDataInput(),
                          outputs=outputs,
                          **kwargs)
+
+    def fit(self,
+            x=None,  # file path of training data
+            y=None,  # label name
+            validation_split=0,
+            validation_data=None,  # file path of validataion data
+            **kwargs):
+        if type(x) is str:
+            df = pd.read_csv(x)
+            validation_df = pd.read_csv(validation_data)
+
+            column_names = list(df.columns)
+            self.inputs[0].column_names = column_names
+            label = df.pop(y)
+            validation_label = validation_df.pop(y)
+            super().fit(x=df,
+                        y=label,
+                        validation_split=0,
+                        validation_data=(validation_df, validation_label),
+                        **kwargs)
+        else:
+            super().fit(x=x,
+                        y=y,
+                        validation_split=validation_split,
+                        validation_data=validation_data,
+                        **kwargs)
 
 
 class StructuredDataClassifier(SupervisedStructuredDataPipeline):
