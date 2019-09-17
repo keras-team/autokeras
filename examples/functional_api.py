@@ -39,4 +39,3 @@ automodel.fit((x_image, x_structured),
               validation_split=0.2,
               epochs=200,
               callbacks=[tf.keras.callbacks.EarlyStopping()])
-                         #,tf.keras.callbacks.LearningRateScheduler()])
