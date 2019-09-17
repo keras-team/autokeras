@@ -32,14 +32,17 @@ def assemble(inputs, outputs, dataset, seed=None):
         if isinstance(input_node, node.ImageInput):
             assemblers.append(ImageAssembler(seed=seed))
         if isinstance(input_node, node.StructuredDataInput):
-            assemblers.append(StructuredDataAssembler())
+            assemblers.append(StructuredDataAssembler(
+                column_names=input_node.column_names))
         if isinstance(input_node, node.TimeSeriesInput):
             assemblers.append(TimeSeriesAssembler())
-
     # Iterate over the dataset to fit the assemblers.
     hps = []
-    for x, y in dataset:
+    for x, _ in dataset:
+        x = (x,)
+        print('x is'+repr(x))
         for temp_x, assembler in zip(x, assemblers):
+            print('temp_x is'+repr(temp_x))
             assembler.update(temp_x)
             hps += assembler.hps
 
@@ -50,10 +53,12 @@ def assemble(inputs, outputs, dataset, seed=None):
         if isinstance(outputs[0], head.ClassificationHead):
             output_block = hyperblock.StructuredDataClassifierBlock(
                 column_types=assemblers[0].column_types,
+                column_names=inputs[0].column_names,
                 head=outputs[0])
         else:
             output_block = hyperblock.StructuredDataRegressorBlock(
                 column_types=assemblers[0].column_types,
+                column_names=inputs[0].column_names,
                 head=outputs[0])
         return graph.GraphHyperModel(inputs, output_block(inputs))
 
@@ -179,9 +184,10 @@ class StructuredDataAssembler(Assembler):
     than 5% of the number of instances.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, column_names, **kwargs):
         super().__init__(**kwargs)
-        self.column_types = []
+        self.column_types = {}
+        self.column_names = column_names
         self.count_nan = None
         self.count_numerical = None
         self.count_categorical = None
@@ -220,13 +226,13 @@ class StructuredDataAssembler(Assembler):
     def infer_column_types(self):
         for i in range(self.num_col):
             if self.count_categorical[i] > 0:
-                self.column_types.append('categorical')
+                self.column_types[self.column_names[i]] = 'categorical'
             elif len(self.count_unique_numerical[i])/self.count_numerical[i] < 0.05:
-                self.column_types.append('categorical')
+                self.column_types[self.column_names[i]] = 'categorical'
             else:
-                self.column_types.append('numerical')
+                self.column_types[self.column_names[i]] = 'numerical'
 
-    def assemble(self, input_node):
+    def assemble(self, input_node):  # not used
         self.infer_column_types()
         return hyperblock.StructuredDataBlock(self.column_types)(input_node)
 

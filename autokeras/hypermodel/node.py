@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 
 
@@ -58,7 +59,20 @@ class TextInput(Input, TextNode):
 
 
 class StructuredDataInput(Input):
-    pass
+    def __init__(self, column_names=None):  # not None?
+        self.column_names = column_names
+        super().__init__()
+
+    def fit(self, x):
+        # TODO: add the column names.
+        pass
+
+    def transform(self, x):
+        if isinstance(x, pd.DataFrame):
+            # convert x,y,validation_data to tf.Dataset
+            x = tf.data.Dataset.from_tensor_slices(
+                x.values.astype(np.unicode))
+        return super().transform(x)
 
 
 class TimeSeriesInput(Input):

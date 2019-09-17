@@ -185,6 +185,7 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
 
     def __init__(self,
                  column_types,
+                 column_names,
                  feature_engineering=True,
                  module_type=None,
                  head=None,
@@ -192,6 +193,7 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
                  **kwargs):
         super().__init__()
         self.column_types = column_types
+        self.column_names = column_names
         self.feature_engineering = feature_engineering
         self.module_type = module_type
         self.head = head
@@ -207,7 +209,8 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
                                             default=True)
         if feature_engineering:
             output_node = preprocessor.FeatureEngineering(
-                column_types=self.column_types)(output_node)
+                column_types=self.column_types,
+                column_names=self.column_names)(output_node)
         return output_node
 
     def build_body(self, hp, input_node):
@@ -288,6 +291,7 @@ class StructuredDataClassifierBlock(SupervisedStructuredDataPipelineBlock):
 
     def __init__(self,
                  column_types,
+                 column_names,
                  feature_engineering=True,
                  loss=None,
                  metrics=None,
@@ -303,6 +307,7 @@ class StructuredDataClassifierBlock(SupervisedStructuredDataPipelineBlock):
                                                        metrics=self.metrics)
         super().__init__(
             column_types=column_types,
+            column_names=column_names,
             feature_engineering=feature_engineering,
             head=self.head,
             lightgbm_block=LightGBMClassifierBlock(metrics=self.metrics))
@@ -334,6 +339,7 @@ class StructuredDataRegressorBlock(SupervisedStructuredDataPipelineBlock):
 
     def __init__(self,
                  column_types,
+                 column_names,
                  feature_engineering=True,
                  loss=None,
                  metrics=None,
@@ -349,6 +355,7 @@ class StructuredDataRegressorBlock(SupervisedStructuredDataPipelineBlock):
                                                    metrics=self.metrics),
         super().__init__(
             column_types=column_types,
+            column_names=column_names,
             feature_engineering=feature_engineering,
             head=self.head,
             lightgbm_block=LightGBMRegressorBlock(metrics=self.metrics))

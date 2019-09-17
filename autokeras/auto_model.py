@@ -1,8 +1,9 @@
-import kerastuner
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+import kerastuner
 from autokeras import meta_model
 from autokeras import tuner
 from autokeras import utils
