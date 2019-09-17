@@ -44,6 +44,16 @@ class Head(block.Block):
         raise ValueError('Unsupported format for {name}.'.format(name=self.name))
 
 
+class IdentityLayer(tf.keras.layers.Layer):
+    """A Keras Layer returns the inputs."""
+
+    def compute_output_signature(self, input_signature):
+        return input_signature
+
+    def call(self, inputs, *args, **kwargs):
+        return tf.identity(nest.flatten(inputs)[0])
+
+
 class EmptyHead(Head):
     """An empty head that do nothing but return the inputs.
 
@@ -65,7 +75,7 @@ class EmptyHead(Head):
         self.metrics = metrics
 
     def build(self, hp, inputs=None):
-        return inputs
+        return IdentityLayer(name=self.name)(inputs)
 
 
 class ClassificationHead(Head):
@@ -200,5 +210,6 @@ class RegressionHead(Head):
         if dropout_rate > 0:
             output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         output_node = block.Flatten().build(hp, output_node)
-        output_node = tf.keras.layers.Dense(self.output_shape[-1], name=self.name)(output_node)
+        output_node = tf.keras.layers.Dense(self.output_shape[-1],
+                                            name=self.name)(output_node)
         return output_node

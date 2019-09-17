@@ -543,24 +543,3 @@ class EmbeddingBlock(Block):
                 input_length=const.Constant.VOCABULARY_SIZE,
                 trainable=True)
         return layer(input_node)
-
-
-class IdentityLayer(tf.keras.layers.Layer):
-    """A Keras Layer returns the inputs."""
-
-    def compute_output_signature(self, input_signature):
-        return input_signature
-
-    def call(self, inputs, *args, **kwargs):
-        return tf.identity(nest.flatten(inputs)[0])
-
-
-class IdentityBlock(Block):
-    """Identity block for LgbmModule preprocessor.
-
-    The input could be anything. Return output with the same shape and contents
-    as input.
-    """
-
-    def build(self, hp, inputs=None):
-        return IdentityLayer()(inputs)

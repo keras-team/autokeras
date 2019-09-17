@@ -146,7 +146,6 @@ class LightGBMClassifierBlock(HyperBlock):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         output_node = preprocessor.LightGBMClassifier()(output_node)
-        output_node = block.IdentityBlock()(output_node)
         output_node = head_module.EmptyHead(
             loss='categorical_crossentropy',
             metrics=self.metrics,
@@ -174,7 +173,6 @@ class LightGBMRegressorBlock(HyperBlock):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         output_node = preprocessor.LightGBMRegressor()(output_node)
-        output_node = block.IdentityBlock()(output_node)
         output_node = head_module.EmptyHead(
             loss='mean_squared_error',
             metrics=self.metrics,
