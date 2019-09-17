@@ -74,24 +74,6 @@ def dataset_shape(dataset):
     return tf.compat.v1.data.get_output_shapes(dataset)
 
 
-def inputs_to_datasets(x):
-    x = nest.flatten(x)
-    new_x = []
-    for temp_x in x:
-        if isinstance(temp_x, np.ndarray):
-            if temp_x.dtype == np.float64:
-                temp_x = temp_x.astype(np.float32)
-            new_x.append(tf.data.Dataset.from_tensor_slices(temp_x))
-    return tf.data.Dataset.zip(tuple(new_x))
-
-
-def prepare_preprocess(x, y):
-    """Convert each input to a tf.data.Dataset."""
-    x = inputs_to_datasets(x)
-    y = inputs_to_datasets(y)
-    return tf.data.Dataset.zip((x, y))
-
-
 def is_label(y):
     """Check if the targets are one-hot encoded or plain labels.
 

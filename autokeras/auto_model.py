@@ -126,9 +126,9 @@ class AutoModel(object):
                           validation_data=validation_data,
                           **kwargs)
 
-    def _process_xy(self, x, y, fit=False):
+    def _process_xy(self, x, y=None, fit=False, predict=False):
         if isinstance(x, tf.data.Dataset):
-            if y is None:
+            if y is None and not predict:
                 return x
             if isinstance(y, tf.data.Dataset):
                 return tf.data.Dataset.zip((x, y))
@@ -141,6 +141,9 @@ class AutoModel(object):
             data = input_node.transform(data)
             new_x.append(data)
         x = tf.data.Dataset.zip(tuple(new_x))
+
+        if predict:
+            return tf.data.Dataset.zip((x, x))
 
         if not isinstance(y, tf.data.Dataset):
             y = nest.flatten(y)
@@ -183,7 +186,7 @@ class AutoModel(object):
         best_hp = best_trial.hyperparameters
 
         self.tuner.load_trial(best_trial)
-        x = utils.prepare_preprocess(x, x)
+        x = self._process_xy(x, predict=True)
         x = self.hypermodel.preprocess(best_hp, x)
         x = x.batch(batch_size)
         y = best_model.predict(x, **kwargs)
