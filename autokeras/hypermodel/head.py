@@ -115,9 +115,9 @@ class ClassificationHead(Head):
         output_node = block.Flatten().build(hp, output_node)
         output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
         if self.loss == 'binary_crossentropy':
-            output_node = tf.keras.activations.sigmoid(output_node)
+            output_node = tf.keras.activations.sigmoid(output_node, name=self.name)
         else:
-            output_node = tf.keras.layers.Softmax()(output_node)
+            output_node = tf.keras.layers.Softmax(name=self.name)(output_node)
         return output_node
 
 
@@ -173,5 +173,5 @@ class RegressionHead(Head):
         if dropout_rate > 0:
             output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         output_node = block.Flatten().build(hp, output_node)
-        output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
+        output_node = tf.keras.layers.Dense(self.output_shape[-1], name=self.name)(output_node)
         return output_node

@@ -86,6 +86,8 @@ def inputs_to_datasets(x):
     new_x = []
     for temp_x in x:
         if isinstance(temp_x, np.ndarray):
+            if temp_x.dtype == np.float64:
+                temp_x = temp_x.astype(np.float32)
             new_x.append(tf.data.Dataset.from_tensor_slices(temp_x))
     return tf.data.Dataset.zip(tuple(new_x))
 
