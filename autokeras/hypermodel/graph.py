@@ -1,6 +1,5 @@
 import copy
 import functools
-import numpy as np
 
 import kerastuner
 import tensorflow as tf
@@ -223,7 +222,7 @@ class GraphHyperModel(kerastuner.HyperModel):
         for output_node in self.outputs:
             block = output_node.in_blocks[0]
             if isinstance(block, head.Head):
-                metrics[block.output_name] = block.metrics
+                metrics[block.name] = block.metrics
         return metrics
 
     def _get_loss(self):

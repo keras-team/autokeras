@@ -12,7 +12,7 @@ def tmp_dir(tmpdir_factory):
 
 def test_io_api(tmp_dir):
     (x_train, y_classification), (x_test, y_test) = mnist.load_data()
-    data_slice = 200
+    data_slice = 20
     x_train = x_train[:data_slice]
     print(x_train.dtype)
     y_classification = y_classification[:data_slice]
@@ -37,7 +37,10 @@ def test_io_api(tmp_dir):
                 ak.StructuredDataInput()],
         outputs=[ak.RegressionHead(metrics=['mae']),
                  ak.ClassificationHead(loss='categorical_crossentropy',
-                                       metrics=['accuracy'])])
+                                       metrics=['accuracy'])],
+        directory=tmp_dir,
+        max_trials=3)
     automodel.fit([x_image, x_structured],
                   [y_regression, y_classification],
+                  epochs=3,
                   validation_split=0.2)

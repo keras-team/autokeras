@@ -5,7 +5,7 @@ from keras.datasets import mnist
 
 # Prepare the data.
 (x_train, y_classification), (x_test, y_test) = mnist.load_data()
-data_slice = 200
+data_slice = 5
 x_train = x_train[:data_slice]
 y_classification = y_classification[:data_slice]
 x_test = x_test[:data_slice]
