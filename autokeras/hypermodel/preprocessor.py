@@ -173,7 +173,7 @@ class Normalization(Preprocessor):
         return (x - self.mean) / self.std
 
     def output_types(self):
-        return (tf.float64,)
+        return (tf.float32,)
 
     @property
     def output_shape(self):
@@ -441,7 +441,7 @@ class LightGBMClassifier(LightGBMModel):
         return y
 
     def output_types(self):
-        return (tf.int32,)
+        return (tf.int64,)
 
     def set_weights(self, weights):
         super().set_weights(weights)
@@ -598,7 +598,7 @@ class ImageAugmentation(Preprocessor):
             x = tf.image.random_brightness(x, self.brightness_range, self.seed)
 
         saturation_range = self.saturation_range
-        if saturation_range != 0:
+        if saturation_range != 0 and channels == 3:
             min_value, max_value = self.saturation_range
             x = tf.image.random_saturation(x, min_value, max_value, self.seed)
 
@@ -642,7 +642,7 @@ class ImageAugmentation(Preprocessor):
         return x
 
     def output_types(self):
-        return (tf.float64,)
+        return (tf.float32,)
 
     @property
     def output_shape(self):
@@ -741,8 +741,8 @@ class FeatureEngineering(Preprocessor):
     def update(self, x, y=None):
         self.num_rows += 1
         x = nest.flatten(x)[0].numpy()
-        for index in range(len(x)):
-            x[index] = x[index].decode('utf-8')
+        # for index in range(len(x)):
+        #    x[index] = x[index].decode('utf-8')
 
         self.fill_missing(x)
 
@@ -763,8 +763,8 @@ class FeatureEngineering(Preprocessor):
     def transform(self, x, fit=False):
         x = nest.flatten(x)[0].numpy()
 
-        for index in range(len(x)):
-            x[index] = x[index].decode('utf-8')
+        # for index in range(len(x)):
+        #   x[index] = x[index].decode('utf-8')
         self.fill_missing(x)
 
         new_values = []
@@ -832,7 +832,7 @@ class FeatureEngineering(Preprocessor):
                 pair = (cat_col_index1, cat_col_index2)
                 self.high_level_cat_cat[pair] = self.categorical_categorical[pair]
 
-            # extract high level columns from num-cat dict and calculte mean
+            # extract high level columns from num-cat dict and calculate mean
             for num_col_index in self.numerical_col:
                 pair = (num_col_index, cat_col_index1)
                 self.high_level_num_cat[pair] = self.numerical_categorical[pair]

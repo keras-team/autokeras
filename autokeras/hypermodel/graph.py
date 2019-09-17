@@ -218,12 +218,11 @@ class GraphHyperModel(kerastuner.HyperModel):
             self._node_to_id[input_node] = len(self._node_to_id)
 
     def _get_metrics(self):
-        metrics = []
-        for metrics_list in [output_node.in_blocks[0].metrics for
-                             output_node in self.outputs
-                             if isinstance(output_node.in_blocks[0],
-                                           head.Head)]:
-            metrics += metrics_list
+        metrics = {}
+        for output_node in self.outputs:
+            block = output_node.in_blocks[0]
+            if isinstance(block, head.Head):
+                metrics[block.name] = block.metrics
         return metrics
 
     def _get_loss(self):
