@@ -50,25 +50,18 @@ def validate_num_inputs(inputs, num):
                                                              len=len(inputs)))
 
 
-def split_train_to_valid(x, y, validation_split):
-    # Generate split index
-    validation_set_size = int(len(x[0]) * validation_split)
-    validation_set_size = max(validation_set_size, 1)
-    validation_set_size = min(validation_set_size, len(x[0]) - 1)
-
-    # Split the data
-    x_train = []
-    y_train = []
-    x_val = []
-    y_val = []
-    for temp_x in x:
-        x_train.append(temp_x[:-validation_set_size])
-        x_val.append(temp_x[-validation_set_size:])
-    for temp_y in y:
-        y_train.append(temp_y[:-validation_set_size])
-        y_val.append(temp_y[-validation_set_size:])
-
-    return (x_train, y_train), (x_val, y_val)
+def split_dataset(dataset, validation_split):
+    num_instances = dataset.reduce(np.int64(0), lambda x, _: x + 1).numpy()
+    if num_instances < 2:
+        raise ValueError('The dataset should at least contain 2 '
+                         'instances to be split.')
+    validation_set_size = min(
+        max(int(num_instances * validation_split), 1),
+        num_instances - 1)
+    train_set_size = num_instances - validation_set_size
+    train_dataset = dataset.take(train_set_size)
+    validation_dataset = dataset.skip(train_set_size)
+    return train_dataset, validation_dataset
 
 
 def get_name_scope():

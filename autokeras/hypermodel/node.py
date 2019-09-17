@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 
 
@@ -27,11 +28,29 @@ class TextNode(Node):
 
 
 class Input(Node):
-    pass
+
+    def fit(self, y):
+        pass
+
+    def transform(self, x):
+        if isinstance(x, tf.data.Dataset):
+            return x
+        if isinstance(x, np.ndarray):
+            return tf.data.Dataset.from_tensor_slices(x)
+        raise ValueError('Unsupported type {type} for '
+                         '{name}.'.format(type=type(x),
+                                          name=self.__class__.__name__))
 
 
 class ImageInput(Input):
-    pass
+
+    def transform(self, x):
+        if isinstance(x, np.ndarray):
+            if len(x.shape) == 3:
+                x = x.reshape(-1, 1)
+            if x.dtype == np.float64:
+                x = x.astype(np.float32)
+        return super().transform(x)
 
 
 class TextInput(Input, TextNode):

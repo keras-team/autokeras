@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
@@ -29,6 +30,18 @@ class Head(block.Block):
     @property
     def loss(self):
         return self._loss
+
+    def fit(self, y):
+        pass
+
+    def transform(self, y):
+        if isinstance(y, tf.data.Dataset):
+            return y
+        if isinstance(y, np.ndarray):
+            if len(y.shape) == 1:
+                y = y.reshape(-1, 1)
+            return tf.data.Dataset.from_tensor_slices(y)
+        raise ValueError('Unsupported format for {name}.'.format(name=self.name))
 
 
 class EmptyHead(Head):
@@ -85,6 +98,7 @@ class ClassificationHead(Head):
         if not self.metrics:
             self.metrics = ['accuracy']
         self.dropout_rate = dropout_rate
+        self.label_encoder = None
 
     @property
     def loss(self):
@@ -119,6 +133,17 @@ class ClassificationHead(Head):
         else:
             output_node = tf.keras.layers.Softmax()(output_node)
         return output_node
+
+    def fit(self, y):
+        if not isinstance(y, np.ndarray):
+            return
+        if not utils.is_label(y):
+            return
+        self.label_encoder = utils.OneHotEncoder()
+        self.label_encoder.fit_with_labels(y)
+
+    def transform(self, y):
+        return super().transform(self.label_encoder.encode(y))
 
 
 class RegressionHead(Head):
