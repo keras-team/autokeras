@@ -173,7 +173,7 @@ class Normalization(Preprocessor):
         return (x - self.mean) / self.std
 
     def output_types(self):
-        return (tf.float64,)
+        return (tf.float32,)
 
     @property
     def output_shape(self):
@@ -642,7 +642,7 @@ class ImageAugmentation(Preprocessor):
         return x
 
     def output_types(self):
-        return (tf.float64,)
+        return (tf.float32,)
 
     @property
     def output_shape(self):
