@@ -44,40 +44,6 @@ class Head(block.Block):
         raise ValueError('Unsupported format for {name}.'.format(name=self.name))
 
 
-class IdentityLayer(tf.keras.layers.Layer):
-    """A Keras Layer returns the inputs."""
-
-    def compute_output_signature(self, input_signature):
-        return input_signature
-
-    def call(self, inputs, *args, **kwargs):
-        return tf.identity(nest.flatten(inputs)[0])
-
-
-class EmptyHead(Head):
-    """An empty head that do nothing but return the inputs.
-
-    # Arguments
-        loss: A Keras loss function. Defaults to None. If None, the loss will be
-            inferred from the AutoModel.
-        metrics: A list of Keras metrics. Defaults to None.
-            If None, the metrics will
-            be inferred from the AutoModel.
-        output_shape: Tuple of int(s). Defaults to None.
-            If None, the output shape
-            will be inferred from the AutoModel.
-    """
-
-    def __init__(self, loss=None, metrics=None, output_shape=None, **kwargs):
-        super().__init__(**kwargs)
-        self.output_shape = output_shape
-        self._loss = loss
-        self.metrics = metrics
-
-    def build(self, hp, inputs=None):
-        return IdentityLayer(name=self.name)(inputs)
-
-
 class ClassificationHead(Head):
     """Classification Dense layers.
 
@@ -101,8 +67,13 @@ class ClassificationHead(Head):
                  multi_label=False,
                  loss=None,
                  metrics=None,
-                 dropout_rate=None):
-        super().__init__(loss=loss, metrics=metrics)
+                 dropout_rate=None,
+                 output_shape=None,
+                 **kwargs):
+        super().__init__(loss=loss,
+                         metrics=metrics,
+                         output_shape=output_shape,
+                         **kwargs)
         self.num_classes = num_classes
         self.multi_label = multi_label
         if not self.metrics:
@@ -179,8 +150,13 @@ class RegressionHead(Head):
                  output_dim=None,
                  loss=None,
                  metrics=None,
-                 dropout_rate=None):
-        super().__init__(loss=loss, metrics=metrics)
+                 dropout_rate=None,
+                 output_shape=None,
+                 **kwargs):
+        super().__init__(loss=loss,
+                         metrics=metrics,
+                         output_shape=output_shape,
+                         **kwargs)
         self.output_dim = output_dim
         if not self.metrics:
             self.metrics = ['mean_squared_error']
