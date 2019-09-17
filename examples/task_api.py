@@ -1,5 +1,5 @@
 import autokeras as ak
-from keras.datasets import mnist,cifar10
+from tensorflow.python.keras.datasets import mnist,cifar10
 import numpy as np
 
 # Prepare the data.

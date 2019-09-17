@@ -2,7 +2,7 @@ import numpy as np
 import autokeras as ak
 import tensorflow as tf
 import pytest
-from keras.datasets import mnist
+from tensorflow.python.keras.datasets import mnist
 
 
 @pytest.fixture(scope='module')
