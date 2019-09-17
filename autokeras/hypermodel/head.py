@@ -148,6 +148,7 @@ class RegressionHead(Head):
         if not self.metrics:
             self.metrics = ['mean_squared_error']
         self.dropout_rate = dropout_rate
+        self.output_name = self.name + '_output'
 
     @property
     def loss(self):
@@ -173,5 +174,5 @@ class RegressionHead(Head):
         if dropout_rate > 0:
             output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         output_node = block.Flatten().build(hp, output_node)
-        output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
+        output_node = tf.keras.layers.Dense(self.output_shape[-1], name=self.output_name)(output_node)
         return output_node
