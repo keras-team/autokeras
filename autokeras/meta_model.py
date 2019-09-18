@@ -39,27 +39,25 @@ def assemble(inputs, outputs, dataset, seed=None):
     # Iterate over the dataset to fit the assemblers.
     hps = []
     for x, _ in dataset:
-        x = (x,)
-        print('x is'+repr(x))
         for temp_x, assembler in zip(x, assemblers):
-            print('temp_x is'+repr(temp_x))
             assembler.update(temp_x)
             hps += assembler.hps
 
     # Single structured data classification or regression.
     if (len(inputs) == 1 and len(outputs) == 1 and
             isinstance(inputs[0], node.StructuredDataInput)):
-        assemblers[0].infer_column_types()
+
+        if inputs[0].column_types is None:
+            assemblers[0].infer_column_types()
+            inputs[0].column_types = assemblers[0].column_types
+
         if isinstance(outputs[0], head.ClassificationHead):
             output_block = hyperblock.StructuredDataClassifierBlock(
-                column_types=assemblers[0].column_types,
-                column_names=inputs[0].column_names,
                 head=outputs[0])
         else:
             output_block = hyperblock.StructuredDataRegressorBlock(
-                column_types=assemblers[0].column_types,
-                column_names=inputs[0].column_names,
                 head=outputs[0])
+        output_block.input_node = inputs[0]
         return graph.GraphHyperModel(inputs, output_block(inputs))
 
     # Assemble the model with assemblers.

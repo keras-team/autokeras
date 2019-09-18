@@ -59,9 +59,10 @@ class TextInput(Input, TextNode):
 
 
 class StructuredDataInput(Input):
-    def __init__(self, column_names=None):  # not None?
+    def __init__(self, column_names=None, column_types=None, **kwargs):
+        super().__init__(**kwargs)
         self.column_names = column_names
-        super().__init__()
+        self.column_types = column_types
 
     def fit(self, x):
         # TODO: add the column names.

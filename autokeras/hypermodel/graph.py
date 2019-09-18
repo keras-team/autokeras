@@ -100,9 +100,7 @@ class GraphHyperModel(kerastuner.HyperModel):
         # TODO: Set the shapes only if they are not provided by the user when
         #  initiating the HyperHead or Block.
         x_shapes, y_shapes = utils.dataset_shape(dataset)
-        print('self.inputs is '+repr(self.inputs))
         for x_shape, input_node in zip(x_shapes, self.inputs):
-            print('x_shape is '+repr(x_shape))
             input_node.shape = tuple(x_shape.as_list())
         for y_shape, output_node in zip(y_shapes, self.outputs):
             output_node.shape = tuple(y_shape.as_list())

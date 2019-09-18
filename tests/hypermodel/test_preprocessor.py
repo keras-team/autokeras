@@ -128,9 +128,26 @@ def test_augment():
 def test_feature_engineering():
     data = structured_data()
     dataset = tf.data.Dataset.from_tensor_slices(data)
-    feature = preprocessor.FeatureEngineering([
-        'categorical', 'categorical', 'numerical', 'numerical', 'categorical',
-        'categorical', 'categorical', 'categorical'])
+    feature = preprocessor.FeatureEngineering(
+        ak.StructuredDataInput(
+            column_names=[
+                        'bool_',
+                        'num_to_cat_',
+                        'float_',
+                        'int_',
+                        'morethan_32_',
+                        'col1_morethan_100_',
+                        'col2_morethan_100_',
+                        'col3_morethan_100_'],
+            column_types={
+                        'bool_': 'categorical',
+                        'num_to_cat_': 'categorical',
+                        'float_': 'numerical',
+                        'int_': 'numerical',
+                        'morethan_32_': 'categorical',
+                        'col1_morethan_100_': 'categorical',
+                        'col2_morethan_100_': 'categorical',
+                        'col3_morethan_100_': 'categorical'}))
     feature.set_hp(kerastuner.HyperParameters())
     for x in dataset:
         feature.update(x)
@@ -150,9 +167,26 @@ def test_feature_engineering():
 def test_feature_engineering_fix_keyerror():
     data = structured_data(100)
     dataset = tf.data.Dataset.from_tensor_slices(data)
-    feature = preprocessor.FeatureEngineering([
-        'categorical', 'categorical', 'numerical', 'numerical', 'categorical',
-        'categorical', 'categorical', 'categorical'])
+    feature = preprocessor.FeatureEngineering(
+        ak.StructuredDataInput(
+            column_names=[
+                        'bool_',
+                        'num_to_cat_',
+                        'float_',
+                        'int_',
+                        'morethan_32_',
+                        'col1_morethan_100_',
+                        'col2_morethan_100_',
+                        'col3_morethan_100_'],
+            column_types={
+                        'bool_': 'categorical',
+                        'num_to_cat_': 'categorical',
+                        'float_': 'numerical',
+                        'int_': 'numerical',
+                        'morethan_32_': 'categorical',
+                        'col1_morethan_100_': 'categorical',
+                        'col2_morethan_100_': 'categorical',
+                        'col3_morethan_100_': 'categorical'}))
     feature.set_hp(kerastuner.HyperParameters())
     for x in dataset:
         feature.update(x)
