@@ -135,7 +135,6 @@ class AutoModel(object):
                 return tf.data.Dataset.zip((x, y))
 
         x = nest.flatten(x)
-<<<<<<< 6cb3b9ba8157c73d0064abdcb76d8463a829b89d
         new_x = []
         for data, input_node in zip(x, self.inputs):
             if fit:
@@ -173,44 +172,6 @@ class AutoModel(object):
         # Split the data with validation_split.
         if validation_data is None and validation_split:
             dataset, validation_data = utils.split_dataset(dataset, validation_split)
-=======
-        y = nest.flatten(y)
-        if type(x[0]) is pd.DataFrame:
-            # convert x,y,validation_data to tf.Dataset
-            x = tf.data.Dataset.from_tensor_slices(
-                x[0].values.astype(np.unicode))
-            # x = tf.data.Dataset.zip(tuple(x))
-            x_val, y_val = validation_data
-            validation_data = tf.data.Dataset.from_tensor_slices(
-                (x_val.values.astype(np.unicode), y_val.values))
-            y = self._label_encoding(y[0].values)
-            y = utils.inputs_to_datasets(y)
-            dataset = tf.data.Dataset.zip(((x,), y))
-            # for line in dataset:
-            #     print('==================================================')
-            #     print(line)
-            return dataset, validation_data
-        # TODO: check x, y types to be numpy.ndarray or tf.data.Dataset.
-        # TODO: y.reshape(-1, 1) if needed.
-        y = self._label_encoding(y)
-        # Split the data with validation_split
-        if (all([isinstance(temp_x, np.ndarray) for temp_x in x]) and
-                all([isinstance(temp_y, np.ndarray) for temp_y in y]) and
-                validation_data is None and
-                validation_split):
-            (x, y), (x_val, y_val) = utils.split_train_to_valid(
-                x, y,
-                validation_split)
-            validation_data = x_val, y_val
-        # TODO: Handle other types of input, zip dataset, tensor, dict.
-        # Prepare the dataset
-        dataset = x if isinstance(x, tf.data.Dataset) \
-            else utils.prepare_preprocess(x, y)
-        if not isinstance(validation_data, tf.data.Dataset):
-            x_val, y_val = validation_data
-            # TODO: see if encoding is needed in advance instead of judge twice.
-            validation_data = utils.prepare_preprocess(x_val, y_val)
->>>>>>> support data from csv files
         return dataset, validation_data
 
     def predict(self, x, batch_size=32, **kwargs):
