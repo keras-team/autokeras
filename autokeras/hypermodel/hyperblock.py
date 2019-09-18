@@ -207,8 +207,6 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
         if feature_engineering:
             fe = preprocessor.FeatureEngineering()
             fe.input_node = self.input_node
-            print('self. input node is'+repr(fe.input_node))
-            print('fe input node is'+repr(fe.input_node))
             output_node = fe(output_node)
             # output_node.input_node = self.input_node
         return output_node
