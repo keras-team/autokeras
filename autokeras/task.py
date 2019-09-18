@@ -176,8 +176,6 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
         inputs = node.StructuredDataInput()
         if column_types:
             inputs.column_types = column_types
-            if column_names is None:
-                raise ValueError('Column names must be specified.')
         if column_names:
             inputs.column_names = column_names
         if column_names and column_types:
@@ -230,25 +228,11 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             df = pd.read_csv(x)
             validation_df = pd.read_csv(validation_data)
             label = df.pop(y).to_numpy()
-            if self.inputs[0].column_names is None:
-                column_names = list(df.columns)
-                self.inputs[0].column_names = column_names
-            else:
-                if len(self.inputs[0].column_names) != df.shape[1]:
-                    raise ValueError(
-                        'The length of column_names and data are mismatched.')
             validation_label = validation_df.pop(y).to_numpy()
             validation_data = (validation_df, validation_label)
             x = df
             y = label
             validation_split = 0
-        # x is numpy ndarray
-        else:
-            # column_names are not specified:
-            if self.inputs[0].column_names is None:
-                self.inputs[0].column_names = []
-                for index in range(x.shape[1]):
-                    self.inputs[0].column_names.append(index)
 
         super().fit(x=x,
                     y=y,
