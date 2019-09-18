@@ -686,6 +686,8 @@ class FeatureEngineering(Preprocessor):
     """A preprocessor block does feature engineering for the data.
 
     # Arguments
+        input_node: An autokeras StructuredDataInput Node. Contain the information
+        of column names and column types.
         column_types: A list of strings. The length of the list should be the same
             as the number of columns of the data. The strings in the list are
             specifying the types of the columns. They should either be 'numerical'
@@ -694,14 +696,14 @@ class FeatureEngineering(Preprocessor):
             Defaults to 1000.
     """
 
-    def __init__(self, column_types, column_names, max_columns=1000, **kwargs):
+    def __init__(self, input_node, max_columns=1000, **kwargs):
         # TODO: support partial column_types, i.e., the size of the dict is smaller
         # than the number of the columns.
         super().__init__(**kwargs)
-        self.column_types = column_types
+        self.column_types = input_node.column_types
         self.max_columns = max_columns
-        self.column_names = column_names
-        self.num_columns = len(column_types)
+        self.column_names = input_node.column_names
+        self.num_columns = len(self.column_types)
         self.num_rows = 0
         self.shape = None
         # A list of categorical column indices.

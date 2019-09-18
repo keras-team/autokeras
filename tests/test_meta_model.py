@@ -19,7 +19,16 @@ def test_text_assembler():
 def test_structured_data_assembler():
     data = structured_data()
     dataset = tf.data.Dataset.from_tensor_slices(data)
-    assembler = meta_model.StructuredDataAssembler()
+    assembler = meta_model.StructuredDataAssembler(
+        column_names=[
+                        'bool_',
+                        'num_to_cat_',
+                        'float_',
+                        'int_',
+                        'morethan_32_',
+                        'col1_morethan_100_',
+                        'col2_morethan_100_',
+                        'col3_morethan_100_'])
     for line in dataset:
         assembler.update(line)
 

@@ -138,9 +138,9 @@ class AutoModel(object):
             y = self._label_encoding(y[0].values)
             y = utils.inputs_to_datasets(y)
             dataset = tf.data.Dataset.zip(((x,), y))
-            for line in dataset:
-                print('=============================================')
-                print(line)
+            # for line in dataset:
+            #     print('==================================================')
+            #     print(line)
             return dataset, validation_data
         # TODO: check x, y types to be numpy.ndarray or tf.data.Dataset.
         # TODO: y.reshape(-1, 1) if needed.
@@ -156,7 +156,6 @@ class AutoModel(object):
             validation_data = x_val, y_val
         # TODO: Handle other types of input, zip dataset, tensor, dict.
         # Prepare the dataset
-        # dataset = tf.data.Dataset.zip((x, y)) ?
         dataset = x if isinstance(x, tf.data.Dataset) \
             else utils.prepare_preprocess(x, y)
         if not isinstance(validation_data, tf.data.Dataset):

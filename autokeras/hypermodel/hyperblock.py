@@ -186,20 +186,17 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
     """Base class for StructuredDataClassifier(Regressor)Block."""
 
     def __init__(self,
-                 column_types,
-                 column_names,
                  feature_engineering=True,
                  module_type=None,
                  head=None,
                  lightgbm_block=None,
                  **kwargs):
         super().__init__()
-        self.column_types = column_types
-        self.column_names = column_names
         self.feature_engineering = feature_engineering
         self.module_type = module_type
         self.head = head
         self.lightgbm_block = lightgbm_block
+        self.input_node = None
 
     def build_feature_engineering(self, hp, input_node):
         output_node = input_node
@@ -211,8 +208,7 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
                                             default=True)
         if feature_engineering:
             output_node = preprocessor.FeatureEngineering(
-                column_types=self.column_types,
-                column_names=self.column_names)(output_node)
+                input_node=self.input_node)(output_node)
         return output_node
 
     def build_body(self, hp, input_node):
@@ -275,10 +271,6 @@ class StructuredDataClassifierBlock(SupervisedStructuredDataPipelineBlock):
     ClassificationHead or the LightGBMClassifierBlock.
 
     # Arguments
-        column_types: A list of strings. The length of the list should be the same
-            as the number of columns of the data. The strings in the list are
-            specifying the types of the columns. They should either be 'numerical'
-            or 'categorical'.
         feature_engineering: Boolean. Whether to use feature engineering for the
             data. If is None, it would be tunable. Defaults to True.
         loss: Keras loss function. The loss function for ClassificationHead.
@@ -292,8 +284,6 @@ class StructuredDataClassifierBlock(SupervisedStructuredDataPipelineBlock):
     """
 
     def __init__(self,
-                 column_types,
-                 column_names,
                  feature_engineering=True,
                  loss=None,
                  metrics=None,
@@ -308,8 +298,6 @@ class StructuredDataClassifierBlock(SupervisedStructuredDataPipelineBlock):
             self.head = head_module.ClassificationHead(loss=self.loss,
                                                        metrics=self.metrics)
         super().__init__(
-            column_types=column_types,
-            column_names=column_names,
             feature_engineering=feature_engineering,
             head=self.head,
             lightgbm_block=LightGBMClassifierBlock(metrics=self.metrics))
@@ -323,10 +311,6 @@ class StructuredDataRegressorBlock(SupervisedStructuredDataPipelineBlock):
     RegressionHead or the LightGBMRegressorBlock.
 
     # Arguments
-        column_types: A list of strings. The length of the list should be the same
-            as the number of columns of the data. The strings in the list are
-            specifying the types of the columns. They should either be 'numerical'
-            or 'categorical'.
         feature_engineering: Boolean. Whether to use feature engineering for the
             data. If is None, it would be tunable. Defaults to True.
         loss: Keras loss function. The loss function for RegressionHead.
@@ -340,8 +324,6 @@ class StructuredDataRegressorBlock(SupervisedStructuredDataPipelineBlock):
     """
 
     def __init__(self,
-                 column_types,
-                 column_names,
                  feature_engineering=True,
                  loss=None,
                  metrics=None,
@@ -356,8 +338,6 @@ class StructuredDataRegressorBlock(SupervisedStructuredDataPipelineBlock):
             self.head = head_module.RegressionHead(loss=self.loss,
                                                    metrics=self.metrics),
         super().__init__(
-            column_types=column_types,
-            column_names=column_names,
             feature_engineering=feature_engineering,
             head=self.head,
             lightgbm_block=LightGBMRegressorBlock(metrics=self.metrics))
