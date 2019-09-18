@@ -259,7 +259,7 @@ def class_to_source_link(cls):
     path += '.py'
     line = inspect.getsourcelines(cls)[-1]
     link = ('https://github.com/keras-team/'
-            'keras/blob/master/' + path + '#L' + str(line))
+            'autokeras/blob/master/' + path + '#L' + str(line))
     return '[[source]](' + link + ')'
 
 
