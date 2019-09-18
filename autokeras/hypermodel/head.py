@@ -41,7 +41,8 @@ class Head(block.Block):
             if len(y.shape) == 1:
                 y = y.reshape(-1, 1)
             return tf.data.Dataset.from_tensor_slices(y)
-        raise ValueError('Unsupported format for {name}.'.format(name=self.name))
+        raise ValueError('Unsupported format {type} '
+                         'for {name}.'.format(type=type(y), name=self.name))
 
 
 class ClassificationHead(Head):

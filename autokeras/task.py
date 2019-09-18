@@ -226,10 +226,10 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         # x is file path of training data
-        if type(x) is str:
+        if isinstance(x, str):
             df = pd.read_csv(x)
             validation_df = pd.read_csv(validation_data)
-            label = df.pop(y)
+            label = df.pop(y).to_numpy()
             if self.inputs[0].column_names is None:
                 column_names = list(df.columns)
                 self.inputs[0].column_names = column_names
@@ -237,13 +237,11 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                 if len(self.inputs[0].column_names) != df.shape[1]:
                     raise ValueError(
                         'The length of column_names and data are mismatched.')
-            validation_label = validation_df.pop(y)
-
-            super().fit(x=df,
-                        y=label,
-                        validation_split=0,
-                        validation_data=(validation_df, validation_label),
-                        **kwargs)
+            validation_label = validation_df.pop(y).to_numpy()
+            validation_data = (validation_df, validation_label)
+            x = df
+            y = label
+            validation_split = 0
         # x is numpy ndarray
         else:
             # column_names are not specified:
@@ -251,11 +249,12 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                 self.inputs[0].column_names = []
                 for index in range(x.shape[1]):
                     self.inputs[0].column_names.append(index)
-            super().fit(x=x,
-                        y=y,
-                        validation_split=validation_split,
-                        validation_data=validation_data,
-                        **kwargs)
+
+        super().fit(x=x,
+                    y=y,
+                    validation_split=validation_split,
+                    validation_data=validation_data,
+                    **kwargs)
 
 
 class StructuredDataClassifier(SupervisedStructuredDataPipeline):
