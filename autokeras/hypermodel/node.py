@@ -4,6 +4,10 @@ import tensorflow as tf
 
 
 class Node(object):
+    """The nodes in a network connecting the blocks."""
+    # TODO: Implement get_config() and set_config(), so that the entire graph can
+    # be saved.
+
     def __init__(self, shape=None):
         super().__init__()
         self.in_blocks = []

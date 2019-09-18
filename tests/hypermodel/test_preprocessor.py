@@ -230,7 +230,6 @@ def test_lgbm_classifier(tmp_dir):
     auto_model.fit(x_train, y_train, epochs=1,
                    validation_data=(x_train, y_train))
     result = auto_model.predict(x_train)
-    auto_model.tuner.get_best_models()[0].summary()
     assert result.shape == (11, 10)
 
 
@@ -251,5 +250,4 @@ def test_lgbm_regressor(tmp_dir):
     auto_model.fit(x_train, y_train, epochs=1,
                    validation_data=(x_train, y_train))
     result = auto_model.predict(x_train)
-    auto_model.tuner.get_best_models()[0].summary()
     assert result.shape == (11, 1)
