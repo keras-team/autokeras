@@ -69,8 +69,27 @@ class StructuredDataInput(Input):
         self.column_types = column_types
 
     def fit(self, x):
-        # TODO: add the column names.
-        pass
+        if isinstance(x, pd.DataFrame):
+            if self.column_names is None:
+                self.column_names = list(x.columns)
+                if self.column_types:  # column_types is provided by user
+                    for column_name in self.column_names:
+                        if column_name not in self.column_types:
+                            raise ValueError(
+                                'Column_names and column_types are mismatched.')
+            else:  # column_names is provided by user
+                if len(self.column_names) != x.shape[1]:
+                    raise ValueError(
+                        'The length of column_names and data are mismatched.')
+
+        else:  # data is from numpy ndarray
+            # column_names are not specified:
+            if self.column_names is None:
+                if self.column_types:
+                    raise ValueError('Column names must be specified.')
+                self.column_names = []
+                for index in range(x.shape[1]):
+                    self.column_names.append(index)
 
     def transform(self, x):
         if isinstance(x, pd.DataFrame):

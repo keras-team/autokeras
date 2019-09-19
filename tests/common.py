@@ -1,5 +1,52 @@
 import numpy as np
 
+column_names_from_numpy = ['bool_',
+                           'num_to_cat_',
+                           'float_',
+                           'int_',
+                           'morethan_32_',
+                           'col1_morethan_100_',
+                           'col2_morethan_100_',
+                           'col3_morethan_100_']
+column_types_from_numpy = {
+                            'bool_': 'categorical',
+                            'num_to_cat_': 'categorical',
+                            'float_': 'numerical',
+                            'int_': 'numerical',
+                            'morethan_32_': 'categorical',
+                            'col1_morethan_100_': 'categorical',
+                            'col2_morethan_100_': 'categorical',
+                            'col3_morethan_100_': 'categorical'}
+column_names_from_csv = [
+                         'sex_',
+                         'age_',
+                         'n_siblings_spouses_',
+                         'parch_',
+                         'fare_',
+                         'class_',
+                         'deck_',
+                         'embark_town_',
+                         'alone_']
+less_column_names_from_csv = [
+                         'age_',
+                         'n_siblings_spouses_',
+                         'parch_',
+                         'fare_',
+                         'class_',
+                         'deck_',
+                         'embark_town_',
+                         'alone_']
+column_types_from_csv = {
+                          'sex_': 'categorical',
+                          'age_': 'numerical',
+                          'n_siblings_spouses_': 'categorical',
+                          'parch_': 'categorical',
+                          'fare_': 'numerical',
+                          'class_': 'categorical',
+                          'deck_': 'categorical',
+                          'embark_town_': 'categorical',
+                          'alone_': 'categorical'}
+
 
 def structured_data(num_data=500):
     # generate high_level dataset

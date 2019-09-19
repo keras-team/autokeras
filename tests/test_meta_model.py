@@ -2,6 +2,8 @@ import tensorflow as tf
 
 from autokeras import meta_model
 from autokeras.hypermodel import node
+
+from .common import column_names_from_numpy
 from .common import structured_data
 
 
@@ -20,15 +22,7 @@ def test_structured_data_assembler():
     data = structured_data()
     dataset = tf.data.Dataset.from_tensor_slices(data)
     assembler = meta_model.StructuredDataAssembler(
-        column_names=[
-                        'bool_',
-                        'num_to_cat_',
-                        'float_',
-                        'int_',
-                        'morethan_32_',
-                        'col1_morethan_100_',
-                        'col2_morethan_100_',
-                        'col3_morethan_100_'])
+        column_names=column_names_from_numpy)
     for line in dataset:
         assembler.update(line)
 

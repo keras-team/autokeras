@@ -1,13 +1,14 @@
 import collections
 import random
+import warnings
 
 import numpy as np
-import warnings
 import tensorflow as tf
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
 
+import autokeras as ak
 from autokeras import const
 from autokeras import utils
 from autokeras.hypermodel import block
@@ -687,7 +688,6 @@ class FeatureEngineering(Preprocessor):
     """A preprocessor block does feature engineering for the data.
 
     # Arguments
-        input_node: An autokeras StructuredDataInput Node. Contain the information
         of column names and column types.
         column_types: A list of strings. The length of the list should be the same
             as the number of columns of the data. The strings in the list are
@@ -697,14 +697,13 @@ class FeatureEngineering(Preprocessor):
             Defaults to 1000.
     """
 
-    def __init__(self, input_node, max_columns=1000, **kwargs):
+    def __init__(self, max_columns=1000, **kwargs):
         # TODO: support partial column_types, i.e., the size of the dict is smaller
         # than the number of the columns.
         super().__init__(**kwargs)
-        self.column_types = input_node.column_types
+        self.input_node = None
         self.max_columns = max_columns
-        self.column_names = input_node.column_names
-        self.num_columns = len(self.column_types)
+        self.num_columns = 0
         self.num_rows = 0
         self.shape = None
         # A list of categorical column indices.
@@ -721,11 +720,14 @@ class FeatureEngineering(Preprocessor):
         self.high_level_cat_cat = {}
         self.high_level_num_cat = {}
 
-        for column_name, column_type in self.column_types.items():
+    def initialize(self):
+        for column_name, column_type in self.input_node.column_types.items():
             if column_type == 'categorical':
-                self.categorical_col.append(self.column_names.index(column_name))
+                self.categorical_col.append(
+                    self.input_node.column_names.index(column_name))
             elif column_type == 'numerical':
-                self.numerical_col.append(self.column_names.index(column_name))
+                self.numerical_col.append(
+                    self.input_node.column_names.index(column_name))
             else:
                 raise ValueError('Unsupported column type: '
                                  '{type}'.format(type=column_type))
@@ -745,6 +747,10 @@ class FeatureEngineering(Preprocessor):
                     cat_col_index1)] = collections.defaultdict(return_zero)
 
     def update(self, x, y=None):
+        if self.num_rows == 0:
+            self.num_columns = len(self.input_node.column_types)
+            self.initialize()
+
         self.num_rows += 1
         x = nest.flatten(x)[0].numpy()
         # for index in range(len(x)):
@@ -846,7 +852,7 @@ class FeatureEngineering(Preprocessor):
                     self.high_level_num_cat[pair][key] /= self.value_counters[
                         cat_col_index1][key]
 
-        self.shape = (len(self.column_types)
+        self.shape = (len(self.input_node.column_types)
                       + len(self.high_level1_col)
                       + len(self.high_level_cat_cat)
                       + len(self.high_level_num_cat),)
@@ -904,13 +910,14 @@ class FeatureEngineering(Preprocessor):
         self.high_level_num_cat = {}
 
     def get_config(self):
-        return {'column_num': self.num_columns,
-                'column_types': self.column_types,
+        return {'num_columns': self.num_columns,
+                'input_node': (self.input_node.column_names,
+                               self.input_node.column_types),
                 'max_columns': self.max_columns}
 
     def set_config(self, config):
-        self.num_columns = config['column_num']
-        self.column_types = config['column_types']
+        self.num_columns = config['num_columns']
+        self.input_node = ak.StructuredDataInput(*config['input_node'])
         self.max_columns = config['max_columns']
 
     def compile(self):

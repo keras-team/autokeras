@@ -125,12 +125,7 @@ def test_augment():
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
-def test_feature_engineering():
-    data = structured_data()
-    dataset = tf.data.Dataset.from_tensor_slices(data)
-    feature = preprocessor.FeatureEngineering(
-        ak.StructuredDataInput(
-            column_names=[
+column_names_for_tests = [
                         'bool_',
                         'num_to_cat_',
                         'float_',
@@ -138,8 +133,8 @@ def test_feature_engineering():
                         'morethan_32_',
                         'col1_morethan_100_',
                         'col2_morethan_100_',
-                        'col3_morethan_100_'],
-            column_types={
+                        'col3_morethan_100_']
+column_types_for_tests = {
                         'bool_': 'categorical',
                         'num_to_cat_': 'categorical',
                         'float_': 'numerical',
@@ -147,7 +142,15 @@ def test_feature_engineering():
                         'morethan_32_': 'categorical',
                         'col1_morethan_100_': 'categorical',
                         'col2_morethan_100_': 'categorical',
-                        'col3_morethan_100_': 'categorical'}))
+                        'col3_morethan_100_': 'categorical'}
+
+
+def test_feature_engineering():
+    data = structured_data()
+    dataset = tf.data.Dataset.from_tensor_slices(data)
+    feature = preprocessor.FeatureEngineering()
+    feature.input_node = ak.StructuredDataInput(column_names=column_names_for_tests,
+                                                column_types=column_types_for_tests)
     feature.set_hp(kerastuner.HyperParameters())
     for x in dataset:
         feature.update(x)
@@ -167,26 +170,9 @@ def test_feature_engineering():
 def test_feature_engineering_fix_keyerror():
     data = structured_data(100)
     dataset = tf.data.Dataset.from_tensor_slices(data)
-    feature = preprocessor.FeatureEngineering(
-        ak.StructuredDataInput(
-            column_names=[
-                        'bool_',
-                        'num_to_cat_',
-                        'float_',
-                        'int_',
-                        'morethan_32_',
-                        'col1_morethan_100_',
-                        'col2_morethan_100_',
-                        'col3_morethan_100_'],
-            column_types={
-                        'bool_': 'categorical',
-                        'num_to_cat_': 'categorical',
-                        'float_': 'numerical',
-                        'int_': 'numerical',
-                        'morethan_32_': 'categorical',
-                        'col1_morethan_100_': 'categorical',
-                        'col2_morethan_100_': 'categorical',
-                        'col3_morethan_100_': 'categorical'}))
+    feature = preprocessor.FeatureEngineering()
+    feature.input_node = ak.StructuredDataInput(column_names=column_names_for_tests,
+                                                column_types=column_types_for_tests)
     feature.set_hp(kerastuner.HyperParameters())
     for x in dataset:
         feature.update(x)
