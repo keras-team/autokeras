@@ -9,9 +9,10 @@ from tests.common import column_names_from_csv
 from tests.common import column_names_from_numpy
 from tests.common import column_types_from_csv
 from tests.common import column_types_from_numpy
+from tests.common import false_column_types_from_csv
 from tests.common import less_column_names_from_csv
+from tests.common import partial_column_types_from_csv
 from tests.common import structured_data
-
 
 train_file_path = r'tests/resources/titanic/train.csv'
 test_file_path = r'tests/resources/titanic/eval.csv'
@@ -161,8 +162,8 @@ def test_structured_data_from_csv_regressor(tmp_dir):
 
 
 def test_structured_data_from_csv_classifier(tmp_dir):
-    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=1)
-    clf.fit(x=train_file_path, y='survived', epochs=2,
+    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=5)
+    clf.fit(x=train_file_path, y='survived', epochs=5,
             validation_data=test_file_path)
 
 
@@ -205,3 +206,24 @@ def test_structured_data_from_csv_col_type_mismatch_classifier(tmp_dir):
         clf.fit(x=train_file_path, y='survived', epochs=2,
                 validation_data=test_file_path)
     assert str(info.value) == 'Column_names and column_types are mismatched.'
+
+
+def test_structured_data_from_csv_false_col_type_classifier(tmp_dir):
+    with pytest.raises(ValueError) as info:
+        clf = ak.StructuredDataClassifier(
+            column_types=false_column_types_from_csv,
+            directory=tmp_dir,
+            max_trials=1)
+        clf.fit(x=train_file_path, y='survived', epochs=2,
+                validation_data=test_file_path)
+    assert str(info.value) == \
+        'Column_types should be either "categorical" or "numerical".'
+
+
+def test_structured_data_from_csv_partial_col_type_classifier(tmp_dir):
+    clf = ak.StructuredDataClassifier(
+        column_types=partial_column_types_from_csv,
+        directory=tmp_dir,
+        max_trials=1)
+    clf.fit(x=train_file_path, y='survived', epochs=2,
+            validation_data=test_file_path)

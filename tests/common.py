@@ -46,6 +46,22 @@ column_types_from_csv = {
                           'deck_': 'categorical',
                           'embark_town_': 'categorical',
                           'alone_': 'categorical'}
+false_column_types_from_csv = {
+                          'sex_': 'cat',
+                          'age_': 'num',
+                          'n_siblings_spouses_': 'cat',
+                          'parch_': 'categorical',
+                          'fare_': 'numerical',
+                          'class_': 'categorical',
+                          'deck_': 'categorical',
+                          'embark_town_': 'categorical',
+                          'alone_': 'categorical'}
+partial_column_types_from_csv = {
+                          'fare': 'numerical',
+                          'class': 'categorical',
+                          'deck': 'categorical',
+                          'embark_town': 'categorical',
+                          'alone': 'categorical'}
 
 
 def structured_data(num_data=500):

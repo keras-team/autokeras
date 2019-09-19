@@ -214,10 +214,15 @@ class StructuredDataAssembler(Assembler):
             else:
                 self.column_types[self.column_names[i]] = 'numerical'
 
-    def assemble(self, input_node):  # not used
+    def assemble(self, input_node):
         self.infer_column_types()
         if input_node.column_types is None:
             input_node.column_types = self.column_types
+        # partial column_types is provided
+        if len(input_node.column_types) < len(input_node.column_names):
+            for key, value in self.column_types.items():
+                if key not in input_node.column_types:
+                    input_node.column_types[key] = value
         return hyperblock.StructuredDataBlock()(input_node)
 
 
