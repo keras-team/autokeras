@@ -31,6 +31,12 @@ class GraphHyperModelBase(kerastuner.HyperModel):
         self._total_topo_depth = 0
         self._build_network()
         self._hps = []
+        self.compile()
+
+    def compile(self):
+        """Passing config infomation from block to block."""
+        for block in self._blocks:
+            block.compile()
 
     def _init_hps(self, hp):
         for single_hp in self._hps:
@@ -198,7 +204,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
             [real_nodes[self._node_to_id[output_node]] for output_node in
              self.outputs])
 
-        return self._compiled(hp, model)
+        return self._compile_keras_model(hp, model)
 
     def _get_metrics(self):
         metrics = {}
@@ -215,7 +221,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
                                            head.Head)])
         return loss
 
-    def _compiled(self, hp, model):
+    def _compile_keras_model(self, hp, model):
         # Specify hyperparameters from compile(...)
         optimizer = hp.Choice('optimizer',
                               ['adam',
@@ -354,11 +360,6 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
                 return block
         return None
 
-    def compile(self):
-        """Passing config infomation from block to block."""
-        for block in self._blocks:
-            block.compile()
-
 
 def copy_block(old_block):
     # TODO: use get_config and set_config, which requires the implementation of
@@ -404,7 +405,6 @@ class GraphHyperModel(GraphHyperModelBase):
             outputs.append(old_node_to_new[output_node])
         self.hyper_built_ghm = HyperBuiltGraphHyperModel(inputs, outputs)
         self.hyper_built_ghm.set_hps(self._hps)
-        self.hyper_built_ghm.compile()
 
     def preprocess(self, hp, dataset, validation_data=None, fit=False):
         """Preprocess the data to be ready for the Keras Model.

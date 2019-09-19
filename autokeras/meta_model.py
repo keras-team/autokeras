@@ -5,7 +5,6 @@ import numpy as np
 
 from autokeras.hypermodel import block
 from autokeras.hypermodel import graph
-from autokeras.hypermodel import head
 from autokeras.hypermodel import hyperblock
 from autokeras.hypermodel import node
 
@@ -42,22 +41,6 @@ def assemble(inputs, outputs, dataset, seed=None):
         for temp_x, assembler in zip(x, assemblers):
             assembler.update(temp_x)
             hps += assembler.hps
-
-    # Single structured data classification or regression.
-    if (len(inputs) == 1 and len(outputs) == 1 and
-            isinstance(inputs[0], node.StructuredDataInput)):
-
-        if inputs[0].column_types is None:
-            assemblers[0].infer_column_types()
-            inputs[0].column_types = assemblers[0].column_types
-
-        if isinstance(outputs[0], head.ClassificationHead):
-            output_block = hyperblock.StructuredDataClassifierBlock(
-                head=outputs[0])
-        else:
-            output_block = hyperblock.StructuredDataRegressorBlock(
-                head=outputs[0])
-        return graph.GraphHyperModel(inputs, output_block(inputs))
 
     # Assemble the model with assemblers.
     middle_nodes = []
@@ -231,7 +214,9 @@ class StructuredDataAssembler(Assembler):
 
     def assemble(self, input_node):  # not used
         self.infer_column_types()
-        return hyperblock.StructuredDataBlock(self.column_types)(input_node)
+        if input_node.column_types is None:
+            input_node.column_types = self.column_types
+        return hyperblock.StructuredDataBlock()(input_node)
 
 
 class TimeSeriesAssembler(Assembler):
