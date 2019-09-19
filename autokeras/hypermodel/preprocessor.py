@@ -745,8 +745,7 @@ class FeatureEngineering(Preprocessor):
     """
 
     def __init__(self, max_columns=1000, **kwargs):
-        # TODO: support partial column_types, i.e., the size of the dict is smaller
-        # than the number of the columns.
+
         super().__init__(**kwargs)
         self.input_node = None
         self.max_columns = max_columns

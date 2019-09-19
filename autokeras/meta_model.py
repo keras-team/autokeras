@@ -165,6 +165,8 @@ class StructuredDataAssembler(Assembler):
     """
 
     def __init__(self, column_names, **kwargs):
+        # TODO: support partial column_types, i.e., the size of the dict is smaller
+        # than the number of the columns.
         super().__init__(**kwargs)
         self.column_types = {}
         self.column_names = column_names
@@ -212,7 +214,7 @@ class StructuredDataAssembler(Assembler):
             else:
                 self.column_types[self.column_names[i]] = 'numerical'
 
-    def assemble(self, input_node):  # not used
+    def assemble(self, input_node):
         self.infer_column_types()
         if input_node.column_types is None:
             input_node.column_types = self.column_types

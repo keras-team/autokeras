@@ -174,14 +174,12 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
     def __init__(self, outputs, column_names, column_types, **kwargs):
         # TODO: support customized column_types.
         inputs = node.StructuredDataInput()
-        if column_types:
-            inputs.column_types = column_types
-        if column_names:
-            inputs.column_names = column_names
+        inputs.column_types = column_types
+        inputs.column_names = column_names
         if column_names and column_types:
-            for column_name in column_names:
-                if column_name not in column_types:
-                    raise ValueError('Column_names and column_types are mismatched.')
+            if not all([column_name in column_names
+                        for column_name in column_types]):
+                raise ValueError('Column_names and column_types are mismatched.')
         super().__init__(inputs=inputs,
                          outputs=outputs,
                          **kwargs)
@@ -195,11 +193,11 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
         """
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x.
-            If the data is from a csv file, it should be a string specifying the path
-            of the csv file of the training data.
+                If the data is from a csv file, it should be a string specifying the
+                path of the csv file of the training data.
             y: numpy.ndarray, tensorflow.Dataset, Training data y.
-            If the data is from a csv file, it should be a string corresponding to
-            the label column.
+                If the data is from a csv file, it should be a string corresponding
+                to the label column.
             validation_split: Float between 0 and 1.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
@@ -219,8 +217,8 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                   - dataset or a dataset iterator
                 For the first two cases, `batch_size` must be provided.
                 For the last case, `validation_steps` must be provided.
-                If the data is read from a csv file, it should be a string specifying
-                the path of a csv file of the validation_data.
+                The type of the validation data should be the same as the training
+                data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         # x is file path of training data
@@ -247,14 +245,12 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
             length of the list should be equal to the number of columns of the data.
-            Defaults to None. If None, it will infer from the header of the csv file
-            or be set to a list of number from zero to the number of columns of the
-            data if the data is from a numpy ndarray.
-        column_types: Dict. Key is string, indicating the name of a column,
-            value is string, indicating the type of that column, should either be
-            'numerical' or 'categorical'. The length of the dict should be equal to
-            the number of columns of the data. Defaults to None. If not None, the
-            column_names need to be specified. If None, it will infer from the data.
+            Defaults to None. If None, it will obtained from the header of the csv
+            file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should either
+            be 'numerical' or 'categorical', indicating the type of that column.
+            Defaults to None. If not None, the column_names need to be specified.
+            If None, it will be inferred from the data.
         num_classes: Int. Defaults to None. If None, it will infer from the data.
         multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to None. If None, the loss will be
@@ -299,14 +295,12 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
             length of the list should be equal to the number of columns of the data.
-            Defaults to None. If None, it will infer from the header of the csv file
-            or be set to a list of number from zero to the number of columns of the
-            data if the data is from a numpy ndarray.
-        column_types: Dict. Key is string, indicating the name of a column,
-            value is string, indicating the type of that column, should either be
-            'numerical' or 'categorical'. The length of the dict should be equal to
-            the number of columns of the data. Defaults to None. If not None, the
-            column_names need to be specified. If None, it will infer from the data.
+            Defaults to None. If None, it will obtained from the header of the csv
+            file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should either
+            be 'numerical' or 'categorical', indicating the type of that column.
+            Defaults to None. If not None, the column_names need to be specified.
+            If None, it will be inferred from the data.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
         name: String. The name of the AutoModel. Defaults to
