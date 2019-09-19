@@ -152,7 +152,7 @@ class StructuredDataBlock(HyperBlock):
         return output_node
 
     def build_body(self, hp, input_node):
-        if len(self.heads) > 0:
+        if len(self.heads) > 1:
             module_type_choices = ['dense']
         else:
             module_type_choices = ['lightgbm', 'dense']

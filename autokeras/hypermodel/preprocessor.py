@@ -299,7 +299,7 @@ class TextToNgramVector(Preprocessor):
         return data[0]
 
     def output_types(self):
-        return (tf.float64,)
+        return (tf.float32,)
 
     @property
     def output_shape(self):
@@ -337,13 +337,6 @@ class TextToNgramVector(Preprocessor):
 
 class LightGBMModel(Preprocessor):
     """The base class for LightGBMClassifier and LightGBMRegressor."""
-
-    def update(self, x, y=None):
-        raise NotImplementedError
-
-    def output_types(self):
-        raise NotImplementedError
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.data = []
@@ -385,6 +378,12 @@ class LightGBMModel(Preprocessor):
     @property
     def output_shape(self):
         return self._output_shape
+
+    def update(self, x, y=None):
+        raise NotImplementedError
+
+    def output_types(self):
+        raise NotImplementedError
 
     def set_weights(self, weights):
         self.lgbm = weights['lgbm']
@@ -437,13 +436,13 @@ class LightGBMClassifier(LightGBMModel):
         # Returns
             Eager Tensor. The predicted label of x.
         """
-        ypred = super().transform(x, fit)
-        y = self._one_hot_encoder.encode(ypred)
+        y = super().transform(x, fit)
+        y = self._one_hot_encoder.encode(y)
         y = y.reshape((-1))
         return y
 
     def output_types(self):
-        return (tf.int64,)
+        return (tf.float32,)
 
     def set_weights(self, weights):
         super().set_weights(weights)
@@ -489,7 +488,7 @@ class LightGBMRegressor(LightGBMModel):
         self.targets.append(y)
 
     def output_types(self):
-        return (tf.float64,)
+        return (tf.float32,)
 
     def get_weights(self):
         return {'lgbm': self.lgbm,
@@ -500,7 +499,7 @@ class LightGBMRegressor(LightGBMModel):
         self._output_shape = None
 
 
-class LightGBMModel(Preprocessor):
+class LightGBMBlock(Preprocessor):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -524,18 +523,18 @@ class LightGBMModel(Preprocessor):
 
     def compile(self):
         self.heads = head.fetch_heads(self)
-        if len(self.heads) > 0:
+        if len(self.heads) > 1:
             raise ValueError('LightGBMBlock can only be connected to one head.')
         if isinstance(self.heads[0], head.ClassificationHead):
             self.lightgbm_block = LightGBMClassifier()
-        if isinstance(self.heads[0], head.ClassificationHead):
+        if isinstance(self.heads[0], head.RegressionHead):
             self.lightgbm_block = LightGBMRegressor()
 
     def update(self, x, y=None):
         self.lightgbm_block.update(x, y)
 
     def transform(self, x, fit=False):
-        self.lightgbm_block.transform(x, fit)
+        return self.lightgbm_block.transform(x, fit)
 
     def finalize(self):
         self.lightgbm_block.finalize()
@@ -543,8 +542,9 @@ class LightGBMModel(Preprocessor):
     def output_types(self):
         return self.lightgbm_block.output_types()
 
+    @property
     def output_shape(self):
-        return self.lightgbm_block.output_shape()
+        return self.lightgbm_block.output_shape
 
 
 class ImageAugmentation(Preprocessor):
@@ -904,7 +904,7 @@ class FeatureEngineering(Preprocessor):
                       + len(self.high_level_num_cat),)
 
     def output_types(self):
-        return (tf.float64,)
+        return (tf.float32,)
 
     @property
     def output_shape(self):
