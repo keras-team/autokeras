@@ -194,7 +194,6 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
         self.module_type = module_type
         self.head = head
         self.lightgbm_block = lightgbm_block
-        self.input_node = None
 
     def build_feature_engineering(self, hp, input_node):
         output_node = input_node
@@ -205,10 +204,7 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
                                             [True],
                                             default=True)
         if feature_engineering:
-            fe = preprocessor.FeatureEngineering()
-            fe.input_node = self.input_node
-            output_node = fe(output_node)
-            # output_node.input_node = self.input_node
+            output_node = preprocessor.FeatureEngineering()(output_node)
         return output_node
 
     def build_body(self, hp, input_node):

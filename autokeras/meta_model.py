@@ -57,7 +57,6 @@ def assemble(inputs, outputs, dataset, seed=None):
         else:
             output_block = hyperblock.StructuredDataRegressorBlock(
                 head=outputs[0])
-        output_block.input_node = inputs[0]
         return graph.GraphHyperModel(inputs, output_block(inputs))
 
     # Assemble the model with assemblers.
