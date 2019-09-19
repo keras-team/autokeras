@@ -1,3 +1,5 @@
+import queue
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
@@ -190,3 +192,21 @@ class RegressionHead(Head):
         output_node = tf.keras.layers.Dense(self.output_shape[-1],
                                             name=self.name)(output_node)
         return output_node
+
+
+def fetch_heads(source_block):
+    heads = []
+    visited_blocks = set()
+    visited_blocks.add(source_block)
+    q = queue.Queue()
+    q.put(source_block)
+    while not q.empty():
+        block = q.get()
+        if isinstance(block, Head):
+            heads.append(block)
+        for output_node in block.outputs:
+            for next_block in output_node.out_blocks:
+                if next_block not in visited_blocks:
+                    visited_blocks.add(next_block)
+                    q.put(next_block)
+    return heads

@@ -81,8 +81,13 @@ class Block(kerastuner.HyperModel):
         return super().build(hp)
 
     def clear_nodes(self):
+        """Delete the connecting edges to the nodes."""
         self.inputs = None
         self.outputs = None
+
+    def compile(self):
+        """Fetch information from other blocks in the network."""
+        pass
 
 
 class DenseBlock(Block):

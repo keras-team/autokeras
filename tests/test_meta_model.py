@@ -26,4 +26,4 @@ def test_structured_data_assembler():
     for line in dataset:
         assembler.update(line)
 
-    assembler.assemble(node.Input())
+    assembler.assemble(node.StructuredDataInput())

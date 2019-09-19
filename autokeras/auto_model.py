@@ -104,8 +104,12 @@ class AutoModel(object):
             y=y,
             validation_data=validation_data,
             validation_split=validation_split)
+
+        # Initialize the hypermodel.
         self._meta_build(dataset)
         self.hypermodel.set_io_shapes(dataset)
+
+        # Build the hypermodel in tuner init.
         hp = kerastuner.HyperParameters()
         self.hypermodel.hyper_build(hp)
         self.hypermodel.preprocess(

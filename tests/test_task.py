@@ -13,6 +13,10 @@ from tests.common import less_column_names_from_csv
 from tests.common import structured_data
 
 
+train_file_path = r'tests/resources/titanic/train.csv'
+test_file_path = r'tests/resources/titanic/eval.csv'
+
+
 @pytest.fixture(scope='module')
 def tmp_dir(tmpdir_factory):
     return tmpdir_factory.mktemp('test_image')
@@ -152,23 +156,17 @@ def test_structured_data_classifier_transform_new_data(tmp_dir):
 
 
 def test_structured_data_from_csv_regressor(tmp_dir):
-    train_file_path = r'tests/resources/titanic/train.csv'
-    test_file_path = r'tests/resources/titanic/eval.csv'
     clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=1)
     clf.fit(x=train_file_path, y='fare', epochs=2, validation_data=test_file_path)
 
 
 def test_structured_data_from_csv_classifier(tmp_dir):
-    train_file_path = r'tests/resources/titanic/train.csv'
-    test_file_path = r'tests/resources/titanic/eval.csv'
     clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=1)
     clf.fit(x=train_file_path, y='survived', epochs=2,
             validation_data=test_file_path)
 
 
 def test_structured_data_from_csv_col_name_type_classifier(tmp_dir):
-    train_file_path = r'tests/resources/titanic/train.csv'
-    test_file_path = r'tests/resources/titanic/eval.csv'
     clf = ak.StructuredDataClassifier(
         column_names=column_names_from_csv,
         column_types=column_types_from_csv,
@@ -179,8 +177,6 @@ def test_structured_data_from_csv_col_name_type_classifier(tmp_dir):
 
 
 def test_structured_data_from_csv_col_name_classifier(tmp_dir):
-    train_file_path = r'tests/resources/titanic/train.csv'
-    test_file_path = r'tests/resources/titanic/eval.csv'
     clf = ak.StructuredDataClassifier(
         column_names=column_names_from_csv,
         directory=tmp_dir,
@@ -190,8 +186,6 @@ def test_structured_data_from_csv_col_name_classifier(tmp_dir):
 
 
 def test_structured_data_from_csv_less_col_name_classifier(tmp_dir):
-    train_file_path = r'tests/resources/titanic/train.csv'
-    test_file_path = r'tests/resources/titanic/eval.csv'
     with pytest.raises(ValueError) as info:
         clf = ak.StructuredDataClassifier(
             column_names=less_column_names_from_csv,
@@ -203,8 +197,6 @@ def test_structured_data_from_csv_less_col_name_classifier(tmp_dir):
 
 
 def test_structured_data_from_csv_col_type_mismatch_classifier(tmp_dir):
-    train_file_path = r'tests/resources/titanic/train.csv'
-    test_file_path = r'tests/resources/titanic/eval.csv'
     with pytest.raises(ValueError) as info:
         clf = ak.StructuredDataClassifier(
             column_types=column_types_from_csv,

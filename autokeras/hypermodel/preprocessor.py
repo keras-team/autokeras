@@ -12,6 +12,8 @@ import autokeras as ak
 from autokeras import const
 from autokeras import utils
 from autokeras.hypermodel import block
+from autokeras.hypermodel import head
+from autokeras.hypermodel import node
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -499,6 +501,53 @@ class LightGBMRegressor(LightGBMModel):
         self._output_shape = None
 
 
+class LightGBMModel(Preprocessor):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.lightgbm_block = None
+        self.heads = None
+
+    def clear_weights(self):
+        self.lightgbm_block.clear_weights()
+
+    def get_weights(self):
+        return self.lightgbm_block.get_weights()
+
+    def set_weights(self, weights):
+        self.lightgbm_block.set_weights(weights)
+
+    def get_config(self):
+        return self.lightgbm_block.get_config()
+
+    def set_config(self, config):
+        self.lightgbm_block.set_config(config)
+
+    def compile(self):
+        self.heads = head.fetch_heads(self)
+        if len(self.heads) > 0:
+            raise ValueError('LightGBMBlock can only be connected to one head.')
+        if isinstance(self.heads[0], head.ClassificationHead):
+            self.lightgbm_block = LightGBMClassifier()
+        if isinstance(self.heads[0], head.ClassificationHead):
+            self.lightgbm_block = LightGBMRegressor()
+
+    def update(self, x, y=None):
+        self.lightgbm_block.update(x, y)
+
+    def transform(self, x, fit=False):
+        self.lightgbm_block.transform(x, fit)
+
+    def finalize(self):
+        self.lightgbm_block.finalize()
+
+    def output_types(self):
+        return self.lightgbm_block.output_types()
+
+    def output_shape(self):
+        return self.lightgbm_block.output_shape()
+
+
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
 
@@ -697,8 +746,6 @@ class FeatureEngineering(Preprocessor):
     """
 
     def __init__(self, max_columns=1000, **kwargs):
-        # TODO: support partial column_types, i.e., the size of the dict is smaller
-        # than the number of the columns.
         super().__init__(**kwargs)
         self.input_node = None
         self.max_columns = max_columns
@@ -916,5 +963,11 @@ class FeatureEngineering(Preprocessor):
 
     def set_config(self, config):
         self.num_columns = config['num_columns']
-        self.input_node = ak.StructuredDataInput(*config['input_node'])
+        self.input_node = node.StructuredDataInput(*config['input_node'])
         self.max_columns = config['max_columns']
+
+    def compile(self):
+        self.input_node = self.inputs[0]
+        if not isinstance(self.input_node, node.StructuredDataInput):
+            raise TypeError('FeatureEngineering block can only be used '
+                            'with StructuredDataInput.')
