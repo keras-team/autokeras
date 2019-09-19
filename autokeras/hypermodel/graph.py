@@ -354,6 +354,11 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
                 return block
         return None
 
+    def compile(self):
+        """Passing config infomation from block to block."""
+        for block in self._blocks:
+            block.compile()
+
 
 def copy_block(old_block):
     # TODO: use get_config and set_config, which requires the implementation of
@@ -399,6 +404,7 @@ class GraphHyperModel(GraphHyperModelBase):
             outputs.append(old_node_to_new[output_node])
         self.hyper_built_ghm = HyperBuiltGraphHyperModel(inputs, outputs)
         self.hyper_built_ghm.set_hps(self._hps)
+        self.hyper_built_ghm.compile()
 
     def preprocess(self, hp, dataset, validation_data=None, fit=False):
         """Preprocess the data to be ready for the Keras Model.

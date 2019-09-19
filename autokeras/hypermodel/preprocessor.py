@@ -11,6 +11,7 @@ from tensorflow.python.util import nest
 from autokeras import const
 from autokeras import utils
 from autokeras.hypermodel import block
+from autokeras.hypermodel import node
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -911,3 +912,9 @@ class FeatureEngineering(Preprocessor):
         self.num_columns = config['column_num']
         self.column_types = config['column_types']
         self.max_columns = config['max_columns']
+
+    def compile(self):
+        self.input_node = self.inputs[0]
+        if not isinstance(self.input_node, node.StructuredDataInput):
+            raise TypeError('FeatureEngineering block can only be used '
+                            'with StructuredDataInput.')
