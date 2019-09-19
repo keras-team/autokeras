@@ -1,8 +1,9 @@
-import kerastuner
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+import kerastuner
 from autokeras import meta_model
 from autokeras import tuner
 from autokeras import utils
@@ -103,8 +104,12 @@ class AutoModel(object):
             y=y,
             validation_data=validation_data,
             validation_split=validation_split)
+
+        # Initialize the hypermodel.
         self._meta_build(dataset)
         self.hypermodel.set_io_shapes(dataset)
+
+        # Build the hypermodel in tuner init.
         hp = kerastuner.HyperParameters()
         self.hypermodel.hyper_build(hp)
         self.hypermodel.preprocess(

@@ -1,13 +1,17 @@
 import functools
-import kerastuner
+
 import numpy as np
 import pytest
 import tensorflow as tf
 
 import autokeras as ak
-from autokeras.hypermodel import preprocessor
+import kerastuner
 from autokeras.hypermodel import block
 from autokeras.hypermodel import head
+from autokeras.hypermodel import preprocessor
+
+from ..common import column_names_from_numpy
+from ..common import column_types_from_numpy
 from ..common import structured_data
 
 
@@ -128,9 +132,9 @@ def test_augment():
 def test_feature_engineering():
     data = structured_data()
     dataset = tf.data.Dataset.from_tensor_slices(data)
-    feature = preprocessor.FeatureEngineering([
-        'categorical', 'categorical', 'numerical', 'numerical', 'categorical',
-        'categorical', 'categorical', 'categorical'])
+    feature = preprocessor.FeatureEngineering()
+    feature.input_node = ak.StructuredDataInput(column_names=column_names_from_numpy,
+                                                column_types=column_types_from_numpy)
     feature.set_hp(kerastuner.HyperParameters())
     for x in dataset:
         feature.update(x)
@@ -150,9 +154,9 @@ def test_feature_engineering():
 def test_feature_engineering_fix_keyerror():
     data = structured_data(100)
     dataset = tf.data.Dataset.from_tensor_slices(data)
-    feature = preprocessor.FeatureEngineering([
-        'categorical', 'categorical', 'numerical', 'numerical', 'categorical',
-        'categorical', 'categorical', 'categorical'])
+    feature = preprocessor.FeatureEngineering()
+    feature.input_node = ak.StructuredDataInput(column_names=column_names_from_numpy,
+                                                column_types=column_types_from_numpy)
     feature.set_hp(kerastuner.HyperParameters())
     for x in dataset:
         feature.update(x)
@@ -196,7 +200,6 @@ def test_lgbm_classifier(tmp_dir):
     auto_model.fit(x_train, y_train, epochs=1,
                    validation_data=(x_train, y_train))
     result = auto_model.predict(x_train)
-    auto_model.tuner.get_best_models()[0].summary()
     assert result.shape == (11, 10)
 
 
@@ -217,5 +220,4 @@ def test_lgbm_regressor(tmp_dir):
     auto_model.fit(x_train, y_train, epochs=1,
                    validation_data=(x_train, y_train))
     result = auto_model.predict(x_train)
-    auto_model.tuner.get_best_models()[0].summary()
     assert result.shape == (11, 1)

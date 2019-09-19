@@ -1,5 +1,6 @@
 from tensorflow.python.util import nest
 
+from autokeras import utils
 from autokeras.hypermodel import block
 from autokeras.hypermodel import head as head_module
 from autokeras.hypermodel import node
@@ -126,76 +127,17 @@ class TextBlock(HyperBlock):
         return output_node
 
 
-class LightGBMClassifierBlock(HyperBlock):
-    """Structured data classification with LightGBM.
-
-    It can be used with preprocessors, but not other blocks or heads.
-
-    # Arguments
-        metrics: String. The type of the model's metrics. If unspecified,
-            it will be 'accuracy' for classification task.
-    """
-
-    def __init__(self, metrics=None, **kwargs):
-        super().__init__(**kwargs)
-        self.metrics = metrics
-        if self.metrics is None:
-            self.metrics = ['accuracy']
-
-    def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
-        output_node = input_node
-        output_node = preprocessor.LightGBMClassifier()(output_node)
-        output_node = head_module.ClassificationHead(
-            loss='categorical_crossentropy',
-            metrics=self.metrics,
-            output_shape=self.output_shape)(output_node)
-        return output_node
-
-
-class LightGBMRegressorBlock(HyperBlock):
-    """Structured data regression with LightGBM.
-
-    It can be used with preprocessors, but not other blocks or heads.
-
-    # Arguments
-        metrics: String. The type of the model's metrics. If unspecified,
-            it will be 'mean_squared_error' for regression task.
-    """
-
-    def __init__(self, metrics=None, **kwargs):
-        super().__init__(**kwargs)
-        self.metrics = metrics
-        if self.metrics is None:
-            self.metrics = ['mean_squared_error']
-
-    def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
-        output_node = input_node
-        output_node = preprocessor.LightGBMRegressor()(output_node)
-        output_node = head_module.RegressionHead(
-            loss='mean_squared_error',
-            metrics=self.metrics,
-            output_shape=self.output_shape)(output_node)
-        return output_node
-
-
-class SupervisedStructuredDataPipelineBlock(HyperBlock):
+class StructuredDataBlock(HyperBlock):
     """Base class for StructuredDataClassifier(Regressor)Block."""
 
     def __init__(self,
-                 column_types,
                  feature_engineering=True,
                  module_type=None,
-                 head=None,
-                 lightgbm_block=None,
                  **kwargs):
         super().__init__()
-        self.column_types = column_types
         self.feature_engineering = feature_engineering
         self.module_type = module_type
-        self.head = head
-        self.lightgbm_block = lightgbm_block
+        self.heads = None
 
     def build_feature_engineering(self, hp, input_node):
         output_node = input_node
@@ -206,21 +148,21 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
                                             [True],
                                             default=True)
         if feature_engineering:
-            output_node = preprocessor.FeatureEngineering(
-                column_types=self.column_types)(output_node)
+            output_node = preprocessor.FeatureEngineering()(output_node)
         return output_node
 
     def build_body(self, hp, input_node):
+        if len(self.heads) > 0:
+            module_type_choices = ['dense']
+        else:
+            module_type_choices = ['lightgbm', 'dense']
         module_type = self.module_type or hp.Choice('module_type',
-                                                    ['dense', 'lightgbm'],
-                                                    default='lightgbm')
+                                                    module_type_choices,
+                                                    default=module_type_choices[0])
         if module_type == 'dense':
             output_node = block.DenseBlock()(input_node)
-            self.head.output_shape = self.output_shape
-            output_node = self.head(output_node)
         elif module_type == 'lightgbm':
-            self.lightgbm_block.output_shape = self.output_shape
-            output_node = self.lightgbm_block.build(hp, input_node)
+            output_node = preprocessor.LightGBMBlock()(input_node)
         else:
             raise ValueError('Unsupported module'
                              'type: {module_type}'.format(
@@ -234,124 +176,8 @@ class SupervisedStructuredDataPipelineBlock(HyperBlock):
         output_node = self.build_body(hp, output_node)
         return output_node
 
-
-class StructuredDataBlock(SupervisedStructuredDataPipelineBlock):
-    """A block for structured data.
-
-    It searches for whether to use feature engineering. The data is then
-    processed with DenseBlock.
-
-    # Arguments
-        column_types: A list of strings. The length of the list should be the same
-            as the number of columns of the data. The strings in the list are
-            specifying the types of the columns. They should either be 'numerical'
-            or 'categorical'.
-        feature_engineering: Boolean. Whether to use feature engineering for the
-            data. If is None, it would be tunable. Defaults to True.
-    """
-
-    def __init__(self,
-                 column_types,
-                 feature_engineering=True,
-                 **kwargs):
-        super().__init__(column_types=column_types,
-                         feature_engineering=feature_engineering,
-                         **kwargs)
-
-    def build_body(self, hp, input_node):
-        return block.DenseBlock()(input_node)
-
-
-class StructuredDataClassifierBlock(SupervisedStructuredDataPipelineBlock):
-    """A block for structured data classification.
-
-    It cannot be connected with any other block downwards. It searches for whether
-    to use feature engineering for the data, and to use DenseBlock and
-    ClassificationHead or the LightGBMClassifierBlock.
-
-    # Arguments
-        column_types: A list of strings. The length of the list should be the same
-            as the number of columns of the data. The strings in the list are
-            specifying the types of the columns. They should either be 'numerical'
-            or 'categorical'.
-        feature_engineering: Boolean. Whether to use feature engineering for the
-            data. If is None, it would be tunable. Defaults to True.
-        loss: Keras loss function. The loss function for ClassificationHead.
-        metrics: A list of Keras metrics. The metrics to use to evaluate the
-            classification.
-        head: ClassificationHead. The ClassificationHead to use with DenseBlock.
-            If unspecified, it would use the default args for the ClassificationHead.
-            If specify both head and metrics, the metrics will only be used for
-            LightGBM, the head with its metrics will be directly used for DenseBlock.
-            If only specified the head, the same metrics will be used for LightGBM.
-    """
-
-    def __init__(self,
-                 column_types,
-                 feature_engineering=True,
-                 loss=None,
-                 metrics=None,
-                 head=None,
-                 **kwargs):
-        self.loss = loss
-        self.metrics = metrics
-        self.head = head
-        if self.metrics is None and isinstance(self.head, head_module.Head):
-            self.metrics = head.metrics
-        if self.head is None:
-            self.head = head_module.ClassificationHead(loss=self.loss,
-                                                       metrics=self.metrics)
-        super().__init__(
-            column_types=column_types,
-            feature_engineering=feature_engineering,
-            head=self.head,
-            lightgbm_block=LightGBMClassifierBlock(metrics=self.metrics))
-
-
-class StructuredDataRegressorBlock(SupervisedStructuredDataPipelineBlock):
-    """A block for structured data regression.
-
-    It cannot be connected with any other block downwards. It searches for whether
-    to use feature engineering for the data, and to use DenseBlock and
-    RegressionHead or the LightGBMRegressorBlock.
-
-    # Arguments
-        column_types: A list of strings. The length of the list should be the same
-            as the number of columns of the data. The strings in the list are
-            specifying the types of the columns. They should either be 'numerical'
-            or 'categorical'.
-        feature_engineering: Boolean. Whether to use feature engineering for the
-            data. If is None, it would be tunable. Defaults to True.
-        loss: Keras loss function. The loss function for RegressionHead.
-        metrics: A list of Keras metrics. The metrics to use to evaluate the
-            regression.
-        head: RegressionHead. The RegressionHead to use with DenseBlock.
-            If unspecified, it would use the default args for the RegressionHead.
-            If specify both head and metrics, the metrics will only be used for
-            LightGBM, the head with its metrics will be directly used for DenseBlock.
-            If only specified the head, the same metrics will be used for LightGBM.
-    """
-
-    def __init__(self,
-                 column_types,
-                 feature_engineering=True,
-                 loss=None,
-                 metrics=None,
-                 head=None,
-                 **kwargs):
-        self.loss = loss
-        self.metrics = metrics
-        self.head = head
-        if self.metrics is None and isinstance(self.head, head_module.Head):
-            self.metrics = head.metrics
-        if self.head is None:
-            self.head = head_module.RegressionHead(loss=self.loss,
-                                                   metrics=self.metrics),
-        super().__init__(
-            column_types=column_types,
-            feature_engineering=feature_engineering,
-            head=self.head,
-            lightgbm_block=LightGBMRegressorBlock(metrics=self.metrics))
+    def compile(self):
+        self.heads = head_module.fetch_heads(self)
 
 
 class TimeSeriesBlock(HyperBlock):

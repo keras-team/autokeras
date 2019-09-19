@@ -1,8 +1,8 @@
 import collections
 import random
+import warnings
 
 import numpy as np
-import warnings
 import tensorflow as tf
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
@@ -11,6 +11,8 @@ from tensorflow.python.util import nest
 from autokeras import const
 from autokeras import utils
 from autokeras.hypermodel import block
+from autokeras.hypermodel import head
+from autokeras.hypermodel import node
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -498,6 +500,53 @@ class LightGBMRegressor(LightGBMModel):
         self._output_shape = None
 
 
+class LightGBMModel(Preprocessor):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.lightgbm_block = None
+        self.heads = None
+
+    def clear_weights(self):
+        self.lightgbm_block.clear_weights()
+
+    def get_weights(self):
+        return self.lightgbm_block.get_weights()
+
+    def set_weights(self, weights):
+        self.lightgbm_block.set_weights(weights)
+
+    def get_config(self):
+        return self.lightgbm_block.get_config()
+
+    def set_config(self, config):
+        self.lightgbm_block.set_config(config)
+
+    def compile(self):
+        self.heads = head.fetch_heads(self)
+        if len(self.heads) > 0:
+            raise ValueError('LightGBMBlock can only be connected to one head.')
+        if isinstance(self.heads[0], head.ClassificationHead):
+            self.lightgbm_block = LightGBMClassifier()
+        if isinstance(self.heads[0], head.ClassificationHead):
+            self.lightgbm_block = LightGBMRegressor()
+
+    def update(self, x, y=None):
+        self.lightgbm_block.update(x, y)
+
+    def transform(self, x, fit=False):
+        self.lightgbm_block.transform(x, fit)
+
+    def finalize(self):
+        self.lightgbm_block.finalize()
+
+    def output_types(self):
+        return self.lightgbm_block.output_types()
+
+    def output_shape(self):
+        return self.lightgbm_block.output_shape()
+
+
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
 
@@ -686,6 +735,7 @@ class FeatureEngineering(Preprocessor):
     """A preprocessor block does feature engineering for the data.
 
     # Arguments
+        of column names and column types.
         column_types: A list of strings. The length of the list should be the same
             as the number of columns of the data. The strings in the list are
             specifying the types of the columns. They should either be 'numerical'
@@ -694,11 +744,12 @@ class FeatureEngineering(Preprocessor):
             Defaults to 1000.
     """
 
-    def __init__(self, column_types, max_columns=1000, **kwargs):
+    def __init__(self, max_columns=1000, **kwargs):
+
         super().__init__(**kwargs)
-        self.column_types = column_types
+        self.input_node = None
         self.max_columns = max_columns
-        self.num_columns = len(column_types)
+        self.num_columns = 0
         self.num_rows = 0
         self.shape = None
         # A list of categorical column indices.
@@ -715,11 +766,14 @@ class FeatureEngineering(Preprocessor):
         self.high_level_cat_cat = {}
         self.high_level_num_cat = {}
 
-        for index, column_type in enumerate(self.column_types):
+    def initialize(self):
+        for column_name, column_type in self.input_node.column_types.items():
             if column_type == 'categorical':
-                self.categorical_col.append(index)
+                self.categorical_col.append(
+                    self.input_node.column_names.index(column_name))
             elif column_type == 'numerical':
-                self.numerical_col.append(index)
+                self.numerical_col.append(
+                    self.input_node.column_names.index(column_name))
             else:
                 raise ValueError('Unsupported column type: '
                                  '{type}'.format(type=column_type))
@@ -739,6 +793,10 @@ class FeatureEngineering(Preprocessor):
                     cat_col_index1)] = collections.defaultdict(return_zero)
 
     def update(self, x, y=None):
+        if self.num_rows == 0:
+            self.num_columns = len(self.input_node.column_types)
+            self.initialize()
+
         self.num_rows += 1
         x = nest.flatten(x)[0].numpy()
         # for index in range(len(x)):
@@ -840,7 +898,7 @@ class FeatureEngineering(Preprocessor):
                     self.high_level_num_cat[pair][key] /= self.value_counters[
                         cat_col_index1][key]
 
-        self.shape = (len(self.column_types)
+        self.shape = (len(self.input_node.column_types)
                       + len(self.high_level1_col)
                       + len(self.high_level_cat_cat)
                       + len(self.high_level_num_cat),)
@@ -898,11 +956,18 @@ class FeatureEngineering(Preprocessor):
         self.high_level_num_cat = {}
 
     def get_config(self):
-        return {'column_num': self.num_columns,
-                'column_types': self.column_types,
+        return {'num_columns': self.num_columns,
+                'input_node': (self.input_node.column_names,
+                               self.input_node.column_types),
                 'max_columns': self.max_columns}
 
     def set_config(self, config):
-        self.num_columns = config['column_num']
-        self.column_types = config['column_types']
+        self.num_columns = config['num_columns']
+        self.input_node = node.StructuredDataInput(*config['input_node'])
         self.max_columns = config['max_columns']
+
+    def compile(self):
+        self.input_node = self.inputs[0]
+        if not isinstance(self.input_node, node.StructuredDataInput):
+            raise TypeError('FeatureEngineering block can only be used '
+                            'with StructuredDataInput.')
