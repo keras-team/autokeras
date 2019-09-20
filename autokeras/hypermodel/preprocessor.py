@@ -745,7 +745,6 @@ class FeatureEngineering(Preprocessor):
     """
 
     def __init__(self, max_columns=1000, **kwargs):
-
         super().__init__(**kwargs)
         self.input_node = None
         self.max_columns = max_columns

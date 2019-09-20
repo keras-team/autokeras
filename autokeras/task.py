@@ -176,6 +176,11 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
         inputs = node.StructuredDataInput()
         inputs.column_types = column_types
         inputs.column_names = column_names
+        if column_types:
+            if not all([column_type in ['categorical', 'numerical']
+                        for column_type in column_types.values()]):
+                raise ValueError(
+                    'Column_types should be either "categorical" or "numerical".')
         if column_names and column_types:
             if not all([column_name in column_names
                         for column_name in column_types]):
@@ -185,10 +190,10 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                          **kwargs)
 
     def fit(self,
-            x=None,  # file path of training data
-            y=None,  # label name
+            x=None,
+            y=None,
             validation_split=0,
-            validation_data=None,  # file path of validataion data
+            validation_data=None,
             **kwargs):
         """
         # Arguments
