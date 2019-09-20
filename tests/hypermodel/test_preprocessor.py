@@ -129,26 +129,6 @@ def test_augment():
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
-column_names_for_tests = [
-                        'bool_',
-                        'num_to_cat_',
-                        'float_',
-                        'int_',
-                        'morethan_32_',
-                        'col1_morethan_100_',
-                        'col2_morethan_100_',
-                        'col3_morethan_100_']
-column_types_for_tests = {
-                        'bool_': 'categorical',
-                        'num_to_cat_': 'categorical',
-                        'float_': 'numerical',
-                        'int_': 'numerical',
-                        'morethan_32_': 'categorical',
-                        'col1_morethan_100_': 'categorical',
-                        'col2_morethan_100_': 'categorical',
-                        'col3_morethan_100_': 'categorical'}
-
-
 def test_feature_engineering():
     data = structured_data()
     dataset = tf.data.Dataset.from_tensor_slices(data)

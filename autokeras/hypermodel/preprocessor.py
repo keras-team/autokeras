@@ -8,7 +8,6 @@ from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
 
-import autokeras as ak
 from autokeras import const
 from autokeras import utils
 from autokeras.hypermodel import block

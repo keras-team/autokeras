@@ -219,10 +219,9 @@ class StructuredDataAssembler(Assembler):
         if input_node.column_types is None:
             input_node.column_types = self.column_types
         # partial column_types is provided
-        elif len(input_node.column_types) < len(input_node.column_names):
-            for key, value in self.column_types.items():
-                if key not in input_node.column_types:
-                    input_node.column_types[key] = value
+        for key, value in self.column_types.items():
+            if key not in input_node.column_types:
+                input_node.column_types[key] = value
         return hyperblock.StructuredDataBlock()(input_node)
 
 

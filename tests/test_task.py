@@ -89,7 +89,7 @@ def test_structured_data_from_numpy_regressor(tmp_dir):
     x_train = data
     y = np.random.rand(num_data, 1)
     y_train = y
-    clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=2)
+    clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=1)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
 
 
@@ -126,7 +126,7 @@ def test_structured_data_from_numpy_col_type_classifier(tmp_dir):
         clf = ak.StructuredDataClassifier(
             column_types=column_types_from_numpy,
             directory=tmp_dir,
-            max_trials=2)
+            max_trials=1)
         clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
     assert str(info.value) == 'Column names must be specified.'
 
@@ -141,7 +141,7 @@ def test_structured_data_from_numpy_col_name_type_classifier(tmp_dir):
         column_names=column_names_from_numpy,
         column_types=column_types_from_numpy,
         directory=tmp_dir,
-        max_trials=2)
+        max_trials=1)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
 
 
@@ -152,7 +152,7 @@ def test_structured_data_classifier_transform_new_data(tmp_dir):
     x_train, x_test = data[:num_train], data[num_train:]
     y = np.random.randint(0, 3, num_data)
     y_train, y_test = y[:num_train], y[num_train:]
-    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=2)
+    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=1)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_test, y_test))
 
 
@@ -162,8 +162,8 @@ def test_structured_data_from_csv_regressor(tmp_dir):
 
 
 def test_structured_data_from_csv_classifier(tmp_dir):
-    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=5)
-    clf.fit(x=train_file_path, y='survived', epochs=5,
+    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=1)
+    clf.fit(x=train_file_path, y='survived', epochs=2,
             validation_data=test_file_path)
 
 
