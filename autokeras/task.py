@@ -190,10 +190,10 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                          **kwargs)
 
     def fit(self,
-            x=None,  # file path of training data
-            y=None,  # label name
+            x=None,
+            y=None,
             validation_split=0,
-            validation_data=None,  # file path of validation data
+            validation_data=None,
             **kwargs):
         """
         # Arguments
