@@ -9,9 +9,10 @@ from tests.common import column_names_from_csv
 from tests.common import column_names_from_numpy
 from tests.common import column_types_from_csv
 from tests.common import column_types_from_numpy
+from tests.common import false_column_types_from_csv
 from tests.common import less_column_names_from_csv
+from tests.common import partial_column_types_from_csv
 from tests.common import structured_data
-
 
 train_file_path = r'tests/resources/titanic/train.csv'
 test_file_path = r'tests/resources/titanic/eval.csv'
@@ -88,7 +89,7 @@ def test_structured_data_from_numpy_regressor(tmp_dir):
     x_train = data
     y = np.random.rand(num_data, 1)
     y_train = y
-    clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=2)
+    clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=1)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
 
 
@@ -125,7 +126,7 @@ def test_structured_data_from_numpy_col_type_classifier(tmp_dir):
         clf = ak.StructuredDataClassifier(
             column_types=column_types_from_numpy,
             directory=tmp_dir,
-            max_trials=2)
+            max_trials=1)
         clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
     assert str(info.value) == 'Column names must be specified.'
 
@@ -140,7 +141,7 @@ def test_structured_data_from_numpy_col_name_type_classifier(tmp_dir):
         column_names=column_names_from_numpy,
         column_types=column_types_from_numpy,
         directory=tmp_dir,
-        max_trials=2)
+        max_trials=1)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
 
 
@@ -151,7 +152,7 @@ def test_structured_data_classifier_transform_new_data(tmp_dir):
     x_train, x_test = data[:num_train], data[num_train:]
     y = np.random.randint(0, 3, num_data)
     y_train, y_test = y[:num_train], y[num_train:]
-    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=2)
+    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=1)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_test, y_test))
 
 
@@ -205,3 +206,24 @@ def test_structured_data_from_csv_col_type_mismatch_classifier(tmp_dir):
         clf.fit(x=train_file_path, y='survived', epochs=2,
                 validation_data=test_file_path)
     assert str(info.value) == 'Column_names and column_types are mismatched.'
+
+
+def test_structured_data_from_csv_false_col_type_classifier(tmp_dir):
+    with pytest.raises(ValueError) as info:
+        clf = ak.StructuredDataClassifier(
+            column_types=false_column_types_from_csv,
+            directory=tmp_dir,
+            max_trials=1)
+        clf.fit(x=train_file_path, y='survived', epochs=2,
+                validation_data=test_file_path)
+    assert str(info.value) == \
+        'Column_types should be either "categorical" or "numerical".'
+
+
+def test_structured_data_from_csv_partial_col_type_classifier(tmp_dir):
+    clf = ak.StructuredDataClassifier(
+        column_types=partial_column_types_from_csv,
+        directory=tmp_dir,
+        max_trials=1)
+    clf.fit(x=train_file_path, y='survived', epochs=2,
+            validation_data=test_file_path)
