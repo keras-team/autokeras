@@ -391,17 +391,7 @@ class LightGBMModel(Preprocessor):
 
 
 class LightGBMClassifier(LightGBMModel):
-    """Collect data, train and test the LightGBM for classification task.
-
-    Input data are np.array etc. np.random.rand(example_number, feature_number).
-    Input labels are encoded labels in np.array form
-    etc. np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).
-    Outputs are predicted encoded labels in np.array form.
-
-    The instance of this LightGBMClassifier class must be followed by
-    an IdentityBlock and an EmptyHead as shown in LightGBMClassifierBlock class.
-    """
+    """Collect data, train and test the LightGBM for classification task."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -460,16 +450,7 @@ class LightGBMClassifier(LightGBMModel):
 
 
 class LightGBMRegressor(LightGBMModel):
-    """Collect data, train and test the LightGBM for regression task.
-
-    Input data are np.array etc. np.random.rand(example_number, feature_number).
-    Input value are real number in np.array form
-    etc. np.array([1.1, 2.1, 4.2, 0.3, 2.4, 8.5, 7.3, 8.4, 9.4, 4.3]).
-    Outputs are predicted value in np.array form.
-
-    The instance of this LightGBMRegressor class must be followed by
-    an IdentityBlock and an EmptyHead as shown in LightGBMRegressorBlock class.
-    """
+    """Collect data, train and test the LightGBM for regression task."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -500,6 +481,7 @@ class LightGBMRegressor(LightGBMModel):
 
 
 class LightGBMBlock(Preprocessor):
+    """LightGBM Block for classification or regression task."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -735,11 +717,6 @@ class FeatureEngineering(Preprocessor):
     """A preprocessor block does feature engineering for the data.
 
     # Arguments
-        of column names and column types.
-        column_types: A list of strings. The length of the list should be the same
-            as the number of columns of the data. The strings in the list are
-            specifying the types of the columns. They should either be 'numerical'
-            or 'categorical'.
         max_columns: Int. The maximum number of columns after feature engineering.
             Defaults to 1000.
     """
@@ -761,8 +738,10 @@ class FeatureEngineering(Preprocessor):
         self.categorical_categorical = {}
         self.numerical_categorical = {}
         self.count_frequency = {}
-        self.high_level1_col = []  # more than 32, less than 100
-        self.high_level2_col = []  # more than 100
+        # more than 32, less than 100
+        self.high_level1_col = []
+        # more than 100
+        self.high_level2_col = []
         self.high_level_cat_cat = {}
         self.high_level_num_cat = {}
 
@@ -799,8 +778,6 @@ class FeatureEngineering(Preprocessor):
 
         self.num_rows += 1
         x = nest.flatten(x)[0].numpy()
-        # for index in range(len(x)):
-        #    x[index] = x[index].decode('utf-8')
 
         self.fill_missing(x)
 
@@ -821,8 +798,6 @@ class FeatureEngineering(Preprocessor):
     def transform(self, x, fit=False):
         x = nest.flatten(x)[0].numpy()
 
-        # for index in range(len(x)):
-        #   x[index] = x[index].decode('utf-8')
         self.fill_missing(x)
 
         new_values = []
@@ -871,9 +846,6 @@ class FeatureEngineering(Preprocessor):
         # divide column according to category number of the column
         for col_index in self.value_counters.keys():
             num_cat = len(self.value_counters[col_index])
-            # if num_cat <= 32:
-            #     continue
-            # calculate frequency
             if num_cat > 32 and num_cat <= 100:
                 self.high_level1_col.append(col_index)
                 self.count_frequency[col_index] = {
@@ -950,8 +922,8 @@ class FeatureEngineering(Preprocessor):
         self.categorical_categorical = {}
         self.numerical_categorical = {}
         self.count_frequency = {}
-        self.high_level1_col = []  # more than 32, less than 100
-        self.high_level2_col = []  # more than 100
+        self.high_level1_col = []
+        self.high_level2_col = []
         self.high_level_cat_cat = {}
         self.high_level_num_cat = {}
 

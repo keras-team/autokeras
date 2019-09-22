@@ -162,6 +162,9 @@ class StructuredDataAssembler(Assembler):
 
     A column will be judged as categorical if the number of different values is less
     than 5% of the number of instances.
+
+    # Arguments
+        column_names:
     """
 
     def __init__(self, column_names, **kwargs):

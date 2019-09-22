@@ -35,9 +35,11 @@ class TextNode(Node):
 class Input(Node):
 
     def fit(self, y):
+        """Record any information needed by transform."""
         pass
 
     def transform(self, x):
+        """Transform x into a compatible type (tf.data.Dataset)."""
         if isinstance(x, tf.data.Dataset):
             return x
         if isinstance(x, np.ndarray):

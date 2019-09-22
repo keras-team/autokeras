@@ -47,7 +47,7 @@ class HyperBlock(block.Block):
 
 
 class ImageBlock(HyperBlock):
-    """HyperBlock for image data.
+    """Block for image data.
 
     The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
     which is controlled by a hyperparameter, 'block_type'.
@@ -102,6 +102,15 @@ class ImageBlock(HyperBlock):
 
 
 class TextBlock(HyperBlock):
+    """Block for text data.
+
+    # Arguments
+        vectorizer: String. 'sequence' or 'ngram'. If it is 'sequence',
+            TextToIntSequence will be used. If it is 'ngram', TextToNgramVector will
+            be used. If unspecified, it will be tuned automatically.
+        pretraining: Boolean. Whether to use pretraining weights in the N-gram
+            vectorizer. If unspecified, it will be tuned automatically.
+    """
 
     def __init__(self, vectorizer=None, pretraining=None, **kwargs):
         super().__init__(**kwargs)
@@ -128,7 +137,15 @@ class TextBlock(HyperBlock):
 
 
 class StructuredDataBlock(HyperBlock):
-    """Base class for StructuredDataClassifier(Regressor)Block."""
+    """Block for structured data.
+
+    # Arguments
+        feature_engineering: Boolean. Whether to use feature engineering block.
+            Defaults to True. If specified as None, it will be tuned automatically.
+        module_type: String. 'dense' or 'lightgbm'. If it is 'dense', DenseBlock
+            will be used. If it is 'lightgbm', LightGBMBlock will be used. If
+            unspecified, it will be tuned automatically.
+    """
 
     def __init__(self,
                  feature_engineering=True,

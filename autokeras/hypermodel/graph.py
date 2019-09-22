@@ -12,7 +12,7 @@ from autokeras.hypermodel import preprocessor
 
 
 class GraphHyperModelBase(kerastuner.HyperModel):
-    """A HyperModel based on connected HyperBlocks.
+    """A HyperModel based on connected Blocks or HyperBlocks.
 
     # Arguments
         inputs: A list of input node(s) for the GraphHyperModel.
@@ -46,6 +46,11 @@ class GraphHyperModelBase(kerastuner.HyperModel):
                 hp.values[name] = single_hp.default
 
     def set_hps(self, hps):
+        """Set the hyperparameters to constrain the search space.
+
+        Args:
+            hps: A list of Hyperparameters instances.
+        """
         self._hps = hps
 
     def set_io_shapes(self, dataset):
@@ -168,10 +173,16 @@ class GraphHyperModelBase(kerastuner.HyperModel):
 
 
 class HyperBuiltGraphHyperModel(GraphHyperModelBase):
+    """A HyperModel based on connected Blocks.
 
-    def __init__(self, inputs, outputs, **kwargs):
+    It is used by GraphHyperModel. GraphHyperModel's hyper_build function produces
+    an instance of HyperBuiltGraphHyperModel, which can be directly built into Keras
+    Model.
+    """
+
+    def __init__(self, **kwargs):
         self._model_inputs = []
-        super().__init__(inputs, outputs, **kwargs)
+        super().__init__(**kwargs)
 
     def _build_network(self):
         super()._build_network()
@@ -184,6 +195,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
                                     key=lambda x: self._node_to_id[x])
 
     def build(self, hp):
+        """Build the HyperModel into a Keras Model."""
         self._init_hps(hp)
         real_nodes = {}
         for input_node in self._model_inputs:
@@ -215,10 +227,11 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
         return metrics
 
     def _get_loss(self):
-        loss = nest.flatten([output_node.in_blocks[0].loss
-                             for output_node in self.outputs
-                             if isinstance(output_node.in_blocks[0],
-                                           head.Head)])
+        loss = {}
+        for output_node in self.outputs:
+            block = output_node.in_blocks[0]
+            if isinstance(block, head.Head):
+                loss[block.name] = block.loss
         return loss
 
     def _compile_keras_model(self, hp, model):
@@ -378,6 +391,7 @@ class GraphHyperModel(GraphHyperModelBase):
         self.hyper_built_ghm = None
 
     def build(self, hp):
+        """Build the HyperModel into a Keras Model."""
         return self.hyper_built_ghm.build(hp)
 
     def hyper_build(self, hp):
