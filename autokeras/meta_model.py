@@ -164,7 +164,10 @@ class StructuredDataAssembler(Assembler):
     than 5% of the number of instances.
 
     # Arguments
-        column_names:
+        column_names: A list of strings specifying the names of the columns. The
+            length of the list should be equal to the number of columns of the data.
+            Defaults to None. If None, it will obtained from the header of the csv
+            file or the pandas.DataFrame.
     """
 
     def __init__(self, column_names, **kwargs):
