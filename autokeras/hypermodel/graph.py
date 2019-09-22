@@ -178,11 +178,15 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
     It is used by GraphHyperModel. GraphHyperModel's hyper_build function produces
     an instance of HyperBuiltGraphHyperModel, which can be directly built into Keras
     Model.
+
+    # Arguments
+        inputs: A list of input node(s) for the GraphHyperModel.
+        outputs: A list of output node(s) for the GraphHyperModel.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, inputs, outputs, **kwargs):
         self._model_inputs = []
-        super().__init__(**kwargs)
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
 
     def _build_network(self):
         super()._build_network()
