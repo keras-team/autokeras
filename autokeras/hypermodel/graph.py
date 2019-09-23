@@ -48,7 +48,7 @@ class GraphHyperModelBase(kerastuner.HyperModel):
     def set_hps(self, hps):
         """Set the hyperparameters to constrain the search space.
 
-        Args:
+        # Arguments
             hps: A list of Hyperparameters instances.
         """
         self._hps = hps
@@ -180,8 +180,8 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
     Model.
 
     # Arguments
-        inputs: A list of input node(s) for the GraphHyperModel.
-        outputs: A list of output node(s) for the GraphHyperModel.
+        inputs: A list of input node(s) for the HyperBuiltGraphHyperModel.
+        outputs: A list of output node(s) for the HyperBuiltGraphHyperModel.
     """
 
     def __init__(self, inputs, outputs, **kwargs):
@@ -389,6 +389,12 @@ def copy_block(old_block):
 
 
 class GraphHyperModel(GraphHyperModelBase):
+    """A HyperModel based on connected Blocks and HyperBlocks.
+
+    # Arguments
+        inputs: A list of input node(s) for the GraphHyperModel.
+        outputs: A list of output node(s) for the GraphHyperModel.
+    """
 
     def __init__(self, inputs, outputs, **kwargs):
         super().__init__(inputs, outputs, **kwargs)

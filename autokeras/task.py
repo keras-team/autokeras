@@ -197,10 +197,10 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             **kwargs):
         """
         # Arguments
-            x: numpy.ndarray or tensorflow.Dataset. Training data x.
-                If the data is from a csv file, it should be a string specifying the
-                path of the csv file of the training data.
-            y: numpy.ndarray, tensorflow.Dataset, Training data y.
+            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+                Training data x. If the data is from a csv file, it should be a
+                string specifying the path of the csv file of the training data.
+            y: String, numpy.ndarray, or tensorflow.Dataset. Training data y.
                 If the data is from a csv file, it should be a string corresponding
                 to the label column.
             validation_split: Float between 0 and 1.

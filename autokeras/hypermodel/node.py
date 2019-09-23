@@ -33,6 +33,10 @@ class TextNode(Node):
 
 
 class Input(Node):
+    """Input node for tensor data.
+
+    The data should be numpy.ndarray or tf.data.Dataset.
+    """
 
     def fit(self, y):
         """Record any information needed by transform."""
@@ -52,6 +56,11 @@ class Input(Node):
 
 
 class ImageInput(Input):
+    """Input node for image data.
+
+    The input data should be numpy.ndarray or tf.data.Dataset. The shape of the data
+    should be 3 dimensional, the last dimension of which should be channel dimension.
+    """
 
     def transform(self, x):
         if isinstance(x, np.ndarray):
@@ -61,11 +70,21 @@ class ImageInput(Input):
 
 
 class TextInput(Input, TextNode):
+    """Input node for text data.
+
+    The input data should be numpy.ndarray or tf.data.Dataset. The data should be one
+    dimensional. Each element in the data should be a string which is a full
+    sentence.
+    """
     pass
 
 
 class StructuredDataInput(Input):
     """Input node for structured data.
+
+    The input data should be String, numpy.ndarray, pandas.DataFrame or
+    tensorflow.Dataset. Training data x. If the data is from a csv file, it
+    should be a string specifying the path of the csv file of the training data.
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
