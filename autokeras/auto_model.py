@@ -132,6 +132,17 @@ class AutoModel(object):
                           **kwargs)
 
     def _process_xy(self, x, y=None, fit=False, predict=False):
+        """Convert x, y to tf.data.Dataset.
+
+        # Arguments
+            x: Any type allowed by the corresponding input node.
+            y: Any type allowed by the corresponding head.
+            fit: Boolean. Whether to fit the type converter with the provided data.
+            predict: Boolean. If it is called by the predict function of AutoModel.
+
+        # Returns
+            A tf.data.Dataset containing both x and y.
+        """
         if isinstance(x, tf.data.Dataset):
             if y is None and not predict:
                 return x
@@ -163,6 +174,7 @@ class AutoModel(object):
         return tf.data.Dataset.zip((x, y))
 
     def _prepare_data(self, x, y, validation_data, validation_split):
+        """Convert the data to tf.data.Dataset."""
         # Check validation information.
         if not validation_data and not validation_split:
             raise ValueError('Either validation_data or validation_split'
@@ -185,6 +197,10 @@ class AutoModel(object):
             x: tf.data.Dataset or numpy.ndarray. Testing data.
             batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
+
+        # Returns
+            A list of numpy.ndarray objects or a single numpy.ndarray.
+            The predicted results.
         """
         best_model = self.tuner.get_best_models(1)[0]
         best_trial = self.tuner.get_best_trials(1)[0]
@@ -204,9 +220,8 @@ class AutoModel(object):
         y = nest.flatten(y)
         new_y = []
         for temp_y, head_block in zip(y, self.heads):
-            if isinstance(head_block, head.ClassificationHead):
-                if head_block.label_encoder:
-                    temp_y = head_block.label_encoder.decode(temp_y)
+            if isinstance(head_block, head.Head):
+                temp_y = head_block.postprocess(temp_y)
             new_y.append(temp_y)
         return new_y
 

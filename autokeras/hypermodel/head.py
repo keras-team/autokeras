@@ -34,9 +34,11 @@ class Head(block.Block):
         return self._loss
 
     def fit(self, y):
+        """Record any information needed by transform."""
         pass
 
     def transform(self, y):
+        """Transform y into a compatible type (tf.data.Dataset)."""
         if isinstance(y, tf.data.Dataset):
             return y
         if isinstance(y, np.ndarray):
@@ -45,6 +47,10 @@ class Head(block.Block):
             return tf.data.Dataset.from_tensor_slices(y)
         raise ValueError('Unsupported format {type} '
                          'for {name}.'.format(type=type(y), name=self.name))
+
+    def postprocess(self, y):
+        """Postprocess the output of the Keras Model."""
+        return y
 
 
 class ClassificationHead(Head):
@@ -71,11 +77,9 @@ class ClassificationHead(Head):
                  loss=None,
                  metrics=None,
                  dropout_rate=None,
-                 output_shape=None,
                  **kwargs):
         super().__init__(loss=loss,
                          metrics=metrics,
-                         output_shape=output_shape,
                          **kwargs)
         self.num_classes = num_classes
         self.multi_label = multi_label
@@ -131,6 +135,11 @@ class ClassificationHead(Head):
             y = self.label_encoder.encode(y)
         return super().transform(y)
 
+    def postprocess(self, y):
+        if self.label_encoder:
+            y = self.label_encoder.decode(y)
+        return y
+
 
 class RegressionHead(Head):
     """Regression Dense layers.
@@ -154,11 +163,9 @@ class RegressionHead(Head):
                  loss=None,
                  metrics=None,
                  dropout_rate=None,
-                 output_shape=None,
                  **kwargs):
         super().__init__(loss=loss,
                          metrics=metrics,
-                         output_shape=output_shape,
                          **kwargs)
         self.output_dim = output_dim
         if not self.metrics:
@@ -195,6 +202,14 @@ class RegressionHead(Head):
 
 
 def fetch_heads(source_block):
+    """Get the downstream head blocks for a given block in the network.
+
+    # Arguments
+        source_block: Block. The source block for the search for heads.
+
+    # Returns
+        A list of Head instances.
+    """
     heads = []
     visited_blocks = set()
     visited_blocks.add(source_block)

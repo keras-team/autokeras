@@ -51,6 +51,18 @@ def validate_num_inputs(inputs, num):
 
 
 def split_dataset(dataset, validation_split):
+    """Split dataset into training and validation.
+
+    # Arguments
+        dataset: tf.data.Dataset. The entire dataset to be split.
+        validation_split: Float. The split ratio for the validation set.
+
+    # Raises
+        ValueError: If the dataset provided is too small to be split.
+
+    # Returns
+        A tuple of two tf.data.Dataset. The training set and the validation set.
+    """
     num_instances = dataset.reduce(np.int64(0), lambda x, _: x + 1).numpy()
     if num_instances < 2:
         raise ValueError('The dataset should at least contain 2 '

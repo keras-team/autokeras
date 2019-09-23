@@ -33,11 +33,17 @@ class TextNode(Node):
 
 
 class Input(Node):
+    """Input node for tensor data.
+
+    The data should be numpy.ndarray or tf.data.Dataset.
+    """
 
     def fit(self, y):
+        """Record any information needed by transform."""
         pass
 
     def transform(self, x):
+        """Transform x into a compatible type (tf.data.Dataset)."""
         if isinstance(x, tf.data.Dataset):
             return x
         if isinstance(x, np.ndarray):
@@ -50,6 +56,11 @@ class Input(Node):
 
 
 class ImageInput(Input):
+    """Input node for image data.
+
+    The input data should be numpy.ndarray or tf.data.Dataset. The shape of the data
+    should be 3 dimensional, the last dimension of which should be channel dimension.
+    """
 
     def transform(self, x):
         if isinstance(x, np.ndarray):
@@ -59,10 +70,32 @@ class ImageInput(Input):
 
 
 class TextInput(Input, TextNode):
+    """Input node for text data.
+
+    The input data should be numpy.ndarray or tf.data.Dataset. The data should be one
+    dimensional. Each element in the data should be a string which is a full
+    sentence.
+    """
     pass
 
 
 class StructuredDataInput(Input):
+    """Input node for structured data.
+
+    The input data should be String, numpy.ndarray, pandas.DataFrame or
+    tensorflow.Dataset. Training data x. If the data is from a csv file, it
+    should be a string specifying the path of the csv file of the training data.
+
+    # Arguments
+        column_names: A list of strings specifying the names of the columns. The
+            length of the list should be equal to the number of columns of the data.
+            Defaults to None. If None, it will obtained from the header of the csv
+            file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should either
+            be 'numerical' or 'categorical', indicating the type of that column.
+            Defaults to None. If not None, the column_names need to be specified.
+            If None, it will be inferred from the data.
+    """
     def __init__(self, column_names=None, column_types=None, **kwargs):
         super().__init__(**kwargs)
         self.column_names = column_names
