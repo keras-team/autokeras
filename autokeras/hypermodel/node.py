@@ -82,9 +82,7 @@ class TextInput(Input, TextNode):
 class StructuredDataInput(Input):
     """Input node for structured data.
 
-    The input data should be String, numpy.ndarray, pandas.DataFrame or
-    tensorflow.Dataset. Training data x. If the data is from a csv file, it
-    should be a string specifying the path of the csv file of the training data.
+    The input data should be numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
