@@ -220,9 +220,8 @@ class AutoModel(object):
         y = nest.flatten(y)
         new_y = []
         for temp_y, head_block in zip(y, self.heads):
-            if isinstance(head_block, head.ClassificationHead):
-                if head_block.label_encoder:
-                    temp_y = head_block.label_encoder.decode(temp_y)
+            if isinstance(head_block, head.Head):
+                temp_y = head_block.postprocess(temp_y)
             new_y.append(temp_y)
         return new_y
 

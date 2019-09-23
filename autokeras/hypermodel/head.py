@@ -48,6 +48,10 @@ class Head(block.Block):
         raise ValueError('Unsupported format {type} '
                          'for {name}.'.format(type=type(y), name=self.name))
 
+    def postprocess(self, y):
+        """Postprocess the output of the Keras Model."""
+        return y
+
 
 class ClassificationHead(Head):
     """Classification Dense layers.
@@ -130,6 +134,11 @@ class ClassificationHead(Head):
         if self.label_encoder:
             y = self.label_encoder.encode(y)
         return super().transform(y)
+
+    def postprocess(self, y):
+        if self.label_encoder:
+            y = self.label_encoder.decode(y)
+        return y
 
 
 class RegressionHead(Head):

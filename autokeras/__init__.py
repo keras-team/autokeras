@@ -4,7 +4,6 @@ from autokeras.const import Constant
 from autokeras.hypermodel.block import ConvBlock
 from autokeras.hypermodel.block import DenseBlock
 from autokeras.hypermodel.block import EmbeddingBlock
-from autokeras.hypermodel.block import LightGBMBlock
 from autokeras.hypermodel.block import Merge
 from autokeras.hypermodel.block import ResNetBlock
 from autokeras.hypermodel.block import RNNBlock
@@ -18,6 +17,7 @@ from autokeras.hypermodel.node import ImageInput
 from autokeras.hypermodel.node import Input
 from autokeras.hypermodel.node import StructuredDataInput
 from autokeras.hypermodel.node import TextInput
+from autokeras.hypermodel.preprocessor import LightGBMBlock
 from autokeras.hypermodel.preprocessor import Normalization
 from autokeras.hypermodel.preprocessor import TextToIntSequence
 from autokeras.hypermodel.preprocessor import TextToNgramVector
