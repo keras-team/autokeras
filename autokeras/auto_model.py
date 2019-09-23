@@ -242,7 +242,7 @@ class AutoModel(object):
             x=x,
             y=y,
             batch_size=batch_size)
-        return best_model.evaluate(x, **kwargs)
+        return best_model.evaluate(data, **kwargs)
 
     def _prepare_best_model_and_data(self, x, y, batch_size, predict=False):
         best_model = self.tuner.get_best_models(1)[0]
