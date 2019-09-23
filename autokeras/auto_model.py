@@ -194,7 +194,7 @@ class AutoModel(object):
         """Predict the output for a given testing data.
 
         # Arguments
-            x: tf.data.Dataset or numpy.ndarray. Testing data.
+            x: Allowed types according to the input node. Testing data.
             batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
 
@@ -202,14 +202,11 @@ class AutoModel(object):
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        best_model = self.tuner.get_best_models(1)[0]
-        best_trial = self.tuner.get_best_trials(1)[0]
-        best_hp = best_trial.hyperparameters
-
-        self.tuner.load_trial(best_trial)
-        x = self._process_xy(x, predict=True)
-        x = self.hypermodel.preprocess(best_hp, x)
-        x = x.batch(batch_size)
+        best_model, x = self._prepare_best_model_and_data(
+            x=x,
+            y=None,
+            batch_size=batch_size,
+            predict=True)
         y = best_model.predict(x, **kwargs)
         y = self._postprocess(y)
         if isinstance(y, list) and len(y) == 1:
@@ -224,6 +221,39 @@ class AutoModel(object):
                 temp_y = head_block.postprocess(temp_y)
             new_y.append(temp_y)
         return new_y
+
+    def evaluate(self, x, y=None, batch_size=32, **kwargs):
+        """Evaluate the best model for the given data.
+
+        # Arguments
+            x: Any allowed types according to the input node. Testing data.
+            y: Any allowed types according to the head. Testing targets.
+                Defaults to None.
+            batch_size: Int. Defaults to 32.
+            **kwargs: Any arguments supported by keras.Model.evaluate.
+
+        # Returns
+            Scalar test loss (if the model has a single output and no metrics) or
+            list of scalars (if the model has multiple outputs and/or metrics).
+            The attribute model.metrics_names will give you the display labels for
+            the scalar outputs.
+        """
+        best_model, data = self._prepare_best_model_and_data(
+            x=x,
+            y=y,
+            batch_size=batch_size)
+        return best_model.evaluate(x, **kwargs)
+
+    def _prepare_best_model_and_data(self, x, y, batch_size, predict=False):
+        best_model = self.tuner.get_best_models(1)[0]
+        best_trial = self.tuner.get_best_trials(1)[0]
+        best_hp = best_trial.hyperparameters
+
+        self.tuner.load_trial(best_trial)
+        x = self._process_xy(x, y, predict=predict)
+        x = self.hypermodel.preprocess(best_hp, x)
+        x = x.batch(batch_size)
+        return best_model, x
 
 
 class GraphAutoModel(AutoModel):
