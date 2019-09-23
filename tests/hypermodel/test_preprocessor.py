@@ -10,8 +10,8 @@ from autokeras.hypermodel import block
 from autokeras.hypermodel import head
 from autokeras.hypermodel import preprocessor
 
-from ..common import column_names_from_numpy
-from ..common import column_types_from_numpy
+from ..common import COLUMN_NAMES_FROM_NUMPY
+from ..common import COLUMN_TYPES_FROM_NUMPY
 from ..common import structured_data
 
 
@@ -133,8 +133,8 @@ def test_feature_engineering():
     data = structured_data()
     dataset = tf.data.Dataset.from_tensor_slices(data)
     feature = preprocessor.FeatureEngineering()
-    feature.input_node = ak.StructuredDataInput(column_names=column_names_from_numpy,
-                                                column_types=column_types_from_numpy)
+    feature.input_node = ak.StructuredDataInput(column_names=COLUMN_NAMES_FROM_NUMPY,
+                                                column_types=COLUMN_TYPES_FROM_NUMPY)
     feature.set_hp(kerastuner.HyperParameters())
     for x in dataset:
         feature.update(x)
@@ -155,8 +155,8 @@ def test_feature_engineering_fix_keyerror():
     data = structured_data(100)
     dataset = tf.data.Dataset.from_tensor_slices(data)
     feature = preprocessor.FeatureEngineering()
-    feature.input_node = ak.StructuredDataInput(column_names=column_names_from_numpy,
-                                                column_types=column_types_from_numpy)
+    feature.input_node = ak.StructuredDataInput(column_names=COLUMN_NAMES_FROM_NUMPY,
+                                                column_types=COLUMN_TYPES_FROM_NUMPY)
     feature.set_hp(kerastuner.HyperParameters())
     for x in dataset:
         feature.update(x)
@@ -189,7 +189,7 @@ def test_lgbm_classifier(tmp_dir):
 
     input_node = ak.Input()
     output_node = input_node
-    output_node = preprocessor.LightGBMClassifier()(output_node)
+    output_node = preprocessor.LightGBMBlock()(output_node)
     output_node = head.ClassificationHead(loss='categorical_crossentropy',
                                           metrics=['accuracy'])(output_node)
 
@@ -209,7 +209,7 @@ def test_lgbm_regressor(tmp_dir):
     y_train = y_train.reshape(-1, 1)
     input_node = ak.Input()
     output_node = input_node
-    output_node = preprocessor.LightGBMRegressor()(output_node)
+    output_node = preprocessor.LightGBMBlock()(output_node)
     output_node = head.RegressionHead(loss='mean_squared_error',
                                       metrics=['mean_squared_error'])(output_node)
 

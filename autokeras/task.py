@@ -177,14 +177,17 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
         inputs.column_types = column_types
         inputs.column_names = column_names
         if column_types:
-            if not all([column_type in ['categorical', 'numerical']
-                        for column_type in column_types.values()]):
-                raise ValueError(
-                    'Column_types should be either "categorical" or "numerical".')
+            for column_type in column_types.values():
+                if column_type not in ['categorical', 'numerical']:
+                    raise ValueError(
+                        'Column_types should be either "categorical" '
+                        'or "numerical", but got {name}'.format(name=column_type))
         if column_names and column_types:
-            if not all([column_name in column_names
-                        for column_name in column_types]):
-                raise ValueError('Column_names and column_types are mismatched.')
+            for column_name in column_types:
+                if column_name not in column_names:
+                    raise ValueError('Column_names and column_types are '
+                                     'mismatched. Cannot find column name '
+                                     '{name} in the data.'.format(name=column_name))
         super().__init__(inputs=inputs,
                          outputs=outputs,
                          **kwargs)
@@ -195,7 +198,8 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             validation_split=0,
             validation_data=None,
             **kwargs):
-        """
+        """Search for the best model and hyperparameters for the task.
+
         # Arguments
             x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
                 Training data x. If the data is from a csv file, it should be a

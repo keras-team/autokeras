@@ -3,8 +3,7 @@ import tensorflow as tf
 from autokeras import meta_model
 from autokeras.hypermodel import node
 
-from .common import column_names_from_numpy
-from .common import structured_data
+from tests import common
 
 
 def test_text_assembler():
@@ -19,10 +18,10 @@ def test_text_assembler():
 
 
 def test_structured_data_assembler():
-    data = structured_data()
+    data = common.structured_data()
     dataset = tf.data.Dataset.from_tensor_slices(data)
     assembler = meta_model.StructuredDataAssembler(
-        column_names=column_names_from_numpy)
+        column_names=common.COLUMN_NAMES_FROM_NUMPY)
     for line in dataset:
         assembler.update(line)
 

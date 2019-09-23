@@ -111,10 +111,13 @@ class StructuredDataInput(Input):
         if isinstance(x, pd.DataFrame) and self.column_names is None:
             self.column_names = list(x.columns)
             # column_types is provided by user
-            if (self.column_types and
-                not all([column_name in self.column_names
-                         for column_name in self.column_types])):
-                raise ValueError('Column_names and column_types are mismatched.')
+            if self.column_types:
+                for column_name in self.column_types:
+                    if column_name not in self.column_names:
+                        raise ValueError('Column_names and column_types are '
+                                         'mismatched. Cannot find column name '
+                                         '{name} in the data.'.format(
+                                             name=column_name))
 
         # Generate column_names.
         if self.column_names is None:
@@ -124,7 +127,10 @@ class StructuredDataInput(Input):
 
         # Check if column_names has the correct length.
         if len(self.column_names) != x.shape[1]:
-            raise ValueError('The length of column_names and data are mismatched.')
+            raise ValueError('Expect column_names to have length {expect} '
+                             'but got {actual}.'.format(
+                                 expect=x.shape[1],
+                                 actual=len(self.column_names)))
 
     def transform(self, x):
         if isinstance(x, pd.DataFrame):

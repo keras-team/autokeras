@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 import autokeras as ak
+from tests import common
 
 
 @pytest.fixture(scope='module')
@@ -143,3 +144,27 @@ def test_auto_model_basic(_, tmp_dir):
                               directory=tmp_dir,
                               max_trials=2)
     auto_model.fit(x_train, y_train, epochs=2, validation_split=0.2)
+
+
+def test_structured_data_input(tmp_dir):
+    num_data = 500
+    data = common.structured_data(num_data)
+    x_train = data
+    y = np.random.randint(0, 3, num_data)
+    y_train = y
+
+    input_node = ak.StructuredDataInput(
+        column_names=common.COLUMN_NAMES_FROM_NUMPY,
+        column_types=common.COLUMN_TYPES_FROM_NUMPY)
+    output_node = input_node
+    output_node = ak.StructuredDataBlock()(output_node)
+    output_node = ak.ClassificationHead(loss='categorical_crossentropy',
+                                        metrics=['accuracy'])(output_node)
+
+    auto_model = ak.GraphAutoModel(input_node,
+                                   output_node,
+                                   directory=tmp_dir,
+                                   max_trials=1)
+    auto_model.fit(x_train, y_train, epochs=1,
+                   validation_data=(x_train, y_train))
+    auto_model.predict(x_train)

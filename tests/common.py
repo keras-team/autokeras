@@ -1,6 +1,6 @@
 import numpy as np
 
-column_names_from_numpy = ['bool_',
+COLUMN_NAMES_FROM_NUMPY = ['bool_',
                            'num_to_cat_',
                            'float_',
                            'int_',
@@ -8,7 +8,7 @@ column_names_from_numpy = ['bool_',
                            'col1_morethan_100_',
                            'col2_morethan_100_',
                            'col3_morethan_100_']
-column_types_from_numpy = {
+COLUMN_TYPES_FROM_NUMPY = {
                             'bool_': 'categorical',
                             'num_to_cat_': 'categorical',
                             'float_': 'numerical',
@@ -17,7 +17,7 @@ column_types_from_numpy = {
                             'col1_morethan_100_': 'categorical',
                             'col2_morethan_100_': 'categorical',
                             'col3_morethan_100_': 'categorical'}
-column_names_from_csv = [
+COLUMN_NAMES_FROM_CSV = [
                          'sex_',
                          'age_',
                          'n_siblings_spouses_',
@@ -27,7 +27,7 @@ column_names_from_csv = [
                          'deck_',
                          'embark_town_',
                          'alone_']
-less_column_names_from_csv = [
+LESS_COLUMN_NAMES_FROM_CSV = [
                          'age_',
                          'n_siblings_spouses_',
                          'parch_',
@@ -36,7 +36,7 @@ less_column_names_from_csv = [
                          'deck_',
                          'embark_town_',
                          'alone_']
-column_types_from_csv = {
+COLUMN_TYPES_FROM_CSV = {
                           'sex_': 'categorical',
                           'age_': 'numerical',
                           'n_siblings_spouses_': 'categorical',
@@ -46,7 +46,7 @@ column_types_from_csv = {
                           'deck_': 'categorical',
                           'embark_town_': 'categorical',
                           'alone_': 'categorical'}
-false_column_types_from_csv = {
+FALSE_COLUMN_TYPES_FROM_CSV = {
                           'sex_': 'cat',
                           'age_': 'num',
                           'n_siblings_spouses_': 'cat',
@@ -56,12 +56,14 @@ false_column_types_from_csv = {
                           'deck_': 'categorical',
                           'embark_town_': 'categorical',
                           'alone_': 'categorical'}
-partial_column_types_from_csv = {
+PARTIAL_COLUMN_TYPES_FROM_CSV = {
                           'fare': 'numerical',
                           'class': 'categorical',
                           'deck': 'categorical',
                           'embark_town': 'categorical',
                           'alone': 'categorical'}
+TRAIN_FILE_PATH = r'tests/resources/titanic/train.csv'
+TEST_FILE_PATH = r'tests/resources/titanic/eval.csv'
 
 
 def structured_data(num_data=500):
