@@ -50,25 +50,30 @@ def validate_num_inputs(inputs, num):
                                                              len=len(inputs)))
 
 
-def split_train_to_valid(x, y, validation_split):
-    # Generate split index
-    validation_set_size = int(len(x[0]) * validation_split)
-    validation_set_size = max(validation_set_size, 1)
-    validation_set_size = min(validation_set_size, len(x[0]) - 1)
+def split_dataset(dataset, validation_split):
+    """Split dataset into training and validation.
 
-    # Split the data
-    x_train = []
-    y_train = []
-    x_val = []
-    y_val = []
-    for temp_x in x:
-        x_train.append(temp_x[:-validation_set_size])
-        x_val.append(temp_x[-validation_set_size:])
-    for temp_y in y:
-        y_train.append(temp_y[:-validation_set_size])
-        y_val.append(temp_y[-validation_set_size:])
+    # Arguments
+        dataset: tf.data.Dataset. The entire dataset to be split.
+        validation_split: Float. The split ratio for the validation set.
 
-    return (x_train, y_train), (x_val, y_val)
+    # Raises
+        ValueError: If the dataset provided is too small to be split.
+
+    # Returns
+        A tuple of two tf.data.Dataset. The training set and the validation set.
+    """
+    num_instances = dataset.reduce(np.int64(0), lambda x, _: x + 1).numpy()
+    if num_instances < 2:
+        raise ValueError('The dataset should at least contain 2 '
+                         'instances to be split.')
+    validation_set_size = min(
+        max(int(num_instances * validation_split), 1),
+        num_instances - 1)
+    train_set_size = num_instances - validation_set_size
+    train_dataset = dataset.take(train_set_size)
+    validation_dataset = dataset.skip(train_set_size)
+    return train_dataset, validation_dataset
 
 
 def get_name_scope():
@@ -79,22 +84,6 @@ def get_name_scope():
 
 def dataset_shape(dataset):
     return tf.compat.v1.data.get_output_shapes(dataset)
-
-
-def inputs_to_datasets(x):
-    x = nest.flatten(x)
-    new_x = []
-    for temp_x in x:
-        if isinstance(temp_x, np.ndarray):
-            new_x.append(tf.data.Dataset.from_tensor_slices(temp_x))
-    return tf.data.Dataset.zip(tuple(new_x))
-
-
-def prepare_preprocess(x, y):
-    """Convert each input to a tf.data.Dataset."""
-    x = inputs_to_datasets(x)
-    y = inputs_to_datasets(y)
-    return tf.data.Dataset.zip((x, y))
 
 
 def is_label(y):
@@ -139,6 +128,7 @@ class OneHotEncoder(object):
     """
 
     def __init__(self, num_classes=None):
+        super().__init__()
         self.num_classes = num_classes
         self._labels = None
         self._label_to_vec = {}
@@ -197,3 +187,19 @@ class OneHotEncoder(object):
         """
         return np.array(list(map(lambda x: self._int_to_label[x],
                                  np.argmax(np.array(data), axis=1)))).reshape(-1, 1)
+
+
+class LabelEncoder(object):
+
+    def __init__(self):
+        super().__init__()
+        self.num_labels = 0
+        self._label_to_int = {}
+
+    def update(self, x):
+        if x not in self._label_to_int:
+            self._label_to_int[x] = self.num_labels
+            self.num_labels += 1
+
+    def transform(self, x):
+        return self._label_to_int[x]

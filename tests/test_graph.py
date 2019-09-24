@@ -12,7 +12,7 @@ def test_set_hp():
     head.output_shape = (1,)
     output_node = head(output_node)
 
-    graph = ak.hypermodel.graph.GraphHyperModel(input_node, output_node)
+    graph = ak.hypermodel.graph.HyperBuiltGraphHyperModel(input_node, output_node)
     hp = kerastuner.HyperParameters()
     graph.set_hps([hp_module.Choice('dense_block_1/num_layers', [6], default=6)])
     graph.build(hp)

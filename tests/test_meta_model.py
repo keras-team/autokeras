@@ -1,6 +1,9 @@
 import tensorflow as tf
 
 from autokeras import meta_model
+from autokeras.hypermodel import node
+
+from tests import common
 
 
 def test_text_assembler():
@@ -12,3 +15,14 @@ def test_text_assembler():
     for x in dataset:
         assembler.update(x)
     assert assembler.sw_ratio() == 0.5
+
+
+def test_structured_data_assembler():
+    data = common.structured_data()
+    dataset = tf.data.Dataset.from_tensor_slices(data)
+    assembler = meta_model.StructuredDataAssembler(
+        column_names=common.COLUMN_NAMES_FROM_NUMPY)
+    for line in dataset:
+        assembler.update(line)
+
+    assembler.assemble(node.StructuredDataInput())

@@ -1,7 +1,8 @@
 from tensorflow.python.util import nest
 
+from autokeras import utils
 from autokeras.hypermodel import block
-from autokeras.hypermodel import head
+from autokeras.hypermodel import head as head_module
 from autokeras.hypermodel import node
 from autokeras.hypermodel import preprocessor
 
@@ -22,9 +23,15 @@ class HyperBlock(block.Block):
     Blocks.
 
     # Arguments
+        output_shape: Tuple of int(s). Defaults to None. If None, the output shape
+            will be inferred from the AutoModel.
         name: String. The name of the block. If unspecified, it will be set
-        automatically with the class name.
+            automatically with the class name.
     """
+
+    def __init__(self, output_shape=None, **kwargs):
+        super().__init__(**kwargs)
+        self.output_shape = output_shape
 
     def build(self, hp, inputs=None):
         """Build the HyperModel instead of Keras Model.
@@ -40,7 +47,7 @@ class HyperBlock(block.Block):
 
 
 class ImageBlock(HyperBlock):
-    """HyperBlock for image data.
+    """Block for image data.
 
     The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
     which is controlled by a hyperparameter, 'block_type'.
@@ -95,6 +102,15 @@ class ImageBlock(HyperBlock):
 
 
 class TextBlock(HyperBlock):
+    """Block for text data.
+
+    # Arguments
+        vectorizer: String. 'sequence' or 'ngram'. If it is 'sequence',
+            TextToIntSequence will be used. If it is 'ngram', TextToNgramVector will
+            be used. If unspecified, it will be tuned automatically.
+        pretraining: Boolean. Whether to use pretraining weights in the N-gram
+            vectorizer. If unspecified, it will be tuned automatically.
+    """
 
     def __init__(self, vectorizer=None, pretraining=None, **kwargs):
         super().__init__(**kwargs)
@@ -121,61 +137,64 @@ class TextBlock(HyperBlock):
 
 
 class StructuredDataBlock(HyperBlock):
-
-    def build(self, hp, inputs=None):
-        raise NotImplementedError
-
-
-class LightGBMClassifierBlock(HyperBlock):
-    """Structured data classification with LightGBM.
-
-    It can be used with preprocessors, but not other blocks or heads.
+    """Block for structured data.
 
     # Arguments
-        metrics: String. The type of the model's metrics. If unspecified,
-            it will be 'accuracy' for classification task.
+        feature_engineering: Boolean. Whether to use feature engineering block.
+            Defaults to True. If specified as None, it will be tuned automatically.
+        module_type: String. 'dense' or 'lightgbm'. If it is 'dense', DenseBlock
+            will be used. If it is 'lightgbm', LightGBMBlock will be used. If
+            unspecified, it will be tuned automatically.
     """
 
-    def __init__(self, metrics=None, **kwargs):
-        super().__init__(**kwargs)
-        self.metrics = metrics
-        if self.metrics is None:
-            self.metrics = ['accuracy']
+    def __init__(self,
+                 feature_engineering=True,
+                 module_type=None,
+                 **kwargs):
+        super().__init__()
+        self.feature_engineering = feature_engineering
+        self.module_type = module_type
+        self.heads = None
+
+    def build_feature_engineering(self, hp, input_node):
+        output_node = input_node
+        feature_engineering = self.feature_engineering
+        if feature_engineering is None:
+            # TODO: If False, use plain label encoding.
+            feature_engineering = hp.Choice('feature_engineering',
+                                            [True],
+                                            default=True)
+        if feature_engineering:
+            output_node = preprocessor.FeatureEngineering()(output_node)
+        return output_node
+
+    def build_body(self, hp, input_node):
+        if len(self.heads) > 1:
+            module_type_choices = ['dense']
+        else:
+            module_type_choices = ['lightgbm', 'dense']
+        module_type = self.module_type or hp.Choice('module_type',
+                                                    module_type_choices,
+                                                    default=module_type_choices[0])
+        if module_type == 'dense':
+            output_node = block.DenseBlock()(input_node)
+        elif module_type == 'lightgbm':
+            output_node = preprocessor.LightGBMBlock()(input_node)
+        else:
+            raise ValueError('Unsupported module'
+                             'type: {module_type}'.format(
+                                 module_type=module_type))
+        nest.flatten(output_node)[0].shape = self.output_shape
+        return output_node
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
-        output_node = input_node
-        output_node = preprocessor.LightGBMClassifier()(output_node)
-        output_node = block.IdentityBlock()(output_node)
-        output_node = head.EmptyHead(loss='categorical_crossentropy',
-                                     metrics=[self.metrics])(output_node)
+        output_node = self.build_feature_engineering(hp, input_node)
+        output_node = self.build_body(hp, output_node)
         return output_node
 
-
-class LightGBMRegressorBlock(HyperBlock):
-    """Structured data regression with LightGBM.
-
-    It can be used with preprocessors, but not other blocks or heads.
-
-    # Arguments
-        metrics: String. The type of the model's metrics. If unspecified,
-            it will be 'mean_squared_error' for regression task.
-    """
-
-    def __init__(self, metrics=None, **kwargs):
-        super().__init__(**kwargs)
-        self.metrics = metrics
-        if self.metrics is None:
-            self.metrics = ['mean_squared_error']
-
-    def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
-        output_node = input_node
-        output_node = preprocessor.LightGBMRegressor()(output_node)
-        output_node = block.IdentityBlock()(output_node)
-        output_node = head.EmptyHead(loss='mean_squared_error',
-                                     metrics=[self.metrics])(output_node)
-        return output_node
+    def compile(self):
+        self.heads = head_module.fetch_heads(self)
 
 
 class TimeSeriesBlock(HyperBlock):

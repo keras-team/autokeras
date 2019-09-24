@@ -1,7 +1,9 @@
-import numpy as np
-import warnings
-import tensorflow as tf
+import collections
 import random
+import warnings
+
+import numpy as np
+import tensorflow as tf
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
@@ -9,6 +11,8 @@ from tensorflow.python.util import nest
 from autokeras import const
 from autokeras import utils
 from autokeras.hypermodel import block
+from autokeras.hypermodel import head
+from autokeras.hypermodel import node
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -171,7 +175,7 @@ class Normalization(Preprocessor):
         return (x - self.mean) / self.std
 
     def output_types(self):
-        return tf.float64,
+        return (tf.float32,)
 
     @property
     def output_shape(self):
@@ -228,7 +232,7 @@ class TextToIntSequence(Preprocessor):
         return sequence
 
     def output_types(self):
-        return tf.int64,
+        return (tf.int64,)
 
     @property
     def output_shape(self):
@@ -295,7 +299,7 @@ class TextToNgramVector(Preprocessor):
         return data[0]
 
     def output_types(self):
-        return tf.float64,
+        return (tf.float32,)
 
     @property
     def output_shape(self):
@@ -333,13 +337,6 @@ class TextToNgramVector(Preprocessor):
 
 class LightGBMModel(Preprocessor):
     """The base class for LightGBMClassifier and LightGBMRegressor."""
-
-    def update(self, x, y=None):
-        raise NotImplementedError
-
-    def output_types(self):
-        raise NotImplementedError
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.data = []
@@ -382,23 +379,19 @@ class LightGBMModel(Preprocessor):
     def output_shape(self):
         return self._output_shape
 
+    def update(self, x, y=None):
+        raise NotImplementedError
+
+    def output_types(self):
+        raise NotImplementedError
+
     def set_weights(self, weights):
         self.lgbm = weights['lgbm']
         self._output_shape = weights['output_shape']
 
 
 class LightGBMClassifier(LightGBMModel):
-    """Collect data, train and test the LightGBM for classification task.
-
-    Input data are np.array etc. np.random.rand(example_number, feature_number).
-    Input labels are encoded labels in np.array form
-    etc. np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).
-    Outputs are predicted encoded labels in np.array form.
-
-    The instance of this LightGBMClassifier class must be followed by
-    an IdentityBlock and an EmptyHead as shown in LightGBMClassifierBlock class.
-    """
+    """Collect data, train and test the LightGBM for classification task."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -433,13 +426,13 @@ class LightGBMClassifier(LightGBMModel):
         # Returns
             Eager Tensor. The predicted label of x.
         """
-        ypred = super().transform(x, fit)
-        y = self._one_hot_encoder.encode(ypred)
+        y = super().transform(x, fit)
+        y = self._one_hot_encoder.encode(y)
         y = y.reshape((-1))
         return y
 
     def output_types(self):
-        return (tf.int32,)
+        return (tf.float32,)
 
     def set_weights(self, weights):
         super().set_weights(weights)
@@ -457,16 +450,7 @@ class LightGBMClassifier(LightGBMModel):
 
 
 class LightGBMRegressor(LightGBMModel):
-    """Collect data, train and test the LightGBM for regression task.
-
-    Input data are np.array etc. np.random.rand(example_number, feature_number).
-    Input value are real number in np.array form
-    etc. np.array([1.1, 2.1, 4.2, 0.3, 2.4, 8.5, 7.3, 8.4, 9.4, 4.3]).
-    Outputs are predicted value in np.array form.
-
-    The instance of this LightGBMRegressor class must be followed by
-    an IdentityBlock and an EmptyHead as shown in LightGBMRegressorBlock class.
-    """
+    """Collect data, train and test the LightGBM for regression task."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -479,12 +463,13 @@ class LightGBMRegressor(LightGBMModel):
             x: Eager Tensor. The data to be stored.
             y: Eager Tensor. The value to be stored.
         """
+        y = nest.flatten(y)[0]
         self.data.append(nest.flatten(x)[0].numpy())
         self._output_shape = np.shape(y)
-        self.targets.append(nest.flatten(y))
+        self.targets.append(y)
 
     def output_types(self):
-        return (tf.float64,)
+        return (tf.float32,)
 
     def get_weights(self):
         return {'lgbm': self.lgbm,
@@ -493,6 +478,55 @@ class LightGBMRegressor(LightGBMModel):
     def clear_weights(self):
         self.lgbm = lgb.LGBMRegressor()
         self._output_shape = None
+
+
+class LightGBMBlock(Preprocessor):
+    """LightGBM Block for classification or regression task."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.lightgbm_block = None
+        self.heads = None
+
+    def clear_weights(self):
+        self.lightgbm_block.clear_weights()
+
+    def get_weights(self):
+        return self.lightgbm_block.get_weights()
+
+    def set_weights(self, weights):
+        self.lightgbm_block.set_weights(weights)
+
+    def get_config(self):
+        return self.lightgbm_block.get_config()
+
+    def set_config(self, config):
+        self.lightgbm_block.set_config(config)
+
+    def compile(self):
+        self.heads = head.fetch_heads(self)
+        if len(self.heads) > 1:
+            raise ValueError('LightGBMBlock can only be connected to one head.')
+        if isinstance(self.heads[0], head.ClassificationHead):
+            self.lightgbm_block = LightGBMClassifier()
+        if isinstance(self.heads[0], head.RegressionHead):
+            self.lightgbm_block = LightGBMRegressor()
+
+    def update(self, x, y=None):
+        self.lightgbm_block.update(x, y)
+
+    def transform(self, x, fit=False):
+        return self.lightgbm_block.transform(x, fit)
+
+    def finalize(self):
+        self.lightgbm_block.finalize()
+
+    def output_types(self):
+        return self.lightgbm_block.output_types()
+
+    @property
+    def output_shape(self):
+        return self.lightgbm_block.output_shape
 
 
 class ImageAugmentation(Preprocessor):
@@ -595,7 +629,7 @@ class ImageAugmentation(Preprocessor):
             x = tf.image.random_brightness(x, self.brightness_range, self.seed)
 
         saturation_range = self.saturation_range
-        if saturation_range != 0:
+        if saturation_range != 0 and channels == 3:
             min_value, max_value = self.saturation_range
             x = tf.image.random_saturation(x, min_value, max_value, self.seed)
 
@@ -639,7 +673,7 @@ class ImageAugmentation(Preprocessor):
         return x
 
     def output_types(self):
-        return tf.float64,
+        return (tf.float32,)
 
     @property
     def output_shape(self):
@@ -673,3 +707,238 @@ class ImageAugmentation(Preprocessor):
         self.gaussian_noise = config['gaussian_noise']
         self.seed = config['seed']
         self.shape = config['shape']
+
+
+def return_zero():
+    return 0
+
+
+class FeatureEngineering(Preprocessor):
+    """A preprocessor block does feature engineering for the data.
+
+    # Arguments
+        max_columns: Int. The maximum number of columns after feature engineering.
+            Defaults to 1000.
+    """
+
+    def __init__(self, max_columns=1000, **kwargs):
+        super().__init__(**kwargs)
+        self.input_node = None
+        self.max_columns = max_columns
+        self.num_columns = 0
+        self.num_rows = 0
+        self.shape = None
+        # A list of categorical column indices.
+        self.categorical_col = []
+        # A list of numerical column indices.
+        self.numerical_col = []
+        self.label_encoders = {}
+        self.value_counters = {}
+        self.categorical_categorical = {}
+        self.numerical_categorical = {}
+        self.count_frequency = {}
+        # more than 32, less than 100
+        self.high_level1_col = []
+        # more than 100
+        self.high_level2_col = []
+        self.high_level_cat_cat = {}
+        self.high_level_num_cat = {}
+
+    def initialize(self):
+        for column_name, column_type in self.input_node.column_types.items():
+            if column_type == 'categorical':
+                self.categorical_col.append(
+                    self.input_node.column_names.index(column_name))
+            elif column_type == 'numerical':
+                self.numerical_col.append(
+                    self.input_node.column_names.index(column_name))
+            else:
+                raise ValueError('Unsupported column type: '
+                                 '{type}'.format(type=column_type))
+
+        for index, cat_col_index1 in enumerate(self.categorical_col):
+            self.label_encoders[cat_col_index1] = utils.LabelEncoder()
+            self.value_counters[cat_col_index1] = collections.defaultdict(
+                return_zero)
+            self.count_frequency[cat_col_index1] = {}
+            for cat_col_index2 in self.categorical_col[index + 1:]:
+                self.categorical_categorical[(
+                    cat_col_index1,
+                    cat_col_index2)] = collections.defaultdict(return_zero)
+            for num_col_index in self.numerical_col:
+                self.numerical_categorical[(
+                    num_col_index,
+                    cat_col_index1)] = collections.defaultdict(return_zero)
+
+    def update(self, x, y=None):
+        if self.num_rows == 0:
+            self.num_columns = len(self.input_node.column_types)
+            self.initialize()
+
+        self.num_rows += 1
+        x = nest.flatten(x)[0].numpy()
+
+        self.fill_missing(x)
+
+        for col_index in self.categorical_col:
+            key = str(x[col_index])
+            self.label_encoders[col_index].update(key)
+            self.value_counters[col_index][key] += 1
+
+        for col_index1, col_index2 in self.categorical_categorical.keys():
+            key = (str(x[col_index1]), str(x[col_index2]))
+            self.categorical_categorical[(col_index1, col_index2)][key] += 1
+
+        for num_col_index, cat_col_index in self.numerical_categorical.keys():
+            key = str(x[cat_col_index])
+            v = x[num_col_index]
+            self.numerical_categorical[(num_col_index, cat_col_index)][key] += v
+
+    def transform(self, x, fit=False):
+        x = nest.flatten(x)[0].numpy()
+
+        self.fill_missing(x)
+
+        new_values = []
+        # append frequency
+        for col_index in self.high_level1_col:
+            cat_name = str(x[col_index])
+            new_value = self.count_frequency[col_index][cat_name] if \
+                cat_name in self.count_frequency[col_index] else -1
+            new_values.append(new_value)
+
+        # append cat-cat value
+        for key, value in self.high_level_cat_cat.items():
+            col_index1, col_index2 = key
+            pair = (str(x[col_index1]), str(x[col_index2]))
+            new_value = value[pair] if pair in value else -1
+            new_values.append(new_value)
+
+        # append num-cat value
+        for key, value in self.high_level_num_cat.items():
+            num_col_index, cat_col_index = key
+            cat_name = str(x[cat_col_index])
+            new_value = value[cat_name] if cat_name in value else -1
+            new_values.append(new_value)
+
+        # LabelEncoding
+        for col_index in self.categorical_col:
+            key = str(x[col_index])
+            try:
+                x[col_index] = self.label_encoders[col_index].transform(key)
+            except KeyError:
+                x[col_index] = -1
+        return np.hstack((x, np.array(new_values)))
+
+    def fill_missing(self, x):
+        for col_index in range(self.num_columns):
+            if col_index in self.numerical_col:
+                if x[col_index] == 'nan':
+                    x[col_index] = 0.0
+                else:
+                    x[col_index] = float(x[col_index])
+            else:
+                if x[col_index] == 'nan':
+                    x[col_index] = 0
+
+    def finalize(self):
+        # divide column according to category number of the column
+        for col_index in self.value_counters.keys():
+            num_cat = len(self.value_counters[col_index])
+            if num_cat > 32 and num_cat <= 100:
+                self.high_level1_col.append(col_index)
+                self.count_frequency[col_index] = {
+                    key: value / (self.num_rows * num_cat)
+                    for key, value in self.value_counters[col_index].items()}
+            elif num_cat > 100:
+                self.high_level2_col.append(col_index)
+
+        self.high_level2_col.sort()
+
+        for index, cat_col_index1 in enumerate(self.high_level2_col):
+            # extract high level columns from cat-cat dict
+            for cat_col_index2 in self.high_level2_col[index + 1:]:
+                pair = (cat_col_index1, cat_col_index2)
+                self.high_level_cat_cat[pair] = self.categorical_categorical[pair]
+
+            # extract high level columns from num-cat dict and calculate mean
+            for num_col_index in self.numerical_col:
+                pair = (num_col_index, cat_col_index1)
+                self.high_level_num_cat[pair] = self.numerical_categorical[pair]
+                for key, value in self.high_level_num_cat[pair].items():
+                    self.high_level_num_cat[pair][key] /= self.value_counters[
+                        cat_col_index1][key]
+
+        self.shape = (len(self.input_node.column_types)
+                      + len(self.high_level1_col)
+                      + len(self.high_level_cat_cat)
+                      + len(self.high_level_num_cat),)
+
+    def output_types(self):
+        return (tf.float32,)
+
+    @property
+    def output_shape(self):
+        return self.shape
+
+    def get_weights(self):
+        return {'shape': self.shape,
+                'num_rows': self.num_rows,
+                'categorical_col': self.categorical_col,
+                'numerical_col': self.numerical_col,
+                'label_encoders': self.label_encoders,
+                'value_counters': self.value_counters,
+                'categorical_categorical': self.categorical_categorical,
+                'numerical_categorical': self.numerical_categorical,
+                'count_frequency': self.count_frequency,
+                'high_level1_col': self.high_level1_col,
+                'high_level2_col': self.high_level2_col,
+                'high_level_cat_cat': self.high_level_cat_cat,
+                'high_level_num_cat': self.high_level_num_cat}
+
+    def set_weights(self, weights):
+        self.shape = weights['shape']
+        self.num_rows = weights['num_rows']
+        self.categorical_col = weights['categorical_col']
+        self.numerical_col = weights['numerical_col']
+        self.label_encoders = weights['label_encoders']
+        self.value_counters = weights['value_counters']
+        self.categorical_categorical = weights['categorical_categorical']
+        self.numerical_categorical = weights['numerical_categorical']
+        self.count_frequency = weights['count_frequency']
+        self.high_level1_col = weights['high_level1_col']
+        self.high_level2_col = weights['high_level2_col']
+        self.high_level_cat_cat = weights['high_level_cat_cat']
+        self.high_level_num_cat = weights['high_level_num_cat']
+
+    def clear_weights(self):
+        self.shape = None
+        self.num_rows = 0
+        self.categorical_col = []
+        self.numerical_col = []
+        self.label_encoders = {}
+        self.value_counters = {}
+        self.categorical_categorical = {}
+        self.numerical_categorical = {}
+        self.count_frequency = {}
+        self.high_level1_col = []
+        self.high_level2_col = []
+        self.high_level_cat_cat = {}
+        self.high_level_num_cat = {}
+
+    def get_config(self):
+        return {'num_columns': self.num_columns,
+                'input_node': (self.input_node.column_names,
+                               self.input_node.column_types),
+                'max_columns': self.max_columns}
+
+    def set_config(self, config):
+        self.num_columns = config['num_columns']
+        self.input_node = node.StructuredDataInput(*config['input_node'])
+        self.max_columns = config['max_columns']
+
+    def compile(self):
+        self.input_node = self.inputs[0]
+        if not isinstance(self.input_node, node.StructuredDataInput):
+            raise TypeError('FeatureEngineering block can only be used '
+                            'with StructuredDataInput.')

@@ -16,6 +16,7 @@ setup(
         'keras-tuner',
         'scikit-learn',
         'numpy',
+        'pandas',
         'lightgbm',
     ],
     extras_require={
