@@ -539,6 +539,9 @@ class LightGBMBlock(Preprocessor):
     def output_shape(self):
         return self.lightgbm_block.output_shape
 
+    def set_hp(self, hp):
+        self.lightgbm_block.set_hp(hp)
+
 
 class ImageAugmentation(Preprocessor):
     """Collection of various image augmentation methods.
