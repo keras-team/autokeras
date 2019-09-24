@@ -63,10 +63,9 @@ class ClassificationHead(Head):
     # Arguments
         num_classes: Int. Defaults to None. If None, it will infer from the data.
         multi_label: Boolean. Defaults to False.
-        loss: A Keras loss function. Defaults to None. If None, the loss will be
-            inferred from the AutoModel.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
+        loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
+            'categorical_crossentropy' based on the number of classes.
+        metrics: A list of Keras metrics. Defaults to use 'accuracy'.
         dropout_rate: Float. The dropout rate for the layers.
             If left unspecified, it will be tuned automatically.
     """
@@ -150,10 +149,8 @@ class RegressionHead(Head):
         output_dim: Int. The number of output dimensions. Defaults to None.
             If None, it will infer from the data.
         multi_label: Boolean. Defaults to False.
-        loss: A Keras loss function. Defaults to None. If None, the loss will be
-            inferred from the AutoModel.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
+        loss: A Keras loss function. Defaults to use 'mean_squared_error'.
+        metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         dropout_rate: Float. The dropout rate for the layers.
             If left unspecified, it will be tuned automatically.
     """

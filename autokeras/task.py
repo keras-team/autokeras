@@ -19,10 +19,9 @@ class ImageClassifier(SupervisedImagePipeline):
     # Arguments
         num_classes: Int. Defaults to None. If None, it will infer from the data.
         multi_label: Boolean. Defaults to False.
-        loss: A Keras loss function. Defaults to None. If None, the loss will be
-            inferred from the AutoModel.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
+        loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
+            'categorical_crossentropy' based on the number of classes.
+        metrics: A list of Keras metrics. Defaults to use 'accuracy'.
         name: String. The name of the AutoModel. Defaults to 'image_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -57,10 +56,8 @@ class ImageRegressor(SupervisedImagePipeline):
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
             If None, it will infer from the data.
-        loss: A Keras loss function. Defaults to None. If None, the loss will be
-            inferred from the AutoModel.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
+        loss: A Keras loss function. Defaults to use 'mean_squared_error'.
+        metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to 'image_regressor'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -101,10 +98,9 @@ class TextClassifier(SupervisedTextPipeline):
     # Arguments
         num_classes: Int. Defaults to None. If None, it will infer from the data.
         multi_label: Boolean. Defaults to False.
-        loss: A Keras loss function. Defaults to None. If None, the loss will be
-            inferred from the AutoModel.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
+        loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
+            'categorical_crossentropy' based on the number of classes.
+        metrics: A list of Keras metrics. Defaults to use 'accuracy'.
         name: String. The name of the AutoModel. Defaults to 'text_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -139,10 +135,8 @@ class TextRegressor(SupervisedTextPipeline):
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
             If None, it will infer from the data.
-        loss: A Keras loss function. Defaults to None. If None, the loss will be
-            inferred from the AutoModel.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
+        loss: A Keras loss function. Defaults to use 'mean_squared_error'.
+        metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to 'text_regressor'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -262,10 +256,9 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             If None, it will be inferred from the data.
         num_classes: Int. Defaults to None. If None, it will infer from the data.
         multi_label: Boolean. Defaults to False.
-        loss: A Keras loss function. Defaults to None. If None, the loss will be
-            inferred from the AutoModel.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
+        loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
+            'categorical_crossentropy' based on the number of classes.
+        metrics: A list of Keras metrics. Defaults to use 'accuracy'.
         name: String. The name of the AutoModel. Defaults to
             'structured_data_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
@@ -310,10 +303,8 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             be 'numerical' or 'categorical', indicating the type of that column.
             Defaults to None. If not None, the column_names need to be specified.
             If None, it will be inferred from the data.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
-        name: String. The name of the AutoModel. Defaults to
-            'structured_data_classifier'.
+        loss: A Keras loss function. Defaults to use 'mean_squared_error'.
+        metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
