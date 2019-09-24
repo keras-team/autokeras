@@ -523,6 +523,15 @@ class LightGBMBlock(Preprocessor):
         if isinstance(self.heads[0], head.RegressionHead):
             self.lightgbm_block = LightGBMRegressor()
 
+        in_block = self.heads[0]
+        # Check if the head has no other input but only LightGBMBlock.
+        while in_block is not self:
+            # The head has other inputs.
+            if len(in_block.inputs) > 1:
+                return
+            in_block = in_block.inputs[0].in_blocks[0]
+        self.heads[0].identity = True
+
     def update(self, x, y=None):
         self.lightgbm_block.update(x, y)
 
