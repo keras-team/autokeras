@@ -194,7 +194,7 @@ class AutoModel(object):
         """Predict the output for a given testing data.
 
         # Arguments
-            x: Allowed types according to the input node. Testing data.
+            x: Any allowed types according to the input node. Testing data.
             batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
 
