@@ -25,6 +25,8 @@ class Head(block.Block):
         self.output_shape = output_shape
         self._loss = loss
         self.metrics = metrics
+        # Mark if the head should directly output the input tensor.
+        self.identity = False
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
@@ -51,6 +53,16 @@ class Head(block.Block):
     def postprocess(self, y):
         """Postprocess the output of the Keras Model."""
         return y
+
+
+class IdentityLayer(tf.keras.layers.Layer):
+    """A Keras Layer returns the inputs."""
+
+    def compute_output_signature(self, input_signature):
+        return input_signature
+
+    def call(self, inputs, *args, **kwargs):
+        return tf.identity(nest.flatten(inputs)[0])
 
 
 class ClassificationHead(Head):
@@ -97,6 +109,8 @@ class ClassificationHead(Head):
         return super().loss
 
     def build(self, hp, inputs=None):
+        if self.identity:
+            return IdentityLayer(name=self.name)(inputs)
         if self.num_classes and self.output_shape[-1] != self.num_classes:
             raise ValueError(
                 'The data doesn\'t match the num_classes. '
@@ -176,6 +190,8 @@ class RegressionHead(Head):
         return super().loss
 
     def build(self, hp, inputs=None):
+        if self.identity:
+            return IdentityLayer(name=self.name)(inputs)
         if self.output_dim and self.output_shape[-1] != self.output_dim:
             raise ValueError(
                 'The data doesn\'t match the output_dim. '
