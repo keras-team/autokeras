@@ -855,6 +855,7 @@ class FeatureEngineering(Preprocessor):
 
     def fill_missing(self, x):
         for col_index in range(self.num_columns):
+            x[col_index] = x[col_index].decode('utf-8')
             if col_index in self.numerical_col:
                 if x[col_index] == 'nan':
                     x[col_index] = 0.0

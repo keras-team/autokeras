@@ -135,6 +135,8 @@ class StructuredDataInput(Input):
             # convert x,y,validation_data to tf.Dataset
             x = tf.data.Dataset.from_tensor_slices(
                 x.values.astype(np.unicode))
+        if isinstance(x, np.ndarray):
+            x = tf.data.Dataset.from_tensor_slices(x.astype(np.unicode))
         return super().transform(x)
 
 
