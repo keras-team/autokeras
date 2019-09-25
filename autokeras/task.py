@@ -193,6 +193,8 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             y=None,
             validation_split=0,
             validation_data=None,
+            epochs=None,
+            callbacks=None,
             **kwargs):
         """Search for the best model and hyperparameters for the task.
 
@@ -224,6 +226,11 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                 For the last case, `validation_steps` must be provided.
                 The type of the validation data should be the same as the training
                 data.
+            epochs: Int. The number of epochs to train each model during the search.
+                If unspecified, we would use epochs equal to 1000 and early stopping
+                with patience equal to 30.
+            callbacks: List of Keras callbacks to apply during training and
+                validation.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         # x is file path of training data
@@ -241,6 +248,7 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                     y=y,
                     validation_split=validation_split,
                     validation_data=validation_data,
+                    epochs=epochs,
                     **kwargs)
 
 

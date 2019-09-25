@@ -87,8 +87,8 @@ class AutoTuner(kerastuner.Tuner):
                 'It is not possible to do `copy.deepcopy(%s)`' %
                 (callbacks,))
 
-        if not [callback for callback in callbacks
-                if isinstance(callback, tf.keras.callbacks.EarlyStopping)]:
+        if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+                    for callback in callbacks]):
             # The patience is set to 30 based on human experience.
             callbacks.append(tf.keras.callbacks.EarlyStopping(patience=30))
 
