@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 COLUMN_NAMES_FROM_NUMPY = ['bool_',
                            'num_to_cat_',
@@ -122,3 +123,36 @@ def structured_data(num_data=500):
         col = np.random.randint(0, num_feature)
         data[row][col] = np.nan
     return data
+
+
+def dataframe_numpy():
+    x = pd.read_csv(TRAIN_FILE_PATH)
+    y = x.pop('survived').to_numpy()
+    val_x = pd.read_csv(TEST_FILE_PATH)
+    val_y = val_x.pop('survived').to_numpy()
+    return (x, y), (val_x, val_y)
+
+
+def dataframe_dataframe():
+    x = pd.read_csv(TRAIN_FILE_PATH)
+    y = pd.DataFrame(x.pop('survived'))
+    val_x = pd.read_csv(TEST_FILE_PATH)
+    val_y = pd.DataFrame(val_x.pop('survived'))
+    return (x, y), (val_x, val_y)
+
+
+def dataframe_series():
+    x = pd.read_csv(TRAIN_FILE_PATH)
+    y = x.pop('survived')
+    val_x = pd.read_csv(TEST_FILE_PATH)
+    val_y = val_x.pop('survived')
+    return (x, y), (val_x, val_y)
+
+
+def csv_test(target):
+    x_test = pd.read_csv(TEST_FILE_PATH)
+    if target == 'regression':
+        x_test = x_test.drop('fare', axis=1)
+    else:
+        x_test = x_test.drop('survived', axis=1)
+    return x_test
