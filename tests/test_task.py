@@ -82,7 +82,7 @@ def test_structured_data_from_numpy_regressor(tmp_dir):
     y_train, y_test = y[:num_train], y[num_train:]
     clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=1)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
-    assert clf.predict(x_test).shape == (len(x_test), 1)
+    assert clf.predict(x_test).shape == (len(y_test), 1)
 
 
 def test_structured_data_from_numpy_classifier(tmp_dir):
@@ -94,7 +94,7 @@ def test_structured_data_from_numpy_classifier(tmp_dir):
     y_train, y_test = y[:num_train], y[num_train:]
     clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=1)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
-    assert clf.predict(x_test).shape == (len(x_test), 1)
+    assert clf.predict(x_test).shape == (len(y_test), 1)
 
 
 def test_structured_data_from_numpy_col_name_classifier(tmp_dir):

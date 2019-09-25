@@ -28,4 +28,3 @@ def test_structured_data_assembler():
     input_node = node.StructuredDataInput()
     assembler.assemble(input_node)
     assert input_node.column_types == common.COLUMN_TYPES_FROM_NUMPY
-
