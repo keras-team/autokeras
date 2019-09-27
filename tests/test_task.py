@@ -18,7 +18,7 @@ def tmp_dir(tmpdir_factory):
 def test_image_classifier(_, tmp_dir):
     x_train = np.random.randn(100, 28, 28, 3)
     y_train = np.random.randint(0, 10, 100)
-    clf = ak.ImageClassifier(directory=tmp_dir, max_trials=2)
+    clf = ak.ImageClassifier(directory=tmp_dir, max_trials=2, seed=common.SEED)
     clf.fit(x_train, y_train, epochs=2, validation_split=0.2)
 
 
@@ -27,7 +27,7 @@ def test_image_classifier(_, tmp_dir):
 def test_image_regressor(_, tmp_dir):
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
-    clf = ak.ImageRegressor(directory=tmp_dir, max_trials=2)
+    clf = ak.ImageRegressor(directory=tmp_dir, max_trials=2, seed=common.SEED)
     clf.fit(x_train, y_train, epochs=2, validation_split=0.2)
 
 
@@ -68,7 +68,7 @@ def test_text_classifier(tmp_dir):
 def test_text_regressor(tmp_dir):
     (train_x, train_y), (test_x, test_y) = imdb_raw()
     train_y = np.random.rand(100, 1)
-    clf = ak.TextRegressor(directory=tmp_dir, max_trials=2)
+    clf = ak.TextRegressor(directory=tmp_dir, max_trials=2, seed=common.SEED)
     clf.fit(train_x, train_y, epochs=2, validation_split=0.2)
     assert clf.predict(test_x).shape == (len(test_x), 1)
 
@@ -80,7 +80,9 @@ def test_structured_data_from_numpy_regressor(tmp_dir):
     x_train, x_test = data[:num_train], data[num_train:]
     y = np.random.rand(num_data, 1)
     y_train, y_test = y[:num_train], y[num_train:]
-    clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=1)
+    clf = ak.StructuredDataRegressor(directory=tmp_dir,
+                                     max_trials=1,
+                                     seed=common.SEED)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
     assert clf.predict(x_test).shape == (len(y_test), 1)
 
@@ -106,7 +108,8 @@ def test_structured_data_from_numpy_col_name_classifier(tmp_dir):
     clf = ak.StructuredDataClassifier(
         column_names=common.COLUMN_NAMES_FROM_NUMPY,
         directory=tmp_dir,
-        max_trials=1)
+        max_trials=1,
+        seed=common.SEED)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
 
 
@@ -120,7 +123,8 @@ def test_structured_data_from_numpy_col_type_classifier(tmp_dir):
         clf = ak.StructuredDataClassifier(
             column_types=common.COLUMN_TYPES_FROM_NUMPY,
             directory=tmp_dir,
-            max_trials=1)
+            max_trials=1,
+            seed=common.SEED)
         clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
     assert str(info.value) == 'Column names must be specified.'
 
@@ -135,7 +139,8 @@ def test_structured_data_from_numpy_col_name_type_classifier(tmp_dir):
         column_names=common.COLUMN_NAMES_FROM_NUMPY,
         column_types=common.COLUMN_TYPES_FROM_NUMPY,
         directory=tmp_dir,
-        max_trials=1)
+        max_trials=1,
+        seed=common.SEED)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
 
 
@@ -146,12 +151,16 @@ def test_structured_data_classifier_transform_new_data(tmp_dir):
     x_train, x_test = data[:num_train], data[num_train:]
     y = np.random.randint(0, 3, num_data)
     y_train, y_test = y[:num_train], y[num_train:]
-    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=1)
+    clf = ak.StructuredDataClassifier(directory=tmp_dir,
+                                      max_trials=1,
+                                      seed=common.SEED)
     clf.fit(x_train, y_train, epochs=2, validation_data=(x_test, y_test))
 
 
 def test_structured_data_from_csv_regressor(tmp_dir):
-    clf = ak.StructuredDataRegressor(directory=tmp_dir, max_trials=1)
+    clf = ak.StructuredDataRegressor(directory=tmp_dir,
+                                     max_trials=1,
+                                     seed=common.SEED)
     clf.fit(x=common.TRAIN_FILE_PATH, y='fare', epochs=2,
             validation_data=common.TEST_FILE_PATH)
     x_test = common.csv_test('regression')
@@ -159,7 +168,9 @@ def test_structured_data_from_csv_regressor(tmp_dir):
 
 
 def test_structured_data_from_csv_classifier(tmp_dir):
-    clf = ak.StructuredDataClassifier(directory=tmp_dir, max_trials=1)
+    clf = ak.StructuredDataClassifier(directory=tmp_dir,
+                                      max_trials=1,
+                                      seed=common.SEED)
     clf.fit(x=common.TRAIN_FILE_PATH, y='survived', epochs=2,
             validation_data=common.TEST_FILE_PATH)
     x_test = common.csv_test('classification')
@@ -171,7 +182,8 @@ def test_structured_data_from_csv_col_name_type_classifier(tmp_dir):
         column_names=common.COLUMN_NAMES_FROM_CSV,
         column_types=common.COLUMN_TYPES_FROM_CSV,
         directory=tmp_dir,
-        max_trials=1)
+        max_trials=1,
+        seed=common.SEED)
     clf.fit(x=common.TRAIN_FILE_PATH, y='survived', epochs=2,
             validation_data=common.TEST_FILE_PATH)
 
@@ -180,7 +192,8 @@ def test_structured_data_from_csv_col_name_classifier(tmp_dir):
     clf = ak.StructuredDataClassifier(
         column_names=common.COLUMN_NAMES_FROM_CSV,
         directory=tmp_dir,
-        max_trials=1)
+        max_trials=1,
+        seed=common.SEED)
     clf.fit(x=common.TRAIN_FILE_PATH, y='survived', epochs=2,
             validation_data=common.TEST_FILE_PATH)
 
@@ -190,7 +203,8 @@ def test_structured_data_from_csv_less_col_name_classifier(tmp_dir):
         clf = ak.StructuredDataClassifier(
             column_names=common.LESS_COLUMN_NAMES_FROM_CSV,
             directory=tmp_dir,
-            max_trials=1)
+            max_trials=1,
+            seed=common.SEED)
         clf.fit(x=common.TRAIN_FILE_PATH, y='survived', epochs=2,
                 validation_data=common.TEST_FILE_PATH)
     assert 'Expect column_names to have length' in str(info.value)
@@ -201,7 +215,8 @@ def test_structured_data_from_csv_col_type_mismatch_classifier(tmp_dir):
         clf = ak.StructuredDataClassifier(
             column_types=common.COLUMN_TYPES_FROM_CSV,
             directory=tmp_dir,
-            max_trials=1)
+            max_trials=1,
+            seed=common.SEED)
         clf.fit(x=common.TRAIN_FILE_PATH, y='survived', epochs=2,
                 validation_data=common.TEST_FILE_PATH)
     assert 'Column_names and column_types are mismatched.' in str(info.value)
@@ -212,7 +227,8 @@ def test_structured_data_from_csv_false_col_type_classifier(tmp_dir):
         clf = ak.StructuredDataClassifier(
             column_types=common.FALSE_COLUMN_TYPES_FROM_CSV,
             directory=tmp_dir,
-            max_trials=1)
+            max_trials=1,
+            seed=common.SEED)
         clf.fit(x=common.TRAIN_FILE_PATH, y='survived', epochs=2,
                 validation_data=common.TEST_FILE_PATH)
     assert 'Column_types should be either "categorical"' in str(info.value)
@@ -222,7 +238,8 @@ def test_structured_data_from_csv_partial_col_type_classifier(tmp_dir):
     clf = ak.StructuredDataClassifier(
         column_types=common.PARTIAL_COLUMN_TYPES_FROM_CSV,
         directory=tmp_dir,
-        max_trials=1)
+        max_trials=1,
+        seed=common.SEED)
     clf.fit(x=common.TRAIN_FILE_PATH, y='survived', epochs=2,
             validation_data=common.TEST_FILE_PATH)
 
@@ -230,7 +247,8 @@ def test_structured_data_from_csv_partial_col_type_classifier(tmp_dir):
 def test_structured_data_from_dataframe_numpy_classifier(tmp_dir):
     clf = ak.StructuredDataClassifier(
         directory=tmp_dir,
-        max_trials=1)
+        max_trials=1,
+        seed=common.SEED)
     (x, y), (val_x, val_y) = common.dataframe_numpy()
     clf.fit(x=x, y=y, epochs=2, validation_data=(val_x, val_y))
     assert clf.predict(val_x).shape == (len(val_x), 1)
@@ -239,7 +257,8 @@ def test_structured_data_from_dataframe_numpy_classifier(tmp_dir):
 def test_structured_data_from_dataframe_dataframe_classifier(tmp_dir):
     clf = ak.StructuredDataClassifier(
         directory=tmp_dir,
-        max_trials=1)
+        max_trials=1,
+        seed=common.SEED)
     (x, y), (val_x, val_y) = common.dataframe_dataframe()
     clf.fit(x=x, y=y, epochs=2, validation_data=(val_x, val_y))
     assert clf.predict(val_x).shape == (len(val_x), 1)
@@ -248,7 +267,8 @@ def test_structured_data_from_dataframe_dataframe_classifier(tmp_dir):
 def test_structured_data_from_dataframe_series_classifier(tmp_dir):
     clf = ak.StructuredDataClassifier(
         directory=tmp_dir,
-        max_trials=1)
+        max_trials=1,
+        seed=common.SEED)
     (x, y), (val_x, val_y) = common.dataframe_series()
     clf.fit(x=x, y=y, epochs=2, validation_data=(val_x, val_y))
     assert clf.predict(val_x).shape == (len(val_x), 1)

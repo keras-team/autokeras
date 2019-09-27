@@ -112,7 +112,7 @@ def test_feature_engineering_fix_keyerror():
 def test_lgbm_classifier():
     dataset = common.generate_data(11, (32,), dtype='dataset')
     y = common.generate_one_hot_labels(11, dtype='dataset')
-    instance = preprocessor.LightGBMBlock()
+    instance = preprocessor.LightGBMBlock(seed=common.SEED)
     instance.lightgbm_block = preprocessor.LightGBMClassifier()
     new_dataset = run_preprocessor(instance,
                                    dataset,
@@ -124,7 +124,7 @@ def test_lgbm_classifier():
 def test_lgbm_regressor():
     dataset = common.generate_data(11, (32,), dtype='dataset')
     y = common.generate_data(11, (1,), dtype='dataset')
-    instance = preprocessor.LightGBMBlock()
+    instance = preprocessor.LightGBMBlock(seed=common.SEED)
     instance.lightgbm_block = preprocessor.LightGBMRegressor()
     new_dataset = run_preprocessor(instance,
                                    dataset,

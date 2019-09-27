@@ -337,12 +337,13 @@ class TextToNgramVector(Preprocessor):
 
 class LightGBMModel(Preprocessor):
     """The base class for LightGBMClassifier and LightGBMRegressor."""
-    def __init__(self, **kwargs):
+    def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
         self.data = []
         self.targets = []
         self._output_shape = None
         self.lgbm = None
+        self.seed = seed
 
     def transform(self, x, fit=False):
         """ Transform the data using well-trained LightGBM regressor.
@@ -406,7 +407,7 @@ class LightGBMClassifier(LightGBMModel):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.lgbm = lgb.LGBMClassifier()
+        self.lgbm = lgb.LGBMClassifier(random_state=self.seed)
         self._one_hot_encoder = utils.OneHotEncoder()
 
     def update(self, x, y=None):
@@ -465,7 +466,7 @@ class LightGBMRegressor(LightGBMModel):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.lgbm = lgb.LGBMRegressor()
+        self.lgbm = lgb.LGBMRegressor(random_state=self.seed)
 
     def update(self, x, y=None):
         """ Store the train data.
@@ -492,12 +493,17 @@ class LightGBMRegressor(LightGBMModel):
 
 
 class LightGBMBlock(Preprocessor):
-    """LightGBM Block for classification or regression task."""
+    """LightGBM Block for classification or regression task.
 
-    def __init__(self, **kwargs):
+    # Arguments
+        seed: Int. Random seed.
+    """
+
+    def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
         self.lightgbm_block = None
         self.heads = None
+        self.seed = seed
 
     def clear_weights(self):
         self.lightgbm_block.clear_weights()
@@ -519,9 +525,9 @@ class LightGBMBlock(Preprocessor):
         if len(self.heads) > 1:
             raise ValueError('LightGBMBlock can only be connected to one head.')
         if isinstance(self.heads[0], head.ClassificationHead):
-            self.lightgbm_block = LightGBMClassifier()
+            self.lightgbm_block = LightGBMClassifier(seed=self.seed)
         if isinstance(self.heads[0], head.RegressionHead):
-            self.lightgbm_block = LightGBMRegressor()
+            self.lightgbm_block = LightGBMRegressor(seed=self.seed)
 
         in_block = self.heads[0]
         # Check if the head has no other input but only LightGBMBlock.
