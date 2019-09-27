@@ -469,28 +469,61 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             seed=seed)
 
 
-class SupervisedTimeSeriesDataPipeline(auto_model.AutoModel):
-
+class TimeSeriesForecaster(auto_model.AutoModel):
+    """AutoKeras time series data forecast class.
+    
+    # Arguments
+        column_names: A list of strings specifying the names of the columns. The
+            length of the list should be equal to the number of columns of the data.
+            Defaults to None. If None, it will obtained from the header of the csv
+            file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should either
+            be 'numerical' or 'categorical', indicating the type of that column.
+            Defaults to None. If not None, the column_names need to be specified.
+            If None, it will be inferred from the data.
+        in_steps: Int. Number of lag observations as input (x). Values may be between
+            [1..len(data)]. Defaults to 1.
+        out_steps: Int. Number of observations as output (y). Values may be between
+            [1..len(data)]. Defaults to 1.
+        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
+            be inferred from the AutoModel.
+        name: String. The name of the AutoModel. Defaults to
+            'structured_data_classifier'.
+        max_trials: Int. The maximum number of different Keras Models to try.
+            The search may finish before reaching the max_trials. Defaults to 100.
+        directory: String. The path to a directory for storing the search outputs.
+            Defaults to None, which would create a folder with the name of the
+            AutoModel in the current directory.
+        seed: Int. Random seed.
+    """
+    
     def __init__(self,
-                 outputs,
-                 column_names,
-                 column_types,
-                 in_steps,
-                 out_steps,
-                 **kwargs):
+                 column_names=None,
+                 column_types=None,
+                 in_steps=1,
+                 out_steps=1,
+                 output_dim=None,
+                 loss=None,
+                 metrics=None,
+                 name='time_series_data_forecaster',
+                 max_trials=100,
+                 directory=None,
+                 seed=None):
         inputs = node.TimeSeriesInput()
         super().__init__(inputs=inputs,
                          outputs=outputs,
                          **kwargs)
         pass
 
+    
     def fit(self,
             x=None,
             y=None,
             validation_split=0,
             validation_data=None,
             **kwargs):
-        """
+        """Search for the best model and hyperparameters for the task.
+        
         # Arguments
             x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
                 Training data x. If the data is from a csv file, it should be a
@@ -525,54 +558,4 @@ class SupervisedTimeSeriesDataPipeline(auto_model.AutoModel):
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         pass
-
-
-class SupervisedTimeSeriesDataForecaster(SupervisedTimeSeriesDataPipeline):
-    """AutoKeras time series data forecast class.
-    # Arguments
-        column_names: A list of strings specifying the names of the columns. The
-            length of the list should be equal to the number of columns of the data.
-            Defaults to None. If None, it will obtained from the header of the csv
-            file or the pandas.DataFrame.
-        column_types: Dict. The keys are the column names. The values should either
-            be 'numerical' or 'categorical', indicating the type of that column.
-            Defaults to None. If not None, the column_names need to be specified.
-            If None, it will be inferred from the data.
-        in_steps: Int. Number of lag observations as input (x). Values may be between
-            [1..len(data)]. Defaults to 1.
-        out_steps: Int. Number of observations as output (y). Values may be between
-            [1..len(data)]. Defaults to 1.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
-        name: String. The name of the AutoModel. Defaults to
-            'structured_data_classifier'.
-        max_trials: Int. The maximum number of different Keras Models to try.
-            The search may finish before reaching the max_trials. Defaults to 100.
-        directory: String. The path to a directory for storing the search outputs.
-            Defaults to None, which would create a folder with the name of the
-            AutoModel in the current directory.
-        seed: Int. Random seed.
-    """
-    def __init__(self,
-                 column_names=None,
-                 column_types=None,
-                 in_steps=1,
-                 out_steps=1,
-                 output_dim=None,
-                 loss=None,
-                 metrics=None,
-                 name='time_series_data_forecaster',
-                 max_trials=100,
-                 directory=None,
-                 seed=None):
-        super().__init__(
-            outputs=head.RegressionHead(output_dim=output_dim,
-                                        loss=loss,
-                                        metrics=metrics),
-            column_names=column_names,
-            column_types=column_types,
-            in_steps=in_steps,
-            out_steps=out_steps,
-            max_trials=max_trials,
-            directory=directory,
-            seed=seed)
+    
