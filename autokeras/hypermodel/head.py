@@ -1,6 +1,7 @@
 import queue
 
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from tensorflow.python.util import nest
 
@@ -47,6 +48,10 @@ class Head(block.Block):
             if len(y.shape) == 1:
                 y = y.reshape(-1, 1)
             return tf.data.Dataset.from_tensor_slices(y)
+        if isinstance(y, pd.DataFrame):
+            return tf.data.Dataset.from_tensor_slices(y.values)
+        if isinstance(y, pd.Series):
+            return tf.data.Dataset.from_tensor_slices(y.values.reshape(-1, 1))
         raise ValueError('Unsupported format {type} '
                          'for {name}.'.format(type=type(y), name=self.name))
 

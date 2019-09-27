@@ -193,7 +193,7 @@ class StructuredDataAssembler(Assembler):
             for i in range(len(x)):
                 self.count_unique_numerical.append({})
         for i in range(self.num_col):
-            # x[i] = x[i].decode('utf-8')
+            x[i] = x[i].decode('utf-8')
             if x[i] == 'nan':
                 self.count_nan[i] += 1
             elif x[i] == 'True':
