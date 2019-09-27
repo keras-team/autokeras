@@ -113,7 +113,7 @@ def test_lgbm_classifier():
     dataset = common.generate_data(11, (32,), dtype='dataset')
     y = common.generate_one_hot_labels(11, dtype='dataset')
     instance = preprocessor.LightGBMBlock(seed=common.SEED)
-    instance.lightgbm_block = preprocessor.LightGBMClassifier()
+    instance.lightgbm_block = preprocessor.LightGBMClassifier(seed=common.SEED)
     new_dataset = run_preprocessor(instance,
                                    dataset,
                                    y,
@@ -125,7 +125,7 @@ def test_lgbm_regressor():
     dataset = common.generate_data(11, (32,), dtype='dataset')
     y = common.generate_data(11, (1,), dtype='dataset')
     instance = preprocessor.LightGBMBlock(seed=common.SEED)
-    instance.lightgbm_block = preprocessor.LightGBMRegressor()
+    instance.lightgbm_block = preprocessor.LightGBMRegressor(seed=common.SEED)
     new_dataset = run_preprocessor(instance,
                                    dataset,
                                    y,
