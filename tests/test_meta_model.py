@@ -18,7 +18,7 @@ def test_text_assembler():
 
 
 def test_structured_data_assembler():
-    data = common.structured_data()
+    data = common.generate_structured_data()
     dataset = tf.data.Dataset.from_tensor_slices(data)
     assembler = meta_model.StructuredDataAssembler(
         column_names=common.COLUMN_NAMES_FROM_NUMPY)

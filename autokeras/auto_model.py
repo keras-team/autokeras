@@ -67,10 +67,10 @@ class AutoModel(object):
     def fit(self,
             x=None,
             y=None,
-            validation_split=0,
-            validation_data=None,
             epochs=None,
             callbacks=None,
+            validation_split=0,
+            validation_data=None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -80,6 +80,11 @@ class AutoModel(object):
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x.
             y: numpy.ndarray or tensorflow.Dataset. Training data y.
+            epochs: Int. The number of epochs to train each model during the search.
+                If unspecified, we would use epochs equal to 1000 and early stopping
+                with patience equal to 30.
+            callbacks: List of Keras callbacks to apply during training and
+                validation.
             validation_split: Float between 0 and 1.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
@@ -99,21 +104,8 @@ class AutoModel(object):
                   - dataset or a dataset iterator
                 For the first two cases, `batch_size` must be provided.
                 For the last case, `validation_steps` must be provided.
-            epochs: Int. The number of epochs to train each model during the search.
-                If unspecified, we would use epochs equal to 1000 and early stopping
-                with patience equal to 30.
-            callbacks: List of Keras callbacks to apply during training and
-                validation.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        if epochs is None:
-            epochs = 1000
-            if callbacks is None:
-                callbacks = []
-            if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                        for callback in callbacks]):
-                callbacks.append(tf.keras.callbacks.EarlyStopping(patience=30))
-
         dataset, validation_data = self._prepare_data(
             x=x,
             y=y,
@@ -141,10 +133,9 @@ class AutoModel(object):
             project_name=self.name)
         self.hypermodel.clear_preprocessors()
 
-        # TODO: allow early stop if epochs is not specified.
         self.tuner.search(x=dataset,
-                          validation_data=validation_data,
                           epochs=epochs,
+                          validation_data=validation_data,
                           callbacks=callbacks,
                           **kwargs)
 
@@ -261,7 +252,11 @@ class AutoModel(object):
             batch_size=batch_size)
         return best_model.evaluate(data, **kwargs)
 
-    def _prepare_best_model_and_data(self, x, y, batch_size, predict=False):
+    def _prepare_best_model_and_data(self,
+                                     x,
+                                     y=None,
+                                     batch_size=32,
+                                     predict=False):
         best_model = self.tuner.get_best_models(1)[0]
         best_trial = self.tuner.get_best_trials(1)[0]
         best_hp = best_trial.hyperparameters

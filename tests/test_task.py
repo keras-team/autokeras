@@ -76,7 +76,7 @@ def test_text_regressor(tmp_dir):
 def test_structured_data_from_numpy_regressor(tmp_dir):
     num_data = 500
     num_train = 400
-    data = common.structured_data(num_data)
+    data = common.generate_structured_data(num_data)
     x_train, x_test = data[:num_train], data[num_train:]
     y = np.random.rand(num_data, 1)
     y_train, y_test = y[:num_train], y[num_train:]
@@ -88,7 +88,7 @@ def test_structured_data_from_numpy_regressor(tmp_dir):
 def test_structured_data_from_numpy_classifier(tmp_dir):
     num_data = 500
     num_train = 400
-    data = common.structured_data(num_data)
+    data = common.generate_structured_data(num_data)
     x_train, x_test = data[:num_train], data[num_train:]
     y = np.random.randint(0, 3, num_data)
     y_train, y_test = y[:num_train], y[num_train:]
@@ -99,7 +99,7 @@ def test_structured_data_from_numpy_classifier(tmp_dir):
 
 def test_structured_data_from_numpy_col_name_classifier(tmp_dir):
     num_data = 500
-    data = common.structured_data(num_data)
+    data = common.generate_structured_data(num_data)
     x_train = data
     y = np.random.randint(0, 3, num_data)
     y_train = y
@@ -112,7 +112,7 @@ def test_structured_data_from_numpy_col_name_classifier(tmp_dir):
 
 def test_structured_data_from_numpy_col_type_classifier(tmp_dir):
     num_data = 500
-    data = common.structured_data(num_data)
+    data = common.generate_structured_data(num_data)
     x_train = data
     y = np.random.randint(0, 3, num_data)
     y_train = y
@@ -127,7 +127,7 @@ def test_structured_data_from_numpy_col_type_classifier(tmp_dir):
 
 def test_structured_data_from_numpy_col_name_type_classifier(tmp_dir):
     num_data = 500
-    data = common.structured_data(num_data)
+    data = common.generate_structured_data(num_data)
     x_train = data
     y = np.random.randint(0, 3, num_data)
     y_train = y
@@ -142,7 +142,7 @@ def test_structured_data_from_numpy_col_name_type_classifier(tmp_dir):
 def test_structured_data_classifier_transform_new_data(tmp_dir):
     num_data = 200
     num_train = 100
-    data = common.structured_data(num_data)
+    data = common.generate_structured_data(num_data)
     x_train, x_test = data[:num_train], data[num_train:]
     y = np.random.randint(0, 3, num_data)
     y_train, y_test = y[:num_train], y[num_train:]
