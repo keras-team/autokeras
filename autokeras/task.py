@@ -246,9 +246,10 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
 
         super().fit(x=x,
                     y=y,
+                    epochs=epochs,
+                    callbacks=callbacks,
                     validation_split=validation_split,
                     validation_data=validation_data,
-                    epochs=epochs,
                     **kwargs)
 
 

@@ -77,6 +77,7 @@ class AutoTuner(kerastuner.Tuner):
         if fit_kwargs['callbacks'] is None:
             fit_kwargs['callbacks'] = []
         fit_kwargs.setdefault('epochs', None)
+
         # Insert early-stopping permanently when epochs is None.
         callbacks = fit_kwargs['callbacks']
         if fit_kwargs['epochs'] is None:
@@ -86,6 +87,7 @@ class AutoTuner(kerastuner.Tuner):
                 callbacks = callbacks + [
                     tf.keras.callbacks.EarlyStopping(patience=30)]
         fit_kwargs['callbacks'] = callbacks
+
         # Insert early-stopping temporarily for the search.
         final_fit = False
         new_fit_kwargs = copy.copy(fit_kwargs)
@@ -95,6 +97,7 @@ class AutoTuner(kerastuner.Tuner):
             callbacks = callbacks + [tf.keras.callbacks.EarlyStopping(patience=30)]
             final_fit = True
         new_fit_kwargs['callbacks'] = callbacks
+
         # Start the search.
         self.on_search_begin()
         for _ in range(self.max_trials):
