@@ -135,8 +135,8 @@ class AutoModel(object):
 
         self.tuner.search(x=dataset,
                           epochs=epochs,
-                          validation_data=validation_data,
                           callbacks=callbacks,
+                          validation_data=validation_data,
                           **kwargs)
 
     def _process_xy(self, x, y=None, fit=False, predict=False):
