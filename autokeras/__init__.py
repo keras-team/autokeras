@@ -7,6 +7,8 @@ from autokeras.hypermodel.block import EmbeddingBlock
 from autokeras.hypermodel.block import Merge
 from autokeras.hypermodel.block import ResNetBlock
 from autokeras.hypermodel.block import RNNBlock
+from autokeras.hypermodel.block import SpatialReduction
+from autokeras.hypermodel.block import TemporalReduction
 from autokeras.hypermodel.block import XceptionBlock
 from autokeras.hypermodel.head import ClassificationHead
 from autokeras.hypermodel.head import RegressionHead

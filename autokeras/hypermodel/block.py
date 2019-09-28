@@ -429,7 +429,7 @@ class SpatialReduction(Block):
             If left unspecified, it will be tuned automatically.
     """
 
-    def __init__(self, reduction_type, **kwargs):
+    def __init__(self, reduction_type=None, **kwargs):
         super().__init__(**kwargs)
         self.reduction_type = reduction_type
 
@@ -467,7 +467,7 @@ class TemporalReduction(Block):
             unspecified, it will be tuned automatically.
     """
 
-    def __init__(self, reduction_type, **kwargs):
+    def __init__(self, reduction_type=None, **kwargs):
         super().__init__(**kwargs)
         self.reduction_type = reduction_type
 
