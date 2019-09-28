@@ -68,8 +68,8 @@ PARTIAL_COLUMN_TYPES_FROM_CSV = {
                           'deck': 'categorical',
                           'embark_town': 'categorical',
                           'alone': 'categorical'}
-TRAIN_FILE_PATH = r'tests/resources/titanic/train.csv'
-TEST_FILE_PATH = r'tests/resources/titanic/eval.csv'
+TRAIN_FILE_PATH = r'tests/fixtures/titanic/train.csv'
+TEST_FILE_PATH = r'tests/fixtures/titanic/eval.csv'
 
 
 def generate_structured_data(num_instances=500, dtype='np'):
