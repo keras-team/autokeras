@@ -81,8 +81,11 @@ class AutoModel(object):
             x: numpy.ndarray or tensorflow.Dataset. Training data x.
             y: numpy.ndarray or tensorflow.Dataset. Training data y.
             epochs: Int. The number of epochs to train each model during the search.
-                If unspecified, we would use epochs equal to 1000 and early stopping
-                with patience equal to 30.
+                If unspecified, by default we train for a maximum of 1000 epochs,
+                but we stop training if the validation loss stops improving for 10
+                epochs (unless you specified an EarlyStopping callback as part of
+                the callbacks argument, in which case the EarlyStopping callback you
+                specified will determine early stopping).
             callbacks: List of Keras callbacks to apply during training and
                 validation.
             validation_split: Float between 0 and 1.

@@ -85,7 +85,7 @@ class AutoTuner(kerastuner.Tuner):
             if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                         for callback in callbacks]):
                 callbacks = callbacks + [
-                    tf.keras.callbacks.EarlyStopping(patience=30)]
+                    tf.keras.callbacks.EarlyStopping(patience=10)]
         fit_kwargs['callbacks'] = callbacks
 
         # Insert early-stopping temporarily for the search.
@@ -94,7 +94,7 @@ class AutoTuner(kerastuner.Tuner):
         callbacks = new_fit_kwargs['callbacks']
         if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                     for callback in new_fit_kwargs['callbacks']]):
-            callbacks = callbacks + [tf.keras.callbacks.EarlyStopping(patience=30)]
+            callbacks = callbacks + [tf.keras.callbacks.EarlyStopping(patience=10)]
             final_fit = True
         new_fit_kwargs['callbacks'] = callbacks
 

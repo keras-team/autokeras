@@ -336,7 +336,11 @@ class TextToNgramVector(Preprocessor):
 
 
 class LightGBMModel(Preprocessor):
-    """The base class for LightGBMClassifier and LightGBMRegressor."""
+    """The base class for LightGBMClassifier and LightGBMRegressor.
+
+    # Arguments
+        seed: Int. Random seed.
+    """
     def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
         self.data = []
@@ -403,10 +407,14 @@ class LightGBMModel(Preprocessor):
 
 
 class LightGBMClassifier(LightGBMModel):
-    """Collect data, train and test the LightGBM for classification task."""
+    """Collect data, train and test the LightGBM for classification task.
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    # Arguments
+        seed: Int. Random seed.
+    """
+
+    def __init__(self, seed=None, **kwargs):
+        super().__init__(seed=seed, **kwargs)
         self.lgbm = lgb.LGBMClassifier(random_state=self.seed)
         self._one_hot_encoder = utils.OneHotEncoder()
 
@@ -462,10 +470,14 @@ class LightGBMClassifier(LightGBMModel):
 
 
 class LightGBMRegressor(LightGBMModel):
-    """Collect data, train and test the LightGBM for regression task."""
+    """Collect data, train and test the LightGBM for regression task.
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    # Arguments
+        seed: Int. Random seed.
+    """
+
+    def __init__(self, seed=None, **kwargs):
+        super().__init__(seed=seed, **kwargs)
         self.lgbm = lgb.LGBMRegressor(random_state=self.seed)
 
     def update(self, x, y=None):
