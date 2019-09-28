@@ -471,7 +471,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
 
 class TimeSeriesForecaster(auto_model.AutoModel):
     """AutoKeras time series data forecast class.
-    
+
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
             length of the list should be equal to the number of columns of the data.
@@ -482,13 +482,13 @@ class TimeSeriesForecaster(auto_model.AutoModel):
             Defaults to None. If not None, the column_names need to be specified.
             If None, it will be inferred from the data.
         in_steps: Int. Number of lag observations as input (x). Values may be between
-            [1..len(data)]. Defaults to 1.
+            [1..len(data)]. Defaults to 1. If unspecified, it will be tuned
+            automatically.
         out_steps: Int. Number of observations as output (y). Values may be between
             [1..len(data)]. Defaults to 1.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
+        metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to
-            'structured_data_classifier'.
+            'time_series_forecaster'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
@@ -496,7 +496,7 @@ class TimeSeriesForecaster(auto_model.AutoModel):
             AutoModel in the current directory.
         seed: Int. Random seed.
     """
-    
+
     def __init__(self,
                  column_names=None,
                  column_types=None,
@@ -509,13 +509,9 @@ class TimeSeriesForecaster(auto_model.AutoModel):
                  max_trials=100,
                  directory=None,
                  seed=None):
-        inputs = node.TimeSeriesInput()
-        super().__init__(inputs=inputs,
-                         outputs=outputs,
-                         **kwargs)
-        pass
+        # TODO: implement.
+        raise NotImplementedError
 
-    
     def fit(self,
             x=None,
             y=None,
@@ -523,17 +519,18 @@ class TimeSeriesForecaster(auto_model.AutoModel):
             validation_data=None,
             **kwargs):
         """Search for the best model and hyperparameters for the task.
-        
+
         # Arguments
             x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
                 Training data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the training data.
-            y: A list of strings, numpy.ndarray, pandas.DataFrame or
+            y: String, a list of string(s), numpy.ndarray, pandas.DataFrame or
                 tensorflow.Dataset. Training data y.
                 If the data is from a csv file, it should be a list of string(s)
                 specifying the name(s) of the column(s) need to be forecasted.
-                If it is multivariate forecasting, y should contain more than one
-                column of data.
+                If it is multivariate forecasting, y should be a list of more than
+                one column names. If it is univariate forecasting, y should be a
+                string or a list of one string.
             validation_split: Float between 0 and 1.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
@@ -557,5 +554,5 @@ class TimeSeriesForecaster(auto_model.AutoModel):
                 data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        pass
-    
+        # TODO: implement.
+        raise NotImplementedError
