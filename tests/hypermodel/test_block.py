@@ -23,8 +23,8 @@ def test_resnet_block():
     output_node = ak.ResNetBlock()(output_node)
     output_node = ak.ClassificationHead(output_shape=(num_classes,))(output_node)
 
-    result = common.fit_predict_with_graph(input_node, output_node, x, y)
-    assert result.shape == (num_instances, num_classes)
+    model = ak.hypermodel.graph.HyperBuiltGraphHyperModel(
+        input_node, output_node).build(kerastuner.HyperParameters())
 
 
 def test_xception_block():

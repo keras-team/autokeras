@@ -104,8 +104,7 @@ def test_preprocessing(_, tmp_dir):
               verbose=False)
 
 
-@mock.patch('kerastuner.engine.tuner.Tuner.search',
-            side_effect=lambda *args, **kwargs: None)
+@mock.patch('autokeras.tuner.RandomSearch')
 def test_auto_model_basic(_, tmp_dir):
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)

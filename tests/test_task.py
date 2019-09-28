@@ -13,8 +13,7 @@ def tmp_dir(tmpdir_factory):
     return tmpdir_factory.mktemp('test_image')
 
 
-@mock.patch('kerastuner.engine.tuner.Tuner.search',
-            side_effect=lambda *args, **kwargs: None)
+@mock.patch('autokeras.tuner.RandomSearch')
 def test_image_classifier(_, tmp_dir):
     x_train = np.random.randn(100, 28, 28, 3)
     y_train = np.random.randint(0, 10, 100)
@@ -22,8 +21,7 @@ def test_image_classifier(_, tmp_dir):
     clf.fit(x_train, y_train, epochs=2, validation_split=0.2)
 
 
-@mock.patch('kerastuner.engine.tuner.Tuner.search',
-            side_effect=lambda *args, **kwargs: None)
+@mock.patch('autokeras.tuner.RandomSearch')
 def test_image_regressor(_, tmp_dir):
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
@@ -58,19 +56,19 @@ def imdb_raw(num_instances=100):
     return (x_train, y_train), (x_test, y_test)
 
 
+@mock.patch('autokeras.tuner.RandomSearch')
 def test_text_classifier(tmp_dir):
     (train_x, train_y), (test_x, test_y) = imdb_raw()
     clf = ak.TextClassifier(directory=tmp_dir, max_trials=2)
     clf.fit(train_x, train_y, epochs=2, validation_split=0.2)
-    assert clf.predict(test_x).shape == (len(test_x), 1)
 
 
+@mock.patch('autokeras.tuner.RandomSearch')
 def test_text_regressor(tmp_dir):
     (train_x, train_y), (test_x, test_y) = imdb_raw()
     train_y = np.random.rand(100, 1)
     clf = ak.TextRegressor(directory=tmp_dir, max_trials=2, seed=common.SEED)
     clf.fit(train_x, train_y, epochs=2, validation_split=0.2)
-    assert clf.predict(test_x).shape == (len(test_x), 1)
 
 
 def test_structured_data_from_numpy_regressor(tmp_dir):
