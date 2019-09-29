@@ -9,19 +9,17 @@ import tensorflow as tf
 class AutoTuner(kerastuner.Tuner):
     """Modified KerasTuner base class to include preprocessing layers."""
 
-    def run_trial(self, trial, hp, fit_args, fit_kwargs):
+    def run_trial(self, trial, hp, **fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
         # Initialize new fit kwargs for the current trial.
         new_fit_kwargs = copy.copy(fit_kwargs)
-        new_fit_kwargs.update(
-            dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
 
         # Preprocess the dataset and set the shapes of the HyperNodes.
         self.hypermodel.hyper_build(hp)
         dataset, validation_data = self.hypermodel.preprocess(
-            hp,
-            new_fit_kwargs.get('x', None),
-            new_fit_kwargs.get('validation_data', None),
+            hp=hp,
+            dataset=new_fit_kwargs.get('x', None),
+            validation_data=new_fit_kwargs.get('validation_data', None),
             fit=True)
 
         # Batching
@@ -72,31 +70,27 @@ class AutoTuner(kerastuner.Tuner):
         # Format the arguments.
         fit_kwargs.update(
             dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
-        fit_args = []
-        fit_kwargs.setdefault('callbacks', [])
-        if fit_kwargs['callbacks'] is None:
-            fit_kwargs['callbacks'] = []
-        fit_kwargs.setdefault('epochs', None)
 
         # Insert early-stopping permanently when epochs is None.
-        callbacks = fit_kwargs['callbacks']
-        if fit_kwargs['epochs'] is None:
-            fit_kwargs['epochs'] = 1000
+        callbacks = fit_kwargs.pop('callbacks', [])
+        epochs = fit_kwargs.pop('epochs', None)
+        if callbacks is None:
+            callbacks = []
+        if epochs is None:
+            epochs = 1000
             if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                         for callback in callbacks]):
                 callbacks = callbacks + [
                     tf.keras.callbacks.EarlyStopping(patience=10)]
-        fit_kwargs['callbacks'] = callbacks
 
         # Insert early-stopping temporarily for the search.
         final_fit = False
-        new_fit_kwargs = copy.copy(fit_kwargs)
-        callbacks = new_fit_kwargs['callbacks']
+        new_callbacks = copy.copy(callbacks)
         if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                    for callback in new_fit_kwargs['callbacks']]):
-            callbacks = callbacks + [tf.keras.callbacks.EarlyStopping(patience=10)]
+                    for callback in new_callbacks]):
+            new_callbacks = new_callbacks + [
+                tf.keras.callbacks.EarlyStopping(patience=10)]
             final_fit = True
-        new_fit_kwargs['callbacks'] = callbacks
 
         # Start the search.
         self.on_search_begin()
@@ -115,7 +109,11 @@ class AutoTuner(kerastuner.Tuner):
             )
             self.trials.append(trial)
             self.on_trial_begin(trial)
-            self.run_trial(trial, hp, fit_args, new_fit_kwargs)
+            self.run_trial(trial=trial,
+                           hp=hp,
+                           epochs=epochs,
+                           callbacks=new_callbacks,
+                           **fit_kwargs)
             self.on_trial_end(trial)
 
         # Final fit.
@@ -129,7 +127,11 @@ class AutoTuner(kerastuner.Tuner):
             )
             self.trials.append(trial)
             self.on_trial_begin(trial)
-            self.run_trial(trial, hp, fit_args, fit_kwargs)
+            self.run_trial(trial=trial,
+                           hp=hp,
+                           epochs=epochs,
+                           callbacks=callbacks,
+                           **fit_kwargs)
             self.on_trial_end(trial)
 
         self.on_search_end()

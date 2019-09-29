@@ -12,7 +12,7 @@ def tmp_dir(tmpdir_factory):
     return tmpdir_factory.mktemp('test_auto_model')
 
 
-def mock_run_trial_for_early_stopping(trial, hp, fit_args, fit_kwargs):
+def mock_run_trial_for_early_stopping(trial, hp, **fit_kwargs):
     assert any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                 for callback in fit_kwargs['callbacks']])
 
@@ -26,9 +26,11 @@ def test_add_early_stopping(_, _1, tmp_dir):
     num_instances = 100
     num_classes = 10
     x = common.generate_data(num_instances=num_instances,
-                             shape=input_shape)
+                             shape=input_shape,
+                             dtype='dataset')
     y = common.generate_one_hot_labels(num_instances=num_instances,
-                                       num_classes=num_classes)
+                                       num_classes=num_classes,
+                                       dtype='dataset')
 
     input_node = ak.Input(shape=input_shape)
     output_node = input_node
@@ -42,4 +44,4 @@ def test_add_early_stopping(_, _1, tmp_dir):
         max_trials=1,
         directory=tmp_dir,
         seed=common.SEED)
-    tuner.search(x, y, validation_data=(x, y))
+    tuner.search(x=tf.data.Dataset.zip((x, y)), validation_data=(x, y))
