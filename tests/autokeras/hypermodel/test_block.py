@@ -11,19 +11,14 @@ from tests import common
 
 def test_resnet_block():
     input_shape = (32, 32, 3)
-    num_instances = 100
     num_classes = 10
-    x = common.generate_data(num_instances=num_instances,
-                             shape=input_shape)
-    y = common.generate_one_hot_labels(num_instances=num_instances,
-                                       num_classes=num_classes)
 
     input_node = ak.Input(shape=input_shape)
     output_node = input_node
     output_node = ak.ResNetBlock()(output_node)
     output_node = ak.ClassificationHead(output_shape=(num_classes,))(output_node)
 
-    model = ak.hypermodel.graph.HyperBuiltGraphHyperModel(
+    ak.hypermodel.graph.HyperBuiltGraphHyperModel(
         input_node, output_node).build(kerastuner.HyperParameters())
 
 
