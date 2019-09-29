@@ -132,7 +132,7 @@ class StructuredDataInput(Input):
 
     def transform(self, x):
         if isinstance(x, pd.DataFrame):
-            # convert x,y,validation_data to tf.Dataset
+            # convert x, y, validation_data to tf.Dataset
             x = tf.data.Dataset.from_tensor_slices(
                 x.values.astype(np.unicode))
         if isinstance(x, np.ndarray):

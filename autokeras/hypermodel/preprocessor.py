@@ -179,7 +179,7 @@ class Normalization(Preprocessor):
 
     @property
     def output_shape(self):
-        return self.inputs[0].shape
+        return self.shape
 
     def get_weights(self):
         return {'sum': self.sum,
@@ -637,6 +637,10 @@ class ImageAugmentation(Preprocessor):
             max_value = 1. + value
         return min_value, max_value
 
+    def update(self, x, y=None):
+        x = nest.flatten(x)[0].numpy()
+        self.shape = x.shape
+
     def transform(self, x, fit=False):
         if not fit:
             return x
@@ -709,10 +713,7 @@ class ImageAugmentation(Preprocessor):
 
     @property
     def output_shape(self):
-        return self.inputs[0].shape
-
-    def update(self, x, y=None):
-        pass
+        return self.shape
 
     def get_config(self):
         return {'rotation_range': self.rotation_range,

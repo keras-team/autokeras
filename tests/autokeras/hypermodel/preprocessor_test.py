@@ -96,7 +96,7 @@ def test_feature_engineering():
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
-def test_feature_engineering_fix_keyerror():
+def test_feature_engineering_new_categorical_value():
     dataset = common.generate_structured_data(num_instances=100, dtype='dataset')
     feature = preprocessor.FeatureEngineering()
     feature.input_node = ak.StructuredDataInput(
