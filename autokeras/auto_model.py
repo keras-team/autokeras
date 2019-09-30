@@ -136,6 +136,16 @@ class AutoModel(object):
             project_name=self.name)
         self.hypermodel.clear_preprocessors()
 
+        # Process the args.
+        if callbacks is None:
+            callbacks = []
+        if epochs is None:
+            epochs = 1000
+            if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+                        for callback in callbacks]):
+                callbacks = callbacks + [
+                    tf.keras.callbacks.EarlyStopping(patience=10)]
+
         self.tuner.search(x=dataset,
                           epochs=epochs,
                           callbacks=callbacks,

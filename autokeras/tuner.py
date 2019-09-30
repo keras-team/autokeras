@@ -71,26 +71,15 @@ class AutoTuner(kerastuner.Tuner):
         fit_kwargs.update(
             dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
 
-        # Insert early-stopping permanently when epochs is None.
+        # Use early-stopping during the search for acceleration.
         callbacks = fit_kwargs.pop('callbacks', [])
-        epochs = fit_kwargs.pop('epochs', None)
-        if callbacks is None:
-            callbacks = []
-        if epochs is None:
-            epochs = 1000
-            if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                        for callback in callbacks]):
-                callbacks = callbacks + [
-                    tf.keras.callbacks.EarlyStopping(patience=10)]
-
-        # Insert early-stopping temporarily for the search.
-        final_fit = False
-        new_callbacks = copy.copy(callbacks)
-        if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                    for callback in new_callbacks]):
-            new_callbacks = new_callbacks + [
-                tf.keras.callbacks.EarlyStopping(patience=10)]
-            final_fit = True
+        callbacks_for_search = copy.copy(callbacks)
+        early_stopping_in_callbacks = any([
+            isinstance(callback, tf.keras.callbacks.EarlyStopping)
+            for callback in callbacks])
+        if not early_stopping_in_callbacks:
+            callbacks_for_search.append(
+                tf.keras.callbacks.EarlyStopping(patience=10))
 
         # Start the search.
         self.on_search_begin()
@@ -101,40 +90,38 @@ class AutoTuner(kerastuner.Tuner):
             if hp is None:
                 # Oracle triggered exit
                 return
-            trial = kerastuner.engine.trial.Trial(
+            self._create_and_run_trial(
                 trial_id=trial_id,
-                hyperparameters=hp.copy(),
-                max_executions=self.executions_per_trial,
-                base_directory=self._host.results_dir
-            )
-            self.trials.append(trial)
-            self.on_trial_begin(trial)
-            self.run_trial(trial=trial,
-                           hp=hp,
-                           epochs=epochs,
-                           callbacks=new_callbacks,
-                           **fit_kwargs)
-            self.on_trial_end(trial)
+                hp=hp,
+                callbacks=callbacks_for_search,
+                **fit_kwargs)
 
-        # Final fit.
-        if final_fit:
+        # Fully train the best model with original callbacks.
+        if not early_stopping_in_callbacks:
             hp = self.get_best_trials(1)[0].hyperparameters
-            trial = kerastuner.engine.trial.Trial(
+            trial_id = kerastuner.engine.tuner_utils.generate_trial_id()
+            self._create_and_run_trial(
                 trial_id=trial_id,
-                hyperparameters=hp.copy(),
-                max_executions=self.executions_per_trial,
-                base_directory=self._host.results_dir
-            )
-            self.trials.append(trial)
-            self.on_trial_begin(trial)
-            self.run_trial(trial=trial,
-                           hp=hp,
-                           epochs=epochs,
-                           callbacks=callbacks,
-                           **fit_kwargs)
-            self.on_trial_end(trial)
+                hp=hp,
+                callbacks=callbacks,
+                **fit_kwargs)
 
         self.on_search_end()
+
+    def _create_and_run_trial(self, trial_id, hp, callbacks, **fit_kwargs):
+        trial = kerastuner.engine.trial.Trial(
+            trial_id=trial_id,
+            hyperparameters=hp.copy(),
+            max_executions=self.executions_per_trial,
+            base_directory=self._host.results_dir
+        )
+        self.trials.append(trial)
+        self.on_trial_begin(trial)
+        self.run_trial(trial=trial,
+                       hp=hp,
+                       callbacks=callbacks,
+                       **fit_kwargs)
+        self.on_trial_end(trial)
 
 
 class RandomSearch(AutoTuner, kerastuner.RandomSearch):
