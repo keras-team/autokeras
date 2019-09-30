@@ -67,6 +67,8 @@ class AutoModel(object):
     def fit(self,
             x=None,
             y=None,
+            epochs=None,
+            callbacks=None,
             validation_split=0,
             validation_data=None,
             **kwargs):
@@ -78,6 +80,14 @@ class AutoModel(object):
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x.
             y: numpy.ndarray or tensorflow.Dataset. Training data y.
+            epochs: Int. The number of epochs to train each model during the search.
+                If unspecified, by default we train for a maximum of 1000 epochs,
+                but we stop training if the validation loss stops improving for 10
+                epochs (unless you specified an EarlyStopping callback as part of
+                the callbacks argument, in which case the EarlyStopping callback you
+                specified will determine early stopping).
+            callbacks: List of Keras callbacks to apply during training and
+                validation.
             validation_split: Float between 0 and 1.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
@@ -126,8 +136,19 @@ class AutoModel(object):
             project_name=self.name)
         self.hypermodel.clear_preprocessors()
 
-        # TODO: allow early stop if epochs is not specified.
+        # Process the args.
+        if callbacks is None:
+            callbacks = []
+        if epochs is None:
+            epochs = 1000
+            if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+                        for callback in callbacks]):
+                callbacks = callbacks + [
+                    tf.keras.callbacks.EarlyStopping(patience=10)]
+
         self.tuner.search(x=dataset,
+                          epochs=epochs,
+                          callbacks=callbacks,
                           validation_data=validation_data,
                           **kwargs)
 
@@ -244,7 +265,11 @@ class AutoModel(object):
             batch_size=batch_size)
         return best_model.evaluate(data, **kwargs)
 
-    def _prepare_best_model_and_data(self, x, y, batch_size, predict=False):
+    def _prepare_best_model_and_data(self,
+                                     x,
+                                     y=None,
+                                     batch_size=32,
+                                     predict=False):
         best_model = self.tuner.get_best_models(1)[0]
         best_trial = self.tuner.get_best_trials(1)[0]
         best_hp = best_trial.hyperparameters

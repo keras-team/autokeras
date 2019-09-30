@@ -97,7 +97,7 @@ class ImageBlock(HyperBlock):
         elif block_type == 'xception':
             output_node = block.XceptionBlock(name=sub_block_name)(output_node)
         elif block_type == 'vanilla':
-            output_node = block.ConvBlock(name=sub_block_name).build(output_node)
+            output_node = block.ConvBlock(name=sub_block_name)(output_node)
         return output_node
 
 
@@ -145,16 +145,19 @@ class StructuredDataBlock(HyperBlock):
         module_type: String. 'dense' or 'lightgbm'. If it is 'dense', DenseBlock
             will be used. If it is 'lightgbm', LightGBMBlock will be used. If
             unspecified, it will be tuned automatically.
+        seed: Int. Random seed.
     """
 
     def __init__(self,
                  feature_engineering=True,
                  module_type=None,
+                 seed=None,
                  **kwargs):
         super().__init__()
         self.feature_engineering = feature_engineering
         self.module_type = module_type
         self.heads = None
+        self.seed = seed
 
     def build_feature_engineering(self, hp, input_node):
         output_node = input_node
@@ -179,7 +182,7 @@ class StructuredDataBlock(HyperBlock):
         if module_type == 'dense':
             output_node = block.DenseBlock()(input_node)
         elif module_type == 'lightgbm':
-            output_node = preprocessor.LightGBMBlock()(input_node)
+            output_node = preprocessor.LightGBMBlock(seed=self.seed)(input_node)
         else:
             raise ValueError('Unsupported module'
                              'type: {module_type}'.format(

@@ -191,6 +191,8 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
     def fit(self,
             x=None,
             y=None,
+            epochs=None,
+            callbacks=None,
             validation_split=0,
             validation_data=None,
             **kwargs):
@@ -203,6 +205,11 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             y: String, numpy.ndarray, or tensorflow.Dataset. Training data y.
                 If the data is from a csv file, it should be a string corresponding
                 to the label column.
+            epochs: Int. The number of epochs to train each model during the search.
+                If unspecified, we would use epochs equal to 1000 and early stopping
+                with patience equal to 30.
+            callbacks: List of Keras callbacks to apply during training and
+                validation.
             validation_split: Float between 0 and 1.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
@@ -239,6 +246,8 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
 
         super().fit(x=x,
                     y=y,
+                    epochs=epochs,
+                    callbacks=callbacks,
                     validation_split=validation_split,
                     validation_data=validation_data,
                     **kwargs)

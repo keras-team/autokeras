@@ -32,7 +32,8 @@ def assemble(inputs, outputs, dataset, seed=None):
             assemblers.append(ImageAssembler(seed=seed))
         if isinstance(input_node, node.StructuredDataInput):
             assemblers.append(StructuredDataAssembler(
-                column_names=input_node.column_names))
+                column_names=input_node.column_names,
+                seed=seed))
         if isinstance(input_node, node.TimeSeriesInput):
             assemblers.append(TimeSeriesAssembler())
     # Iterate over the dataset to fit the assemblers.
@@ -168,9 +169,10 @@ class StructuredDataAssembler(Assembler):
             length of the list should be equal to the number of columns of the data.
             Defaults to None. If None, it will obtained from the header of the csv
             file or the pandas.DataFrame.
+        seed: Int. Random seed.
     """
 
-    def __init__(self, column_names, **kwargs):
+    def __init__(self, column_names, seed=None, **kwargs):
         # TODO: support partial column_types, i.e., the size of the dict is smaller
         # than the number of the columns.
         super().__init__(**kwargs)
@@ -181,6 +183,7 @@ class StructuredDataAssembler(Assembler):
         self.count_categorical = None
         self.count_unique_numerical = []
         self.num_col = None
+        self.seed = seed
 
     def update(self, x):
         # calculate the statistics.
@@ -228,7 +231,7 @@ class StructuredDataAssembler(Assembler):
         for key, value in self.column_types.items():
             if key not in input_node.column_types:
                 input_node.column_types[key] = value
-        return hyperblock.StructuredDataBlock()(input_node)
+        return hyperblock.StructuredDataBlock(seed=self.seed)(input_node)
 
 
 class TimeSeriesAssembler(Assembler):

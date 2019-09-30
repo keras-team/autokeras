@@ -9,19 +9,17 @@ import tensorflow as tf
 class AutoTuner(kerastuner.Tuner):
     """Modified KerasTuner base class to include preprocessing layers."""
 
-    def run_trial(self, trial, hp, fit_args, fit_kwargs):
+    def run_trial(self, trial, hp, **fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
         # Initialize new fit kwargs for the current trial.
         new_fit_kwargs = copy.copy(fit_kwargs)
-        new_fit_kwargs.update(
-            dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
 
         # Preprocess the dataset and set the shapes of the HyperNodes.
         self.hypermodel.hyper_build(hp)
         dataset, validation_data = self.hypermodel.preprocess(
-            hp,
-            new_fit_kwargs.get('x', None),
-            new_fit_kwargs.get('validation_data', None),
+            hp=hp,
+            dataset=new_fit_kwargs.get('x', None),
+            validation_data=new_fit_kwargs.get('validation_data', None),
             fit=True)
 
         # Batching
@@ -34,10 +32,6 @@ class AutoTuner(kerastuner.Tuner):
         new_fit_kwargs['validation_data'] = validation_data
         new_fit_kwargs['batch_size'] = None
         new_fit_kwargs['y'] = None
-
-        # Add earlystopping callback if necessary
-        callbacks = new_fit_kwargs.get('callbacks', [])
-        new_fit_kwargs['callbacks'] = self.add_earlystopping_callback(callbacks)
 
         super().run_trial(trial, hp, [], new_fit_kwargs)
 
@@ -72,27 +66,62 @@ class AutoTuner(kerastuner.Tuner):
         path = os.path.join(trial.directory, filename)
         self.hypermodel.load_preprocessors(path)
 
-    @staticmethod
-    def add_earlystopping_callback(callbacks):
-        if not callbacks:
-            callbacks = []
+    def search(self, *fit_args, **fit_kwargs):
+        # Format the arguments.
+        fit_kwargs.update(
+            dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
 
-        try:
-            callbacks = copy.deepcopy(callbacks)
-        except:
-            raise ValueError(
-                'All callbacks used during a search '
-                'should be deep-copyable (since they are '
-                'reused across executions). '
-                'It is not possible to do `copy.deepcopy(%s)`' %
-                (callbacks,))
+        # Use early-stopping during the search for acceleration.
+        callbacks = fit_kwargs.pop('callbacks', [])
+        callbacks_for_search = copy.copy(callbacks)
+        early_stopping_in_callbacks = any([
+            isinstance(callback, tf.keras.callbacks.EarlyStopping)
+            for callback in callbacks])
+        if not early_stopping_in_callbacks:
+            callbacks_for_search.append(
+                tf.keras.callbacks.EarlyStopping(patience=10))
 
-        if not [callback for callback in callbacks
-                if isinstance(callback, tf.keras.callbacks.EarlyStopping)]:
-            # The patience is set to 30 based on human experience.
-            callbacks.append(tf.keras.callbacks.EarlyStopping(patience=30))
+        # Start the search.
+        self.on_search_begin()
+        for _ in range(self.max_trials):
+            # Obtain unique trial ID to communicate with the oracle.
+            trial_id = kerastuner.engine.tuner_utils.generate_trial_id()
+            hp = self._call_oracle(trial_id)
+            if hp is None:
+                # Oracle triggered exit
+                return
+            self._create_and_run_trial(
+                trial_id=trial_id,
+                hp=hp,
+                callbacks=callbacks_for_search,
+                **fit_kwargs)
 
-        return callbacks
+        # Fully train the best model with original callbacks.
+        if not early_stopping_in_callbacks:
+            hp = self.get_best_trials(1)[0].hyperparameters
+            trial_id = kerastuner.engine.tuner_utils.generate_trial_id()
+            self._create_and_run_trial(
+                trial_id=trial_id,
+                hp=hp,
+                callbacks=callbacks,
+                **fit_kwargs)
+
+        self.on_search_end()
+
+    def _create_and_run_trial(self, trial_id, hp, callbacks, **fit_kwargs):
+        trial = kerastuner.engine.trial.Trial(
+            trial_id=trial_id,
+            hyperparameters=hp.copy(),
+            max_executions=self.executions_per_trial,
+            base_directory=self._host.results_dir
+        )
+        self.trials.append(trial)
+        self.on_trial_begin(trial)
+        self.run_trial(trial=trial,
+                       hp=hp,
+                       callbacks=callbacks,
+                       **fit_kwargs)
+        self.on_trial_end(trial)
 
 
 class RandomSearch(AutoTuner, kerastuner.RandomSearch):

@@ -1,6 +1,11 @@
+import kerastuner
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 
+import autokeras as ak
+
+SEED = 5
 COLUMN_NAMES_FROM_NUMPY = ['bool_',
                            'num_to_cat_',
                            'float_',
@@ -67,7 +72,7 @@ TRAIN_FILE_PATH = r'tests/resources/titanic/train.csv'
 TEST_FILE_PATH = r'tests/resources/titanic/eval.csv'
 
 
-def structured_data(num_data=500):
+def generate_structured_data(num_instances=500, dtype='np'):
     # generate high_level dataset
     num_feature = 8
     num_nan = 100
@@ -103,26 +108,32 @@ def structured_data(num_data=500):
             career_size.append(c+'_'+g)
 
     np.random.seed(0)
-    col_bool = np.random.choice(boolean, num_data).reshape(num_data, 1)
-    col_num_to_cat = np.random.randint(20, 41, size=num_data).reshape(num_data, 1)
-    col_float = 100*np.random.random(num_data,).reshape(num_data, 1)
-    col_int = np.random.randint(2000, 4000, size=num_data).reshape(num_data, 1)
-    col_morethan_32 = np.random.choice(career_size, num_data).reshape(num_data, 1)
+    col_bool = np.random.choice(boolean, num_instances).reshape(num_instances, 1)
+    col_num_to_cat = np.random.randint(
+        20, 41, size=num_instances).reshape(num_instances, 1)
+    col_float = 100*np.random.random(num_instances,).reshape(num_instances, 1)
+    col_int = np.random.randint(
+        2000, 4000, size=num_instances).reshape(num_instances, 1)
+    col_morethan_32 = np.random.choice(
+        career_size, num_instances).reshape(num_instances, 1)
     col1_morethan_100 = np.random.choice(career_states,
-                                         num_data).reshape(num_data, 1)
+                                         num_instances).reshape(num_instances, 1)
     col2_morethan_100 = np.random.choice(career_years,
-                                         num_data).reshape(num_data, 1)
+                                         num_instances).reshape(num_instances, 1)
     col3_morethan_100 = np.random.choice(career_color,
-                                         num_data).reshape(num_data, 1)
+                                         num_instances).reshape(num_instances, 1)
     data = np.concatenate((col_bool, col_num_to_cat, col_float, col_int,
                            col_morethan_32, col1_morethan_100, col2_morethan_100,
                            col3_morethan_100), axis=1)
     # generate np.nan data
     for i in range(num_nan):
-        row = np.random.randint(0, num_data)
+        row = np.random.randint(0, num_instances)
         col = np.random.randint(0, num_feature)
         data[row][col] = np.nan
-    return data
+    if dtype == 'np':
+        return data
+    if dtype == 'dataset':
+        return tf.data.Dataset.from_tensor_slices(data)
 
 
 def dataframe_numpy():
@@ -156,3 +167,37 @@ def csv_test(target):
     else:
         x_test = x_test.drop('survived', axis=1)
     return x_test
+
+
+def generate_data(num_instances=100, shape=(32, 32, 3), dtype='np'):
+    data = np.random.rand(*((num_instances,) + shape))
+    if data.dtype == np.float64:
+        data = data.astype(np.float32)
+    if dtype == 'np':
+        return data
+    if dtype == 'dataset':
+        return tf.data.Dataset.from_tensor_slices(data)
+
+
+def generate_one_hot_labels(num_instances=100, num_classes=10, dtype='np'):
+    labels = np.random.randint(num_classes, size=num_instances)
+    data = tf.keras.utils.to_categorical(labels)
+    if dtype == 'np':
+        return data
+    if dtype == 'dataset':
+        return tf.data.Dataset.from_tensor_slices(data)
+
+
+def fit_predict_with_graph(inputs, outputs, x, y):
+    model = ak.hypermodel.graph.HyperBuiltGraphHyperModel(
+        inputs, outputs).build(kerastuner.HyperParameters())
+    model.fit(x, y,
+              epochs=1,
+              batch_size=100,
+              verbose=False,
+              validation_split=0.2)
+    return model.predict(x)
+
+
+def do_nothing(*args, **kwargs):
+    pass
