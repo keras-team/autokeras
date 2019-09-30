@@ -429,7 +429,7 @@ class SpatialReduction(Block):
             If left unspecified, it will be tuned automatically.
     """
 
-    def __init__(self, reduction_type, **kwargs):
+    def __init__(self, reduction_type=None, **kwargs):
         super().__init__(**kwargs)
         self.reduction_type = reduction_type
 
@@ -467,7 +467,7 @@ class TemporalReduction(Block):
             unspecified, it will be tuned automatically.
     """
 
-    def __init__(self, reduction_type, **kwargs):
+    def __init__(self, reduction_type=None, **kwargs):
         super().__init__(**kwargs)
         self.reduction_type = reduction_type
 
@@ -528,12 +528,13 @@ class EmbeddingBlock(Block):
                                                     ['random',
                                                      'glove',
                                                      'fasttext',
-                                                     'word2vec'],
-                                                    default=False)
+                                                     'word2vec',
+                                                     'none'],
+                                                    default='none')
         embedding_dim = self.embedding_dim or hp.Choice('embedding_dim',
                                                         [32, 64, 128, 256, 512],
                                                         default=128)
-        if pretraining:
+        if pretraining != 'none':
             # TODO: load from pretrained weights
             layer = tf.keras.layers.Embedding(
                 input_dim=input_node.shape[1],

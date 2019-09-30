@@ -294,7 +294,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
                         data = [node_id_to_data[self._node_to_id[input_node]]
                                 for input_node in block.inputs]
                         block.update(data, y=y)
-
+                # Finalize and set the shapes of the output nodes.
                 for block in blocks:
                     block.finalize()
                     nest.flatten(block.outputs)[0].shape = block.output_shape

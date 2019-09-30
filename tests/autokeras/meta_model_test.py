@@ -1,7 +1,10 @@
+import numpy as np
 import tensorflow as tf
 
 from autokeras import meta_model
+from autokeras.hypermodel import head
 from autokeras.hypermodel import node
+from autokeras.hypermodel import preprocessor
 
 from tests import common
 
@@ -28,3 +31,18 @@ def test_structured_data_assembler():
     input_node = node.StructuredDataInput()
     assembler.assemble(input_node)
     assert input_node.column_types == common.COLUMN_TYPES_FROM_NUMPY
+
+
+def test_partial_column_types():
+    input_node = node.StructuredDataInput(
+        column_names=common.COLUMN_NAMES_FROM_CSV,
+        column_types=common.PARTIAL_COLUMN_TYPES_FROM_CSV)
+    (x, y), (val_x, val_y) = common.dataframe_numpy()
+    dataset = tf.data.Dataset.zip((
+        (tf.data.Dataset.from_tensor_slices(x.values.astype(np.unicode)),),
+        (tf.data.Dataset.from_tensor_slices(y),)
+        ))
+    hm = meta_model.assemble(input_node, head.ClassificationHead(), dataset)
+    for block in hm._blocks:
+        if isinstance(block, preprocessor.FeatureEngineering):
+            assert block.input_node.column_types['fare'] == 'categorical'
