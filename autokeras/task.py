@@ -267,9 +267,9 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
         if isinstance(x, str):
             x = pd.read_csv(x)
 
-        super().fit(x=x,
-                    batch_size=batch_size,
-                    **kwargs)
+        super().predict(x=x,
+                        batch_size=batch_size,
+                        **kwargs)
 
     def evaluate(self, x, y=None, batch_size=32, **kwargs):
         """Evaluate the best model for the given data.
