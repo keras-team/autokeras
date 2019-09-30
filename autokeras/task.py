@@ -252,6 +252,51 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                     validation_data=validation_data,
                     **kwargs)
 
+    def predict(self, x, batch_size=32, **kwargs):
+        """Predict the output for a given testing data.
+
+        # Arguments
+            x: Any allowed types according to the input node. Testing data.
+            batch_size: Int. Defaults to 32.
+            **kwargs: Any arguments supported by keras.Model.predict.
+
+        # Returns
+            A list of numpy.ndarray objects or a single numpy.ndarray.
+            The predicted results.
+        """
+        if isinstance(x, str):
+            x = pd.read_csv(x)
+
+        super().fit(x=x,
+                    batch_size=batch_size,
+                    **kwargs)
+
+    def evaluate(self, x, y=None, batch_size=32, **kwargs):
+        """Evaluate the best model for the given data.
+
+        # Arguments
+            x: Any allowed types according to the input node. Testing data.
+            y: Any allowed types according to the head. Testing targets.
+                Defaults to None.
+            batch_size: Int. Defaults to 32.
+            **kwargs: Any arguments supported by keras.Model.evaluate.
+
+        # Returns
+            Scalar test loss (if the model has a single output and no metrics) or
+            list of scalars (if the model has multiple outputs and/or metrics).
+            The attribute model.metrics_names will give you the display labels for
+            the scalar outputs.
+        """
+        if isinstance(x, str):
+            df = pd.read_csv(x)
+            label = df.pop(y).to_numpy()
+            x = df
+            y = label
+        super().evaluate(x=x,
+                         y=y,
+                         batch_size=batch_size,
+                         **kwargs)
+
 
 class StructuredDataClassifier(SupervisedStructuredDataPipeline):
     """AutoKeras structured data classification class.
