@@ -256,7 +256,9 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
         """Predict the output for a given testing data.
 
         # Arguments
-            x: Any allowed types according to the input node. Testing data.
+            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+                Testing data x. If the data is from a csv file, it should be a
+                string specifying the path of the csv file of the testing data.
             batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
 
@@ -275,9 +277,12 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
         """Evaluate the best model for the given data.
 
         # Arguments
-            x: Any allowed types according to the input node. Testing data.
-            y: Any allowed types according to the head. Testing targets.
-                Defaults to None.
+            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+                Testing data x. If the data is from a csv file, it should be a
+                string specifying the path of the csv file of the testing data.
+            y: String, numpy.ndarray, or tensorflow.Dataset. Testing data y.
+                If the data is from a csv file, it should be a string corresponding
+                to the label column.
             batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
