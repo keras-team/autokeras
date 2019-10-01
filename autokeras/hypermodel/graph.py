@@ -27,8 +27,6 @@ class GraphHyperModelBase(kerastuner.HyperModel):
         self._nodes = []
         self._blocks = []
         self._block_to_id = {}
-        self._block_topo_depth = {}
-        self._total_topo_depth = 0
         self._build_network()
         self._hps = []
         self.compile()
@@ -105,8 +103,6 @@ class GraphHyperModelBase(kerastuner.HyperModel):
         # Add the blocks in topological order.
         self._blocks = []
         self._block_to_id = {}
-        self._block_topo_depth = {}
-        depth_count = 0
         while len(blocks) != 0:
             new_added = []
 
@@ -124,8 +120,6 @@ class GraphHyperModelBase(kerastuner.HyperModel):
             for block in new_added:
                 # Add the collected blocks to the AutoModel.
                 self._add_block(block)
-                self._block_topo_depth[
-                    self._block_to_id[block]] = depth_count
 
                 # Decrease the in degree of the output nodes.
                 for output_node in block.outputs:
@@ -133,9 +127,6 @@ class GraphHyperModelBase(kerastuner.HyperModel):
                         continue
                     output_node_id = self._node_to_id[output_node]
                     in_degree[output_node_id] -= 1
-
-            depth_count += 1
-        self._total_topo_depth = depth_count
 
     def _search_network(self, input_node, outputs, in_stack_nodes,
                         visited_nodes):
@@ -262,66 +253,65 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
         return dataset, validation_data
 
     def _preprocess(self, dataset, fit=False):
-        # Put blocks in groups by topological depth.
-        # TODO: Dynamically process the topology instead of pregenerated. The
-        # topology may change due to different hp. Some block may require multiple
-        # rounds, some may require zero round.
-        blocks_by_depth = []
-        for depth in range(self._total_topo_depth):
-            temp_blocks = []
-            for block in self._blocks:
-                if (self._block_topo_depth[
-                    self._block_to_id[block]] == depth and
-                        isinstance(block, preprocessor.Preprocessor)):
-                    temp_blocks.append(block)
-            if not temp_blocks:
-                break
-            blocks_by_depth.append(temp_blocks)
-
         # A list of input node ids in the same order as the x in the dataset.
         input_node_ids = [self._node_to_id[input_node] for input_node in self.inputs]
 
-        # Iterate the depth.
-        for blocks in blocks_by_depth:
+        # Iterate until all the model inputs have their data.
+        while set(map(lambda node: self._node_to_id[node], self._model_inputs)
+                  ) - set(input_node_ids):
+            # Gather the blocks for the next iteration over the dataset.
+            blocks = []
+            for node_id in input_node_ids:
+                for block in self._nodes[node_id].out_blocks:
+                    if isinstance(block, preprocessor.Preprocessor):
+                        blocks.append(block)
             if fit:
                 # Iterate the dataset to fit the preprocessors in current depth.
-                for x, y in dataset:
-                    x = nest.flatten(x)
-                    node_id_to_data = {
-                        node_id: temp_x for temp_x, node_id in zip(x, input_node_ids)
-                    }
-                    for block in blocks:
-                        data = [node_id_to_data[self._node_to_id[input_node]]
-                                for input_node in block.inputs]
-                        block.update(data, y=y)
-                # Finalize and set the shapes of the output nodes.
-                for block in blocks:
-                    block.finalize()
-                    nest.flatten(block.outputs)[0].shape = block.output_shape
+                self._fit_preprocessors(dataset, input_node_ids, blocks)
 
             # Transform the dataset.
+            output_node_ids = []
             dataset = dataset.map(functools.partial(
                 self._preprocess_transform,
                 input_node_ids=input_node_ids,
+                output_node_ids=output_node_ids,
                 blocks=blocks,
                 fit=fit))
 
             # Build input_node_ids for next depth.
-            input_node_ids = list(sorted([self._node_to_id[block.outputs[0]]
-                                          for block in blocks]))
+            input_node_ids = output_node_ids
         return dataset
 
-    def _preprocess_transform(self, x, y, input_node_ids, blocks, fit=False):
+    def _fit_preprocessors(self, dataset, input_node_ids, blocks):
+        # Iterate the dataset to fit the preprocessors in current depth.
+        for x, y in dataset:
+            x = nest.flatten(x)
+            id_to_data = {
+                node_id: temp_x for temp_x, node_id in zip(x, input_node_ids)
+            }
+            for block in blocks:
+                data = [id_to_data[self._node_to_id[input_node]]
+                        for input_node in block.inputs]
+                block.update(data, y=y)
+
+        # Finalize and set the shapes of the output nodes.
+        for block in blocks:
+            block.finalize()
+            nest.flatten(block.outputs)[0].shape = block.output_shape
+
+    def _preprocess_transform(self,
+                              x,
+                              y,
+                              input_node_ids,
+                              output_node_ids,
+                              blocks,
+                              fit=False):
         x = nest.flatten(x)
         id_to_data = {
             node_id: temp_x
             for temp_x, node_id in zip(x, input_node_ids)
         }
         output_data = {}
-        # Keep the Keras Model inputs even they are not inputs to the blocks.
-        for node_id, data in id_to_data.items():
-            if self._is_model_inputs(self._nodes[node_id]):
-                output_data[node_id] = data
         # Transform each x by the corresponding block.
         for hm in blocks:
             data = [id_to_data[self._node_to_id[input_node]]
@@ -332,8 +322,15 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
             data = nest.flatten(data)[0]
             data.set_shape(hm.output_shape)
             output_data[self._node_to_id[hm.outputs[0]]] = data
+        # Keep the Keras Model inputs even they are not inputs to the blocks.
+        for node_id, data in id_to_data.items():
+            if self._is_model_inputs(self._nodes[node_id]):
+                output_data[node_id] = data
+
+        for node_id in sorted(output_data.keys()):
+            output_node_ids.append(node_id)
         return tuple(map(
-            lambda index: output_data[index], sorted(output_data))), y
+            lambda node_id: output_data[node_id], output_node_ids)), y
 
     @staticmethod
     def _is_model_inputs(node):
