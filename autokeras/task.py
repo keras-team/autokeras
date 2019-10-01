@@ -252,6 +252,56 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                     validation_data=validation_data,
                     **kwargs)
 
+    def predict(self, x, batch_size=32, **kwargs):
+        """Predict the output for a given testing data.
+
+        # Arguments
+            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+                Testing data x. If the data is from a csv file, it should be a
+                string specifying the path of the csv file of the testing data.
+            batch_size: Int. Defaults to 32.
+            **kwargs: Any arguments supported by keras.Model.predict.
+
+        # Returns
+            A list of numpy.ndarray objects or a single numpy.ndarray.
+            The predicted results.
+        """
+        if isinstance(x, str):
+            x = pd.read_csv(x)
+
+        return super().predict(x=x,
+                               batch_size=batch_size,
+                               **kwargs)
+
+    def evaluate(self, x, y=None, batch_size=32, **kwargs):
+        """Evaluate the best model for the given data.
+
+        # Arguments
+            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+                Testing data x. If the data is from a csv file, it should be a
+                string specifying the path of the csv file of the testing data.
+            y: String, numpy.ndarray, or tensorflow.Dataset. Testing data y.
+                If the data is from a csv file, it should be a string corresponding
+                to the label column.
+            batch_size: Int. Defaults to 32.
+            **kwargs: Any arguments supported by keras.Model.evaluate.
+
+        # Returns
+            Scalar test loss (if the model has a single output and no metrics) or
+            list of scalars (if the model has multiple outputs and/or metrics).
+            The attribute model.metrics_names will give you the display labels for
+            the scalar outputs.
+        """
+        if isinstance(x, str):
+            df = pd.read_csv(x)
+            label = df.pop(y).to_numpy()
+            x = df
+            y = label
+        return super().evaluate(x=x,
+                                y=y,
+                                batch_size=batch_size,
+                                **kwargs)
+
 
 class StructuredDataClassifier(SupervisedStructuredDataPipeline):
     """AutoKeras structured data classification class.
