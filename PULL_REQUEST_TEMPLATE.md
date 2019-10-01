@@ -1,17 +1,9 @@
-<!--This pull request resolves #ISSUE_NUMBER. Also give a brief
-description/summary of the pull request here -->
+<!-- STEP 1: Give the pull request a meaningful title. -->
 ### Which issue(s) does this Pull Request fix?
+<!-- STEP 2: Replace the "000" with the issue ID this pull request resolves. -->
 resolves #000
 
-<!-- The pull request is in progress.
-OR
-The pull request is ready to be merged. 
-(is it in progress or ready to be merged?) -->
-
-### Pull Request Status 
-
-
-<!-- Any more details/comments on the pull request,
-detailed description of PR goes here -->
 ### Details of the Pull Request
+<!-- STEP 3: Add details/comments on the pull request. -->
 
+<!-- STEP 3: If the pull request is in progress, click the down green arrow to select "Create Draft Pull Request", and click the button. If the pull request is ready to be reviewed, click "Create Pull Request" button directly. -->
