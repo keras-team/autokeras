@@ -505,7 +505,7 @@ class TimeSeriesForecaster(auto_model.AutoModel):
                  output_dim=None,
                  loss=None,
                  metrics=None,
-                 name='time_series_data_forecaster',
+                 name='time_series_forecaster',
                  max_trials=100,
                  directory=None,
                  seed=None):
