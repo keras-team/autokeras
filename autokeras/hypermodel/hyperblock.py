@@ -1,6 +1,5 @@
 from tensorflow.python.util import nest
 
-from autokeras import utils
 from autokeras.hypermodel import block
 from autokeras.hypermodel import head as head_module
 from autokeras.hypermodel import node

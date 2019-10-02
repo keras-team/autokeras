@@ -1,6 +1,5 @@
 import numpy as np
 import autokeras as ak
-import tensorflow as tf
 from keras.datasets import mnist
 
 # Prepare the data.

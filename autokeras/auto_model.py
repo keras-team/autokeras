@@ -1,5 +1,3 @@
-import numpy as np
-import pandas as pd
 import tensorflow as tf
 from tensorflow.python.util import nest
 
@@ -9,7 +7,6 @@ from autokeras import tuner
 from autokeras import utils
 from autokeras.hypermodel import graph
 from autokeras.hypermodel import head
-from autokeras.hypermodel import node
 
 
 class AutoModel(object):
