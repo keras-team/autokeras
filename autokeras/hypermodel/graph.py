@@ -54,16 +54,16 @@ class GraphHyperModelBase(kerastuner.HyperModel):
     def set_io_shapes(self, dataset):
         """Set the input and output shapes to the nodes.
 
-        Args:
+        # Arguments
             dataset: tf.data.Dataset. The input dataset before preprocessing.
         """
-        # TODO: Set the shapes only if they are not provided by the user when
-        #  initiating the HyperHead or Block.
         x_shapes, y_shapes = utils.dataset_shape(dataset)
         for x_shape, input_node in zip(x_shapes, self.inputs):
-            input_node.shape = tuple(x_shape.as_list())
+            if input_node.shape is None:
+                input_node.shape = tuple(x_shape.as_list())
         for y_shape, output_node in zip(y_shapes, self.outputs):
-            output_node.shape = tuple(y_shape.as_list())
+            if output_node.shape is None:
+                output_node.shape = tuple(y_shape.as_list())
             output_node.in_blocks[0].output_shape = output_node.shape
 
     def _build_network(self):
@@ -446,7 +446,7 @@ class GraphHyperModel(GraphHyperModelBase):
     def save_preprocessors(self, path):
         """Save the preprocessors in the hypermodel in a single file.
 
-        Args:
+        # Arguments
             path: String. The path to a single file.
         """
         self.hyper_built_ghm.save_preprocessors(path)
@@ -454,7 +454,7 @@ class GraphHyperModel(GraphHyperModelBase):
     def load_preprocessors(self, path):
         """Load the preprocessors in the hypermodel from a single file
 
-        Args:
+        # Arguments
             path: String. The path to a single file.
         """
         self.hyper_built_ghm.load_preprocessors(path)
