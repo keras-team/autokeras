@@ -3,16 +3,6 @@
 ignore =
     # defaults flake8 ignores
     E121,E123,E126,E226,E24,E704,W503,W504
-    # Function name should be lowercase
-    N802
-    # class name should use CapWords convention
-    N801
-    # lowercase ... imported as non lowercase
-    N812
-    # do not use bare 'except'
-    E722
-    # constant ... imported as non constant
-    N811
 
 # imported but unused in __init__.py, that's ok.
 per-file-ignores = **/__init__.py:F401
