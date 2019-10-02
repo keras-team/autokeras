@@ -168,7 +168,6 @@ class TextRegressor(SupervisedTextPipeline):
 class SupervisedStructuredDataPipeline(auto_model.AutoModel):
 
     def __init__(self, outputs, column_names, column_types, **kwargs):
-        # TODO: support customized column_types.
         inputs = node.StructuredDataInput()
         inputs.column_types = column_types
         inputs.column_names = column_names
