@@ -230,3 +230,7 @@ def imdb_raw(num_instances=100):
     x_train = np.array(x_train, dtype=np.str)
     x_test = np.array(x_test, dtype=np.str)
     return (x_train, y_train), (x_test, y_test)
+
+
+def name_in_hps(hp_name, hp):
+    return any([hp_name in name for name in hp.values])
