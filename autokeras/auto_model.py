@@ -2,10 +2,10 @@ import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras import base
 from autokeras import meta_model
 from autokeras import tuner
 from autokeras import utils
+from autokeras.hypermodel import base
 from autokeras.hypermodel import graph
 
 
