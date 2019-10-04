@@ -2,7 +2,7 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-import autokeras.encoder
+from autokeras import encoder
 from autokeras import utils
 from autokeras.hypermodel import base
 from autokeras.hypermodel import block as block_module
@@ -159,9 +159,9 @@ class ClassificationHead(base.Head):
         if self.num_classes is None:
             self.num_classes = len(labels)
         if self.num_classes == 2:
-            self.label_encoder = autokeras.encoder.LabelEncoder()
+            self.label_encoder = encoder.LabelEncoder()
         elif self.num_classes > 2:
-            self.label_encoder = autokeras.encoder.OneHotEncoder()
+            self.label_encoder = encoder.OneHotEncoder()
         self.set_loss()
         self.label_encoder.fit_with_labels(y)
 

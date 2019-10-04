@@ -8,8 +8,8 @@ from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
 
-import autokeras.encoder
 from autokeras import const
+from autokeras import encoder
 from autokeras.hypermodel import base
 from autokeras.hypermodel import node as node_module
 
@@ -329,7 +329,7 @@ class LightGBMClassifier(LightGBMModel):
     def finalize(self):
         self._output_shape = self.targets[0].shape
         if self.num_classes > 2:
-            self._one_hot_encoder = autokeras.encoder.OneHotEncoder()
+            self._one_hot_encoder = encoder.OneHotEncoder()
             self._one_hot_encoder.fit_with_one_hot_encoded(self.targets)
             self.targets = self._one_hot_encoder.decode(self.targets)
         super().finalize()
@@ -366,7 +366,7 @@ class LightGBMClassifier(LightGBMModel):
     def clear_weights(self):
         super().clear_weights()
         self.lgbm = lgb.LGBMClassifier(random_state=self.seed)
-        self._one_hot_encoder = autokeras.encoder.OneHotEncoder()
+        self._one_hot_encoder = encoder.OneHotEncoder()
 
 
 class LightGBMRegressor(LightGBMModel):
@@ -657,7 +657,7 @@ class FeatureEngineering(base.Preprocessor):
                                  '{type}'.format(type=column_type))
 
         for index, cat_col_index1 in enumerate(self.categorical_col):
-            self.label_encoders[cat_col_index1] = autokeras.encoder.LabelEncoder()
+            self.label_encoders[cat_col_index1] = encoder.LabelEncoder()
             self.value_counters[cat_col_index1] = collections.defaultdict(
                 return_zero)
             self.count_frequency[cat_col_index1] = {}
