@@ -111,7 +111,8 @@ otherwise, the code will not be merged.
 
 ## Developer Tools Guide
 We highly recommend you to use [Pycharm](https://www.jetbrains.com/pycharm/) 
-and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
+and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) 
+as well as a pre-commit hook.
 ### Pycharm
 Pycharm is the best IDE for large project development in Python.
 We recommend you [inspect the code](https://www.jetbrains.com/help/pycharm/running-inspections.html)
@@ -124,6 +125,13 @@ and only install the packages required by autokeras with the corresponding versi
 The virtualenv should be created based on Python 3.6 interpreter.
 Use pycharm to select the 
 [virtualenv as interpreter](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html).
+
+### pre-commit hook
+
+You can make git run `flake8` before every commit automatically. It will make you go faster by
+avoiding pushing commit which are not passing the flake8 tests. To do this, 
+open `.git/hooks/pre-commit` with a text editor and write `flake8` inside. If the `flake8` doesn't
+pass, the commit will be aborted.
 
 ## Reusable Code Guide
 You may checkout this code review [video](https://youtu.be/PWdfY0DmjCo) to get familiar with the code structure.
