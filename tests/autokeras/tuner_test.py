@@ -35,7 +35,8 @@ def test_add_early_stopping(_2, get_trials, _1, _, run_trial, tmp_dir):
     input_node = ak.Input(shape=input_shape)
     output_node = input_node
     output_node = ak.DenseBlock()(output_node)
-    output_node = ak.ClassificationHead(output_shape=(num_classes,))(output_node)
+    output_node = ak.ClassificationHead(num_classes=num_classes,
+                                        output_shape=(num_classes,))(output_node)
     hypermodel = ak.hypermodel.graph.HyperBuiltGraphHyperModel(input_node,
                                                                output_node)
     tuner = ak.tuner.RandomSearch(

@@ -2,37 +2,14 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-
-class Node(object):
-    """The nodes in a network connecting the blocks."""
-    # TODO: Implement get_config() and set_config(), so that the entire graph can
-    # be saved.
-
-    def __init__(self, shape=None):
-        super().__init__()
-        self.in_blocks = []
-        self.out_blocks = []
-        self.shape = shape
-
-    def add_in_block(self, hypermodel):
-        self.in_blocks.append(hypermodel)
-
-    def add_out_block(self, hypermodel):
-        self.out_blocks.append(hypermodel)
-
-    def build(self):
-        return tf.keras.Input(shape=self.shape)
-
-    def clear_edges(self):
-        self.in_blocks = []
-        self.out_blocks = []
+from autokeras.hypermodel import base
 
 
-class TextNode(Node):
+class TextNode(base.Node):
     pass
 
 
-class Input(Node):
+class Input(base.Node):
     """Input node for tensor data.
 
     The data should be numpy.ndarray or tf.data.Dataset.

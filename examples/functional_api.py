@@ -4,6 +4,9 @@ import tensorflow as tf
 from keras.datasets import mnist
 
 # Prepare the data.
+import autokeras.hypermodel.block
+import autokeras.hypermodel.head
+
 (x_train, y_classification), (x_test, y_test) = mnist.load_data()
 data_slice = 5
 x_train = x_train[:data_slice]
@@ -27,8 +30,8 @@ structured_inputs = ak.StructuredDataInput()
 structured_outputs = ak.DenseBlock()(structured_inputs)
 merged_outputs = ak.Merge()((structured_outputs, image_outputs))
 
-classification_outputs = ak.ClassificationHead()(merged_outputs)
-regression_outputs = ak.RegressionHead()(merged_outputs)
+classification_outputs = autokeras.hypermodel.head.ClassificationHead()(merged_outputs)
+regression_outputs = autokeras.hypermodel.head.RegressionHead()(merged_outputs)
 automodel = ak.GraphAutoModel(inputs=[inputs, structured_inputs],
                               outputs=[regression_outputs,
                                        classification_outputs])

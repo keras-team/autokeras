@@ -19,7 +19,7 @@ def test_io_api(tmp_dir):
     text_x = text_x[:num_instances]
     structured_data_x = common.generate_structured_data(num_instances=num_instances)
     classification_y = common.generate_one_hot_labels(num_instances=num_instances,
-                                                      num_classes=2)
+                                                      num_classes=3)
     regression_y = common.generate_data(num_instances=num_instances, shape=(1,))
 
     # Build model and train.
@@ -31,7 +31,8 @@ def test_io_api(tmp_dir):
                  ak.ClassificationHead(loss='categorical_crossentropy',
                                        metrics=['accuracy'])],
         directory=tmp_dir,
-        max_trials=2)
+        max_trials=2,
+        seed=common.SEED)
     automodel.fit([image_x, text_x, structured_data_x],
                   [regression_y, classification_y],
                   epochs=2,

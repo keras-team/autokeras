@@ -10,6 +10,13 @@ def name_in_hps(hp_name, hp):
     return any([hp_name in name for name in hp.values])
 
 
+def test_type_error_for_call():
+    block = block_module.ConvBlock()
+    with pytest.raises(TypeError) as info:
+        block(block)
+    assert 'Expect the inputs to layer' in str(info.value)
+
+
 @mock.patch('autokeras.hypermodel.block.resnet.HyperResNet.__init__')
 @mock.patch('autokeras.hypermodel.block.resnet.HyperResNet.build')
 def test_resnet_block(init, build):
@@ -112,6 +119,7 @@ def test_spatial_reduction():
 def test_embedding_block():
     input_shape = (32,)
     block = block_module.EmbeddingBlock()
+    block.max_features = 100
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.Input(shape=input_shape).build())

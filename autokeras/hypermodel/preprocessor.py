@@ -8,131 +8,19 @@ from sklearn import feature_selection
 from sklearn.feature_extraction import text
 from tensorflow.python.util import nest
 
+import autokeras.encoder
 from autokeras import const
 from autokeras import utils
-from autokeras.hypermodel import block
-from autokeras.hypermodel import head
-from autokeras.hypermodel import node
+from autokeras.hypermodel import base
+from autokeras.hypermodel import node as node_module
+
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import lightgbm as lgb
 
 
-class Preprocessor(block.Block):
-    """Hyper preprocessing block base class."""
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._hp = None
-
-    def build(self, hp, inputs=None):
-        """Build into part of a Keras Model.
-
-        Since they are for preprocess data before feeding into the Keras Model,
-        they are not part of the Keras Model. They only pass the inputs
-        directly to outputs.
-        """
-        return inputs
-
-    def set_hp(self, hp):
-        """Set Hyperparameters for the Preprocessor.
-
-        Since the `update` and `transform` function are all for single training
-        instances instead of the entire dataset, the Hyperparameters needs to be
-        set in advance of call them.
-
-        # Arguments
-            hp: Hyperparameters. The hyperparameters for tuning the preprocessor.
-        """
-        self._hp = hp
-
-    def update(self, x, y=None):
-        """Incrementally fit the preprocessor with a single training instance.
-
-        # Arguments
-            x: EagerTensor. A single instance in the training dataset.
-            y: EagerTensor. The targets of the tasks. Defaults to None.
-        """
-        raise NotImplementedError
-
-    def transform(self, x, fit=False):
-        """Incrementally fit the preprocessor with a single training instance.
-
-        # Arguments
-            x: EagerTensor. A single instance in the training dataset.
-            fit: Boolean. Whether it is in fit mode.
-
-        Returns:
-            A transformed instanced which can be converted to a tf.Tensor.
-        """
-        raise NotImplementedError
-
-    def output_types(self):
-        """The output types of the transformed data, e.g. tf.int64.
-
-        The output types are required by tf.py_function, which is used for transform
-        the dataset into a new one with a map function.
-
-        # Returns
-            A tuple of data types.
-        """
-        raise NotImplementedError
-
-    @property
-    def output_shape(self):
-        """The output shape of the transformed data.
-
-        The output shape is needed to build the Keras Model from the AutoModel.
-        The output shape of the preprocessor is the input shape of the Keras Model.
-
-        # Returns
-            A tuple of int(s) or a TensorShape.
-        """
-        raise NotImplementedError
-
-    def finalize(self):
-        """Training process of the preprocessor after update with all instances."""
-        pass
-
-    def get_config(self):
-        """Get the configuration of the preprocessor.
-
-        # Returns
-            A dictionary of configurations of the preprocessor.
-        """
-        return {}
-
-    def set_config(self, config):
-        """Set the configuration of the preprocessor.
-
-        # Arguments
-            config: A dictionary of the configurations of the preprocessor.
-        """
-        pass
-
-    def clear_weights(self):
-        """Delete the trained weights of the preprocessor."""
-        pass
-
-    def get_weights(self):
-        """Get the trained weights of the preprocessor.
-
-        # Returns
-            A dictionary of trained weights of the preprocessor.
-        """
-        return {}
-
-    def set_weights(self, weights):
-        """Set the trained weights of the preprocessor.
-
-        # Arguments
-            weights: A dictionary of trained weights of the preprocessor.
-        """
-        pass
-
-
-class Normalization(Preprocessor):
+class Normalization(base.Preprocessor):
     """ Perform basic image transformation and augmentation.
 
     # Arguments
@@ -206,7 +94,7 @@ class Normalization(Preprocessor):
         self.shape = None
 
 
-class TextToIntSequence(Preprocessor):
+class TextToIntSequence(base.Preprocessor):
     """Convert raw texts to sequences of word indices."""
 
     def __init__(self, max_len=None, **kwargs):
@@ -215,6 +103,8 @@ class TextToIntSequence(Preprocessor):
         self.max_len_in_data = 0
         self.tokenizer = tf.keras.preprocessing.text.Tokenizer(
             num_words=const.Constant.VOCABULARY_SIZE)
+        self.max_len_to_use = None
+        self.max_features = None
 
     def update(self, x, y=None):
         sentence = nest.flatten(x)[0].numpy().decode('utf-8')
@@ -223,12 +113,16 @@ class TextToIntSequence(Preprocessor):
         if self.max_len is None:
             self.max_len_in_data = max(self.max_len_in_data, len(sequence))
 
+    def finalize(self):
+        self.max_len_to_use = self.max_len or self.max_len_in_data
+        self.max_features = len(self.tokenizer.word_counts)
+
     def transform(self, x, fit=False):
         sentence = nest.flatten(x)[0].numpy().decode('utf-8')
-        sequence = self.tokenizer.texts_to_sequences(sentence)[0]
+        sequence = self.tokenizer.texts_to_sequences([sentence])
         sequence = tf.keras.preprocessing.sequence.pad_sequences(
             sequence,
-            self.max_len or self.max_len_in_data)
+            self.max_len_to_use)[0]
         return sequence
 
     def output_types(self):
@@ -258,7 +152,7 @@ class TextToIntSequence(Preprocessor):
             num_words=const.Constant.VOCABULARY_SIZE)
 
 
-class TextToNgramVector(Preprocessor):
+class TextToNgramVector(base.Preprocessor):
     """Convert raw texts to n-gram vectors."""
 
     def __init__(self, **kwargs):
@@ -335,7 +229,7 @@ class TextToNgramVector(Preprocessor):
         self.shape = None
 
 
-class LightGBMModel(Preprocessor):
+class LightGBMModel(base.Preprocessor):
     """The base class for LightGBMClassifier and LightGBMRegressor.
 
     # Arguments
@@ -348,6 +242,16 @@ class LightGBMModel(Preprocessor):
         self._output_shape = None
         self.lgbm = None
         self.seed = seed
+
+    def update(self, x, y=None):
+        """ Store the train data and decode.
+
+        # Arguments
+            x: Eager Tensor. The data to be stored.
+            y: Eager Tensor. The label to be stored.
+        """
+        self.data.append(nest.flatten(x)[0].numpy())
+        self.targets.append(nest.flatten(y)[0].numpy())
 
     def transform(self, x, fit=False):
         """ Transform the data using well-trained LightGBM regressor.
@@ -395,15 +299,20 @@ class LightGBMModel(Preprocessor):
     def output_shape(self):
         return self._output_shape
 
-    def update(self, x, y=None):
-        raise NotImplementedError
-
     def output_types(self):
-        raise NotImplementedError
+        return (tf.float32,)
 
     def set_weights(self, weights):
         self.lgbm = weights['lgbm']
         self._output_shape = weights['output_shape']
+
+    def get_weights(self):
+        return {'lgbm': self.lgbm,
+                'output_shape': self._output_shape,
+                'seed': self.seed}
+
+    def clear_weights(self):
+        self._output_shape = None
 
 
 class LightGBMClassifier(LightGBMModel):
@@ -416,21 +325,16 @@ class LightGBMClassifier(LightGBMModel):
     def __init__(self, seed=None, **kwargs):
         super().__init__(seed=seed, **kwargs)
         self.lgbm = lgb.LGBMClassifier(random_state=self.seed)
-        self._one_hot_encoder = utils.OneHotEncoder()
+        self._one_hot_encoder = None
+        self.num_classes = None
 
-    def update(self, x, y=None):
-        """ Store the train data and decode.
-
-        # Arguments
-            x: Eager Tensor. The data to be stored.
-            y: Eager Tensor. The label to be stored.
-        """
-        y = nest.flatten(y)[0].numpy()
-        self.data.append(nest.flatten(x)[0].numpy())
-        self._one_hot_encoder.fit_with_one_hot_encoded(np.array(y))
-        self._output_shape = np.shape(y)
-        y = y.reshape(1, -1)
-        self.targets.append(nest.flatten(self._one_hot_encoder.decode(y))[0])
+    def finalize(self):
+        self._output_shape = self.targets[0].shape
+        if self.num_classes > 2:
+            self._one_hot_encoder = autokeras.encoder.OneHotEncoder()
+            self._one_hot_encoder.fit_with_one_hot_encoded(self.targets)
+            self.targets = self._one_hot_encoder.decode(self.targets)
+        super().finalize()
 
     def get_params(self):
         params = super().get_params()
@@ -447,26 +351,24 @@ class LightGBMClassifier(LightGBMModel):
             Eager Tensor. The predicted label of x.
         """
         y = super().transform(x, fit)
-        y = self._one_hot_encoder.encode(y)
-        y = y.reshape((-1))
+        if self._one_hot_encoder:
+            y = self._one_hot_encoder.encode(y)
+            y = y.reshape((-1))
         return y
-
-    def output_types(self):
-        return (tf.float32,)
 
     def set_weights(self, weights):
         super().set_weights(weights)
-        self._one_hot_encoder = weights['_one_hot_encoder']
+        self._one_hot_encoder = weights['one_hot_encoder']
 
     def get_weights(self):
-        return {'lgbm': self.lgbm,
-                '_one_hot_encoder': self._one_hot_encoder,
-                'output_shape': self._output_shape}
+        weights = super().get_weights()
+        weights.update({'one_hot_encoder': self._one_hot_encoder})
+        return weights
 
     def clear_weights(self):
-        self.lgbm = lgb.LGBMClassifier()
-        self._one_hot_encoder = utils.OneHotEncoder()
-        self._output_shape = None
+        super().clear_weights()
+        self.lgbm = lgb.LGBMClassifier(random_state=self.seed)
+        self._one_hot_encoder = autokeras.encoder.OneHotEncoder()
 
 
 class LightGBMRegressor(LightGBMModel):
@@ -480,31 +382,16 @@ class LightGBMRegressor(LightGBMModel):
         super().__init__(seed=seed, **kwargs)
         self.lgbm = lgb.LGBMRegressor(random_state=self.seed)
 
-    def update(self, x, y=None):
-        """ Store the train data.
-
-        # Arguments
-            x: Eager Tensor. The data to be stored.
-            y: Eager Tensor. The value to be stored.
-        """
-        y = nest.flatten(y)[0]
-        self.data.append(nest.flatten(x)[0].numpy())
-        self._output_shape = np.shape(y)
-        self.targets.append(y)
-
-    def output_types(self):
-        return (tf.float32,)
-
-    def get_weights(self):
-        return {'lgbm': self.lgbm,
-                'output_shape': self._output_shape}
-
     def clear_weights(self):
-        self.lgbm = lgb.LGBMRegressor()
-        self._output_shape = None
+        super().clear_weights()
+        self.lgbm = lgb.LGBMRegressor(random_state=self.seed)
+
+    def finalize(self):
+        self._output_shape = self.targets[0].shape
+        super().finalize()
 
 
-class LightGBMBlock(Preprocessor):
+class LightGBMBlock(base.Preprocessor):
     """LightGBM Block for classification or regression task.
 
     # Arguments
@@ -532,24 +419,6 @@ class LightGBMBlock(Preprocessor):
     def set_config(self, config):
         self.lightgbm_block.set_config(config)
 
-    def compile(self):
-        self.heads = head.fetch_heads(self)
-        if len(self.heads) > 1:
-            raise ValueError('LightGBMBlock can only be connected to one head.')
-        if isinstance(self.heads[0], head.ClassificationHead):
-            self.lightgbm_block = LightGBMClassifier(seed=self.seed)
-        if isinstance(self.heads[0], head.RegressionHead):
-            self.lightgbm_block = LightGBMRegressor(seed=self.seed)
-
-        in_block = self.heads[0]
-        # Check if the head has no other input but only LightGBMBlock.
-        while in_block is not self:
-            # The head has other inputs.
-            if len(in_block.inputs) > 1:
-                return
-            in_block = in_block.inputs[0].in_blocks[0]
-        self.heads[0].identity = True
-
     def update(self, x, y=None):
         self.lightgbm_block.update(x, y)
 
@@ -570,7 +439,7 @@ class LightGBMBlock(Preprocessor):
         self.lightgbm_block.set_hp(hp)
 
 
-class ImageAugmentation(Preprocessor):
+class ImageAugmentation(base.Preprocessor):
     """Collection of various image augmentation methods.
 
     # Arguments
@@ -746,7 +615,7 @@ def return_zero():
     return 0
 
 
-class FeatureEngineering(Preprocessor):
+class FeatureEngineering(base.Preprocessor):
     """A preprocessor block does feature engineering for the data.
 
     # Arguments
@@ -790,7 +659,7 @@ class FeatureEngineering(Preprocessor):
                                  '{type}'.format(type=column_type))
 
         for index, cat_col_index1 in enumerate(self.categorical_col):
-            self.label_encoders[cat_col_index1] = utils.LabelEncoder()
+            self.label_encoders[cat_col_index1] = autokeras.encoder.LabelEncoder()
             self.value_counters[cat_col_index1] = collections.defaultdict(
                 return_zero)
             self.count_frequency[cat_col_index1] = {}
@@ -968,11 +837,5 @@ class FeatureEngineering(Preprocessor):
 
     def set_config(self, config):
         self.num_columns = config['num_columns']
-        self.input_node = node.StructuredDataInput(*config['input_node'])
+        self.input_node = node_module.StructuredDataInput(*config['input_node'])
         self.max_columns = config['max_columns']
-
-    def compile(self):
-        self.input_node = self.inputs[0]
-        if not isinstance(self.input_node, node.StructuredDataInput):
-            raise TypeError('FeatureEngineering block can only be used '
-                            'with StructuredDataInput.')

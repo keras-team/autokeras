@@ -170,6 +170,7 @@ def csv_test(target):
 
 
 def generate_data(num_instances=100, shape=(32, 32, 3), dtype='np'):
+    np.random.seed(SEED)
     data = np.random.rand(*((num_instances,) + shape))
     if data.dtype == np.float64:
         data = data.astype(np.float32)
@@ -180,6 +181,7 @@ def generate_data(num_instances=100, shape=(32, 32, 3), dtype='np'):
 
 
 def generate_one_hot_labels(num_instances=100, num_classes=10, dtype='np'):
+    np.random.seed(SEED)
     labels = np.random.randint(num_classes, size=num_instances)
     data = tf.keras.utils.to_categorical(labels)
     if dtype == 'np':

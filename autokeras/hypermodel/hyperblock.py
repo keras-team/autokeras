@@ -1,51 +1,12 @@
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import block
-from autokeras.hypermodel import head as head_module
-from autokeras.hypermodel import node
-from autokeras.hypermodel import preprocessor
+from autokeras.hypermodel import base
+from autokeras.hypermodel import block as block_module
+from autokeras.hypermodel import node as node_module
+from autokeras.hypermodel import preprocessor as preprocessor_module
 
 
-class HyperBlock(block.Block):
-    """HyperBlock uses hyperparameters to decide inner Block graph.
-
-    A HyperBlock should be build into connected Blocks instead of individual Keras
-    layers. The main purpose of creating the HyperBlock class is for the ease of
-    parsing the graph for preprocessors. The graph would be hard to parse if a Block,
-    whose inner structure is decided by hyperparameters dynamically, contains both
-    preprocessors and Keras layers.
-
-    When the preprocessing layers of Keras are ready to cover all the preprocessors
-    in AutoKeras, the preprocessors should be handled by the Keras Model. The
-    HyperBlock class should be removed. The subclasses should extend Block class
-    directly and the build function should build connected Keras layers instead of
-    Blocks.
-
-    # Arguments
-        output_shape: Tuple of int(s). Defaults to None. If None, the output shape
-            will be inferred from the AutoModel.
-        name: String. The name of the block. If unspecified, it will be set
-            automatically with the class name.
-    """
-
-    def __init__(self, output_shape=None, **kwargs):
-        super().__init__(**kwargs)
-        self.output_shape = output_shape
-
-    def build(self, hp, inputs=None):
-        """Build the HyperModel instead of Keras Model.
-
-        # Arguments
-            hp: Hyperparameters. The hyperparameters for building the model.
-            inputs: A list of instances of Node.
-
-        # Returns
-            An Node instance, the output node of the output Block.
-        """
-        raise NotImplementedError
-
-
-class ImageBlock(HyperBlock):
+class ImageBlock(base.HyperBlock):
     """Block for image data.
 
     The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
@@ -72,6 +33,21 @@ class ImageBlock(HyperBlock):
         self.augment = augment
         self.seed = seed
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({'block_type': self.block_type,
+                       'normalize': self.normalize,
+                       'augment': self.augment,
+                       'seed': self.seed})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.block_type = config.get('block_type')
+        self.normalize = config.get('normalize')
+        self.augment = config.get('augment')
+        self.seed = config.get('seed')
+
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
@@ -87,20 +63,22 @@ class ImageBlock(HyperBlock):
         if augment is None:
             augment = hp.Choice('augment', [True, False], default=True)
         if normalize:
-            output_node = preprocessor.Normalization()(output_node)
+            output_node = preprocessor_module.Normalization()(output_node)
         if augment:
-            output_node = preprocessor.ImageAugmentation(seed=self.seed)(output_node)
+            output_node = preprocessor_module.ImageAugmentation(
+                seed=self.seed)(output_node)
         sub_block_name = self.name + '_' + block_type
         if block_type == 'resnet':
-            output_node = block.ResNetBlock(name=sub_block_name)(output_node)
+            output_node = block_module.ResNetBlock(name=sub_block_name)(output_node)
         elif block_type == 'xception':
-            output_node = block.XceptionBlock(name=sub_block_name)(output_node)
+            output_node = block_module.XceptionBlock(
+                name=sub_block_name)(output_node)
         elif block_type == 'vanilla':
-            output_node = block.ConvBlock(name=sub_block_name)(output_node)
+            output_node = block_module.ConvBlock(name=sub_block_name)(output_node)
         return output_node
 
 
-class TextBlock(HyperBlock):
+class TextBlock(base.HyperBlock):
     """Block for text data.
 
     # Arguments
@@ -116,26 +94,37 @@ class TextBlock(HyperBlock):
         self.vectorizer = vectorizer
         self.pretraining = pretraining
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({'vectorizer': self.vectorizer,
+                       'pretraining': self.pretraining})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.vectorizer = config['vectorizer']
+        self.pretraining = config['pretraining']
+
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         vectorizer = self.vectorizer or hp.Choice('vectorizer',
                                                   ['sequence', 'ngram'],
                                                   default='sequence')
-        if not isinstance(input_node, node.TextNode):
+        if not isinstance(input_node, node_module.TextNode):
             raise ValueError('The input_node should be a TextNode.')
         if vectorizer == 'ngram':
-            output_node = preprocessor.TextToNgramVector()(output_node)
-            output_node = block.DenseBlock()(output_node)
+            output_node = preprocessor_module.TextToNgramVector()(output_node)
+            output_node = block_module.DenseBlock()(output_node)
         else:
-            output_node = preprocessor.TextToIntSequence()(output_node)
-            output_node = block.EmbeddingBlock(
+            output_node = preprocessor_module.TextToIntSequence()(output_node)
+            output_node = block_module.EmbeddingBlock(
                 pretraining=self.pretraining)(output_node)
-            output_node = block.ConvBlock(separable=True)(output_node)
+            output_node = block_module.ConvBlock(separable=True)(output_node)
         return output_node
 
 
-class StructuredDataBlock(HyperBlock):
+class StructuredDataBlock(base.HyperBlock):
     """Block for structured data.
 
     # Arguments
@@ -152,11 +141,26 @@ class StructuredDataBlock(HyperBlock):
                  module_type=None,
                  seed=None,
                  **kwargs):
-        super().__init__()
+        super().__init__(**kwargs)
         self.feature_engineering = feature_engineering
         self.module_type = module_type
         self.heads = None
         self.seed = seed
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'feature_engineering': self.feature_engineering,
+                       'module_type': self.module_type,
+                       'heads': self.heads,
+                       'seed': self.seed})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.feature_engineering = config.get('feature_engineering')
+        self.module_type = config.get('module_type')
+        self.heads = config.get('heads')
+        self.seed = config.get('seed')
 
     def build_feature_engineering(self, hp, input_node):
         output_node = input_node
@@ -167,7 +171,7 @@ class StructuredDataBlock(HyperBlock):
                                             [True],
                                             default=True)
         if feature_engineering:
-            output_node = preprocessor.FeatureEngineering()(output_node)
+            output_node = preprocessor_module.FeatureEngineering()(output_node)
         return output_node
 
     def build_body(self, hp, input_node):
@@ -179,9 +183,10 @@ class StructuredDataBlock(HyperBlock):
                                                     module_type_choices,
                                                     default=module_type_choices[0])
         if module_type == 'dense':
-            output_node = block.DenseBlock()(input_node)
+            output_node = block_module.DenseBlock()(input_node)
         elif module_type == 'lightgbm':
-            output_node = preprocessor.LightGBMBlock(seed=self.seed)(input_node)
+            output_node = preprocessor_module.LightGBMBlock(
+                seed=self.seed)(input_node)
         else:
             raise ValueError('Unsupported module'
                              'type: {module_type}'.format(
@@ -195,17 +200,14 @@ class StructuredDataBlock(HyperBlock):
         output_node = self.build_body(hp, output_node)
         return output_node
 
-    def compile(self):
-        self.heads = head_module.fetch_heads(self)
 
-
-class TimeSeriesBlock(HyperBlock):
+class TimeSeriesBlock(base.HyperBlock):
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
 
 
-class GeneralBlock(HyperBlock):
+class GeneralBlock(base.HyperBlock):
     """A general neural network block when the input type is unknown.
 
     When the input type is unknown. The GeneralBlock would search in a large space
