@@ -115,7 +115,7 @@ class TextToIntSequence(base.Preprocessor):
 
     def finalize(self):
         self.max_len_to_use = self.max_len or self.max_len_in_data
-        self.max_features = len(self.tokenizer.word_counts)
+        self.max_features = len(self.tokenizer.word_counts) + 1
 
     def transform(self, x, fit=False):
         sentence = nest.flatten(x)[0].numpy().decode('utf-8')
