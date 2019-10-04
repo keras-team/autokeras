@@ -1,6 +1,7 @@
 from unittest import mock
 
 import kerastuner
+import pytest
 
 import autokeras as ak
 from autokeras.hypermodel import block as block_module

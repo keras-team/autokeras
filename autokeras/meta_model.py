@@ -1,7 +1,7 @@
+import numpy as np
 import tensorflow as tf
 from kerastuner.engine import hyperparameters as hp_module
 from tensorflow.python.util import nest
-import numpy as np
 
 from autokeras.hypermodel import block
 from autokeras.hypermodel import graph

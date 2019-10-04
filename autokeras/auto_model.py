@@ -1,14 +1,12 @@
+import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
-
-import kerastuner
 
 import autokeras.hypermodel.base
 from autokeras import meta_model
 from autokeras import tuner
 from autokeras import utils
 from autokeras.hypermodel import graph
-from autokeras.hypermodel import head
 
 
 class AutoModel(object):

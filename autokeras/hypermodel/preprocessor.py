@@ -10,10 +10,8 @@ from tensorflow.python.util import nest
 
 import autokeras.encoder
 from autokeras import const
-from autokeras import utils
 from autokeras.hypermodel import base
 from autokeras.hypermodel import node as node_module
-
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")

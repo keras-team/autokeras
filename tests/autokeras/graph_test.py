@@ -1,7 +1,7 @@
 import kerastuner
-from kerastuner.engine import hyperparameters as hp_module
-import tensorflow as tf
 import pytest
+import tensorflow as tf
+from kerastuner.engine import hyperparameters as hp_module
 
 import autokeras as ak
 from autokeras.hypermodel import graph as graph_module

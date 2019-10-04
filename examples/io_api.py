@@ -1,11 +1,9 @@
 import numpy as np
+
 import autokeras as ak
 from keras.datasets import mnist
 
 # Prepare the data.
-import autokeras.hypermodel.block
-import autokeras.hypermodel.head
-
 (x_train, y_classification), (x_test, y_test) = mnist.load_data()
 data_slice = 20
 x_train = x_train[:data_slice]
@@ -30,9 +28,9 @@ y_classification = y_classification.reshape(-1, 1)
 automodel = ak.AutoModel(
     inputs=[ak.ImageInput(),
             ak.StructuredDataInput()],
-    outputs=[autokeras.hypermodel.head.RegressionHead(metrics=['mae']),
-             autokeras.hypermodel.head.ClassificationHead(loss='categorical_crossentropy',
-                                                          metrics=['accuracy'])])
+    outputs=[ak.RegressionHead(metrics=['mae']),
+             ak.ClassificationHead(loss='categorical_crossentropy',
+                                   metrics=['accuracy'])])
 automodel.fit([x_image, x_structured],
               [y_regression, y_classification],
               validation_split=0.2)
