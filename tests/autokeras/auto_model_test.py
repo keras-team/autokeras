@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 import autokeras as ak
-from tests import common
 
 
 @pytest.fixture(scope='module')
@@ -13,7 +12,8 @@ def tmp_dir(tmpdir_factory):
 
 
 @mock.patch('autokeras.tuner.RandomSearch')
-def test_evaluate(tuner, tmp_dir):
+@mock.patch('autokeras.hypermodel.graph.GraphHyperModel')
+def test_evaluate(graph, tuner, tmp_dir):
     x_train = np.random.rand(100, 32)
     y_train = np.random.rand(100, 1)
 
@@ -29,10 +29,12 @@ def test_evaluate(tuner, tmp_dir):
     auto_model.fit(x_train, y_train, epochs=1, validation_data=(x_train, y_train))
     auto_model.evaluate(x_train, y_train)
     assert tuner.called
+    assert graph.called
 
 
 @mock.patch('autokeras.tuner.RandomSearch')
-def test_auto_model_predict(tuner, tmp_dir):
+@mock.patch('autokeras.hypermodel.graph.GraphHyperModel')
+def test_auto_model_predict(graph, tuner, tmp_dir):
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
 
@@ -43,3 +45,4 @@ def test_auto_model_predict(tuner, tmp_dir):
     auto_model.fit(x_train, y_train, epochs=2, validation_split=0.2)
     auto_model.predict(x_train)
     assert tuner.called
+    assert graph.called

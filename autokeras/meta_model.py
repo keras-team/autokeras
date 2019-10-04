@@ -173,8 +173,6 @@ class StructuredDataAssembler(Assembler):
     """
 
     def __init__(self, column_names, seed=None, **kwargs):
-        # TODO: support partial column_types, i.e., the size of the dict is smaller
-        # than the number of the columns.
         super().__init__(**kwargs)
         self.column_types = {}
         self.column_names = column_names

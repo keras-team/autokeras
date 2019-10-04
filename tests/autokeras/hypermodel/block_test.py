@@ -1,13 +1,9 @@
 from unittest import mock
 
 import kerastuner
-import numpy as np
-import pytest
-import tensorflow as tf
 
 import autokeras as ak
 from autokeras.hypermodel import block as block_module
-from tests import common
 
 
 def name_in_hps(hp_name, hp):

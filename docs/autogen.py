@@ -1,21 +1,14 @@
 # -*- coding: utf-8 -*-
-import inspect
-import os
-import re
-import shutil
-import sys
 import pathlib
+import shutil
 
-import six
-import autokeras
+import keras_autodoc
+
 from autokeras import auto_model
 from autokeras import task
 from autokeras.hypermodel import block
 from autokeras.hypermodel import head
 from autokeras.hypermodel import hyperblock
-
-import keras_autodoc
-
 
 EXCLUDE = {
     'Optimizer',

@@ -1,5 +1,3 @@
-from unittest import mock
-
 import kerastuner
 from kerastuner.engine import hyperparameters as hp_module
 import tensorflow as tf
