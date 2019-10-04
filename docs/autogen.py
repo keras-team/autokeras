@@ -6,10 +6,8 @@ import inspect
 import os
 import re
 import shutil
-import sys
 
 import six
-import autokeras
 from autokeras import auto_model
 from autokeras import task
 from autokeras.hypermodel import block

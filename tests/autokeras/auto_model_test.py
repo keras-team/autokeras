@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 import autokeras as ak
-from tests import common
 
 
 @pytest.fixture(scope='module')

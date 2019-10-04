@@ -1,13 +1,9 @@
 import functools
 
 import kerastuner
-import numpy as np
-import pytest
 import tensorflow as tf
 
 import autokeras as ak
-from autokeras.hypermodel import block
-from autokeras.hypermodel import head
 from autokeras.hypermodel import preprocessor
 from tests import common
 
