@@ -1,4 +1,5 @@
 import pytest
+import tensorflow as tf
 
 from autokeras.hypermodel import node
 from tests import common
@@ -48,3 +49,30 @@ def test_structured_data_input_transform():
     input_node.fit(x)
     input_node.transform(x)
     assert input_node.column_names[0] == 'sex'
+
+
+def test_image_input():
+    x = common.generate_data()
+    input_node = node.ImageInput()
+    input_node.fit(x)
+    assert isinstance(input_node.transform(x), tf.data.Dataset)
+
+
+def test_image_input_with_three_dim():
+    x = common.generate_data(shape=(32, 32))
+    input_node = node.ImageInput()
+    input_node.fit(x)
+    x = input_node.transform(x)
+    assert isinstance(x, tf.data.Dataset)
+    for a in x:
+        assert a.shape == (32, 32, 1)
+        break
+
+
+def test_image_input_with_illegal_dim():
+    x = common.generate_data(shape=(32,))
+    input_node = node.ImageInput()
+    input_node.fit(x)
+    with pytest.raises(ValueError) as info:
+        x = input_node.transform(x)
+    assert 'Expect image input to have' in str(info.value)

@@ -1,11 +1,9 @@
 import numpy as np
 import tensorflow as tf
 
+import autokeras as ak
 from autokeras import meta_model
-from autokeras.hypermodel import head
 from autokeras.hypermodel import node
-from autokeras.hypermodel import preprocessor
-
 from tests import common
 
 
@@ -42,7 +40,7 @@ def test_partial_column_types():
         (tf.data.Dataset.from_tensor_slices(x.values.astype(np.unicode)),),
         (tf.data.Dataset.from_tensor_slices(y),)
         ))
-    hm = meta_model.assemble(input_node, head.ClassificationHead(), dataset)
+    hm = meta_model.assemble(input_node, ak.ClassificationHead(), dataset)
     for block in hm._blocks:
-        if isinstance(block, preprocessor.FeatureEngineering):
+        if isinstance(block, ak.FeatureEngineering):
             assert block.input_node.column_types['fare'] == 'categorical'

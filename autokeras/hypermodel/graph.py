@@ -6,9 +6,8 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import utils
-from autokeras.hypermodel import head
-from autokeras.hypermodel import hyperblock
-from autokeras.hypermodel import preprocessor
+from autokeras.hypermodel import base
+from autokeras.hypermodel import compiler
 
 
 class GraphHyperModelBase(kerastuner.HyperModel):
@@ -19,6 +18,7 @@ class GraphHyperModelBase(kerastuner.HyperModel):
         outputs: A list of output node(s) for the GraphHyperModel.
         name: String. The name of the GraphHyperModel.
     """
+
     def __init__(self, inputs, outputs, name=None):
         super().__init__(name=name)
         self.inputs = nest.flatten(inputs)
@@ -29,12 +29,15 @@ class GraphHyperModelBase(kerastuner.HyperModel):
         self._block_to_id = {}
         self._build_network()
         self._hps = []
-        self.compile()
 
-    def compile(self):
+    def compile(self, func):
         """Passing config infomation from block to block."""
         for block in self._blocks:
-            block.compile()
+            if block.__class__ in func:
+                func[block.__class__](block)
+
+    def build(self, hp):
+        raise NotImplementedError
 
     def _init_hps(self, hp):
         for single_hp in self._hps:
@@ -178,6 +181,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
     def __init__(self, inputs, outputs, **kwargs):
         self._model_inputs = []
         super().__init__(inputs=inputs, outputs=outputs, **kwargs)
+        self.compile(compiler.BEFORE)
 
     def _build_network(self):
         super()._build_network()
@@ -197,7 +201,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
             node_id = self._node_to_id[input_node]
             real_nodes[node_id] = input_node.build()
         for block in self._blocks:
-            if isinstance(block, preprocessor.Preprocessor):
+            if isinstance(block, base.Preprocessor):
                 continue
             temp_inputs = [real_nodes[self._node_to_id[input_node]]
                            for input_node in block.inputs]
@@ -217,7 +221,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
         metrics = {}
         for output_node in self.outputs:
             block = output_node.in_blocks[0]
-            if isinstance(block, head.Head):
+            if isinstance(block, base.Head):
                 metrics[block.name] = block.metrics
         return metrics
 
@@ -225,7 +229,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
         loss = {}
         for output_node in self.outputs:
             block = output_node.in_blocks[0]
-            if isinstance(block, head.Head):
+            if isinstance(block, base.Head):
                 loss[block.name] = block.loss
         return loss
 
@@ -244,12 +248,12 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
 
     def preprocess(self, hp, dataset, validation_data=None, fit=False):
         for block in self._blocks:
-            if isinstance(block, preprocessor.Preprocessor):
+            if isinstance(block, base.Preprocessor):
                 block.set_hp(hp)
         dataset = self._preprocess(dataset, fit=fit)
-        if not validation_data:
-            return dataset
-        validation_data = self._preprocess(validation_data)
+        if validation_data:
+            validation_data = self._preprocess(validation_data)
+        self.compile(compiler.AFTER)
         return dataset, validation_data
 
     def _preprocess(self, dataset, fit=False):
@@ -263,7 +267,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
             blocks = []
             for node_id in input_node_ids:
                 for block in self._nodes[node_id].out_blocks:
-                    if isinstance(block, preprocessor.Preprocessor):
+                    if isinstance(block, base.Preprocessor):
                         blocks.append(block)
             if fit:
                 # Iterate the dataset to fit the preprocessors in current depth.
@@ -335,10 +339,10 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
     @staticmethod
     def _is_model_inputs(node):
         for block in node.in_blocks:
-            if not isinstance(block, preprocessor.Preprocessor):
+            if not isinstance(block, base.Preprocessor):
                 return False
         for block in node.out_blocks:
-            if not isinstance(block, preprocessor.Preprocessor):
+            if not isinstance(block, base.Preprocessor):
                 return True
         return False
 
@@ -346,7 +350,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
         configs = {}
         weights = {}
         for block in self._blocks:
-            if isinstance(block, preprocessor.Preprocessor):
+            if isinstance(block, base.Preprocessor):
                 configs[block.name] = block.get_config()
                 weights[block.name] = block.get_weights()
         preprocessors = {'configs': configs, 'weights': weights}
@@ -365,7 +369,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
 
     def clear_preprocessors(self):
         for block in self._blocks:
-            if isinstance(block, preprocessor.Preprocessor):
+            if isinstance(block, base.Preprocessor):
                 block.clear_weights()
 
     def _get_block(self, name):
@@ -376,12 +380,8 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
 
 
 def copy_block(old_block):
-    # TODO: use get_config and set_config, which requires the implementation of
-    # these two functions in all blocks.
-    block = copy.copy(old_block)
-    block.clear_nodes()
-    if isinstance(block, preprocessor.Preprocessor):
-        block.clear_weights()
+    block = old_block.__class__()
+    block.set_config(old_block.get_config())
     return block
 
 
@@ -396,6 +396,7 @@ class GraphHyperModel(GraphHyperModelBase):
     def __init__(self, inputs, outputs, **kwargs):
         super().__init__(inputs, outputs, **kwargs)
         self.hyper_built_ghm = None
+        self.compile(compiler.HYPER)
 
     def build(self, hp):
         """Build the HyperModel into a Keras Model."""
@@ -409,13 +410,12 @@ class GraphHyperModel(GraphHyperModelBase):
             input_node.clear_edges()
             old_node_to_new[old_input_node] = input_node
         for old_block in self._blocks:
-            block = copy_block(old_block)
             inputs = [old_node_to_new[input_node]
                       for input_node in old_block.inputs]
-            if isinstance(old_block, hyperblock.HyperBlock):
-                outputs = block.build(hp, inputs=inputs)
+            if isinstance(old_block, base.HyperBlock):
+                outputs = old_block.build(hp, inputs=inputs)
             else:
-                outputs = block(inputs)
+                outputs = copy_block(old_block)(inputs)
             for output_node, old_output_node in zip(outputs, old_block.outputs):
                 old_node_to_new[old_output_node] = output_node
         inputs = []

@@ -1,6 +1,6 @@
-import os
 import copy
 import inspect
+import os
 
 import kerastuner
 import tensorflow as tf

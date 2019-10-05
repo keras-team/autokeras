@@ -1,4 +1,5 @@
 import numpy as np
+
 import autokeras as ak
 from keras.datasets import mnist
 

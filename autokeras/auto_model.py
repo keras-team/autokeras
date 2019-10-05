@@ -1,12 +1,12 @@
+import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-import kerastuner
 from autokeras import meta_model
 from autokeras import tuner
 from autokeras import utils
+from autokeras.hypermodel import base
 from autokeras.hypermodel import graph
-from autokeras.hypermodel import head
 
 
 class AutoModel(object):
@@ -48,7 +48,7 @@ class AutoModel(object):
         self.directory = directory
         self.seed = seed
         self.hypermodel = None
-        if all([isinstance(output_node, head.Head)
+        if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
             self.heads = self.outputs
         else:
@@ -235,7 +235,7 @@ class AutoModel(object):
         y = nest.flatten(y)
         new_y = []
         for temp_y, head_block in zip(y, self.heads):
-            if isinstance(head_block, head.Head):
+            if isinstance(head_block, base.Head):
                 temp_y = head_block.postprocess(temp_y)
             new_y.append(temp_y)
         return new_y
@@ -273,7 +273,7 @@ class AutoModel(object):
 
         self.tuner.load_trial(best_trial)
         x = self._process_xy(x, y, predict=predict)
-        x = self.hypermodel.preprocess(best_hp, x)
+        x, _ = self.hypermodel.preprocess(best_hp, x)
         x = x.batch(batch_size)
         return best_model, x
 

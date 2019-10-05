@@ -2,37 +2,14 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-
-class Node(object):
-    """The nodes in a network connecting the blocks."""
-    # TODO: Implement get_config() and set_config(), so that the entire graph can
-    # be saved.
-
-    def __init__(self, shape=None):
-        super().__init__()
-        self.in_blocks = []
-        self.out_blocks = []
-        self.shape = shape
-
-    def add_in_block(self, hypermodel):
-        self.in_blocks.append(hypermodel)
-
-    def add_out_block(self, hypermodel):
-        self.out_blocks.append(hypermodel)
-
-    def build(self):
-        return tf.keras.Input(shape=self.shape)
-
-    def clear_edges(self):
-        self.in_blocks = []
-        self.out_blocks = []
+from autokeras.hypermodel import base
 
 
-class TextNode(Node):
+class TextNode(base.Node):
     pass
 
 
-class Input(Node):
+class Input(base.Node):
     """Input node for tensor data.
 
     The data should be numpy.ndarray or tf.data.Dataset.
@@ -59,13 +36,19 @@ class ImageInput(Input):
     """Input node for image data.
 
     The input data should be numpy.ndarray or tf.data.Dataset. The shape of the data
-    should be 3 dimensional, the last dimension of which should be channel dimension.
+    should be 3 or 4 dimensional, the last dimension of which should be channel
+    dimension.
     """
 
     def transform(self, x):
         if isinstance(x, np.ndarray):
-            if len(x.shape) == 3:
-                x = x.reshape(-1, 1)
+            if x.ndim == 3:
+                x = np.expand_dims(x, axis=3)
+        if x.ndim != 4:
+            raise ValueError('Expect image input to have 2 or 3 dimensions (not '
+                             'including batch dimension), but got input shape '
+                             '{shape} with {ndim} dimensions'.format(shape=x.shape,
+                                                                     ndim=x.ndim))
         return super().transform(x)
 
 

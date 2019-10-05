@@ -14,6 +14,8 @@ def tmp_dir(tmpdir_factory):
 @mock.patch('autokeras.tuner.RandomSearch')
 @mock.patch('autokeras.hypermodel.graph.GraphHyperModel')
 def test_evaluate(graph, tuner, tmp_dir):
+    mc = graph.return_value
+    mc.preprocess.return_value = (mock.Mock(), mock.Mock())
     x_train = np.random.rand(100, 32)
     y_train = np.random.rand(100, 1)
 
@@ -35,6 +37,8 @@ def test_evaluate(graph, tuner, tmp_dir):
 @mock.patch('autokeras.tuner.RandomSearch')
 @mock.patch('autokeras.hypermodel.graph.GraphHyperModel')
 def test_auto_model_predict(graph, tuner, tmp_dir):
+    mc = graph.return_value
+    mc.preprocess.return_value = (mock.Mock(), mock.Mock())
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
 

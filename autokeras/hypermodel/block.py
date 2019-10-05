@@ -1,14 +1,10 @@
-import types
-
-import kerastuner
 import tensorflow as tf
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
 from tensorflow.python.util import nest
 
-from autokeras import const
 from autokeras import utils
-from autokeras.hypermodel import node
+from autokeras.hypermodel import base
 
 
 def set_hp_value(hp, name, value):
@@ -16,81 +12,7 @@ def set_hp_value(hp, name, value):
     hp.values[full_name] = value or hp.values[full_name]
 
 
-class Block(kerastuner.HyperModel):
-    """The base class for different Block.
-
-    The Block can be connected together to build the search space
-    for an AutoModel. Notably, many args in the __init__ function are defaults to
-    be a tunable variable when not specified by the user.
-
-    # Arguments
-        name: String. The name of the block. If unspecified, it will be set
-        automatically with the class name.
-    """
-
-    def __init__(self, name=None, **kwargs):
-        super().__init__(**kwargs)
-        if not name:
-            prefix = self.__class__.__name__
-            name = prefix + '_' + str(tf.keras.backend.get_uid(prefix))
-            name = utils.to_snake_case(name)
-        self.name = name
-        self.inputs = None
-        self.outputs = None
-        self._num_output_node = 1
-
-    def __new__(cls, *args, **kwargs):
-        obj = super().__new__(cls)
-        build_fn = obj.build
-
-        def build_wrapper(obj, hp, *args, **kwargs):
-            with hp.name_scope(obj.name):
-                return build_fn(hp, *args, **kwargs)
-
-        obj.build = types.MethodType(build_wrapper, obj)
-        return obj
-
-    def __call__(self, inputs):
-        """Functional API.
-
-        # Arguments
-            inputs: A list of input node(s) or a single input node for the block.
-
-        # Returns
-            list: A list of output node(s) of the Block.
-        """
-        self.inputs = nest.flatten(inputs)
-        for input_node in self.inputs:
-            input_node.add_out_block(self)
-        self.outputs = []
-        for _ in range(self._num_output_node):
-            output_node = node.Node()
-            output_node.add_in_block(self)
-            self.outputs.append(output_node)
-        return self.outputs
-
-    def build(self, hp, inputs=None):
-        """Build the Block into a real Keras Model.
-
-        The subclasses should override this function and return the output node.
-
-        # Arguments
-            hp: Hyperparameters. The hyperparameters for building the model.
-            inputs: A list of input node(s).
-        """
-        return super().build(hp)
-
-    def clear_nodes(self):
-        """Delete the connecting edges to the nodes."""
-        self.inputs = None
-        self.outputs = None
-
-    def compile(self):
-        """Fetch information from other blocks in the network."""
-        pass
-
-
-class DenseBlock(Block):
+class DenseBlock(base.Block):
     """Block for Dense layers.
 
     # Arguments
@@ -111,6 +33,20 @@ class DenseBlock(Block):
         self.num_layers = num_layers
         self.use_batchnorm = use_batchnorm
         self.dropout_rate = dropout_rate
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'num_layers': self.num_layers,
+            'use_batchnorm': self.use_batchnorm,
+            'dropout_rate': self.dropout_rate})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.num_layers = config['num_layers']
+        self.use_batchnorm = config['use_batchnorm']
+        self.dropout_rate = config['dropout_rate']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -140,7 +76,7 @@ class DenseBlock(Block):
         return output_node
 
 
-class RNNBlock(Block):
+class RNNBlock(base.Block):
     """An RNN Block.
 
     # Arguments
@@ -165,6 +101,22 @@ class RNNBlock(Block):
         self.bidirectional = bidirectional
         self.num_layers = num_layers
         self.layer_type = layer_type
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'return_sequences': self.return_sequences,
+            'bidirectional': self.bidirectional,
+            'num_layers': self.num_layers,
+            'layer_type': self.layer_type})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.return_sequences = config['return_sequences']
+        self.bidirectional = config['bidirectional']
+        self.num_layers = config['num_layers']
+        self.layer_type = config['layer_type']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -209,7 +161,7 @@ class RNNBlock(Block):
         return output_node
 
 
-class ConvBlock(Block):
+class ConvBlock(base.Block):
     """Block for vanilla ConvNets.
 
     # Arguments
@@ -229,6 +181,20 @@ class ConvBlock(Block):
         self.kernel_size = kernel_size
         self.num_blocks = num_blocks
         self.separable = separable
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'kernel_size': self.kernel_size,
+            'num_blocks': self.num_blocks,
+            'separable': self.separable})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.kernel_size = config['kernel_size']
+        self.num_blocks = config['num_blocks']
+        self.separable = config['separable']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -278,7 +244,7 @@ class ConvBlock(Block):
         return 'same'
 
 
-class ResNetBlock(Block, resnet.HyperResNet):
+class ResNetBlock(base.Block, resnet.HyperResNet):
     """Block for ResNet.
 
     # Arguments
@@ -296,6 +262,18 @@ class ResNetBlock(Block, resnet.HyperResNet):
         self.version = version
         self.pooling = pooling
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'version': self.version,
+            'pooling': self.pooling})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.version = config['version']
+        self.pooling = config['pooling']
+
     def build(self, hp, inputs=None):
         self.input_tensor = nest.flatten(inputs)[0]
         self.input_shape = None
@@ -310,7 +288,7 @@ class ResNetBlock(Block, resnet.HyperResNet):
         return model.outputs
 
 
-class XceptionBlock(Block, xception.HyperXception):
+class XceptionBlock(base.Block, xception.HyperXception):
     """XceptionBlock.
 
     An Xception structure, used for specifying your model with specific datasets.
@@ -346,6 +324,22 @@ class XceptionBlock(Block, xception.HyperXception):
         self.num_residual_blocks = num_residual_blocks
         self.pooling = pooling
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'activation': self.activation,
+            'initial_strides': self.initial_strides,
+            'num_residual_blocks': self.num_residual_blocks,
+            'pooling': self.pooling})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.activation = config['activation']
+        self.initial_strides = config['initial_strides']
+        self.num_residual_blocks = config['num_residual_blocks']
+        self.pooling = config['pooling']
+
     def build(self, hp, inputs=None):
         self.input_tensor = nest.flatten(inputs)[0]
         self.input_shape = None
@@ -372,7 +366,7 @@ def shape_compatible(shape1, shape2):
     return shape1[:-1] == shape2[:-1]
 
 
-class Merge(Block):
+class Merge(base.Block):
     """Merge block to merge multiple nodes into one.
 
     # Arguments
@@ -382,6 +376,15 @@ class Merge(Block):
     def __init__(self, merge_type=None, **kwargs):
         super().__init__(**kwargs)
         self.merge_type = merge_type
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'merge_type': self.merge_type})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.merge_type = config['merge_type']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -409,7 +412,7 @@ class Merge(Block):
         return tf.keras.layers.Concatenate()(inputs)
 
 
-class Flatten(Block):
+class Flatten(base.Block):
     """Flatten the input tensor with Keras Flatten layer."""
 
     def build(self, hp, inputs=None):
@@ -421,7 +424,7 @@ class Flatten(Block):
         return input_node
 
 
-class SpatialReduction(Block):
+class SpatialReduction(base.Block):
     """Reduce the dimension of a spatial tensor, e.g. image, to a vector.
 
     # Arguments
@@ -432,6 +435,15 @@ class SpatialReduction(Block):
     def __init__(self, reduction_type=None, **kwargs):
         super().__init__(**kwargs)
         self.reduction_type = reduction_type
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'reduction_type': self.reduction_type})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.reduction_type = config['reduction_type']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -459,7 +471,7 @@ class SpatialReduction(Block):
         return output_node
 
 
-class TemporalReduction(Block):
+class TemporalReduction(base.Block):
     """Reduce the dimension of a temporal tensor, e.g. output of RNN, to a vector.
 
     # Arguments
@@ -470,6 +482,15 @@ class TemporalReduction(Block):
     def __init__(self, reduction_type=None, **kwargs):
         super().__init__(**kwargs)
         self.reduction_type = reduction_type
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'reduction_type': self.reduction_type})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.reduction_type = config['reduction_type']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -499,13 +520,16 @@ class TemporalReduction(Block):
         return output_node
 
 
-class EmbeddingBlock(Block):
+class EmbeddingBlock(base.Block):
     """Word embedding block for sequences.
 
     The input should be tokenized sequences with the same length, where each element
     of a sequence should be the index of the word.
 
     # Arguments
+        max_features: Int. Size of the vocabulary. Must be set if not using
+            TextToIntSequence before this block. If not specified, we will use the
+            vocabulary size in the preceding TextToIntSequence vocabulary size.
         pretraining: String. 'random' (use random weights instead any pretrained
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
@@ -513,39 +537,53 @@ class EmbeddingBlock(Block):
     """
 
     def __init__(self,
+                 max_features=None,
                  pretraining=None,
                  embedding_dim=None,
                  **kwargs):
         super().__init__(**kwargs)
+        self.max_features = None
         self.pretraining = pretraining
         self.embedding_dim = embedding_dim
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'max_features': self.max_features,
+            'pretraining': self.pretraining,
+            'embedding_dim': self.embedding_dim})
+        return config
+
+    def set_config(self, config):
+        super().set_config(config)
+        self.max_features = config['max_features']
+        self.pretraining = config['pretraining']
+        self.embedding_dim = config['embedding_dim']
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         # TODO: support more pretrained embedding layers.
         # glove, fasttext, and word2vec
-        pretraining = self.pretraining or hp.Choice('pretraining',
-                                                    ['random',
-                                                     'glove',
-                                                     'fasttext',
-                                                     'word2vec',
-                                                     'none'],
-                                                    default='none')
-        embedding_dim = self.embedding_dim or hp.Choice('embedding_dim',
-                                                        [32, 64, 128, 256, 512],
-                                                        default=128)
+        pretraining = self.pretraining or hp.Choice(
+            'pretraining',
+            ['random', 'glove', 'fasttext', 'word2vec', 'none'],
+            default='none')
+        embedding_dim = self.embedding_dim or hp.Choice(
+            'embedding_dim',
+            [32, 64, 128, 256, 512],
+            default=128)
         if pretraining != 'none':
             # TODO: load from pretrained weights
             layer = tf.keras.layers.Embedding(
-                input_dim=input_node.shape[1],
+                input_dim=self.max_features,
                 output_dim=embedding_dim,
-                input_length=const.Constant.VOCABULARY_SIZE)
+                input_length=input_node.shape[1])
             # trainable=False,
             # weights=[embedding_matrix])
         else:
             layer = tf.keras.layers.Embedding(
-                input_dim=input_node.shape[1],
+                input_dim=self.max_features,
                 output_dim=embedding_dim,
-                input_length=const.Constant.VOCABULARY_SIZE,
+                input_length=input_node.shape[1],
                 trainable=True)
         return layer(input_node)
