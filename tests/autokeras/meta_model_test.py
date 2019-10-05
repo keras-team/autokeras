@@ -39,7 +39,7 @@ def test_partial_column_types():
     dataset = tf.data.Dataset.zip((
         (tf.data.Dataset.from_tensor_slices(x.values.astype(np.unicode)),),
         (tf.data.Dataset.from_tensor_slices(y),)
-        ))
+    ))
     hm = meta_model.assemble(input_node, ak.ClassificationHead(), dataset)
     for block in hm._blocks:
         if isinstance(block, ak.FeatureEngineering):

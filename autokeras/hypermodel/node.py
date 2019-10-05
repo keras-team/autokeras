@@ -77,6 +77,7 @@ class StructuredDataInput(Input):
             Defaults to None. If not None, the column_names need to be specified.
             If None, it will be inferred from the data.
     """
+
     def __init__(self, column_names=None, column_types=None, **kwargs):
         super().__init__(**kwargs)
         self.column_names = column_names
