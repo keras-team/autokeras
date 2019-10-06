@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from tensorflow.python.util import nest
 
 from autokeras.hypermodel import base
 
@@ -75,12 +76,21 @@ class StructuredDataInput(Input):
         column_types: Dict. The keys are the column names. The values should either
             be 'numerical' or 'categorical', indicating the type of that column.
             Defaults to None. If not None, the column_names need to be specified.
-            If None, it will be inferred from the data.
+            If None, it will be inferred from the data. A column will be judged as
+            categorical if the number of different values is less than 5% of the
+            number of instances.
     """
+
     def __init__(self, column_names=None, column_types=None, **kwargs):
         super().__init__(**kwargs)
         self.column_names = column_names
         self.column_types = column_types
+        # Variables for inferring column types.
+        self.count_nan = None
+        self.count_numerical = None
+        self.count_categorical = None
+        self.count_unique_numerical = []
+        self.num_col = None
 
     def fit(self, x):
         if not isinstance(x, (pd.DataFrame, np.ndarray)):
@@ -115,12 +125,61 @@ class StructuredDataInput(Input):
 
     def transform(self, x):
         if isinstance(x, pd.DataFrame):
-            # convert x, y, validation_data to tf.Dataset
+            # Convert x, y, validation_data to tf.Dataset.
             x = tf.data.Dataset.from_tensor_slices(
                 x.values.astype(np.unicode))
         if isinstance(x, np.ndarray):
             x = tf.data.Dataset.from_tensor_slices(x.astype(np.unicode))
-        return super().transform(x)
+        dataset = super().transform(x)
+        for x in dataset:
+            self.update(x)
+        self.infer_column_types()
+        return dataset
+
+    def update(self, x):
+        # Calculate the statistics.
+        x = nest.flatten(x)[0].numpy()
+        if self.num_col is None:
+            self.num_col = len(x)
+            self.count_nan = np.zeros(self.num_col)
+            self.count_numerical = np.zeros(self.num_col)
+            self.count_categorical = np.zeros(self.num_col)
+            for i in range(len(x)):
+                self.count_unique_numerical.append({})
+        for i in range(self.num_col):
+            x[i] = x[i].decode('utf-8')
+            if x[i] == 'nan':
+                self.count_nan[i] += 1
+            elif x[i] == 'True':
+                self.count_categorical[i] += 1
+            elif x[i] == 'False':
+                self.count_categorical[i] += 1
+            else:
+                try:
+                    tmp_num = float(x[i])
+                    self.count_numerical[i] += 1
+                    if tmp_num not in self.count_unique_numerical[i]:
+                        self.count_unique_numerical[i][tmp_num] = 1
+                    else:
+                        self.count_unique_numerical[i][tmp_num] += 1
+                except ValueError:
+                    self.count_categorical[i] += 1
+
+    def infer_column_types(self):
+        column_types = {}
+        for i in range(self.num_col):
+            if self.count_categorical[i] > 0:
+                column_types[self.column_names[i]] = 'categorical'
+            elif len(self.count_unique_numerical[i])/self.count_numerical[i] < 0.05:
+                column_types[self.column_names[i]] = 'categorical'
+            else:
+                column_types[self.column_names[i]] = 'numerical'
+        # Partial column_types is provided.
+        if self.column_types is None:
+            self.column_types = {}
+        for key, value in column_types.items():
+            if key not in self.column_types:
+                self.column_types[key] = value
 
 
 class TimeSeriesInput(Input):

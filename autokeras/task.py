@@ -328,6 +328,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             AutoModel in the current directory.
         seed: Int. Random seed.
     """
+
     def __init__(self,
                  column_names=None,
                  column_types=None,
@@ -372,6 +373,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             AutoModel in the current directory.
         seed: Int. Random seed.
     """
+
     def __init__(self,
                  column_names=None,
                  column_types=None,

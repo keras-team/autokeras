@@ -373,6 +373,7 @@ class Merge(base.Block):
         merge_type: String. 'add' or 'concatenate'. If left unspecified, it will be
             tuned automatically.
     """
+
     def __init__(self, merge_type=None, **kwargs):
         super().__init__(**kwargs)
         self.merge_type = merge_type

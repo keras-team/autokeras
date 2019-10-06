@@ -32,9 +32,7 @@ def test_functional_api(tmp_dir):
     outputs2 = ak.XceptionBlock()(image_input)
     image_output = ak.Merge()((outputs1, outputs2))
 
-    structured_data_input = ak.StructuredDataInput(
-        column_names=common.COLUMN_NAMES_FROM_CSV,
-        column_types=common.COLUMN_TYPES_FROM_CSV)
+    structured_data_input = ak.StructuredDataInput()
     structured_data_output = ak.FeatureEngineering()(structured_data_input)
     structured_data_output = ak.DenseBlock()(structured_data_output)
 
@@ -48,13 +46,13 @@ def test_functional_api(tmp_dir):
     text_output = ak.Merge()((
         outputs1,
         outputs2
-        ))
+    ))
 
     merged_outputs = ak.Merge()((
         structured_data_output,
         image_output,
         text_output
-        ))
+    ))
 
     regression_outputs = ak.RegressionHead()(merged_outputs)
     classification_outputs = ak.ClassificationHead()(merged_outputs)
@@ -63,7 +61,7 @@ def test_functional_api(tmp_dir):
             image_input,
             text_input,
             structured_data_input
-                ],
+        ],
         directory=tmp_dir,
         outputs=[regression_outputs,
                  classification_outputs],

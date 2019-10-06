@@ -233,6 +233,7 @@ class LightGBMModel(base.Preprocessor):
     # Arguments
         seed: Int. Random seed.
     """
+
     def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
         self.data = []
