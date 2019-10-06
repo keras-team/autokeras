@@ -1,4 +1,3 @@
-import numpy as np
 import tensorflow as tf
 from kerastuner.engine import hyperparameters as hp_module
 from tensorflow.python.util import nest
@@ -31,9 +30,7 @@ def assemble(inputs, outputs, dataset, seed=None):
         if isinstance(input_node, node.ImageInput):
             assemblers.append(ImageAssembler(seed=seed))
         if isinstance(input_node, node.StructuredDataInput):
-            assemblers.append(StructuredDataAssembler(
-                column_names=input_node.column_names,
-                seed=seed))
+            assemblers.append(StructuredDataAssembler(seed=seed))
         if isinstance(input_node, node.TimeSeriesInput):
             assemblers.append(TimeSeriesAssembler())
     # Iterate over the dataset to fit the assemblers.
@@ -161,74 +158,15 @@ class ImageAssembler(Assembler):
 class StructuredDataAssembler(Assembler):
     """Assembler for structured data. which infers the column types for the data.
 
-    A column will be judged as categorical if the number of different values is less
-    than 5% of the number of instances.
-
     # Arguments
-        column_names: A list of strings specifying the names of the columns. The
-            length of the list should be equal to the number of columns of the data.
-            Defaults to None. If None, it will obtained from the header of the csv
-            file or the pandas.DataFrame.
         seed: Int. Random seed.
     """
 
-    def __init__(self, column_names, seed=None, **kwargs):
+    def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
-        self.column_types = {}
-        self.column_names = column_names
-        self.count_nan = None
-        self.count_numerical = None
-        self.count_categorical = None
-        self.count_unique_numerical = []
-        self.num_col = None
         self.seed = seed
 
-    def update(self, x):
-        # calculate the statistics.
-        x = nest.flatten(x)[0].numpy()
-        if self.num_col is None:
-            self.num_col = len(x)
-            self.count_nan = np.zeros(self.num_col)
-            self.count_numerical = np.zeros(self.num_col)
-            self.count_categorical = np.zeros(self.num_col)
-            for i in range(len(x)):
-                self.count_unique_numerical.append({})
-        for i in range(self.num_col):
-            x[i] = x[i].decode('utf-8')
-            if x[i] == 'nan':
-                self.count_nan[i] += 1
-            elif x[i] == 'True':
-                self.count_categorical[i] += 1
-            elif x[i] == 'False':
-                self.count_categorical[i] += 1
-            else:
-                try:
-                    tmp_num = float(x[i])
-                    self.count_numerical[i] += 1
-                    if tmp_num not in self.count_unique_numerical[i]:
-                        self.count_unique_numerical[i][tmp_num] = 1
-                    else:
-                        self.count_unique_numerical[i][tmp_num] += 1
-                except ValueError:
-                    self.count_categorical[i] += 1
-
-    def infer_column_types(self):
-        for i in range(self.num_col):
-            if self.count_categorical[i] > 0:
-                self.column_types[self.column_names[i]] = 'categorical'
-            elif len(self.count_unique_numerical[i])/self.count_numerical[i] < 0.05:
-                self.column_types[self.column_names[i]] = 'categorical'
-            else:
-                self.column_types[self.column_names[i]] = 'numerical'
-
     def assemble(self, input_node):
-        self.infer_column_types()
-        if input_node.column_types is None:
-            input_node.column_types = self.column_types
-        # partial column_types is provided.
-        for key, value in self.column_types.items():
-            if key not in input_node.column_types:
-                input_node.column_types[key] = value
         return hyperblock.StructuredDataBlock(seed=self.seed)(input_node)
 
 

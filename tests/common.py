@@ -6,68 +6,69 @@ import tensorflow as tf
 import autokeras as ak
 
 SEED = 5
-COLUMN_NAMES_FROM_NUMPY = ['bool_',
-                           'num_to_cat_',
-                           'float_',
-                           'int_',
-                           'morethan_32_',
-                           'col1_morethan_100_',
-                           'col2_morethan_100_',
-                           'col3_morethan_100_']
+COLUMN_NAMES_FROM_NUMPY = [
+    'bool_',
+    'num_to_cat_',
+    'float_',
+    'int_',
+    'morethan_32_',
+    'col1_morethan_100_',
+    'col2_morethan_100_',
+    'col3_morethan_100_']
 COLUMN_TYPES_FROM_NUMPY = {
-                            'bool_': 'categorical',
-                            'num_to_cat_': 'categorical',
-                            'float_': 'numerical',
-                            'int_': 'numerical',
-                            'morethan_32_': 'categorical',
-                            'col1_morethan_100_': 'categorical',
-                            'col2_morethan_100_': 'categorical',
-                            'col3_morethan_100_': 'categorical'}
+    'bool_': 'categorical',
+    'num_to_cat_': 'categorical',
+    'float_': 'numerical',
+    'int_': 'numerical',
+    'morethan_32_': 'categorical',
+    'col1_morethan_100_': 'categorical',
+    'col2_morethan_100_': 'categorical',
+    'col3_morethan_100_': 'categorical'}
 COLUMN_NAMES_FROM_CSV = [
-                         'sex_',
-                         'age_',
-                         'n_siblings_spouses_',
-                         'parch_',
-                         'fare_',
-                         'class_',
-                         'deck_',
-                         'embark_town_',
-                         'alone_']
+    'sex',
+    'age',
+    'n_siblings_spouses',
+    'parch',
+    'fare',
+    'class',
+    'deck',
+    'embark_town',
+    'alone']
 LESS_COLUMN_NAMES_FROM_CSV = [
-                         'age_',
-                         'n_siblings_spouses_',
-                         'parch_',
-                         'fare_',
-                         'class_',
-                         'deck_',
-                         'embark_town_',
-                         'alone_']
+    'age',
+    'n_siblings_spouses',
+    'parch',
+    'fare',
+    'class',
+    'deck',
+    'embark_town',
+    'alone']
 COLUMN_TYPES_FROM_CSV = {
-                          'sex_': 'categorical',
-                          'age_': 'numerical',
-                          'n_siblings_spouses_': 'categorical',
-                          'parch_': 'categorical',
-                          'fare_': 'numerical',
-                          'class_': 'categorical',
-                          'deck_': 'categorical',
-                          'embark_town_': 'categorical',
-                          'alone_': 'categorical'}
+    'sex': 'categorical',
+    'age': 'numerical',
+    'n_siblings_spouses': 'categorical',
+    'parch': 'categorical',
+    'fare': 'numerical',
+    'class': 'categorical',
+    'deck': 'categorical',
+    'embark_town': 'categorical',
+    'alone': 'categorical'}
 FALSE_COLUMN_TYPES_FROM_CSV = {
-                          'sex_': 'cat',
-                          'age_': 'num',
-                          'n_siblings_spouses_': 'cat',
-                          'parch_': 'categorical',
-                          'fare_': 'numerical',
-                          'class_': 'categorical',
-                          'deck_': 'categorical',
-                          'embark_town_': 'categorical',
-                          'alone_': 'categorical'}
+    'sex': 'cat',
+    'age': 'num',
+    'n_siblings_spouses': 'cat',
+    'parch': 'categorical',
+    'fare': 'numerical',
+    'class': 'categorical',
+    'deck': 'categorical',
+    'embark_town': 'categorical',
+    'alone': 'categorical'}
 PARTIAL_COLUMN_TYPES_FROM_CSV = {
-                          'fare': 'categorical',
-                          'class': 'categorical',
-                          'deck': 'categorical',
-                          'embark_town': 'categorical',
-                          'alone': 'categorical'}
+    'fare': 'categorical',
+    'class': 'categorical',
+    'deck': 'categorical',
+    'embark_town': 'categorical',
+    'alone': 'categorical'}
 TRAIN_FILE_PATH = r'tests/fixtures/titanic/train.csv'
 TEST_FILE_PATH = r'tests/fixtures/titanic/eval.csv'
 

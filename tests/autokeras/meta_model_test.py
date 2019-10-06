@@ -1,4 +1,3 @@
-import numpy as np
 import tensorflow as tf
 
 import autokeras as ak
@@ -21,26 +20,10 @@ def test_text_assembler():
 def test_structured_data_assembler():
     data = common.generate_structured_data()
     dataset = tf.data.Dataset.from_tensor_slices(data)
-    assembler = meta_model.StructuredDataAssembler(
-        column_names=common.COLUMN_NAMES_FROM_NUMPY)
+    assembler = meta_model.StructuredDataAssembler()
     for line in dataset:
         assembler.update(line)
 
     input_node = node.StructuredDataInput()
     assembler.assemble(input_node)
-    assert input_node.column_types == common.COLUMN_TYPES_FROM_NUMPY
-
-
-def test_partial_column_types():
-    input_node = node.StructuredDataInput(
-        column_names=common.COLUMN_NAMES_FROM_CSV,
-        column_types=common.PARTIAL_COLUMN_TYPES_FROM_CSV)
-    (x, y), (val_x, val_y) = common.dataframe_numpy()
-    dataset = tf.data.Dataset.zip((
-        (tf.data.Dataset.from_tensor_slices(x.values.astype(np.unicode)),),
-        (tf.data.Dataset.from_tensor_slices(y),)
-    ))
-    hm = meta_model.assemble(input_node, ak.ClassificationHead(), dataset)
-    for block in hm._blocks:
-        if isinstance(block, ak.FeatureEngineering):
-            assert block.input_node.column_types['fare'] == 'categorical'
+    assert isinstance(input_node.out_blocks[0], ak.StructuredDataBlock)
