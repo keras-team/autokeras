@@ -224,13 +224,15 @@ class ConvBlock(base.Block):
                           [16, 32, 64],
                           default=32),
                 kernel_size,
-                padding=self._get_padding(kernel_size, output_node))(output_node)
+                padding=self._get_padding(kernel_size, output_node),
+                activation='relu')(output_node)
             output_node = conv(
                 hp.Choice('filters_{i}_2'.format(i=i),
                           [16, 32, 64],
                           default=32),
                 kernel_size,
-                padding=self._get_padding(kernel_size, output_node))(output_node)
+                padding=self._get_padding(kernel_size, output_node),
+                activation='relu')(output_node)
             output_node = pool(
                 kernel_size - 1,
                 padding=self._get_padding(kernel_size - 1, output_node))(output_node)

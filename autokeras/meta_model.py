@@ -2,7 +2,7 @@ import tensorflow as tf
 from kerastuner.engine import hyperparameters as hp_module
 from tensorflow.python.util import nest
 
-from autokeras.hypermodel import block
+from autokeras.hypermodel import block as block_module
 from autokeras.hypermodel import graph
 from autokeras.hypermodel import hyperblock
 from autokeras.hypermodel import node
@@ -47,7 +47,7 @@ def assemble(inputs, outputs, dataset, seed=None):
 
     # Merge the middle nodes.
     if len(middle_nodes) > 1:
-        output_node = block.Merge()(middle_nodes)
+        output_node = block_module.Merge()(middle_nodes)
     else:
         output_node = middle_nodes[0]
 
@@ -137,7 +137,10 @@ class ImageAssembler(Assembler):
         self._num_samples += 1
 
     def assemble(self, input_node):
-        block = hyperblock.ImageBlock(seed=self.seed)
+        block = hyperblock.ImageBlock(
+            normalize=None,
+            augment=None,
+            seed=self.seed)
         if max(self._shape[0], self._shape[1]) < 32:
             if self._num_samples < 10000:
                 self.hps.append(hp_module.Choice(
@@ -152,7 +155,9 @@ class ImageAssembler(Assembler):
                 self.hps.append(hp_module.Int(
                                 block.name + '_xception/num_residual_blocks', 2, 4,
                                 default=4))
-        return block(input_node)
+        output_node = block(input_node)
+        output_node = block_module.SpatialReduction()(output_node)
+        return block_module.DenseBlock()(output_node)
 
 
 class StructuredDataAssembler(Assembler):

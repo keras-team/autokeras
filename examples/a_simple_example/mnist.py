@@ -1,13 +1,26 @@
-from keras.datasets import mnist
-from autokeras import ImageClassifier
+from tensorflow.keras.datasets import mnist
+
+import autokeras as ak
+
+
+def task_api():
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    clf = ak.ImageClassifier(seed=5, max_trials=3)
+    clf.fit(x_train, y_train, validation_split=0.2)
+    return clf.evaluate(x_test, y_test)
+
+
+def functional_api():
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    input_node = ak.ImageInput()
+    output_node = ak.ConvBlock()(input_node)
+    output_node = ak.SpatialReduction()(output_node)
+    output_node = ak.DenseBlock()(output_node)
+    output_node = ak.ClassificationHead()(output_node)
+    clf = ak.GraphAutoModel(input_node, output_node, seed=5, max_trials=3)
+    clf.fit(x_train, y_train, validation_split=0.2)
+    return clf.evaluate(x_test, y_test)
+
 
 if __name__ == '__main__':
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    x_train = x_train.reshape(x_train.shape + (1,))
-    x_test = x_test.reshape(x_test.shape + (1,))
-    clf = ImageClassifier(verbose=True, augment=False)
-    clf.fit(x_train, y_train, time_limit=30 * 60)
-    clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
-    y = clf.evaluate(x_test, y_test)
-
-    print(y * 100)
+    task_api()
