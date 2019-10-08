@@ -24,16 +24,22 @@ def test_io_api(tmp_dir):
 
     # Build model and train.
     automodel = ak.AutoModel(
-        inputs=[ak.ImageInput(),
-                ak.TextInput(),
-                ak.StructuredDataInput()],
+        inputs=[
+            ak.ImageInput(),
+            ak.TextInput(),
+            ak.StructuredDataInput()
+        ],
         outputs=[ak.RegressionHead(metrics=['mae']),
                  ak.ClassificationHead(loss='categorical_crossentropy',
                                        metrics=['accuracy'])],
         directory=tmp_dir,
         max_trials=2,
         seed=common.SEED)
-    automodel.fit([image_x, text_x, structured_data_x],
-                  [regression_y, classification_y],
-                  epochs=2,
-                  validation_split=0.2)
+    automodel.fit([
+        image_x,
+        text_x,
+        structured_data_x
+    ],
+        [regression_y, classification_y],
+        epochs=2,
+        validation_split=0.2)

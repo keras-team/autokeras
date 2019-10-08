@@ -500,9 +500,10 @@ class ImageAugmentation(base.Preprocessor):
                     'or a tuple of 2 floats between 0 and 1, '
                     'but got: %s' % (value, name))
             min_value, max_value = value
-        else:
-            min_value = 1. - value
-            max_value = 1. + value
+        elif value == 0:
+            return None
+        min_value = 1. - value
+        max_value = 1. + value
         return min_value, max_value
 
     def update(self, x, y=None):
@@ -538,11 +539,11 @@ class ImageAugmentation(base.Preprocessor):
         if self.brightness_range != 0:
             x = tf.image.random_brightness(x, self.brightness_range, self.seed)
 
-        if self.saturation_range != 0 and channels == 3:
+        if self.saturation_range is not None and channels == 3:
             min_value, max_value = self.saturation_range
             x = tf.image.random_saturation(x, min_value, max_value, self.seed)
 
-        if self.contrast_range != 0:
+        if self.contrast_range is not None:
             min_value, max_value = self.contrast_range
             x = tf.image.random_contrast(x, min_value, max_value, self.seed)
 

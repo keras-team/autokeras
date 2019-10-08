@@ -25,7 +25,7 @@ class Input(base.Node):
         if isinstance(x, tf.data.Dataset):
             return x
         if isinstance(x, np.ndarray):
-            if x.dtype == np.float64:
+            if np.issubdtype(x.dtype, np.number):
                 x = x.astype(np.float32)
             return tf.data.Dataset.from_tensor_slices(x)
         raise TypeError('Unsupported type {type} for '
