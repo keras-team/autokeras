@@ -47,6 +47,7 @@ class ImageClassifier(SupervisedImagePipeline):
                                             metrics=metrics),
             max_trials=max_trials,
             directory=directory,
+            name=name,
             seed=seed)
 
 
@@ -82,6 +83,7 @@ class ImageRegressor(SupervisedImagePipeline):
                                         metrics=metrics),
             max_trials=max_trials,
             directory=directory,
+            name=name,
             seed=seed)
 
 
@@ -127,6 +129,7 @@ class TextClassifier(SupervisedTextPipeline):
                                             metrics=metrics),
             max_trials=max_trials,
             directory=directory,
+            name=name,
             seed=seed)
 
 
@@ -162,6 +165,7 @@ class TextRegressor(SupervisedTextPipeline):
                                         metrics=metrics),
             max_trials=max_trials,
             directory=directory,
+            name=name,
             seed=seed)
 
 
@@ -349,6 +353,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             column_types=column_types,
             max_trials=max_trials,
             directory=directory,
+            name=name,
             seed=seed)
 
 
@@ -392,4 +397,5 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             column_types=column_types,
             max_trials=max_trials,
             directory=directory,
+            name=name,
             seed=seed)

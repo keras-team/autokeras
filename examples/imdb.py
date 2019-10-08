@@ -1,5 +1,11 @@
+import os
+
 import numpy as np
 import tensorflow as tf
+
+import autokeras as ak
+
+os.environ['CUDA_VISIBLE_DEVICES'] = "2,3"
 
 
 def imdb_raw(num_instances=100):
@@ -30,7 +36,10 @@ def imdb_raw(num_instances=100):
 
 
 def task_api():
-    pass
+    (x_train, y_train), (x_test, y_test) = imdb_raw()
+    clf = ak.TextClassifier(max_trials=3, seed=5)
+    clf.fit(x_train, y_train, validation_split=0.2)
+    return clf.evaluate(x_test, y_test)
 
 
 if __name__ == '__main__':
