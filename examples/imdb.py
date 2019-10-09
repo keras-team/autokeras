@@ -1,23 +1,20 @@
-import os
-
 import numpy as np
 import tensorflow as tf
 
 import autokeras as ak
 
-os.environ['CUDA_VISIBLE_DEVICES'] = "2,3"
 
-
-def imdb_raw(num_instances=100):
+def imdb_raw():
+    max_features = 20000
     index_offset = 3  # word index offset
 
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.imdb.load_data(
-        num_words=1000,
+        num_words=max_features,
         index_from=index_offset)
-    x_train = x_train[:num_instances]
-    y_train = y_train[:num_instances].reshape(-1, 1)
-    x_test = x_test[:num_instances]
-    y_test = y_test[:num_instances].reshape(-1, 1)
+    x_train = x_train
+    y_train = y_train.reshape(-1, 1)
+    x_test = x_test
+    y_test = y_test.reshape(-1, 1)
 
     word_to_id = tf.keras.datasets.imdb.get_word_index()
     word_to_id = {k: (v + index_offset) for k, v in word_to_id.items()}
@@ -42,5 +39,29 @@ def task_api():
     return clf.evaluate(x_test, y_test)
 
 
+def functional_api():
+    max_features = 20000
+    max_words = 400
+    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.imdb.load_data(
+        num_words=max_features,
+        index_from=3)
+    x_train = tf.keras.preprocessing.sequence.pad_sequences(
+        x_train, maxlen=max_words)
+    x_test = tf.keras.preprocessing.sequence.pad_sequences(x_test, maxlen=max_words)
+    print(x_train.dtype)
+    print(x_train[:10])
+    input_node = ak.Input()
+    output_node = input_node
+    output_node = ak.EmbeddingBlock(max_features=max_features)(output_node)
+    output_node = ak.ConvBlock()(output_node)
+    output_node = ak.SpatialReduction()(output_node)
+    output_node = ak.DenseBlock()(output_node)
+    output_node = ak.ClassificationHead()(output_node)
+    clf = ak.GraphAutoModel(input_node, output_node, seed=5, max_trials=3)
+    clf.fit(x_train, y_train, validation_split=0.2)
+    return clf.evaluate(x_test, y_test)
+
+
 if __name__ == '__main__':
     task_api()
+    # functional_api()

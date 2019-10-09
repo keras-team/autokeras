@@ -537,17 +537,21 @@ class EmbeddingBlock(base.Block):
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
         embedding_dim: Int. If left unspecified, it will be tuned automatically.
+        dropout_rate: Float. The dropout rate for after the Embedding layer.
+            If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self,
                  max_features=None,
                  pretraining=None,
                  embedding_dim=None,
+                 dropout_rate=None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.max_features = None
+        self.max_features = max_features
         self.pretraining = pretraining
         self.embedding_dim = embedding_dim
+        self.dropout_rate = dropout_rate
 
     def get_config(self):
         config = super().get_config()
@@ -589,4 +593,10 @@ class EmbeddingBlock(base.Block):
                 output_dim=embedding_dim,
                 input_length=input_node.shape[1],
                 trainable=True)
-        return layer(input_node)
+        output_node = layer(input_node)
+        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
+                                                      [0.0, 0.25, 0.5],
+                                                      default=0.25)
+        if dropout_rate > 0:
+            output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
+        return output_node

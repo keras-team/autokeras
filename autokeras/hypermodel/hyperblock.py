@@ -121,6 +121,8 @@ class TextBlock(base.HyperBlock):
             output_node = block_module.EmbeddingBlock(
                 pretraining=self.pretraining)(output_node)
             output_node = block_module.ConvBlock(separable=True)(output_node)
+            output_node = block_module.SpatialReduction()(output_node)
+            output_node = block_module.DenseBlock()(output_node)
         return output_node
 
 
