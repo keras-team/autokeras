@@ -88,7 +88,70 @@ def test_image_input_with_three_dim():
 def test_image_input_with_illegal_dim():
     x = common.generate_data(shape=(32,))
     input_node = node.ImageInput()
-    input_node.fit(x)
     with pytest.raises(ValueError) as info:
+        input_node.fit(x)
         x = input_node.transform(x)
-    assert 'Expect image input to have' in str(info.value)
+    assert 'Expect the data to ImageInput to have 2' in str(info.value)
+
+
+def test_image_input_unsupported_type():
+    x = 'unknown'
+    input_node = node.ImageInput()
+    with pytest.raises(TypeError) as info:
+        input_node.fit(x)
+        x = input_node.transform(x)
+    assert 'Expect the data to ImageInput to be numpy' in str(info.value)
+
+
+def test_image_input_numerical():
+    x = np.array([[['unknown']]])
+    input_node = node.ImageInput()
+    with pytest.raises(TypeError) as info:
+        input_node.fit(x)
+        x = input_node.transform(x)
+    assert 'Expect the data to ImageInput to be numerical' in str(info.value)
+
+
+def test_input_type_error():
+    x = 'unknown'
+    input_node = node.Input()
+    with pytest.raises(TypeError) as info:
+        input_node.fit(x)
+        x = input_node.transform(x)
+    assert 'Expect the data to Input to be numpy' in str(info.value)
+
+
+def test_input_numerical():
+    x = np.array([[['unknown']]])
+    input_node = node.Input()
+    with pytest.raises(TypeError) as info:
+        input_node.fit(x)
+        x = input_node.transform(x)
+    assert 'Expect the data to Input to be numerical' in str(info.value)
+
+
+def test_text_input_type_error():
+    x = 'unknown'
+    input_node = node.TextInput()
+    with pytest.raises(TypeError) as info:
+        input_node.fit(x)
+        x = input_node.transform(x)
+    assert 'Expect the data to TextInput to be numpy' in str(info.value)
+
+
+def test_text_input_with_illegal_dim():
+    x = common.generate_data(shape=(32, 32))
+    input_node = node.TextInput()
+    with pytest.raises(ValueError) as info:
+        input_node.fit(x)
+        x = input_node.transform(x)
+    assert 'Expect the data to TextInput to have 1' in str(info.value)
+
+
+def test_text_string():
+    x = common.generate_data(shape=(32,))
+    input_node = node.TextInput()
+    with pytest.raises(TypeError) as info:
+        input_node.fit(x)
+        x = input_node.transform(x)
+    assert 'Expect the data to TextInput to be strings' in str(info.value)
