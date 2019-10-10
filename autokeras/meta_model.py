@@ -137,10 +137,7 @@ class ImageAssembler(Assembler):
         self._num_samples += 1
 
     def assemble(self, input_node):
-        block = hyperblock.ImageBlock(
-            normalize=None,
-            augment=None,
-            seed=self.seed)
+        block = hyperblock.ImageBlock(seed=self.seed)
         if max(self._shape[0], self._shape[1]) < 32:
             if self._num_samples < 10000:
                 self.hps.append(hp_module.Choice(

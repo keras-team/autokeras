@@ -23,8 +23,8 @@ class ImageBlock(base.HyperBlock):
 
     def __init__(self,
                  block_type=None,
-                 normalize=True,
-                 augment=True,
+                 normalize=None,
+                 augment=None,
                  seed=None,
                  **kwargs):
         super().__init__(**kwargs)
