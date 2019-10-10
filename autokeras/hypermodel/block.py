@@ -210,7 +210,7 @@ class ConvBlock(base.Block):
                                                   default=2)
         separable = self.separable
         if separable is None:
-            self.separable = hp.Choice('separable', [True, False], default=False)
+            separable = hp.Choice('separable', [True, False], default=False)
 
         if separable:
             conv = utils.get_sep_conv(input_node.shape)

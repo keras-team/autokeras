@@ -91,7 +91,7 @@ def test_image_input_with_illegal_dim():
     with pytest.raises(ValueError) as info:
         input_node.fit(x)
         x = input_node.transform(x)
-    assert 'Expect the data to ImageInput to have 2' in str(info.value)
+    assert 'Expect the data to ImageInput to have 3' in str(info.value)
 
 
 def test_image_input_unsupported_type():
@@ -140,7 +140,7 @@ def test_text_input_type_error():
 
 
 def test_text_input_with_illegal_dim():
-    x = common.generate_data(shape=(32, 32))
+    x = common.generate_data(shape=(32,))
     input_node = node.TextInput()
     with pytest.raises(ValueError) as info:
         input_node.fit(x)
@@ -149,7 +149,7 @@ def test_text_input_with_illegal_dim():
 
 
 def test_text_string():
-    x = common.generate_data(shape=(32,))
+    x = np.array([1, 2])
     input_node = node.TextInput()
     with pytest.raises(TypeError) as info:
         input_node.fit(x)

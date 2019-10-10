@@ -48,11 +48,9 @@ class ImageInput(Input):
             raise TypeError('Expect the data to ImageInput to be numpy.ndarray or '
                             'tf.data.Dataset, but got {type}.'.format(type=type(x)))
         if isinstance(x, np.ndarray) and x.ndim not in [3, 4]:
-            raise ValueError('Expect the data to ImageInput to have 2 or 3 '
-                             'dimensions (not including batch dimension), but got '
-                             'input shape {shape} with {ndim} dimensions'.format(
-                                 shape=x.shape,
-                                 ndim=x.ndim))
+            raise ValueError('Expect the data to ImageInput to have 3 or 4 '
+                             'dimensions, but got input shape {shape} with {ndim} '
+                             'dimensions'.format(shape=x.shape, ndim=x.ndim))
         if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.number):
             raise TypeError('Expect the data to ImageInput to be numerical, but got '
                             '{type}.'.format(type=x.dtype))
@@ -78,10 +76,9 @@ class TextInput(Input, TextNode):
             raise TypeError('Expect the data to TextInput to be numpy.ndarray or '
                             'tf.data.Dataset, but got {type}.'.format(type=type(x)))
 
-        if isinstance(x, np.ndarray) and x.ndim != 2:
-            raise ValueError('Expect the data to TextInput to have 1 dimension (not '
-                             'including batch dimension), but got input shape '
-                             '{shape} with {ndim} dimensions'.format(
+        if isinstance(x, np.ndarray) and x.ndim != 1:
+            raise ValueError('Expect the data to TextInput to have 1 dimension, but '
+                             'got input shape {shape} with {ndim} dimensions'.format(
                                  shape=x.shape,
                                  ndim=x.ndim))
         if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.character):
