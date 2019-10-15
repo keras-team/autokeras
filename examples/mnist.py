@@ -10,6 +10,16 @@ def task_api():
     return clf.evaluate(x_test, y_test)
 
 
+def io_api():
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    clf = ak.AutoModel(ak.ImageInput(),
+                       ak.ClassificationHead(),
+                       seed=5,
+                       max_trials=3)
+    clf.fit(x_train, y_train, validation_split=0.2)
+    return clf.evaluate(x_test, y_test)
+
+
 def functional_api():
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     input_node = ak.ImageInput()
