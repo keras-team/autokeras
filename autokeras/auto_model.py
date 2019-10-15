@@ -68,6 +68,7 @@ class AutoModel(object):
             callbacks=None,
             validation_split=0,
             validation_data=None,
+            objective='val_loss',
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -94,16 +95,12 @@ class AutoModel(object):
                 The validation data is selected from the last samples
                 in the `x` and `y` data provided, before shuffling. This argument is
                 not supported when `x` is a dataset.
-            validation_data: Data on which to evaluate
-                the loss and any model metrics at the end of each epoch.
-                The model will not be trained on this data.
-                `validation_data` will override `validation_split`.
-                `validation_data` could be:
-                  - tuple `(x_val, y_val)` of Numpy arrays or tensors
-                  - tuple `(x_val, y_val, val_sample_weights)` of Numpy arrays
-                  - dataset or a dataset iterator
-                For the first two cases, `batch_size` must be provided.
-                For the last case, `validation_steps` must be provided.
+            validation_data: Data on which to evaluate the loss and any model metrics
+                at the end of each epoch. The model will not be trained on this data.
+                `validation_data` will override `validation_split`. The type of the
+                validation data should be the same as the training data.
+            objective: String. Name of model metric to minimize
+                or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         dataset, validation_data = self._prepare_data(
@@ -126,7 +123,7 @@ class AutoModel(object):
             fit=True)
         self.tuner = tuner.RandomSearch(
             hypermodel=self.hypermodel,
-            objective='val_loss',
+            objective=objective,
             max_trials=self.max_trials,
             directory=self.directory,
             seed=self.seed,

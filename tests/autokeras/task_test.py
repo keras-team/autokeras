@@ -103,7 +103,7 @@ def test_structured_data_classifier_from_csv(init, fit):
                                       seed=common.SEED)
 
     clf.fit(x=common.TRAIN_FILE_PATH, y='survived', epochs=2,
-            validation_data=common.TEST_FILE_PATH)
+            validation_data=(common.TEST_FILE_PATH, 'survived'))
 
     assert init.called
     _, kwargs = fit.call_args_list[0]

@@ -190,6 +190,12 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
         super().__init__(inputs=inputs,
                          outputs=outputs,
                          **kwargs)
+        self._target_col_name = None
+
+    def _read_from_csv(self, x, y):
+        df = pd.read_csv(x)
+        target = df.pop(y).to_numpy()
+        return df, target
 
     def fit(self,
             x=None,
@@ -198,6 +204,7 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             callbacks=None,
             validation_split=0,
             validation_data=None,
+            objective='val_loss',
             **kwargs):
         """Search for the best model and hyperparameters for the task.
 
@@ -222,30 +229,22 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                 The validation data is selected from the last samples
                 in the `x` and `y` data provided, before shuffling. This argument is
                 not supported when `x` is a dataset.
-            validation_data: Data on which to evaluate
-                the loss and any model metrics at the end of each epoch.
-                The model will not be trained on this data.
-                `validation_data` will override `validation_split`.
-                `validation_data` could be:
-                  - tuple `(x_val, y_val)` of Numpy arrays or tensors
-                  - tuple `(x_val, y_val, val_sample_weights)` of Numpy arrays
-                  - dataset or a dataset iterator
-                For the first two cases, `batch_size` must be provided.
-                For the last case, `validation_steps` must be provided.
-                The type of the validation data should be the same as the training
-                data.
+            validation_data: Data on which to evaluate the loss and any model metrics
+                at the end of each epoch. The model will not be trained on this data.
+                `validation_data` will override `validation_split`. The type of the
+                validation data should be the same as the training data.
+            objective: String. Name of model metric to minimize
+                or maximize. Defaults to 'val_accuracy'.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         # x is file path of training data
         if isinstance(x, str):
-            df = pd.read_csv(x)
-            validation_df = pd.read_csv(validation_data)
-            label = df.pop(y).to_numpy()
-            validation_label = validation_df.pop(y).to_numpy()
-            validation_data = (validation_df, validation_label)
-            x = df
-            y = label
-            validation_split = 0
+            self._target_column_name = y
+            x, y = self._read_from_csv(x, y)
+        if validation_data:
+            x_val, y_val = validation_data
+            if isinstance(x_val, str):
+                validation_data = self._read_from_csv(x_val, y_val)
 
         super().fit(x=x,
                     y=y,
@@ -253,6 +252,7 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                     callbacks=callbacks,
                     validation_split=validation_split,
                     validation_data=validation_data,
+                    objective=objective,
                     **kwargs)
 
     def predict(self, x, batch_size=32, **kwargs):
@@ -271,6 +271,8 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
         """
         if isinstance(x, str):
             x = pd.read_csv(x)
+            if self._target_col_name in x:
+                x.pop(self._target_col_name)
 
         return super().predict(x=x,
                                batch_size=batch_size,
@@ -296,10 +298,7 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             the scalar outputs.
         """
         if isinstance(x, str):
-            df = pd.read_csv(x)
-            label = df.pop(y).to_numpy()
-            x = df
-            y = label
+            x, y = self._read_from_csv(x, y)
         return super().evaluate(x=x,
                                 y=y,
                                 batch_size=batch_size,
@@ -355,6 +354,55 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             directory=directory,
             name=name,
             seed=seed)
+
+    def fit(self,
+            x=None,
+            y=None,
+            epochs=None,
+            callbacks=None,
+            validation_split=0,
+            validation_data=None,
+            objective='val_accuracy',
+            **kwargs):
+        """Search for the best model and hyperparameters for the task.
+
+        # Arguments
+            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+                Training data x. If the data is from a csv file, it should be a
+                string specifying the path of the csv file of the training data.
+            y: String, numpy.ndarray, or tensorflow.Dataset. Training data y.
+                If the data is from a csv file, it should be a string corresponding
+                to the label column.
+            epochs: Int. The number of epochs to train each model during the search.
+                If unspecified, we would use epochs equal to 1000 and early stopping
+                with patience equal to 30.
+            callbacks: List of Keras callbacks to apply during training and
+                validation.
+            validation_split: Float between 0 and 1.
+                Fraction of the training data to be used as validation data.
+                The model will set apart this fraction of the training data,
+                will not train on it, and will evaluate
+                the loss and any model metrics
+                on this data at the end of each epoch.
+                The validation data is selected from the last samples
+                in the `x` and `y` data provided, before shuffling. This argument is
+                not supported when `x` is a dataset.
+            validation_data: Data on which to evaluate the loss and any model metrics
+                at the end of each epoch. The model will not be trained on this data.
+                `validation_data` will override `validation_split`. The type of the
+                validation data should be the same as the training data.
+            objective: String. Name of model metric to minimize
+                or maximize. Defaults to 'val_accuracy'.
+            **kwargs: Any arguments supported by keras.Model.fit.
+        """
+        super().fit(x=x,
+                    y=y,
+                    epochs=epochs,
+                    callbacks=callbacks,
+                    validation_split=validation_split,
+                    validation_data=validation_data,
+                    objective=objective,
+                    **kwargs)
 
 
 class StructuredDataRegressor(SupervisedStructuredDataPipeline):
