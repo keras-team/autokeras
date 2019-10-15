@@ -117,7 +117,6 @@ class AutoModel(object):
         hp = kerastuner.HyperParameters()
         self.hypermodel.hyper_build(hp)
         self.hypermodel.preprocess(
-            hp=kerastuner.HyperParameters(),
             dataset=dataset,
             validation_data=validation_data,
             fit=True)
@@ -217,11 +216,9 @@ class AutoModel(object):
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        best_model, x = self._prepare_best_model_and_data(
-            x=x,
-            y=None,
-            batch_size=batch_size,
-            predict=True)
+        best_model = self.tuner.get_best_models(1)[0]
+        x = self.hypermodel.preprocess(
+            self._process_xy(x, None, predict=True)).batch(batch_size)
         y = best_model.predict(x, **kwargs)
         y = self._postprocess(y)
         if isinstance(y, list) and len(y) == 1:
@@ -253,26 +250,9 @@ class AutoModel(object):
             The attribute model.metrics_names will give you the display labels for
             the scalar outputs.
         """
-        best_model, data = self._prepare_best_model_and_data(
-            x=x,
-            y=y,
-            batch_size=batch_size)
-        return best_model.evaluate(data, **kwargs)
-
-    def _prepare_best_model_and_data(self,
-                                     x,
-                                     y=None,
-                                     batch_size=32,
-                                     predict=False):
         best_model = self.tuner.get_best_models(1)[0]
-        best_trial = self.tuner.get_best_trials(1)[0]
-        best_hp = best_trial.hyperparameters
-
-        self.tuner.load_trial(best_trial)
-        x = self._process_xy(x, y, predict=predict)
-        x, _ = self.hypermodel.preprocess(best_hp, x)
-        x = x.batch(batch_size)
-        return best_model, x
+        data = self.hypermodel.preprocess(self._process_xy(x, y)).batch(batch_size)
+        return best_model.evaluate(data, **kwargs)
 
 
 class GraphAutoModel(AutoModel):

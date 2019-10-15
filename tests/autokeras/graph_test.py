@@ -18,7 +18,7 @@ def test_set_hp():
 
     graph = graph_module.HyperBuiltGraphHyperModel(input_node, output_node)
     hp = kerastuner.HyperParameters()
-    graph.set_hps([hp_module.Choice('dense_block_1/num_layers', [6], default=6)])
+    graph.register_hps([hp_module.Choice('dense_block_1/num_layers', [6], default=6)])
     graph.build(hp)
 
     for single_hp in hp.space:

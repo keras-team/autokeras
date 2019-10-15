@@ -9,20 +9,21 @@ import tensorflow as tf
 class AutoTuner(kerastuner.Tuner):
     """Modified KerasTuner base class to include preprocessing layers."""
 
-    def run_trial(self, trial, hp, **fit_kwargs):
+    def run_trial(self, trial, *fit_args, **fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
         # Initialize new fit kwargs for the current trial.
+        fit_kwargs.update(
+            dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
         new_fit_kwargs = copy.copy(fit_kwargs)
 
         # Preprocess the dataset and set the shapes of the HyperNodes.
-        self.hypermodel.hyper_build(hp)
+        self.hypermodel.hyper_build(trial.hyperparameters)
         dataset, validation_data = self.hypermodel.preprocess(
-            hp=hp,
             dataset=new_fit_kwargs.get('x', None),
             validation_data=new_fit_kwargs.get('validation_data', None),
             fit=True)
 
-        # Batching
+        # # Batching
         batch_size = new_fit_kwargs.get('batch_size', 32)
         dataset = dataset.batch(batch_size)
         validation_data = validation_data.batch(batch_size)
@@ -33,38 +34,21 @@ class AutoTuner(kerastuner.Tuner):
         new_fit_kwargs['batch_size'] = None
         new_fit_kwargs['y'] = None
 
-        super().run_trial(trial, hp, [], new_fit_kwargs)
-
-    def get_best_hp(self, num_models=1):
-        """Returns hyperparameters used to build the best model(s).
-
-        # Arguments
-            num_models (int, optional): Number of best models, whose building
-                HyperParameters to return. Models will be returned in sorted order
-                starting from the best. Defaults to 1.
-
-        # Returns
-            List of HyperParameter instances.
-        """
-        best_trials = self._get_best_trials(num_models)
-        return [trial.hyperparameters.copy()
-                for trial in best_trials]
+        super().run_trial(trial, **new_fit_kwargs)
 
     def on_trial_end(self, trial):
         super().on_trial_end(trial)
         filename = '%s-preprocessors' % trial.trial_id
-        path = os.path.join(trial.directory, filename)
+        path = os.path.join(self.get_trial_dir(trial.trial_id), filename)
         self.hypermodel.save_preprocessors(path)
         self.hypermodel.clear_preprocessors()
 
-    def get_best_trials(self, num_trials=1):
-        return super()._get_best_trials(num_trials)
-
-    def load_trial(self, trial):
+    def load_model(self, trial):
         self.hypermodel.hyper_build(trial.hyperparameters)
         filename = '%s-preprocessors' % trial.trial_id
-        path = os.path.join(trial.directory, filename)
+        path = os.path.join(self.get_trial_dir(trial.trial_id), filename)
         self.hypermodel.load_preprocessors(path)
+        super().load_model(trial)
 
     def search(self, *fit_args, **fit_kwargs):
         # Format the arguments.
@@ -81,32 +65,17 @@ class AutoTuner(kerastuner.Tuner):
             callbacks_for_search.append(
                 tf.keras.callbacks.EarlyStopping(patience=10))
 
-        # Start the search.
-        self.on_search_begin()
-        for _ in range(self.max_trials):
-            # Obtain unique trial ID to communicate with the oracle.
-            trial_id = kerastuner.engine.tuner_utils.generate_trial_id()
-            hp = self._call_oracle(trial_id)
-            if hp is None:
-                # Oracle triggered exit
-                return
-            self._create_and_run_trial(
-                trial_id=trial_id,
-                hp=hp,
-                callbacks=callbacks_for_search,
-                **fit_kwargs)
+        super().search(callbacks=callbacks_for_search, **fit_kwargs)
 
-        # Fully train the best model with original callbacks.
-        if not early_stopping_in_callbacks:
-            hp = self.get_best_trials(1)[0].hyperparameters
-            trial_id = kerastuner.engine.tuner_utils.generate_trial_id()
-            self._create_and_run_trial(
-                trial_id=trial_id,
-                hp=hp,
-                callbacks=callbacks,
-                **fit_kwargs)
-
-        self.on_search_end()
+        # # Fully train the best model with original callbacks.
+        # if not early_stopping_in_callbacks:
+        #     hp = self.get_best_trials(1)[0].hyperparameters
+        #     trial_id = kerastuner.engine.tuner_utils.generate_trial_id()
+        #     self._create_and_run_trial(
+        #         trial_id=trial_id,
+        #         hp=hp,
+        #         callbacks=callbacks,
+        #         **fit_kwargs)
 
     def _create_and_run_trial(self, trial_id, hp, callbacks, **fit_kwargs):
         trial = kerastuner.engine.trial.Trial(
