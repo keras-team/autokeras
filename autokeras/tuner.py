@@ -6,7 +6,7 @@ import kerastuner
 import tensorflow as tf
 
 
-class AutoTuner(kerastuner.Tuner):
+class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     """Modified KerasTuner base class to include preprocessing layers."""
 
     def __init__(self, hyper_graph, **kwargs):
@@ -59,7 +59,9 @@ class AutoTuner(kerastuner.Tuner):
     def search(self, *fit_args, **fit_kwargs):
         super().search(*fit_args, **fit_kwargs)
 
-        # # Fully train the best model with original callbacks.
+        # Fully train the best model with original callbacks.
+        # if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+        # for callback in callbacks]):
         # if not early_stopping_in_callbacks:
         #     hp = self.get_best_trials(1)[0].hyperparameters
         #     trial_id = kerastuner.engine.tuner_utils.generate_trial_id()
@@ -69,8 +71,8 @@ class AutoTuner(kerastuner.Tuner):
         #         callbacks=callbacks,
         #         **fit_kwargs)
 
-    def _inject_callbacks(self, callbacks, trial):
-        callbacks = super()._inject_callbacks(callbacks, trial)
+    def _inject_callbacks(self, callbacks, trial, execution=0):
+        callbacks = super()._inject_callbacks(callbacks, trial, execution)
         if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                     for callback in callbacks]):
             callbacks.append(tf.keras.callbacks.EarlyStopping(patience=10))
