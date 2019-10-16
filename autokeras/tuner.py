@@ -57,21 +57,7 @@ class AutoTuner(kerastuner.Tuner):
         return preprocess_graph, super().load_model(trial)
 
     def search(self, *fit_args, **fit_kwargs):
-        # Format the arguments.
-        fit_kwargs.update(
-            dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
-
-        # Use early-stopping during the search for acceleration.
-        callbacks = fit_kwargs.pop('callbacks', [])
-        callbacks_for_search = copy.copy(callbacks)
-        early_stopping_in_callbacks = any([
-            isinstance(callback, tf.keras.callbacks.EarlyStopping)
-            for callback in callbacks])
-        if not early_stopping_in_callbacks:
-            callbacks_for_search.append(
-                tf.keras.callbacks.EarlyStopping(patience=10))
-
-        super().search(callbacks=callbacks_for_search, **fit_kwargs)
+        super().search(*fit_args, **fit_kwargs)
 
         # # Fully train the best model with original callbacks.
         # if not early_stopping_in_callbacks:
@@ -82,6 +68,13 @@ class AutoTuner(kerastuner.Tuner):
         #         hp=hp,
         #         callbacks=callbacks,
         #         **fit_kwargs)
+
+    def _inject_callbacks(self, callbacks, trial):
+        callbacks = super()._inject_callbacks(callbacks, trial)
+        if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+                    for callback in callbacks]):
+            callbacks.append(tf.keras.callbacks.EarlyStopping(patience=10))
+        return callbacks
 
     def _create_and_run_trial(self, trial_id, hp, callbacks, **fit_kwargs):
         trial = kerastuner.engine.trial.Trial(
