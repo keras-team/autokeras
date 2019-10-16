@@ -23,8 +23,8 @@ class ImageBlock(base.HyperBlock):
 
     def __init__(self,
                  block_type=None,
-                 normalize=True,
-                 augment=True,
+                 normalize=None,
+                 augment=None,
                  seed=None,
                  **kwargs):
         super().__init__(**kwargs)
@@ -54,14 +54,14 @@ class ImageBlock(base.HyperBlock):
 
         block_type = self.block_type or hp.Choice('block_type',
                                                   ['resnet', 'xception', 'vanilla'],
-                                                  default='resnet')
+                                                  default='vanilla')
 
         normalize = self.normalize
         if normalize is None:
             normalize = hp.Choice('normalize', [True, False], default=True)
         augment = self.augment
         if augment is None:
-            augment = hp.Choice('augment', [True, False], default=True)
+            augment = hp.Choice('augment', [True, False], default=False)
         if normalize:
             output_node = preprocessor_module.Normalization()(output_node)
         if augment:
@@ -121,6 +121,8 @@ class TextBlock(base.HyperBlock):
             output_node = block_module.EmbeddingBlock(
                 pretraining=self.pretraining)(output_node)
             output_node = block_module.ConvBlock(separable=True)(output_node)
+            output_node = block_module.SpatialReduction()(output_node)
+            output_node = block_module.DenseBlock()(output_node)
         return output_node
 
 

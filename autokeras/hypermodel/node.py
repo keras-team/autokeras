@@ -16,21 +16,22 @@ class Input(base.Node):
     The data should be numpy.ndarray or tf.data.Dataset.
     """
 
-    def fit(self, y):
+    def fit(self, x):
         """Record any information needed by transform."""
-        pass
+        if not isinstance(x, (np.ndarray, tf.data.Dataset)):
+            raise TypeError('Expect the data to Input to be numpy.ndarray or '
+                            'tf.data.Dataset, but got {type}.'.format(type=type(x)))
+        if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.number):
+            raise TypeError('Expect the data to Input to be numerical, but got '
+                            '{type}.'.format(type=x.dtype))
 
     def transform(self, x):
         """Transform x into a compatible type (tf.data.Dataset)."""
         if isinstance(x, tf.data.Dataset):
             return x
         if isinstance(x, np.ndarray):
-            if x.dtype == np.float64:
-                x = x.astype(np.float32)
+            x = x.astype(np.float32)
             return tf.data.Dataset.from_tensor_slices(x)
-        raise TypeError('Unsupported type {type} for '
-                        '{name}.'.format(type=type(x),
-                                         name=self.__class__.__name__))
 
 
 class ImageInput(Input):
@@ -41,15 +42,23 @@ class ImageInput(Input):
     dimension.
     """
 
+    def fit(self, x):
+        """Record any information needed by transform."""
+        if not isinstance(x, (np.ndarray, tf.data.Dataset)):
+            raise TypeError('Expect the data to ImageInput to be numpy.ndarray or '
+                            'tf.data.Dataset, but got {type}.'.format(type=type(x)))
+        if isinstance(x, np.ndarray) and x.ndim not in [3, 4]:
+            raise ValueError('Expect the data to ImageInput to have 3 or 4 '
+                             'dimensions, but got input shape {shape} with {ndim} '
+                             'dimensions'.format(shape=x.shape, ndim=x.ndim))
+        if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.number):
+            raise TypeError('Expect the data to ImageInput to be numerical, but got '
+                            '{type}.'.format(type=x.dtype))
+
     def transform(self, x):
         if isinstance(x, np.ndarray):
             if x.ndim == 3:
                 x = np.expand_dims(x, axis=3)
-        if x.ndim != 4:
-            raise ValueError('Expect image input to have 2 or 3 dimensions (not '
-                             'including batch dimension), but got input shape '
-                             '{shape} with {ndim} dimensions'.format(shape=x.shape,
-                                                                     ndim=x.ndim))
         return super().transform(x)
 
 
@@ -60,7 +69,26 @@ class TextInput(Input, TextNode):
     dimensional. Each element in the data should be a string which is a full
     sentence.
     """
-    pass
+
+    def fit(self, x):
+        """Record any information needed by transform."""
+        if not isinstance(x, (np.ndarray, tf.data.Dataset)):
+            raise TypeError('Expect the data to TextInput to be numpy.ndarray or '
+                            'tf.data.Dataset, but got {type}.'.format(type=type(x)))
+
+        if isinstance(x, np.ndarray) and x.ndim != 1:
+            raise ValueError('Expect the data to TextInput to have 1 dimension, but '
+                             'got input shape {shape} with {ndim} dimensions'.format(
+                                 shape=x.shape,
+                                 ndim=x.ndim))
+        if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.character):
+            raise TypeError('Expect the data to TextInput to be strings, but got '
+                            '{type}.'.format(type=x.dtype))
+
+    def transform(self, x):
+        if isinstance(x, np.ndarray):
+            x = tf.data.Dataset.from_tensor_slices(x)
+        return x
 
 
 class StructuredDataInput(Input):
