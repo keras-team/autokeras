@@ -10,7 +10,7 @@ from autokeras.hypermodel import base
 from autokeras.hypermodel import compiler
 
 
-class GraphHyperModelBase(kerastuner.HyperModel):
+class Graph(object):
     """A HyperModel based on connected Blocks or HyperBlocks.
 
     # Arguments
@@ -19,17 +19,16 @@ class GraphHyperModelBase(kerastuner.HyperModel):
         name: String. The name of the GraphHyperModel.
     """
 
-    def __init__(self, inputs, outputs, name=None):
-        super().__init__(name=name)
+    def __init__(self, inputs, outputs, override_hps=None):
+        super().__init__()
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
-        self.hp = None
         self._node_to_id = {}
         self._nodes = []
         self._blocks = []
         self._block_to_id = {}
         self._build_network()
-        self._hps_to_register = []
+        self.override_hps = override_hps or []
 
     def compile(self, func):
         """Passing config infomation from block to block."""
@@ -37,33 +36,14 @@ class GraphHyperModelBase(kerastuner.HyperModel):
             if block.__class__ in func:
                 func[block.__class__](block)
 
-    def build(self, hp):
-        raise NotImplementedError
-
     def _init_hps(self, hp):
-        for single_hp in self._hps_to_register:
+        for single_hp in self.override_hps:
             name = single_hp.name
             if name not in hp.values:
                 hp.register(single_hp.name,
                             single_hp.__class__.__name__,
                             single_hp.get_config())
                 hp.values[name] = single_hp.default
-
-    def set_hp(self, hp):
-        """Set the hyperparameters for build and preprocess."""
-        self._init_hps(hp)
-        self.hp = hp
-        for block in self._blocks:
-            if isinstance(block, base.Preprocessor):
-                block.set_hp(hp)
-
-    def register_hps(self, hps):
-        """Set the hyperparameters to constrain the search space.
-
-        # Arguments
-            hps: A list of Hyperparameters instances.
-        """
-        self._hps_to_register = hps
 
     def set_io_shapes(self, dataset):
         """Set the input and output shapes to the nodes.
@@ -176,8 +156,14 @@ class GraphHyperModelBase(kerastuner.HyperModel):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
 
+    def _get_block(self, name):
+        for block in self._blocks:
+            if block.name == name:
+                return block
+        raise ValueError('Cannot find block named {name}.'.format(name=name))
 
-class HyperBuiltGraphHyperModel(GraphHyperModelBase):
+
+class PlainGraph(Graph):
     """A HyperModel based on connected Blocks.
 
     It is used by GraphHyperModel. GraphHyperModel's hyper_build function produces
@@ -192,7 +178,6 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
     def __init__(self, inputs, outputs, **kwargs):
         self._model_inputs = []
         super().__init__(inputs=inputs, outputs=outputs, **kwargs)
-        self.compile(compiler.BEFORE)
 
     def _build_network(self):
         super()._build_network()
@@ -204,10 +189,35 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
         self._model_inputs = sorted(self._model_inputs,
                                     key=lambda x: self._node_to_id[x])
 
+    @staticmethod
+    def _is_model_inputs(node):
+        for block in node.in_blocks:
+            if not isinstance(block, base.Preprocessor):
+                return False
+        for block in node.out_blocks:
+            if not isinstance(block, base.Preprocessor):
+                return True
+        return False
+
+    def build_keras_graph(self):
+        return KerasGraph(self._model_inputs,
+                          self.outputs,
+                          override_hps=self.override_hps)
+
+    def build_preprocess_graph(self):
+        return PreprocessGraph(self.inputs,
+                               self._model_inputs,
+                               override_hps=self.override_hps)
+
+
+class KerasGraph(Graph, kerastuner.HyperModel):
+
     def build(self, hp):
         """Build the HyperModel into a Keras Model."""
+        self._init_hps(hp)
+        self.compile(compiler.AFTER)
         real_nodes = {}
-        for input_node in self._model_inputs:
+        for input_node in self.inputs:
             node_id = self._node_to_id[input_node]
             real_nodes[node_id] = input_node.build()
         for block in self._blocks:
@@ -221,7 +231,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
                 real_nodes[self._node_to_id[output_node]] = real_output_node
         model = tf.keras.Model(
             [real_nodes[self._node_to_id[input_node]] for input_node in
-             self._model_inputs],
+             self.inputs],
             [real_nodes[self._node_to_id[output_node]] for output_node in
              self.outputs])
 
@@ -256,11 +266,25 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
 
         return model
 
+
+class PreprocessGraph(Graph):
+
     def preprocess(self, dataset, validation_data=None, fit=False):
+        """Preprocess the data to be ready for the Keras Model.
+
+        # Arguments
+            dataset: tf.data.Dataset. Training data.
+            validation_data: tf.data.Dataset. Validation data.
+            fit: Boolean. Whether to fit the preprocessing layers with x and y.
+
+        # Returns
+            if validation data is provided.
+            A tuple of two preprocessed tf.data.Dataset, (train, validation).
+            Otherwise, return the training dataset.
+        """
         dataset = self._preprocess(dataset, fit=fit)
         if validation_data:
             validation_data = self._preprocess(validation_data)
-        self.compile(compiler.AFTER)
         return dataset, validation_data
 
     def _preprocess(self, dataset, fit=False):
@@ -268,22 +292,22 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
         input_node_ids = [self._node_to_id[input_node] for input_node in self.inputs]
 
         # Iterate until all the model inputs have their data.
-        while set(map(lambda node: self._node_to_id[node], self._model_inputs)
+        while set(map(lambda node: self._node_to_id[node], self.outputs)
                   ) - set(input_node_ids):
             # Gather the blocks for the next iteration over the dataset.
             blocks = []
             for node_id in input_node_ids:
                 for block in self._nodes[node_id].out_blocks:
-                    if isinstance(block, base.Preprocessor):
+                    if block in self._blocks:
                         blocks.append(block)
             if fit:
                 # Iterate the dataset to fit the preprocessors in current depth.
-                self._fit_preprocessors(dataset, input_node_ids, blocks)
+                self._fit(dataset, input_node_ids, blocks)
 
             # Transform the dataset.
             output_node_ids = []
             dataset = dataset.map(functools.partial(
-                self._preprocess_transform,
+                self._transform,
                 input_node_ids=input_node_ids,
                 output_node_ids=output_node_ids,
                 blocks=blocks,
@@ -293,7 +317,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
             input_node_ids = output_node_ids
         return dataset
 
-    def _fit_preprocessors(self, dataset, input_node_ids, blocks):
+    def _fit(self, dataset, input_node_ids, blocks):
         # Iterate the dataset to fit the preprocessors in current depth.
         for x, y in dataset:
             x = nest.flatten(x)
@@ -310,13 +334,13 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
             block.finalize()
             nest.flatten(block.outputs)[0].shape = block.output_shape
 
-    def _preprocess_transform(self,
-                              x,
-                              y,
-                              input_node_ids,
-                              output_node_ids,
-                              blocks,
-                              fit=False):
+    def _transform(self,
+                   x,
+                   y,
+                   input_node_ids,
+                   output_node_ids,
+                   blocks,
+                   fit=False):
         x = nest.flatten(x)
         id_to_data = {
             node_id: temp_x
@@ -335,7 +359,7 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
             output_data[self._node_to_id[hm.outputs[0]]] = data
         # Keep the Keras Model inputs even they are not inputs to the blocks.
         for node_id, data in id_to_data.items():
-            if self._is_model_inputs(self._nodes[node_id]):
+            if self._nodes[node_id] in self.outputs:
                 output_data[node_id] = data
 
         for node_id in sorted(output_data.keys()):
@@ -343,27 +367,26 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
         return tuple(map(
             lambda node_id: output_data[node_id], output_node_ids)), y
 
-    @staticmethod
-    def _is_model_inputs(node):
-        for block in node.in_blocks:
-            if not isinstance(block, base.Preprocessor):
-                return False
-        for block in node.out_blocks:
-            if not isinstance(block, base.Preprocessor):
-                return True
-        return False
+    def save(self, path):
+        """Save the preprocessors in the hypermodel in a single file.
 
-    def save_preprocessors(self, path):
+        # Arguments
+            path: String. The path to a single file.
+        """
         configs = {}
         weights = {}
         for block in self._blocks:
-            if isinstance(block, base.Preprocessor):
-                configs[block.name] = block.get_config()
-                weights[block.name] = block.get_weights()
+            configs[block.name] = block.get_config()
+            weights[block.name] = block.get_weights()
         preprocessors = {'configs': configs, 'weights': weights}
         utils.pickle_to_file(preprocessors, path)
 
-    def load_preprocessors(self, path):
+    def load(self, path):
+        """Load the preprocessors in the hypermodel from a single file
+
+        # Arguments
+            path: String. The path to a single file.
+        """
         preprocessors = utils.pickle_from_file(path)
         configs = preprocessors['configs']
         weights = preprocessors['weights']
@@ -374,16 +397,15 @@ class HyperBuiltGraphHyperModel(GraphHyperModelBase):
             block = self._get_block(name)
             block.set_weights(weight)
 
-    def clear_preprocessors(self):
+    def clear(self):
+        """Clear the preprocessors' weights in the hypermodel."""
         for block in self._blocks:
-            if isinstance(block, base.Preprocessor):
-                block.clear_weights()
+            block.clear_weights()
 
-    def _get_block(self, name):
+    def build(self, hp):
+        self.compile(compiler.BEFORE)
         for block in self._blocks:
-            if block.name == name:
-                return block
-        raise ValueError('Cannot find block named {name}.'.format(name=name))
+            block.build(hp)
 
 
 def copy_block(old_block):
@@ -392,7 +414,7 @@ def copy_block(old_block):
     return block
 
 
-class GraphHyperModel(GraphHyperModelBase):
+class HyperGraph(Graph):
     """A HyperModel based on connected Blocks and HyperBlocks.
 
     # Arguments
@@ -402,12 +424,14 @@ class GraphHyperModel(GraphHyperModelBase):
 
     def __init__(self, inputs, outputs, **kwargs):
         super().__init__(inputs, outputs, **kwargs)
-        self.hyper_built_ghm = None
         self.compile(compiler.HYPER)
 
-    def build(self, hp=None):
-        """Build the HyperModel into a Keras Model."""
-        return self.hyper_built_ghm.build(hp)
+    def build_graphs(self, hp):
+        plain_graph = self.hyper_build(hp)
+        preprocess_graph = plain_graph.build_preprocess_graph()
+        preprocess_graph.build(hp)
+        return (preprocess_graph,
+                plain_graph.build_keras_graph())
 
     def hyper_build(self, hp):
         """Build a GraphHyperModel with no HyperBlock but only Block."""
@@ -433,41 +457,4 @@ class GraphHyperModel(GraphHyperModelBase):
         outputs = []
         for output_node in self.outputs:
             outputs.append(old_node_to_new[output_node])
-        self.hyper_built_ghm = HyperBuiltGraphHyperModel(inputs, outputs)
-        self.hyper_built_ghm.register_hps(self._hps_to_register)
-        self.hyper_built_ghm.set_hp(hp)
-
-    def preprocess(self, dataset, validation_data=None, fit=False):
-        """Preprocess the data to be ready for the Keras Model.
-
-        # Arguments
-            dataset: tf.data.Dataset. Training data.
-            validation_data: tf.data.Dataset. Validation data.
-            fit: Boolean. Whether to fit the preprocessing layers with x and y.
-
-        # Returns
-            if validation data is provided.
-            A tuple of two preprocessed tf.data.Dataset, (train, validation).
-            Otherwise, return the training dataset.
-        """
-        return self.hyper_built_ghm.preprocess(dataset, validation_data, fit)
-
-    def save_preprocessors(self, path):
-        """Save the preprocessors in the hypermodel in a single file.
-
-        # Arguments
-            path: String. The path to a single file.
-        """
-        self.hyper_built_ghm.save_preprocessors(path)
-
-    def load_preprocessors(self, path):
-        """Load the preprocessors in the hypermodel from a single file
-
-        # Arguments
-            path: String. The path to a single file.
-        """
-        self.hyper_built_ghm.load_preprocessors(path)
-
-    def clear_preprocessors(self):
-        """Clear the preprocessors' weights in the hypermodel."""
-        self.hyper_built_ghm.clear_preprocessors()
+        return PlainGraph(inputs, outputs, override_hps=self.override_hps)

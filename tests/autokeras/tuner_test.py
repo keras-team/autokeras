@@ -16,12 +16,7 @@ def tmp_dir(tmpdir_factory):
 @mock.patch('autokeras.tuner.AutoTuner.run_trial')
 @mock.patch('autokeras.tuner.kerastuner.Tuner.on_search_begin')
 @mock.patch('autokeras.tuner.AutoTuner.on_trial_end')
-@mock.patch('autokeras.tuner.kerastuner.Tuner._get_best_trials')
-@mock.patch('kerastuner.engine.trial.Trial')
-def test_add_early_stopping(_2, get_trials, _1, _, run_trial, tmp_dir):
-    trial = kerastuner.engine.trial.Trial()
-    trial.hyperparameters = kerastuner.HyperParameters()
-    get_trials.return_value = [trial]
+def test_add_early_stopping(_1, _, run_trial, tmp_dir):
     input_shape = (32,)
     num_instances = 100
     num_classes = 10
@@ -37,10 +32,10 @@ def test_add_early_stopping(_2, get_trials, _1, _, run_trial, tmp_dir):
     output_node = ak.DenseBlock()(output_node)
     output_node = ak.ClassificationHead(num_classes=num_classes,
                                         output_shape=(num_classes,))(output_node)
-    hypermodel = ak.hypermodel.graph.HyperBuiltGraphHyperModel(input_node,
-                                                               output_node)
+    hypermodel = ak.hypermodel.graph.HyperGraph(input_node, output_node)
     tuner = ak.tuner.RandomSearch(
-        hypermodel=hypermodel,
+        hyper_graph=hypermodel,
+        hypermodel=hypermodel.build_graphs(kerastuner.HyperParameters())[1],
         objective='val_loss',
         max_trials=1,
         directory=tmp_dir,

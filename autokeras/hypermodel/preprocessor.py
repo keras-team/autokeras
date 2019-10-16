@@ -241,6 +241,7 @@ class LightGBMModel(base.Preprocessor):
         self._output_shape = None
         self.lgbm = None
         self.seed = seed
+        self.params = None
 
     def update(self, x, y=None):
         """ Store the train data and decode.
@@ -263,33 +264,34 @@ class LightGBMModel(base.Preprocessor):
         """
         return [self.lgbm.predict(x.numpy().reshape((1, -1)))]
 
-    def get_params(self):
-        return {'boosting_type': ['gbdt'],
-                'min_child_weight': self._hp.Choice('min_child_weight',
-                                                    [5, 10, 30, 50, 60, 80, 100],
-                                                    default=5),
-                'min_split_gain': [1.0],
-                'subsample': [0.8],
-                'colsample_bytree': self._hp.Choice('colsample_bytree',
-                                                    [0.6, 0.7],
-                                                    default=0.6),
-                'max_depth': self._hp.Choice('max_depth',
-                                             [5, 8, 10],
-                                             default=10),
-                'num_leaves': [70],
-                'learning_rate': self._hp.Choice('learning_rate',
-                                                 [0.03, 0.045, 0.06, 0.075,
-                                                  0.85, 0.95, 0.105, 0.12],
-                                                 default=0.105),
-                'n_estimators': self._hp.Choice('n_estimators',
-                                                [50, 100, 150, 200],
-                                                default=50)}
+    def build(self, hp):
+        self.params = {
+            'boosting_type': ['gbdt'],
+            'min_child_weight': hp.Choice('min_child_weight',
+                                          [5, 10, 30, 50, 60, 80, 100],
+                                          default=5),
+            'min_split_gain': [1.0],
+            'subsample': [0.8],
+            'colsample_bytree': hp.Choice('colsample_bytree',
+                                          [0.6, 0.7],
+                                          default=0.6),
+            'max_depth': hp.Choice('max_depth',
+                                   [5, 8, 10],
+                                   default=10),
+            'num_leaves': [70],
+            'learning_rate': hp.Choice('learning_rate',
+                                       [0.03, 0.045, 0.06, 0.075,
+                                        0.85, 0.95, 0.105, 0.12],
+                                       default=0.105),
+            'n_estimators': hp.Choice('n_estimators',
+                                      [50, 100, 150, 200],
+                                      default=50)}
 
     def finalize(self):
         """ Train the LightGBM model with the data and value stored."""
         target = np.array(self.targets).flatten()
         # TODO: Set hp for parameters below.
-        self.lgbm.set_params(**self.get_params())
+        self.lgbm.set_params(**self.params)
         self.lgbm.fit(X=np.asarray(self.data), y=target)
         self.data = []
         self.targets = []
@@ -402,6 +404,9 @@ class LightGBMBlock(base.Preprocessor):
         self.lightgbm_block = None
         self.heads = None
         self.seed = seed
+
+    def build(self, hp):
+        self.lightgbm_block.build(hp)
 
     def clear_weights(self):
         self.lightgbm_block.clear_weights()

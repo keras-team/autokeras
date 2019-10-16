@@ -9,6 +9,11 @@ import tensorflow as tf
 class AutoTuner(kerastuner.Tuner):
     """Modified KerasTuner base class to include preprocessing layers."""
 
+    def __init__(self, hyper_graph, **kwargs):
+        super().__init__(**kwargs)
+        self.hyper_graph = hyper_graph
+        self.preprocess_graph = None
+
     def run_trial(self, trial, *fit_args, **fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
         # Initialize new fit kwargs for the current trial.
@@ -17,8 +22,9 @@ class AutoTuner(kerastuner.Tuner):
         new_fit_kwargs = copy.copy(fit_kwargs)
 
         # Preprocess the dataset and set the shapes of the HyperNodes.
-        self.hypermodel.hyper_build(trial.hyperparameters)
-        dataset, validation_data = self.hypermodel.preprocess(
+        self.preprocess_graph, self.hypermodel = self.hyper_graph.build_graphs(
+            trial.hyperparameters)
+        dataset, validation_data = self.preprocess_graph.preprocess(
             dataset=new_fit_kwargs.get('x', None),
             validation_data=new_fit_kwargs.get('validation_data', None),
             fit=True)
@@ -40,15 +46,15 @@ class AutoTuner(kerastuner.Tuner):
         super().on_trial_end(trial)
         filename = '%s-preprocessors' % trial.trial_id
         path = os.path.join(self.get_trial_dir(trial.trial_id), filename)
-        self.hypermodel.save_preprocessors(path)
-        self.hypermodel.clear_preprocessors()
+        self.preprocess_graph.save(path)
+        self.preprocess_graph.clear()
 
     def load_model(self, trial):
-        self.hypermodel.hyper_build(trial.hyperparameters)
+        preprocess_graph, _ = self.hyper_graph.build_graphs(trial.hyperparameters)
         filename = '%s-preprocessors' % trial.trial_id
         path = os.path.join(self.get_trial_dir(trial.trial_id), filename)
-        self.hypermodel.load_preprocessors(path)
-        super().load_model(trial)
+        preprocess_graph.load(path)
+        return preprocess_graph, super().load_model(trial)
 
     def search(self, *fit_args, **fit_kwargs):
         # Format the arguments.

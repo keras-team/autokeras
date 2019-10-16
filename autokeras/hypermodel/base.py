@@ -237,30 +237,14 @@ class HyperBlock(Block):
 class Preprocessor(Block):
     """Hyper preprocessing block base class."""
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._hp = None
-
-    def build(self, hp, inputs=None):
+    def build(self, hp):
         """Build into part of a Keras Model.
 
         Since they are for preprocess data before feeding into the Keras Model,
         they are not part of the Keras Model. They only pass the inputs
         directly to outputs.
         """
-        return inputs
-
-    def set_hp(self, hp):
-        """Set Hyperparameters for the Preprocessor.
-
-        Since the `update` and `transform` function are all for single training
-        instances instead of the entire dataset, the Hyperparameters needs to be
-        set in advance of call them.
-
-        # Arguments
-            hp: Hyperparameters. The hyperparameters for tuning the preprocessor.
-        """
-        self._hp = hp
+        pass
 
     def update(self, x, y=None):
         """Incrementally fit the preprocessor with a single training instance.

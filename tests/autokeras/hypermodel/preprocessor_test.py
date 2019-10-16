@@ -17,7 +17,7 @@ def map_func(x, instance=None, dtype=tf.float32):
 
 def run_preprocessor(instance, x, y=None, dtype=tf.float32):
     dataset = tf.data.Dataset.zip((x, y))
-    instance.set_hp(kerastuner.HyperParameters())
+    instance.build(kerastuner.HyperParameters())
     for temp_x, temp_y in dataset:
         instance.update(temp_x, temp_y)
     instance.finalize()
