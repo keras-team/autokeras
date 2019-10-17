@@ -1,4 +1,4 @@
-import collections
+import ast
 import random
 import warnings
 
@@ -10,8 +10,8 @@ from tensorflow.python.util import nest
 
 from autokeras import const
 from autokeras import encoder
+from autokeras import utils
 from autokeras.hypermodel import base
-from autokeras.hypermodel import node as node_module
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -83,14 +83,6 @@ class Normalization(base.Preprocessor):
         self.std = weights['std']
         self.shape = weights['shape']
 
-    def clear_weights(self):
-        self.sum = 0
-        self.square_sum = 0
-        self.count = 0
-        self.mean = None
-        self.std = None
-        self.shape = None
-
 
 class TextToIntSequence(base.Preprocessor):
     """Convert raw texts to sequences of word indices."""
@@ -143,11 +135,6 @@ class TextToIntSequence(base.Preprocessor):
     def set_weights(self, weights):
         self.max_len_in_data = weights['max_len_in_data']
         self.tokenizer = weights['tokenizer']
-
-    def clear_weights(self):
-        self.max_len_in_data = 0
-        self.tokenizer = tf.keras.preprocessing.text.Tokenizer(
-            num_words=const.Constant.VOCABULARY_SIZE)
 
 
 class TextToNgramVector(base.Preprocessor):
@@ -212,19 +199,6 @@ class TextToNgramVector(base.Preprocessor):
         self.vectorizer.max_features = weights['max_features']
         self._texts = weights['texts']
         self.shape = weights['shape']
-
-    def clear_weights(self):
-        self.vectorizer = text.TfidfVectorizer(
-            ngram_range=(1, 2),
-            strip_accents='unicode',
-            decode_error='replace',
-            analyzer='word',
-            min_df=2)
-        self.selector = None
-        self.targets = None
-        self.vectorizer.max_features = const.Constant.VOCABULARY_SIZE
-        self._texts = []
-        self.shape = None
 
 
 class LightGBMModel(base.Preprocessor):
@@ -312,9 +286,6 @@ class LightGBMModel(base.Preprocessor):
                 'output_shape': self._output_shape,
                 'seed': self.seed}
 
-    def clear_weights(self):
-        self._output_shape = None
-
 
 class LightGBMClassifier(LightGBMModel):
     """Collect data, train and test the LightGBM for classification task.
@@ -359,17 +330,13 @@ class LightGBMClassifier(LightGBMModel):
 
     def set_weights(self, weights):
         super().set_weights(weights)
-        self._one_hot_encoder = weights['one_hot_encoder']
+        self._one_hot_encoder = encoder.OneHotEncoder()
+        self._one_hot_encoder.set_state(weights['one_hot_encoder'])
 
     def get_weights(self):
         weights = super().get_weights()
-        weights.update({'one_hot_encoder': self._one_hot_encoder})
+        weights.update({'one_hot_encoder': self._one_hot_encoder.get_state()})
         return weights
-
-    def clear_weights(self):
-        super().clear_weights()
-        self.lgbm = lgb.LGBMClassifier(random_state=self.seed)
-        self._one_hot_encoder = encoder.OneHotEncoder()
 
 
 class LightGBMRegressor(LightGBMModel):
@@ -381,10 +348,6 @@ class LightGBMRegressor(LightGBMModel):
 
     def __init__(self, seed=None, **kwargs):
         super().__init__(seed=seed, **kwargs)
-        self.lgbm = lgb.LGBMRegressor(random_state=self.seed)
-
-    def clear_weights(self):
-        super().clear_weights()
         self.lgbm = lgb.LGBMRegressor(random_state=self.seed)
 
     def finalize(self):
@@ -407,9 +370,6 @@ class LightGBMBlock(base.Preprocessor):
 
     def build(self, hp):
         self.lightgbm_block.build(hp)
-
-    def clear_weights(self):
-        self.lightgbm_block.clear_weights()
 
     def get_weights(self):
         return self.lightgbm_block.get_weights()
@@ -630,7 +590,8 @@ class FeatureEngineering(base.Preprocessor):
 
     def __init__(self, max_columns=1000, **kwargs):
         super().__init__(**kwargs)
-        self.input_node = None
+        self.column_names = None
+        self.column_types = None
         self.max_columns = max_columns
         self.num_columns = 0
         self.num_rows = 0
@@ -652,34 +613,29 @@ class FeatureEngineering(base.Preprocessor):
         self.high_level_num_cat = {}
 
     def initialize(self):
-        for column_name, column_type in self.input_node.column_types.items():
+        for column_name, column_type in self.column_types.items():
             if column_type == 'categorical':
                 self.categorical_col.append(
-                    self.input_node.column_names.index(column_name))
+                    self.column_names.index(column_name))
             elif column_type == 'numerical':
                 self.numerical_col.append(
-                    self.input_node.column_names.index(column_name))
+                    self.column_names.index(column_name))
             else:
                 raise ValueError('Unsupported column type: '
                                  '{type}'.format(type=column_type))
 
         for index, cat_col_index1 in enumerate(self.categorical_col):
             self.label_encoders[cat_col_index1] = encoder.LabelEncoder()
-            self.value_counters[cat_col_index1] = collections.defaultdict(
-                return_zero)
+            self.value_counters[cat_col_index1] = {}
             self.count_frequency[cat_col_index1] = {}
             for cat_col_index2 in self.categorical_col[index + 1:]:
-                self.categorical_categorical[(
-                    cat_col_index1,
-                    cat_col_index2)] = collections.defaultdict(return_zero)
+                self.categorical_categorical[(cat_col_index1, cat_col_index2)] = {}
             for num_col_index in self.numerical_col:
-                self.numerical_categorical[(
-                    num_col_index,
-                    cat_col_index1)] = collections.defaultdict(return_zero)
+                self.numerical_categorical[(num_col_index, cat_col_index1)] = {}
 
     def update(self, x, y=None):
         if self.num_rows == 0:
-            self.num_columns = len(self.input_node.column_types)
+            self.num_columns = len(self.column_types)
             self.initialize()
 
         self.num_rows += 1
@@ -690,15 +646,19 @@ class FeatureEngineering(base.Preprocessor):
         for col_index in self.categorical_col:
             key = str(x[col_index])
             self.label_encoders[col_index].update(key)
+            self.value_counters[col_index].setdefault(key, 0)
             self.value_counters[col_index][key] += 1
 
         for col_index1, col_index2 in self.categorical_categorical.keys():
-            key = (str(x[col_index1]), str(x[col_index2]))
+            key = str((x[col_index1], x[col_index2]))
+            self.categorical_categorical[(col_index1, col_index2)].setdefault(key, 0)
             self.categorical_categorical[(col_index1, col_index2)][key] += 1
 
         for num_col_index, cat_col_index in self.numerical_categorical.keys():
             key = str(x[cat_col_index])
             v = x[num_col_index]
+            self.numerical_categorical[(
+                num_col_index, cat_col_index)].setdefault(key, 0)
             self.numerical_categorical[(num_col_index, cat_col_index)][key] += v
 
     def transform(self, x, fit=False):
@@ -717,7 +677,7 @@ class FeatureEngineering(base.Preprocessor):
         # append cat-cat value
         for key, value in self.high_level_cat_cat.items():
             col_index1, col_index2 = key
-            pair = (str(x[col_index1]), str(x[col_index2]))
+            pair = str((x[col_index1], x[col_index2]))
             new_value = value[pair] if pair in value else -1
             new_values.append(new_value)
 
@@ -777,7 +737,7 @@ class FeatureEngineering(base.Preprocessor):
                     self.high_level_num_cat[pair][key] /= self.value_counters[
                         cat_col_index1][key]
 
-        self.shape = (len(self.input_node.column_types)
+        self.shape = (len(self.column_types)
                       + len(self.high_level1_col)
                       + len(self.high_level_cat_cat)
                       + len(self.high_level_num_cat),)
@@ -790,57 +750,55 @@ class FeatureEngineering(base.Preprocessor):
         return self.shape
 
     def get_weights(self):
-        return {'shape': self.shape,
-                'num_rows': self.num_rows,
-                'categorical_col': self.categorical_col,
-                'numerical_col': self.numerical_col,
-                'label_encoders': self.label_encoders,
-                'value_counters': self.value_counters,
-                'categorical_categorical': self.categorical_categorical,
-                'numerical_categorical': self.numerical_categorical,
-                'count_frequency': self.count_frequency,
-                'high_level1_col': self.high_level1_col,
-                'high_level2_col': self.high_level2_col,
-                'high_level_cat_cat': self.high_level_cat_cat,
-                'high_level_num_cat': self.high_level_num_cat}
+        label_encoders_state = {
+            key: label_encoder.get_state()
+            for key, label_encoder in self.label_encoders.items()}
+        return {
+            'shape': self.shape,
+            'num_rows': self.num_rows,
+            'categorical_col': self.categorical_col,
+            'numerical_col': self.numerical_col,
+            'label_encoders': utils.to_type_key(label_encoders_state, str),
+            'value_counters': utils.to_type_key(self.value_counters, str),
+            'categorical_categorical': utils.to_type_key(
+                self.categorical_categorical, str),
+            'numerical_categorical': utils.to_type_key(
+                self.numerical_categorical, str),
+            'count_frequency': utils.to_type_key(self.count_frequency, str),
+            'high_level1_col': self.high_level1_col,
+            'high_level2_col': self.high_level2_col,
+            'high_level_cat_cat': utils.to_type_key(self.high_level_cat_cat, str),
+            'high_level_num_cat': utils.to_type_key(self.high_level_num_cat, str)}
 
     def set_weights(self, weights):
+        for key, label_encoder_state in utils.to_type_key(weights['label_encoders'],
+                                                          int).items():
+            self.label_encoders[key].set_state(label_encoder_state)
         self.shape = weights['shape']
         self.num_rows = weights['num_rows']
         self.categorical_col = weights['categorical_col']
         self.numerical_col = weights['numerical_col']
-        self.label_encoders = weights['label_encoders']
-        self.value_counters = weights['value_counters']
-        self.categorical_categorical = weights['categorical_categorical']
-        self.numerical_categorical = weights['numerical_categorical']
-        self.count_frequency = weights['count_frequency']
+        self.value_counters = utils.to_type_key(weights['value_counters'], int)
+        self.categorical_categorical = utils.to_type_key(
+            weights['categorical_categorical'], ast.literal_eval)
+        self.numerical_categorical = utils.to_type_key(
+            weights['numerical_categorical'], ast.literal_eval)
+        self.count_frequency = utils.to_type_key(weights['count_frequency'], int)
         self.high_level1_col = weights['high_level1_col']
         self.high_level2_col = weights['high_level2_col']
-        self.high_level_cat_cat = weights['high_level_cat_cat']
-        self.high_level_num_cat = weights['high_level_num_cat']
-
-    def clear_weights(self):
-        self.shape = None
-        self.num_rows = 0
-        self.categorical_col = []
-        self.numerical_col = []
-        self.label_encoders = {}
-        self.value_counters = {}
-        self.categorical_categorical = {}
-        self.numerical_categorical = {}
-        self.count_frequency = {}
-        self.high_level1_col = []
-        self.high_level2_col = []
-        self.high_level_cat_cat = {}
-        self.high_level_num_cat = {}
+        self.high_level_cat_cat = utils.to_type_key(
+            weights['high_level_cat_cat'], ast.literal_eval)
+        self.high_level_num_cat = utils.to_type_key(
+            weights['high_level_num_cat'], ast.literal_eval)
 
     def get_config(self):
-        return {'num_columns': self.num_columns,
-                'input_node': (self.input_node.column_names,
-                               self.input_node.column_types),
+        return {'column_names': self.column_names,
+                'column_types': utils.to_type_key(self.column_types, str),
+                'num_columns': self.num_columns,
                 'max_columns': self.max_columns}
 
     def set_config(self, config):
+        self.column_names = config['column_names']
+        self.column_types = config['column_types']
         self.num_columns = config['num_columns']
-        self.input_node = node_module.StructuredDataInput(*config['input_node'])
         self.max_columns = config['max_columns']

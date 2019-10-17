@@ -1,7 +1,8 @@
+import kerastuner
 import numpy as np
 
 
-class Encoder(object):
+class Encoder(kerastuner.engine.stateful.Stateful):
     def __init__(self, num_classes=None):
         self.num_classes = num_classes
         self._labels = None
@@ -16,6 +17,16 @@ class Encoder(object):
     def decode(self, data):
         raise NotImplementedError
 
+    def get_state(self):
+        return {'num_classes': self.num_classes,
+                'labels': self._labels,
+                'int_to_label': self._int_to_label}
+
+    def set_state(self, state):
+        self.num_classes = state['num_classes']
+        self._labels = state['labels']
+        self._int_to_label = state['int_to_label']
+
 
 class OneHotEncoder(Encoder):
     """A class that can format data.
@@ -29,6 +40,15 @@ class OneHotEncoder(Encoder):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._label_to_vec = {}
+
+    def get_state(self):
+        state = super().get_state()
+        state.update({'label_to_vec': self._label_to_vec})
+        return state
+
+    def set_state(self, state):
+        super().set_state(state)
+        self._label_to_vec = state['label_to_vec']
 
     def fit_with_labels(self, data):
         """Create mapping from label to vector, and vector to label.
@@ -90,6 +110,15 @@ class LabelEncoder(Encoder):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._label_to_int = {}
+
+    def get_state(self):
+        state = super().get_state()
+        state.update({'label_to_int': self._label_to_int})
+        return state
+
+    def set_state(self, state):
+        super().set_state(state)
+        self._label_to_int = state['label_to_int']
 
     def fit_with_labels(self, data):
         data = np.array(data).flatten()

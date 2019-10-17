@@ -33,20 +33,20 @@ class ImageBlock(base.HyperBlock):
         self.augment = augment
         self.seed = seed
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({'block_type': self.block_type,
                        'normalize': self.normalize,
                        'augment': self.augment,
                        'seed': self.seed})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.block_type = config.get('block_type')
-        self.normalize = config.get('normalize')
-        self.augment = config.get('augment')
-        self.seed = config.get('seed')
+    def set_state(self, state):
+        super().set_state(state)
+        self.block_type = state.get('block_type')
+        self.normalize = state.get('normalize')
+        self.augment = state.get('augment')
+        self.seed = state.get('seed')
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
@@ -94,16 +94,16 @@ class TextBlock(base.HyperBlock):
         self.vectorizer = vectorizer
         self.pretraining = pretraining
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({'vectorizer': self.vectorizer,
                        'pretraining': self.pretraining})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.vectorizer = config['vectorizer']
-        self.pretraining = config['pretraining']
+    def set_state(self, state):
+        super().set_state(state)
+        self.vectorizer = state['vectorizer']
+        self.pretraining = state['pretraining']
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
@@ -149,20 +149,20 @@ class StructuredDataBlock(base.HyperBlock):
         self.heads = None
         self.seed = seed
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({'feature_engineering': self.feature_engineering,
                        'module_type': self.module_type,
                        'heads': self.heads,
                        'seed': self.seed})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.feature_engineering = config.get('feature_engineering')
-        self.module_type = config.get('module_type')
-        self.heads = config.get('heads')
-        self.seed = config.get('seed')
+    def set_state(self, state):
+        super().set_state(state)
+        self.feature_engineering = state.get('feature_engineering')
+        self.module_type = state.get('module_type')
+        self.heads = state.get('heads')
+        self.seed = state.get('seed')
 
     def build_feature_engineering(self, hp, input_node):
         output_node = input_node

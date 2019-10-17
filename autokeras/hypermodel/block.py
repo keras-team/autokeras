@@ -34,19 +34,19 @@ class DenseBlock(base.Block):
         self.use_batchnorm = use_batchnorm
         self.dropout_rate = dropout_rate
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({
             'num_layers': self.num_layers,
             'use_batchnorm': self.use_batchnorm,
             'dropout_rate': self.dropout_rate})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.num_layers = config['num_layers']
-        self.use_batchnorm = config['use_batchnorm']
-        self.dropout_rate = config['dropout_rate']
+    def set_state(self, state):
+        super().set_state(state)
+        self.num_layers = state['num_layers']
+        self.use_batchnorm = state['use_batchnorm']
+        self.dropout_rate = state['dropout_rate']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -102,8 +102,8 @@ class RNNBlock(base.Block):
         self.num_layers = num_layers
         self.layer_type = layer_type
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({
             'return_sequences': self.return_sequences,
             'bidirectional': self.bidirectional,
@@ -111,12 +111,12 @@ class RNNBlock(base.Block):
             'layer_type': self.layer_type})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.return_sequences = config['return_sequences']
-        self.bidirectional = config['bidirectional']
-        self.num_layers = config['num_layers']
-        self.layer_type = config['layer_type']
+    def set_state(self, state):
+        super().set_state(state)
+        self.return_sequences = state['return_sequences']
+        self.bidirectional = state['bidirectional']
+        self.num_layers = state['num_layers']
+        self.layer_type = state['layer_type']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -182,19 +182,19 @@ class ConvBlock(base.Block):
         self.num_blocks = num_blocks
         self.separable = separable
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({
             'kernel_size': self.kernel_size,
             'num_blocks': self.num_blocks,
             'separable': self.separable})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.kernel_size = config['kernel_size']
-        self.num_blocks = config['num_blocks']
-        self.separable = config['separable']
+    def set_state(self, state):
+        super().set_state(state)
+        self.kernel_size = state['kernel_size']
+        self.num_blocks = state['num_blocks']
+        self.separable = state['separable']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -264,17 +264,17 @@ class ResNetBlock(base.Block, resnet.HyperResNet):
         self.version = version
         self.pooling = pooling
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({
             'version': self.version,
             'pooling': self.pooling})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.version = config['version']
-        self.pooling = config['pooling']
+    def set_state(self, state):
+        super().set_state(state)
+        self.version = state['version']
+        self.pooling = state['pooling']
 
     def build(self, hp, inputs=None):
         self.input_tensor = nest.flatten(inputs)[0]
@@ -326,8 +326,8 @@ class XceptionBlock(base.Block, xception.HyperXception):
         self.num_residual_blocks = num_residual_blocks
         self.pooling = pooling
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({
             'activation': self.activation,
             'initial_strides': self.initial_strides,
@@ -335,12 +335,12 @@ class XceptionBlock(base.Block, xception.HyperXception):
             'pooling': self.pooling})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.activation = config['activation']
-        self.initial_strides = config['initial_strides']
-        self.num_residual_blocks = config['num_residual_blocks']
-        self.pooling = config['pooling']
+    def set_state(self, state):
+        super().set_state(state)
+        self.activation = state['activation']
+        self.initial_strides = state['initial_strides']
+        self.num_residual_blocks = state['num_residual_blocks']
+        self.pooling = state['pooling']
 
     def build(self, hp, inputs=None):
         self.input_tensor = nest.flatten(inputs)[0]
@@ -380,14 +380,14 @@ class Merge(base.Block):
         super().__init__(**kwargs)
         self.merge_type = merge_type
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({'merge_type': self.merge_type})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.merge_type = config['merge_type']
+    def set_state(self, state):
+        super().set_state(state)
+        self.merge_type = state['merge_type']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -439,14 +439,14 @@ class SpatialReduction(base.Block):
         super().__init__(**kwargs)
         self.reduction_type = reduction_type
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({'reduction_type': self.reduction_type})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.reduction_type = config['reduction_type']
+    def set_state(self, state):
+        super().set_state(state)
+        self.reduction_type = state['reduction_type']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -486,14 +486,14 @@ class TemporalReduction(base.Block):
         super().__init__(**kwargs)
         self.reduction_type = reduction_type
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({'reduction_type': self.reduction_type})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.reduction_type = config['reduction_type']
+    def set_state(self, state):
+        super().set_state(state)
+        self.reduction_type = state['reduction_type']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -553,19 +553,19 @@ class EmbeddingBlock(base.Block):
         self.embedding_dim = embedding_dim
         self.dropout_rate = dropout_rate
 
-    def get_config(self):
-        config = super().get_config()
+    def get_state(self):
+        config = super().get_state()
         config.update({
             'max_features': self.max_features,
             'pretraining': self.pretraining,
             'embedding_dim': self.embedding_dim})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.max_features = config['max_features']
-        self.pretraining = config['pretraining']
-        self.embedding_dim = config['embedding_dim']
+    def set_state(self, state):
+        super().set_state(state)
+        self.max_features = state['max_features']
+        self.pretraining = state['pretraining']
+        self.embedding_dim = state['embedding_dim']
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]

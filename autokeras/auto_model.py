@@ -216,7 +216,7 @@ class AutoModel(object):
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        preprocess_graph, model = self.tuner.get_best_models(1)[0]
+        preprocess_graph, model = self.tuner.get_best_model()
         x = preprocess_graph.preprocess(
             self._process_xy(x, None, predict=True))[0].batch(batch_size)
         y = model.predict(x, **kwargs)
@@ -250,7 +250,7 @@ class AutoModel(object):
             The attribute model.metrics_names will give you the display labels for
             the scalar outputs.
         """
-        preprocess_graph, model = self.tuner.get_best_models(1)[0]
+        preprocess_graph, model = self.tuner.get_best_model()
         data = preprocess_graph.preprocess(
             self._process_xy(x, y))[0].batch(batch_size)
         return model.evaluate(data, **kwargs)

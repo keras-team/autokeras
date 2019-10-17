@@ -9,10 +9,8 @@ from tensorflow.python.util import nest
 from autokeras import utils
 
 
-class Node(object):
+class Node(kerastuner.engine.stateful.Stateful):
     """The nodes in a network connecting the blocks."""
-    # TODO: Implement get_config() and set_config(), so that the entire graph can
-    # be saved.
 
     def __init__(self, shape=None):
         super().__init__()
@@ -29,12 +27,18 @@ class Node(object):
     def build(self):
         return tf.keras.Input(shape=self.shape)
 
+    def get_state(self):
+        return {'shape': self.shape}
+
+    def set_state(self, state):
+        self.shape = state['shape']
+
     def clear_edges(self):
         self.in_blocks = []
         self.out_blocks = []
 
 
-class Block(kerastuner.HyperModel):
+class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
     """The base class for different Block.
 
     The Block can be connected together to build the search space
@@ -108,7 +112,7 @@ class Block(kerastuner.HyperModel):
         self.inputs = None
         self.outputs = None
 
-    def get_config(self):
+    def get_state(self):
         """Get the configuration of the preprocessor.
 
         # Returns
@@ -116,13 +120,13 @@ class Block(kerastuner.HyperModel):
         """
         return {'name': self.name}
 
-    def set_config(self, config):
+    def set_state(self, state):
         """Set the configuration of the preprocessor.
 
         # Arguments
-            config: A dictionary of the configurations of the preprocessor.
+            state: A dictionary of the configurations of the preprocessor.
         """
-        self.name = config['name']
+        self.name = state['name']
 
 
 class Head(Block):
@@ -145,22 +149,22 @@ class Head(Block):
         # Mark if the head should directly output the input tensor.
         self.identity = False
 
-    def get_config(self):
-        config = super().get_config()
-        config.update({
+    def get_state(self):
+        state = super().get_state()
+        state.update({
             'output_shape': self.output_shape,
             'loss': self.loss,
             'metrics': self.metrics,
             'identity': self.identity
         })
-        return config
+        return state
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.output_shape = config['output_shape']
-        self.loss = config['loss']
-        self.metrics = config['metrics']
-        self.identity = config['identity']
+    def set_state(self, state):
+        super().set_state(state)
+        self.output_shape = state['output_shape']
+        self.loss = state['loss']
+        self.metrics = state['metrics']
+        self.identity = state['identity']
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
@@ -294,8 +298,20 @@ class Preprocessor(Block):
         """Training process of the preprocessor after update with all instances."""
         pass
 
-    def clear_weights(self):
-        """Delete the trained weights of the preprocessor."""
+    def get_config(self):
+        """Get the configuration of the preprocessor.
+
+        # Returns
+            A dictionary of configurations of the preprocessor.
+        """
+        return {}
+
+    def set_config(self, config):
+        """Set the configuration of the preprocessor.
+
+        # Arguments
+            config: A dictionary of the configurations of the preprocessor.
+        """
         pass
 
     def get_weights(self):
@@ -313,3 +329,14 @@ class Preprocessor(Block):
             weights: A dictionary of trained weights of the preprocessor.
         """
         pass
+
+    def get_state(self):
+        config = super().get_state()
+        config.update(self.get_config())
+        return {'config': config,
+                'weights': self.get_weights()}
+
+    def set_state(self, state):
+        self.set_config(state['config'])
+        super().set_state(state['config'])
+        self.set_weights(state['weights'])

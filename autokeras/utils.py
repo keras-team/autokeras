@@ -116,3 +116,8 @@ def to_snake_case(name):
     if insecure[0] != '_':
         return insecure
     return 'private' + insecure
+
+
+def to_type_key(dictionary, convert_func):
+    return {convert_func(key): value
+            for key, value in dictionary.items()}

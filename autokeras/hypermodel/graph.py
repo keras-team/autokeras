@@ -10,7 +10,7 @@ from autokeras.hypermodel import base
 from autokeras.hypermodel import compiler
 
 
-class Graph(object):
+class Graph(kerastuner.engine.stateful.Stateful):
     """A HyperModel based on connected Blocks or HyperBlocks.
 
     # Arguments
@@ -161,6 +161,21 @@ class Graph(object):
             if block.name == name:
                 return block
         raise ValueError('Cannot find block named {name}.'.format(name=name))
+
+    def get_state(self):
+        block_state = {str(block_id): block.get_state()
+                       for block_id, block in enumerate(self._blocks)}
+        node_state = {str(node_id): node.get_state()
+                      for node_id, node in enumerate(self._nodes)}
+        return {'blocks': block_state, 'nodes': node_state}
+
+    def set_state(self, state):
+        block_state = state['blocks']
+        node_state = state['nodes']
+        for block_id, block in enumerate(self._blocks):
+            block.set_state(block_state[int(block_id)])
+        for node_id, node in enumerate(self._nodes):
+            node.set_state(node_state[int(node_id)])
 
 
 class PlainGraph(Graph):
@@ -367,41 +382,6 @@ class PreprocessGraph(Graph):
         return tuple(map(
             lambda node_id: output_data[node_id], output_node_ids)), y
 
-    def save(self, path):
-        """Save the preprocessors in the hypermodel in a single file.
-
-        # Arguments
-            path: String. The path to a single file.
-        """
-        configs = {}
-        weights = {}
-        for block in self._blocks:
-            configs[block.name] = block.get_config()
-            weights[block.name] = block.get_weights()
-        preprocessors = {'configs': configs, 'weights': weights}
-        utils.pickle_to_file(preprocessors, path)
-
-    def load(self, path):
-        """Load the preprocessors in the hypermodel from a single file
-
-        # Arguments
-            path: String. The path to a single file.
-        """
-        preprocessors = utils.pickle_from_file(path)
-        configs = preprocessors['configs']
-        weights = preprocessors['weights']
-        for name, config in configs.items():
-            block = self._get_block(name)
-            block.set_config(config)
-        for name, weight in weights.items():
-            block = self._get_block(name)
-            block.set_weights(weight)
-
-    def clear(self):
-        """Clear the preprocessors' weights in the hypermodel."""
-        for block in self._blocks:
-            block.clear_weights()
-
     def build(self, hp):
         self.compile(compiler.BEFORE)
         for block in self._blocks:
@@ -410,7 +390,7 @@ class PreprocessGraph(Graph):
 
 def copy_block(old_block):
     block = old_block.__class__()
-    block.set_config(old_block.get_config())
+    block.set_state(old_block.get_state())
     return block
 
 

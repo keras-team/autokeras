@@ -19,7 +19,7 @@ def test_evaluate(graph, tuner, tmp_dir):
     mc = graph.return_value
     mc.build_graphs.return_value = (pg, mock.Mock())
     mc = tuner.return_value
-    mc.get_best_models.return_value = [(pg, mock.Mock())]
+    mc.get_best_model.return_value = (pg, mock.Mock())
     x_train = np.random.rand(100, 32)
     y_train = np.random.rand(100, 1)
 
@@ -46,7 +46,7 @@ def test_auto_model_predict(graph, tuner, tmp_dir):
     mc = graph.return_value
     mc.build_graphs.return_value = (pg, mock.Mock())
     mc = tuner.return_value
-    mc.get_best_models.return_value = [(pg, mock.Mock())]
+    mc.get_best_model.return_value = (pg, mock.Mock())
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
 

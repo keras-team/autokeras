@@ -74,10 +74,11 @@ def lightgbm_head(lightgbm_block):
 
 
 def feature_engineering_input(fe_block):
-    fe_block.input_node = fe_block.inputs[0]
-    if not isinstance(fe_block.input_node, node_module.StructuredDataInput):
+    if not isinstance(fe_block.inputs[0], node_module.StructuredDataInput):
         raise TypeError('FeatureEngineering block can only be used '
                         'with StructuredDataInput.')
+    fe_block.column_types = fe_block.inputs[0].column_types
+    fe_block.column_names = fe_block.inputs[0].column_names
 
 
 def structured_data_block_heads(structured_data_block):

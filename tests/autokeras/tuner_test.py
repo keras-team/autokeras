@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 import tensorflow as tf
 
-import autokeras as ak
+from autokeras import tuner as tuner_module
 from tests import common
 
 
@@ -13,7 +13,7 @@ def tmp_dir(tmpdir_factory):
 
 
 def test_add_early_stopping(tmp_dir):
-    tuner = ak.tuner.RandomSearch(
+    tuner = tuner_module.RandomSearch(
         hyper_graph=mock.Mock(),
         hypermodel=mock.Mock(),
         objective='val_loss',
@@ -25,3 +25,24 @@ def test_add_early_stopping(tmp_dir):
 
     assert any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                 for callback in callbacks])
+
+
+@mock.patch('autokeras.tuner.RandomSearch._get_trained_epochs', return_value=3)
+@mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
+@mock.patch('tensorflow.keras.Model')
+def test_search(_, _1, _2, tmp_dir):
+    hyper_graph = mock.Mock()
+    hyper_graph.build_graphs.return_value = (mock.Mock(), mock.Mock())
+    tuner = tuner_module.RandomSearch(
+        hyper_graph=hyper_graph,
+        hypermodel=mock.Mock(),
+        objective='val_loss',
+        max_trials=1,
+        directory=tmp_dir,
+        seed=common.SEED)
+    oracle = mock.Mock()
+    oracle.get_best_trials.return_value = [mock.Mock()]
+    tuner.oracle = oracle
+    tuner.preprocess_graph = mock.Mock()
+    tuner.need_fully_train = True
+    tuner.search(x=mock.Mock(), y=mock.Mock(), epochs=5)
