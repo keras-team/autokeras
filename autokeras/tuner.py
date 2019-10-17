@@ -26,23 +26,27 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         # Preprocess the dataset and set the shapes of the HyperNodes.
         self.preprocess_graph, self.hypermodel = self.hyper_graph.build_graphs(
             trial.hyperparameters)
-        dataset, validation_data = self.preprocess_graph.preprocess(
-            dataset=new_fit_kwargs.get('x', None),
-            validation_data=new_fit_kwargs.get('validation_data', None),
-            fit=True)
+
+        self._prepare_run(self.preprocess_graph, new_fit_kwargs, True)
+
+        super().run_trial(trial, **new_fit_kwargs)
+
+    def _prepare_run(self, preprocess_graph, fit_kwargs, fit=False):
+        dataset, validation_data = preprocess_graph.preprocess(
+            dataset=fit_kwargs.get('x', None),
+            validation_data=fit_kwargs.get('validation_data', None),
+            fit=fit)
 
         # # Batching
-        batch_size = new_fit_kwargs.get('batch_size', 32)
+        batch_size = fit_kwargs.get('batch_size', 32)
         dataset = dataset.batch(batch_size)
         validation_data = validation_data.batch(batch_size)
 
         # Update the new fit kwargs values
-        new_fit_kwargs['x'] = dataset
-        new_fit_kwargs['validation_data'] = validation_data
-        new_fit_kwargs['batch_size'] = None
-        new_fit_kwargs['y'] = None
-
-        super().run_trial(trial, **new_fit_kwargs)
+        fit_kwargs['x'] = dataset
+        fit_kwargs['validation_data'] = validation_data
+        fit_kwargs['batch_size'] = None
+        fit_kwargs['y'] = None
 
     def _get_save_path(self, trial, name):
         filename = '{trial_id}-{name}'.format(trial_id=trial.trial_id, name=name)
@@ -87,16 +91,14 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
 
         # Fully train the best model with original callbacks.
         if self.need_fully_train:
-            fit_kwargs.update(
+            new_fit_kwargs = copy.copy(fit_kwargs)
+            new_fit_kwargs.update(
                 dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
-            fit_kwargs['epochs'] = fit_kwargs['epochs'] - \
-                self._get_trained_epochs(best_trial)
-            model.fit(**fit_kwargs)
+            self._prepare_run(preprocess_graph, new_fit_kwargs)
+            model = keras_graph.build(self.best_hp)
+            model.fit(**new_fit_kwargs)
 
         model.save_weights(self.best_model_path)
-
-    def _get_trained_epochs(self, trial):
-        return len(next(iter(trial.metrics.metrics.values())).get_history())
 
     def _inject_callbacks(self, callbacks, trial, execution=0):
         callbacks = super()._inject_callbacks(callbacks, trial, execution)

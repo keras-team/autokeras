@@ -120,6 +120,29 @@ class StructuredDataInput(Input):
         self.count_unique_numerical = []
         self.num_col = None
 
+    def get_state(self):
+        state = super().get_state()
+        state.update({
+            'column_names': self.column_names,
+            'column_types': self.column_types,
+            'count_nan': self.count_nan,
+            'count_numerical': self.count_numerical,
+            'count_categorical': self.count_categorical,
+            'count_unique_numerical': self.count_unique_numerical,
+            'num_col': self.num_col
+        })
+        return state
+
+    def set_state(self, state):
+        super().set_state(state)
+        self.column_names = state['column_names']
+        self.column_types = state['column_types']
+        self.count_nan = state['count_nan']
+        self.count_numerical = state['count_numerical']
+        self.count_categorical = state['count_categorical']
+        self.count_unique_numerical = state['count_unique_numerical']
+        self.num_col = state['num_col']
+
     def fit(self, x):
         if not isinstance(x, (pd.DataFrame, np.ndarray)):
             raise TypeError('Unsupported type {type} for '

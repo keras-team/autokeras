@@ -296,7 +296,6 @@ class GraphAutoModel(AutoModel):
             directory=directory,
             seed=seed
         )
-        self.hyper_graph = graph.HyperGraph(self.inputs, self.outputs)
 
     def _meta_build(self, dataset):
-        pass
+        self.hyper_graph = graph.HyperGraph(self.inputs, self.outputs)

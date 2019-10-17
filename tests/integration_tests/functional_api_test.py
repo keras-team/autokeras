@@ -76,4 +76,4 @@ def test_functional_api(tmp_dir):
         ),
         (regression_y, classification_y),
         validation_split=0.2,
-        epochs=2)
+        epochs=1)

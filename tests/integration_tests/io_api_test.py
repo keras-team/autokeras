@@ -41,5 +41,5 @@ def test_io_api(tmp_dir):
         structured_data_x
     ],
         [regression_y, classification_y],
-        epochs=2,
+        epochs=1,
         validation_split=0.2)

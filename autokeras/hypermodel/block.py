@@ -35,12 +35,12 @@ class DenseBlock(base.Block):
         self.dropout_rate = dropout_rate
 
     def get_state(self):
-        config = super().get_state()
-        config.update({
+        state = super().get_state()
+        state.update({
             'num_layers': self.num_layers,
             'use_batchnorm': self.use_batchnorm,
             'dropout_rate': self.dropout_rate})
-        return config
+        return state
 
     def set_state(self, state):
         super().set_state(state)
@@ -103,13 +103,13 @@ class RNNBlock(base.Block):
         self.layer_type = layer_type
 
     def get_state(self):
-        config = super().get_state()
-        config.update({
+        state = super().get_state()
+        state.update({
             'return_sequences': self.return_sequences,
             'bidirectional': self.bidirectional,
             'num_layers': self.num_layers,
             'layer_type': self.layer_type})
-        return config
+        return state
 
     def set_state(self, state):
         super().set_state(state)
@@ -183,12 +183,12 @@ class ConvBlock(base.Block):
         self.separable = separable
 
     def get_state(self):
-        config = super().get_state()
-        config.update({
+        state = super().get_state()
+        state.update({
             'kernel_size': self.kernel_size,
             'num_blocks': self.num_blocks,
             'separable': self.separable})
-        return config
+        return state
 
     def set_state(self, state):
         super().set_state(state)
@@ -265,11 +265,11 @@ class ResNetBlock(base.Block, resnet.HyperResNet):
         self.pooling = pooling
 
     def get_state(self):
-        config = super().get_state()
-        config.update({
+        state = super().get_state()
+        state.update({
             'version': self.version,
             'pooling': self.pooling})
-        return config
+        return state
 
     def set_state(self, state):
         super().set_state(state)
@@ -327,13 +327,13 @@ class XceptionBlock(base.Block, xception.HyperXception):
         self.pooling = pooling
 
     def get_state(self):
-        config = super().get_state()
-        config.update({
+        state = super().get_state()
+        state.update({
             'activation': self.activation,
             'initial_strides': self.initial_strides,
             'num_residual_blocks': self.num_residual_blocks,
             'pooling': self.pooling})
-        return config
+        return state
 
     def set_state(self, state):
         super().set_state(state)
@@ -381,9 +381,9 @@ class Merge(base.Block):
         self.merge_type = merge_type
 
     def get_state(self):
-        config = super().get_state()
-        config.update({'merge_type': self.merge_type})
-        return config
+        state = super().get_state()
+        state.update({'merge_type': self.merge_type})
+        return state
 
     def set_state(self, state):
         super().set_state(state)
@@ -440,9 +440,9 @@ class SpatialReduction(base.Block):
         self.reduction_type = reduction_type
 
     def get_state(self):
-        config = super().get_state()
-        config.update({'reduction_type': self.reduction_type})
-        return config
+        state = super().get_state()
+        state.update({'reduction_type': self.reduction_type})
+        return state
 
     def set_state(self, state):
         super().set_state(state)
@@ -487,9 +487,9 @@ class TemporalReduction(base.Block):
         self.reduction_type = reduction_type
 
     def get_state(self):
-        config = super().get_state()
-        config.update({'reduction_type': self.reduction_type})
-        return config
+        state = super().get_state()
+        state.update({'reduction_type': self.reduction_type})
+        return state
 
     def set_state(self, state):
         super().set_state(state)
@@ -554,12 +554,12 @@ class EmbeddingBlock(base.Block):
         self.dropout_rate = dropout_rate
 
     def get_state(self):
-        config = super().get_state()
-        config.update({
+        state = super().get_state()
+        state.update({
             'max_features': self.max_features,
             'pretraining': self.pretraining,
             'embedding_dim': self.embedding_dim})
-        return config
+        return state
 
     def set_state(self, state):
         super().set_state(state)

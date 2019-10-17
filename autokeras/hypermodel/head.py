@@ -89,11 +89,14 @@ class ClassificationHead(base.Head):
 
     def get_state(self):
         state = super().get_state()
+        label_encoder_state = None
+        if self.label_encoder:
+            label_encoder_state = self.label_encoder.get_state()
         state.update({
             'num_classes': self.num_classes,
             'multi_label': self.multi_label,
             'dropout_rate': self.dropout_rate,
-            'label_encoder': self.label_encoder
+            'label_encoder': label_encoder_state,
         })
         return state
 
@@ -102,7 +105,10 @@ class ClassificationHead(base.Head):
         self.num_classes = state['num_classes']
         self.multi_label = state['multi_label']
         self.dropout_rate = state['dropout_rate']
-        self.label_encoder = state['label_encoder']
+        self.label_encoder = None
+        if state['label_encoder']:
+            self.label_encoder = encoder.LabelEncoder()
+            self.label_encoder.set_state(state['label_encoder'])
 
     def build(self, hp, inputs=None):
         if self.identity:

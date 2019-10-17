@@ -27,7 +27,7 @@ def test_add_early_stopping(tmp_dir):
                 for callback in callbacks])
 
 
-@mock.patch('autokeras.tuner.RandomSearch._get_trained_epochs', return_value=3)
+@mock.patch('autokeras.tuner.RandomSearch._prepare_run')
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
 @mock.patch('tensorflow.keras.Model')
 def test_search(_, _1, _2, tmp_dir):
@@ -41,7 +41,7 @@ def test_search(_, _1, _2, tmp_dir):
         directory=tmp_dir,
         seed=common.SEED)
     oracle = mock.Mock()
-    oracle.get_best_trials.return_value = [mock.Mock()]
+    oracle.get_best_trials.return_value = [mock.Mock(), mock.Mock(), mock.Mock()]
     tuner.oracle = oracle
     tuner.preprocess_graph = mock.Mock()
     tuner.need_fully_train = True

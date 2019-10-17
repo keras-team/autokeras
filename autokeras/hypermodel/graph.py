@@ -1,5 +1,5 @@
-import copy
 import functools
+import pickle
 
 import kerastuner
 import tensorflow as tf
@@ -74,12 +74,12 @@ class Graph(kerastuner.engine.stateful.Stateful):
                 raise ValueError('Inputs and outputs not connected.')
 
         # Find the blocks.
-        blocks = set()
+        blocks = []
         for input_node in self._nodes:
             for block in input_node.out_blocks:
                 if any([output_node in self._node_to_id
-                        for output_node in block.outputs]):
-                    blocks.add(block)
+                        for output_node in block.outputs]) and block not in blocks:
+                    blocks.append(block)
 
         # Check if all the inputs of the blocks are set as inputs.
         for block in blocks:
@@ -173,9 +173,20 @@ class Graph(kerastuner.engine.stateful.Stateful):
         block_state = state['blocks']
         node_state = state['nodes']
         for block_id, block in enumerate(self._blocks):
-            block.set_state(block_state[int(block_id)])
+            block.set_state(block_state[str(block_id)])
         for node_id, node in enumerate(self._nodes):
-            node.set_state(node_state[int(node_id)])
+            node.set_state(node_state[str(node_id)])
+
+    def save(self, fname):
+        state = self.get_state()
+        with tf.io.gfile.GFile(fname, 'wb') as f:
+            pickle.dump(state, f)
+        return str(fname)
+
+    def reload(self, fname):
+        with tf.io.gfile.GFile(fname, 'rb') as f:
+            state = pickle.load(f)
+        self.set_state(state)
 
 
 class PlainGraph(Graph):
@@ -394,6 +405,12 @@ def copy_block(old_block):
     return block
 
 
+def copy_node(old_node):
+    node = old_node.__class__()
+    node.set_state(old_node.get_state())
+    return node
+
+
 class HyperGraph(Graph):
     """A HyperModel based on connected Blocks and HyperBlocks.
 
@@ -417,10 +434,11 @@ class HyperGraph(Graph):
         """Build a GraphHyperModel with no HyperBlock but only Block."""
         # Make sure get_uid would count from start.
         tf.keras.backend.clear_session()
-        inputs = copy.copy(self.inputs)
+        inputs = []
         old_node_to_new = {}
-        for input_node, old_input_node in zip(inputs, self.inputs):
-            input_node.clear_edges()
+        for old_input_node in self.inputs:
+            input_node = copy_node(old_input_node)
+            inputs.append(input_node)
             old_node_to_new[old_input_node] = input_node
         for old_block in self._blocks:
             inputs = [old_node_to_new[input_node]

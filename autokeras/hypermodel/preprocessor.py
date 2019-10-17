@@ -130,11 +130,15 @@ class TextToIntSequence(base.Preprocessor):
 
     def get_weights(self):
         return {'max_len_in_data': self.max_len_in_data,
-                'tokenizer': self.tokenizer}
+                'tokenizer': self.tokenizer,
+                'max_len_to_use': self.max_len_to_use,
+                'max_features': self.max_features}
 
     def set_weights(self, weights):
         self.max_len_in_data = weights['max_len_in_data']
         self.tokenizer = weights['tokenizer']
+        self.max_len_to_use = weights['max_len_to_use']
+        self.max_features = weights['max_features']
 
 
 class TextToNgramVector(base.Preprocessor):
@@ -280,11 +284,14 @@ class LightGBMModel(base.Preprocessor):
     def set_weights(self, weights):
         self.lgbm = weights['lgbm']
         self._output_shape = weights['output_shape']
+        self.seed = weights['seed']
+        self.params = weights['params']
 
     def get_weights(self):
         return {'lgbm': self.lgbm,
                 'output_shape': self._output_shape,
-                'seed': self.seed}
+                'seed': self.seed,
+                'params': self.params}
 
 
 class LightGBMClassifier(LightGBMModel):
@@ -332,10 +339,12 @@ class LightGBMClassifier(LightGBMModel):
         super().set_weights(weights)
         self._one_hot_encoder = encoder.OneHotEncoder()
         self._one_hot_encoder.set_state(weights['one_hot_encoder'])
+        self.num_classes = weights['num_classes']
 
     def get_weights(self):
         weights = super().get_weights()
-        weights.update({'one_hot_encoder': self._one_hot_encoder.get_state()})
+        weights.update({'one_hot_encoder': self._one_hot_encoder.get_state(),
+                        'num_classes': self.num_classes})
         return weights
 
 
@@ -576,10 +585,6 @@ class ImageAugmentation(base.Preprocessor):
         self.shape = config['shape']
 
 
-def return_zero():
-    return 0
-
-
 class FeatureEngineering(base.Preprocessor):
     """A preprocessor block does feature engineering for the data.
 
@@ -773,6 +778,7 @@ class FeatureEngineering(base.Preprocessor):
     def set_weights(self, weights):
         for key, label_encoder_state in utils.to_type_key(weights['label_encoders'],
                                                           int).items():
+            self.label_encoders[key] = encoder.LabelEncoder()
             self.label_encoders[key].set_state(label_encoder_state)
         self.shape = weights['shape']
         self.num_rows = weights['num_rows']
