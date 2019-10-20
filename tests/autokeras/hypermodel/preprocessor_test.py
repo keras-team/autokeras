@@ -28,7 +28,6 @@ def run_preprocessor(instance, x, y=None, dtype=tf.float32, tmp_dir=None):
         instance.update(temp_x, temp_y)
     instance.finalize()
     instance.set_state(instance.get_state())
-    print(instance.get_state())
     if tmp_dir:
         instance.save(os.path.join(tmp_dir, 'temp'))
 

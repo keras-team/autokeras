@@ -95,10 +95,10 @@ class TextBlock(base.HyperBlock):
         self.pretraining = pretraining
 
     def get_state(self):
-        config = super().get_state()
-        config.update({'vectorizer': self.vectorizer,
-                       'pretraining': self.pretraining})
-        return config
+        state = super().get_state()
+        state.update({'vectorizer': self.vectorizer,
+                      'pretraining': self.pretraining})
+        return state
 
     def set_state(self, state):
         super().set_state(state)

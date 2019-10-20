@@ -109,9 +109,8 @@ class AutoModel(object):
             validation_data=validation_data,
             validation_split=validation_split)
 
-        # Initialize the hypermodel.
+        # Initialize the hyper_graph.
         self._meta_build(dataset)
-        self.hyper_graph.set_io_shapes(dataset)
 
         # Build the hypermodel in tuner init.
         hp = kerastuner.HyperParameters()
@@ -167,8 +166,9 @@ class AutoModel(object):
         new_x = []
         for data, input_node in zip(x, self.inputs):
             if fit:
-                input_node.fit(data)
-            data = input_node.transform(data)
+                data = input_node.fit_transform(data)
+            else:
+                data = input_node.transform(data)
             new_x.append(data)
         x = tf.data.Dataset.zip(tuple(new_x))
 
@@ -180,8 +180,9 @@ class AutoModel(object):
             new_y = []
             for data, head_block in zip(y, self.heads):
                 if fit:
-                    head_block.fit(data)
-                data = head_block.transform(data)
+                    data = head_block.fit_transform(data)
+                else:
+                    data = head_block.transform(data)
                 new_y.append(data)
             y = tf.data.Dataset.zip(tuple(new_y))
 

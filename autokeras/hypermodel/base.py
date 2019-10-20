@@ -33,10 +33,6 @@ class Node(kerastuner.engine.stateful.Stateful):
     def set_state(self, state):
         self.shape = state['shape']
 
-    def clear_edges(self):
-        self.in_blocks = []
-        self.out_blocks = []
-
 
 class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
     """The base class for different Block.
@@ -102,15 +98,10 @@ class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
         The subclasses should override this function and return the output node.
 
         # Arguments
-            hp: Hyperparameters. The hyperparameters for building the model.
+            hp: HyperParameters. The hyperparameters for building the model.
             inputs: A list of input node(s).
         """
         return super().build(hp)
-
-    def clear_nodes(self):
-        """Delete the connecting edges to the nodes."""
-        self.inputs = None
-        self.outputs = None
 
     def get_state(self):
         """Get the configuration of the preprocessor.
@@ -169,20 +160,33 @@ class Head(Block):
     def build(self, hp, inputs=None):
         raise NotImplementedError
 
-    def check_data_type(self, y):
+    def _check(self, y):
         supported_types = (tf.data.Dataset, np.ndarray, pd.DataFrame, pd.Series)
         if not isinstance(y, supported_types):
             raise TypeError('Expect the target data of {name} to be tf.data.Dataset,'
                             ' np.ndarray, pd.DataFrame or pd.Series, but got {type}.'
                             .format(name=self.name, type=type(y)))
 
-    def fit(self, y):
-        """Record any information needed by transform."""
-        self.check_data_type(y)
+    def _record_dataset_shape(self, dataset):
+        self.output_shape = utils.dataset_shape(dataset)
+
+    def _fit(self, y):
+        pass
+
+    def fit_transform(self, y):
+        self._check(y)
+        self._fit(y)
+        dataset = self._convert_to_dataset(y)
+        self._record_dataset_shape(dataset)
+        return dataset
 
     def transform(self, y):
         """Transform y into a compatible type (tf.data.Dataset)."""
-        self.check_data_type(y)
+        self._check(y)
+        dataset = self._convert_to_dataset(y)
+        return dataset
+
+    def _convert_to_dataset(self, y):
         if isinstance(y, tf.data.Dataset):
             return y
         if isinstance(y, np.ndarray):
@@ -229,7 +233,7 @@ class HyperBlock(Block):
         """Build the HyperModel instead of Keras Model.
 
         # Arguments
-            hp: Hyperparameters. The hyperparameters for building the model.
+            hp: HyperParameters. The hyperparameters for building the model.
             inputs: A list of instances of Node.
 
         # Returns
@@ -239,14 +243,18 @@ class HyperBlock(Block):
 
 
 class Preprocessor(Block):
-    """Hyper preprocessing block base class."""
+    """Hyper preprocessing block base class.
+
+    It extends Block which extends Hypermodel. A preprocessor is a Hypermodel, which
+    means it is a search space. However, different from other Hypermodels, it is
+    also a model which can be fit.
+    """
 
     def build(self, hp):
-        """Build into part of a Keras Model.
+        """Get the values of the required HyperParameters.
 
-        Since they are for preprocess data before feeding into the Keras Model,
-        they are not part of the Keras Model. They only pass the inputs
-        directly to outputs.
+        It does not build and return a Keras Model, but initialize the
+        HyperParameters for the preprocessor to be fit.
         """
         pass
 
@@ -331,9 +339,9 @@ class Preprocessor(Block):
         pass
 
     def get_state(self):
-        config = super().get_state()
-        config.update(self.get_config())
-        return {'config': config,
+        state = super().get_state()
+        state.update(self.get_config())
+        return {'config': state,
                 'weights': self.get_weights()}
 
     def set_state(self, state):

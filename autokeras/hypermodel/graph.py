@@ -5,18 +5,19 @@ import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras import utils
 from autokeras.hypermodel import base
 from autokeras.hypermodel import compiler
 
 
 class Graph(kerastuner.engine.stateful.Stateful):
-    """A HyperModel based on connected Blocks or HyperBlocks.
+    """A graph consists of connected Blocks, HyperBlocks, Preprocessors or Heads.
 
     # Arguments
-        inputs: A list of input node(s) for the GraphHyperModel.
-        outputs: A list of output node(s) for the GraphHyperModel.
-        name: String. The name of the GraphHyperModel.
+        inputs: A list of input node(s) for the Graph.
+        outputs: A list of output node(s) for the Graph.
+        override_hps: A list of HyperParameters. The predefined HyperParameters that
+            will override the space of the Hyperparameters defined in the Hypermodels
+            with the same names.
     """
 
     def __init__(self, inputs, outputs, override_hps=None):
@@ -31,12 +32,18 @@ class Graph(kerastuner.engine.stateful.Stateful):
         self.override_hps = override_hps or []
 
     def compile(self, func):
-        """Passing config infomation from block to block."""
+        """Share the information between blocks by calling functions in compiler.
+
+        # Arguments
+            func: A dictionary. The keys are the block classes. The values are
+                corresponding compile functions.
+        """
         for block in self._blocks:
             if block.__class__ in func:
                 func[block.__class__](block)
 
-    def _init_hps(self, hp):
+    def _register_hps(self, hp):
+        """Register the override HyperParameters for current HyperParameters."""
         for single_hp in self.override_hps:
             name = single_hp.name
             if name not in hp.values:
@@ -44,21 +51,6 @@ class Graph(kerastuner.engine.stateful.Stateful):
                             single_hp.__class__.__name__,
                             single_hp.get_config())
                 hp.values[name] = single_hp.default
-
-    def set_io_shapes(self, dataset):
-        """Set the input and output shapes to the nodes.
-
-        # Arguments
-            dataset: tf.data.Dataset. The input dataset before preprocessing.
-        """
-        x_shapes, y_shapes = utils.dataset_shape(dataset)
-        for x_shape, input_node in zip(x_shapes, self.inputs):
-            if input_node.shape is None:
-                input_node.shape = tuple(x_shape.as_list())
-        for y_shape, output_node in zip(y_shapes, self.outputs):
-            if output_node.shape is None:
-                output_node.shape = tuple(y_shape.as_list())
-            output_node.in_blocks[0].output_shape = output_node.shape
 
     def _build_network(self):
         self._node_to_id = {}
@@ -188,35 +180,38 @@ class Graph(kerastuner.engine.stateful.Stateful):
             state = pickle.load(f)
         self.set_state(state)
 
+    def build(self, hp):
+        self._register_hps(hp)
+
 
 class PlainGraph(Graph):
-    """A HyperModel based on connected Blocks.
+    """A graph built from a HyperGraph to produce KerasGraph and PreprocessGraph.
 
-    It is used by GraphHyperModel. GraphHyperModel's hyper_build function produces
-    an instance of HyperBuiltGraphHyperModel, which can be directly built into Keras
-    Model.
+    A PlainGraph does not contain HyperBlock. HyperGraph's hyper_build function
+    returns an instance of PlainGraph, which can be directly built into a KerasGraph
+    and a PreprocessGraph.
 
     # Arguments
-        inputs: A list of input node(s) for the HyperBuiltGraphHyperModel.
-        outputs: A list of output node(s) for the HyperBuiltGraphHyperModel.
+        inputs: A list of input node(s) for the PlainGraph.
+        outputs: A list of output node(s) for the PlainGraph.
     """
 
     def __init__(self, inputs, outputs, **kwargs):
-        self._model_inputs = []
+        self._keras_model_inputs = []
         super().__init__(inputs=inputs, outputs=outputs, **kwargs)
 
     def _build_network(self):
         super()._build_network()
         # Find the model input nodes
         for node in self._nodes:
-            if self._is_model_inputs(node):
-                self._model_inputs.append(node)
+            if self._is_keras_model_inputs(node):
+                self._keras_model_inputs.append(node)
 
-        self._model_inputs = sorted(self._model_inputs,
-                                    key=lambda x: self._node_to_id[x])
+        self._keras_model_inputs = sorted(self._keras_model_inputs,
+                                          key=lambda x: self._node_to_id[x])
 
     @staticmethod
-    def _is_model_inputs(node):
+    def _is_keras_model_inputs(node):
         for block in node.in_blocks:
             if not isinstance(block, base.Preprocessor):
                 return False
@@ -226,21 +221,22 @@ class PlainGraph(Graph):
         return False
 
     def build_keras_graph(self):
-        return KerasGraph(self._model_inputs,
+        return KerasGraph(self._keras_model_inputs,
                           self.outputs,
                           override_hps=self.override_hps)
 
     def build_preprocess_graph(self):
         return PreprocessGraph(self.inputs,
-                               self._model_inputs,
+                               self._keras_model_inputs,
                                override_hps=self.override_hps)
 
 
 class KerasGraph(Graph, kerastuner.HyperModel):
+    """A graph and HyperModel to be built into a Keras model."""
 
     def build(self, hp):
         """Build the HyperModel into a Keras Model."""
-        self._init_hps(hp)
+        super().build(hp)
         self.compile(compiler.AFTER)
         real_nodes = {}
         for input_node in self.inputs:
@@ -294,6 +290,13 @@ class KerasGraph(Graph, kerastuner.HyperModel):
 
 
 class PreprocessGraph(Graph):
+    """A graph consists of only Preprocessors.
+
+    It is both a search space with Hyperparameters and a model to be fitted. It
+    preprocess the dataset with the Preprocessors. The output is the input to the
+    Keras model. It does not extend Hypermodel class because it cannot be built into
+    a Keras model.
+    """
 
     def preprocess(self, dataset, validation_data=None, fit=False):
         """Preprocess the data to be ready for the Keras Model.
@@ -394,29 +397,33 @@ class PreprocessGraph(Graph):
             lambda node_id: output_data[node_id], output_node_ids)), y
 
     def build(self, hp):
+        """Obtain the values of all the HyperParameters.
+
+        Different from the build function of Hypermodel. This build function does not
+        produce a Keras model. It only obtain the hyperparameter values from
+        HyperParameters.
+
+        # Arguments
+            hp: HyperParameters.
+        """
+        super().build(hp)
         self.compile(compiler.BEFORE)
         for block in self._blocks:
             block.build(hp)
 
 
-def copy_block(old_block):
-    block = old_block.__class__()
-    block.set_state(old_block.get_state())
-    return block
-
-
-def copy_node(old_node):
-    node = old_node.__class__()
-    node.set_state(old_node.get_state())
-    return node
+def copy(old_instance):
+    instance = old_instance.__class__()
+    instance.set_state(old_instance.get_state())
+    return instance
 
 
 class HyperGraph(Graph):
     """A HyperModel based on connected Blocks and HyperBlocks.
 
     # Arguments
-        inputs: A list of input node(s) for the GraphHyperModel.
-        outputs: A list of output node(s) for the GraphHyperModel.
+        inputs: A list of input node(s) for the HyperGraph.
+        outputs: A list of output node(s) for the HyperGraph.
     """
 
     def __init__(self, inputs, outputs, **kwargs):
@@ -437,7 +444,7 @@ class HyperGraph(Graph):
         inputs = []
         old_node_to_new = {}
         for old_input_node in self.inputs:
-            input_node = copy_node(old_input_node)
+            input_node = copy(old_input_node)
             inputs.append(input_node)
             old_node_to_new[old_input_node] = input_node
         for old_block in self._blocks:
@@ -446,7 +453,7 @@ class HyperGraph(Graph):
             if isinstance(old_block, base.HyperBlock):
                 outputs = old_block.build(hp, inputs=inputs)
             else:
-                outputs = copy_block(old_block)(inputs)
+                outputs = copy(old_block)(inputs)
             for output_node, old_output_node in zip(outputs, old_block.outputs):
                 old_node_to_new[old_output_node] = output_node
         inputs = []

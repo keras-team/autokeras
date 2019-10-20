@@ -3,6 +3,7 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras import utils
 from autokeras.hypermodel import base
 
 
@@ -16,7 +17,7 @@ class Input(base.Node):
     The data should be numpy.ndarray or tf.data.Dataset.
     """
 
-    def fit(self, x):
+    def _check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (np.ndarray, tf.data.Dataset)):
             raise TypeError('Expect the data to Input to be numpy.ndarray or '
@@ -25,13 +26,26 @@ class Input(base.Node):
             raise TypeError('Expect the data to Input to be numerical, but got '
                             '{type}.'.format(type=x.dtype))
 
-    def transform(self, x):
-        """Transform x into a compatible type (tf.data.Dataset)."""
+    def _convert_to_dataset(self, x):
         if isinstance(x, tf.data.Dataset):
             return x
         if isinstance(x, np.ndarray):
             x = x.astype(np.float32)
             return tf.data.Dataset.from_tensor_slices(x)
+
+    def _record_dataset_shape(self, dataset):
+        self.shape = utils.dataset_shape(dataset)
+
+    def fit_transform(self, x):
+        dataset = self.transform(x)
+        self._record_dataset_shape(dataset)
+        return dataset
+
+    def transform(self, x):
+        """Transform x into a compatible type (tf.data.Dataset)."""
+        self._check(x)
+        dataset = self._convert_to_dataset(x)
+        return dataset
 
 
 class ImageInput(Input):
@@ -42,7 +56,7 @@ class ImageInput(Input):
     dimension.
     """
 
-    def fit(self, x):
+    def _check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (np.ndarray, tf.data.Dataset)):
             raise TypeError('Expect the data to ImageInput to be numpy.ndarray or '
@@ -55,11 +69,11 @@ class ImageInput(Input):
             raise TypeError('Expect the data to ImageInput to be numerical, but got '
                             '{type}.'.format(type=x.dtype))
 
-    def transform(self, x):
+    def _convert_to_dataset(self, x):
         if isinstance(x, np.ndarray):
             if x.ndim == 3:
                 x = np.expand_dims(x, axis=3)
-        return super().transform(x)
+        return super()._convert_to_dataset(x)
 
 
 class TextInput(Input, TextNode):
@@ -70,7 +84,7 @@ class TextInput(Input, TextNode):
     sentence.
     """
 
-    def fit(self, x):
+    def _check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (np.ndarray, tf.data.Dataset)):
             raise TypeError('Expect the data to TextInput to be numpy.ndarray or '
@@ -85,7 +99,7 @@ class TextInput(Input, TextNode):
             raise TypeError('Expect the data to TextInput to be strings, but got '
                             '{type}.'.format(type=x.dtype))
 
-    def transform(self, x):
+    def _convert_to_dataset(self, x):
         if isinstance(x, np.ndarray):
             x = tf.data.Dataset.from_tensor_slices(x)
         return x
@@ -143,7 +157,7 @@ class StructuredDataInput(Input):
         self.count_unique_numerical = state['count_unique_numerical']
         self.num_col = state['num_col']
 
-    def fit(self, x):
+    def _check(self, x):
         if not isinstance(x, (pd.DataFrame, np.ndarray)):
             raise TypeError('Unsupported type {type} for '
                             '{name}.'.format(type=type(x),
@@ -174,14 +188,14 @@ class StructuredDataInput(Input):
                                  expect=x.shape[1],
                                  actual=len(self.column_names)))
 
-    def transform(self, x):
+    def _convert_to_dataset(self, x):
         if isinstance(x, pd.DataFrame):
             # Convert x, y, validation_data to tf.Dataset.
             x = tf.data.Dataset.from_tensor_slices(
                 x.values.astype(np.unicode))
         if isinstance(x, np.ndarray):
             x = tf.data.Dataset.from_tensor_slices(x.astype(np.unicode))
-        dataset = super().transform(x)
+        dataset = super()._convert_to_dataset(x)
         for x in dataset:
             self.update(x)
         self.infer_column_types()

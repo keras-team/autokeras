@@ -7,7 +7,18 @@ import tensorflow as tf
 
 
 class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
-    """Modified KerasTuner base class to include preprocessing layers."""
+    """A Tuner class based on KerasTuner for AutoKeras.
+
+    Different from KerasTuner's Tuner class. AutoTuner's not only tunes the
+    Hypermodel which can be directly built into a Keras model, but also the
+    preprocessors. Therefore, a HyperGraph stores the overall search space containing
+    both the Preprocessors and Hypermodel. For every trial, the HyperGraph build the
+    PreprocessGraph and KerasGraph with the provided HyperParameters.
+
+    # Arguments
+        hyper_graph: HyperGraph. The HyperGraph to be tuned.
+        **kwargs: The other args supported by KerasTuner.
+    """
 
     def __init__(self, hyper_graph, **kwargs):
         super().__init__(**kwargs)
@@ -37,7 +48,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             validation_data=fit_kwargs.get('validation_data', None),
             fit=fit)
 
-        # # Batching
+        # Batching
         batch_size = fit_kwargs.get('batch_size', 32)
         dataset = dataset.batch(batch_size)
         validation_data = validation_data.batch(batch_size)
@@ -53,6 +64,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         return os.path.join(self.get_trial_dir(trial.trial_id), filename)
 
     def on_trial_end(self, trial):
+        """Save and clear the hypermodel and preprocess_graph."""
         super().on_trial_end(trial)
 
         self.preprocess_graph.save(self._get_save_path(trial, 'preprocess_graph'))
@@ -62,6 +74,14 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         self.hypermodel = None
 
     def load_model(self, trial):
+        """Load the model in a history trial.
+
+        # Arguments
+            trial: Trial. The trial to be loaded.
+
+        # Returns
+            Tuple of (PreprocessGraph, KerasGraph, tf.keras.Model).
+        """
         preprocess_graph, keras_graph = self.hyper_graph.build_graphs(
             trial.hyperparameters)
         preprocess_graph.reload(self._get_save_path(trial, 'preprocess_graph'))
@@ -72,6 +92,13 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         return models
 
     def get_best_model(self):
+        """Load the best PreprocessGraph and Keras model.
+
+        It is mainly used by the predict and evaluate function of AutoModel.
+
+        # Returns
+            Tuple of (PreprocessGraph, tf.keras.Model).
+        """
         preprocess_graph, keras_graph = self.hyper_graph.build_graphs(
             self.best_hp)
         preprocess_graph.reload(self.best_preprocess_graph_path)
@@ -81,6 +108,12 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         return preprocess_graph, model
 
     def search(self, *fit_args, **fit_kwargs):
+        """Search for the best HyperParameters.
+
+        If there is not early-stopping in the callbacks, the early-stopping callback
+        is injected to accelerate the search process. At the end of the search, the
+        best model will be fully trained with the specified number of epochs.
+        """
         super().search(*fit_args, **fit_kwargs)
 
         best_trial = self.oracle.get_best_trials(1)[0]
@@ -101,27 +134,13 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         model.save_weights(self.best_model_path)
 
     def _inject_callbacks(self, callbacks, trial, execution=0):
+        """Inject the early-stopping callback."""
         callbacks = super()._inject_callbacks(callbacks, trial, execution)
         if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                     for callback in callbacks]):
             self.need_fully_train = True
             callbacks.append(tf.keras.callbacks.EarlyStopping(patience=10))
         return callbacks
-
-    def _create_and_run_trial(self, trial_id, hp, callbacks, **fit_kwargs):
-        trial = kerastuner.engine.trial.Trial(
-            trial_id=trial_id,
-            hyperparameters=hp.copy(),
-            max_executions=self.executions_per_trial,
-            base_directory=self._host.results_dir
-        )
-        self.trials.append(trial)
-        self.on_trial_begin(trial)
-        self.run_trial(trial=trial,
-                       hp=hp,
-                       callbacks=callbacks,
-                       **fit_kwargs)
-        self.on_trial_end(trial)
 
     @property
     def best_preprocess_graph_path(self):

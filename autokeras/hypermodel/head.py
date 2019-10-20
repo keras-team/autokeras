@@ -139,8 +139,8 @@ class ClassificationHead(base.Head):
             output_node = tf.keras.layers.Softmax(name=self.name)(output_node)
         return output_node
 
-    def fit(self, y):
-        super().fit(y)
+    def _fit(self, y):
+        super()._fit(y)
         if isinstance(y, tf.data.Dataset):
             if not self.num_classes:
                 for y in tf.data.Dataset:
@@ -171,10 +171,10 @@ class ClassificationHead(base.Head):
         self.set_loss()
         self.label_encoder.fit_with_labels(y)
 
-    def transform(self, y):
+    def _convert_to_dataset(self, y):
         if self.label_encoder:
             y = self.label_encoder.encode(y)
-        return super().transform(y)
+        return super()._convert_to_dataset(y)
 
     def postprocess(self, y):
         if self.label_encoder:
