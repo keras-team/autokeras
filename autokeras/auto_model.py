@@ -48,6 +48,7 @@ class AutoModel(object):
         self.directory = directory
         self.seed = seed
         self.hyper_graph = None
+        self._split_dataset = False
         if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
             self.heads = self.outputs
@@ -143,6 +144,7 @@ class AutoModel(object):
                     tf.keras.callbacks.EarlyStopping(patience=10)]
 
         self.tuner.search(x=dataset,
+                          concat=self._split_dataset,
                           epochs=epochs,
                           callbacks=callbacks,
                           validation_data=validation_data,
@@ -202,10 +204,12 @@ class AutoModel(object):
         # Prepare the dataset.
         dataset = self._process_xy(x, y, fit=True)
         if validation_data:
+            self._split_dataset = False
             val_x, val_y = validation_data
             validation_data = self._process_xy(val_x, val_y)
         # Split the data with validation_split.
         if validation_data is None and validation_split:
+            self._split_dataset = True
             dataset, validation_data = utils.split_dataset(dataset, validation_split)
         return dataset, validation_data
 

@@ -127,10 +127,13 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         keras_graph.save(self.best_keras_graph_path)
 
         # Fully train the best model with original callbacks.
-        if self.need_fully_train:
+        if self.need_fully_train or concat:
             new_fit_kwargs = copy.copy(fit_kwargs)
             new_fit_kwargs.update(
                 dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
+            if concat:
+                new_fit_kwargs['x'] = new_fit_kwargs['x'].concatenate(
+                    new_fit_kwargs['validation_data'][0])
             self._prepare_run(preprocess_graph, new_fit_kwargs)
             model = keras_graph.build(self.best_hp)
             model.fit(**new_fit_kwargs)
