@@ -16,10 +16,13 @@ def test_set_hp():
     head.output_shape = (1,)
     output_node = head(output_node)
 
-    graph = graph_module.HyperBuiltGraphHyperModel(input_node, output_node)
+    graph = graph_module.HyperGraph(
+        input_node,
+        output_node,
+        override_hps=[hp_module.Choice('dense_block_1/num_layers', [6], default=6)])
     hp = kerastuner.HyperParameters()
-    graph.set_hps([hp_module.Choice('dense_block_1/num_layers', [6], default=6)])
-    graph.build(hp)
+    plain_graph = graph.hyper_build(hp)
+    plain_graph.build_keras_graph().build(hp)
 
     for single_hp in hp.space:
         if single_hp.name == 'dense_block_1/num_layers':
@@ -40,7 +43,7 @@ def test_input_output_disconnect():
     output_node = ak.RegressionHead()(output_node)
 
     with pytest.raises(ValueError) as info:
-        graph_module.GraphHyperModel(input_node1, output_node)
+        graph_module.HyperGraph(input_node1, output_node)
     assert 'Inputs and outputs not connected.' in str(info.value)
 
 
@@ -55,7 +58,7 @@ def test_hyper_graph_cycle():
     head.outputs = output_node1
 
     with pytest.raises(ValueError) as info:
-        graph_module.GraphHyperModel([input_node1, input_node2], output_node)
+        graph_module.HyperGraph([input_node1, input_node2], output_node)
     assert 'The network has a cycle.' in str(info.value)
 
 
@@ -68,7 +71,7 @@ def test_input_missing():
     output_node = ak.RegressionHead()(output_node)
 
     with pytest.raises(ValueError) as info:
-        graph_module.GraphHyperModel(input_node1, output_node)
+        graph_module.HyperGraph(input_node1, output_node)
     assert 'A required input is missing for HyperModel' in str(info.value)
 
 
@@ -78,8 +81,8 @@ def test_graph_basics():
     output_node = ak.DenseBlock()(output_node)
     output_node = ak.RegressionHead(output_shape=(1,))(output_node)
 
-    graph = graph_module.HyperBuiltGraphHyperModel(input_node, output_node)
-    model = graph.build(kerastuner.HyperParameters())
+    graph = graph_module.PlainGraph(input_node, output_node)
+    model = graph.build_keras_graph().build(kerastuner.HyperParameters())
     assert model.input_shape == (None, 30)
     assert model.output_shape == (None, 1)
 
@@ -92,9 +95,9 @@ def test_merge():
     output_node = ak.Merge()([output_node1, output_node2])
     output_node = ak.RegressionHead(output_shape=(1,))(output_node)
 
-    graph = graph_module.HyperBuiltGraphHyperModel([input_node1, input_node2],
-                                                   output_node)
-    model = graph.build(kerastuner.HyperParameters())
+    graph = graph_module.PlainGraph([input_node1, input_node2],
+                                    output_node)
+    model = graph.build_keras_graph().build(kerastuner.HyperParameters())
     assert model.input_shape == [(None, 30), (None, 40)]
     assert model.output_shape == (None, 1)
 
@@ -130,10 +133,9 @@ def test_preprocessing():
     output_node = ak.Merge()([output_node1, output_node2, output_node3])
     output_node = ak.RegressionHead()(output_node)
 
-    graph = graph_module.HyperBuiltGraphHyperModel([input_node1, input_node2],
-                                                   output_node)
-    graph.preprocess(
-        hp=kerastuner.HyperParameters(),
+    graph = graph_module.PlainGraph([input_node1, input_node2],
+                                    output_node)
+    graph.build_preprocess_graph().preprocess(
         dataset=dataset,
         validation_data=dataset,
         fit=True)

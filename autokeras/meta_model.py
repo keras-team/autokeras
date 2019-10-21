@@ -53,8 +53,7 @@ def assemble(inputs, outputs, dataset, seed=None):
 
     outputs = nest.flatten([output_blocks(output_node)
                             for output_blocks in outputs])
-    hm = graph.GraphHyperModel(inputs, outputs)
-    hm.set_hps(hps)
+    hm = graph.HyperGraph(inputs, outputs, override_hps=hps)
     return hm
 
 

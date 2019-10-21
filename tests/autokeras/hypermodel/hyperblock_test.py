@@ -7,7 +7,7 @@ from tests import common
 
 def test_image_block():
     block = hyperblock_module.ImageBlock(normalize=None, augment=None)
-    block.set_config(block.get_config())
+    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.Input())
@@ -19,7 +19,7 @@ def test_image_block():
 
 def test_text_block():
     block = hyperblock_module.TextBlock()
-    block.set_config(block.get_config())
+    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.TextInput())
@@ -30,7 +30,7 @@ def test_text_block():
 def test_structured_data_block():
     block = hyperblock_module.StructuredDataBlock()
     block.heads = [ak.ClassificationHead()]
-    block.set_config(block.get_config())
+    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.Input())

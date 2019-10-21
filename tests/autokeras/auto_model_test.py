@@ -12,10 +12,14 @@ def tmp_dir(tmpdir_factory):
 
 
 @mock.patch('autokeras.tuner.RandomSearch')
-@mock.patch('autokeras.hypermodel.graph.GraphHyperModel')
+@mock.patch('autokeras.hypermodel.graph.HyperGraph')
 def test_evaluate(graph, tuner, tmp_dir):
+    pg = mock.Mock()
+    pg.preprocess.return_value = (mock.Mock(), mock.Mock())
     mc = graph.return_value
-    mc.preprocess.return_value = (mock.Mock(), mock.Mock())
+    mc.build_graphs.return_value = (pg, mock.Mock())
+    mc = tuner.return_value
+    mc.get_best_model.return_value = (pg, mock.Mock())
     x_train = np.random.rand(100, 32)
     y_train = np.random.rand(100, 1)
 
@@ -35,10 +39,14 @@ def test_evaluate(graph, tuner, tmp_dir):
 
 
 @mock.patch('autokeras.tuner.RandomSearch')
-@mock.patch('autokeras.hypermodel.graph.GraphHyperModel')
+@mock.patch('autokeras.hypermodel.graph.HyperGraph')
 def test_auto_model_predict(graph, tuner, tmp_dir):
+    pg = mock.Mock()
+    pg.preprocess.return_value = (mock.Mock(), mock.Mock())
     mc = graph.return_value
-    mc.preprocess.return_value = (mock.Mock(), mock.Mock())
+    mc.build_graphs.return_value = (pg, mock.Mock())
+    mc = tuner.return_value
+    mc.get_best_model.return_value = (pg, mock.Mock())
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
 

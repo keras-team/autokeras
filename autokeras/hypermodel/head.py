@@ -87,22 +87,28 @@ class ClassificationHead(base.Head):
             elif self.num_classes > 2:
                 self.loss = 'categorical_crossentropy'
 
-    def get_config(self):
-        config = super().get_config()
-        config.update({
+    def get_state(self):
+        state = super().get_state()
+        label_encoder_state = None
+        if self.label_encoder:
+            label_encoder_state = self.label_encoder.get_state()
+        state.update({
             'num_classes': self.num_classes,
             'multi_label': self.multi_label,
             'dropout_rate': self.dropout_rate,
-            'label_encoder': self.label_encoder
+            'label_encoder': label_encoder_state,
         })
-        return config
+        return state
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.num_classes = config['num_classes']
-        self.multi_label = config['multi_label']
-        self.dropout_rate = config['dropout_rate']
-        self.label_encoder = config['label_encoder']
+    def set_state(self, state):
+        super().set_state(state)
+        self.num_classes = state['num_classes']
+        self.multi_label = state['multi_label']
+        self.dropout_rate = state['dropout_rate']
+        self.label_encoder = None
+        if state['label_encoder']:
+            self.label_encoder = encoder.LabelEncoder()
+            self.label_encoder.set_state(state['label_encoder'])
 
     def build(self, hp, inputs=None):
         if self.identity:
@@ -133,8 +139,8 @@ class ClassificationHead(base.Head):
             output_node = tf.keras.layers.Softmax(name=self.name)(output_node)
         return output_node
 
-    def fit(self, y):
-        super().fit(y)
+    def _fit(self, y):
+        super()._fit(y)
         if isinstance(y, tf.data.Dataset):
             if not self.num_classes:
                 for y in tf.data.Dataset:
@@ -165,10 +171,10 @@ class ClassificationHead(base.Head):
         self.set_loss()
         self.label_encoder.fit_with_labels(y)
 
-    def transform(self, y):
+    def _convert_to_dataset(self, y):
         if self.label_encoder:
             y = self.label_encoder.encode(y)
-        return super().transform(y)
+        return super()._convert_to_dataset(y)
 
     def postprocess(self, y):
         if self.label_encoder:
@@ -208,17 +214,17 @@ class RegressionHead(base.Head):
             self.loss = 'mean_squared_error'
         self.dropout_rate = dropout_rate
 
-    def get_config(self):
-        config = super().get_config()
-        config.update({
+    def get_state(self):
+        state = super().get_state()
+        state.update({
             'output_dim': self.output_dim,
             'dropout_rate': self.dropout_rate})
-        return config
+        return state
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.output_dim = config['output_dim']
-        self.dropout_rate = config['dropout_rate']
+    def set_state(self, state):
+        super().set_state(state)
+        self.output_dim = state['output_dim']
+        self.dropout_rate = state['dropout_rate']
 
     def build(self, hp, inputs=None):
         if self.identity:

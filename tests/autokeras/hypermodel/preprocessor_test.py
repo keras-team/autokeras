@@ -1,12 +1,18 @@
 import functools
+import os
 
 import kerastuner
 import numpy as np
+import pytest
 import tensorflow as tf
 
-import autokeras as ak
 from autokeras.hypermodel import preprocessor as preprocessor_module
 from tests import common
+
+
+@pytest.fixture(scope='module')
+def tmp_dir(tmpdir_factory):
+    return tmpdir_factory.mktemp('preprocessor_test')
 
 
 def map_func(x, instance=None, dtype=tf.float32):
@@ -15,17 +21,15 @@ def map_func(x, instance=None, dtype=tf.float32):
                           Tout=(dtype,))
 
 
-def run_preprocessor(instance, x, y=None, dtype=tf.float32):
+def run_preprocessor(instance, x, y=None, dtype=tf.float32, tmp_dir=None):
     dataset = tf.data.Dataset.zip((x, y))
-    instance.set_hp(kerastuner.HyperParameters())
+    instance.build(kerastuner.HyperParameters())
     for temp_x, temp_y in dataset:
         instance.update(temp_x, temp_y)
     instance.finalize()
-    instance.set_config(instance.get_config())
-
-    weights = instance.get_weights()
-    instance.clear_weights()
-    instance.set_weights(weights)
+    instance.set_state(instance.get_state())
+    if tmp_dir:
+        instance.save(os.path.join(tmp_dir, 'temp'))
 
     for temp_x, _ in dataset:
         instance.transform(temp_x, True)
@@ -86,25 +90,24 @@ def test_augment():
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
-def test_feature_engineering():
+def test_feature_engineering(tmp_dir):
     dataset = common.generate_structured_data(dtype='dataset')
     feature = preprocessor_module.FeatureEngineering()
-    feature.input_node = ak.StructuredDataInput(
-        column_names=common.COLUMN_NAMES_FROM_NUMPY,
-        column_types=common.COLUMN_TYPES_FROM_NUMPY)
+    feature.column_names = common.COLUMN_NAMES_FROM_NUMPY
+    feature.column_types = common.COLUMN_TYPES_FROM_NUMPY
     new_dataset = run_preprocessor(feature,
                                    dataset,
                                    common.generate_data(dtype='dataset'),
-                                   tf.float32)
+                                   tf.float32,
+                                   tmp_dir)
     assert isinstance(new_dataset, tf.data.Dataset)
 
 
 def test_feature_engineering_new_categorical_value():
     dataset = common.generate_structured_data(num_instances=100, dtype='dataset')
     feature = preprocessor_module.FeatureEngineering()
-    feature.input_node = ak.StructuredDataInput(
-        column_names=common.COLUMN_NAMES_FROM_NUMPY,
-        column_types=common.COLUMN_TYPES_FROM_NUMPY)
+    feature.column_names = common.COLUMN_NAMES_FROM_NUMPY
+    feature.column_types = common.COLUMN_TYPES_FROM_NUMPY
     new_dataset = run_preprocessor(feature,
                                    dataset,
                                    common.generate_data(dtype='dataset'),

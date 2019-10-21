@@ -1,10 +1,9 @@
 from unittest import mock
 
-import kerastuner
 import pytest
 import tensorflow as tf
 
-import autokeras as ak
+from autokeras import tuner as tuner_module
 from tests import common
 
 
@@ -13,48 +12,37 @@ def tmp_dir(tmpdir_factory):
     return tmpdir_factory.mktemp('test_auto_model')
 
 
-@mock.patch('autokeras.tuner.AutoTuner.run_trial')
-@mock.patch('autokeras.tuner.kerastuner.Tuner.on_search_begin')
-@mock.patch('autokeras.tuner.AutoTuner.on_trial_end')
-@mock.patch('autokeras.tuner.kerastuner.Tuner._get_best_trials')
-@mock.patch('kerastuner.engine.trial.Trial')
-def test_add_early_stopping(_2, get_trials, _1, _, run_trial, tmp_dir):
-    trial = kerastuner.engine.trial.Trial()
-    trial.hyperparameters = kerastuner.HyperParameters()
-    get_trials.return_value = [trial]
-    input_shape = (32,)
-    num_instances = 100
-    num_classes = 10
-    x = common.generate_data(num_instances=num_instances,
-                             shape=input_shape,
-                             dtype='dataset')
-    y = common.generate_one_hot_labels(num_instances=num_instances,
-                                       num_classes=num_classes,
-                                       dtype='dataset')
-
-    input_node = ak.Input(shape=input_shape)
-    output_node = input_node
-    output_node = ak.DenseBlock()(output_node)
-    output_node = ak.ClassificationHead(num_classes=num_classes,
-                                        output_shape=(num_classes,))(output_node)
-    hypermodel = ak.hypermodel.graph.HyperBuiltGraphHyperModel(input_node,
-                                                               output_node)
-    tuner = ak.tuner.RandomSearch(
-        hypermodel=hypermodel,
+def test_add_early_stopping(tmp_dir):
+    tuner = tuner_module.RandomSearch(
+        hyper_graph=mock.Mock(),
+        hypermodel=mock.Mock(),
         objective='val_loss',
         max_trials=1,
         directory=tmp_dir,
         seed=common.SEED)
-    tuner.search(x=tf.data.Dataset.zip((x, y)),
-                 validation_data=(x, y),
-                 epochs=20,
-                 callbacks=[])
 
-    _, kwargs = run_trial.call_args_list[0]
-    callbacks = kwargs['callbacks']
-    assert len(callbacks) == 1
-    assert isinstance(callbacks[0], tf.keras.callbacks.EarlyStopping)
+    callbacks = tuner._inject_callbacks([], mock.Mock())
 
-    _, kwargs = run_trial.call_args_list[1]
-    callbacks = kwargs['callbacks']
-    assert len(callbacks) == 0
+    assert any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+                for callback in callbacks])
+
+
+@mock.patch('autokeras.tuner.RandomSearch._prepare_run')
+@mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
+@mock.patch('tensorflow.keras.Model')
+def test_search(_, _1, _2, tmp_dir):
+    hyper_graph = mock.Mock()
+    hyper_graph.build_graphs.return_value = (mock.Mock(), mock.Mock())
+    tuner = tuner_module.RandomSearch(
+        hyper_graph=hyper_graph,
+        hypermodel=mock.Mock(),
+        objective='val_loss',
+        max_trials=1,
+        directory=tmp_dir,
+        seed=common.SEED)
+    oracle = mock.Mock()
+    oracle.get_best_trials.return_value = [mock.Mock(), mock.Mock(), mock.Mock()]
+    tuner.oracle = oracle
+    tuner.preprocess_graph = mock.Mock()
+    tuner.need_fully_train = True
+    tuner.search(x=mock.Mock(), y=mock.Mock(), epochs=5)

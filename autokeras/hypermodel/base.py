@@ -9,10 +9,8 @@ from tensorflow.python.util import nest
 from autokeras import utils
 
 
-class Node(object):
+class Node(kerastuner.engine.stateful.Stateful):
     """The nodes in a network connecting the blocks."""
-    # TODO: Implement get_config() and set_config(), so that the entire graph can
-    # be saved.
 
     def __init__(self, shape=None):
         super().__init__()
@@ -29,12 +27,14 @@ class Node(object):
     def build(self):
         return tf.keras.Input(shape=self.shape)
 
-    def clear_edges(self):
-        self.in_blocks = []
-        self.out_blocks = []
+    def get_state(self):
+        return {'shape': self.shape}
+
+    def set_state(self, state):
+        self.shape = state['shape']
 
 
-class Block(kerastuner.HyperModel):
+class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
     """The base class for different Block.
 
     The Block can be connected together to build the search space
@@ -98,17 +98,12 @@ class Block(kerastuner.HyperModel):
         The subclasses should override this function and return the output node.
 
         # Arguments
-            hp: Hyperparameters. The hyperparameters for building the model.
+            hp: HyperParameters. The hyperparameters for building the model.
             inputs: A list of input node(s).
         """
         return super().build(hp)
 
-    def clear_nodes(self):
-        """Delete the connecting edges to the nodes."""
-        self.inputs = None
-        self.outputs = None
-
-    def get_config(self):
+    def get_state(self):
         """Get the configuration of the preprocessor.
 
         # Returns
@@ -116,13 +111,13 @@ class Block(kerastuner.HyperModel):
         """
         return {'name': self.name}
 
-    def set_config(self, config):
+    def set_state(self, state):
         """Set the configuration of the preprocessor.
 
         # Arguments
-            config: A dictionary of the configurations of the preprocessor.
+            state: A dictionary of the configurations of the preprocessor.
         """
-        self.name = config['name']
+        self.name = state['name']
 
 
 class Head(Block):
@@ -145,40 +140,53 @@ class Head(Block):
         # Mark if the head should directly output the input tensor.
         self.identity = False
 
-    def get_config(self):
-        config = super().get_config()
-        config.update({
+    def get_state(self):
+        state = super().get_state()
+        state.update({
             'output_shape': self.output_shape,
             'loss': self.loss,
             'metrics': self.metrics,
             'identity': self.identity
         })
-        return config
+        return state
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.output_shape = config['output_shape']
-        self.loss = config['loss']
-        self.metrics = config['metrics']
-        self.identity = config['identity']
+    def set_state(self, state):
+        super().set_state(state)
+        self.output_shape = state['output_shape']
+        self.loss = state['loss']
+        self.metrics = state['metrics']
+        self.identity = state['identity']
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
 
-    def check_data_type(self, y):
+    def _check(self, y):
         supported_types = (tf.data.Dataset, np.ndarray, pd.DataFrame, pd.Series)
         if not isinstance(y, supported_types):
             raise TypeError('Expect the target data of {name} to be tf.data.Dataset,'
                             ' np.ndarray, pd.DataFrame or pd.Series, but got {type}.'
                             .format(name=self.name, type=type(y)))
 
-    def fit(self, y):
-        """Record any information needed by transform."""
-        self.check_data_type(y)
+    def _record_dataset_shape(self, dataset):
+        self.output_shape = utils.dataset_shape(dataset)
+
+    def _fit(self, y):
+        pass
+
+    def fit_transform(self, y):
+        self._check(y)
+        self._fit(y)
+        dataset = self._convert_to_dataset(y)
+        self._record_dataset_shape(dataset)
+        return dataset
 
     def transform(self, y):
         """Transform y into a compatible type (tf.data.Dataset)."""
-        self.check_data_type(y)
+        self._check(y)
+        dataset = self._convert_to_dataset(y)
+        return dataset
+
+    def _convert_to_dataset(self, y):
         if isinstance(y, tf.data.Dataset):
             return y
         if isinstance(y, np.ndarray):
@@ -225,7 +233,7 @@ class HyperBlock(Block):
         """Build the HyperModel instead of Keras Model.
 
         # Arguments
-            hp: Hyperparameters. The hyperparameters for building the model.
+            hp: HyperParameters. The hyperparameters for building the model.
             inputs: A list of instances of Node.
 
         # Returns
@@ -235,32 +243,20 @@ class HyperBlock(Block):
 
 
 class Preprocessor(Block):
-    """Hyper preprocessing block base class."""
+    """Hyper preprocessing block base class.
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._hp = None
+    It extends Block which extends Hypermodel. A preprocessor is a Hypermodel, which
+    means it is a search space. However, different from other Hypermodels, it is
+    also a model which can be fit.
+    """
 
-    def build(self, hp, inputs=None):
-        """Build into part of a Keras Model.
+    def build(self, hp):
+        """Get the values of the required HyperParameters.
 
-        Since they are for preprocess data before feeding into the Keras Model,
-        they are not part of the Keras Model. They only pass the inputs
-        directly to outputs.
+        It does not build and return a Keras Model, but initialize the
+        HyperParameters for the preprocessor to be fit.
         """
-        return inputs
-
-    def set_hp(self, hp):
-        """Set Hyperparameters for the Preprocessor.
-
-        Since the `update` and `transform` function are all for single training
-        instances instead of the entire dataset, the Hyperparameters needs to be
-        set in advance of call them.
-
-        # Arguments
-            hp: Hyperparameters. The hyperparameters for tuning the preprocessor.
-        """
-        self._hp = hp
+        pass
 
     def update(self, x, y=None):
         """Incrementally fit the preprocessor with a single training instance.
@@ -310,8 +306,20 @@ class Preprocessor(Block):
         """Training process of the preprocessor after update with all instances."""
         pass
 
-    def clear_weights(self):
-        """Delete the trained weights of the preprocessor."""
+    def get_config(self):
+        """Get the configuration of the preprocessor.
+
+        # Returns
+            A dictionary of configurations of the preprocessor.
+        """
+        return {}
+
+    def set_config(self, config):
+        """Set the configuration of the preprocessor.
+
+        # Arguments
+            config: A dictionary of the configurations of the preprocessor.
+        """
         pass
 
     def get_weights(self):
@@ -329,3 +337,14 @@ class Preprocessor(Block):
             weights: A dictionary of trained weights of the preprocessor.
         """
         pass
+
+    def get_state(self):
+        state = super().get_state()
+        state.update(self.get_config())
+        return {'config': state,
+                'weights': self.get_weights()}
+
+    def set_state(self, state):
+        self.set_config(state['config'])
+        super().set_state(state['config'])
+        self.set_weights(state['weights'])

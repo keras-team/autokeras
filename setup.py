@@ -13,7 +13,6 @@ setup(
     keywords=['AutoML', 'keras'],
     install_requires=[
         'tensorflow',
-        'keras-tuner',
         'scikit-learn',
         'numpy',
         'pandas',

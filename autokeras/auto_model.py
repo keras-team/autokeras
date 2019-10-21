@@ -47,7 +47,7 @@ class AutoModel(object):
         self.max_trials = max_trials
         self.directory = directory
         self.seed = seed
-        self.hypermodel = None
+        self.hyper_graph = None
         if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
             self.heads = self.outputs
@@ -55,11 +55,11 @@ class AutoModel(object):
             self.heads = [output_node.in_blocks[0] for output_node in self.outputs]
 
     def _meta_build(self, dataset):
-        self.hypermodel = meta_model.assemble(inputs=self.inputs,
-                                              outputs=self.outputs,
-                                              dataset=dataset,
-                                              seed=self.seed)
-        self.outputs = self.hypermodel.outputs
+        self.hyper_graph = meta_model.assemble(inputs=self.inputs,
+                                               outputs=self.outputs,
+                                               dataset=dataset,
+                                               seed=self.seed)
+        self.outputs = self.hyper_graph.outputs
 
     def fit(self,
             x=None,
@@ -109,26 +109,24 @@ class AutoModel(object):
             validation_data=validation_data,
             validation_split=validation_split)
 
-        # Initialize the hypermodel.
+        # Initialize the hyper_graph.
         self._meta_build(dataset)
-        self.hypermodel.set_io_shapes(dataset)
 
         # Build the hypermodel in tuner init.
         hp = kerastuner.HyperParameters()
-        self.hypermodel.hyper_build(hp)
-        self.hypermodel.preprocess(
-            hp=kerastuner.HyperParameters(),
+        preprocess_graph, keras_graph = self.hyper_graph.build_graphs(hp)
+        preprocess_graph.preprocess(
             dataset=dataset,
             validation_data=validation_data,
             fit=True)
         self.tuner = tuner.RandomSearch(
-            hypermodel=self.hypermodel,
+            hyper_graph=self.hyper_graph,
+            hypermodel=keras_graph,
             objective=objective,
             max_trials=self.max_trials,
             directory=self.directory,
             seed=self.seed,
             project_name=self.name)
-        self.hypermodel.clear_preprocessors()
 
         # Process the args.
         if callbacks is None:
@@ -168,8 +166,9 @@ class AutoModel(object):
         new_x = []
         for data, input_node in zip(x, self.inputs):
             if fit:
-                input_node.fit(data)
-            data = input_node.transform(data)
+                data = input_node.fit_transform(data)
+            else:
+                data = input_node.transform(data)
             new_x.append(data)
         x = tf.data.Dataset.zip(tuple(new_x))
 
@@ -181,8 +180,9 @@ class AutoModel(object):
             new_y = []
             for data, head_block in zip(y, self.heads):
                 if fit:
-                    head_block.fit(data)
-                data = head_block.transform(data)
+                    data = head_block.fit_transform(data)
+                else:
+                    data = head_block.transform(data)
                 new_y.append(data)
             y = tf.data.Dataset.zip(tuple(new_y))
 
@@ -217,12 +217,10 @@ class AutoModel(object):
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        best_model, x = self._prepare_best_model_and_data(
-            x=x,
-            y=None,
-            batch_size=batch_size,
-            predict=True)
-        y = best_model.predict(x, **kwargs)
+        preprocess_graph, model = self.tuner.get_best_model()
+        x = preprocess_graph.preprocess(
+            self._process_xy(x, None, predict=True))[0].batch(batch_size)
+        y = model.predict(x, **kwargs)
         y = self._postprocess(y)
         if isinstance(y, list) and len(y) == 1:
             y = y[0]
@@ -253,26 +251,10 @@ class AutoModel(object):
             The attribute model.metrics_names will give you the display labels for
             the scalar outputs.
         """
-        best_model, data = self._prepare_best_model_and_data(
-            x=x,
-            y=y,
-            batch_size=batch_size)
-        return best_model.evaluate(data, **kwargs)
-
-    def _prepare_best_model_and_data(self,
-                                     x,
-                                     y=None,
-                                     batch_size=32,
-                                     predict=False):
-        best_model = self.tuner.get_best_models(1)[0]
-        best_trial = self.tuner.get_best_trials(1)[0]
-        best_hp = best_trial.hyperparameters
-
-        self.tuner.load_trial(best_trial)
-        x = self._process_xy(x, y, predict=predict)
-        x, _ = self.hypermodel.preprocess(best_hp, x)
-        x = x.batch(batch_size)
-        return best_model, x
+        preprocess_graph, model = self.tuner.get_best_model()
+        data = preprocess_graph.preprocess(
+            self._process_xy(x, y))[0].batch(batch_size)
+        return model.evaluate(data, **kwargs)
 
 
 class GraphAutoModel(AutoModel):
@@ -315,7 +297,6 @@ class GraphAutoModel(AutoModel):
             directory=directory,
             seed=seed
         )
-        self.hypermodel = graph.GraphHyperModel(self.inputs, self.outputs)
 
     def _meta_build(self, dataset):
-        pass
+        self.hyper_graph = graph.HyperGraph(self.inputs, self.outputs)
