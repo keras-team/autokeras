@@ -145,9 +145,11 @@ class RNNBlock(block_module.Block):
         num_layers = self.num_layers or hp.Choice('num_layers',
                                                   [1, 2, 3],
                                                   default=2)
-        attention = self.attention or hp.Choice('attention',
-                                                [True, False],
-                                                default=True)
+        attention = self.attention
+        if attention is None:
+            attention = hp.Choice('attention',
+                                  [True, False],
+                                  default=True)
         rnn_layers = {
             'gru': layers.GRU,
             'lstm': layers.LSTM
