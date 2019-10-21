@@ -107,12 +107,16 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         model.load_weights(self.best_model_path)
         return preprocess_graph, model
 
-    def search(self, *fit_args, **fit_kwargs):
+    def search(self, concat=False, *fit_args, **fit_kwargs):
         """Search for the best HyperParameters.
 
         If there is not early-stopping in the callbacks, the early-stopping callback
         is injected to accelerate the search process. At the end of the search, the
         best model will be fully trained with the specified number of epochs.
+
+        # Arguments
+            concat: Boolean. Concatenate the training set and validation set for the
+                final fit of the best model.
         """
         super().search(*fit_args, **fit_kwargs)
 

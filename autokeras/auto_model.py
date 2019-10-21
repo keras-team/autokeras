@@ -95,10 +95,14 @@ class AutoModel(object):
                 The validation data is selected from the last samples
                 in the `x` and `y` data provided, before shuffling. This argument is
                 not supported when `x` is a dataset.
+                The best model found would be fit on the entire dataset including the
+                validation data.
             validation_data: Data on which to evaluate the loss and any model metrics
                 at the end of each epoch. The model will not be trained on this data.
                 `validation_data` will override `validation_split`. The type of the
                 validation data should be the same as the training data.
+                The best model found would be fit on the training dataset without the
+                validation data.
             objective: String. Name of model metric to minimize
                 or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
             **kwargs: Any arguments supported by keras.Model.fit.
