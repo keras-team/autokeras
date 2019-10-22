@@ -48,6 +48,7 @@ class AutoModel(object):
         self.directory = directory
         self.seed = seed
         self.hyper_graph = None
+        self._split_dataset = False
         if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
             self.heads = self.outputs
@@ -95,10 +96,14 @@ class AutoModel(object):
                 The validation data is selected from the last samples
                 in the `x` and `y` data provided, before shuffling. This argument is
                 not supported when `x` is a dataset.
+                The best model found would be fit on the entire dataset including the
+                validation data.
             validation_data: Data on which to evaluate the loss and any model metrics
                 at the end of each epoch. The model will not be trained on this data.
                 `validation_data` will override `validation_split`. The type of the
                 validation data should be the same as the training data.
+                The best model found would be fit on the training dataset without the
+                validation data.
             objective: String. Name of model metric to minimize
                 or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
             **kwargs: Any arguments supported by keras.Model.fit.
@@ -121,6 +126,7 @@ class AutoModel(object):
             fit=True)
         self.tuner = tuner.RandomSearch(
             hyper_graph=self.hyper_graph,
+            fit_on_val_data=self._split_dataset,
             hypermodel=keras_graph,
             objective=objective,
             max_trials=self.max_trials,
@@ -198,10 +204,12 @@ class AutoModel(object):
         # Prepare the dataset.
         dataset = self._process_xy(x, y, fit=True)
         if validation_data:
+            self._split_dataset = False
             val_x, val_y = validation_data
             validation_data = self._process_xy(val_x, val_y)
         # Split the data with validation_split.
         if validation_data is None and validation_split:
+            self._split_dataset = True
             dataset, validation_data = utils.split_dataset(dataset, validation_split)
         return dataset, validation_data
 

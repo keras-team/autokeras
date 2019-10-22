@@ -17,15 +17,18 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
 
     # Arguments
         hyper_graph: HyperGraph. The HyperGraph to be tuned.
+        fit_on_val_data: Boolean. Use the training set and validation set for the
+            final fit of the best model.
         **kwargs: The other args supported by KerasTuner.
     """
 
-    def __init__(self, hyper_graph, **kwargs):
+    def __init__(self, hyper_graph, fit_on_val_data=False, **kwargs):
         super().__init__(**kwargs)
         self.hyper_graph = hyper_graph
         self.preprocess_graph = None
         self.need_fully_train = False
         self.best_hp = None
+        self.fit_on_val_data = fit_on_val_data
 
     def run_trial(self, trial, *fit_args, **fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
@@ -123,11 +126,14 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         keras_graph.save(self.best_keras_graph_path)
 
         # Fully train the best model with original callbacks.
-        if self.need_fully_train:
+        if self.need_fully_train or self.fit_on_val_data:
             new_fit_kwargs = copy.copy(fit_kwargs)
             new_fit_kwargs.update(
                 dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
             self._prepare_run(preprocess_graph, new_fit_kwargs)
+            if self.fit_on_val_data:
+                new_fit_kwargs['x'] = new_fit_kwargs['x'].concatenate(
+                    new_fit_kwargs['validation_data'])
             model = keras_graph.build(self.best_hp)
             model.fit(**new_fit_kwargs)
 
