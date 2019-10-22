@@ -1,6 +1,7 @@
 import pandas as pd
 
 from autokeras import auto_model
+from autokeras import tuner as tuner_module
 from autokeras.hypermodel import head
 from autokeras.hypermodel import node
 

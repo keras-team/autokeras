@@ -76,6 +76,7 @@ class AutoModel(object):
             callbacks=None,
             validation_split=0,
             validation_data=None,
+            tuner='random_search',
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -110,6 +111,8 @@ class AutoModel(object):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
+            tuner: String. The tuner to be used for the search.
+                Defaults to 'random_search'.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         dataset, validation_data = self._prepare_data(
