@@ -126,6 +126,7 @@ class AutoModel(object):
             fit=True)
         self.tuner = tuner.RandomSearch(
             hyper_graph=self.hyper_graph,
+            fit_on_val_data=self._split_dataset,
             hypermodel=keras_graph,
             objective=objective,
             max_trials=self.max_trials,
@@ -144,7 +145,6 @@ class AutoModel(object):
                     tf.keras.callbacks.EarlyStopping(patience=10)]
 
         self.tuner.search(x=dataset,
-                          concat=self._split_dataset,
                           epochs=epochs,
                           callbacks=callbacks,
                           validation_data=validation_data,

@@ -69,7 +69,6 @@ def test_final_fit_concat(graph, tuner, tmp_dir):
     mc.build_graphs.return_value = (pg, mock.Mock())
     mc = tuner.return_value
     mc.get_best_model.return_value = (pg, mock.Mock())
-    search = mc.search
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
 
@@ -79,7 +78,7 @@ def test_final_fit_concat(graph, tuner, tmp_dir):
                               max_trials=2)
     auto_model.fit(x_train, y_train, epochs=2, validation_split=0.2)
     assert auto_model._split_dataset
-    assert search.call_args_list[0][1]['concat']
+    assert tuner.call_args_list[0][1]['fit_on_val_data']
 
 
 @mock.patch('autokeras.tuner.RandomSearch')
@@ -91,7 +90,6 @@ def test_final_fit_not_concat(graph, tuner, tmp_dir):
     mc.build_graphs.return_value = (pg, mock.Mock())
     mc = tuner.return_value
     mc.get_best_model.return_value = (pg, mock.Mock())
-    search = mc.search
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
 
@@ -101,4 +99,4 @@ def test_final_fit_not_concat(graph, tuner, tmp_dir):
                               max_trials=2)
     auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
     assert not auto_model._split_dataset
-    assert not search.call_args_list[0][1]['concat']
+    assert not tuner.call_args_list[0][1]['fit_on_val_data']

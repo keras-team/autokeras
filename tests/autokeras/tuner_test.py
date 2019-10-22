@@ -35,6 +35,7 @@ def test_search(_, _1, _2, tmp_dir):
     hyper_graph.build_graphs.return_value = (mock.Mock(), mock.Mock())
     tuner = tuner_module.RandomSearch(
         hyper_graph=hyper_graph,
+        fit_on_val_data=True,
         hypermodel=mock.Mock(),
         objective='val_loss',
         max_trials=1,
@@ -45,8 +46,7 @@ def test_search(_, _1, _2, tmp_dir):
     tuner.oracle = oracle
     tuner.preprocess_graph = mock.Mock()
     tuner.need_fully_train = True
-    tuner.search(concat=True,
-                 x=mock.Mock(),
+    tuner.search(x=mock.Mock(),
                  y=mock.Mock(),
                  validation_data=[mock.Mock()],
                  epochs=5)
