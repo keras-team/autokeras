@@ -169,3 +169,44 @@ class RandomSearch(AutoTuner, kerastuner.RandomSearch):
 class HyperBand(AutoTuner, kerastuner.Hyperband):
     """KerasTuner Hyperband with preprocessing layer tuning."""
     pass
+
+
+class ImageClassifierOracle(kerastuner.Oracle):
+
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError
+
+
+class ImageClassifierTuner(AutoTuner):
+
+    def __init__(self,
+                 hypermodel,
+                 objective,
+                 max_trials,
+                 seed=None,
+                 hyperparameters=None,
+                 tune_new_entries=True,
+                 allow_new_entries=True,
+                 **kwargs):
+        self.seed = seed
+        oracle = ImageClassifierOracle(
+            objective=objective,
+            max_trials=max_trials,
+            seed=seed,
+            hyperparameters=hyperparameters,
+            tune_new_entries=tune_new_entries,
+            allow_new_entries=allow_new_entries)
+        super().__init__(
+            oracle,
+            hypermodel,
+            **kwargs)
+
+
+TUNER_CLASSES = {
+    'random_search': RandomSearch,
+    'image_classifier': ImageClassifierTuner,
+}
+
+
+def get_tuner_class(name):
+    return TUNER_CLASSES.get(name)

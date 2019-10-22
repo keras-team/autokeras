@@ -39,9 +39,8 @@ class ClassificationHead(base.Head):
     (more than 2) classification. Use Accuracy as metrics by default.
 
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
-    pd.DataFrame or pd.Series. The targets can be raw labels, one-hot encoded for
-    multi-class classification, or encoded to a single column for binary
-    classification.
+    pd.DataFrame or pd.Series. It can be raw labels, one-hot encoded if more than two
+    classes, or binary encoded for binary classification.
 
     The raw labels will be encoded to one column if two classes were found,
     or one-hot encoded if more than two classes were found.

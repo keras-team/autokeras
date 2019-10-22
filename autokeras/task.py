@@ -1,6 +1,7 @@
 import pandas as pd
 
 from autokeras import auto_model
+from autokeras import tuner as tuner_module
 from autokeras.hypermodel import head
 from autokeras.hypermodel import node
 
@@ -53,6 +54,66 @@ class ImageClassifier(SupervisedImagePipeline):
             name=name,
             objective=objective,
             seed=seed)
+
+    def fit(self,
+            x=None,
+            y=None,
+            epochs=None,
+            callbacks=None,
+            validation_split=0,
+            validation_data=None,
+            objective='val_loss',
+            **kwargs):
+        """Search for the best model and hyperparameters for the AutoModel.
+
+        It will search for the best model based on the performances on
+        validation data.
+
+        # Arguments
+            x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape of the
+                data should be 3 or 4 dimensional, the last dimension of which should
+                be channel dimension.
+            y: numpy.ndarray or tensorflow.Dataset. Training data y. It can be raw
+                labels, one-hot encoded if more than two classes, or binary encoded
+                for binary classification.
+            epochs: Int. The number of epochs to train each model during the search.
+                If unspecified, by default we train for a maximum of 1000 epochs,
+                but we stop training if the validation loss stops improving for 10
+                epochs (unless you specified an EarlyStopping callback as part of
+                the callbacks argument, in which case the EarlyStopping callback you
+                specified will determine early stopping).
+            callbacks: List of Keras callbacks to apply during training and
+                validation.
+            validation_split: Float between 0 and 1.
+                Fraction of the training data to be used as validation data.
+                The model will set apart this fraction of the training data,
+                will not train on it, and will evaluate
+                the loss and any model metrics
+                on this data at the end of each epoch.
+                The validation data is selected from the last samples
+                in the `x` and `y` data provided, before shuffling. This argument is
+                not supported when `x` is a dataset.
+                The best model found would be fit on the entire dataset including the
+                validation data.
+            validation_data: Data on which to evaluate the loss and any model metrics
+                at the end of each epoch. The model will not be trained on this data.
+                `validation_data` will override `validation_split`. The type of the
+                validation data should be the same as the training data.
+                The best model found would be fit on the training dataset without the
+                validation data.
+            objective: String. Name of model metric to minimize
+                or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
+            **kwargs: Any arguments supported by keras.Model.fit.
+        """
+        super().fit(x=x,
+                    y=y,
+                    epochs=epochs,
+                    callbacks=callbacks,
+                    validation_split=validation_split,
+                    validation_data=validation_data,
+                    objective=objective,
+                    tuner=tuner_module.ImageClassifierTuner(),
+                    **kwargs)
 
 
 class ImageRegressor(SupervisedImagePipeline):
