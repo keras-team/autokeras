@@ -45,4 +45,8 @@ def test_search(_, _1, _2, tmp_dir):
     tuner.oracle = oracle
     tuner.preprocess_graph = mock.Mock()
     tuner.need_fully_train = True
-    tuner.search(x=mock.Mock(), y=mock.Mock(), epochs=5)
+    tuner.search(concat=True,
+                 x=mock.Mock(),
+                 y=mock.Mock(),
+                 validation_data=[mock.Mock()],
+                 epochs=5)

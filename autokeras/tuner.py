@@ -131,10 +131,10 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             new_fit_kwargs = copy.copy(fit_kwargs)
             new_fit_kwargs.update(
                 dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
+            self._prepare_run(preprocess_graph, new_fit_kwargs)
             if concat:
                 new_fit_kwargs['x'] = new_fit_kwargs['x'].concatenate(
-                    new_fit_kwargs['validation_data'][0])
-            self._prepare_run(preprocess_graph, new_fit_kwargs)
+                    new_fit_kwargs['validation_data'])
             model = keras_graph.build(self.best_hp)
             model.fit(**new_fit_kwargs)
 
