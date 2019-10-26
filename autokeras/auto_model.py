@@ -198,7 +198,7 @@ class AutoModel(object):
         """Convert the data to tf.data.Dataset."""
         # Check validation information.
         if not validation_data and not validation_split:
-            raise ValueError('Either validation_data or validation_split'
+            raise ValueError('Either validation_data or validation_split '
                              'should be provided.')
         # TODO: Handle other types of input, zip dataset, tensor, dict.
         # Prepare the dataset.
