@@ -294,6 +294,8 @@ class GraphAutoModel(AutoModel):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
+        tuner: String. The tuner to be used for the search.
+            Defaults to 'random_search'.
         seed: Int. Random seed.
     """
 
@@ -304,6 +306,7 @@ class GraphAutoModel(AutoModel):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
+                 tuner='random_search',
                  seed=None):
         super().__init__(
             inputs=inputs,
@@ -312,6 +315,7 @@ class GraphAutoModel(AutoModel):
             max_trials=max_trials,
             directory=directory,
             objective=objective,
+            tuner=tuner,
             seed=seed
         )
 
