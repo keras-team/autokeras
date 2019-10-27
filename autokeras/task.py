@@ -481,11 +481,13 @@ class TimeSeriesForecaster(auto_model.AutoModel):
             be 'numerical' or 'categorical', indicating the type of that column.
             Defaults to None. If not None, the column_names need to be specified.
             If None, it will be inferred from the data.
-        in_steps: Int. Number of lag observations as input (x). Values may be between
-            [1..len(data)]. Defaults to 1. If unspecified, it will be tuned
+        lookback: Int. The number of time steps to used before forecasting time step.
+            If unspecified, it will be tuned automatically.
+        predict_from: Int. The starting point of the forecast. The number of time
+            steps after the training data. If unspecified, it will be tuned
             automatically.
-        out_steps: Int. Number of observations as output (y). Values may be between
-            [1..len(data)]. Defaults to 1.
+        predict_until: Int. The end point of the forecast. The number of time steps
+            after the training data. If unspecified, it will be tuned automatically.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to
             'time_series_forecaster'.
@@ -500,10 +502,9 @@ class TimeSeriesForecaster(auto_model.AutoModel):
     def __init__(self,
                  column_names=None,
                  column_types=None,
-                 in_steps=1,
-                 out_steps=1,
-                 output_dim=None,
-                 loss=None,
+                 lookback=None,
+                 predict_from=1,
+                 predict_until=10,
                  metrics=None,
                  name='time_series_forecaster',
                  max_trials=100,
@@ -540,18 +541,16 @@ class TimeSeriesForecaster(auto_model.AutoModel):
                 The validation data is selected from the last samples
                 in the `x` and `y` data provided, before shuffling. This argument is
                 not supported when `x` is a dataset.
-            validation_data: Data on which to evaluate
-                the loss and any model metrics at the end of each epoch.
-                The model will not be trained on this data.
-                `validation_data` will override `validation_split`.
-                `validation_data` could be:
-                  - tuple `(x_val, y_val)` of Numpy arrays or tensors
-                  - tuple `(x_val, y_val, val_sample_weights)` of Numpy arrays
-                  - dataset or a dataset iterator
-                For the first two cases, `batch_size` must be provided.
-                For the last case, `validation_steps` must be provided.
-                The type of the validation data should be the same as the training
-                data.
+                The best model found would be fit on the entire dataset including the
+                validation data.
+            validation_data: Data on which to evaluate the loss and any model metrics
+                at the end of each epoch. The model will not be trained on this data.
+                `validation_data` will override `validation_split`. The type of the
+                validation data should be the same as the training data.
+                The best model found would be fit on the training dataset without the
+                validation data.
+            objective: String. Name of model metric to minimize
+                or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         # TODO: implement.
