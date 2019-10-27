@@ -288,6 +288,8 @@ class GraphAutoModel(AutoModel):
         directory: String. The path to a directory for storing the search outputs.
             Defaults to None, which would create a folder with the name of the
             AutoModel in the current directory.
+        objective: String. Name of model metric to minimize
+            or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         seed: Int. Random seed.
     """
 
@@ -297,6 +299,7 @@ class GraphAutoModel(AutoModel):
                  name='graph_auto_model',
                  max_trials=100,
                  directory=None,
+                 objective='val_loss',
                  seed=None):
         super().__init__(
             inputs=inputs,
@@ -304,6 +307,7 @@ class GraphAutoModel(AutoModel):
             name=name,
             max_trials=max_trials,
             directory=directory,
+            objective=objective,
             seed=seed
         )
 
