@@ -50,7 +50,8 @@ automodel = ak.AutoModel(
             ak.ClassificationHead(loss='categorical_crossentropy',
                                   metrics=['accuracy'])])
 automodel.fit([x_image, x_structured],
-              [y_regression, y_classification])
+              [y_regression, y_classification],
+              validation_split=0.2)
 
 ```
 

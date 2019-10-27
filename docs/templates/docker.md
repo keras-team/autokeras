@@ -42,7 +42,7 @@ Let's download the mnist example and run it within the container.
 
 Download the example :  
 ```
-curl https://raw.githubusercontent.com/keras-team/autokeras/master/examples/a_simple_example/mnist.py --output mnist.py
+curl https://raw.githubusercontent.com/keras-team/autokeras/master/examples/mnist.py --output mnist.py
 ```
 
 Run the mnist example :
