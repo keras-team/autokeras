@@ -418,7 +418,6 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                     callbacks=callbacks,
                     validation_split=validation_split,
                     validation_data=validation_data,
-                    objective=self.objective,
                     **kwargs)
 
 
