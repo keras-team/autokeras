@@ -28,6 +28,8 @@ class ImageClassifier(SupervisedImagePipeline):
         directory: String. The path to a directory for storing the search outputs.
             Defaults to None, which would create a folder with the name of the
             AutoModel in the current directory.
+        objective: String. Name of model metric to minimize
+            or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         seed: Int. Random seed.
     """
 
@@ -39,6 +41,7 @@ class ImageClassifier(SupervisedImagePipeline):
                  name='image_classifier',
                  max_trials=100,
                  directory=None,
+                 objective='val_loss',
                  seed=None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
@@ -48,6 +51,7 @@ class ImageClassifier(SupervisedImagePipeline):
             max_trials=max_trials,
             directory=directory,
             name=name,
+            objective=objective,
             seed=seed)
 
 
@@ -66,6 +70,8 @@ class ImageRegressor(SupervisedImagePipeline):
         directory: String. The path to a directory for storing the search outputs.
             Defaults to None, which would create a folder with the name of the
             AutoModel in the current directory.
+        objective: String. Name of model metric to minimize
+            or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         seed: Int. Random seed.
     """
 
@@ -76,6 +82,7 @@ class ImageRegressor(SupervisedImagePipeline):
                  name='image_regressor',
                  max_trials=100,
                  directory=None,
+                 objective='val_loss',
                  seed=None):
         super().__init__(
             outputs=head.RegressionHead(output_dim=output_dim,
@@ -84,6 +91,7 @@ class ImageRegressor(SupervisedImagePipeline):
             max_trials=max_trials,
             directory=directory,
             name=name,
+            objective=objective,
             seed=seed)
 
 
@@ -110,6 +118,8 @@ class TextClassifier(SupervisedTextPipeline):
         directory: String. The path to a directory for storing the search outputs.
             Defaults to None, which would create a folder with the name of the
             AutoModel in the current directory.
+        objective: String. Name of model metric to minimize
+            or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         seed: Int. Random seed.
     """
 
@@ -121,6 +131,7 @@ class TextClassifier(SupervisedTextPipeline):
                  name='text_classifier',
                  max_trials=100,
                  directory=None,
+                 objective='val_loss',
                  seed=None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
@@ -130,6 +141,7 @@ class TextClassifier(SupervisedTextPipeline):
             max_trials=max_trials,
             directory=directory,
             name=name,
+            objective=objective,
             seed=seed)
 
 
@@ -148,6 +160,8 @@ class TextRegressor(SupervisedTextPipeline):
         directory: String. The path to a directory for storing the search outputs.
             Defaults to None, which would create a folder with the name of the
             AutoModel in the current directory.
+        objective: String. Name of model metric to minimize
+            or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         seed: Int. Random seed.
     """
 
@@ -158,6 +172,7 @@ class TextRegressor(SupervisedTextPipeline):
                  name='text_regressor',
                  max_trials=100,
                  directory=None,
+                 objective='val_loss',
                  seed=None):
         super().__init__(
             outputs=head.RegressionHead(output_dim=output_dim,
@@ -166,6 +181,7 @@ class TextRegressor(SupervisedTextPipeline):
             max_trials=max_trials,
             directory=directory,
             name=name,
+            objective=objective,
             seed=seed)
 
 
@@ -204,7 +220,6 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             callbacks=None,
             validation_split=0,
             validation_data=None,
-            objective='val_loss',
             **kwargs):
         """Search for the best model and hyperparameters for the task.
 
@@ -237,8 +252,6 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
-            objective: String. Name of model metric to minimize
-                or maximize. Defaults to 'val_accuracy'.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         # x is file path of training data
@@ -256,7 +269,6 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                     callbacks=callbacks,
                     validation_split=validation_split,
                     validation_data=validation_data,
-                    objective=objective,
                     **kwargs)
 
     def predict(self, x, batch_size=32, **kwargs):
@@ -333,6 +345,8 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
         directory: String. The path to a directory for storing the search outputs.
             Defaults to None, which would create a folder with the name of the
             AutoModel in the current directory.
+        objective: String. Name of model metric to minimize
+            or maximize. Defaults to 'val_accuracy'.
         seed: Int. Random seed.
     """
 
@@ -346,6 +360,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                  name='structured_data_classifier',
                  max_trials=100,
                  directory=None,
+                 objective='val_accuracy',
                  seed=None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
@@ -357,6 +372,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             max_trials=max_trials,
             directory=directory,
             name=name,
+            objective=objective,
             seed=seed)
 
     def fit(self,
@@ -366,7 +382,6 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             callbacks=None,
             validation_split=0,
             validation_data=None,
-            objective='val_accuracy',
             **kwargs):
         """Search for the best model and hyperparameters for the task.
 
@@ -395,8 +410,6 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                 at the end of each epoch. The model will not be trained on this data.
                 `validation_data` will override `validation_split`. The type of the
                 validation data should be the same as the training data.
-            objective: String. Name of model metric to minimize
-                or maximize. Defaults to 'val_accuracy'.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         super().fit(x=x,
@@ -405,7 +418,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                     callbacks=callbacks,
                     validation_split=validation_split,
                     validation_data=validation_data,
-                    objective=objective,
+                    objective=self.objective,
                     **kwargs)
 
 
@@ -428,6 +441,8 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
         directory: String. The path to a directory for storing the search outputs.
             Defaults to None, which would create a folder with the name of the
             AutoModel in the current directory.
+        objective: String. Name of model metric to minimize
+            or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         seed: Int. Random seed.
     """
 
@@ -440,6 +455,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
                  name='structured_data_regressor',
                  max_trials=100,
                  directory=None,
+                 objective='val_loss',
                  seed=None):
         super().__init__(
             outputs=head.RegressionHead(output_dim=output_dim,
@@ -450,4 +466,5 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             max_trials=max_trials,
             directory=directory,
             name=name,
+            objective=objective,
             seed=seed)

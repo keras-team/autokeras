@@ -30,6 +30,8 @@ class AutoModel(object):
         directory: String. The path to a directory for storing the search outputs.
             Defaults to None, which would create a folder with the name of the
             AutoModel in the current directory.
+        objective: String. Name of model metric to minimize
+            or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         seed: Int. Random seed.
     """
 
@@ -39,6 +41,7 @@ class AutoModel(object):
                  name='auto_model',
                  max_trials=100,
                  directory=None,
+                 objective='val_loss',
                  seed=None):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
@@ -48,6 +51,7 @@ class AutoModel(object):
         self.directory = directory
         self.seed = seed
         self.hyper_graph = None
+        self.objective = objective
         self._split_dataset = False
         if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
@@ -69,7 +73,6 @@ class AutoModel(object):
             callbacks=None,
             validation_split=0,
             validation_data=None,
-            objective='val_loss',
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -104,8 +107,6 @@ class AutoModel(object):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
-            objective: String. Name of model metric to minimize
-                or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         dataset, validation_data = self._prepare_data(
@@ -128,7 +129,7 @@ class AutoModel(object):
             hyper_graph=self.hyper_graph,
             fit_on_val_data=self._split_dataset,
             hypermodel=keras_graph,
-            objective=objective,
+            objective=self.objective,
             max_trials=self.max_trials,
             directory=self.directory,
             seed=self.seed,
