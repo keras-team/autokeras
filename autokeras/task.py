@@ -498,6 +498,8 @@ class TimeSeriesForecaster(auto_model.AutoModel):
         directory: String. The path to a directory for storing the search outputs.
             Defaults to None, which would create a folder with the name of the
             AutoModel in the current directory.
+        objective: String. Name of model metric to minimize
+            or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         seed: Int. Random seed.
     """
 
@@ -512,6 +514,7 @@ class TimeSeriesForecaster(auto_model.AutoModel):
                  name='time_series_forecaster',
                  max_trials=100,
                  directory=None,
+                 objective='val_loss',
                  seed=None):
         # TODO: implement.
         raise NotImplementedError
@@ -552,8 +555,6 @@ class TimeSeriesForecaster(auto_model.AutoModel):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
-            objective: String. Name of model metric to minimize
-                or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         # TODO: implement.
