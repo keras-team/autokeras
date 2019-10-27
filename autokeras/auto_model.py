@@ -32,6 +32,8 @@ class AutoModel(object):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
+        tuner: String. The tuner to be used for the search.
+            Defaults to 'random_search'.
         seed: Int. Random seed.
     """
 
@@ -42,6 +44,7 @@ class AutoModel(object):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
+                 tuner='random_search',
                  seed=None):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
@@ -52,6 +55,7 @@ class AutoModel(object):
         self.seed = seed
         self.hyper_graph = None
         self.objective = objective
+        self.tuner = tuner
         self._split_dataset = False
         if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
@@ -73,7 +77,6 @@ class AutoModel(object):
             callbacks=None,
             validation_split=0,
             validation_data=None,
-            tuner='random_search',
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -108,8 +111,6 @@ class AutoModel(object):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
-            tuner: String. The tuner to be used for the search.
-                Defaults to 'random_search'.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         dataset, validation_data = self._prepare_data(
@@ -128,7 +129,7 @@ class AutoModel(object):
             dataset=dataset,
             validation_data=validation_data,
             fit=True)
-        self.tuner = tuner_module.get_tuner_class(tuner)(
+        self.tuner = tuner_module.get_tuner_class(self.tuner)(
             hyper_graph=self.hyper_graph,
             fit_on_val_data=self._split_dataset,
             hypermodel=keras_graph,

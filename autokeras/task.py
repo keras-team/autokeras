@@ -1,7 +1,6 @@
 import pandas as pd
 
 from autokeras import auto_model
-from autokeras import tuner as tuner_module
 from autokeras.hypermodel import head
 from autokeras.hypermodel import node
 
@@ -53,6 +52,7 @@ class ImageClassifier(SupervisedImagePipeline):
             directory=directory,
             name=name,
             objective=objective,
+            tuner='image_classifier',
             seed=seed)
 
     def fit(self,
@@ -101,8 +101,6 @@ class ImageClassifier(SupervisedImagePipeline):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
-            objective: String. Name of model metric to minimize
-                or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         super().fit(x=x,
@@ -111,8 +109,6 @@ class ImageClassifier(SupervisedImagePipeline):
                     callbacks=callbacks,
                     validation_split=validation_split,
                     validation_data=validation_data,
-                    objective=objective,
-                    tuner='image_classifier',
                     **kwargs)
 
 
