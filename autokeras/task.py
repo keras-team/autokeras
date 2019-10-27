@@ -481,13 +481,14 @@ class TimeSeriesForecaster(auto_model.AutoModel):
             be 'numerical' or 'categorical', indicating the type of that column.
             Defaults to None. If not None, the column_names need to be specified.
             If None, it will be inferred from the data.
-        lookback: Int. The number of time steps to used before forecasting time step.
-            If unspecified, it will be tuned automatically.
-        predict_from: Int. The starting point of the forecast. The number of time
-            steps after the training data. If unspecified, it will be tuned
+        lookback: Int. The range of history steps to consider for each prediction.
+            For example, if lookback=n, the data from step (i - n) to (i - 1) is used
+            to predict the value of step i. If unspecified, it will be tuned
             automatically.
-        predict_until: Int. The end point of the forecast. The number of time steps
-            after the training data. If unspecified, it will be tuned automatically.
+        predict_from: Int. The starting point of the forecast. The number of steps
+            after the last step in training data. Defaults to 1.
+        predict_until: Int. The end point of the forecast. The number of steps
+            after the last step in training data. Defaults to 10.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to
