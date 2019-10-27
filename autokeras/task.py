@@ -482,8 +482,8 @@ class TimeSeriesForecaster(auto_model.AutoModel):
             Defaults to None. If not None, the column_names need to be specified.
             If None, it will be inferred from the data.
         lookback: Int. The range of history steps to consider for each prediction.
-            For example, if lookback=n, the data from step (i - n) to (i - 1) is used
-            to predict the value of step i. If unspecified, it will be tuned
+            For example, if lookback=n, the data in the range [i - n, i - 1]
+            is used to predict the value of step i. If unspecified, it will be tuned
             automatically.
         predict_from: Int. The starting point of the forecast. The number of steps
             after the last step in training data. Defaults to 1.
