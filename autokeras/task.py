@@ -488,6 +488,7 @@ class TimeSeriesForecaster(auto_model.AutoModel):
             automatically.
         predict_until: Int. The end point of the forecast. The number of time steps
             after the training data. If unspecified, it will be tuned automatically.
+        loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to
             'time_series_forecaster'.
@@ -505,6 +506,7 @@ class TimeSeriesForecaster(auto_model.AutoModel):
                  lookback=None,
                  predict_from=1,
                  predict_until=10,
+                 loss='mean_squared_error',
                  metrics=None,
                  name='time_series_forecaster',
                  max_trials=100,
