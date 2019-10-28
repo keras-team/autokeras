@@ -485,10 +485,15 @@ class TimeSeriesForecaster(auto_model.AutoModel):
             For example, if lookback=n, the data in the range of [i - n, i - 1]
             is used to predict the value of step i. If unspecified, it will be tuned
             automatically.
-        predict_from: Int. The starting point of the forecast. The number of steps
-            after the last step in training data. Defaults to 1.
-        predict_until: Int. The end point of the forecast. The number of steps
-            after the last step in training data. Defaults to 10.
+        predict_from: Int. The starting point of the forecast for each sample (in
+            number of steps) after the last time step in the input. If N is the last
+            step in the input, then the first step of the predicted output will be
+            N + predict_from. Defaults to 1 (which corresponds to starting the
+            forecast immediately after the last step in the input).
+        predict_until: Int. The end point of the forecast for each sample (in number
+            of steps) after the last time step in the input. If N is the last step in
+            the input, then the last step of the predicted output will be
+            N + predict_until. Defaults to 10.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to
