@@ -17,49 +17,36 @@ from autokeras.hypermodel import hyperblock
 # [classA, (classB, ['method1', 'method2', ...]), ...]
 # 4) Choose which methods to document (methods listed as qualified names):
 # [classA, (classB, [module.classB.method1, module.classB.method2, ...]), ...]
-PAGES = [
-    {
-        'page': 'auto_model.md',
-        'classes': [
-            (auto_model.AutoModel, [
-                auto_model.AutoModel.fit,
-                auto_model.AutoModel.predict,
-            ]),
-        ]
-    },
-    {
-        'page': 'graph_auto_model.md',
-        'classes': [
-            (auto_model.GraphAutoModel, [
-                auto_model.GraphAutoModel.fit,
-                auto_model.GraphAutoModel.predict,
-            ]),
-        ]
-    },
-    {
-        'page': 'block.md',
-        'classes': [hyperblock.ImageBlock,
-                    hyperblock.TextBlock,
-                    hyperblock.StructuredDataBlock,
-                    block.ResNetBlock,
-                    block.XceptionBlock,
-                    block.ConvBlock,
-                    block.RNNBlock,
-                    block.Merge],
-    },
-    {
-        'page': 'task.md',
-        'classes': [task.ImageClassifier,
-                    task.ImageRegressor,
-                    task.TextClassifier,
-                    task.TextRegressor],
-    },
-    {
-        'page': 'head.md',
-        'classes': [head.ClassificationHead,
-                    head.RegressionHead],
-    }
-]
+PAGES = {
+    'auto_model.md': [
+        auto_model.AutoModel,
+        auto_model.AutoModel.fit,
+        auto_model.AutoModel.predict,
+    ],
+    'graph_auto_model.md': [
+        'autokeras.GraphAutoModel',
+        'autokeras.GraphAutoModel.fit',
+        'autokeras.GraphAutoModel.predict',
+    ],
+    'block.md': [
+         hyperblock.ImageBlock,
+         hyperblock.TextBlock,
+         hyperblock.StructuredDataBlock,
+         block.ResNetBlock,
+         block.XceptionBlock,
+         block.ConvBlock,
+         block.RNNBlock,
+         block.Merge
+     ],
+    'task.md': [
+        task.ImageClassifier,
+        task.ImageRegressor,
+        task.TextClassifier,
+        task.TextRegressor
+    ],
+    'head.md': [head.ClassificationHead, head.RegressionHead]
+}
+
 
 ROOT = 'http://autokeras.com/'
 
