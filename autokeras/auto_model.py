@@ -123,16 +123,9 @@ class AutoModel(object):
         self._meta_build(dataset)
 
         # Build the hypermodel in tuner init.
-        hp = kerastuner.HyperParameters()
-        preprocess_graph, keras_graph = self.hyper_graph.build_graphs(hp)
-        preprocess_graph.preprocess(
-            dataset=dataset,
-            validation_data=validation_data,
-            fit=True)
         self.tuner = tuner_module.get_tuner_class(self.tuner)(
             hyper_graph=self.hyper_graph,
             fit_on_val_data=self._split_dataset,
-            hypermodel=keras_graph,
             objective=self.objective,
             max_trials=self.max_trials,
             directory=self.directory,

@@ -207,7 +207,7 @@ class RegressionHead(base.Head):
 
     def __init__(self,
                  output_dim=None,
-                 loss=None,
+                 loss='mean_squared_error',
                  metrics=None,
                  dropout_rate=None,
                  **kwargs):
@@ -217,8 +217,7 @@ class RegressionHead(base.Head):
         self.output_dim = output_dim
         if not self.metrics:
             self.metrics = ['mean_squared_error']
-        if not self.loss:
-            self.loss = 'mean_squared_error'
+        self.loss = loss
         self.dropout_rate = dropout_rate
 
     def get_state(self):

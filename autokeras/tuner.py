@@ -5,6 +5,8 @@ import os
 import kerastuner
 import tensorflow as tf
 
+from autokeras.hypermodel import graph
+
 
 class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     """A Tuner class based on KerasTuner for AutoKeras.
@@ -171,16 +173,140 @@ class HyperBand(AutoTuner, kerastuner.Hyperband):
     pass
 
 
-class ImageClassifierOracle(kerastuner.Oracle):
+class GreedyRandomOracle(kerastuner.Oracle):
+    """An oracle combining random search and greedy algorithm.
 
-    def __init__(self, *args, **kwargs):
-        raise NotImplementedError
+    It groups the HyperParameters into several categories, namely, HyperGraph,
+    Preprocessor, Architecture, and Optimization. The oracle tunes each group
+    separately using random search. Uses union the best HyperParameters for
+    each group as the overall best HyperParameters.
+
+    # Arguments
+        hyper_graph: HyperGraph. The hyper_graph model to be tuned.
+    """
+
+    HYPER = 'HYPER'
+    PREPROCESS = 'PREPROCESS'
+    OPT = 'OPT'
+    ARCH = 'ARCH'
+    STAGES = [HYPER, PREPROCESS, OPT, ARCH]
+    NEXT_STAGE = {STAGES[i]: STAGES[i + 1] for i in len(STAGES) - 1}
+
+    def __init__(self, hyper_graph, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.hyper_graph = hyper_graph
+        # Start from tuning the hyper block hps.
+        self._stage = GreedyRandomOracle.HYPER
+        # Sets of HyperParameter names.
+        self._hp_names = {
+            GreedyRandomOracle.HYPER: set(),
+            GreedyRandomOracle.PREPROCESS: set(),
+            GreedyRandomOracle.OPT: set(),
+            GreedyRandomOracle.ARCH: set(),
+        }
+        self._trial_id_to_stage = {}
+        # Use 10% of max_trials to tune each category except architecture_hps.
+        # Use the rest quota to tune the architecture_hps.
+        trial_each = max(0.1 * self.max_trials, 1)
+        self._end_stage[GreedyRandomOracle.HYPER] = trial_each
+        self._end_stage[GreedyRandomOracle.PREPROCESS] = trial_each * 2
+        self._end_stage[GreedyRandomOracle.OPT] = trial_each * 3
+        self._end_stage[GreedyRandomOracle.ARCH] = self.max_trials
+
+    def set_state(self, state):
+        super().set_state(state)
+        self.hyper_graph.set_state(state['hyper_graph'])
+
+    def get_state(self):
+        state = super().get_state()
+        state.update({'hyper_graph': self.hyper_graph.get_state()})
+        return state
+
+    def update_space(self, hyperparameters):
+        # Get the block names.
+        preprocess_graph, keras_graph = self.hyper_graph.build_graphs(
+            hyperparameters)
+
+        # Add the new Hyperparameters to different categories.
+        ref_names = {hp.name for hp in self.hyperparameters.space}
+        for hp in hyperparameters.space:
+            if hp.name not in ref_names:
+                hp_type = None
+                if any([hp.name.startswith(block.name)
+                        for block in self.hyper_graph.blocks
+                        if isinstance(block, graph.HyperGraph)]):
+                    hp_type = GreedyRandomOracle.HYPER
+                elif any([hp.name.startswith(block.name)
+                          for block in preprocess_graph.blocks]):
+                    hp_type = GreedyRandomOracle.PREPROCESS
+                elif any([hp.name.startswith(block.name)
+                          for block in keras_graph.blocks]):
+                    hp_type = GreedyRandomOracle.ARCH
+                else:
+                    hp_type = GreedyRandomOracle.OPT
+                self._hp_names[hp_type].add(hp.name)
+
+        super().update_space(hyperparameters)
+
+    def _populate_space(self, trial_id):
+        # TODO: handle reach max collision.
+        new_values = self._random_sample(self._hp_names[self._stage])
+        self._trial_id_to_stage[trial_id] = self._stage
+        # Update the stage.
+        if len(self.trials) == self._end_stage[self._stage]:
+            self._stage = GreedyRandomOracle.NEXT_STAGE[self._stage]
+
+        # Find the best hps in history.
+        values = self._get_best_values()
+        values.update(new_values)
+        return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
+                'values': values}
+
+    def _get_best_values(self):
+        values = {p.name: p.default for p in self.hyperparameters.space}
+        best_score = {}
+        for trial in self.trials.values():
+            if trial.status != "COMPLETED":
+                continue
+            stage = self._trial_id_to_stage[trial.trial_id]
+            trial_values = trial.hyperparameters.values
+            score = trial.score
+            if self.objective.direction == 'max':
+                score = -score
+            if stage not in best_score or best_score[stage] > score:
+                best_score[stage] = score
+                for key in self._hp_names[stage]:
+                    if key in trial_values:
+                        values[key] = trial_values
+        return values
+
+    def _random_sample(self, names):
+        collisions = 0
+        while 1:
+            # Generate a set of random values.
+            values = {}
+            for p in self.hyperparameters.space:
+                if p.name in names:
+                    values[p.name] = p.random_sample(self._seed_state)
+                    self._seed_state += 1
+            # Keep trying until the set of values is unique,
+            # or until we exit due to too many collisions.
+            values_hash = self._compute_values_hash(values)
+            if values_hash in self._tried_so_far:
+                collisions += 1
+                if collisions > self._max_collisions:
+                    break
+                continue
+            self._tried_so_far.add(values_hash)
+            break
+        return values
 
 
-class ImageClassifierTuner(AutoTuner):
+class GreedyRandom(AutoTuner):
 
     def __init__(self,
-                 hypermodel,
+                 hyper_graph,
+                 fit_on_val_data,
                  objective,
                  max_trials,
                  seed=None,
@@ -189,22 +315,33 @@ class ImageClassifierTuner(AutoTuner):
                  allow_new_entries=True,
                  **kwargs):
         self.seed = seed
-        oracle = ImageClassifierOracle(
+        oracle = GreedyRandomOracle(
+            hyper_graph=hyper_graph,
             objective=objective,
             max_trials=max_trials,
             seed=seed,
             hyperparameters=hyperparameters,
             tune_new_entries=tune_new_entries,
             allow_new_entries=allow_new_entries)
+        hp = oracle.get_space()
+        preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
+        oracle.update_space(hp)
         super().__init__(
-            oracle,
-            hypermodel,
+            hyper_graph=hyper_graph,
+            fit_on_val_data=fit_on_val_data,
+            oracle=oracle,
+            hypermodel=keras_graph,
             **kwargs)
 
 
 TUNER_CLASSES = {
     'random_search': RandomSearch,
-    'image_classifier': ImageClassifierTuner,
+    'image_classifier': GreedyRandom,
+    'image_regressor': GreedyRandom,
+    'text_classifier': GreedyRandom,
+    'text_regressor': GreedyRandom,
+    'structured_data_classifier': GreedyRandom,
+    'structured_data_regressor': GreedyRandom,
 }
 
 

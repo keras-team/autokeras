@@ -26,7 +26,7 @@ class Graph(kerastuner.engine.stateful.Stateful):
         self.outputs = nest.flatten(outputs)
         self._node_to_id = {}
         self._nodes = []
-        self._blocks = []
+        self.blocks = []
         self._block_to_id = {}
         self._build_network()
         self.override_hps = override_hps or []
@@ -38,7 +38,7 @@ class Graph(kerastuner.engine.stateful.Stateful):
             func: A dictionary. The keys are the block classes. The values are
                 corresponding compile functions.
         """
-        for block in self._blocks:
+        for block in self.blocks:
             if block.__class__ in func:
                 func[block.__class__](block)
 
@@ -87,7 +87,7 @@ class Graph(kerastuner.engine.stateful.Stateful):
                 block for block in node.in_blocks if block in blocks])
 
         # Add the blocks in topological order.
-        self._blocks = []
+        self.blocks = []
         self._block_to_id = {}
         while len(blocks) != 0:
             new_added = []
@@ -139,32 +139,34 @@ class Graph(kerastuner.engine.stateful.Stateful):
         in_stack_nodes.remove(input_node)
 
     def _add_block(self, block):
-        if block not in self._blocks:
-            block_id = len(self._blocks)
+        if block not in self.blocks:
+            block_id = len(self.blocks)
             self._block_to_id[block] = block_id
-            self._blocks.append(block)
+            self.blocks.append(block)
 
     def _add_node(self, input_node):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
 
     def _get_block(self, name):
-        for block in self._blocks:
+        for block in self.blocks:
             if block.name == name:
                 return block
         raise ValueError('Cannot find block named {name}.'.format(name=name))
 
     def get_state(self):
+        # TODO: Include everything including the graph structure.
         block_state = {str(block_id): block.get_state()
-                       for block_id, block in enumerate(self._blocks)}
+                       for block_id, block in enumerate(self.blocks)}
         node_state = {str(node_id): node.get_state()
                       for node_id, node in enumerate(self._nodes)}
         return {'blocks': block_state, 'nodes': node_state}
 
     def set_state(self, state):
+        # TODO: Include everything including the graph structure.
         block_state = state['blocks']
         node_state = state['nodes']
-        for block_id, block in enumerate(self._blocks):
+        for block_id, block in enumerate(self.blocks):
             block.set_state(block_state[str(block_id)])
         for node_id, node in enumerate(self._nodes):
             node.set_state(node_state[str(node_id)])
@@ -242,7 +244,7 @@ class KerasGraph(Graph, kerastuner.HyperModel):
         for input_node in self.inputs:
             node_id = self._node_to_id[input_node]
             real_nodes[node_id] = input_node.build()
-        for block in self._blocks:
+        for block in self.blocks:
             if isinstance(block, base.Preprocessor):
                 continue
             temp_inputs = [real_nodes[self._node_to_id[input_node]]
@@ -327,7 +329,7 @@ class PreprocessGraph(Graph):
             blocks = []
             for node_id in input_node_ids:
                 for block in self._nodes[node_id].out_blocks:
-                    if block in self._blocks:
+                    if block in self.blocks:
                         blocks.append(block)
             if fit:
                 # Iterate the dataset to fit the preprocessors in current depth.
@@ -408,7 +410,7 @@ class PreprocessGraph(Graph):
         """
         super().build(hp)
         self.compile(compiler.BEFORE)
-        for block in self._blocks:
+        for block in self.blocks:
             block.build(hp)
 
 
@@ -447,7 +449,7 @@ class HyperGraph(Graph):
             input_node = copy(old_input_node)
             inputs.append(input_node)
             old_node_to_new[old_input_node] = input_node
-        for old_block in self._blocks:
+        for old_block in self.blocks:
             inputs = [old_node_to_new[input_node]
                       for input_node in old_block.inputs]
             if isinstance(old_block, base.HyperBlock):
