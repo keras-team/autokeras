@@ -50,3 +50,7 @@ def test_search(_, _1, _2, tmp_dir):
                  y=mock.Mock(),
                  validation_data=[mock.Mock()],
                  epochs=5)
+
+
+def test_greedy_random_oracle():
+    assert False
