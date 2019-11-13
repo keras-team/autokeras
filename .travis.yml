@@ -24,7 +24,7 @@ jobs:
         - pip install git+https://github.com/keras-team/keras-tuner.git@1.0rc0
         - pip install mkdocs
         - pip install mkdocs-material
-        - pip install git+https://github.com/keras-team/keras-autodoc.git@v0.3.0
+        - pip install keras-autodoc==0.4.0
         - sh shell/docs.sh
       deploy:
         - provider: pages
