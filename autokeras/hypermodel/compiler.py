@@ -15,8 +15,8 @@ from autokeras.hypermodel import node as node_module
 from autokeras.hypermodel import preprocessor as preprocessor_module
 
 
-def embedding_max_features(embedding_block):
-    """Fetch the max_features value for embedding block from TextToIntSequence."""
+def retrieve_info_for_embedding(embedding_block):
+    """Fetch the max_features value and word-index dict for embedding block from TextToIntSequence."""
     if embedding_block.max_features:
         return
     input_node = embedding_block.inputs[0]
@@ -28,6 +28,7 @@ def embedding_max_features(embedding_block):
         block = input_node.in_blocks[0]
         if isinstance(block, preprocessor_module.TextToIntSequence):
             embedding_block.max_features = block.max_features
+            embedding_block.word_index = block.tokenizer.word_index
             return
         input_node = block.inputs[0]
 
@@ -106,7 +107,7 @@ BEFORE = {
 
 # Compile the graph after the preprocessing step.
 AFTER = {
-    block_module.EmbeddingBlock: embedding_max_features,
+    block_module.EmbeddingBlock: retrieve_info_for_embedding,
 }
 
 # Compile the HyperGraph.

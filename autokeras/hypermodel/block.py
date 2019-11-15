@@ -2,9 +2,13 @@ import tensorflow as tf
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
 from tensorflow.python.util import nest
+import os
+import numpy as np
+from keras.utils.data_utils import get_file
 
 from autokeras import utils
 from autokeras.hypermodel import base
+from autokeras.const import Constant
 
 
 def set_hp_value(hp, name, value):
@@ -546,12 +550,14 @@ class EmbeddingBlock(base.Block):
                  pretraining=None,
                  embedding_dim=None,
                  dropout_rate=None,
+                 word_index=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.max_features = max_features
         self.pretraining = pretraining
         self.embedding_dim = embedding_dim
         self.dropout_rate = dropout_rate
+        self.word_index = word_index
 
     def get_state(self):
         state = super().get_state()
@@ -566,28 +572,59 @@ class EmbeddingBlock(base.Block):
         self.max_features = state['max_features']
         self.pretraining = state['pretraining']
         self.embedding_dim = state['embedding_dim']
+    
+    @staticmethod
+    def _load_embedding_index(filename, has_header):
+        embedding_index = {}
+        f = open(filename)
+        if has_header:
+            num_words_pretrained, dim = map(int, f.readline().split())
+        for line in f:
+            values = line.split()
+            word = values[0]
+            vector = np.asarray(values[1:], dtype='float32')
+            embedding_index[word] = vector
+        f.close()
+        return embedding_index
+
+    def _build_embedding_matrix(self, pretraining_type):
+        filename = Constant.EMDEDDING_PRETRAINING[pretraining_type]['FILE_NAME']
+        origin = Constant.EMDEDDING_PRETRAINING[pretraining_type]['URL']
+        need_extract = Constant.EMDEDDING_PRETRAINING[pretraining_type]['EXTRACT']
+        full_fn = get_file(filename, origin=origin, extract=need_extract)
+        has_header = Constant.EMDEDDING_PRETRAINING[pretraining_type]['HAS_HEADER']
+        embedding_index = EmbeddingBlock._load_embedding_index(full_fn, has_header)
+        
+        num_unique_words = len(self.word_index) + 1
+        embedding_matrix = np.zeros((num_unique_words, self.embedding_dim))
+        for word, i in self.word_index.items():
+            embedding_vector = embedding_index.get(word)
+            if embedding_vector is not None:
+                # words not found in embedding index will be all-zeros.
+                embedding_matrix[i] = embedding_vector
+        return embedding_matrix
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
-        # TODO: support more pretrained embedding layers.
-        # glove, fasttext, and word2vec
         pretraining = self.pretraining or hp.Choice(
             'pretraining',
             ['random', 'glove', 'fasttext', 'word2vec', 'none'],
             default='none')
-        embedding_dim = self.embedding_dim or hp.Choice(
-            'embedding_dim',
-            [32, 64, 128, 256, 512],
-            default=128)
-        if pretraining != 'none':
-            # TODO: load from pretrained weights
+
+        if pretraining in ['glove', 'fasttext', 'word2vec']:
+            self.embedding_dim = Constant.EMDEDDING_PRETRAINING[pretraining]['EMBEDDING_DIM']
+            embedding_matrix = self._build_embedding_matrix(pretraining)
             layer = tf.keras.layers.Embedding(
                 input_dim=self.max_features,
-                output_dim=embedding_dim,
-                input_length=input_node.shape[1])
-            # trainable=False,
-            # weights=[embedding_matrix])
+                output_dim=self.embedding_dim,
+                input_length=input_node.shape[1],
+                trainable=False,
+                weights=[embedding_matrix])
         else:
+            embedding_dim = self.embedding_dim or hp.Choice(
+                'embedding_dim',
+                [32, 64, 128, 256, 512],
+                default=128)
             layer = tf.keras.layers.Embedding(
                 input_dim=self.max_features,
                 output_dim=embedding_dim,

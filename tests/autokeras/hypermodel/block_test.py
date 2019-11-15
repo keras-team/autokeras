@@ -2,6 +2,7 @@ from unittest import mock
 
 import kerastuner
 import pytest
+import numpy as np
 
 import autokeras as ak
 from autokeras.hypermodel import block as block_module
@@ -133,3 +134,23 @@ def test_embedding_block():
 
     assert common.name_in_hps('pretraining', hp)
     assert common.name_in_hps('embedding_dim', hp)
+
+@mock.patch('autokeras.hypermodel.block.EmbeddingBlock._load_embedding_index')
+@mock.patch('autokeras.hypermodel.block.get_file')
+def test_embedding_block_with_pretraining(get_file, load_embedding_index):
+    load_embedding_index.return_value = {'test': np.ones((100, ))}
+    get_file.return_value = ''
+    input_shape = (32,)
+    block = block_module.EmbeddingBlock(pretraining='glove')
+    block.max_features = 2
+    block.word_index = {'test': 1}
+    block.set_state(block.get_state())
+    hp = kerastuner.HyperParameters()
+
+    block.build(hp, ak.Input(shape=input_shape).build())
+
+    embedding_matrix = block._build_embedding_matrix('glove')
+    assert np.array_equal(embedding_matrix[1], np.ones((100, )))
+    assert not common.name_in_hps('pretraining', hp)
+    assert not common.name_in_hps('embedding_dim', hp)
+

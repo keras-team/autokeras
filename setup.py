@@ -21,7 +21,7 @@ setup(
         'tensorflow',
         'scikit-learn',
         'numpy',
-        'pandas',
+        'pandas>=0.24.0',
         'lightgbm',
     ],
     extras_require={
