@@ -190,7 +190,7 @@ class GreedyRandomOracle(kerastuner.Oracle):
     OPT = 'OPT'
     ARCH = 'ARCH'
     STAGES = [HYPER, PREPROCESS, OPT, ARCH]
-    NEXT_STAGE = {STAGES[i]: STAGES[i + 1] for i in len(STAGES) - 1}
+    NEXT_STAGE = {STAGES[i]: STAGES[(i + 1) % STAGES] for i in len(STAGES)}
 
     def __init__(self, hyper_graph, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -204,14 +204,15 @@ class GreedyRandomOracle(kerastuner.Oracle):
             GreedyRandomOracle.OPT: set(),
             GreedyRandomOracle.ARCH: set(),
         }
-        self._trial_id_to_stage = {}
         # Use 10% of max_trials to tune each category except architecture_hps.
         # Use the rest quota to tune the architecture_hps.
-        trial_each = max(0.1 * self.max_trials, 1)
-        self._end_stage[GreedyRandomOracle.HYPER] = trial_each
-        self._end_stage[GreedyRandomOracle.PREPROCESS] = trial_each * 2
-        self._end_stage[GreedyRandomOracle.OPT] = trial_each * 3
-        self._end_stage[GreedyRandomOracle.ARCH] = self.max_trials
+        self._capacity = {
+            GreedyRandomOracle.HYPER: 1,
+            GreedyRandomOracle.PREPROCESS: 1,
+            GreedyRandomOracle.OPT: 1,
+            GreedyRandomOracle.ARCH: 4,
+        }
+        self._stage_trial_count = 0
 
     def set_state(self, state):
         super().set_state(state)
@@ -249,56 +250,46 @@ class GreedyRandomOracle(kerastuner.Oracle):
         super().update_space(hyperparameters)
 
     def _populate_space(self, trial_id):
-        # TODO: handle reach max collision.
-        new_values = self._random_sample(self._hp_names[self._stage])
-        self._trial_id_to_stage[trial_id] = self._stage
-        # Update the stage.
-        if len(self.trials) == self._end_stage[self._stage]:
-            self._stage = GreedyRandomOracle.NEXT_STAGE[self._stage]
-
-        # Find the best hps in history.
-        values = self._get_best_values()
-        values.update(new_values)
-        return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
-                'values': values}
-
-    def _get_best_values(self):
-        values = {p.name: p.default for p in self.hyperparameters.space}
-        best_score = {}
-        for trial in self.trials.values():
-            if trial.status != "COMPLETED":
+        for _ in range(len(GreedyRandomOracle.STAGES)):
+            values = self._generate_values()
+            # Reached max collisions.
+            if values is None:
+                # Try next stage.
+                self._stage = GreedyRandomOracle.NEXT_STAGE[self._stage]
+                self._stage_trial_count = 0
                 continue
-            stage = self._trial_id_to_stage[trial.trial_id]
-            trial_values = trial.hyperparameters.values
-            score = trial.score
-            if self.objective.direction == 'max':
-                score = -score
-            if stage not in best_score or best_score[stage] > score:
-                best_score[stage] = score
-                for key in self._hp_names[stage]:
-                    if key in trial_values:
-                        values[key] = trial_values
-        return values
+            # Values found.
+            self._stage_trial_count += 1
+            if self._stage_trial_count == self._capacity[self._stage]:
+                self._stage = GreedyRandomOracle.NEXT_STAGE[self._stage]
+                self._stage_trial_count = 0
+            return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
+                    'values': values}
+        # All stages reached max collisions.
+        return {'status': kerastuner.engine.trial.TrialStatus.STOPPED,
+                'values': None}
 
-    def _random_sample(self, names):
+    def _generate_stage_values(self):
+        best_values = self.get_best_trials()[0].hyperparameters.values
         collisions = 0
         while 1:
-            # Generate a set of random values.
+            # Generate new values for the current stage.
             values = {}
             for p in self.hyperparameters.space:
-                if p.name in names:
+                if p.name in self._hp_names[self._stage]:
                     values[p.name] = p.random_sample(self._seed_state)
                     self._seed_state += 1
+            values = {**best_values, **values}
             # Keep trying until the set of values is unique,
             # or until we exit due to too many collisions.
             values_hash = self._compute_values_hash(values)
-            if values_hash in self._tried_so_far:
-                collisions += 1
-                if collisions > self._max_collisions:
-                    break
-                continue
-            self._tried_so_far.add(values_hash)
-            break
+            if values_hash not in self._tried_so_far:
+                self._tried_so_far.add(values_hash)
+                break
+            collisions += 1
+            if collisions > self._max_collisions:
+                # Reached max collisions. No value to return.
+                return None
         return values
 
 
