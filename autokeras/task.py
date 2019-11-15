@@ -355,6 +355,7 @@ class TextRegressor(SupervisedTextPipeline):
             directory=directory,
             name=name,
             objective=objective,
+            tuner='text_regressor',
             seed=seed)
 
     def fit(self,
@@ -605,6 +606,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             directory=directory,
             name=name,
             objective=objective,
+            tuner='structured_data_classifier',
             seed=seed)
 
     def fit(self,
@@ -700,6 +702,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             directory=directory,
             name=name,
             objective=objective,
+            tuner='structured_data_regressor',
             seed=seed)
 
 
