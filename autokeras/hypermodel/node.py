@@ -109,6 +109,7 @@ class StructuredDataInput(Input):
     """Input node for structured data.
 
     The input data should be numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+    The data should be two-dimensional with numerical or categorical values.
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
