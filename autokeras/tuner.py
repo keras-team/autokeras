@@ -190,7 +190,11 @@ class GreedyRandomOracle(kerastuner.Oracle):
     OPT = 'OPT'
     ARCH = 'ARCH'
     STAGES = [HYPER, PREPROCESS, OPT, ARCH]
-    NEXT_STAGE = {STAGES[i]: STAGES[(i + 1) % STAGES] for i in len(STAGES)}
+
+    @staticmethod
+    def next_stage(stage):
+        stages = GreedyRandomOracle.STAGES
+        return stages[(stages.index(stage) + 1) % len(stages)]
 
     def __init__(self, hyper_graph, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -255,13 +259,13 @@ class GreedyRandomOracle(kerastuner.Oracle):
             # Reached max collisions.
             if values is None:
                 # Try next stage.
-                self._stage = GreedyRandomOracle.NEXT_STAGE[self._stage]
+                self._stage = GreedyRandomOracle.next_stage(self._stage)
                 self._stage_trial_count = 0
                 continue
             # Values found.
             self._stage_trial_count += 1
             if self._stage_trial_count == self._capacity[self._stage]:
-                self._stage = GreedyRandomOracle.NEXT_STAGE[self._stage]
+                self._stage = GreedyRandomOracle.next_stage(self._stage)
                 self._stage_trial_count = 0
             return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
                     'values': values}
