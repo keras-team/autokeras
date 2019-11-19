@@ -1,11 +1,13 @@
 import copy
 import inspect
 import os
+import random
 
 import kerastuner
 import tensorflow as tf
 
 from autokeras.hypermodel import graph
+from autokeras.hypermodel import base
 
 
 class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
@@ -173,7 +175,7 @@ class HyperBand(AutoTuner, kerastuner.Hyperband):
     pass
 
 
-class GreedyRandomOracle(kerastuner.Oracle):
+class GreedyOracle(kerastuner.Oracle):
     """An oracle combining random search and greedy algorithm.
 
     It groups the HyperParameters into several categories, namely, HyperGraph,
@@ -183,6 +185,7 @@ class GreedyRandomOracle(kerastuner.Oracle):
 
     # Arguments
         hyper_graph: HyperGraph. The hyper_graph model to be tuned.
+        seed: Int. Random seed.
     """
 
     HYPER = 'HYPER'
@@ -193,38 +196,49 @@ class GreedyRandomOracle(kerastuner.Oracle):
 
     @staticmethod
     def next_stage(stage):
-        stages = GreedyRandomOracle.STAGES
+        stages = GreedyOracle.STAGES
         return stages[(stages.index(stage) + 1) % len(stages)]
 
-    def __init__(self, hyper_graph, *args, **kwargs):
+    def __init__(self, hyper_graph, seed=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.hyper_graph = hyper_graph
         # Start from tuning the hyper block hps.
-        self._stage = GreedyRandomOracle.HYPER
+        self._stage = GreedyOracle.HYPER
         # Sets of HyperParameter names.
         self._hp_names = {
-            GreedyRandomOracle.HYPER: set(),
-            GreedyRandomOracle.PREPROCESS: set(),
-            GreedyRandomOracle.OPT: set(),
-            GreedyRandomOracle.ARCH: set(),
+            GreedyOracle.HYPER: set(),
+            GreedyOracle.PREPROCESS: set(),
+            GreedyOracle.OPT: set(),
+            GreedyOracle.ARCH: set(),
         }
         # Use 10% of max_trials to tune each category except architecture_hps.
         # Use the rest quota to tune the architecture_hps.
         self._capacity = {
-            GreedyRandomOracle.HYPER: 1,
-            GreedyRandomOracle.PREPROCESS: 1,
-            GreedyRandomOracle.OPT: 1,
-            GreedyRandomOracle.ARCH: 4,
+            GreedyOracle.HYPER: 1,
+            GreedyOracle.PREPROCESS: 1,
+            GreedyOracle.OPT: 1,
+            GreedyOracle.ARCH: 4,
         }
         self._stage_trial_count = 0
+        self.seed = seed or random.randint(1, 1e4)
+        # Incremented at every call to `populate_space`.
+        self._seed_state = self.seed
+        self._tried_so_far = set()
+        self._max_collisions = 5
 
     def set_state(self, state):
         super().set_state(state)
         self.hyper_graph.set_state(state['hyper_graph'])
+        self._stage = state['stage']
+        self._capacity = state['capacity']
 
     def get_state(self):
         state = super().get_state()
-        state.update({'hyper_graph': self.hyper_graph.get_state()})
+        state.update({
+            'hyper_graph': self.hyper_graph.get_state(),
+            'stage': self._stage,
+            'capacity': self._capacity,
+        })
         return state
 
     def update_space(self, hyperparameters):
@@ -239,33 +253,33 @@ class GreedyRandomOracle(kerastuner.Oracle):
                 hp_type = None
                 if any([hp.name.startswith(block.name)
                         for block in self.hyper_graph.blocks
-                        if isinstance(block, graph.HyperGraph)]):
-                    hp_type = GreedyRandomOracle.HYPER
+                        if isinstance(block, base.HyperBlock)]):
+                    hp_type = GreedyOracle.HYPER
                 elif any([hp.name.startswith(block.name)
                           for block in preprocess_graph.blocks]):
-                    hp_type = GreedyRandomOracle.PREPROCESS
+                    hp_type = GreedyOracle.PREPROCESS
                 elif any([hp.name.startswith(block.name)
                           for block in keras_graph.blocks]):
-                    hp_type = GreedyRandomOracle.ARCH
+                    hp_type = GreedyOracle.ARCH
                 else:
-                    hp_type = GreedyRandomOracle.OPT
+                    hp_type = GreedyOracle.OPT
                 self._hp_names[hp_type].add(hp.name)
 
         super().update_space(hyperparameters)
 
     def _populate_space(self, trial_id):
-        for _ in range(len(GreedyRandomOracle.STAGES)):
-            values = self._generate_values()
+        for _ in range(len(GreedyOracle.STAGES)):
+            values = self._generate_stage_values()
             # Reached max collisions.
             if values is None:
                 # Try next stage.
-                self._stage = GreedyRandomOracle.next_stage(self._stage)
+                self._stage = GreedyOracle.next_stage(self._stage)
                 self._stage_trial_count = 0
                 continue
             # Values found.
             self._stage_trial_count += 1
             if self._stage_trial_count == self._capacity[self._stage]:
-                self._stage = GreedyRandomOracle.next_stage(self._stage)
+                self._stage = GreedyOracle.next_stage(self._stage)
                 self._stage_trial_count = 0
             return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
                     'values': values}
@@ -297,7 +311,7 @@ class GreedyRandomOracle(kerastuner.Oracle):
         return values
 
 
-class GreedyRandom(AutoTuner):
+class Greedy(AutoTuner):
 
     def __init__(self,
                  hyper_graph,
@@ -310,7 +324,7 @@ class GreedyRandom(AutoTuner):
                  allow_new_entries=True,
                  **kwargs):
         self.seed = seed
-        oracle = GreedyRandomOracle(
+        oracle = GreedyOracle(
             hyper_graph=hyper_graph,
             objective=objective,
             max_trials=max_trials,
@@ -331,12 +345,12 @@ class GreedyRandom(AutoTuner):
 
 TUNER_CLASSES = {
     'random_search': RandomSearch,
-    'image_classifier': GreedyRandom,
-    'image_regressor': GreedyRandom,
-    'text_classifier': GreedyRandom,
-    'text_regressor': GreedyRandom,
-    'structured_data_classifier': GreedyRandom,
-    'structured_data_regressor': GreedyRandom,
+    'image_classifier': Greedy,
+    'image_regressor': Greedy,
+    'text_classifier': Greedy,
+    'text_regressor': Greedy,
+    'structured_data_classifier': Greedy,
+    'structured_data_regressor': Greedy,
 }
 
 

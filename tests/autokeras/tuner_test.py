@@ -1,8 +1,10 @@
 from unittest import mock
 
+import kerastuner
 import pytest
 import tensorflow as tf
 
+import autokeras as ak
 from autokeras import tuner as tuner_module
 from tests import common
 
@@ -52,5 +54,49 @@ def test_search(_, _1, _2, tmp_dir):
                  epochs=5)
 
 
-def test_greedy_random_oracle():
-    assert False
+def build_hyper_graph():
+    image_input = ak.ImageInput(shape=(32, 32, 3))
+    merged_outputs = ak.ImageBlock()(image_input)
+    head = ak.ClassificationHead(num_classes=10)
+    head.output_shape = (10,)
+    classification_outputs = head(merged_outputs)
+    return ak.hypermodel.graph.HyperGraph(
+        inputs=image_input,
+        outputs=classification_outputs)
+
+
+def test_random_oracle_state():
+    hyper_graph = build_hyper_graph()
+    oracle = tuner_module.GreedyOracle(
+        hyper_graph=hyper_graph,
+        objective='val_loss',
+    )
+    oracle.set_state(oracle.get_state())
+    assert oracle.hyper_graph is hyper_graph
+
+
+@mock.patch('autokeras.tuner.GreedyOracle.get_best_trials')
+def test_random_oracle(fn):
+    hyper_graph = build_hyper_graph()
+    oracle = tuner_module.GreedyOracle(
+        hyper_graph=hyper_graph,
+        objective='val_loss',
+    )
+    hp = kerastuner.HyperParameters()
+    preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
+    preprocess_graph.build(hp)
+    keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
+    keras_graph.build(hp)
+    trial = mock.Mock()
+    trial.hyperparameters = hp
+    fn.return_value = [trial]
+
+    oracle.update_space(hp)
+    for i in range(100):
+        oracle._populate_space(str(i))
+
+    assert 'optimizer' in oracle._hp_names[tuner_module.GreedyOracle.OPT]
+    assert 'classification_head_2/dropout_rate' in oracle._hp_names[
+        tuner_module.GreedyOracle.ARCH]
+    assert 'image_block_2/block_type' in oracle._hp_names[
+        tuner_module.GreedyOracle.HYPER]
