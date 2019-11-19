@@ -12,7 +12,8 @@ def test_type_error_for_call():
     block = block_module.ConvBlock()
     with pytest.raises(TypeError) as info:
         block(block)
-    assert 'Expect the inputs to layer' in str(info.value)
+    if 'Expect the inputs to layer' not in str(info.value):
+        raise AssertionError()
 
 
 @mock.patch('autokeras.hypermodel.block.resnet.HyperResNet.__init__')
@@ -25,10 +26,9 @@ def test_resnet_block(init, build):
 
     block.build(hp, ak.Input(shape=input_shape).build())
 
-    assert common.name_in_hps('version', hp)
-    assert common.name_in_hps('pooling', hp)
-    assert init.called
-    assert build.called
+    if not (common.name_in_hps('version', hp) and common.name_in_hps('pooling', hp)
+            and init.called and build.called):
+        raise AssertionError()
 
 
 @mock.patch('autokeras.hypermodel.block.xception.HyperXception.__init__')
@@ -41,12 +41,11 @@ def test_xception_block(init, build):
 
     block.build(hp, ak.Input(shape=input_shape).build())
 
-    assert common.name_in_hps('activation', hp)
-    assert common.name_in_hps('initial_strides', hp)
-    assert common.name_in_hps('num_residual_blocks', hp)
-    assert common.name_in_hps('pooling', hp)
-    assert init.called
-    assert build.called
+    if not (common.name_in_hps('activation', hp) and
+            common.name_in_hps('initial_strides', hp) and
+            common.name_in_hps('num_residual_blocks', hp) and
+            common.name_in_hps('pooling', hp) and init.called and build.called):
+        raise AssertionError()
 
 
 def test_conv_block():
@@ -57,9 +56,10 @@ def test_conv_block():
 
     block.build(hp, ak.Input(shape=input_shape).build())
 
-    assert common.name_in_hps('kernel_size', hp)
-    assert common.name_in_hps('num_blocks', hp)
-    assert common.name_in_hps('separable', hp)
+    if not (common.name_in_hps('kernel_size', hp) and
+            common.name_in_hps('num_blocks', hp) and
+            common.name_in_hps('separable', hp)):
+        raise AssertionError()
 
 
 def test_rnn_block():
@@ -70,9 +70,10 @@ def test_rnn_block():
 
     block.build(hp, ak.Input(shape=input_shape).build())
 
-    assert common.name_in_hps('bidirectional', hp)
-    assert common.name_in_hps('layer_type', hp)
-    assert common.name_in_hps('num_layers', hp)
+    if not (common.name_in_hps('bidirectional', hp) and
+            common.name_in_hps('layer_type', hp) and
+            common.name_in_hps('num_layers', hp)):
+        raise AssertionError()
 
 
 def test_dense_block():
@@ -83,8 +84,9 @@ def test_dense_block():
 
     block.build(hp, ak.Input(shape=input_shape).build())
 
-    assert common.name_in_hps('num_layers', hp)
-    assert common.name_in_hps('use_batchnorm', hp)
+    if not (common.name_in_hps('num_layers', hp) and
+            common.name_in_hps('use_batchnorm', hp)):
+        raise AssertionError()
 
 
 def test_merge():
@@ -97,7 +99,8 @@ def test_merge():
     block.build(hp, [ak.Input(shape=input_shape_1).build(),
                      ak.Input(shape=input_shape_2).build()])
 
-    assert common.name_in_hps('merge_type', hp)
+    if not common.name_in_hps('merge_type', hp):
+        raise AssertionError()
 
 
 def test_temporal_reduction():
@@ -108,7 +111,8 @@ def test_temporal_reduction():
 
     block.build(hp, ak.Input(shape=input_shape).build())
 
-    assert common.name_in_hps('reduction_type', hp)
+    if not common.name_in_hps('reduction_type', hp):
+        raise AssertionError()
 
 
 def test_spatial_reduction():
@@ -119,7 +123,8 @@ def test_spatial_reduction():
 
     block.build(hp, ak.Input(shape=input_shape).build())
 
-    assert common.name_in_hps('reduction_type', hp)
+    if not common.name_in_hps('reduction_type', hp):
+        raise AssertionError()
 
 
 def test_embedding_block():
@@ -131,5 +136,6 @@ def test_embedding_block():
 
     block.build(hp, ak.Input(shape=input_shape).build())
 
-    assert common.name_in_hps('pretraining', hp)
-    assert common.name_in_hps('embedding_dim', hp)
+    if not (common.name_in_hps('pretraining', hp) and
+            common.name_in_hps('embedding_dim', hp)):
+        raise AssertionError()

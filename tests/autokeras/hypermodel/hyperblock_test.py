@@ -12,9 +12,10 @@ def test_image_block():
 
     block.build(hp, ak.Input())
 
-    assert common.name_in_hps('block_type', hp)
-    assert common.name_in_hps('normalize', hp)
-    assert common.name_in_hps('augment', hp)
+    if not (common.name_in_hps('block_type', hp) and
+            common.name_in_hps('normalize', hp) and
+            common.name_in_hps('augment', hp)):
+        raise AssertionError()
 
 
 def test_text_block():
@@ -24,7 +25,8 @@ def test_text_block():
 
     block.build(hp, ak.TextInput())
 
-    assert common.name_in_hps('vectorizer', hp)
+    if not common.name_in_hps('vectorizer', hp):
+        raise AssertionError()
 
 
 def test_structured_data_block():
@@ -35,4 +37,5 @@ def test_structured_data_block():
 
     block.build(hp, ak.Input())
 
-    assert common.name_in_hps('module_type', hp)
+    if not common.name_in_hps('module_type', hp):
+        raise AssertionError()

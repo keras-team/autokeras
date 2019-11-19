@@ -12,7 +12,8 @@ def test_y_is_pd_series():
     (x, y), (val_x, val_y) = common.dataframe_series()
     head = head_module.ClassificationHead()
     head.fit_transform(y)
-    assert isinstance(head.transform(y), tf.data.Dataset)
+    if not isinstance(head.transform(y), tf.data.Dataset):
+        raise AssertionError()
 
 
 def test_unsupported_types():
@@ -20,7 +21,8 @@ def test_unsupported_types():
     head = head_module.ClassificationHead(name='a')
     with pytest.raises(TypeError) as info:
         head.fit_transform(y)
-    assert 'Expect the target data' in str(info.value)
+    if 'Expect the target data' not in str(info.value):
+        raise AssertionError()
 
 
 def test_one_class():
@@ -28,7 +30,8 @@ def test_one_class():
     head = head_module.ClassificationHead(name='a')
     with pytest.raises(ValueError) as info:
         head.fit_transform(y)
-    assert 'Expect the target data' in str(info.value)
+    if 'Expect the target data' not in str(info.value):
+        raise AssertionError()
 
 
 def test_two_classes():
@@ -37,11 +40,13 @@ def test_two_classes():
     head.fit_transform(y)
     head.output_shape = (1,)
     head.build(kerastuner.HyperParameters(), node_module.Input(shape=(32,)).build())
-    assert head.loss == 'binary_crossentropy'
+    if head.loss != 'binary_crossentropy':
+        raise AssertionError()
 
 
 def test_three_classes():
     y = np.array(['a', 'a', 'c', 'b'])
     head = head_module.ClassificationHead(name='a')
     head.fit_transform(y)
-    assert head.loss == 'categorical_crossentropy'
+    if head.loss != 'categorical_crossentropy':
+        raise AssertionError()

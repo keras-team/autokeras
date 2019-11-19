@@ -17,25 +17,29 @@ def tmp_dir(tmpdir_factory):
 @mock.patch('autokeras.auto_model.AutoModel.__init__')
 def test_image_classifier(auto_model):
     task.ImageClassifier(directory=tmp_dir, max_trials=2, seed=common.SEED)
-    assert auto_model.called
+    if not auto_model.called:
+        raise AssertionError()
 
 
 @mock.patch('autokeras.auto_model.AutoModel.__init__')
 def test_image_regressor(auto_model):
     task.ImageRegressor(directory=tmp_dir, max_trials=2, seed=common.SEED)
-    assert auto_model.called
+    if not auto_model.called:
+        raise AssertionError()
 
 
 @mock.patch('autokeras.auto_model.AutoModel.__init__')
 def test_text_classifier(auto_model):
     task.TextClassifier(directory=tmp_dir, max_trials=2, seed=common.SEED)
-    assert auto_model.called
+    if not auto_model.called:
+        raise AssertionError()
 
 
 @mock.patch('autokeras.auto_model.AutoModel.__init__')
 def test_text_regressor(auto_model):
     task.TextRegressor(directory=tmp_dir, max_trials=2, seed=common.SEED)
-    assert auto_model.called
+    if not auto_model.called:
+        raise AssertionError()
 
 
 def test_structured_data_unknown_str_in_col_type(tmp_dir):
@@ -45,7 +49,8 @@ def test_structured_data_unknown_str_in_col_type(tmp_dir):
             directory=tmp_dir,
             max_trials=1,
             seed=common.SEED)
-    assert 'Column_types should be either "categorical"' in str(info.value)
+    if 'Column_types should be either "categorical"' not in str(info.value):
+        raise AssertionError()
 
 
 def test_structured_data_col_name_type_mismatch(tmp_dir):
@@ -56,7 +61,8 @@ def test_structured_data_col_name_type_mismatch(tmp_dir):
             directory=tmp_dir,
             max_trials=1,
             seed=common.SEED)
-    assert 'Column_names and column_types are mismatched.' in str(info.value)
+    if 'Column_names and column_types are mismatched.' not in str(info.value):
+        raise AssertionError()
 
 
 @mock.patch('autokeras.auto_model.AutoModel.fit')
@@ -73,8 +79,8 @@ def test_structured_classifier(init, fit):
         seed=common.SEED)
     clf.fit(train_x, train_y, epochs=2, validation_data=(train_x, train_y))
 
-    assert init.called
-    assert fit.called
+    if not(init.called and fit.called):
+        raise AssertionError()
 
 
 @mock.patch('autokeras.auto_model.AutoModel.fit')
@@ -91,8 +97,8 @@ def test_structured_regressor(init, fit):
         seed=common.SEED)
     clf.fit(train_x, train_y, epochs=2, validation_data=(train_x, train_y))
 
-    assert init.called
-    assert fit.called
+    if not (init.called and fit.called):
+        raise AssertionError()
 
 
 @mock.patch('autokeras.auto_model.AutoModel.fit')
@@ -105,7 +111,9 @@ def test_structured_data_classifier_from_csv(init, fit):
     clf.fit(x=common.TRAIN_FILE_PATH, y='survived', epochs=2,
             validation_data=(common.TEST_FILE_PATH, 'survived'))
 
-    assert init.called
+    if not init.called:
+        raise AssertionError()
     _, kwargs = fit.call_args_list[0]
-    assert isinstance(kwargs['x'], pandas.DataFrame)
-    assert isinstance(kwargs['y'], np.ndarray)
+    if not (isinstance(kwargs['x'], pandas.DataFrame) and
+            isinstance(kwargs['y'], np.ndarray)):
+        raise AssertionError()

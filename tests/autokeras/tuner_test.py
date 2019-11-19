@@ -23,8 +23,9 @@ def test_add_early_stopping(tmp_dir):
 
     callbacks = tuner._inject_callbacks([], mock.Mock())
 
-    assert any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                for callback in callbacks])
+    if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+                for callback in callbacks]):
+        raise AssertionError()
 
 
 @mock.patch('autokeras.tuner.RandomSearch._prepare_run')

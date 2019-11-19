@@ -14,7 +14,8 @@ def test_text_assembler():
     dataset = tf.data.Dataset.from_tensor_slices(texts)
     for x in dataset:
         assembler.update(x)
-    assert assembler.sw_ratio() == 0.5
+    if assembler.sw_ratio() != 0.5:
+        raise AssertionError()
 
 
 def test_structured_data_assembler():
@@ -26,4 +27,5 @@ def test_structured_data_assembler():
 
     input_node = node.StructuredDataInput()
     assembler.assemble(input_node)
-    assert isinstance(input_node.out_blocks[0], ak.StructuredDataBlock)
+    if not isinstance(input_node.out_blocks[0], ak.StructuredDataBlock):
+        raise AssertionError()

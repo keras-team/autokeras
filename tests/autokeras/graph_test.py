@@ -26,10 +26,10 @@ def test_set_hp():
 
     for single_hp in hp.space:
         if single_hp.name == 'dense_block_1/num_layers':
-            assert len(single_hp.values) == 1
-            assert single_hp.values[0] == 6
+            if not (len(single_hp.values) == 1 and single_hp.values[0] == 6):
+                raise AssertionError()
             return
-    assert False
+    raise AssertionError()
 
 
 def test_input_output_disconnect():
@@ -44,7 +44,8 @@ def test_input_output_disconnect():
 
     with pytest.raises(ValueError) as info:
         graph_module.HyperGraph(input_node1, output_node)
-    assert 'Inputs and outputs not connected.' in str(info.value)
+    if 'Inputs and outputs not connected.' not in str(info.value):
+        raise AssertionError()
 
 
 def test_hyper_graph_cycle():
@@ -59,7 +60,8 @@ def test_hyper_graph_cycle():
 
     with pytest.raises(ValueError) as info:
         graph_module.HyperGraph([input_node1, input_node2], output_node)
-    assert 'The network has a cycle.' in str(info.value)
+    if 'The network has a cycle.' not in str(info.value):
+        raise AssertionError()
 
 
 def test_input_missing():
@@ -72,7 +74,8 @@ def test_input_missing():
 
     with pytest.raises(ValueError) as info:
         graph_module.HyperGraph(input_node1, output_node)
-    assert 'A required input is missing for HyperModel' in str(info.value)
+    if 'A required input is missing for HyperModel' not in str(info.value):
+        raise AssertionError()
 
 
 def test_graph_basics():
@@ -83,8 +86,8 @@ def test_graph_basics():
 
     graph = graph_module.PlainGraph(input_node, output_node)
     model = graph.build_keras_graph().build(kerastuner.HyperParameters())
-    assert model.input_shape == (None, 30)
-    assert model.output_shape == (None, 1)
+    if not (model.input_shape == (None, 30) and model.output_shape == (None, 1)):
+        raise AssertionError()
 
 
 def test_merge():
@@ -98,8 +101,9 @@ def test_merge():
     graph = graph_module.PlainGraph([input_node1, input_node2],
                                     output_node)
     model = graph.build_keras_graph().build(kerastuner.HyperParameters())
-    assert model.input_shape == [(None, 30), (None, 40)]
-    assert model.output_shape == (None, 1)
+    if not (model.input_shape == [(None, 30), (None, 40)] and
+            model.output_shape == (None, 1)):
+        raise AssertionError()
 
 
 def test_preprocessing():

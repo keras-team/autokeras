@@ -48,7 +48,8 @@ def test_normalize():
                                    dataset,
                                    common.generate_data(dtype='dataset'),
                                    dtype=tf.float32)
-    assert isinstance(new_dataset, tf.data.Dataset)
+    if not isinstance(new_dataset, tf.data.Dataset):
+        raise AssertionError()
 
 
 def test_sequence():
@@ -61,9 +62,11 @@ def test_sequence():
         dataset,
         common.generate_data(dtype='dataset'),
         tf.int64)
-    assert isinstance(new_dataset, tf.data.Dataset)
+    if not isinstance(new_dataset, tf.data.Dataset):
+        raise AssertionError()
     for (x,) in new_dataset:
-        assert x.shape == (6,)
+        if x.shape != (6,):
+            raise AssertionError()
         break
 
 
@@ -77,7 +80,8 @@ def test_ngram():
         dataset,
         common.generate_data(dtype='dataset'),
         tf.float32)
-    assert isinstance(new_dataset, tf.data.Dataset)
+    if not isinstance(new_dataset, tf.data.Dataset):
+        raise AssertionError()
 
 
 def test_augment():
@@ -87,7 +91,8 @@ def test_augment():
         dataset,
         common.generate_data(dtype='dataset'),
         tf.float32)
-    assert isinstance(new_dataset, tf.data.Dataset)
+    if not isinstance(new_dataset, tf.data.Dataset):
+        raise AssertionError()
 
 
 def test_feature_engineering(tmp_dir):
@@ -100,7 +105,8 @@ def test_feature_engineering(tmp_dir):
                                    common.generate_data(dtype='dataset'),
                                    tf.float32,
                                    tmp_dir)
-    assert isinstance(new_dataset, tf.data.Dataset)
+    if not isinstance(new_dataset, tf.data.Dataset):
+        raise AssertionError()
 
 
 def test_feature_engineering_new_categorical_value():
@@ -112,7 +118,8 @@ def test_feature_engineering_new_categorical_value():
                                    dataset,
                                    common.generate_data(dtype='dataset'),
                                    tf.float32)
-    assert isinstance(new_dataset, tf.data.Dataset)
+    if not isinstance(new_dataset, tf.data.Dataset):
+        raise AssertionError()
 
 
 def test_lgbm_classifier():
@@ -127,9 +134,11 @@ def test_lgbm_classifier():
                                    y,
                                    tf.float32)
     for (x,) in new_dataset:
-        assert x.shape == (3,)
+        if x.shape != (3,):
+            raise AssertionError()
         break
-    assert isinstance(new_dataset, tf.data.Dataset)
+    if not isinstance(new_dataset, tf.data.Dataset):
+        raise AssertionError()
 
 
 def test_lgbm_classifier_two_classes():
@@ -145,9 +154,11 @@ def test_lgbm_classifier_two_classes():
                                    y,
                                    tf.float32)
     for (x,) in new_dataset:
-        assert x.shape == (1,)
+        if x.shape != (1,):
+            raise AssertionError()
         break
-    assert isinstance(new_dataset, tf.data.Dataset)
+    if not isinstance(new_dataset, tf.data.Dataset):
+        raise AssertionError()
 
 
 def test_lgbm_regressor():
@@ -159,4 +170,5 @@ def test_lgbm_regressor():
                                    dataset,
                                    y,
                                    tf.float32)
-    assert isinstance(new_dataset, tf.data.Dataset)
+    if not isinstance(new_dataset, tf.data.Dataset):
+        raise AssertionError()
