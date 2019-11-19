@@ -14,47 +14,8 @@ def tmp_dir(tmpdir_factory):
     return tmpdir_factory.mktemp('test_auto_model')
 
 
-def test_add_early_stopping(tmp_dir):
-    tuner = tuner_module.RandomSearch(
-        hyper_graph=mock.Mock(),
-        hypermodel=mock.Mock(),
-        objective='val_loss',
-        max_trials=1,
-        directory=tmp_dir,
-        seed=common.SEED)
-
-    callbacks = tuner._inject_callbacks([], mock.Mock())
-
-    assert any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                for callback in callbacks])
-
-
-@mock.patch('autokeras.tuner.RandomSearch._prepare_run')
-@mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
-@mock.patch('tensorflow.keras.Model')
-def test_search(_, _1, _2, tmp_dir):
-    hyper_graph = mock.Mock()
-    hyper_graph.build_graphs.return_value = (mock.Mock(), mock.Mock())
-    tuner = tuner_module.RandomSearch(
-        hyper_graph=hyper_graph,
-        fit_on_val_data=True,
-        hypermodel=mock.Mock(),
-        objective='val_loss',
-        max_trials=1,
-        directory=tmp_dir,
-        seed=common.SEED)
-    oracle = mock.Mock()
-    oracle.get_best_trials.return_value = [mock.Mock(), mock.Mock(), mock.Mock()]
-    tuner.oracle = oracle
-    tuner.preprocess_graph = mock.Mock()
-    tuner.need_fully_train = True
-    tuner.search(x=mock.Mock(),
-                 y=mock.Mock(),
-                 validation_data=[mock.Mock()],
-                 epochs=5)
-
-
 def build_hyper_graph():
+    tf.keras.backend.clear_session()
     image_input = ak.ImageInput(shape=(32, 32, 3))
     merged_outputs = ak.ImageBlock()(image_input)
     head = ak.ClassificationHead(num_classes=10)
@@ -63,6 +24,34 @@ def build_hyper_graph():
     return ak.hypermodel.graph.HyperGraph(
         inputs=image_input,
         outputs=classification_outputs)
+
+
+@mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
+@mock.patch('autokeras.tuner.Greedy.get_best_models', 
+            return_value=((mock.Mock(), mock.Mock(), mock.Mock()),))
+@mock.patch('autokeras.tuner.Greedy._prepare_run')
+def test_add_early_stopping(_, _1, base_tuner_search, tmp_dir):
+    hyper_graph = build_hyper_graph()
+    hp = kerastuner.HyperParameters()
+    preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
+    preprocess_graph.build(hp)
+    keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
+    tuner = tuner_module.Greedy(
+        hyper_graph=hyper_graph,
+        hypermodel=keras_graph,
+        objective='val_loss',
+        max_trials=1,
+        directory=tmp_dir,
+        seed=common.SEED)
+    oracle = mock.Mock()
+    oracle.get_best_trials.return_value = (mock.Mock(),)
+    tuner.oracle = oracle
+    tuner.search()
+
+    callbacks = base_tuner_search.call_args_list[0][1]['callbacks']
+
+    assert any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+                for callback in callbacks])
 
 
 def test_random_oracle_state():
@@ -96,7 +85,7 @@ def test_random_oracle(fn):
         oracle._populate_space(str(i))
 
     assert 'optimizer' in oracle._hp_names[tuner_module.GreedyOracle.OPT]
-    assert 'classification_head_2/dropout_rate' in oracle._hp_names[
+    assert 'classification_head_1/dropout_rate' in oracle._hp_names[
         tuner_module.GreedyOracle.ARCH]
-    assert 'image_block_2/block_type' in oracle._hp_names[
+    assert 'image_block_1/block_type' in oracle._hp_names[
         tuner_module.GreedyOracle.HYPER]

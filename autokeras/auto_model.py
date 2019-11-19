@@ -1,6 +1,8 @@
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+import kerastuner
+
 from autokeras import meta_model
 from autokeras import tuner as tuner_module
 from autokeras import utils
@@ -32,7 +34,7 @@ class AutoModel(object):
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         tuner: String. The tuner to be used for the search.
-            Defaults to 'random_search'.
+            Defaults to 'greedy'.
         seed: Int. Random seed.
     """
 
@@ -43,12 +45,11 @@ class AutoModel(object):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
-                 tuner='random_search',
+                 tuner='greedy',
                  seed=None):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self.name = name
-        self.tuner = None
         self.max_trials = max_trials
         self.directory = directory
         self.seed = seed
@@ -121,9 +122,20 @@ class AutoModel(object):
         # Initialize the hyper_graph.
         self._meta_build(dataset)
 
-        # Build the hypermodel in tuner init.
+        # Initialize the Tuner.
+        # The hypermodel needs input_shape, which can only be known after
+        # preprocessing. So we preprocess the dataset once to get the input_shape,
+        # so that the hypermodel can be built in the initializer of the Tuner, which
+        # does not access the dataset.
+        hp = kerastuner.HyperParameters()
+        preprocess_graph, keras_graph = self.hyper_graph.build_graphs(hp)
+        preprocess_graph.preprocess(
+            dataset=dataset,
+            validation_data=validation_data,
+            fit=True)
         self.tuner = tuner_module.get_tuner_class(self.tuner)(
             hyper_graph=self.hyper_graph,
+            hypermodel=keras_graph,
             fit_on_val_data=self._split_dataset,
             objective=self.objective,
             max_trials=self.max_trials,
@@ -287,7 +299,7 @@ class GraphAutoModel(AutoModel):
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         tuner: String. The tuner to be used for the search.
-            Defaults to 'random_search'.
+            Defaults to 'greedy'.
         seed: Int. Random seed.
     """
 
@@ -298,7 +310,7 @@ class GraphAutoModel(AutoModel):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
-                 tuner='random_search',
+                 tuner='greedy',
                  seed=None):
         super().__init__(
             inputs=inputs,

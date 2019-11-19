@@ -57,16 +57,14 @@ class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
         self.outputs = None
         self._num_output_node = 1
 
-    def __new__(cls, *args, **kwargs):
-        obj = super().__new__(cls)
-        build_fn = obj.build
+    def _build_wrapper(self, hp, *args, **kwargs):
+        if not self.tunable:
+            # Copy `HyperParameters` object so that new entries are not added
+            # to the search space.
+            hp = hp.copy()
 
-        def build_wrapper(obj, hp, *args, **kwargs):
-            with hp.name_scope(obj.name):
-                return build_fn(hp, *args, **kwargs)
-
-        obj.build = types.MethodType(build_wrapper, obj)
-        return obj
+        with hp.name_scope(self.name):
+            return self._build(hp, *args, **kwargs)
 
     def __call__(self, inputs):
         """Functional API.

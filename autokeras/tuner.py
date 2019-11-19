@@ -4,6 +4,7 @@ import os
 import random
 
 import kerastuner
+import kerastuner.engine.hypermodel as hm_module
 import tensorflow as tf
 
 from autokeras.hypermodel import graph
@@ -26,24 +27,25 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         **kwargs: The other args supported by KerasTuner.
     """
 
-    def __init__(self, hyper_graph, fit_on_val_data=False, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, hyper_graph, hypermodel, fit_on_val_data=False, **kwargs):
         self.hyper_graph = hyper_graph
+        super().__init__(
+            hypermodel=hm_module.KerasHyperModel(hypermodel),
+            **kwargs)
         self.preprocess_graph = None
         self.need_fully_train = False
         self.best_hp = None
         self.fit_on_val_data = fit_on_val_data
 
-    def run_trial(self, trial, *fit_args, **fit_kwargs):
+    def run_trial(self, trial, **fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
         # Initialize new fit kwargs for the current trial.
-        fit_kwargs.update(
-            dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
         new_fit_kwargs = copy.copy(fit_kwargs)
 
         # Preprocess the dataset and set the shapes of the HyperNodes.
-        self.preprocess_graph, self.hypermodel = self.hyper_graph.build_graphs(
+        self.preprocess_graph, keras_graph = self.hyper_graph.build_graphs(
             trial.hyperparameters)
+        self.hypermodel = hm_module.KerasHyperModel(keras_graph)
 
         self._prepare_run(self.preprocess_graph, new_fit_kwargs, True)
 
@@ -114,14 +116,23 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         model.load_weights(self.best_model_path)
         return preprocess_graph, model
 
-    def search(self, *fit_args, **fit_kwargs):
+    def search(self, callbacks=None, **fit_kwargs):
         """Search for the best HyperParameters.
 
         If there is not early-stopping in the callbacks, the early-stopping callback
         is injected to accelerate the search process. At the end of the search, the
         best model will be fully trained with the specified number of epochs.
         """
-        super().search(*fit_args, **fit_kwargs)
+        # Insert early-stopping for acceleration.
+        if not callbacks:
+            callbacks = []
+        new_callbacks = self._deepcopy_callbacks(callbacks)
+        if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+                    for callback in callbacks]):
+            self.need_fully_train = True
+            new_callbacks.append(tf.keras.callbacks.EarlyStopping(patience=10))
+
+        super().search(callbacks=new_callbacks, **fit_kwargs)
 
         best_trial = self.oracle.get_best_trials(1)[0]
         self.best_hp = best_trial.hyperparameters
@@ -130,27 +141,17 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         keras_graph.save(self.best_keras_graph_path)
 
         # Fully train the best model with original callbacks.
-        if self.need_fully_train or self.fit_on_val_data:
-            new_fit_kwargs = copy.copy(fit_kwargs)
-            new_fit_kwargs.update(
-                dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
-            self._prepare_run(preprocess_graph, new_fit_kwargs)
+        if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+                    for callback in callbacks]) or self.fit_on_val_data:
+            fit_kwargs['callbacks'] = self._deepcopy_callbacks(callbacks)
+            self._prepare_run(preprocess_graph, fit_kwargs)
             if self.fit_on_val_data:
-                new_fit_kwargs['x'] = new_fit_kwargs['x'].concatenate(
-                    new_fit_kwargs['validation_data'])
+                fit_kwargs['x'] = fit_kwargs['x'].concatenate(
+                    fit_kwargs['validation_data'])
             model = keras_graph.build(self.best_hp)
-            model.fit(**new_fit_kwargs)
+            model.fit(**fit_kwargs)
 
         model.save_weights(self.best_model_path)
-
-    def _inject_callbacks(self, callbacks, trial, execution=0):
-        """Inject the early-stopping callback."""
-        callbacks = super()._inject_callbacks(callbacks, trial, execution)
-        if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                    for callback in callbacks]):
-            self.need_fully_train = True
-            callbacks.append(tf.keras.callbacks.EarlyStopping(patience=10))
-        return callbacks
 
     @property
     def best_preprocess_graph_path(self):
@@ -315,9 +316,10 @@ class Greedy(AutoTuner):
 
     def __init__(self,
                  hyper_graph,
-                 fit_on_val_data,
+                 hypermodel,
                  objective,
                  max_trials,
+                 fit_on_val_data=False,
                  seed=None,
                  hyperparameters=None,
                  tune_new_entries=True,
@@ -339,12 +341,13 @@ class Greedy(AutoTuner):
             hyper_graph=hyper_graph,
             fit_on_val_data=fit_on_val_data,
             oracle=oracle,
-            hypermodel=keras_graph,
+            hypermodel=hypermodel,
             **kwargs)
 
 
 TUNER_CLASSES = {
     'random_search': RandomSearch,
+    'greedy': Greedy,
     'image_classifier': Greedy,
     'image_regressor': Greedy,
     'text_classifier': Greedy,

@@ -18,7 +18,8 @@ setup(
     download_url='https://github.com/keras-team/autokeras/archive/1.0.0a0.tar.gz',
     keywords=['AutoML', 'keras'],
     install_requires=[
-        'tensorflow',
+        'tensorflow>=2.0.0',
+        'kerastuner>=1.0.0',
         'scikit-learn',
         'numpy',
         'pandas',
