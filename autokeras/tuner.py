@@ -29,6 +29,8 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         self.hyper_graph = hyper_graph
         super().__init__(
             hypermodel=hm_module.KerasHyperModel(hypermodel),
+            # TODO: Support resume of a previous run.
+            overwrite=True,
             **kwargs)
         self.preprocess_graph = None
         self.best_hp = None
