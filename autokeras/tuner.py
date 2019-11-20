@@ -1,5 +1,4 @@
 import copy
-import inspect
 import os
 import random
 
@@ -7,7 +6,6 @@ import kerastuner
 import kerastuner.engine.hypermodel as hm_module
 import tensorflow as tf
 
-from autokeras.hypermodel import graph
 from autokeras.hypermodel import base
 
 
@@ -229,14 +227,16 @@ class GreedyOracle(kerastuner.Oracle):
 
     def set_state(self, state):
         super().set_state(state)
-        #self.hyper_graph.set_state(state['hyper_graph'])
+        # TODO: self.hyper_graph.set_state(state['hyper_graph'])
+        # currently the state is not json serializable.
         self._stage = state['stage']
         self._capacity = state['capacity']
 
     def get_state(self):
         state = super().get_state()
         state.update({
-            #'hyper_graph': self.hyper_graph.get_state(),
+            # TODO: 'hyper_graph': self.hyper_graph.get_state(),
+            # currently the state is not json serializable.
             'stage': self._stage,
             'capacity': self._capacity,
         })

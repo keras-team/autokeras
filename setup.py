@@ -1,6 +1,7 @@
 from distutils.core import setup
-from setuptools import find_packages
 from pathlib import Path
+
+from setuptools import find_packages
 
 this_file = Path(__file__).resolve()
 readme = this_file.parent / 'README.md'

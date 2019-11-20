@@ -27,7 +27,7 @@ def build_hyper_graph():
 
 
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
-@mock.patch('autokeras.tuner.Greedy.get_best_models', 
+@mock.patch('autokeras.tuner.Greedy.get_best_models',
             return_value=((mock.Mock(), mock.Mock(), mock.Mock()),))
 @mock.patch('autokeras.tuner.Greedy._prepare_run')
 def test_add_early_stopping(_, _1, base_tuner_search, tmp_dir):

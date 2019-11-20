@@ -1,7 +1,6 @@
+import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
-
-import kerastuner
 
 from autokeras import meta_model
 from autokeras import tuner as tuner_module

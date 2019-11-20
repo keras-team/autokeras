@@ -9,7 +9,6 @@ from autokeras.hypermodel import block
 from autokeras.hypermodel import head
 from autokeras.hypermodel import hyperblock
 
-
 # For each class to document, it is possible to:
 # 1) Document only the class: [classA, classB, ...]
 # 2) Document all its methods: [classA, (classB, '*')]
@@ -29,15 +28,15 @@ PAGES = {
         'autokeras.GraphAutoModel.predict',
     ],
     'block.md': [
-         hyperblock.ImageBlock,
-         hyperblock.TextBlock,
-         hyperblock.StructuredDataBlock,
-         block.ResNetBlock,
-         block.XceptionBlock,
-         block.ConvBlock,
-         block.RNNBlock,
-         block.Merge
-     ],
+        hyperblock.ImageBlock,
+        hyperblock.TextBlock,
+        hyperblock.StructuredDataBlock,
+        block.ResNetBlock,
+        block.XceptionBlock,
+        block.ConvBlock,
+        block.RNNBlock,
+        block.Merge
+    ],
     'task.md': [
         task.ImageClassifier,
         task.ImageRegressor,
