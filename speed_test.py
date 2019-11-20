@@ -1,7 +1,3 @@
-import os
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
-
 import tensorflow as tf
 from tensorflow.python.keras.datasets import mnist
 
@@ -20,17 +16,15 @@ def test_functional_api():
     image_input = ak.ImageInput()
     output = image_input
     output = ak.Normalization()(output)
-    output = ak.ImageAugmentation()(output)
-    outputs1 = ak.ResNetBlock(version='next')(output)
-    outputs2 = ak.XceptionBlock()(output)
-    image_output = ak.Merge()((outputs1, outputs2))
+    # output = ak.ImageAugmentation()(output)
+    output = ak.ConvBlock()(output)
 
-    classification_outputs = ak.ClassificationHead()(image_output)
+    classification_outputs = ak.ClassificationHead()(output)
     automodel = ak.GraphAutoModel(
         inputs=image_input,
         directory='.',
         outputs=classification_outputs,
-        max_trials=2,
+        max_trials=1,
         seed=5)
 
     automodel.fit(
