@@ -28,8 +28,8 @@ def test_functional_api(tmp_dir):
     image_input = ak.ImageInput()
     output = ak.Normalization()(image_input)
     output = ak.ImageAugmentation()(output)
-    outputs1 = ak.ResNetBlock(version='next')(image_input)
-    outputs2 = ak.XceptionBlock()(image_input)
+    outputs1 = ak.ResNetBlock(version='next')(output)
+    outputs2 = ak.XceptionBlock()(output)
     image_output = ak.Merge()((outputs1, outputs2))
 
     structured_data_input = ak.StructuredDataInput()
