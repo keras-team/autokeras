@@ -6,18 +6,15 @@ jobs:
     - stage: test
       script:
         - pip install -e .[tests] --progress-bar off
-        - pip install git+https://github.com/keras-team/keras-tuner.git@1.0rc0
         - pytest tests --cov=autokeras --cov-report xml:coverage.xml
         - pip install python-coveralls && coveralls
     -
       script:
         - pip install -e .[tests] --progress-bar off
-        - pip install git+https://github.com/keras-team/keras-tuner.git@1.0rc0
         - flake8
     -
       script:
         - pip install -e .[tests] --progress-bar off
-        - pip install git+https://github.com/keras-team/keras-tuner.git@1.0rc0
         - pip install mkdocs
         - pip install mkdocs-material
         - pip install keras-autodoc==0.4.0
