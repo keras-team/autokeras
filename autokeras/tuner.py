@@ -31,7 +31,6 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             hypermodel=hm_module.KerasHyperModel(hypermodel),
             **kwargs)
         self.preprocess_graph = None
-        self.need_fully_train = False
         self.best_hp = None
         self.fit_on_val_data = fit_on_val_data
 
@@ -127,7 +126,6 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         new_callbacks = self._deepcopy_callbacks(callbacks)
         if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                     for callback in callbacks]):
-            self.need_fully_train = True
             new_callbacks.append(tf.keras.callbacks.EarlyStopping(patience=10))
 
         super().search(callbacks=new_callbacks, **fit_kwargs)
@@ -179,8 +177,9 @@ class GreedyOracle(kerastuner.Oracle):
 
     It groups the HyperParameters into several categories, namely, HyperGraph,
     Preprocessor, Architecture, and Optimization. The oracle tunes each group
-    separately using random search. Uses union the best HyperParameters for
-    each group as the overall best HyperParameters.
+    separately using random search. In each trial, it use a greedy strategy to
+    generate new values for one of the categories of HyperParameters and use the best
+    trial so far for the rest of the HyperParameters values.
 
     # Arguments
         hyper_graph: HyperGraph. The hyper_graph model to be tuned.
@@ -198,8 +197,8 @@ class GreedyOracle(kerastuner.Oracle):
         stages = GreedyOracle.STAGES
         return stages[(stages.index(stage) + 1) % len(stages)]
 
-    def __init__(self, hyper_graph, seed=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, hyper_graph, seed=None, **kwargs):
+        super().__init__(**kwargs)
         self.hyper_graph = hyper_graph
         # Start from tuning the hyper block hps.
         self._stage = GreedyOracle.HYPER
@@ -210,8 +209,7 @@ class GreedyOracle(kerastuner.Oracle):
             GreedyOracle.OPT: set(),
             GreedyOracle.ARCH: set(),
         }
-        # Use 10% of max_trials to tune each category except architecture_hps.
-        # Use the rest quota to tune the architecture_hps.
+        # The quota used to tune each category of hps.
         self._capacity = {
             GreedyOracle.HYPER: 1,
             GreedyOracle.PREPROCESS: 1,

@@ -81,7 +81,7 @@ def test_random_oracle(fn):
     fn.return_value = [trial]
 
     oracle.update_space(hp)
-    for i in range(100):
+    for i in range(2000):
         oracle._populate_space(str(i))
 
     assert 'optimizer' in oracle._hp_names[tuner_module.GreedyOracle.OPT]
