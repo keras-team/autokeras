@@ -1,5 +1,4 @@
 import ast
-import random
 import warnings
 
 import numpy as np
@@ -416,9 +415,10 @@ class ImageAugmentation(base.Preprocessor):
     """Collection of various image augmentation methods.
 
     # Arguments
+        percentage: Float. The percentage of data to augment.
         rotation_range: Int. The value can only be 0, 90, or 180.
             Degree range for random rotations. Default to 180.
-        random_crop: Boolean. Whether to crop the image randomly. Default to True.
+        crop: Boolean. Whether to crop the image randomly. Default to True.
         brightness_range: Positive float.
             Serve as 'max_delta' in tf.image.random_brightness. Default to 0.5.
             Equivalent to adjust brightness using a 'delta' randomly picked in
@@ -435,12 +435,12 @@ class ImageAugmentation(base.Preprocessor):
         horizontal_flip: Boolean. Whether to flip the image horizontally.
         vertical_flip: Boolean. Whether to flip the image vertically.
         gaussian_noise: Boolean. Whether to add gaussian noise to the image.
-        seed: Int. Seed for tf.image.random_*(). Default to None.
     """
 
     def __init__(self,
+                 percentage=0.25,
                  rotation_range=180,
-                 random_crop=True,
+                 crop=True,
                  brightness_range=0.5,
                  saturation_range=0.5,
                  contrast_range=0.5,
@@ -448,11 +448,24 @@ class ImageAugmentation(base.Preprocessor):
                  horizontal_flip=True,
                  vertical_flip=True,
                  gaussian_noise=True,
-                 seed=None,
                  **kwargs):
         super().__init__(**kwargs)
+        self.percentage = percentage
         self.rotation_range = rotation_range
-        self.random_crop = random_crop
+        self._rotate_choices = [0]
+        if self.rotation_range == 90:
+            self._rotate_choices = [0, 1, 3]
+        elif self.rotation_range == 180:
+            self._rotate_choices = [0, 1, 2, 3]
+        self.crop = crop
+        if self.crop:
+            # Generate 20 crop settings, ranging from a 1% to 20% crop.
+            self.scales = list(np.arange(0.8, 1.0, 0.01))
+            self.boxes = np.zeros((len(self.scales), 4))
+            for i, scale in enumerate(self.scales):
+                x1 = y1 = 0.5 - (0.5 * scale)
+                x2 = y2 = 0.5 + (0.5 * scale)
+                self.boxes[i] = [x1, y1, x2, y2]
         self.brightness_range = brightness_range
         self.saturation_range = self._get_min_and_max(saturation_range,
                                                       'saturation_range')
@@ -462,7 +475,6 @@ class ImageAugmentation(base.Preprocessor):
         self.horizontal_flip = horizontal_flip
         self.vertical_flip = vertical_flip
         self.gaussian_noise = gaussian_noise
-        self.seed = seed
         self.shape = None
 
     @staticmethod
@@ -485,69 +497,69 @@ class ImageAugmentation(base.Preprocessor):
         self.shape = x.shape
 
     def transform(self, x, fit=False):
-        if not fit:
-            return x
-        np.random.seed(self.seed)
         self.shape = x.shape
-        target_height, target_width, channels = self.shape
-        k_choices = {}
-        if self.rotation_range == 0:
-            k_choices = [0]
-        elif self.rotation_range == 90:
-            k_choices = [0, 1, 3]
-        elif self.rotation_range == 180:
-            k_choices = [0, 1, 2, 3]
-        x = tf.image.rot90(x, k=random.choice(k_choices))
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if fit and choice < self.percentage:
+            return self.augment(x)
+        return x
 
-        if self.random_crop:
-            crop_height = np.random.randint(low=1, high=target_height)
-            crop_width = np.random.randint(low=1, high=target_width)
-            crop_size = [crop_height,
-                         crop_width,
-                         channels]
-            target_shape = (target_height, target_width)
-            x = tf.image.resize(
-                tf.image.random_crop(x, size=crop_size, seed=self.seed),
-                size=target_shape)
+    def rotate(self, x):
+        rotate_choice = tf.random.uniform(
+            shape=[],
+            minval=0,
+            maxval=len(self._rotate_choices),
+            dtype=tf.int64)
+        return tf.image.rot90(x, k=self._rotate_choices[rotate_choice])
 
-        if self.brightness_range != 0:
-            x = tf.image.random_brightness(x, self.brightness_range, self.seed)
+    def random_crop(self, x):
+        crops = tf.image.crop_and_resize(
+            [x],
+            boxes=self.boxes,
+            box_indices=np.zeros(len(self.scales)),
+            crop_size=self.shape[:2])
+        return crops[tf.random.uniform(shape=[],
+                                       minval=0,
+                                       maxval=len(self.scales),
+                                       dtype=tf.int32)]
 
-        if self.saturation_range is not None and channels == 3:
-            min_value, max_value = self.saturation_range
-            x = tf.image.random_saturation(x, min_value, max_value, self.seed)
+    def augment(self, x):
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if self.rotation_range != 0 and choice < 0.5:
+            x = self.rotate(x)
 
-        if self.contrast_range is not None:
-            min_value, max_value = self.contrast_range
-            x = tf.image.random_contrast(x, min_value, max_value, self.seed)
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if self.crop and choice < 0.5:
+            x = self.random_crop(x)
 
-        if self.translation:
-            pad_top = np.random.randint(low=0,
-                                        high=max(int(target_height*0.3), 1))
-            pad_left = np.random.randint(low=0,
-                                         high=max(int(target_width*0.3), 1))
-            pad_bottom = np.random.randint(low=0,
-                                           high=max(int(target_height*0.3), 1))
-            pad_right = np.random.randint(low=0,
-                                          high=max(int(target_width*0.3), 1))
-            x = tf.image.pad_to_bounding_box(x, pad_top, pad_left,
-                                             target_height + pad_bottom + pad_top,
-                                             target_width + pad_right + pad_left)
-            x = tf.image.crop_to_bounding_box(x, pad_bottom, pad_right,
-                                              target_height, target_width)
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if self.brightness_range != 0 and choice < 0.5:
+            x = tf.image.random_brightness(x,
+                                           self.brightness_range)
+
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if self.saturation_range and self.shape[-1] == 3 and choice > 0.5:
+            x = tf.image.random_saturation(x,
+                                           self.saturation_range[0],
+                                           self.saturation_range[1])
+
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if self.contrast_range and choice < 0.5:
+            x = tf.image.random_contrast(x,
+                                         self.contrast_range[0],
+                                         self.contrast_range[1])
 
         if self.horizontal_flip:
-            x = tf.image.flip_left_right(x)
+            x = tf.image.random_flip_left_right(x)
 
         if self.vertical_flip:
-            x = tf.image.flip_up_down(x)
+            x = tf.image.random_flip_up_down(x)
 
-        if self.gaussian_noise:
-            noise = tf.random.normal(shape=tf.shape(x),
-                                     mean=0.0,
-                                     stddev=1.0,
-                                     seed=self.seed,
-                                     dtype=tf.float32)
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        noise = tf.random.normal(shape=tf.shape(x),
+                                 mean=0.0,
+                                 stddev=1.0,
+                                 dtype=tf.float32)
+        if self.gaussian_noise and choice < 0.5:
             x = tf.add(x, noise)
         return x
 
@@ -560,7 +572,7 @@ class ImageAugmentation(base.Preprocessor):
 
     def get_config(self):
         return {'rotation_range': self.rotation_range,
-                'random_crop': self.random_crop,
+                'crop': self.crop,
                 'brightness_range': self.brightness_range,
                 'saturation_range': self.saturation_range,
                 'contrast_range': self.contrast_range,
@@ -568,12 +580,11 @@ class ImageAugmentation(base.Preprocessor):
                 'horizontal_flip': self.horizontal_flip,
                 'vertical_flip': self.vertical_flip,
                 'gaussian_noise': self.gaussian_noise,
-                'seed': self.seed,
                 'shape': self.shape}
 
     def set_config(self, config):
         self.rotation_range = config['rotation_range']
-        self.random_crop = config['random_crop']
+        self.crop = config['crop']
         self.brightness_range = config['brightness_range']
         self.saturation_range = config['saturation_range']
         self.contrast_range = config['contrast_range']
@@ -581,7 +592,6 @@ class ImageAugmentation(base.Preprocessor):
         self.horizontal_flip = config['horizontal_flip']
         self.vertical_flip = config['vertical_flip']
         self.gaussian_noise = config['gaussian_noise']
-        self.seed = config['seed']
         self.shape = config['shape']
 
 
