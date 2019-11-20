@@ -170,8 +170,8 @@ class ImageRegressor(SupervisedImagePipeline):
                 be channel dimension.
             y: numpy.ndarray or tensorflow.Dataset. Training data y. The targets
                 passing to the head would have to be tf.data.Dataset, np.ndarray,
-                pd.DataFrame or pd.Series. It can be one-dimensional or
-                multi-dimensional. The values should all be numerical.
+                pd.DataFrame or pd.Series. It can be single-column or multi-column.
+                The values should all be numerical.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, by default we train for a maximum of 1000 epochs,
                 but we stop training if the validation loss stops improving for 10
@@ -375,8 +375,8 @@ class TextRegressor(SupervisedTextPipeline):
                 full sentence.
             y: numpy.ndarray or tensorflow.Dataset. Training data y. The targets
                 passing to the head would have to be tf.data.Dataset, np.ndarray,
-                pd.DataFrame or pd.Series. It can be one-dimensional or
-                multi-dimensional. The values should all be numerical.
+                pd.DataFrame or pd.Series. It can be single-column or multi-column.
+                The values should all be numerical.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, by default we train for a maximum of 1000 epochs,
                 but we stop training if the validation loss stops improving for 10
@@ -457,8 +457,8 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                 string specifying the path of the csv file of the training data.
             y: String, numpy.ndarray, or tensorflow.Dataset. Training data y.
                 If the data is from a csv file, it should be a string, which is the
-                name of the target column. Otherwise, it can be one-dimensional or
-                multi-dimensional. The values should all be numerical.
+                name of the target column. Otherwise, it can be single-column or
+                multi-column. The values should all be numerical.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, we would use epochs equal to 1000 and early stopping
                 with patience equal to 30.

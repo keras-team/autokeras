@@ -193,7 +193,7 @@ class RegressionHead(base.Head):
     """Regression Dense layers.
 
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
-    pd.DataFrame or pd.Series. It can be one-dimensional or multi-dimensional. The
+    pd.DataFrame or pd.Series. It can be single-column or multi-column. The
     values should all be numerical.
 
     # Arguments
