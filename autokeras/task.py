@@ -62,7 +62,6 @@ class ImageClassifier(SupervisedImagePipeline):
             callbacks=None,
             validation_split=0,
             validation_data=None,
-            objective='val_loss',
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -134,7 +133,7 @@ class ImageRegressor(SupervisedImagePipeline):
 
     def __init__(self,
                  output_dim=None,
-                 loss=None,
+                 loss='mean_squared_error',
                  metrics=None,
                  name='image_regressor',
                  max_trials=100,
@@ -159,7 +158,6 @@ class ImageRegressor(SupervisedImagePipeline):
             callbacks=None,
             validation_split=0,
             validation_data=None,
-            objective='val_loss',
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -267,7 +265,6 @@ class TextClassifier(SupervisedTextPipeline):
             callbacks=None,
             validation_split=0,
             validation_data=None,
-            objective='val_loss',
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -340,7 +337,7 @@ class TextRegressor(SupervisedTextPipeline):
 
     def __init__(self,
                  output_dim=None,
-                 loss=None,
+                 loss='mean_squared_error',
                  metrics=None,
                  name='text_regressor',
                  max_trials=100,
@@ -365,7 +362,6 @@ class TextRegressor(SupervisedTextPipeline):
             callbacks=None,
             validation_split=0,
             validation_data=None,
-            objective='val_loss',
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -685,7 +681,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
                  column_names=None,
                  column_types=None,
                  output_dim=None,
-                 loss=None,
+                 loss='mean_squared_error',
                  metrics=None,
                  name='structured_data_regressor',
                  max_trials=100,

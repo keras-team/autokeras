@@ -77,7 +77,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         super().on_trial_end(trial)
 
         self.preprocess_graph.save(self._get_save_path(trial, 'preprocess_graph'))
-        self.hypermodel.save(self._get_save_path(trial, 'keras_graph'))
+        self.hypermodel.hypermodel.save(self._get_save_path(trial, 'keras_graph'))
 
         self.preprocess_graph = None
         self.hypermodel = None
@@ -95,7 +95,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             trial.hyperparameters)
         preprocess_graph.reload(self._get_save_path(trial, 'preprocess_graph'))
         keras_graph.reload(self._get_save_path(trial, 'keras_graph'))
-        self.hypermodel = keras_graph
+        self.hypermodel = hm_module.KerasHyperModel(keras_graph)
         models = (preprocess_graph, keras_graph, super().load_model(trial))
         self.hypermodel = None
         return models
@@ -229,14 +229,14 @@ class GreedyOracle(kerastuner.Oracle):
 
     def set_state(self, state):
         super().set_state(state)
-        self.hyper_graph.set_state(state['hyper_graph'])
+        #self.hyper_graph.set_state(state['hyper_graph'])
         self._stage = state['stage']
         self._capacity = state['capacity']
 
     def get_state(self):
         state = super().get_state()
         state.update({
-            'hyper_graph': self.hyper_graph.get_state(),
+            #'hyper_graph': self.hyper_graph.get_state(),
             'stage': self._stage,
             'capacity': self._capacity,
         })
@@ -289,7 +289,11 @@ class GreedyOracle(kerastuner.Oracle):
                 'values': None}
 
     def _generate_stage_values(self):
-        best_values = self.get_best_trials()[0].hyperparameters.values
+        best_trials = self.get_best_trials()
+        if best_trials:
+            best_values = best_trials[0].hyperparameters.values
+        else:
+            best_values = self.hyperparameters.values
         collisions = 0
         while 1:
             # Generate new values for the current stage.
