@@ -23,6 +23,7 @@ setup(
         'numpy',
         'pandas',
         'lightgbm',
+        'kerastuner',
     ],
     extras_require={
         'tests': ['pytest>=4.4.0',
