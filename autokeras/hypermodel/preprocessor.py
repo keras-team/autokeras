@@ -4,8 +4,14 @@ import warnings
 
 import numpy as np
 import tensorflow as tf
+import scipy.sparse as sp
+import re
+import array
 from sklearn import feature_selection
 from sklearn.feature_extraction import text
+from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
+from sklearn.externals.six import moves
+from collections import defaultdict
 from tensorflow.python.util import nest
 
 from autokeras import const
@@ -146,47 +152,149 @@ class TextToNgramVector(base.Preprocessor):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.vectorizer = text.TfidfVectorizer(
-            ngram_range=(1, 2),
-            strip_accents='unicode',
-            decode_error='replace',
-            analyzer='word',
-            min_df=2)
         self.selector = None
         self.targets = None
-        self.vectorizer.max_features = const.Constant.VOCABULARY_SIZE
+        self._max_features = const.Constant.VOCABULARY_SIZE
         self._texts = []
-        self.shape = None
+        self._shape = None
+        self.vocabulary = defaultdict()  # Vocabulary(Increase with the inputs)
+        self.vocabulary.default_factory = self.vocabulary.__len__
+        self.feature_counter = {}  # Frequency of the token in the whole doc
+        self.sentence_containers = {}  # Number of sentence that contains the token
+        self.tf_idf_vec = {}  # TF-IDF of all the tokens
+        self.word_sum = 0  # The number of all the words in the raw doc
+        self.stc_num = 0  # The number of all the sentences in the raw doc
+        self.temp_vec = set()  # Store the features of each sentence, used for the transform func
+        self.result = []  # Final result list of the processed text
+        self.kbestfeature_value = []
+        self.kbestfeature_key = []
+        self.mask = []
+    
+    @staticmethod
+    def _word_ngram(tokens, stop_words=None):
+        # handle stop words
+        if stop_words is not None:
+            tokens = [w for w in tokens if w not in stop_words]
 
+        # handle token n-grams
+        min_n, max_n = (1, 1)
+        if max_n != 1:
+            original_tokens = tokens
+            if min_n == 1:
+                # no need to do any slicing for unigrams
+                # just iterate through the original tokens
+                tokens = list(original_tokens)
+                min_n += 1
+            else:
+                tokens = []
+
+            n_original_tokens = len(original_tokens)
+
+            # bind method outside of loop to reduce overhead
+            tokens_append = tokens.append
+            space_join = " ".join
+
+            for n in moves.xrange(min_n, min(max_n + 1, n_original_tokens + 1)):
+                for i in moves.xrange(n_original_tokens - n + 1):
+                    tokens_append(space_join(original_tokens[i: i + n]))
+
+        return tokens
+    
     def update(self, x, y=None):
         # TODO: Implement a sequential version fit for both
         #  TfidfVectorizer and SelectKBest
-        self._texts.append(nest.flatten(x)[0].numpy().decode('utf-8'))
+        x = nest.flatten(x)[0].numpy().decode('utf-8')
+        stop_words = ENGLISH_STOP_WORDS
+        token_pattern = re.compile(r"(?u)\b\w\w+\b")
+        tokens = self._word_ngram(token_pattern.findall(x.lower()),  # x.lower()
+                                  stop_words)
+        j_indices = []
+        indptr = array.array(str("i"))
+        values = array.array(str("i"))
+        indptr.append(0)
+        set4sentence = set()
+        self.stc_num += 1
+        for feature in tokens:
+            self.word_sum += 1
+            try:
+                feature_idx = self.vocabulary[feature]
+                set4sentence.add(feature_idx)
+                if feature_idx not in self.feature_counter:
+                    self.feature_counter[feature_idx] = 1
+                else:
+                    self.feature_counter[feature_idx] += 1
+            except KeyError:
+                # Ignore out-of-vocabulary items for fixed_vocab=True
+                continue
+        for element in set4sentence:
+            if element not in self.sentence_containers:
+                self.sentence_containers[element] = 1
+            else:
+                self.sentence_containers[element] += 1
+        set4sentence.clear()
+        j_indices.extend(self.feature_counter.keys())
+        values.extend(self.feature_counter.values())
+        indptr.append(len(j_indices))
+        j_indices = np.asarray(j_indices, dtype=np.intc)
+        indptr = np.frombuffer(indptr, dtype=np.intc)
+        values = np.frombuffer(values, dtype=np.intc)
+        vec = sp.csr_matrix((values, j_indices, indptr),
+                            shape=(len(indptr) - 1, len(self.vocabulary)),
+                            dtype=np.int64)
+        vec.sort_indices()
 
     def finalize(self):
-        self._texts = np.array(self._texts)
-        self.vectorizer.fit(self._texts)
-        data = self.vectorizer.transform(self._texts)
-        self.shape = data.shape[1:]
-        if self.targets:
-            self.selector = feature_selection.SelectKBest(
-                feature_selection.f_classif,
-                k=min(self.vectorizer.max_features, data.shape[1]))
-            self.selector.fit(data, self.targets)
+        for word in self.feature_counter:
+            _tf = self.feature_counter[word] / self.word_sum
+            idf = np.log(self.stc_num / self.sentence_containers[word] + 1)
+            self.tf_idf_vec[word] = _tf * idf
+        if len(self.vocabulary) < self._max_features:
+            self._max_features = len(self.vocabulary)
+        kbestfeature = dict(sorted(self.tf_idf_vec.items(),
+                            key=lambda item: item[1],
+                            reverse=True)[0:self._max_features])
+        self.kbestfeature_value = np.array(list(dict(
+            sorted(kbestfeature.items())).values()))
+        self.kbestfeature_key = np.array(list(dict(
+            sorted(kbestfeature.items())).keys()))
+        self.mask = [0 for _ in range(self._max_features)]
 
     def transform(self, x, fit=False):
-        sentence = nest.flatten(x)[0].numpy().decode('utf-8')
-        data = self.vectorizer.transform([sentence]).toarray()
-        if self.selector:
-            data = self.selector.transform(data).astype('float32')
-        return data[0]
+        x = nest.flatten(x)[0].numpy().decode('utf-8')
+        self._texts.append(x)
+        stop_words = ENGLISH_STOP_WORDS
+        token_pattern = re.compile(r"(?u)\b\w\w+\b")
+        tokens = self._word_ngram(token_pattern.findall(x.lower()),
+                                  stop_words)
+        for feature in tokens:
+            try:
+                feature_idx = self.vocabulary[feature]
+                self.temp_vec.add(feature_idx)
+            except KeyError:
+                # Ignore out-of-vocabulary items for fixed_vocab=True
+                continue
+        for num in self.temp_vec:
+            try:
+                num = list(self.kbestfeature_key).index(num)
+            except ValueError:
+                continue
+            if num - 1 <= self._max_features:
+                self.mask[num] = 1
+        self.result = np.array(
+            self.mask)*np.array(
+            self.kbestfeature_value)
+        # Refresh the mask&temp_vec for next time usage.
+        self.mask = [0 for _ in range(self._max_features)]
+        self.temp_vec = set()
+        # TODO: For each x, what is the type of return value?
+        return self.result
 
     def output_types(self):
-        return (tf.float32,)
-
+        return tf.float64,
+    
     @property
     def output_shape(self):
-        return self.shape
+        return np.shape(self.result)
 
     def get_weights(self):
         return {'vectorizer': self.vectorizer,
