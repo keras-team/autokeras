@@ -7,8 +7,6 @@ import tensorflow as tf
 import scipy.sparse as sp
 import re
 import array
-from sklearn import feature_selection
-from sklearn.feature_extraction import text
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from sklearn.externals.six import moves
 from collections import defaultdict
@@ -164,7 +162,7 @@ class TextToNgramVector(base.Preprocessor):
         self.tf_idf_vec = {}  # TF-IDF of all the tokens
         self.word_sum = 0  # The number of all the words in the raw doc
         self.stc_num = 0  # The number of all the sentences in the raw doc
-        self.temp_vec = set()  # Store the features of each sentence, used for the transform func
+        self.temp_vec = set()  # Store the features of each sentencey
         self.result = []  # Final result list of the processed text
         self.kbestfeature_value = []
         self.kbestfeature_key = []
@@ -297,18 +295,16 @@ class TextToNgramVector(base.Preprocessor):
         return np.shape(self.result)
 
     def get_weights(self):
-        return {'vectorizer': self.vectorizer,
-                'selector': self.selector,
+        return {'selector': self.selector,
                 'targets': self.targets,
-                'max_features': self.vectorizer.max_features,
+                'max_features': self._max_features,
                 'texts': self._texts,
-                'shape': self.shape}
+                'shape': self._shape}
 
     def set_weights(self, weights):
-        self.vectorizer = weights['vectorizer']
         self.selector = weights['selector']
         self.targets = weights['targets']
-        self.vectorizer.max_features = weights['max_features']
+        self._max_features = weights['max_features']
         self._texts = weights['texts']
         self.shape = weights['shape']
 
