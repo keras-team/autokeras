@@ -57,14 +57,13 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             fit=fit)
 
         # Batching
-        batch_size = fit_kwargs.get('batch_size', 32)
+        batch_size = fit_kwargs.pop('batch_size', 32)
         dataset = dataset.batch(batch_size)
         validation_data = validation_data.batch(batch_size)
 
         # Update the new fit kwargs values
         fit_kwargs['x'] = dataset
         fit_kwargs['validation_data'] = validation_data
-        fit_kwargs['batch_size'] = None
         fit_kwargs['y'] = None
 
     def _get_save_path(self, trial, name):

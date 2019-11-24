@@ -14,7 +14,7 @@ def task_api():
 
 
 def io_api():
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     clf = ak.AutoModel(ak.ImageInput(),
                        ak.ClassificationHead(),
                        seed=5,
@@ -24,11 +24,12 @@ def io_api():
 
 
 def functional_api():
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     input_node = ak.ImageInput()
     output_node = input_node
     output_node = ak.Normalization()(output_node)
-    output_node = ak.ConvBlock()(output_node)
+    output_node = ak.ImageAugmentation()(output_node)
+    output_node = ak.ResNetBlock(version='next')(output_node)
     output_node = ak.SpatialReduction()(output_node)
     output_node = ak.DenseBlock()(output_node)
     output_node = ak.ClassificationHead()(output_node)
@@ -38,4 +39,4 @@ def functional_api():
 
 
 if __name__ == '__main__':
-    task_api()
+    functional_api()
