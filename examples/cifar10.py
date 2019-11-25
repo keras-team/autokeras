@@ -4,8 +4,6 @@ from tensorflow.keras.datasets import cifar10
 
 import autokeras as ak
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
-
 def task_api():
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     clf = ak.ImageClassifier(seed=5, max_trials=10)
