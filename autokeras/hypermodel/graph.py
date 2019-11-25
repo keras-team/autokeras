@@ -281,7 +281,7 @@ class KerasGraph(Graph, kerastuner.HyperModel):
         # Specify hyperparameters from compile(...)
         optimizer = hp.Choice('optimizer',
                               ['adam', 'adadelta', 'sgd'],
-                             default='adam')
+                              default='adam')
 
         model.compile(optimizer=optimizer,
                       metrics=self._get_metrics(),

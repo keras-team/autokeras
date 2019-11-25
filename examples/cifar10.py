@@ -1,8 +1,7 @@
-import os
-
 from tensorflow.keras.datasets import cifar10
 
 import autokeras as ak
+
 
 def task_api():
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()

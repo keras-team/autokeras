@@ -83,7 +83,7 @@ def test_ngram():
 def test_augment():
     dataset = common.generate_data(dtype='dataset')
     new_dataset = run_preprocessor(
-        preprocessor_module.ImageAugmentation(seed=common.SEED),
+        preprocessor_module.ImageAugmentation(),
         dataset,
         common.generate_data(dtype='dataset'),
         tf.float32)
