@@ -60,10 +60,10 @@ def fetch_heads(source_block):
 
 def lightgbm_head(lightgbm_block):
     """Fetch the heads for LightGBMBlock."""
-    lightgbm_block.heads = fetch_heads(lightgbm_block)
-    if len(lightgbm_block.heads) > 1:
+    heads = fetch_heads(lightgbm_block)
+    if len(heads) > 1:
         raise ValueError('LightGBMBlock can only be connected to one head.')
-    head = lightgbm_block.heads[0]
+    head = heads[0]
     if isinstance(head, head_module.ClassificationHead):
         classifier = preprocessor_module.LightGBMClassifier(seed=lightgbm_block.seed)
         classifier.num_classes = head.num_classes
@@ -95,7 +95,7 @@ def feature_engineering_input(fe_block):
 
 
 def structured_data_block_heads(structured_data_block):
-    structured_data_block.heads = fetch_heads(structured_data_block)
+    structured_data_block.num_heads = len(fetch_heads(structured_data_block))
 
 
 # Compile the graph before the preprocessing step.

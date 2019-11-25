@@ -9,7 +9,7 @@ from autokeras.hypermodel import base
 from autokeras.hypermodel import graph
 
 
-class AutoModel(object):
+class AutoModel(kerastuner.engine.stateful.Stateful):
     """ A Model defined by inputs and outputs.
     AutoModel combines a HyperModel and a Tuner to tune the HyperModel.
     The user can use it in a similar way to a Keras model since it
@@ -33,6 +33,8 @@ class AutoModel(object):
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         tuner: String. It should be one of 'greedy', 'bayesian', 'hyperband' or
             'random'. Defaults to 'greedy'.
+        overwrite: Boolean. default `True`. If `False`, reloads an existing project
+            of the same name if one is found. Otherwise, overwrites the project.
         seed: Int. Random seed.
     """
 
@@ -44,6 +46,7 @@ class AutoModel(object):
                  directory=None,
                  objective='val_loss',
                  tuner='greedy',
+                 overwrite=True,
                  seed=None):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
@@ -55,6 +58,7 @@ class AutoModel(object):
         self.objective = objective
         # TODO: Support passing a tuner instance.
         self.tuner = tuner_module.get_tuner_class(tuner)
+        self.overwrite = overwrite
         self._split_dataset = False
         if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
@@ -271,6 +275,12 @@ class AutoModel(object):
         data = preprocess_graph.preprocess(
             self._process_xy(x, y))[0].batch(batch_size)
         return model.evaluate(data, **kwargs)
+
+    def get_state(self):
+        pass
+
+    def set_state(self, state):
+        pass
 
 
 class GraphAutoModel(AutoModel):

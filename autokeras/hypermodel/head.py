@@ -88,20 +88,20 @@ class ClassificationHead(base.Head):
 
     def get_state(self):
         state = super().get_state()
-        label_encoder_state = None
-        label_encoder_class = None
+        encoder_class = None
+        encoder_state = None
+        if isinstance(self.label_encoder, encoder.OneHotEncoder):
+            encoder_class = 'one_hot_encoder'
+        elif isinstance(self.label_encoder, encoder.LabelEncoder):
+            encoder_class = 'label_encoder'
         if self.label_encoder:
-            label_encoder_state = self.label_encoder.get_state()
-            if isinstance(self.label_encoder, encoder.OneHotEncoder):
-                label_encoder_class = 'one_hot_encoder'
-            else:
-                label_encoder_class = 'label_encoder'
+            encoder_state = self.label_encoder.get_state()
         state.update({
             'num_classes': self.num_classes,
             'multi_label': self.multi_label,
             'dropout_rate': self.dropout_rate,
-            'label_encoder': label_encoder_state,
-            'encoder_class': label_encoder_class})
+            'encoder_class': encoder_class,
+            'encoder_state': encoder_state})
         return state
 
     def set_state(self, state):
@@ -110,12 +110,23 @@ class ClassificationHead(base.Head):
         self.multi_label = state['multi_label']
         self.dropout_rate = state['dropout_rate']
         self.label_encoder = None
-        if state['label_encoder']:
-            if state['encoder_class'] == 'one_hot_encoder':
-                self.label_encoder = encoder.OneHotEncoder()
-            else:
-                self.label_encoder = encoder.LabelEncoder()
-            self.label_encoder.set_state(state['label_encoder'])
+        if state['encoder_class'] == 'one_hot_encoder':
+            self.label_encoder = encoder.OneHotEncoder()
+        elif state['encoder_class'] == 'label_encoder':
+            self.label_encoder = encoder.LabelEncoder()
+        if self.label_encoder:
+            self.label_encoder.set_state(state['encoder_state'])
+
+    def get_weights(self):
+        weights = super().get_weights()
+        if self.label_encoder:
+            weights.update({'label_encoder': self.label_encoder.get_weights()})
+        return weights
+
+    def set_weights(self, weights):
+        super().set_weights(weights)
+        if self.label_encoder:
+            self.label_encoder.set_weights(weights['label_encoder'])
 
     def build(self, hp, inputs=None):
         if self.identity:

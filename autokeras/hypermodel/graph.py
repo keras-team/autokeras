@@ -1,6 +1,4 @@
 import functools
-import pickle
-
 import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
@@ -9,7 +7,7 @@ from autokeras.hypermodel import base
 from autokeras.hypermodel import compiler
 
 
-class Graph(kerastuner.engine.stateful.Stateful):
+class Graph(base.Weighted, kerastuner.engine.stateful.Stateful):
     """A graph consists of connected Blocks, HyperBlocks, Preprocessors or Heads.
 
     # Arguments
@@ -171,19 +169,18 @@ class Graph(kerastuner.engine.stateful.Stateful):
         for node_id, node in enumerate(self._nodes):
             node.set_state(node_state[str(node_id)])
 
-    def save(self, fname):
-        state = self.get_state()
-        with tf.io.gfile.GFile(fname, 'wb') as f:
-            pickle.dump(state, f)
-        return str(fname)
-
-    def reload(self, fname):
-        with tf.io.gfile.GFile(fname, 'rb') as f:
-            state = pickle.load(f)
-        self.set_state(state)
-
     def build(self, hp):
         self._register_hps(hp)
+
+    def get_weights(self):
+        node_weights = {str(node_id): node.get_weights()
+                        for node_id, node in enumerate(self._nodes)}
+        return {'nodes': node_weights}
+
+    def set_weights(self, weights):
+        node_weights = weights['nodes']
+        for node_id, node in enumerate(self._nodes):
+            node.set_weights(node_weights[str(node_id)])
 
 
 class PlainGraph(Graph):
@@ -412,10 +409,25 @@ class PreprocessGraph(Graph):
         for block in self.blocks:
             block.build(hp)
 
+    def get_weights(self):
+        weights = super().get_weights()
+        block_weights = {str(block_id): block.get_weights()
+                         for block_id, block in enumerate(self.blocks)}
+        weights.update({'blocks': block_weights})
+        return weights
+
+    def set_weights(self, weights):
+        super().set_weights(weights)
+        block_weights = weights['blocks']
+        for block_id, block in enumerate(self.blocks):
+            block.set_weights(block_weights[str(block_id)])
+
 
 def copy(old_instance):
     instance = old_instance.__class__()
     instance.set_state(old_instance.get_state())
+    if isinstance(instance, base.Weighted):
+        instance.set_weights(old_instance.get_weights())
     return instance
 
 

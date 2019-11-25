@@ -146,14 +146,14 @@ class StructuredDataBlock(base.HyperBlock):
         super().__init__(**kwargs)
         self.feature_engineering = feature_engineering
         self.module_type = module_type
-        self.heads = None
+        self.num_heads = None
         self.seed = seed
 
     def get_state(self):
         config = super().get_state()
         config.update({'feature_engineering': self.feature_engineering,
                        'module_type': self.module_type,
-                       'heads': self.heads,
+                       'num_heads': self.num_heads,
                        'seed': self.seed})
         return config
 
@@ -161,7 +161,7 @@ class StructuredDataBlock(base.HyperBlock):
         super().set_state(state)
         self.feature_engineering = state.get('feature_engineering')
         self.module_type = state.get('module_type')
-        self.heads = state.get('heads')
+        self.num_heads = state.get('num_heads')
         self.seed = state.get('seed')
 
     def build_feature_engineering(self, hp, input_node):
@@ -177,7 +177,7 @@ class StructuredDataBlock(base.HyperBlock):
         return output_node
 
     def build_body(self, hp, input_node):
-        if len(self.heads) > 1:
+        if self.num_heads > 1:
             module_type_choices = ['dense']
         else:
             module_type_choices = ['lightgbm', 'dense']

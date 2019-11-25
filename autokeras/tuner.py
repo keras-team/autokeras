@@ -75,7 +75,11 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         super().on_trial_end(trial)
 
         self.preprocess_graph.save(self._get_save_path(trial, 'preprocess_graph'))
+        self.preprocess_graph.save_weights(
+            self._get_save_path(trial, 'preprocess_graph_weights'))
         self.hypermodel.hypermodel.save(self._get_save_path(trial, 'keras_graph'))
+        self.hypermodel.hypermodel.save_weights(
+            self._get_save_path(trial, 'keras_graph_weights'))
 
         self.preprocess_graph = None
         self.hypermodel = None
@@ -91,8 +95,12 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         """
         preprocess_graph, keras_graph = self.hyper_graph.build_graphs(
             trial.hyperparameters)
+        # TODO: Use constants for these strings.
         preprocess_graph.reload(self._get_save_path(trial, 'preprocess_graph'))
+        preprocess_graph.load_weights(
+            self._get_save_path(trial, 'preprocess_graph_weights'))
         keras_graph.reload(self._get_save_path(trial, 'keras_graph'))
+        keras_graph.load_weights(self._get_save_path(trial, 'keras_graph_weights'))
         self.hypermodel = hm_module.KerasHyperModel(keras_graph)
         models = (preprocess_graph, keras_graph, super().load_model(trial))
         self.hypermodel = None
@@ -109,7 +117,9 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         preprocess_graph, keras_graph = self.hyper_graph.build_graphs(
             self.best_hp)
         preprocess_graph.reload(self.best_preprocess_graph_path)
+        preprocess_graph.load_weights(self.best_preprocess_graph_weights_path)
         keras_graph.reload(self.best_keras_graph_path)
+        keras_graph.load_weights(self.best_keras_graph_weights_path)
         model = keras_graph.build(self.best_hp)
         model.load_weights(self.best_model_path)
         return preprocess_graph, model
@@ -135,6 +145,8 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         self.best_hp = best_trial.hyperparameters
         preprocess_graph, keras_graph, model = self.get_best_models()[0]
         preprocess_graph.save(self.best_preprocess_graph_path)
+        preprocess_graph.save_weights(self.best_preprocess_graph_weights_path)
+        keras_graph.save_weights(self.best_keras_graph_weights_path)
         keras_graph.save(self.best_keras_graph_path)
 
         # Fully train the best model with original callbacks.
@@ -157,6 +169,14 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     @property
     def best_keras_graph_path(self):
         return os.path.join(self.project_dir, 'best_keras_graph')
+
+    @property
+    def best_preprocess_graph_weights_path(self):
+        return os.path.join(self.project_dir, 'best_preprocess_weights_graph')
+
+    @property
+    def best_keras_graph_weights_path(self):
+        return os.path.join(self.project_dir, 'best_keras_weights_graph')
 
     @property
     def best_model_path(self):
@@ -231,16 +251,14 @@ class GreedyOracle(kerastuner.Oracle):
 
     def set_state(self, state):
         super().set_state(state)
-        # TODO: self.hyper_graph.set_state(state['hyper_graph'])
-        # currently the state is not json serializable.
+        self.hyper_graph.set_state(state['hyper_graph'])
         self._stage = state['stage']
         self._capacity = state['capacity']
 
     def get_state(self):
         state = super().get_state()
         state.update({
-            # TODO: 'hyper_graph': self.hyper_graph.get_state(),
-            # currently the state is not json serializable.
+            'hyper_graph': self.hyper_graph.get_state(),
             'stage': self._stage,
             'capacity': self._capacity,
         })

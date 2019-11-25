@@ -1,8 +1,10 @@
 import kerastuner
 import numpy as np
 
+from autokeras.hypermodel import base
 
-class Encoder(kerastuner.engine.stateful.Stateful):
+
+class Encoder(base.Weighted, kerastuner.engine.stateful.Stateful):
     """Base class for encoders of the prediction targets.
 
     # Arguments
@@ -45,14 +47,18 @@ class Encoder(kerastuner.engine.stateful.Stateful):
         raise NotImplementedError
 
     def get_state(self):
-        return {'num_classes': self.num_classes,
-                'labels': self._labels,
-                'int_to_label': self._int_to_label}
+        return {'num_classes': self.num_classes}
 
     def set_state(self, state):
         self.num_classes = state['num_classes']
-        self._labels = state['labels']
-        self._int_to_label = state['int_to_label']
+
+    def get_weights(self):
+        return {'labels': self._labels,
+                'int_to_label': self._int_to_label}
+
+    def set_weights(self, weights):
+        self._labels = weights['labels']
+        self._int_to_label = weights['int_to_label']
 
 
 class OneHotEncoder(Encoder):
@@ -68,14 +74,14 @@ class OneHotEncoder(Encoder):
         super().__init__(**kwargs)
         self._label_to_vec = {}
 
-    def get_state(self):
-        state = super().get_state()
-        state.update({'label_to_vec': self._label_to_vec})
-        return state
+    def get_weights(self):
+        weights = super().get_weights()
+        weights.update({'label_to_vec': self._label_to_vec})
+        return weights
 
-    def set_state(self, state):
-        super().set_state(state)
-        self._label_to_vec = state['label_to_vec']
+    def set_weights(self, weights):
+        super().set_weights(weights)
+        self._label_to_vec = weights['label_to_vec']
 
     def fit_with_labels(self, data):
         """Create mapping from label to vector, and vector to label.
@@ -149,14 +155,14 @@ class LabelEncoder(Encoder):
         super().__init__(**kwargs)
         self._label_to_int = {}
 
-    def get_state(self):
-        state = super().get_state()
-        state.update({'label_to_int': self._label_to_int})
-        return state
+    def get_weights(self):
+        weights = super().get_weights()
+        weights.update({'label_to_int': self._label_to_int})
+        return weights
 
-    def set_state(self, state):
-        super().set_state(state)
-        self._label_to_int = state['label_to_int']
+    def set_weights(self, weights):
+        super().set_weights(weights)
+        self._label_to_int = weights['label_to_int']
 
     def fit_with_labels(self, data):
         """Fit the encoder with all the labels.

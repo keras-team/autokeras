@@ -1,13 +1,60 @@
 import kerastuner
 import numpy as np
 import pandas as pd
+import pickle
 import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import utils
 
 
-class Node(kerastuner.engine.stateful.Stateful):
+class Weighted(object):
+    """The base class for those have weights.
+
+    They should override `get_weights` and `set_weights` so that they can be loaded
+    and saved with these functions. We define weights for any hypermodel as something
+    that can only be know after seeing the data.
+    """
+
+    def get_weights(self):
+        """Returns the current weights of this object.
+
+        # Returns
+            Dictionary.
+        """
+        raise NotImplementedError
+
+    def set_weights(self, weights):
+        """Sets the current state of this object.
+
+        # Arguments
+            weights: Dict. The weights to restore for this object.
+        """
+        raise NotImplementedError
+
+    def save_weights(self, fname):
+        """Save weights to file.
+
+        # Arguments
+            fname: String. The path to a file to save the weights.
+        """
+        weights = self.get_weights()
+        with tf.io.gfile.GFile(fname, 'wb') as f:
+            pickle.dump(weights, f)
+        return str(fname)
+
+    def load_weights(self, fname):
+        """Load weights to file.
+
+        # Arguments
+            fname: String. The path to a file to load the weights.
+        """
+        with tf.io.gfile.GFile(fname, 'rb') as f:
+            weights = pickle.load(f)
+        self.set_weights(weights)
+
+
+class Node(Weighted, kerastuner.engine.stateful.Stateful):
     """The nodes in a network connecting the blocks."""
 
     def __init__(self, shape=None):
@@ -26,9 +73,15 @@ class Node(kerastuner.engine.stateful.Stateful):
         return tf.keras.Input(shape=self.shape)
 
     def get_state(self):
-        return {'shape': self.shape}
+        return {}
 
     def set_state(self, state):
+        pass
+
+    def get_weights(self):
+        return {'shape': self.shape}
+
+    def set_weights(self, state):
         self.shape = state['shape']
 
 
@@ -116,7 +169,7 @@ class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
         self.name = state['name']
 
 
-class Head(Block):
+class Head(Weighted, Block):
     """Base class for the heads, e.g. classification, regression.
 
     # Arguments
@@ -139,7 +192,6 @@ class Head(Block):
     def get_state(self):
         state = super().get_state()
         state.update({
-            'output_shape': self.output_shape,
             'loss': self.loss,
             'metrics': self.metrics,
             'identity': self.identity
@@ -148,10 +200,15 @@ class Head(Block):
 
     def set_state(self, state):
         super().set_state(state)
-        self.output_shape = state['output_shape']
         self.loss = state['loss']
         self.metrics = state['metrics']
         self.identity = state['identity']
+
+    def get_weights(self):
+        return {'output_shape': self.output_shape}
+
+    def set_weights(self, weights):
+        self.output_shape = weights['output_shape']
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
@@ -238,7 +295,7 @@ class HyperBlock(Block):
         raise NotImplementedError
 
 
-class Preprocessor(Block):
+class Preprocessor(Weighted, Block):
     """Hyper preprocessing block base class.
 
     It extends Block which extends Hypermodel. A preprocessor is a Hypermodel, which
@@ -302,7 +359,7 @@ class Preprocessor(Block):
         """Training process of the preprocessor after update with all instances."""
         pass
 
-    def get_config(self):
+    def get_state(self):
         """Get the configuration of the preprocessor.
 
         # Returns
@@ -310,37 +367,10 @@ class Preprocessor(Block):
         """
         return {}
 
-    def set_config(self, config):
+    def set_state(self, state):
         """Set the configuration of the preprocessor.
 
         # Arguments
-            config: A dictionary of the configurations of the preprocessor.
+            state: A dictionary of the configurations of the preprocessor.
         """
         pass
-
-    def get_weights(self):
-        """Get the trained weights of the preprocessor.
-
-        # Returns
-            A dictionary of trained weights of the preprocessor.
-        """
-        return {}
-
-    def set_weights(self, weights):
-        """Set the trained weights of the preprocessor.
-
-        # Arguments
-            weights: A dictionary of trained weights of the preprocessor.
-        """
-        pass
-
-    def get_state(self):
-        state = super().get_state()
-        state.update(self.get_config())
-        return {'config': state,
-                'weights': self.get_weights()}
-
-    def set_state(self, state):
-        self.set_config(state['config'])
-        super().set_state(state['config'])
-        self.set_weights(state['weights'])

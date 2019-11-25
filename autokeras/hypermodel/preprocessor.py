@@ -67,12 +67,13 @@ class Normalization(base.Preprocessor):
         return self.shape
 
     def get_weights(self):
-        return {'sum': self.sum,
-                'square_sum': self.square_sum,
-                'count': self.count,
-                'mean': self.mean,
-                'std': self.std,
-                'shape': self.shape}
+        return {
+            'sum': self.sum,
+            'square_sum': self.square_sum,
+            'count': self.count,
+            'mean': self.mean,
+            'std': self.std,
+            'shape': self.shape}
 
     def set_weights(self, weights):
         self.sum = weights['sum']
@@ -121,11 +122,11 @@ class TextToIntSequence(base.Preprocessor):
     def output_shape(self):
         return self.max_len or self.max_len_in_data,
 
-    def get_config(self):
+    def get_state(self):
         return {'max_len': self.max_len}
 
-    def set_config(self, config):
-        self.max_len = config['max_len']
+    def set_state(self, state):
+        self.max_len = state['max_len']
 
     def get_weights(self):
         return {'max_len_in_data': self.max_len_in_data,
@@ -188,12 +189,13 @@ class TextToNgramVector(base.Preprocessor):
         return self.shape
 
     def get_weights(self):
-        return {'vectorizer': self.vectorizer,
-                'selector': self.selector,
-                'targets': self.targets,
-                'max_features': self.vectorizer.max_features,
-                'texts': self._texts,
-                'shape': self.shape}
+        return {
+            'vectorizer': self.vectorizer,
+            'selector': self.selector,
+            'targets': self.targets,
+            'max_features': self.vectorizer.max_features,
+            'texts': self._texts,
+            'shape': self.shape}
 
     def set_weights(self, weights):
         self.vectorizer = weights['vectorizer']
@@ -373,7 +375,6 @@ class LightGBMBlock(base.Preprocessor):
     def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
         self.lightgbm_block = None
-        self.heads = None
         self.seed = seed
 
     def build(self, hp):
@@ -385,11 +386,11 @@ class LightGBMBlock(base.Preprocessor):
     def set_weights(self, weights):
         self.lightgbm_block.set_weights(weights)
 
-    def get_config(self):
-        return self.lightgbm_block.get_config()
+    def get_state(self):
+        return self.lightgbm_block.get_state()
 
-    def set_config(self, config):
-        self.lightgbm_block.set_config(config)
+    def set_state(self, state):
+        self.lightgbm_block.set_state(state)
 
     def update(self, x, y=None):
         self.lightgbm_block.update(x, y)
@@ -579,8 +580,7 @@ class ImageAugmentation(base.Preprocessor):
                 'translation': self.translation,
                 'horizontal_flip': self.horizontal_flip,
                 'vertical_flip': self.vertical_flip,
-                'gaussian_noise': self.gaussian_noise,
-                'shape': self.shape}
+                'gaussian_noise': self.gaussian_noise}
 
     def set_config(self, config):
         self.rotation_range = config['rotation_range']
@@ -592,7 +592,12 @@ class ImageAugmentation(base.Preprocessor):
         self.horizontal_flip = config['horizontal_flip']
         self.vertical_flip = config['vertical_flip']
         self.gaussian_noise = config['gaussian_noise']
-        self.shape = config['shape']
+
+    def get_weights(self):
+        return {'shape': self.shape}
+
+    def set_weights(self, weights):
+        self.shape = weights['shape']
 
 
 class FeatureEngineering(base.Preprocessor):
@@ -807,14 +812,14 @@ class FeatureEngineering(base.Preprocessor):
         self.high_level_num_cat = utils.to_type_key(
             weights['high_level_num_cat'], ast.literal_eval)
 
-    def get_config(self):
+    def get_state(self):
         return {'column_names': self.column_names,
                 'column_types': utils.to_type_key(self.column_types, str),
                 'num_columns': self.num_columns,
                 'max_columns': self.max_columns}
 
-    def set_config(self, config):
-        self.column_names = config['column_names']
-        self.column_types = config['column_types']
-        self.num_columns = config['num_columns']
-        self.max_columns = config['max_columns']
+    def set_state(self, state):
+        self.column_names = state['column_names']
+        self.column_types = state['column_types']
+        self.num_columns = state['num_columns']
+        self.max_columns = state['max_columns']

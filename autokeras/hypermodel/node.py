@@ -140,11 +140,6 @@ class StructuredDataInput(Input):
         state.update({
             'column_names': self.column_names,
             'column_types': self.column_types,
-            'count_nan': self.count_nan,
-            'count_numerical': self.count_numerical,
-            'count_categorical': self.count_categorical,
-            'count_unique_numerical': self.count_unique_numerical,
-            'num_col': self.num_col
         })
         return state
 
@@ -152,11 +147,25 @@ class StructuredDataInput(Input):
         super().set_state(state)
         self.column_names = state['column_names']
         self.column_types = state['column_types']
-        self.count_nan = state['count_nan']
-        self.count_numerical = state['count_numerical']
-        self.count_categorical = state['count_categorical']
-        self.count_unique_numerical = state['count_unique_numerical']
-        self.num_col = state['num_col']
+
+    def get_weights(self):
+        weights = super().get_weights()
+        weights.update({
+            'count_nan': self.count_nan,
+            'count_numerical': self.count_numerical,
+            'count_categorical': self.count_categorical,
+            'count_unique_numerical': self.count_unique_numerical,
+            'num_col': self.num_col
+        })
+        return weights
+
+    def set_weights(self, weights):
+        super().set_weights(weights)
+        self.count_nan = weights['count_nan']
+        self.count_numerical = weights['count_numerical']
+        self.count_categorical = weights['count_categorical']
+        self.count_unique_numerical = weights['count_unique_numerical']
+        self.num_col = weights['num_col']
 
     def _check(self, x):
         if not isinstance(x, (pd.DataFrame, np.ndarray)):
