@@ -1,3 +1,5 @@
+import os
+
 import kerastuner
 import pytest
 import tensorflow as tf
@@ -6,6 +8,11 @@ from kerastuner.engine import hyperparameters as hp_module
 import autokeras as ak
 from autokeras.hypermodel import graph as graph_module
 from tests import common
+
+
+@pytest.fixture(scope='module')
+def tmp_dir(tmpdir_factory):
+    return tmpdir_factory.mktemp('test_graph')
 
 
 def test_set_hp():
@@ -85,6 +92,31 @@ def test_graph_basics():
     model = graph.build_keras_graph().build(kerastuner.HyperParameters())
     assert model.input_shape == (None, 30)
     assert model.output_shape == (None, 1)
+
+
+def test_graph_save_load(tmp_dir):
+    input1 = ak.Input()
+    input2 = ak.Input()
+    output1 = ak.DenseBlock()(input1)
+    output2 = ak.ConvBlock()(input2)
+    output = ak.Merge()([output1, output2])
+    output1 = ak.RegressionHead()(output)
+    output2 = ak.ClassificationHead()(output)
+
+    graph = graph_module.HyperGraph(
+        inputs=[input1, input2],
+        outputs=[output1, output2],
+        override_hps=[hp_module.Choice('dense_block_1/num_layers', [6], default=6)])
+    path = os.path.join(tmp_dir, 'graph')
+    graph.save(path)
+    graph = graph_module.HyperGraph()
+    graph.reload(path)
+
+    assert len(graph.inputs) == 2
+    assert len(graph.outputs) == 2
+    assert isinstance(graph.inputs[0].out_blocks[0], ak.DenseBlock)
+    assert isinstance(graph.inputs[1].out_blocks[0], ak.ConvBlock)
+    assert isinstance(graph.override_hps[0], hp_module.Choice)
 
 
 def test_merge():
