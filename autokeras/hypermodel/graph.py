@@ -159,47 +159,13 @@ class Graph(base.Weighted, kerastuner.engine.stateful.Stateful):
     def get_state(self):
         block_states = {str(block_id): block.get_state()
                         for block_id, block in enumerate(self.blocks)}
-        block_classes = [block.__class__.__name__ for block in self.blocks]
-
         node_states = {str(node_id): node.get_state()
                        for node_id, node in enumerate(self._nodes)}
-        node_classes = [node.__class__.__name__ for node in self._nodes]
-
-        block_inputs = {
-            block_id: [self._node_to_id[node]
-                       for node in block.inputs]
-            for block_id, block in enumerate(self.blocks)}
-        block_outputs = {
-            block_id: [self._node_to_id[node]
-                       for node in block.outputs]
-            for block_id, block in enumerate(self.blocks)}
-
-        node_inputs = {
-            node_id: [self._block_to_id[block]
-                      for block in node.in_blocks]
-            for node_id, node in enumerate(self._nodes)}
-        node_outputs = {
-            node_id: [self._block_to_id[block]
-                      for block in node.out_blocks]
-            for node_id, node in enumerate(self._nodes)}
-
         override_hps = [(hp.__class__.__name__, hp.get_config())
                         for hp in self.override_hps]
-
-        inputs = [self._node_to_id[node] for node in self.inputs]
-        outputs = [self._node_to_id[node] for node in self.outputs]
-
         return {
-            'inputs': inputs,  # List of node_ids.
-            'outputs': outputs,  # List of node_ids.
             'block_states': block_states,  # Dict {id: state}.
-            'block_classes': block_classes,  # List of strings of class names.
             'node_states': node_states,  # Dict {id: state}.
-            'node_classes': node_classes,  # List of strings of class names.
-            'block_inputs': block_inputs,  # Dict {id: List of node_ids}.
-            'block_outputs': block_outputs,  # Dict {id: List of node_ids}.
-            'node_inputs': node_inputs,  # Dict {id: List of block_ids}.
-            'node_outputs': node_outputs,  # Dict {id: List of block_ids}.
             'override_hps': override_hps,  # List of tuple of (class_name, config).
         }
 
@@ -207,34 +173,13 @@ class Graph(base.Weighted, kerastuner.engine.stateful.Stateful):
         block_states = state['block_states']
         node_states = state['node_states']
 
-        self.blocks = [getattr(autokeras, block_class)()
-                       for block_class in state['block_classes']]
-        self._nodes = [getattr(autokeras, node_class)()
-                       for node_class in state['node_classes']]
-
-        self._block_to_id = {self.blocks[block_id]: block_id
-                             for block_id in range(len(self.blocks))}
-        self._node_to_id = {self._nodes[node_id]: node_id
-                            for node_id in range(len(self._nodes))}
-
         for block_id, block in enumerate(self.blocks):
             block.set_state(block_states[str(block_id)])
-            block.inputs = [self._nodes[node_id]
-                            for node_id in state['block_inputs'][str(block_id)]]
-            block.outputs = [self._nodes[node_id]
-                             for node_id in state['block_outputs'][str(block_id)]]
         for node_id, node in enumerate(self._nodes):
             node.set_state(node_states[str(node_id)])
-            node.in_blocks = [self.blocks[block_id]
-                              for block_id in state['node_inputs'][str(node_id)]]
-            node.out_blocks = [self.blocks[block_id]
-                               for block_id in state['node_outputs'][str(node_id)]]
 
         self.override_hps = [getattr(hp_module, hp_class).from_config(config)
                              for hp_class, config in state['override_hps']]
-
-        self.inputs = [self._nodes[node_id] for node_id in state['inputs']]
-        self.outputs = [self._nodes[node_id] for node_id in state['outputs']]
 
     def build(self, hp):
         self._register_hps(hp)
@@ -533,4 +478,69 @@ class HyperGraph(Graph):
         outputs = []
         for output_node in self.outputs:
             outputs.append(old_node_to_new[output_node])
-        return PlainGraph(inputs, outputs, override_hps=self.override_hps)
+        return PlainGraph(inputs=inputs,
+                          outputs=outputs,
+                          override_hps=self.override_hps)
+
+    def get_state(self):
+        state = super().get_state()
+        block_classes = [block.__class__.__name__ for block in self.blocks]
+        node_classes = [node.__class__.__name__ for node in self._nodes]
+        block_inputs = {
+            str(block_id): [self._node_to_id[node]
+                            for node in block.inputs]
+            for block_id, block in enumerate(self.blocks)}
+        block_outputs = {
+            str(block_id): [self._node_to_id[node]
+                            for node in block.outputs]
+            for block_id, block in enumerate(self.blocks)}
+        node_inputs = {
+            str(node_id): [self._block_to_id[block]
+                           for block in node.in_blocks]
+            for node_id, node in enumerate(self._nodes)}
+        node_outputs = {
+            str(node_id): [self._block_to_id[block]
+                           for block in node.out_blocks]
+            for node_id, node in enumerate(self._nodes)}
+
+        inputs = [self._node_to_id[node] for node in self.inputs]
+        outputs = [self._node_to_id[node] for node in self.outputs]
+
+        state.update({
+            'inputs': inputs,  # List of node_ids.
+            'outputs': outputs,  # List of node_ids.
+            'block_classes': block_classes,  # List of strings of class names.
+            'node_classes': node_classes,  # List of strings of class names.
+            'block_inputs': block_inputs,  # Dict {id: List of node_ids}.
+            'block_outputs': block_outputs,  # Dict {id: List of node_ids}.
+            'node_inputs': node_inputs,  # Dict {id: List of block_ids}.
+            'node_outputs': node_outputs,  # Dict {id: List of block_ids}.
+        })
+        return state
+
+    def set_state(self, state):
+        self.blocks = [getattr(autokeras, block_class)()
+                       for block_class in state['block_classes']]
+        self._nodes = [getattr(autokeras, node_class)()
+                       for node_class in state['node_classes']]
+
+        self._block_to_id = {self.blocks[block_id]: block_id
+                             for block_id in range(len(self.blocks))}
+        self._node_to_id = {self._nodes[node_id]: node_id
+                            for node_id in range(len(self._nodes))}
+
+        for block_id, block in enumerate(self.blocks):
+            block.inputs = [self._nodes[node_id]
+                            for node_id in state['block_inputs'][str(block_id)]]
+            block.outputs = [self._nodes[node_id]
+                             for node_id in state['block_outputs'][str(block_id)]]
+        for node_id, node in enumerate(self._nodes):
+            node.in_blocks = [self.blocks[block_id]
+                              for block_id in state['node_inputs'][str(node_id)]]
+            node.out_blocks = [self.blocks[block_id]
+                               for block_id in state['node_outputs'][str(node_id)]]
+
+        self.inputs = [self._nodes[node_id] for node_id in state['inputs']]
+        self.outputs = [self._nodes[node_id] for node_id in state['outputs']]
+
+        super().set_state(state)

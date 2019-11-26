@@ -333,4 +333,5 @@ class GraphAutoModel(AutoModel):
         )
 
     def _meta_build(self, dataset):
-        self.hyper_graph = graph.HyperGraph(self.inputs, self.outputs)
+        self.hyper_graph = graph.HyperGraph(inputs=self.inputs,
+                                            outputs=self.outputs)
