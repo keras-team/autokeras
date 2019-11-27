@@ -10,7 +10,7 @@ from autokeras.hypermodel import base
 from autokeras.hypermodel import compiler
 
 
-class Graph(base.Weighted, kerastuner.engine.stateful.Stateful):
+class Graph(base.Pickable):
     """A graph consists of connected Blocks, HyperBlocks, Preprocessors or Heads.
 
     # Arguments
@@ -156,30 +156,30 @@ class Graph(base.Weighted, kerastuner.engine.stateful.Stateful):
                 return block
         raise ValueError('Cannot find block named {name}.'.format(name=name))
 
-    def get_state(self):
-        block_states = {str(block_id): block.get_state()
+    def get_config(self):
+        block_config = {str(block_id): block.get_config()
                         for block_id, block in enumerate(self.blocks)}
-        node_states = {str(node_id): node.get_state()
+        node_config = {str(node_id): node.get_config()
                        for node_id, node in enumerate(self._nodes)}
         override_hps = [(hp.__class__.__name__, hp.get_config())
                         for hp in self.override_hps]
         return {
-            'block_states': block_states,  # Dict {id: state}.
-            'node_states': node_states,  # Dict {id: state}.
+            'block_config': block_config,  # Dict {id: config}.
+            'node_config': node_config,  # Dict {id: config}.
             'override_hps': override_hps,  # List of tuple of (class_name, config).
         }
 
-    def set_state(self, state):
-        block_states = state['block_states']
-        node_states = state['node_states']
+    def set_config(self, config):
+        block_config = config['block_config']
+        node_config = config['node_config']
 
         for block_id, block in enumerate(self.blocks):
-            block.set_state(block_states[str(block_id)])
+            block.set_config(block_config[str(block_id)])
         for node_id, node in enumerate(self._nodes):
-            node.set_state(node_states[str(node_id)])
+            node.set_config(node_config[str(node_id)])
 
         self.override_hps = [getattr(hp_module, hp_class).from_config(config)
-                             for hp_class, config in state['override_hps']]
+                             for hp_class, config in config['override_hps']]
 
     def build(self, hp):
         self._register_hps(hp)
@@ -434,8 +434,6 @@ class PreprocessGraph(Graph):
 def copy(old_instance):
     instance = old_instance.__class__()
     instance.set_state(old_instance.get_state())
-    if isinstance(instance, base.Weighted):
-        instance.set_weights(old_instance.get_weights())
     return instance
 
 
@@ -482,8 +480,8 @@ class HyperGraph(Graph):
                           outputs=outputs,
                           override_hps=self.override_hps)
 
-    def get_state(self):
-        state = super().get_state()
+    def get_config(self):
+        config = super().get_config()
         block_classes = [block.__class__.__name__ for block in self.blocks]
         node_classes = [node.__class__.__name__ for node in self._nodes]
         block_inputs = {
@@ -506,7 +504,7 @@ class HyperGraph(Graph):
         inputs = [self._node_to_id[node] for node in self.inputs]
         outputs = [self._node_to_id[node] for node in self.outputs]
 
-        state.update({
+        config.update({
             'inputs': inputs,  # List of node_ids.
             'outputs': outputs,  # List of node_ids.
             'block_classes': block_classes,  # List of strings of class names.
@@ -516,13 +514,13 @@ class HyperGraph(Graph):
             'node_inputs': node_inputs,  # Dict {id: List of block_ids}.
             'node_outputs': node_outputs,  # Dict {id: List of block_ids}.
         })
-        return state
+        return config
 
-    def set_state(self, state):
+    def set_config(self, config):
         self.blocks = [getattr(autokeras, block_class)()
-                       for block_class in state['block_classes']]
+                       for block_class in config['block_classes']]
         self._nodes = [getattr(autokeras, node_class)()
-                       for node_class in state['node_classes']]
+                       for node_class in config['node_classes']]
 
         self._block_to_id = {self.blocks[block_id]: block_id
                              for block_id in range(len(self.blocks))}
@@ -531,16 +529,16 @@ class HyperGraph(Graph):
 
         for block_id, block in enumerate(self.blocks):
             block.inputs = [self._nodes[node_id]
-                            for node_id in state['block_inputs'][str(block_id)]]
+                            for node_id in config['block_inputs'][str(block_id)]]
             block.outputs = [self._nodes[node_id]
-                             for node_id in state['block_outputs'][str(block_id)]]
+                             for node_id in config['block_outputs'][str(block_id)]]
         for node_id, node in enumerate(self._nodes):
             node.in_blocks = [self.blocks[block_id]
-                              for block_id in state['node_inputs'][str(node_id)]]
+                              for block_id in config['node_inputs'][str(node_id)]]
             node.out_blocks = [self.blocks[block_id]
-                               for block_id in state['node_outputs'][str(node_id)]]
+                               for block_id in config['node_outputs'][str(node_id)]]
 
-        self.inputs = [self._nodes[node_id] for node_id in state['inputs']]
-        self.outputs = [self._nodes[node_id] for node_id in state['outputs']]
+        self.inputs = [self._nodes[node_id] for node_id in config['inputs']]
+        self.outputs = [self._nodes[node_id] for node_id in config['outputs']]
 
-        super().set_state(state)
+        super().set_config(config)

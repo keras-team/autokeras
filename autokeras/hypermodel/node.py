@@ -135,18 +135,18 @@ class StructuredDataInput(Input):
         self.count_unique_numerical = []
         self.num_col = None
 
-    def get_state(self):
-        state = super().get_state()
-        state.update({
+    def get_config(self):
+        config = super().get_config()
+        config.update({
             'column_names': self.column_names,
             'column_types': self.column_types,
         })
-        return state
+        return config
 
-    def set_state(self, state):
-        super().set_state(state)
-        self.column_names = state['column_names']
-        self.column_types = state['column_types']
+    def set_config(self, config):
+        super().set_config(config)
+        self.column_names = config['column_names']
+        self.column_types = config['column_types']
 
     def get_weights(self):
         weights = super().get_weights()

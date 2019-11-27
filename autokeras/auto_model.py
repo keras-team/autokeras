@@ -9,7 +9,7 @@ from autokeras.hypermodel import base
 from autokeras.hypermodel import graph
 
 
-class AutoModel(kerastuner.engine.stateful.Stateful):
+class AutoModel(object):
     """ A Model defined by inputs and outputs.
     AutoModel combines a HyperModel and a Tuner to tune the HyperModel.
     The user can use it in a similar way to a Keras model since it
@@ -123,7 +123,8 @@ class AutoModel(kerastuner.engine.stateful.Stateful):
             validation_split=validation_split)
 
         # Initialize the hyper_graph.
-        self._meta_build(dataset)
+        if not self.hyper_graph:
+            self._meta_build(dataset)
 
         # Initialize the Tuner.
         # The hypermodel needs input_shape, which can only be known after
@@ -140,6 +141,7 @@ class AutoModel(kerastuner.engine.stateful.Stateful):
             hyper_graph=self.hyper_graph,
             hypermodel=keras_graph,
             fit_on_val_data=self._split_dataset,
+            overwrite=self.overwrite,
             objective=self.objective,
             max_trials=self.max_trials,
             directory=self.directory,
@@ -275,12 +277,6 @@ class AutoModel(kerastuner.engine.stateful.Stateful):
         data = preprocess_graph.preprocess(
             self._process_xy(x, y))[0].batch(batch_size)
         return model.evaluate(data, **kwargs)
-
-    def get_state(self):
-        pass
-
-    def set_state(self, state):
-        pass
 
 
 class GraphAutoModel(AutoModel):

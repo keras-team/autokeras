@@ -4,18 +4,52 @@ import kerastuner
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from kerastuner.engine import stateful
 from tensorflow.python.util import nest
 
 from autokeras import utils
 
 
-class Weighted(object):
-    """The base class for those have weights.
+class Pickable(stateful.Stateful):
+    """The mixin for saving and loading config and weights for HyperModels.
 
-    They should override `get_weights` and `set_weights` so that they can be loaded
-    and saved with these functions. We define weights for any hypermodel as something
-    that can only be know after seeing the data.
+    We define weights for any hypermodel as something that can only be know after
+    seeing the data. The rest of the states are configs.
     """
+
+    def get_state(self):
+        """Returns the current state of this object.
+
+        # Returns
+            Dictionary.
+        """
+        return {'config': self.get_config(),
+                'weights': self.get_weights()}
+
+    def set_state(self, state):
+        """Sets the current state of this object.
+
+        # Arguments
+            state: Dict. The state to restore for this object.
+        """
+        self.set_config(state['config'])
+        self.set_weights(state['weights'])
+
+    def get_config(self):
+        """Returns the current config of this object.
+
+        # Returns
+            Dictionary.
+        """
+        raise NotImplementedError
+
+    def set_config(self, config):
+        """Sets the current config of this object.
+
+        # Arguments
+            config: Dict. The config to restore for this object.
+        """
+        raise NotImplementedError
 
     def get_weights(self):
         """Returns the current weights of this object.
@@ -26,36 +60,36 @@ class Weighted(object):
         raise NotImplementedError
 
     def set_weights(self, weights):
-        """Sets the current state of this object.
+        """Sets the current weights of this object.
 
         # Arguments
             weights: Dict. The weights to restore for this object.
         """
         raise NotImplementedError
 
-    def save_weights(self, fname):
+    def save(self, fname):
         """Save weights to file.
 
         # Arguments
-            fname: String. The path to a file to save the weights.
+            fname: String. The path to a file to save the state.
         """
-        weights = self.get_weights()
+        state = self.get_state()
         with tf.io.gfile.GFile(fname, 'wb') as f:
-            pickle.dump(weights, f)
+            pickle.dump(state, f)
         return str(fname)
 
-    def load_weights(self, fname):
-        """Load weights to file.
+    def reload(self, fname):
+        """Load state to file.
 
         # Arguments
-            fname: String. The path to a file to load the weights.
+            fname: String. The path to a file to load the state.
         """
         with tf.io.gfile.GFile(fname, 'rb') as f:
-            weights = pickle.load(f)
-        self.set_weights(weights)
+            state = pickle.load(f)
+        self.set_state(state)
 
 
-class Node(Weighted, kerastuner.engine.stateful.Stateful):
+class Node(Pickable):
     """The nodes in a network connecting the blocks."""
 
     def __init__(self, shape=None):
@@ -73,20 +107,20 @@ class Node(Weighted, kerastuner.engine.stateful.Stateful):
     def build(self):
         return tf.keras.Input(shape=self.shape)
 
-    def get_state(self):
+    def get_config(self):
         return {}
 
-    def set_state(self, state):
+    def set_config(self, config):
         pass
 
     def get_weights(self):
         return {'shape': self.shape}
 
-    def set_weights(self, state):
-        self.shape = state['shape']
+    def set_weights(self, weights):
+        self.shape = weights['shape']
 
 
-class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
+class Block(kerastuner.HyperModel, Pickable):
     """The base class for different Block.
 
     The Block can be connected together to build the search space
@@ -153,7 +187,7 @@ class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
         """
         return super().build(hp)
 
-    def get_state(self):
+    def get_config(self):
         """Get the configuration of the preprocessor.
 
         # Returns
@@ -161,16 +195,22 @@ class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
         """
         return {'name': self.name}
 
-    def set_state(self, state):
+    def set_config(self, config):
         """Set the configuration of the preprocessor.
 
         # Arguments
-            state: A dictionary of the configurations of the preprocessor.
+            config: A dictionary of the configurations of the preprocessor.
         """
-        self.name = state['name']
+        self.name = config['name']
+
+    def get_weights(self):
+        return {}
+
+    def set_weights(self, weights):
+        pass
 
 
-class Head(Weighted, Block):
+class Head(Block):
     """Base class for the heads, e.g. classification, regression.
 
     # Arguments
@@ -190,20 +230,20 @@ class Head(Weighted, Block):
         # Mark if the head should directly output the input tensor.
         self.identity = False
 
-    def get_state(self):
-        state = super().get_state()
-        state.update({
+    def get_config(self):
+        config = super().get_config()
+        config.update({
             'loss': self.loss,
             'metrics': self.metrics,
             'identity': self.identity
         })
-        return state
+        return config
 
-    def set_state(self, state):
-        super().set_state(state)
-        self.loss = state['loss']
-        self.metrics = state['metrics']
-        self.identity = state['identity']
+    def set_config(self, config):
+        super().set_config(config)
+        self.loss = config['loss']
+        self.metrics = config['metrics']
+        self.identity = config['identity']
 
     def get_weights(self):
         return {'output_shape': self.output_shape}
@@ -296,7 +336,7 @@ class HyperBlock(Block):
         raise NotImplementedError
 
 
-class Preprocessor(Weighted, Block):
+class Preprocessor(Block):
     """Hyper preprocessing block base class.
 
     It extends Block which extends Hypermodel. A preprocessor is a Hypermodel, which
@@ -358,20 +398,4 @@ class Preprocessor(Weighted, Block):
 
     def finalize(self):
         """Training process of the preprocessor after update with all instances."""
-        pass
-
-    def get_state(self):
-        """Get the configuration of the preprocessor.
-
-        # Returns
-            A dictionary of configurations of the preprocessor.
-        """
-        return {}
-
-    def set_state(self, state):
-        """Set the configuration of the preprocessor.
-
-        # Arguments
-            state: A dictionary of the configurations of the preprocessor.
-        """
         pass

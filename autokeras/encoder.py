@@ -1,10 +1,9 @@
-import kerastuner
 import numpy as np
 
 from autokeras.hypermodel import base
 
 
-class Encoder(base.Weighted, kerastuner.engine.stateful.Stateful):
+class Encoder(base.Pickable):
     """Base class for encoders of the prediction targets.
 
     # Arguments
@@ -46,11 +45,11 @@ class Encoder(base.Weighted, kerastuner.engine.stateful.Stateful):
         """
         raise NotImplementedError
 
-    def get_state(self):
+    def get_config(self):
         return {'num_classes': self.num_classes}
 
-    def set_state(self, state):
-        self.num_classes = state['num_classes']
+    def set_config(self, config):
+        self.num_classes = config['num_classes']
 
     def get_weights(self):
         return {'labels': self._labels,
