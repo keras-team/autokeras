@@ -167,7 +167,7 @@ class TextToNgramVector(base.Preprocessor):
         self.kbestfeature_value = []
         self.kbestfeature_key = []
         self.mask = []
-    
+
     @staticmethod
     def _word_ngram(tokens, stop_words=None):
         # handle stop words
@@ -197,7 +197,7 @@ class TextToNgramVector(base.Preprocessor):
                     tokens_append(space_join(original_tokens[i: i + n]))
 
         return tokens
-    
+
     def update(self, x, y=None):
         # TODO: Implement a sequential version fit for both
         #  TfidfVectorizer and SelectKBest
@@ -256,6 +256,7 @@ class TextToNgramVector(base.Preprocessor):
         self.kbestfeature_key = np.array(list(dict(
             sorted(kbestfeature.items())).keys()))
         self.mask = [0 for _ in range(self._max_features)]
+        self._shape = np.shape(self.mask)
 
     def transform(self, x, fit=False):
         x = nest.flatten(x)[0].numpy().decode('utf-8')
@@ -278,9 +279,8 @@ class TextToNgramVector(base.Preprocessor):
                 continue
             if num - 1 <= self._max_features:
                 self.mask[num] = 1
-        self.result = np.array(
-            self.mask)*np.array(
-            self.kbestfeature_value)
+
+        self.result = np.array(self.mask) * self.kbestfeature_value
         # Refresh the mask&temp_vec for next time usage.
         self.mask = [0 for _ in range(self._max_features)]
         self.temp_vec = set()
@@ -289,24 +289,29 @@ class TextToNgramVector(base.Preprocessor):
 
     def output_types(self):
         return tf.float64,
-    
+
     @property
     def output_shape(self):
-        return np.shape(self.result)
+        return self._shape
 
     def get_weights(self):
         return {'selector': self.selector,
                 'targets': self.targets,
                 'max_features': self._max_features,
                 'texts': self._texts,
-                'shape': self._shape}
+                'shape': self._shape,
+                'kbestfeature_value': self.kbestfeature_value,
+                'kbestfeature_key': self.kbestfeature_key}
 
     def set_weights(self, weights):
         self.selector = weights['selector']
         self.targets = weights['targets']
         self._max_features = weights['max_features']
         self._texts = weights['texts']
-        self.shape = weights['shape']
+        self._shape = weights['shape']
+        self.kbestfeature_value = weights['kbestfeature_value']
+        self.kbestfeature_key = weights['kbestfeature_key']
+        self.mask = [0 for _ in range(self._max_features)]
 
 
 class LightGBMModel(base.Preprocessor):
