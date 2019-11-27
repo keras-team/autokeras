@@ -4,11 +4,8 @@ import warnings
 
 import numpy as np
 import tensorflow as tf
-import scipy.sparse as sp
 import re
-import array
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
-from sklearn.externals.six import moves
 from collections import defaultdict
 from tensorflow.python.util import nest
 
@@ -153,7 +150,6 @@ class TextToNgramVector(base.Preprocessor):
         self.selector = None
         self.targets = None
         self._max_features = const.Constant.VOCABULARY_SIZE
-        self._texts = []
         self._shape = None
         self.vocabulary = defaultdict()  # Vocabulary(Increase with the inputs)
         self.vocabulary.default_factory = self.vocabulary.__len__
@@ -192,8 +188,8 @@ class TextToNgramVector(base.Preprocessor):
             tokens_append = tokens.append
             space_join = " ".join
 
-            for n in moves.xrange(min_n, min(max_n + 1, n_original_tokens + 1)):
-                for i in moves.xrange(n_original_tokens - n + 1):
+            for n in range(min_n, min(max_n + 1, n_original_tokens + 1)):
+                for i in range(n_original_tokens - n + 1):
                     tokens_append(space_join(original_tokens[i: i + n]))
 
         return tokens
@@ -204,12 +200,8 @@ class TextToNgramVector(base.Preprocessor):
         x = nest.flatten(x)[0].numpy().decode('utf-8')
         stop_words = ENGLISH_STOP_WORDS
         token_pattern = re.compile(r"(?u)\b\w\w+\b")
-        tokens = self._word_ngram(token_pattern.findall(x.lower()),  # x.lower()
+        tokens = self._word_ngram(token_pattern.findall(x.lower()),
                                   stop_words)
-        j_indices = []
-        indptr = array.array(str("i"))
-        values = array.array(str("i"))
-        indptr.append(0)
         set4sentence = set()
         self.stc_num += 1
         for feature in tokens:
@@ -230,16 +222,6 @@ class TextToNgramVector(base.Preprocessor):
             else:
                 self.sentence_containers[element] += 1
         set4sentence.clear()
-        j_indices.extend(self.feature_counter.keys())
-        values.extend(self.feature_counter.values())
-        indptr.append(len(j_indices))
-        j_indices = np.asarray(j_indices, dtype=np.intc)
-        indptr = np.frombuffer(indptr, dtype=np.intc)
-        values = np.frombuffer(values, dtype=np.intc)
-        vec = sp.csr_matrix((values, j_indices, indptr),
-                            shape=(len(indptr) - 1, len(self.vocabulary)),
-                            dtype=np.int64)
-        vec.sort_indices()
 
     def finalize(self):
         for word in self.feature_counter:
@@ -249,18 +231,17 @@ class TextToNgramVector(base.Preprocessor):
         if len(self.vocabulary) < self._max_features:
             self._max_features = len(self.vocabulary)
         kbestfeature = dict(sorted(self.tf_idf_vec.items(),
-                            key=lambda item: item[1],
-                            reverse=True)[0:self._max_features])
+                                   key=lambda item: item[1],
+                                   reverse=True)[0:self._max_features])
         self.kbestfeature_value = np.array(list(dict(
             sorted(kbestfeature.items())).values()))
         self.kbestfeature_key = np.array(list(dict(
             sorted(kbestfeature.items())).keys()))
-        self.mask = [0 for _ in range(self._max_features)]
+        self.mask = np.zeros(self._max_features, dtype=int)
         self._shape = np.shape(self.mask)
 
     def transform(self, x, fit=False):
         x = nest.flatten(x)[0].numpy().decode('utf-8')
-        self._texts.append(x)
         stop_words = ENGLISH_STOP_WORDS
         token_pattern = re.compile(r"(?u)\b\w\w+\b")
         tokens = self._word_ngram(token_pattern.findall(x.lower()),
@@ -282,7 +263,7 @@ class TextToNgramVector(base.Preprocessor):
 
         self.result = np.array(self.mask) * self.kbestfeature_value
         # Refresh the mask&temp_vec for next time usage.
-        self.mask = [0 for _ in range(self._max_features)]
+        self.mask = np.zeros(self._max_features, dtype=int)
         self.temp_vec = set()
         # TODO: For each x, what is the type of return value?
         return self.result
@@ -298,7 +279,6 @@ class TextToNgramVector(base.Preprocessor):
         return {'selector': self.selector,
                 'targets': self.targets,
                 'max_features': self._max_features,
-                'texts': self._texts,
                 'shape': self._shape,
                 'kbestfeature_value': self.kbestfeature_value,
                 'kbestfeature_key': self.kbestfeature_key}
@@ -307,11 +287,10 @@ class TextToNgramVector(base.Preprocessor):
         self.selector = weights['selector']
         self.targets = weights['targets']
         self._max_features = weights['max_features']
-        self._texts = weights['texts']
         self._shape = weights['shape']
         self.kbestfeature_value = weights['kbestfeature_value']
         self.kbestfeature_key = weights['kbestfeature_key']
-        self.mask = [0 for _ in range(self._max_features)]
+        self.mask = np.zeros(self._max_features, dtype=int)
 
 
 class LightGBMModel(base.Preprocessor):
