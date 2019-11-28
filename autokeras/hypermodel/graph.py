@@ -1,5 +1,5 @@
 import functools
-import pickle
+import json
 
 import kerastuner
 import tensorflow as tf
@@ -172,12 +172,12 @@ class Graph(kerastuner.engine.stateful.Stateful):
     def save(self, fname):
         state = self.get_state()
         with tf.io.gfile.GFile(fname, 'wb') as f:
-            pickle.dump(state, f)
+            json.dump(state, f)
         return str(fname)
 
     def reload(self, fname):
         with tf.io.gfile.GFile(fname, 'rb') as f:
-            state = pickle.load(f)
+            state = json.load(f)
         self.set_state(state)
 
     def build(self, hp):
