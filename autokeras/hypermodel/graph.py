@@ -448,8 +448,8 @@ class HyperGraph(Graph):
             inputs.append(input_node)
             old_node_to_new[old_input_node] = input_node
         for old_block in self._blocks:
-            inputs = [old_node_to_new[input_node]
-                      for input_node in old_block.inputs]
+            inputs = [old_node_to_new[input_node_old]
+                      for input_node_old in old_block.inputs]
             if isinstance(old_block, base.HyperBlock):
                 outputs = old_block.build(hp, inputs=inputs)
             else:
@@ -457,8 +457,8 @@ class HyperGraph(Graph):
             for output_node, old_output_node in zip(outputs, old_block.outputs):
                 old_node_to_new[old_output_node] = output_node
         inputs = []
-        for input_node in self.inputs:
-            inputs.append(old_node_to_new[input_node])
+        for input_node_self in self.inputs:
+            inputs.append(old_node_to_new[input_node_self])
         outputs = []
         for output_node in self.outputs:
             outputs.append(old_node_to_new[output_node])
