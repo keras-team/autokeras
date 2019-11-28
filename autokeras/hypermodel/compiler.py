@@ -110,6 +110,9 @@ AFTER = {
 }
 
 # Compile the HyperGraph.
-HYPER = {**{
+
+HYPERGRAPH = {
     hyperblock_module.StructuredDataBlock: structured_data_block_heads,
-}, **BEFORE}
+}
+
+HYPER = {**HYPERGRAPH, **BEFORE}
