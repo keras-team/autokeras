@@ -261,7 +261,7 @@ class TextToNgramVector(base.Preprocessor):
             if num - 1 <= self._max_features:
                 self.mask[num] = 1
 
-        self.result = np.array(self.mask) * self.kbestfeature_value
+        self.result = self.mask * self.kbestfeature_value
         # Refresh the mask&temp_vec for next time usage.
         self.mask = np.zeros(self._max_features, dtype=int)
         self.temp_vec = set()
