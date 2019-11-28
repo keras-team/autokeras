@@ -5,7 +5,6 @@ import warnings
 import numpy as np
 import tensorflow as tf
 import re
-from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from collections import defaultdict
 from tensorflow.python.util import nest
 
@@ -145,8 +144,10 @@ class TextToIntSequence(base.Preprocessor):
 class TextToNgramVector(base.Preprocessor):
     """Convert raw texts to n-gram vectors."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, ngram_range=(1, 1), stop_words=None, **kwargs):
         super().__init__(**kwargs)
+        self.stop_words = stop_words
+        self.ngram_range = ngram_range
         self.selector = None
         self.targets = None
         self._max_features = const.Constant.VOCABULARY_SIZE
@@ -165,13 +166,13 @@ class TextToNgramVector(base.Preprocessor):
         self.mask = []
 
     @staticmethod
-    def _word_ngram(tokens, stop_words=None):
+    def _word_ngram(tokens, ngram_range=(1, 1), stop_words=None):
         # handle stop words
         if stop_words is not None:
             tokens = [w for w in tokens if w not in stop_words]
 
         # handle token n-grams
-        min_n, max_n = (1, 1)
+        min_n, max_n = ngram_range
         if max_n != 1:
             original_tokens = tokens
             if min_n == 1:
@@ -198,10 +199,9 @@ class TextToNgramVector(base.Preprocessor):
         # TODO: Implement a sequential version fit for both
         #  TfidfVectorizer and SelectKBest
         x = nest.flatten(x)[0].numpy().decode('utf-8')
-        stop_words = ENGLISH_STOP_WORDS
         token_pattern = re.compile(r"(?u)\b\w\w+\b")
-        tokens = self._word_ngram(token_pattern.findall(x.lower()),
-                                  stop_words)
+        tokens = self._word_ngram(token_pattern.findall(x.lower()), self.ngram_range,
+                                  self.stop_words)
         set4sentence = set()
         self.stc_num += 1
         for feature in tokens:
@@ -242,10 +242,9 @@ class TextToNgramVector(base.Preprocessor):
 
     def transform(self, x, fit=False):
         x = nest.flatten(x)[0].numpy().decode('utf-8')
-        stop_words = ENGLISH_STOP_WORDS
         token_pattern = re.compile(r"(?u)\b\w\w+\b")
-        tokens = self._word_ngram(token_pattern.findall(x.lower()),
-                                  stop_words)
+        tokens = self._word_ngram(token_pattern.findall(x.lower()), self.ngram_range,
+                                  self.stop_words)
         for feature in tokens:
             try:
                 feature_idx = self.vocabulary[feature]
@@ -281,7 +280,9 @@ class TextToNgramVector(base.Preprocessor):
                 'max_features': self._max_features,
                 'shape': self._shape,
                 'kbestfeature_value': self.kbestfeature_value,
-                'kbestfeature_key': self.kbestfeature_key}
+                'kbestfeature_key': self.kbestfeature_key,
+                'ngram_range': self.ngram_range,
+                'stop_words': self.stop_words}
 
     def set_weights(self, weights):
         self.selector = weights['selector']
@@ -290,6 +291,8 @@ class TextToNgramVector(base.Preprocessor):
         self._shape = weights['shape']
         self.kbestfeature_value = weights['kbestfeature_value']
         self.kbestfeature_key = weights['kbestfeature_key']
+        self.ngram_range = weights['ngram_range']
+        self.stop_words = weights['stop_words']
         self.mask = np.zeros(self._max_features, dtype=int)
 
 

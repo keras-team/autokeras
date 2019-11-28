@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
+from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from autokeras.hypermodel import preprocessor as preprocessor_module
 from tests import common
 
@@ -72,8 +73,23 @@ def test_ngram():
              'The dog sat on the log.',
              'Dogs and cats living together.']
     dataset = tf.data.Dataset.from_tensor_slices(texts)
+    # Test Default Behaviour
     new_dataset = run_preprocessor(
         preprocessor_module.TextToNgramVector(),
+        dataset,
+        common.generate_data(dtype='dataset'),
+        tf.float32)
+    assert isinstance(new_dataset, tf.data.Dataset)
+    # Test ngram_range
+    new_dataset = run_preprocessor(
+        preprocessor_module.TextToNgramVector(ngram_range=(1, 2)),
+        dataset,
+        common.generate_data(dtype='dataset'),
+        tf.float32)
+    assert isinstance(new_dataset, tf.data.Dataset)
+    # Test stop word removal
+    new_dataset = run_preprocessor(
+        preprocessor_module.TextToNgramVector(stop_words=ENGLISH_STOP_WORDS),
         dataset,
         common.generate_data(dtype='dataset'),
         tf.float32)
