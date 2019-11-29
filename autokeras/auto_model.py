@@ -10,8 +10,7 @@ from autokeras.hypermodel import graph
 
 
 class AutoModel(object):
-    """ A Model defined by inputs and outputs.
-
+    """ A Model defined by inputs and outputs.  
     AutoModel combines a HyperModel and a Tuner to tune the HyperModel.
     The user can use it in a similar way to a Keras model since it
     also has `fit()` and  `predict()` methods.
@@ -32,8 +31,8 @@ class AutoModel(object):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        tuner: String. The tuner to be used for the search.
-            Defaults to 'greedy'.
+        tuner: String. It should be one of 'greedy', 'bayesian', 'hyperband' or
+            'random'. Defaults to 'greedy'.
         seed: Int. Random seed.
     """
 
@@ -54,7 +53,8 @@ class AutoModel(object):
         self.seed = seed
         self.hyper_graph = None
         self.objective = objective
-        self.tuner = tuner
+        # TODO: Support passing a tuner instance.
+        self.tuner = tuner_module.get_tuner_class(tuner)
         self._split_dataset = False
         if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
@@ -132,7 +132,7 @@ class AutoModel(object):
             dataset=dataset,
             validation_data=validation_data,
             fit=True)
-        self.tuner = tuner_module.get_tuner_class(self.tuner)(
+        self.tuner = self.tuner(
             hyper_graph=self.hyper_graph,
             hypermodel=keras_graph,
             fit_on_val_data=self._split_dataset,
@@ -297,8 +297,8 @@ class GraphAutoModel(AutoModel):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        tuner: String. The tuner to be used for the search.
-            Defaults to 'greedy'.
+        tuner: String. It should be one of 'greedy', 'bayesian', 'hyperband' or
+            'random'. Defaults to 'greedy'.
         seed: Int. Random seed.
     """
 
