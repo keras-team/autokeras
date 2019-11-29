@@ -52,7 +52,63 @@ class ImageClassifier(SupervisedImagePipeline):
             directory=directory,
             name=name,
             objective=objective,
+            tuner='image_classifier',
             seed=seed)
+
+    def fit(self,
+            x=None,
+            y=None,
+            epochs=None,
+            callbacks=None,
+            validation_split=0,
+            validation_data=None,
+            **kwargs):
+        """Search for the best model and hyperparameters for the AutoModel.
+
+        It will search for the best model based on the performances on
+        validation data.
+
+        # Arguments
+            x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape of the
+                data should be 3 or 4 dimensional, the last dimension of which should
+                be channel dimension.
+            y: numpy.ndarray or tensorflow.Dataset. Training data y. It can be raw
+                labels, one-hot encoded if more than two classes, or binary encoded
+                for binary classification.
+            epochs: Int. The number of epochs to train each model during the search.
+                If unspecified, by default we train for a maximum of 1000 epochs,
+                but we stop training if the validation loss stops improving for 10
+                epochs (unless you specified an EarlyStopping callback as part of
+                the callbacks argument, in which case the EarlyStopping callback you
+                specified will determine early stopping).
+            callbacks: List of Keras callbacks to apply during training and
+                validation.
+            validation_split: Float between 0 and 1.
+                Fraction of the training data to be used as validation data.
+                The model will set apart this fraction of the training data,
+                will not train on it, and will evaluate
+                the loss and any model metrics
+                on this data at the end of each epoch.
+                The validation data is selected from the last samples
+                in the `x` and `y` data provided, before shuffling. This argument is
+                not supported when `x` is a dataset.
+                The best model found would be fit on the entire dataset including the
+                validation data.
+            validation_data: Data on which to evaluate the loss and any model metrics
+                at the end of each epoch. The model will not be trained on this data.
+                `validation_data` will override `validation_split`. The type of the
+                validation data should be the same as the training data.
+                The best model found would be fit on the training dataset without the
+                validation data.
+            **kwargs: Any arguments supported by keras.Model.fit.
+        """
+        super().fit(x=x,
+                    y=y,
+                    epochs=epochs,
+                    callbacks=callbacks,
+                    validation_split=validation_split,
+                    validation_data=validation_data,
+                    **kwargs)
 
 
 class ImageRegressor(SupervisedImagePipeline):
@@ -77,7 +133,7 @@ class ImageRegressor(SupervisedImagePipeline):
 
     def __init__(self,
                  output_dim=None,
-                 loss=None,
+                 loss='mean_squared_error',
                  metrics=None,
                  name='image_regressor',
                  max_trials=100,
@@ -92,7 +148,64 @@ class ImageRegressor(SupervisedImagePipeline):
             directory=directory,
             name=name,
             objective=objective,
+            tuner='image_regressor',
             seed=seed)
+
+    def fit(self,
+            x=None,
+            y=None,
+            epochs=None,
+            callbacks=None,
+            validation_split=0,
+            validation_data=None,
+            **kwargs):
+        """Search for the best model and hyperparameters for the AutoModel.
+
+        It will search for the best model based on the performances on
+        validation data.
+
+        # Arguments
+            x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape of the
+                data should be 3 or 4 dimensional, the last dimension of which should
+                be channel dimension.
+            y: numpy.ndarray or tensorflow.Dataset. Training data y. The targets
+                passing to the head would have to be tf.data.Dataset, np.ndarray,
+                pd.DataFrame or pd.Series. It can be single-column or multi-column.
+                The values should all be numerical.
+            epochs: Int. The number of epochs to train each model during the search.
+                If unspecified, by default we train for a maximum of 1000 epochs,
+                but we stop training if the validation loss stops improving for 10
+                epochs (unless you specified an EarlyStopping callback as part of
+                the callbacks argument, in which case the EarlyStopping callback you
+                specified will determine early stopping).
+            callbacks: List of Keras callbacks to apply during training and
+                validation.
+            validation_split: Float between 0 and 1.
+                Fraction of the training data to be used as validation data.
+                The model will set apart this fraction of the training data,
+                will not train on it, and will evaluate
+                the loss and any model metrics
+                on this data at the end of each epoch.
+                The validation data is selected from the last samples
+                in the `x` and `y` data provided, before shuffling. This argument is
+                not supported when `x` is a dataset.
+                The best model found would be fit on the entire dataset including the
+                validation data.
+            validation_data: Data on which to evaluate the loss and any model metrics
+                at the end of each epoch. The model will not be trained on this data.
+                `validation_data` will override `validation_split`. The type of the
+                validation data should be the same as the training data.
+                The best model found would be fit on the training dataset without the
+                validation data.
+            **kwargs: Any arguments supported by keras.Model.fit.
+        """
+        super().fit(x=x,
+                    y=y,
+                    epochs=epochs,
+                    callbacks=callbacks,
+                    validation_split=validation_split,
+                    validation_data=validation_data,
+                    **kwargs)
 
 
 class SupervisedTextPipeline(auto_model.AutoModel):
@@ -142,7 +255,64 @@ class TextClassifier(SupervisedTextPipeline):
             directory=directory,
             name=name,
             objective=objective,
+            tuner='text_classifier',
             seed=seed)
+
+    def fit(self,
+            x=None,
+            y=None,
+            epochs=None,
+            callbacks=None,
+            validation_split=0,
+            validation_data=None,
+            **kwargs):
+        """Search for the best model and hyperparameters for the AutoModel.
+
+        It will search for the best model based on the performances on
+        validation data.
+
+        # Arguments
+            x: numpy.ndarray or tensorflow.Dataset. Training data x. The input data
+                should be numpy.ndarray or tf.data.Dataset. The data should be one
+                dimensional. Each element in the data should be a string which is a
+                full sentence.
+            y: numpy.ndarray or tensorflow.Dataset. Training data y. It can be raw
+                labels, one-hot encoded if more than two classes, or binary encoded
+                for binary classification.
+            epochs: Int. The number of epochs to train each model during the search.
+                If unspecified, by default we train for a maximum of 1000 epochs,
+                but we stop training if the validation loss stops improving for 10
+                epochs (unless you specified an EarlyStopping callback as part of
+                the callbacks argument, in which case the EarlyStopping callback you
+                specified will determine early stopping).
+            callbacks: List of Keras callbacks to apply during training and
+                validation.
+            validation_split: Float between 0 and 1.
+                Fraction of the training data to be used as validation data.
+                The model will set apart this fraction of the training data,
+                will not train on it, and will evaluate
+                the loss and any model metrics
+                on this data at the end of each epoch.
+                The validation data is selected from the last samples
+                in the `x` and `y` data provided, before shuffling. This argument is
+                not supported when `x` is a dataset.
+                The best model found would be fit on the entire dataset including the
+                validation data.
+            validation_data: Data on which to evaluate the loss and any model metrics
+                at the end of each epoch. The model will not be trained on this data.
+                `validation_data` will override `validation_split`. The type of the
+                validation data should be the same as the training data.
+                The best model found would be fit on the training dataset without the
+                validation data.
+            **kwargs: Any arguments supported by keras.Model.fit.
+        """
+        super().fit(x=x,
+                    y=y,
+                    epochs=epochs,
+                    callbacks=callbacks,
+                    validation_split=validation_split,
+                    validation_data=validation_data,
+                    **kwargs)
 
 
 class TextRegressor(SupervisedTextPipeline):
@@ -167,7 +337,7 @@ class TextRegressor(SupervisedTextPipeline):
 
     def __init__(self,
                  output_dim=None,
-                 loss=None,
+                 loss='mean_squared_error',
                  metrics=None,
                  name='text_regressor',
                  max_trials=100,
@@ -182,7 +352,65 @@ class TextRegressor(SupervisedTextPipeline):
             directory=directory,
             name=name,
             objective=objective,
+            tuner='text_regressor',
             seed=seed)
+
+    def fit(self,
+            x=None,
+            y=None,
+            epochs=None,
+            callbacks=None,
+            validation_split=0,
+            validation_data=None,
+            **kwargs):
+        """Search for the best model and hyperparameters for the AutoModel.
+
+        It will search for the best model based on the performances on
+        validation data.
+
+        # Arguments
+            x: numpy.ndarray or tensorflow.Dataset. Training data x. The input data
+                should be numpy.ndarray or tf.data.Dataset. The data should be one
+                dimensional. Each element in the data should be a string which is a
+                full sentence.
+            y: numpy.ndarray or tensorflow.Dataset. Training data y. The targets
+                passing to the head would have to be tf.data.Dataset, np.ndarray,
+                pd.DataFrame or pd.Series. It can be single-column or multi-column.
+                The values should all be numerical.
+            epochs: Int. The number of epochs to train each model during the search.
+                If unspecified, by default we train for a maximum of 1000 epochs,
+                but we stop training if the validation loss stops improving for 10
+                epochs (unless you specified an EarlyStopping callback as part of
+                the callbacks argument, in which case the EarlyStopping callback you
+                specified will determine early stopping).
+            callbacks: List of Keras callbacks to apply during training and
+                validation.
+            validation_split: Float between 0 and 1.
+                Fraction of the training data to be used as validation data.
+                The model will set apart this fraction of the training data,
+                will not train on it, and will evaluate
+                the loss and any model metrics
+                on this data at the end of each epoch.
+                The validation data is selected from the last samples
+                in the `x` and `y` data provided, before shuffling. This argument is
+                not supported when `x` is a dataset.
+                The best model found would be fit on the entire dataset including the
+                validation data.
+            validation_data: Data on which to evaluate the loss and any model metrics
+                at the end of each epoch. The model will not be trained on this data.
+                `validation_data` will override `validation_split`. The type of the
+                validation data should be the same as the training data.
+                The best model found would be fit on the training dataset without the
+                validation data.
+            **kwargs: Any arguments supported by keras.Model.fit.
+        """
+        super().fit(x=x,
+                    y=y,
+                    epochs=epochs,
+                    callbacks=callbacks,
+                    validation_split=validation_split,
+                    validation_data=validation_data,
+                    **kwargs)
 
 
 class SupervisedStructuredDataPipeline(auto_model.AutoModel):
@@ -228,8 +456,9 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                 Training data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the training data.
             y: String, numpy.ndarray, or tensorflow.Dataset. Training data y.
-                If the data is from a csv file, it should be a string corresponding
-                to the label column.
+                If the data is from a csv file, it should be a string, which is the
+                name of the target column. Otherwise, it can be single-column or
+                multi-column. The values should all be numerical.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, we would use epochs equal to 1000 and early stopping
                 with patience equal to 30.
@@ -373,6 +602,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             directory=directory,
             name=name,
             objective=objective,
+            tuner='structured_data_classifier',
             seed=seed)
 
     def fit(self,
@@ -390,8 +620,10 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                 Training data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the training data.
             y: String, numpy.ndarray, or tensorflow.Dataset. Training data y.
-                If the data is from a csv file, it should be a string corresponding
-                to the label column.
+                If the data is from a csv file, it should be a string, which is the
+                name of the target column. Otherwise, It can be raw labels, one-hot
+                encoded if more than two classes, or binary encoded for binary
+                classification.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, we would use epochs equal to 1000 and early stopping
                 with patience equal to 30.
@@ -449,7 +681,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
                  column_names=None,
                  column_types=None,
                  output_dim=None,
-                 loss=None,
+                 loss='mean_squared_error',
                  metrics=None,
                  name='structured_data_regressor',
                  max_trials=100,
@@ -466,6 +698,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             directory=directory,
             name=name,
             objective=objective,
+            tuner='structured_data_regressor',
             seed=seed)
 
 

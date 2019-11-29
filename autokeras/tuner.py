@@ -1,9 +1,12 @@
 import copy
-import inspect
 import os
+import random
 
 import kerastuner
+import kerastuner.engine.hypermodel as hm_module
 import tensorflow as tf
+
+from autokeras.hypermodel import base
 
 
 class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
@@ -22,24 +25,26 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         **kwargs: The other args supported by KerasTuner.
     """
 
-    def __init__(self, hyper_graph, fit_on_val_data=False, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, hyper_graph, hypermodel, fit_on_val_data=False, **kwargs):
         self.hyper_graph = hyper_graph
+        super().__init__(
+            hypermodel=hm_module.KerasHyperModel(hypermodel),
+            # TODO: Support resume of a previous run.
+            overwrite=True,
+            **kwargs)
         self.preprocess_graph = None
-        self.need_fully_train = False
         self.best_hp = None
         self.fit_on_val_data = fit_on_val_data
 
-    def run_trial(self, trial, *fit_args, **fit_kwargs):
+    def run_trial(self, trial, **fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
         # Initialize new fit kwargs for the current trial.
-        fit_kwargs.update(
-            dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
         new_fit_kwargs = copy.copy(fit_kwargs)
 
         # Preprocess the dataset and set the shapes of the HyperNodes.
-        self.preprocess_graph, self.hypermodel = self.hyper_graph.build_graphs(
+        self.preprocess_graph, keras_graph = self.hyper_graph.build_graphs(
             trial.hyperparameters)
+        self.hypermodel = hm_module.KerasHyperModel(keras_graph)
 
         self._prepare_run(self.preprocess_graph, new_fit_kwargs, True)
 
@@ -71,7 +76,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         super().on_trial_end(trial)
 
         self.preprocess_graph.save(self._get_save_path(trial, 'preprocess_graph'))
-        self.hypermodel.save(self._get_save_path(trial, 'keras_graph'))
+        self.hypermodel.hypermodel.save(self._get_save_path(trial, 'keras_graph'))
 
         self.preprocess_graph = None
         self.hypermodel = None
@@ -89,7 +94,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             trial.hyperparameters)
         preprocess_graph.reload(self._get_save_path(trial, 'preprocess_graph'))
         keras_graph.reload(self._get_save_path(trial, 'keras_graph'))
-        self.hypermodel = keras_graph
+        self.hypermodel = hm_module.KerasHyperModel(keras_graph)
         models = (preprocess_graph, keras_graph, super().load_model(trial))
         self.hypermodel = None
         return models
@@ -110,14 +115,22 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         model.load_weights(self.best_model_path)
         return preprocess_graph, model
 
-    def search(self, *fit_args, **fit_kwargs):
+    def search(self, callbacks=None, **fit_kwargs):
         """Search for the best HyperParameters.
 
         If there is not early-stopping in the callbacks, the early-stopping callback
         is injected to accelerate the search process. At the end of the search, the
         best model will be fully trained with the specified number of epochs.
         """
-        super().search(*fit_args, **fit_kwargs)
+        # Insert early-stopping for acceleration.
+        if not callbacks:
+            callbacks = []
+        new_callbacks = self._deepcopy_callbacks(callbacks)
+        if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+                    for callback in callbacks]):
+            new_callbacks.append(tf.keras.callbacks.EarlyStopping(patience=10))
+
+        super().search(callbacks=new_callbacks, **fit_kwargs)
 
         best_trial = self.oracle.get_best_trials(1)[0]
         self.best_hp = best_trial.hyperparameters
@@ -126,27 +139,17 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         keras_graph.save(self.best_keras_graph_path)
 
         # Fully train the best model with original callbacks.
-        if self.need_fully_train or self.fit_on_val_data:
-            new_fit_kwargs = copy.copy(fit_kwargs)
-            new_fit_kwargs.update(
-                dict(zip(inspect.getfullargspec(tf.keras.Model.fit).args, fit_args)))
-            self._prepare_run(preprocess_graph, new_fit_kwargs)
+        if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
+                    for callback in callbacks]) or self.fit_on_val_data:
+            fit_kwargs['callbacks'] = self._deepcopy_callbacks(callbacks)
+            self._prepare_run(preprocess_graph, fit_kwargs)
             if self.fit_on_val_data:
-                new_fit_kwargs['x'] = new_fit_kwargs['x'].concatenate(
-                    new_fit_kwargs['validation_data'])
+                fit_kwargs['x'] = fit_kwargs['x'].concatenate(
+                    fit_kwargs['validation_data'])
             model = keras_graph.build(self.best_hp)
-            model.fit(**new_fit_kwargs)
+            model.fit(**fit_kwargs)
 
         model.save_weights(self.best_model_path)
-
-    def _inject_callbacks(self, callbacks, trial, execution=0):
-        """Inject the early-stopping callback."""
-        callbacks = super()._inject_callbacks(callbacks, trial, execution)
-        if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                    for callback in callbacks]):
-            self.need_fully_train = True
-            callbacks.append(tf.keras.callbacks.EarlyStopping(patience=10))
-        return callbacks
 
     @property
     def best_preprocess_graph_path(self):
@@ -166,6 +169,209 @@ class RandomSearch(AutoTuner, kerastuner.RandomSearch):
     pass
 
 
-class HyperBand(AutoTuner, kerastuner.Hyperband):
+class Hyperband(AutoTuner, kerastuner.Hyperband):
     """KerasTuner Hyperband with preprocessing layer tuning."""
     pass
+
+
+class BayesianOptimization(AutoTuner, kerastuner.BayesianOptimization):
+    """KerasTuner BayesianOptimization with preprocessing layer tuning."""
+    pass
+
+
+class GreedyOracle(kerastuner.Oracle):
+    """An oracle combining random search and greedy algorithm.
+
+    It groups the HyperParameters into several categories, namely, HyperGraph,
+    Preprocessor, Architecture, and Optimization. The oracle tunes each group
+    separately using random search. In each trial, it use a greedy strategy to
+    generate new values for one of the categories of HyperParameters and use the best
+    trial so far for the rest of the HyperParameters values.
+
+    # Arguments
+        hyper_graph: HyperGraph. The hyper_graph model to be tuned.
+        seed: Int. Random seed.
+    """
+
+    HYPER = 'HYPER'
+    PREPROCESS = 'PREPROCESS'
+    OPT = 'OPT'
+    ARCH = 'ARCH'
+    STAGES = [HYPER, PREPROCESS, OPT, ARCH]
+
+    @staticmethod
+    def next_stage(stage):
+        stages = GreedyOracle.STAGES
+        return stages[(stages.index(stage) + 1) % len(stages)]
+
+    def __init__(self, hyper_graph, seed=None, **kwargs):
+        super().__init__(**kwargs)
+        self.hyper_graph = hyper_graph
+        # Start from tuning the hyper block hps.
+        self._stage = GreedyOracle.HYPER
+        # Sets of HyperParameter names.
+        self._hp_names = {
+            GreedyOracle.HYPER: set(),
+            GreedyOracle.PREPROCESS: set(),
+            GreedyOracle.OPT: set(),
+            GreedyOracle.ARCH: set(),
+        }
+        # The quota used to tune each category of hps.
+        self._capacity = {
+            GreedyOracle.HYPER: 1,
+            GreedyOracle.PREPROCESS: 1,
+            GreedyOracle.OPT: 1,
+            GreedyOracle.ARCH: 4,
+        }
+        self._stage_trial_count = 0
+        self.seed = seed or random.randint(1, 1e4)
+        # Incremented at every call to `populate_space`.
+        self._seed_state = self.seed
+        self._tried_so_far = set()
+        self._max_collisions = 5
+
+    def set_state(self, state):
+        super().set_state(state)
+        # TODO: self.hyper_graph.set_state(state['hyper_graph'])
+        # currently the state is not json serializable.
+        self._stage = state['stage']
+        self._capacity = state['capacity']
+
+    def get_state(self):
+        state = super().get_state()
+        state.update({
+            # TODO: 'hyper_graph': self.hyper_graph.get_state(),
+            # currently the state is not json serializable.
+            'stage': self._stage,
+            'capacity': self._capacity,
+        })
+        return state
+
+    def update_space(self, hyperparameters):
+        # Get the block names.
+        preprocess_graph, keras_graph = self.hyper_graph.build_graphs(
+            hyperparameters)
+
+        # Add the new Hyperparameters to different categories.
+        ref_names = {hp.name for hp in self.hyperparameters.space}
+        for hp in hyperparameters.space:
+            if hp.name not in ref_names:
+                hp_type = None
+                if any([hp.name.startswith(block.name)
+                        for block in self.hyper_graph.blocks
+                        if isinstance(block, base.HyperBlock)]):
+                    hp_type = GreedyOracle.HYPER
+                elif any([hp.name.startswith(block.name)
+                          for block in preprocess_graph.blocks]):
+                    hp_type = GreedyOracle.PREPROCESS
+                elif any([hp.name.startswith(block.name)
+                          for block in keras_graph.blocks]):
+                    hp_type = GreedyOracle.ARCH
+                else:
+                    hp_type = GreedyOracle.OPT
+                self._hp_names[hp_type].add(hp.name)
+
+        super().update_space(hyperparameters)
+
+    def _populate_space(self, trial_id):
+        for _ in range(len(GreedyOracle.STAGES)):
+            values = self._generate_stage_values()
+            # Reached max collisions.
+            if values is None:
+                # Try next stage.
+                self._stage = GreedyOracle.next_stage(self._stage)
+                self._stage_trial_count = 0
+                continue
+            # Values found.
+            self._stage_trial_count += 1
+            if self._stage_trial_count == self._capacity[self._stage]:
+                self._stage = GreedyOracle.next_stage(self._stage)
+                self._stage_trial_count = 0
+            return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
+                    'values': values}
+        # All stages reached max collisions.
+        return {'status': kerastuner.engine.trial.TrialStatus.STOPPED,
+                'values': None}
+
+    def _generate_stage_values(self):
+        best_trials = self.get_best_trials()
+        if best_trials:
+            best_values = best_trials[0].hyperparameters.values
+        else:
+            best_values = self.hyperparameters.values
+        collisions = 0
+        while 1:
+            # Generate new values for the current stage.
+            values = {}
+            for p in self.hyperparameters.space:
+                if p.name in self._hp_names[self._stage]:
+                    values[p.name] = p.random_sample(self._seed_state)
+                    self._seed_state += 1
+            values = {**best_values, **values}
+            # Keep trying until the set of values is unique,
+            # or until we exit due to too many collisions.
+            values_hash = self._compute_values_hash(values)
+            if values_hash not in self._tried_so_far:
+                self._tried_so_far.add(values_hash)
+                break
+            collisions += 1
+            if collisions > self._max_collisions:
+                # Reached max collisions. No value to return.
+                return None
+        return values
+
+
+class Greedy(AutoTuner):
+
+    def __init__(self,
+                 hyper_graph,
+                 hypermodel,
+                 objective,
+                 max_trials,
+                 fit_on_val_data=False,
+                 seed=None,
+                 hyperparameters=None,
+                 tune_new_entries=True,
+                 allow_new_entries=True,
+                 **kwargs):
+        self.seed = seed
+        oracle = GreedyOracle(
+            hyper_graph=hyper_graph,
+            objective=objective,
+            max_trials=max_trials,
+            seed=seed,
+            hyperparameters=hyperparameters,
+            tune_new_entries=tune_new_entries,
+            allow_new_entries=allow_new_entries)
+        hp = oracle.get_space()
+        preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
+        oracle.update_space(hp)
+        super().__init__(
+            hyper_graph=hyper_graph,
+            fit_on_val_data=fit_on_val_data,
+            oracle=oracle,
+            hypermodel=hypermodel,
+            **kwargs)
+
+
+TUNER_CLASSES = {
+    'bayesian': BayesianOptimization,
+    'random': RandomSearch,
+    'hyperband': Hyperband,
+    'greedy': Greedy,
+    'image_classifier': Greedy,
+    'image_regressor': Greedy,
+    'text_classifier': Greedy,
+    'text_regressor': Greedy,
+    'structured_data_classifier': Greedy,
+    'structured_data_regressor': Greedy,
+}
+
+
+def get_tuner_class(tuner):
+    if isinstance(tuner, str) and tuner in TUNER_CLASSES:
+        return TUNER_CLASSES.get(tuner)
+    else:
+        raise ValueError('The value {tuner} passed for argument tuner is invalid, '
+                         'expected one of "greedy", "random", "hyperband", '
+                         '"bayesian".'.format(tuner=tuner))

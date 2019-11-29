@@ -39,9 +39,8 @@ class ClassificationHead(base.Head):
     (more than 2) classification. Use Accuracy as metrics by default.
 
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
-    pd.DataFrame or pd.Series. The targets can be raw labels, one-hot encoded for
-    multi-class classification, or encoded to a single column for binary
-    classification.
+    pd.DataFrame or pd.Series. It can be raw labels, one-hot encoded if more than two
+    classes, or binary encoded for binary classification.
 
     The raw labels will be encoded to one column if two classes were found,
     or one-hot encoded if more than two classes were found.
@@ -194,7 +193,8 @@ class RegressionHead(base.Head):
     """Regression Dense layers.
 
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
-    pd.DataFrame or pd.Series.
+    pd.DataFrame or pd.Series. It can be single-column or multi-column. The
+    values should all be numerical.
 
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
@@ -208,7 +208,7 @@ class RegressionHead(base.Head):
 
     def __init__(self,
                  output_dim=None,
-                 loss=None,
+                 loss='mean_squared_error',
                  metrics=None,
                  dropout_rate=None,
                  **kwargs):
@@ -218,8 +218,7 @@ class RegressionHead(base.Head):
         self.output_dim = output_dim
         if not self.metrics:
             self.metrics = ['mean_squared_error']
-        if not self.loss:
-            self.loss = 'mean_squared_error'
+        self.loss = loss
         self.dropout_rate = dropout_rate
 
     def get_state(self):

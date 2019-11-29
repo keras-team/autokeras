@@ -1,6 +1,7 @@
 from distutils.core import setup
-from setuptools import find_packages
 from pathlib import Path
+
+from setuptools import find_packages
 
 this_file = Path(__file__).resolve()
 readme = this_file.parent / 'README.md'
@@ -18,7 +19,8 @@ setup(
     download_url='https://github.com/keras-team/autokeras/archive/1.0.0a0.tar.gz',
     keywords=['AutoML', 'keras'],
     install_requires=[
-        'tensorflow',
+        'tensorflow>=2.0.0',
+        'keras-tuner>=1.0.0',
         'scikit-learn',
         'numpy',
         'pandas',
