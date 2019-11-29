@@ -10,7 +10,7 @@ from autokeras.hypermodel import graph
 
 
 class AutoModel(object):
-    """ A Model defined by inputs and outputs.  
+    """ A Model defined by inputs and outputs.
     AutoModel combines a HyperModel and a Tuner to tune the HyperModel.
     The user can use it in a similar way to a Keras model since it
     also has `fit()` and  `predict()` methods.
