@@ -418,7 +418,7 @@ class ImageAugmentation(base.Preprocessor):
         percentage: Float. The percentage of data to augment.
         rotation_range: Int. The value can only be 0, 90, or 180.
             Degree range for random rotations. Default to 180.
-        crop: Boolean. Whether to crop the image randomly. Default to True.
+        random_crop: Boolean. Whether to crop the image randomly. Default to True.
         brightness_range: Positive float.
             Serve as 'max_delta' in tf.image.random_brightness. Default to 0.5.
             Equivalent to adjust brightness using a 'delta' randomly picked in
@@ -440,7 +440,7 @@ class ImageAugmentation(base.Preprocessor):
     def __init__(self,
                  percentage=0.25,
                  rotation_range=180,
-                 crop=True,
+                 random_crop=True,
                  brightness_range=0.5,
                  saturation_range=0.5,
                  contrast_range=0.5,
@@ -457,8 +457,8 @@ class ImageAugmentation(base.Preprocessor):
             self._rotate_choices = [0, 1, 3]
         elif self.rotation_range == 180:
             self._rotate_choices = [0, 1, 2, 3]
-        self.crop = crop
-        if self.crop:
+        self.random_crop = random_crop
+        if self.random_crop:
             # Generate 20 crop settings, ranging from a 1% to 20% crop.
             self.scales = list(np.arange(0.8, 1.0, 0.01))
             self.boxes = np.zeros((len(self.scales), 4))
@@ -500,10 +500,10 @@ class ImageAugmentation(base.Preprocessor):
         self.shape = x.shape
         choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
         if fit and choice < self.percentage:
-            return self.augment(x)
+            return self._augment(x)
         return x
 
-    def rotate(self, x):
+    def _rotate(self, x):
         rotate_choice = tf.random.uniform(
             shape=[],
             minval=0,
@@ -511,7 +511,7 @@ class ImageAugmentation(base.Preprocessor):
             dtype=tf.int64)
         return tf.image.rot90(x, k=self._rotate_choices[rotate_choice])
 
-    def random_crop(self, x):
+    def _random_crop(self, x):
         crops = tf.image.crop_and_resize(
             [x],
             boxes=self.boxes,
@@ -522,14 +522,14 @@ class ImageAugmentation(base.Preprocessor):
                                        maxval=len(self.scales),
                                        dtype=tf.int32)]
 
-    def augment(self, x):
+    def _augment(self, x):
         choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
         if self.rotation_range != 0 and choice < 0.5:
-            x = self.rotate(x)
+            x = self._rotate(x)
 
         choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
-        if self.crop and choice < 0.5:
-            x = self.random_crop(x)
+        if self.random_crop and choice < 0.5:
+            x = self._random_crop(x)
 
         choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
         if self.brightness_range != 0 and choice < 0.5:
@@ -572,7 +572,7 @@ class ImageAugmentation(base.Preprocessor):
 
     def get_config(self):
         return {'rotation_range': self.rotation_range,
-                'crop': self.crop,
+                'random_crop': self.random_crop,
                 'brightness_range': self.brightness_range,
                 'saturation_range': self.saturation_range,
                 'contrast_range': self.contrast_range,
@@ -584,7 +584,7 @@ class ImageAugmentation(base.Preprocessor):
 
     def set_config(self, config):
         self.rotation_range = config['rotation_range']
-        self.crop = config['crop']
+        self.random_crop = config['random_crop']
         self.brightness_range = config['brightness_range']
         self.saturation_range = config['saturation_range']
         self.contrast_range = config['contrast_range']
