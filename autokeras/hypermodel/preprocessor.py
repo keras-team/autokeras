@@ -5,8 +5,8 @@ import warnings
 import numpy as np
 import tensorflow as tf
 import re
-from collections import defaultdict
 from tensorflow.python.util import nest
+from sklearn.preprocessing import normalize
 
 from autokeras import const
 from autokeras import encoder
@@ -151,35 +151,39 @@ class TextToNgramVector(base.Preprocessor):
         during tokenization
         max_features: Positive Int. Maximum number of words to be considered during
         tokenization
+        norm: String. Can be ('l1', 'l2' or None) Attribute to replicate
+        normalization in sklearn TfidfVectorizer
+            Defaults to 'l2'
     """
 
     def __init__(self,
                  ngram_range=(1, 1),
                  stop_words=None,
                  max_features=None,
+                 norm='l2',
                  ** kwargs):
         super().__init__(**kwargs)
         self.stop_words = stop_words
         self.ngram_range = ngram_range
+        self.norm = norm
+        if(self.norm not in ('l1', 'l2', None)):
+            raise ValueError(
+                    "norm=%s, needs to be either 'l1','l2' or None"
+                    % self.norm)
         self.selector = None
         self.targets = None
         self._max_features = max_features or const.Constant.VOCABULARY_SIZE
         if(self._max_features <= 0):
             raise ValueError(
                     "max_features=%r, needs to be a positive integer"
-                    % max_features)
+                    % self._max_features)
         self._shape = None
-        self.vocabulary = defaultdict()  # Vocabulary(Increase with the inputs)
-        self.vocabulary.default_factory = self.vocabulary.__len__
-        self.feature_counter = {}  # Frequency of the token in the whole doc
+        self.vocabulary = {}  # Vocabulary(Increase with the inputs)
         self.sentence_containers = {}  # Number of sentence that contains the token
-        self.tf_idf_vec = {}  # TF-IDF of all the tokens
-        self.word_sum = 0  # The number of all the words in the raw doc
+        self.word_count = {}  # Count of words across documents
+        self._idf_vec = {}  # IDF of all the tokens
         self.stc_num = 0  # The number of all the sentences in the raw doc
-        self.temp_vec = set()  # Store the features of each sentence
         self.kbestfeature_value = []
-        self.kbestfeature_key = []
-        self.mask = []
 
     @staticmethod
     def _word_ngram(tokens, ngram_range=(1, 1), stop_words=None):
@@ -219,17 +223,13 @@ class TextToNgramVector(base.Preprocessor):
         set4sentence = set()
         self.stc_num += 1
         for feature in tokens:
-            self.word_sum += 1
-            try:
-                feature_idx = self.vocabulary[feature]
-                set4sentence.add(feature_idx)
-                if feature_idx not in self.feature_counter:
-                    self.feature_counter[feature_idx] = 1
-                else:
-                    self.feature_counter[feature_idx] += 1
-            except KeyError:
-                # Ignore out-of-vocabulary items for fixed_vocab=True
-                continue
+            if feature not in self.vocabulary:
+                self.vocabulary[feature] = len(self.vocabulary)
+            if(feature not in self.word_count):
+                self.word_count[feature] = 1
+            else:
+                self.word_count[feature] += 1
+            set4sentence.add(feature)
         for element in set4sentence:
             if element not in self.sentence_containers:
                 self.sentence_containers[element] = 1
@@ -238,46 +238,40 @@ class TextToNgramVector(base.Preprocessor):
         set4sentence.clear()
 
     def finalize(self):
-        for word in self.feature_counter:
-            _tf = self.feature_counter[word] / self.word_sum
-            idf = np.log(self.stc_num / self.sentence_containers[word] + 1)
-            self.tf_idf_vec[word] = _tf * idf
+        self.stc_num += 1  # idf smoothing
+        for word in self.sentence_containers:
+            idf = (np.log((self.stc_num)/(self.sentence_containers[word] + 1)) + 1)
+            self._idf_vec[word] = idf
         if len(self.vocabulary) < self._max_features:
             self._max_features = len(self.vocabulary)
-        kbestfeature = dict(sorted(self.tf_idf_vec.items(),
-                                   key=lambda item: item[1],
+        # Sort based on term frequency to match sklearn TfidfVectorizer
+        kbestfeature = dict(sorted(self._idf_vec.items(),
+                                   key=(lambda item:
+                                   self.word_count[item[0]]),
                                    reverse=True)[0:self._max_features])
         self.kbestfeature_value = np.array(list(dict(
             sorted(kbestfeature.items())).values()))
-        self.kbestfeature_key = np.array(list(dict(
+        kbestfeature_key = np.array(list(dict(
             sorted(kbestfeature.items())).keys()))
-        self.mask = np.zeros(self._max_features, dtype=int)
-        self._shape = np.shape(self.mask)
+        self.vocabulary.clear()
+        for i in range(self._max_features):
+            self.vocabulary[kbestfeature_key[i]] = i
+        self._shape = np.shape(self.kbestfeature_value)
 
     def transform(self, x, fit=False):
+        # Calculate tf at doc level
+        tf = np.zeros(self._max_features, dtype=int)
         x = nest.flatten(x)[0].numpy().decode('utf-8')
         token_pattern = re.compile(r"(?u)\b\w\w+\b")
         tokens = self._word_ngram(token_pattern.findall(x.lower()), self.ngram_range,
                                   self.stop_words)
-        for feature in tokens:
-            try:
-                feature_idx = self.vocabulary[feature]
-                self.temp_vec.add(feature_idx)
-            except KeyError:
-                # Ignore out-of-vocabulary items for fixed_vocab=True
-                continue
-        for num in self.temp_vec:
-            try:
-                num = list(self.kbestfeature_key).index(num)
-            except ValueError:
-                continue
-            if num - 1 <= self._max_features:
-                self.mask[num] = 1
 
-        result = self.mask * self.kbestfeature_value
-        # Refresh the mask&temp_vec for next time usage.
-        self.mask = np.zeros(self._max_features, dtype=int)
-        self.temp_vec = set()
+        for feature in tokens:
+            if feature in self.vocabulary:
+                feature_idx = self.vocabulary[feature]
+                tf[feature_idx] += 1
+        result = tf * self.kbestfeature_value
+        result = normalize([result], norm=self.norm, copy=False)[0]
         return result
 
     def output_types(self):
@@ -293,20 +287,29 @@ class TextToNgramVector(base.Preprocessor):
                 'max_features': self._max_features,
                 'shape': self._shape,
                 'kbestfeature_value': self.kbestfeature_value,
-                'kbestfeature_key': self.kbestfeature_key,
+                'vocabulary': self.vocabulary,
                 'ngram_range': self.ngram_range,
-                'stop_words': self.stop_words}
+                'stop_words': self.stop_words,
+                'norm': self.norm}
 
     def set_weights(self, weights):
         self.selector = weights['selector']
         self.targets = weights['targets']
         self._max_features = weights['max_features']
+        if(self._max_features <= 0):
+            raise ValueError(
+                    "max_features=%r, needs to be a positive integer"
+                    % self._max_features)
         self._shape = weights['shape']
         self.kbestfeature_value = weights['kbestfeature_value']
-        self.kbestfeature_key = weights['kbestfeature_key']
+        self.vocabulary = weights['vocabulary']
         self.ngram_range = weights['ngram_range']
         self.stop_words = weights['stop_words']
-        self.mask = np.zeros(self._max_features, dtype=int)
+        self.norm = weights['norm']
+        if(self.norm not in ('l1', 'l2', None)):
+            raise ValueError(
+                    "norm=%s, needs to be either 'l1','l2' or None"
+                    % self.norm)
 
 
 class LightGBMModel(base.Preprocessor):
