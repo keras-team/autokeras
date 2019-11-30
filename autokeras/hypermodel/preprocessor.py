@@ -149,15 +149,25 @@ class TextToNgramVector(base.Preprocessor):
             Defaults to (1,1)
         stop_words: Set or Iterable of strings. List of stop words to be removed
         during tokenization
+        max_features: Positive Int. Maximum number of words to be considered during
+        tokenization
     """
 
-    def __init__(self, ngram_range=(1, 1), stop_words=None, **kwargs):
+    def __init__(self,
+                 ngram_range=(1, 1),
+                 stop_words=None,
+                 max_features=None,
+                 ** kwargs):
         super().__init__(**kwargs)
         self.stop_words = stop_words
         self.ngram_range = ngram_range
         self.selector = None
         self.targets = None
-        self._max_features = const.Constant.VOCABULARY_SIZE
+        self._max_features = max_features or const.Constant.VOCABULARY_SIZE
+        if(self._max_features <= 0):
+            raise ValueError(
+                    "max_features=%r, needs to be a positive integer"
+                    % max_features)
         self._shape = None
         self.vocabulary = defaultdict()  # Vocabulary(Increase with the inputs)
         self.vocabulary.default_factory = self.vocabulary.__len__
@@ -166,7 +176,7 @@ class TextToNgramVector(base.Preprocessor):
         self.tf_idf_vec = {}  # TF-IDF of all the tokens
         self.word_sum = 0  # The number of all the words in the raw doc
         self.stc_num = 0  # The number of all the sentences in the raw doc
-        self.temp_vec = set()  # Store the features of each sentencey
+        self.temp_vec = set()  # Store the features of each sentence
         self.kbestfeature_value = []
         self.kbestfeature_key = []
         self.mask = []
@@ -202,8 +212,6 @@ class TextToNgramVector(base.Preprocessor):
         return tokens
 
     def update(self, x, y=None):
-        # TODO: Implement a sequential version fit for both
-        #  TfidfVectorizer and SelectKBest
         x = nest.flatten(x)[0].numpy().decode('utf-8')
         token_pattern = re.compile(r"(?u)\b\w\w+\b")
         tokens = self._word_ngram(token_pattern.findall(x.lower()), self.ngram_range,
