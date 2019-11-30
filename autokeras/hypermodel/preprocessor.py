@@ -142,7 +142,14 @@ class TextToIntSequence(base.Preprocessor):
 
 
 class TextToNgramVector(base.Preprocessor):
-    """Convert raw texts to n-gram vectors."""
+    """Convert raw texts to n-gram vectors.
+
+    # Arguments
+        ngram_range: Int Tuple. Range of sizes of ngram tokens to be extracted.
+            Defaults to (1,1)
+        stop_words: Set or Iterable of strings. List of stop words to be removed
+        during tokenization
+    """
 
     def __init__(self, ngram_range=(1, 1), stop_words=None, **kwargs):
         super().__init__(**kwargs)
@@ -160,7 +167,6 @@ class TextToNgramVector(base.Preprocessor):
         self.word_sum = 0  # The number of all the words in the raw doc
         self.stc_num = 0  # The number of all the sentences in the raw doc
         self.temp_vec = set()  # Store the features of each sentencey
-        self.result = []  # Final result list of the processed text
         self.kbestfeature_value = []
         self.kbestfeature_key = []
         self.mask = []
@@ -260,15 +266,14 @@ class TextToNgramVector(base.Preprocessor):
             if num - 1 <= self._max_features:
                 self.mask[num] = 1
 
-        self.result = self.mask * self.kbestfeature_value
+        result = self.mask * self.kbestfeature_value
         # Refresh the mask&temp_vec for next time usage.
         self.mask = np.zeros(self._max_features, dtype=int)
         self.temp_vec = set()
-        # TODO: For each x, what is the type of return value?
-        return self.result
+        return result
 
     def output_types(self):
-        return tf.float64,
+        return (tf.float64,)
 
     @property
     def output_shape(self):
