@@ -40,8 +40,8 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             overwrite=overwrite,
             **kwargs)
         self.preprocess_graph = None
-        self.best_hp = None
         self.fit_on_val_data = fit_on_val_data
+        self._finished = False
 
     def run_trial(self, trial, **fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
@@ -114,11 +114,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         # Returns
             Tuple of (PreprocessGraph, tf.keras.Model).
         """
-        preprocess_graph, keras_graph = self.hyper_graph.build_graphs(
-            self.best_hp)
-        preprocess_graph.reload(self.best_preprocess_graph_path)
-        keras_graph.reload(self.best_keras_graph_path)
-        model = keras_graph.build(self.best_hp)
+        preprocess_graph, keras_graph, model = self.get_best_models()[0]
         model.load_weights(self.best_model_path)
         return preprocess_graph, model
 
@@ -129,6 +125,8 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         is injected to accelerate the search process. At the end of the search, the
         best model will be fully trained with the specified number of epochs.
         """
+        if self._finished:
+            return
         # Insert early-stopping for acceleration.
         if not callbacks:
             callbacks = []
@@ -139,32 +137,23 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
 
         super().search(callbacks=new_callbacks, **fit_kwargs)
 
-        best_trial = self.oracle.get_best_trials(1)[0]
-        self.best_hp = best_trial.hyperparameters
-        preprocess_graph, keras_graph, model = self.get_best_models()[0]
-        preprocess_graph.save(self.best_preprocess_graph_path)
-        keras_graph.save(self.best_keras_graph_path)
-
         # Fully train the best model with original callbacks.
         if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                     for callback in callbacks]) or self.fit_on_val_data:
+            best_trial = self.oracle.get_best_trials(1)[0]
+            best_hp = best_trial.hyperparameters
+            preprocess_graph, keras_graph = self.hyper_graph.build_graphs(best_hp)
             fit_kwargs['callbacks'] = self._deepcopy_callbacks(callbacks)
-            self._prepare_run(preprocess_graph, fit_kwargs)
+            self._prepare_run(preprocess_graph, fit_kwargs, fit=True)
             if self.fit_on_val_data:
                 fit_kwargs['x'] = fit_kwargs['x'].concatenate(
                     fit_kwargs['validation_data'])
-            model = keras_graph.build(self.best_hp)
+            model = keras_graph.build(best_hp)
             model.fit(**fit_kwargs)
+        else:
+            preprocess_graph, keras_graph, model = self.get_best_models()[0]
 
         model.save_weights(self.best_model_path)
-
-    @property
-    def best_preprocess_graph_path(self):
-        return os.path.join(self.project_dir, 'best_preprocess_graph')
-
-    @property
-    def best_keras_graph_path(self):
-        return os.path.join(self.project_dir, 'best_keras_graph')
 
     @property
     def best_model_path(self):

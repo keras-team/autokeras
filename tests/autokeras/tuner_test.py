@@ -27,10 +27,8 @@ def build_hyper_graph():
 
 
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
-@mock.patch('autokeras.tuner.Greedy.get_best_models',
-            return_value=((mock.Mock(), mock.Mock(), mock.Mock()),))
 @mock.patch('autokeras.tuner.Greedy._prepare_run')
-def test_add_early_stopping(_, _1, base_tuner_search, tmp_dir):
+def test_add_early_stopping(_, base_tuner_search, tmp_dir):
     hyper_graph = build_hyper_graph()
     hp = kerastuner.HyperParameters()
     preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
@@ -46,10 +44,13 @@ def test_add_early_stopping(_, _1, base_tuner_search, tmp_dir):
     oracle = mock.Mock()
     oracle.get_best_trials.return_value = (mock.Mock(),)
     tuner.oracle = oracle
+    mock_graph = mock.Mock()
+    mock_graph.build_graphs.return_value = (mock.Mock(), mock.Mock())
+    tuner.hyper_graph = mock_graph
+
     tuner.search()
 
     callbacks = base_tuner_search.call_args_list[0][1]['callbacks']
-
     assert any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                 for callback in callbacks])
 
