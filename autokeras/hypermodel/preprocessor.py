@@ -146,14 +146,14 @@ class TextToNgramVector(base.Preprocessor):
 
     # Arguments
         ngram_range: Int Tuple. Range of sizes of ngram tokens to be extracted.
-            Defaults to (1,1)
+            Defaults to (1,1).
         stop_words: Set or Iterable of strings. List of stop words to be removed
-        during tokenization
+            during tokenization.
         max_features: Positive Int. Maximum number of words to be considered during
-        tokenization
+            tokenization.
         norm: String. Can be ('l1', 'l2' or None) Attribute to replicate
-        normalization in sklearn TfidfVectorizer
-            Defaults to 'l2'
+            normalization in sklearn TfidfVectorizer.
+            Defaults to 'l2'.
     """
 
     def __init__(self,
@@ -161,21 +161,21 @@ class TextToNgramVector(base.Preprocessor):
                  stop_words=None,
                  max_features=None,
                  norm='l2',
-                 ** kwargs):
+                 **kwargs):
         super().__init__(**kwargs)
         self.stop_words = stop_words
         self.ngram_range = ngram_range
         self.norm = norm
         if(self.norm not in ('l1', 'l2', None)):
             raise ValueError(
-                    "norm=%s, needs to be either 'l1','l2' or None"
+                    "norm=%s, needs to be either 'l1','l2' or None."
                     % self.norm)
         self.selector = None
         self.targets = None
         self._max_features = max_features or const.Constant.VOCABULARY_SIZE
         if(self._max_features <= 0):
             raise ValueError(
-                    "max_features=%r, needs to be a positive integer"
+                    "max_features=%r, needs to be a positive integer."
                     % self._max_features)
         self._shape = None
         self.vocabulary = {}  # Vocabulary(Increase with the inputs)
@@ -183,7 +183,7 @@ class TextToNgramVector(base.Preprocessor):
         self.word_count = {}  # Count of words across documents
         self._idf_vec = {}  # IDF of all the tokens
         self.stc_num = 0  # The number of all the sentences in the raw doc
-        self.kbestfeature_value = []
+        self.k_best_idf_values = []
 
     @staticmethod
     def _word_ngram(tokens, ngram_range=(1, 1), stop_words=None):
@@ -220,7 +220,7 @@ class TextToNgramVector(base.Preprocessor):
         token_pattern = re.compile(r"(?u)\b\w\w+\b")
         tokens = self._word_ngram(token_pattern.findall(x.lower()), self.ngram_range,
                                   self.stop_words)
-        set4sentence = set()
+        sentence_set = set()
         self.stc_num += 1
         for feature in tokens:
             if feature not in self.vocabulary:
@@ -229,38 +229,38 @@ class TextToNgramVector(base.Preprocessor):
                 self.word_count[feature] = 1
             else:
                 self.word_count[feature] += 1
-            set4sentence.add(feature)
-        for element in set4sentence:
+            sentence_set.add(feature)
+        for element in sentence_set:
             if element not in self.sentence_containers:
                 self.sentence_containers[element] = 1
             else:
                 self.sentence_containers[element] += 1
-        set4sentence.clear()
+        sentence_set.clear()
 
     def finalize(self):
         self.stc_num += 1  # idf smoothing
         for word in self.sentence_containers:
             idf = (np.log((self.stc_num)/(self.sentence_containers[word] + 1)) + 1)
             self._idf_vec[word] = idf
+        max_features = self._max_features
         if len(self.vocabulary) < self._max_features:
-            self._max_features = len(self.vocabulary)
+            max_features = len(self.vocabulary)
         # Sort based on term frequency to match sklearn TfidfVectorizer
-        kbestfeature = dict(sorted(self._idf_vec.items(),
-                                   key=(lambda item:
-                                   self.word_count[item[0]]),
-                                   reverse=True)[0:self._max_features])
-        self.kbestfeature_value = np.array(list(dict(
-            sorted(kbestfeature.items())).values()))
-        kbestfeature_key = np.array(list(dict(
-            sorted(kbestfeature.items())).keys()))
+        k_best_feature = dict(sorted(self._idf_vec.items(),
+                                     key=(lambda item: self.word_count[item[0]]),
+                                     reverse=True)[0:max_features])
+        self.k_best_idf_values = np.array(list(dict(
+            sorted(k_best_feature.items())).values()))
+        k_best_feature_key = np.array(list(dict(
+            sorted(k_best_feature.items())).keys()))
         self.vocabulary.clear()
-        for i in range(self._max_features):
-            self.vocabulary[kbestfeature_key[i]] = i
-        self._shape = np.shape(self.kbestfeature_value)
+        for i in range(max_features):
+            self.vocabulary[k_best_feature_key[i]] = i
+        self._shape = np.shape(self.k_best_idf_values)
 
     def transform(self, x, fit=False):
         # Calculate tf at doc level
-        tf = np.zeros(self._max_features, dtype=int)
+        tf = np.zeros(len(self.vocabulary), dtype=int)
         x = nest.flatten(x)[0].numpy().decode('utf-8')
         token_pattern = re.compile(r"(?u)\b\w\w+\b")
         tokens = self._word_ngram(token_pattern.findall(x.lower()), self.ngram_range,
@@ -270,7 +270,7 @@ class TextToNgramVector(base.Preprocessor):
             if feature in self.vocabulary:
                 feature_idx = self.vocabulary[feature]
                 tf[feature_idx] += 1
-        result = tf * self.kbestfeature_value
+        result = tf * self.k_best_idf_values
         result = normalize([result], norm=self.norm, copy=False)[0]
         return result
 
@@ -281,35 +281,47 @@ class TextToNgramVector(base.Preprocessor):
     def output_shape(self):
         return self._shape
 
-    def get_weights(self):
+    def get_config(self):
         return {'selector': self.selector,
                 'targets': self.targets,
-                'max_features': self._max_features,
-                'shape': self._shape,
-                'kbestfeature_value': self.kbestfeature_value,
-                'vocabulary': self.vocabulary,
                 'ngram_range': self.ngram_range,
+                'max_features': self._max_features,
                 'stop_words': self.stop_words,
                 'norm': self.norm}
 
-    def set_weights(self, weights):
-        self.selector = weights['selector']
-        self.targets = weights['targets']
-        self._max_features = weights['max_features']
+    def set_config(self, config):
+        self.selector = config['selector']
+        self.targets = config['targets']
+        self._max_features = config['max_features']
         if(self._max_features <= 0):
             raise ValueError(
                     "max_features=%r, needs to be a positive integer"
                     % self._max_features)
-        self._shape = weights['shape']
-        self.kbestfeature_value = weights['kbestfeature_value']
-        self.vocabulary = weights['vocabulary']
-        self.ngram_range = weights['ngram_range']
-        self.stop_words = weights['stop_words']
-        self.norm = weights['norm']
+        self.ngram_range = config['ngram_range']
+        self.stop_words = config['stop_words']
+        self.norm = config['norm']
         if(self.norm not in ('l1', 'l2', None)):
             raise ValueError(
                     "norm=%s, needs to be either 'l1','l2' or None"
                     % self.norm)
+
+    def get_weights(self):
+        return {'shape': self._shape,
+                'k_best_idf_values': self.k_best_idf_values,
+                'vocabulary': self.vocabulary,
+                'idf_vec': self._idf_vec,
+                'sentence_containers': self.sentence_containers,
+                'word_count': self.word_count,
+                'stc_num': self.stc_num}
+
+    def set_weights(self, weights):
+        self._shape = weights['shape']
+        self.k_best_idf_values = weights['k_best_idf_values']
+        self.vocabulary = weights['vocabulary']
+        self._idf_vec = weights['idf_vec']
+        self.sentence_containers = weights['sentence_containers']
+        self.word_count = weights['word_count']
+        self.stc_num = weights['stc_num']
 
 
 class LightGBMModel(base.Preprocessor):
