@@ -246,16 +246,16 @@ class TextToNgramVector(base.Preprocessor):
         if len(self.vocabulary) < self._max_features:
             max_features = len(self.vocabulary)
         # Sort based on term frequency to match sklearn TfidfVectorizer
-        k_best_feature = dict(sorted(self._idf_vec.items(),
-                                     key=(lambda item: self.word_count[item[0]]),
-                                     reverse=True)[0:max_features])
+        k_best_idfs = dict(sorted(self._idf_vec.items(),
+                                  key=(lambda item: self.word_count[item[0]]),
+                                  reverse=True)[0:max_features])
         self.k_best_idf_values = np.array(list(dict(
-            sorted(k_best_feature.items())).values()))
-        k_best_feature_key = np.array(list(dict(
-            sorted(k_best_feature.items())).keys()))
+            sorted(k_best_idfs.items())).values()))
+        k_best_idf_keys = np.array(list(dict(
+            sorted(k_best_idfs.items())).keys()))
         self.vocabulary.clear()
         for i in range(max_features):
-            self.vocabulary[k_best_feature_key[i]] = i
+            self.vocabulary[k_best_idf_keys[i]] = i
         self._shape = np.shape(self.k_best_idf_values)
 
     def transform(self, x, fit=False):
