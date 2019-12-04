@@ -21,7 +21,7 @@ clf.fit(x_train, y_train)
 y = clf.predict(x_test, y_test)
 ```
 
-See the [documentation of Task API](/task) for more details.
+See the documentation of Task APIs for more details.
 
 
 
