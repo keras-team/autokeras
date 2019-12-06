@@ -1,17 +1,17 @@
 import ast
 import random
+import re
 import warnings
 
 import numpy as np
-import tensorflow as tf
-import re
-from tensorflow.python.util import nest
 from sklearn.preprocessing import normalize
 
+import tensorflow as tf
 from autokeras import const
 from autokeras import encoder
 from autokeras import utils
 from autokeras.hypermodel import base
+from tensorflow.python.util import nest
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -168,15 +168,15 @@ class TextToNgramVector(base.Preprocessor):
         self.norm = norm
         if(self.norm not in ('l1', 'l2', None)):
             raise ValueError(
-                    "norm=%s, needs to be either 'l1','l2' or None."
-                    % self.norm)
+                "norm=%s, needs to be either 'l1','l2' or None."
+                % self.norm)
         self.selector = None
         self.targets = None
         self._max_features = max_features or const.Constant.VOCABULARY_SIZE
         if(self._max_features <= 0):
             raise ValueError(
-                    "max_features=%r, needs to be a positive integer."
-                    % self._max_features)
+                "max_features=%r, needs to be a positive integer."
+                % self._max_features)
         self._shape = None
         self.vocabulary = {}  # Vocabulary(Increase with the inputs)
         self.sentence_containers = {}  # Number of sentence that contains the token
@@ -293,17 +293,9 @@ class TextToNgramVector(base.Preprocessor):
         self.selector = config['selector']
         self.targets = config['targets']
         self._max_features = config['max_features']
-        if(self._max_features <= 0):
-            raise ValueError(
-                    "max_features=%r, needs to be a positive integer"
-                    % self._max_features)
         self.ngram_range = config['ngram_range']
         self.stop_words = config['stop_words']
         self.norm = config['norm']
-        if(self.norm not in ('l1', 'l2', None)):
-            raise ValueError(
-                    "norm=%s, needs to be either 'l1','l2' or None"
-                    % self.norm)
 
     def get_weights(self):
         return {'shape': self._shape,
