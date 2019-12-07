@@ -4,14 +4,14 @@ import re
 import warnings
 
 import numpy as np
-from sklearn.preprocessing import normalize
-
 import tensorflow as tf
+from sklearn.preprocessing import normalize
+from tensorflow.python.util import nest
+
 from autokeras import const
 from autokeras import encoder
 from autokeras import utils
 from autokeras.hypermodel import base
-from tensorflow.python.util import nest
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")

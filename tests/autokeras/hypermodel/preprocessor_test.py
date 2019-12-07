@@ -1,15 +1,15 @@
 import functools
 import os
 
+import kerastuner
 import numpy as np
 import pytest
+import tensorflow as tf
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from sklearn.feature_extraction.text import TfidfVectorizer
-from tests import common
 
-import kerastuner
-import tensorflow as tf
 from autokeras.hypermodel import preprocessor as preprocessor_module
+from tests import common
 
 
 @pytest.fixture(scope='module')
