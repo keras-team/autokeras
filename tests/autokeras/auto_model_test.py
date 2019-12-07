@@ -90,3 +90,19 @@ def test_final_fit_not_concat(tuner_fn, tmp_dir):
     auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
     assert not auto_model._split_dataset
     assert not tuner_class.call_args_list[0][1]['fit_on_val_data']
+
+
+@mock.patch('autokeras.auto_model.tuner_module.get_tuner_class')
+def test_overwrite(tuner_fn, tmp_dir):
+    tuner_class = tuner_fn.return_value
+
+    x_train = np.random.rand(100, 32, 32, 3)
+    y_train = np.random.rand(100, 1)
+
+    auto_model = ak.AutoModel(ak.ImageInput(),
+                              ak.RegressionHead(),
+                              directory=tmp_dir,
+                              max_trials=2,
+                              overwrite=False)
+    auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
+    assert not tuner_class.call_args_list[0][1]['overwrite']
