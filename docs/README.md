@@ -1,12 +1,12 @@
 # AutoKeras Documentation
 
-The source for AutoKeras documentation is in this directory. 
+The source for AutoKeras documentation is in this directory.
 Our documentation uses extended Markdown, as implemented by [MkDocs](http://mkdocs.org).
 
 ## Building the documentation
 
 - Install MkDocs and the material theme: `pip install mkdocs mkdocs-material`
-- Install keras-autodoc: `pip install git+https://github.com/keras-team/keras-autodoc.git`
+- Install keras-autodoc: `pip install keras-autodoc==0.4.0`
 - `pip install -e .` to make sure that Python will import your modified version of AutoKeras.
 - From the root directory, `cd` into the `docs/` folder and run:
     - `python autogen.py`

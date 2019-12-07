@@ -3,47 +3,90 @@ import shutil
 
 import keras_autodoc
 
-from autokeras import auto_model
-from autokeras import task
-from autokeras.hypermodel import block
-from autokeras.hypermodel import head
-from autokeras.hypermodel import hyperblock
+import autokeras as ak
 
-# For each class to document, it is possible to:
-# 1) Document only the class: [classA, classB, ...]
-# 2) Document all its methods: [classA, (classB, '*')]
-# 3) Choose which methods to document (methods listed as strings):
-# [classA, (classB, ['method1', 'method2', ...]), ...]
-# 4) Choose which methods to document (methods listed as qualified names):
-# [classA, (classB, [module.classB.method1, module.classB.method2, ...]), ...]
+
 PAGES = {
+    'image_classifier.md': [
+        ak.ImageClassifier,
+        ak.ImageClassifier.fit,
+        ak.ImageClassifier.predict,
+        ak.ImageClassifier.evaluate,
+    ],
+    'image_regressor.md': [
+        ak.ImageRegressor,
+        ak.ImageRegressor.fit,
+        ak.ImageRegressor.predict,
+        ak.ImageRegressor.evaluate,
+    ],
+    'text_classifier.md': [
+        ak.TextClassifier,
+        ak.TextClassifier.fit,
+        ak.TextClassifier.predict,
+        ak.TextClassifier.evaluate,
+    ],
+    'text_regressor.md': [
+        ak.TextRegressor,
+        ak.TextRegressor.fit,
+        ak.TextRegressor.predict,
+        ak.TextRegressor.evaluate,
+    ],
+    'structured_data_classifier.md': [
+        ak.StructuredDataClassifier,
+        ak.StructuredDataClassifier.fit,
+        ak.StructuredDataClassifier.predict,
+        ak.StructuredDataClassifier.evaluate,
+    ],
+    'structured_data_regressor.md': [
+        ak.StructuredDataRegressor,
+        ak.StructuredDataRegressor.fit,
+        ak.StructuredDataRegressor.predict,
+        ak.StructuredDataRegressor.evaluate,
+    ],
     'auto_model.md': [
-        auto_model.AutoModel,
-        auto_model.AutoModel.fit,
-        auto_model.AutoModel.predict,
+        ak.AutoModel,
+        ak.AutoModel.fit,
+        ak.AutoModel.predict,
+        ak.AutoModel.evaluate,
     ],
     'graph_auto_model.md': [
-        'autokeras.GraphAutoModel',
-        'autokeras.GraphAutoModel.fit',
-        'autokeras.GraphAutoModel.predict',
+        ak.GraphAutoModel,
+        ak.GraphAutoModel.fit,
+        ak.GraphAutoModel.predict,
+        ak.GraphAutoModel.evaluate,
+    ],
+    'node.md': [
+        ak.ImageInput,
+        ak.Input,
+        ak.StructuredDataInput,
+        ak.TextInput,
     ],
     'block.md': [
-        hyperblock.ImageBlock,
-        hyperblock.TextBlock,
-        hyperblock.StructuredDataBlock,
-        block.ResNetBlock,
-        block.XceptionBlock,
-        block.ConvBlock,
-        block.RNNBlock,
-        block.Merge
+        ak.ConvBlock,
+        ak.DenseBlock,
+        ak.EmbeddingBlock,
+        ak.Merge,
+        ak.ResNetBlock,
+        ak.RNNBlock,
+        ak.SpatialReduction,
+        ak.TemporalReduction,
+        ak.XceptionBlock,
+        ak.ImageBlock,
+        ak.StructuredDataBlock,
+        ak.TextBlock,
     ],
-    'task.md': [
-        task.ImageClassifier,
-        task.ImageRegressor,
-        task.TextClassifier,
-        task.TextRegressor
+    'preprocessor.md': [
+        ak.FeatureEngineering,
+        ak.ImageAugmentation,
+        ak.LightGBMBlock,
+        ak.Normalization,
+        ak.TextToIntSequence,
+        ak.TextToNgramVector,
     ],
-    'head.md': [head.ClassificationHead, head.RegressionHead]
+    'head.md': [
+        ak.ClassificationHead,
+        ak.RegressionHead,
+    ],
 }
 
 

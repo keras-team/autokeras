@@ -21,9 +21,18 @@ nav:
     - Docker: docker.md
     - Contributing Guide: contributing.md
     - Documentation:
-      - Task API: task.md
+      - Task APIs:
+        - ImageClassifier: image_classifier.md
+        - ImageRegressor: image_regressor.md
+        - TextClassifier: text_classifier.md
+        - TextRegressor: text_regressor.md
+        - StructuredDataClassifier: structured_data_classifier.md
+        - StructuredDataRegressor: structured_data_regressor.md
       - AutoModel: auto_model.md
       - GraphAutoModel: graph_auto_model.md
-      - Block: block.md
-      - Head: head.md
+      - Building Blocks:
+        - Node: node.md
+        - Preprocessor: preprocessor.md
+        - Block: block.md
+        - Head: head.md
     - About: about.md

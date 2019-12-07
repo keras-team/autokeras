@@ -57,14 +57,13 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             fit=fit)
 
         # Batching
-        batch_size = fit_kwargs.get('batch_size', 32)
+        batch_size = fit_kwargs.pop('batch_size', 32)
         dataset = dataset.batch(batch_size)
         validation_data = validation_data.batch(batch_size)
 
         # Update the new fit kwargs values
         fit_kwargs['x'] = dataset
         fit_kwargs['validation_data'] = validation_data
-        fit_kwargs['batch_size'] = None
         fit_kwargs['y'] = None
 
     def _get_save_path(self, trial, name):
@@ -169,8 +168,13 @@ class RandomSearch(AutoTuner, kerastuner.RandomSearch):
     pass
 
 
-class HyperBand(AutoTuner, kerastuner.Hyperband):
+class Hyperband(AutoTuner, kerastuner.Hyperband):
     """KerasTuner Hyperband with preprocessing layer tuning."""
+    pass
+
+
+class BayesianOptimization(AutoTuner, kerastuner.BayesianOptimization):
+    """KerasTuner BayesianOptimization with preprocessing layer tuning."""
     pass
 
 
@@ -350,7 +354,9 @@ class Greedy(AutoTuner):
 
 
 TUNER_CLASSES = {
-    'random_search': RandomSearch,
+    'bayesian': BayesianOptimization,
+    'random': RandomSearch,
+    'hyperband': Hyperband,
     'greedy': Greedy,
     'image_classifier': Greedy,
     'image_regressor': Greedy,
@@ -361,5 +367,10 @@ TUNER_CLASSES = {
 }
 
 
-def get_tuner_class(name):
-    return TUNER_CLASSES.get(name)
+def get_tuner_class(tuner):
+    if isinstance(tuner, str) and tuner in TUNER_CLASSES:
+        return TUNER_CLASSES.get(tuner)
+    else:
+        raise ValueError('The value {tuner} passed for argument tuner is invalid, '
+                         'expected one of "greedy", "random", "hyperband", '
+                         '"bayesian".'.format(tuner=tuner))
