@@ -5,7 +5,6 @@ import keras_autodoc
 
 import autokeras as ak
 
-
 PAGES = {
     'image_classifier.md': [
         ak.ImageClassifier,
