@@ -46,12 +46,6 @@ PAGES = {
         'autokeras.AutoModel.predict',
         'autokeras.AutoModel.evaluate',
     ],
-    'graph_auto_model.md': [
-        'autokeras.GraphAutoModel',
-        'autokeras.GraphAutoModel.fit',
-        'autokeras.GraphAutoModel.predict',
-        'autokeras.GraphAutoModel.evaluate',
-    ],
     'node.md': [
         'autokeras.ImageInput',
         'autokeras.Input',
