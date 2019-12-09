@@ -1,5 +1,4 @@
 from autokeras.auto_model import AutoModel
-from autokeras.auto_model import GraphAutoModel
 from autokeras.const import Constant
 from autokeras.hypermodel.base import Block
 from autokeras.hypermodel.base import Head
