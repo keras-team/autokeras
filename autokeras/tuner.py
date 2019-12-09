@@ -154,6 +154,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             preprocess_graph, keras_graph, model = self.get_best_models()[0]
 
         model.save_weights(self.best_model_path)
+        self._finished = True
 
     @property
     def best_model_path(self):

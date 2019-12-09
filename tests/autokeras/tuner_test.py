@@ -90,3 +90,49 @@ def test_random_oracle(fn):
         tuner_module.GreedyOracle.ARCH]
     assert 'image_block_1/block_type' in oracle._hp_names[
         tuner_module.GreedyOracle.HYPER]
+
+
+@mock.patch('kerastuner.engine.base_tuner.BaseTuner.__init__')
+@mock.patch('autokeras.tuner.Greedy._prepare_run')
+def test_overwrite_init(_, base_tuner_init, tmp_dir):
+    hyper_graph = build_hyper_graph()
+    hp = kerastuner.HyperParameters()
+    preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
+    preprocess_graph.build(hp)
+    keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
+    tuner_module.Greedy(
+        hyper_graph=hyper_graph,
+        hypermodel=keras_graph,
+        objective='val_loss',
+        max_trials=1,
+        directory=tmp_dir,
+        seed=common.SEED)
+
+    assert base_tuner_init.call_args_list[0][1]['overwrite']
+
+
+@mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
+@mock.patch('autokeras.tuner.Greedy._prepare_run')
+def test_overwrite_search(_, base_tuner_search, tmp_dir):
+    hyper_graph = build_hyper_graph()
+    hp = kerastuner.HyperParameters()
+    preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
+    preprocess_graph.build(hp)
+    keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
+    tuner = tuner_module.Greedy(
+        hyper_graph=hyper_graph,
+        hypermodel=keras_graph,
+        objective='val_loss',
+        max_trials=1,
+        directory=tmp_dir,
+        seed=common.SEED)
+    oracle = mock.Mock()
+    oracle.get_best_trials.return_value = (mock.Mock(),)
+    tuner.oracle = oracle
+    mock_graph = mock.Mock()
+    mock_graph.build_graphs.return_value = (mock.Mock(), mock.Mock())
+    tuner.hyper_graph = mock_graph
+
+    tuner.search()
+
+    assert tuner._finished
