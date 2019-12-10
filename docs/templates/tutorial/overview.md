@@ -1,103 +1,76 @@
 # AutoKeras 1.0 Tutorial
 
-In AutoKeras, there are 3 levels of APIs: task API, IO API, and functional API.
+## Supported Tasks
 
-## Task API
-We have designed an extremely simple interface for a series of tasks.
-The following code example shows how to do image classification with the task API.
+AutoKeras supports several tasks with extremely simple interface.
+You can click the links below to see the detailed tutorial for each task.
 
-```python
-import autokeras as ak
-from keras.datasets import mnist
+[Image Classification](/tutorial/image_classification)
 
-# Prepare the data.
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
-x_train = x_train.reshape(x_train.shape + (1,))
-x_test = x_test.reshape(x_test.shape + (1,))
+[Image Regression](/tutorial/image_regression)
 
-# Search and train the classifier.
-clf = ak.ImageClassifier(max_trials=100)
-clf.fit(x_train, y_train)
-y = clf.predict(x_test, y_test)
-```
+[Text Classification](/tutorial/text_classification)
 
-See the documentation of Task APIs for more details.
+[Text Regression](/tutorial/text_regression)
+
+[Structured Data Classification](/tutorial/structured_data_classification)
+
+[Structured Data Regression](/tutorial/structured_data_regression)
 
 
+Coming Soon: Time Series Forcasting, Object Detection, Image Segmentation.
 
-## IO API
 
-The following code example shows how to use IO API for multi-modal and multi-task scenarios using [AutoModel](/auto_model)
+## Multi-Task and Multi-Modal Data
 
-```python
-import numpy as np
-import autokeras as ak
-from keras.datasets import mnist
+If you are dealing with multi-task or multi-modal dataset, you can refer to [this
+tutorial](/tutorial/multi) for details.
 
-# Prepare the data.
-(x_train, y_classification), (x_test, y_test) = mnist.load_data()
-x_image = x_train.reshape(x_train.shape + (1,))
-x_test = x_test.reshape(x_test.shape + (1,))
 
-x_structured = np.random.rand(x_train.shape[0], 100)
-y_regression = np.random.rand(x_train.shape[0], 1)
+## Customized Model
 
-# Build model and train.
-automodel = ak.AutoModel(
-   inputs=[ak.ImageInput(),
-           ak.StructuredDataInput()],
-   outputs=[ak.RegressionHead(metrics=['mae']),
-            ak.ClassificationHead(loss='categorical_crossentropy',
-                                  metrics=['accuracy'])])
-automodel.fit([x_image, x_structured],
-              [y_regression, y_classification],
-              validation_split=0.2)
+AutoKeras also provide many building blocks for you to quickly construct your own
+model.
+With these blocks, you only need to specify the high-level architecture of your
+model.
+AutoKeras would search for the best detailed configuration for you.
 
-```
+### Nodes
+[ImageInput](/node/#imageinput-class)
 
-Now we support `ImageInput`, `TextInput`, and `StructuredDataInput`.
+[Input](/node/#input-class)
 
-## Functional API
+[StructuredDataInput](/node/#structureddatainput-class)
 
-You can also define your own neural architecture with the predefined blocks and [AutoModel](/auto_model).
+[TextInput](/node/#textinput-class)
 
-```python
-import autokeras as ak
-import numpy as np
-import tensorflow as tf
-from keras.datasets import mnist
+### Preprocessors
+[FeatureEngineering](/preprocessor/#featureengineering-class)
 
-# Prepare the data.
-(x_train, y_classification), (x_test, y_test) = mnist.load_data()
-x_image = x_train.reshape(x_train.shape + (1,))
-x_test = x_test.reshape(x_test.shape + (1,))
+[ImageAugmentation](/preprocessor/#imageaugmentation-class)
 
-x_structured = np.random.rand(x_train.shape[0], 100)
-y_regression = np.random.rand(x_train.shape[0], 1)
+[LightGBMBlock](/preprocessor/#lightgbmblock-class)
 
-# Build model and train.
-inputs = ak.ImageInput(shape=(28, 28, 1))
-outputs1 = ak.ResNetBlock(version='next')(inputs)
-outputs2 = ak.XceptionBlock()(inputs)
-image_outputs = ak.Merge()((outputs1, outputs2))
+[Normalization](/preprocessor/#normalization-class)
 
-structured_inputs = ak.StructuredInput()
-structured_outputs = ak.DenseBlock()(structured_inputs)
-merged_outputs = ak.Merge()((image_outputs, structured_outputs))
+[TextToIntSequence](/preprocessor/#texttointsequence-class)
 
-classification_outputs = ak.ClassificationHead()(merged_outputs)
-regression_outputs = ak.RegressionHead()(merged_outputs)
-automodel = ak.AutoModel(inputs=inputs,
-                              outputs=[regression_outputs,
-                                       classification_outputs])
+[TextToNgramVector](/preprocessor/#texttongramvector-class)
 
-automodel.fit((x_image, x_structured),
-              (y_regression, y_classification),
-              trials=100,
-              epochs=200,
-              callbacks=[tf.keras.callbacks.EarlyStopping(),
-                         tf.keras.callbacks.LearningRateScheduler()])
+### Blocks
+ConvBlock
+DenseBlock
+EmbeddingBlock
+Merge
+ResNetBlock
+RNNBlock
+SpatialReduction
+TemporalReduction
+XceptionBlock
+ImageBlock
+StructuredDataBlock
+TextBlock
 
-```
-
-For complete list of blocks, please checkout the documentation [here](/block).
+### Heads
+ClassificationHead
+RegressionHead
