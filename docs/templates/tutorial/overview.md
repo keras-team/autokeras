@@ -23,17 +23,19 @@ Coming Soon: Time Series Forcasting, Object Detection, Image Segmentation.
 
 ## Multi-Task and Multi-Modal Data
 
-If you are dealing with multi-task or multi-modal dataset, you can refer to [this
-tutorial](/tutorial/multi) for details.
+If you are dealing with multi-task or multi-modal dataset, you can refer to this
+[tutorial](/tutorial/multi) for details.
 
 
 ## Customized Model
 
-AutoKeras also provide many building blocks for you to quickly construct your own
+Follow this [tutorial](/tutorial/customized), to use AutoKeras building blocks to quickly construct your own
 model.
 With these blocks, you only need to specify the high-level architecture of your
 model.
 AutoKeras would search for the best detailed configuration for you.
+Moreover, you can override the base classes to create your own block.
+The following are the links to the documentation of the predefined input nodes and blocks in AutoKeras.
 
 ### Nodes
 [ImageInput](/node/#imageinput-class)
@@ -58,19 +60,31 @@ AutoKeras would search for the best detailed configuration for you.
 [TextToNgramVector](/preprocessor/#texttongramvector-class)
 
 ### Blocks
-ConvBlock
-DenseBlock
-EmbeddingBlock
-Merge
-ResNetBlock
-RNNBlock
-SpatialReduction
-TemporalReduction
-XceptionBlock
-ImageBlock
-StructuredDataBlock
-TextBlock
+[ConvBlock](/block/#convblock-class)
+
+[DenseBlock](/block/#denseblock-class)
+
+[EmbeddingBlock](/block/#embeddingblock-class)
+
+[Merge](/block/#merge-class)
+
+[ResNetBlock](/block/#resnetblock-class)
+
+[RNNBlock](/block/#rnnblock-class)
+
+[SpatialReduction](/block/#spatialreduction-class)
+
+[TemporalReduction](/block/#temporalreduction-class)
+
+[XceptionBlock](/block/#xceptionblock-class)
+
+[ImageBlock](/block/#imageblock-class)
+
+[StructuredDataBlock](/block/#structureddatablock-class)
+
+[TextBlock](/block/#textblock-class)
 
 ### Heads
-ClassificationHead
-RegressionHead
+[ClassificationHead](/head/#classificationhead-class)
+
+[RegressionHead](/head/#regressionhead-class)
