@@ -30,8 +30,9 @@ class ImageClassifier(SupervisedImagePipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        overwrite: Boolean. default `True`. If `False`, reloads an existing project
-            of the same name if one is found. Otherwise, overwrites the project.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing 
+            project of the same name if one is found. Otherwise, overwrites the 
+            project.
         seed: Int. Random seed.
     """
 
@@ -132,8 +133,9 @@ class ImageRegressor(SupervisedImagePipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        overwrite: Boolean. default `True`. If `False`, reloads an existing project
-            of the same name if one is found. Otherwise, overwrites the project.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing 
+            project of the same name if one is found. Otherwise, overwrites the 
+            project.
         seed: Int. Random seed.
     """
 
@@ -241,8 +243,9 @@ class TextClassifier(SupervisedTextPipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        overwrite: Boolean. default `True`. If `False`, reloads an existing project
-            of the same name if one is found. Otherwise, overwrites the project.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing 
+            project of the same name if one is found. Otherwise, overwrites the 
+            project.
         seed: Int. Random seed.
     """
 
@@ -344,8 +347,9 @@ class TextRegressor(SupervisedTextPipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        overwrite: Boolean. default `True`. If `False`, reloads an existing project
-            of the same name if one is found. Otherwise, overwrites the project.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing 
+            project of the same name if one is found. Otherwise, overwrites the 
+            project.
         seed: Int. Random seed.
     """
 
@@ -592,8 +596,9 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize. Defaults to 'val_accuracy'.
-        overwrite: Boolean. default `True`. If `False`, reloads an existing project
-            of the same name if one is found. Otherwise, overwrites the project.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing 
+            project of the same name if one is found. Otherwise, overwrites the 
+            project.
         seed: Int. Random seed.
     """
 
@@ -694,8 +699,9 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        overwrite: Boolean. default `True`. If `False`, reloads an existing project
-            of the same name if one is found. Otherwise, overwrites the project.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing 
+            project of the same name if one is found. Otherwise, overwrites the 
+            project.
         seed: Int. Random seed.
     """
 
@@ -762,8 +768,9 @@ class TimeSeriesForecaster(auto_model.AutoModel):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        overwrite: Boolean. default `True`. If `False`, reloads an existing project
-            of the same name if one is found. Otherwise, overwrites the project.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing 
+            project of the same name if one is found. Otherwise, overwrites the 
+            project.
         seed: Int. Random seed.
     """
 

@@ -33,8 +33,9 @@ class AutoModel(object):
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         tuner: String. It should be one of 'greedy', 'bayesian', 'hyperband' or
             'random'. Defaults to 'greedy'.
-        overwrite: Boolean. default `True`. If `False`, reloads an existing project
-            of the same name if one is found. Otherwise, overwrites the project.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
+            project of the same name if one is found. Otherwise, overwrites the
+            project.
         seed: Int. Random seed.
     """
 
@@ -46,7 +47,7 @@ class AutoModel(object):
                  directory=None,
                  objective='val_loss',
                  tuner='greedy',
-                 overwrite=True,
+                 overwrite=False,
                  seed=None):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
