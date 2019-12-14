@@ -1,4 +1,4 @@
-ARG cuda_version=9.0
+ARG cuda_version=10.1
 ARG cudnn_version=7
 FROM nvidia/cuda:${cuda_version}-cudnn${cudnn_version}-devel
 
@@ -41,10 +41,6 @@ RUN conda config --append channels conda-forge
 RUN conda install -y python=${python_version} && \
     pip install --upgrade pip && \
     pip install \
-      keras \
-      sklearn_pandas \
-      tensorflow-gpu \
-      cntk-gpu  \
       autokeras && \
     conda install \
       bcolz \
@@ -60,13 +56,8 @@ RUN conda install -y python=${python_version} && \
       pyyaml \
       scikit-learn \
       six \
-      theano \
       mkdocs&& \
-    git clone git://github.com/keras-team/keras.git /src && pip install -e /src[tests] && \
-    pip install git+git://github.com/keras-team/keras.git && \
     conda clean -yt
-
-ADD theanorc /home/keras/.theanorc
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
