@@ -66,25 +66,25 @@ class Normalization(base.Preprocessor):
     def output_shape(self):
         return self.shape
 
-    def get_weights(self):
-        weights = super().get_weights()
-        weights.update({
+    def get_state(self):
+        state = super().get_state()
+        state.update({
             'sum': self.sum,
             'square_sum': self.square_sum,
             'count': self.count,
             'mean': self.mean,
             'std': self.std,
             'shape': self.shape})
-        return weights
+        return state
 
-    def set_weights(self, weights):
-        super().set_weights(weights)
-        self.sum = weights['sum']
-        self.square_sum = weights['square_sum']
-        self.count = weights['count']
-        self.mean = weights['mean']
-        self.std = weights['std']
-        self.shape = weights['shape']
+    def set_state(self, state):
+        super().set_state(state)
+        self.sum = state['sum']
+        self.square_sum = state['square_sum']
+        self.count = state['count']
+        self.mean = state['mean']
+        self.std = state['std']
+        self.shape = state['shape']
 
 
 class TextToIntSequence(base.Preprocessor):
@@ -130,24 +130,20 @@ class TextToIntSequence(base.Preprocessor):
         config.update({'max_len': self.max_len})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.max_len = config['max_len']
+    def get_state(self):
+        state = super().get_state()
+        state.update({'max_len_in_data': self.max_len_in_data,
+                      'tokenizer': self.tokenizer,
+                      'max_len_to_use': self.max_len_to_use,
+                      'max_features': self.max_features})
+        return state
 
-    def get_weights(self):
-        weights = super().get_weights()
-        weights.update({'max_len_in_data': self.max_len_in_data,
-                        'tokenizer': self.tokenizer,
-                        'max_len_to_use': self.max_len_to_use,
-                        'max_features': self.max_features})
-        return weights
-
-    def set_weights(self, weights):
-        super().set_weights(weights)
-        self.max_len_in_data = weights['max_len_in_data']
-        self.tokenizer = weights['tokenizer']
-        self.max_len_to_use = weights['max_len_to_use']
-        self.max_features = weights['max_features']
+    def set_state(self, state):
+        super().set_state(state)
+        self.max_len_in_data = state['max_len_in_data']
+        self.tokenizer = state['tokenizer']
+        self.max_len_to_use = state['max_len_to_use']
+        self.max_features = state['max_features']
 
 
 class TextToNgramVector(base.Preprocessor):
@@ -197,25 +193,25 @@ class TextToNgramVector(base.Preprocessor):
     def output_shape(self):
         return self.shape
 
-    def get_weights(self):
-        weights = super().get_weights()
-        weights.update({
+    def get_state(self):
+        state = super().get_state()
+        state.update({
             'vectorizer': self.vectorizer,
             'selector': self.selector,
             'targets': self.targets,
             'max_features': self.vectorizer.max_features,
             'texts': self._texts,
             'shape': self.shape})
-        return weights
+        return state
 
-    def set_weights(self, weights):
-        super().set_weights(weights)
-        self.vectorizer = weights['vectorizer']
-        self.selector = weights['selector']
-        self.targets = weights['targets']
-        self.vectorizer.max_features = weights['max_features']
-        self._texts = weights['texts']
-        self.shape = weights['shape']
+    def set_state(self, state):
+        super().set_state(state)
+        self.vectorizer = state['vectorizer']
+        self.selector = state['selector']
+        self.targets = state['targets']
+        self.vectorizer.max_features = state['max_features']
+        self._texts = state['texts']
+        self.shape = state['shape']
 
 
 class LightGBMModel(base.Preprocessor):
@@ -294,20 +290,23 @@ class LightGBMModel(base.Preprocessor):
     def output_types(self):
         return (tf.float32,)
 
-    def set_weights(self, weights):
-        super().set_weights(weights)
-        self.lgbm = weights['lgbm']
-        self._output_shape = weights['output_shape']
-        self.seed = weights['seed']
-        self.params = weights['params']
+    def get_config(self):
+        config = super().get_config()
+        config.update({'seed': self.seed})
+        return config
 
-    def get_weights(self):
-        weights = super().get_weights()
-        weights.update({'lgbm': self.lgbm,
-                        'output_shape': self._output_shape,
-                        'seed': self.seed,
-                        'params': self.params})
-        return weights
+    def set_state(self, state):
+        super().set_state(state)
+        self.lgbm = state['lgbm']
+        self._output_shape = state['output_shape']
+        self.params = state['params']
+
+    def get_state(self):
+        state = super().get_state()
+        state.update({'lgbm': self.lgbm,
+                      'output_shape': self._output_shape,
+                      'params': self.params})
+        return state
 
 
 class LightGBMClassifier(LightGBMModel):
@@ -351,26 +350,20 @@ class LightGBMClassifier(LightGBMModel):
             y = y.reshape((-1))
         return y
 
-    def set_weights(self, weights):
-        super().set_weights(weights)
-        self._one_hot_encoder = encoder.OneHotEncoder()
-        self._one_hot_encoder.set_weights(weights['one_hot_encoder'])
-        self.num_classes = weights['num_classes']
+    def set_state(self, state):
+        super().set_state(state)
+        self._one_hot_encoder = encoder.deserialize(state['one_hot_encoder'])
+        if self._one_hot_encoder:
+            self._one_hot_encoder.set_state(state['one_hot_encoder_state'])
+        self.num_classes = state['num_classes']
 
-    def get_weights(self):
-        weights = super().get_weights()
-        weights.update({'one_hot_encoder': self._one_hot_encoder.get_weights(),
-                        'num_classes': self.num_classes})
-        return weights
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({'one_hot_encoder': self._one_hot_encoder.get_config()})
-        return config
-
-    def set_config(self, config):
-        super().set_config(config)
-        self._one_hot_encoder.set_config(config['one_hot_encoder'])
+    def get_state(self):
+        state = super().get_state()
+        state.update({'one_hot_encoder': encoder.serialize(self._one_hot_encoder),
+                      'one_hot_encoder_state': self._one_hot_encoder.get_state() if
+                      self._one_hot_encoder else None,
+                      'num_classes': self.num_classes})
+        return state
 
 
 class LightGBMRegressor(LightGBMModel):
@@ -404,17 +397,24 @@ class LightGBMBlock(base.Preprocessor):
     def build(self, hp):
         self.lightgbm_block.build(hp)
 
-    def get_weights(self):
-        return self.lightgbm_block.get_weights()
+    def get_state(self):
+        return {
+            'lightgbm_block': tf.keras.utils.serialize_keras_object(
+                self.lightgbm_block),
+            'lightgbm_block_state': self.lightgbm_block.get_state()
+            if self.lightgbm_block else None}
 
-    def set_weights(self, weights):
-        self.lightgbm_block.set_weights(weights)
+    def set_state(self, state):
+        self.lightgbm_block = tf.keras.utils.deserialize_keras_object(
+            state['lightgbm_block'],
+            module_objects=globals())
+        if self.lightgbm_block:
+            self.lightgbm_block.set_state(state['lightgbm_block_state'])
 
     def get_config(self):
-        return self.lightgbm_block.get_config()
-
-    def set_config(self, config):
-        self.lightgbm_block.set_config(config)
+        config = super().get_config()
+        config.update({'seed': self.seed})
+        return config
 
     def update(self, x, y=None):
         self.lightgbm_block.update(x, y)
@@ -598,6 +598,7 @@ class ImageAugmentation(base.Preprocessor):
     def get_config(self):
         config = super().get_config()
         config.update({
+            'percentage': self.percentage,
             'rotation_range': self.rotation_range,
             'random_crop': self.random_crop,
             'brightness_range': self.brightness_range,
@@ -609,26 +610,14 @@ class ImageAugmentation(base.Preprocessor):
             'gaussian_noise': self.gaussian_noise})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.rotation_range = config['rotation_range']
-        self.random_crop = config['random_crop']
-        self.brightness_range = config['brightness_range']
-        self.saturation_range = config['saturation_range']
-        self.contrast_range = config['contrast_range']
-        self.translation = config['translation']
-        self.horizontal_flip = config['horizontal_flip']
-        self.vertical_flip = config['vertical_flip']
-        self.gaussian_noise = config['gaussian_noise']
+    def get_state(self):
+        state = super().get_state()
+        state.update({'shape': self.shape})
+        return state
 
-    def get_weights(self):
-        weights = super().get_weights()
-        weights.update({'shape': self.shape})
-        return weights
-
-    def set_weights(self, weights):
-        super().set_weights(weights)
-        self.shape = weights['shape']
+    def set_state(self, state):
+        super().set_state(state)
+        self.shape = state['shape']
 
 
 class FeatureEngineering(base.Preprocessor):
@@ -800,17 +789,21 @@ class FeatureEngineering(base.Preprocessor):
     def output_shape(self):
         return self.shape
 
-    def get_weights(self):
-        weights = super().get_weights()
-        label_encoders_weights = {
-            key: label_encoder.get_weights()
+    def get_state(self):
+        state = super().get_state()
+        label_encoders = {
+            key: encoder.serialize(label_encoder)
             for key, label_encoder in self.label_encoders.items()}
-        weights.update({
+        label_encoders_state = {
+            key: label_encoder.get_state()
+            for key, label_encoder in self.label_encoders.items()}
+        state.update({
             'shape': self.shape,
             'num_rows': self.num_rows,
             'categorical_col': self.categorical_col,
             'numerical_col': self.numerical_col,
-            'label_encoders': utils.to_type_key(label_encoders_weights, str),
+            'label_encoders': utils.to_type_key(label_encoders, str),
+            'label_encoders_state': utils.to_type_key(label_encoders_state, str),
             'value_counters': utils.to_type_key(self.value_counters, str),
             'categorical_categorical': utils.to_type_key(
                 self.categorical_categorical, str),
@@ -820,49 +813,40 @@ class FeatureEngineering(base.Preprocessor):
             'high_level1_col': self.high_level1_col,
             'high_level2_col': self.high_level2_col,
             'high_level_cat_cat': utils.to_type_key(self.high_level_cat_cat, str),
-            'high_level_num_cat': utils.to_type_key(self.high_level_num_cat, str)})
-        return weights
+            'high_level_num_cat': utils.to_type_key(self.high_level_num_cat, str),
+            'column_names': self.column_names,
+            'column_types': utils.to_type_key(self.column_types, str),
+            'num_columns': self.num_columns,
+        })
+        return state
 
-    def set_weights(self, weights):
-        super().set_weights(weights)
-        for key, label_encoder_weights in weights['label_encoders'].items():
-            self.label_encoders[key] = encoder.LabelEncoder()
-            self.label_encoders[key].set_weights(label_encoder_weights)
-        self.shape = weights['shape']
-        self.num_rows = weights['num_rows']
-        self.categorical_col = weights['categorical_col']
-        self.numerical_col = weights['numerical_col']
-        self.value_counters = utils.to_type_key(weights['value_counters'], int)
+    def set_state(self, state):
+        super().set_state(state)
+        for key, label_encoder in state['label_encoders'].items():
+            self.label_encoders[key] = encoder.deserialize(label_encoder)
+        for key, label_encoder_state in state['label_encoders_state'].items():
+            self.label_encoders[key].set_state(label_encoder_state)
+        self.column_names = state['column_names']
+        self.column_types = state['column_types']
+        self.num_columns = state['num_columns']
+        self.shape = state['shape']
+        self.num_rows = state['num_rows']
+        self.categorical_col = state['categorical_col']
+        self.numerical_col = state['numerical_col']
+        self.value_counters = utils.to_type_key(state['value_counters'], int)
         self.categorical_categorical = utils.to_type_key(
-            weights['categorical_categorical'], ast.literal_eval)
+            state['categorical_categorical'], ast.literal_eval)
         self.numerical_categorical = utils.to_type_key(
-            weights['numerical_categorical'], ast.literal_eval)
-        self.count_frequency = utils.to_type_key(weights['count_frequency'], int)
-        self.high_level1_col = weights['high_level1_col']
-        self.high_level2_col = weights['high_level2_col']
+            state['numerical_categorical'], ast.literal_eval)
+        self.count_frequency = utils.to_type_key(state['count_frequency'], int)
+        self.high_level1_col = state['high_level1_col']
+        self.high_level2_col = state['high_level2_col']
         self.high_level_cat_cat = utils.to_type_key(
-            weights['high_level_cat_cat'], ast.literal_eval)
+            state['high_level_cat_cat'], ast.literal_eval)
         self.high_level_num_cat = utils.to_type_key(
-            weights['high_level_num_cat'], ast.literal_eval)
+            state['high_level_num_cat'], ast.literal_eval)
 
     def get_config(self):
         config = super().get_config()
-        label_encoders_config = {
-            key: label_encoder.get_config()
-            for key, label_encoder in self.label_encoders.items()}
-        config.update({'column_names': self.column_names,
-                       'column_types': utils.to_type_key(self.column_types, str),
-                       'num_columns': self.num_columns,
-                       'max_columns': self.max_columns,
-                       'label_encoders': label_encoders_config})
+        config.update({'max_columns': self.max_columns})
         return config
-
-    def set_config(self, config):
-        super().set_config(config)
-        for key, label_encoder_config in config['label_encoders'].items():
-            self.label_encoders[key] = encoder.LabelEncoder()
-            self.label_encoders[key].set_config(label_encoder_config)
-        self.column_names = config['column_names']
-        self.column_types = config['column_types']
-        self.num_columns = config['num_columns']
-        self.max_columns = config['max_columns']

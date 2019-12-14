@@ -143,29 +143,24 @@ class StructuredDataInput(Input):
         })
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.column_names = config['column_names']
-        self.column_types = config['column_types']
-
-    def get_weights(self):
-        weights = super().get_weights()
-        weights.update({
+    def get_state(self):
+        state = super().get_state()
+        state.update({
             'count_nan': self.count_nan,
             'count_numerical': self.count_numerical,
             'count_categorical': self.count_categorical,
             'count_unique_numerical': self.count_unique_numerical,
             'num_col': self.num_col
         })
-        return weights
+        return state
 
-    def set_weights(self, weights):
-        super().set_weights(weights)
-        self.count_nan = weights['count_nan']
-        self.count_numerical = weights['count_numerical']
-        self.count_categorical = weights['count_categorical']
-        self.count_unique_numerical = weights['count_unique_numerical']
-        self.num_col = weights['num_col']
+    def set_state(self, state):
+        super().set_state(state)
+        self.count_nan = state['count_nan']
+        self.count_numerical = state['count_numerical']
+        self.count_categorical = state['count_categorical']
+        self.count_unique_numerical = state['count_unique_numerical']
+        self.num_col = state['num_col']
 
     def _check(self, x):
         if not isinstance(x, (pd.DataFrame, np.ndarray)):

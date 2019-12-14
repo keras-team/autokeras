@@ -42,12 +42,6 @@ class DenseBlock(base.Block):
             'dropout_rate': self.dropout_rate})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.num_layers = config['num_layers']
-        self.use_batchnorm = config['use_batchnorm']
-        self.dropout_rate = config['dropout_rate']
-
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
@@ -110,13 +104,6 @@ class RNNBlock(base.Block):
             'num_layers': self.num_layers,
             'layer_type': self.layer_type})
         return config
-
-    def set_config(self, config):
-        super().set_config(config)
-        self.return_sequences = config['return_sequences']
-        self.bidirectional = config['bidirectional']
-        self.num_layers = config['num_layers']
-        self.layer_type = config['layer_type']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -189,12 +176,6 @@ class ConvBlock(base.Block):
             'num_blocks': self.num_blocks,
             'separable': self.separable})
         return config
-
-    def set_config(self, config):
-        super().set_config(config)
-        self.kernel_size = config['kernel_size']
-        self.num_blocks = config['num_blocks']
-        self.separable = config['separable']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -271,11 +252,6 @@ class ResNetBlock(base.Block, resnet.HyperResNet):
             'pooling': self.pooling})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.version = config['version']
-        self.pooling = config['pooling']
-
     def build(self, hp, inputs=None):
         self.input_tensor = nest.flatten(inputs)[0]
         self.input_shape = None
@@ -335,13 +311,6 @@ class XceptionBlock(base.Block, xception.HyperXception):
             'pooling': self.pooling})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.activation = config['activation']
-        self.initial_strides = config['initial_strides']
-        self.num_residual_blocks = config['num_residual_blocks']
-        self.pooling = config['pooling']
-
     def build(self, hp, inputs=None):
         self.input_tensor = nest.flatten(inputs)[0]
         self.input_shape = None
@@ -384,10 +353,6 @@ class Merge(base.Block):
         config = super().get_config()
         config.update({'merge_type': self.merge_type})
         return config
-
-    def set_config(self, config):
-        super().set_config(config)
-        self.merge_type = config['merge_type']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -444,10 +409,6 @@ class SpatialReduction(base.Block):
         config.update({'reduction_type': self.reduction_type})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.reduction_type = config['reduction_type']
-
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
@@ -490,10 +451,6 @@ class TemporalReduction(base.Block):
         config = super().get_config()
         config.update({'reduction_type': self.reduction_type})
         return config
-
-    def set_config(self, config):
-        super().set_config(config)
-        self.reduction_type = config['reduction_type']
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -558,14 +515,9 @@ class EmbeddingBlock(base.Block):
         config.update({
             'max_features': self.max_features,
             'pretraining': self.pretraining,
-            'embedding_dim': self.embedding_dim})
+            'embedding_dim': self.embedding_dim,
+            'dropout_rate': self.dropout_rate})
         return config
-
-    def set_config(self, config):
-        super().set_config(config)
-        self.max_features = config['max_features']
-        self.pretraining = config['pretraining']
-        self.embedding_dim = config['embedding_dim']
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]

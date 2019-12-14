@@ -113,3 +113,12 @@ AFTER = {
 HYPER = {**{
     hyperblock_module.StructuredDataBlock: structured_data_block_heads,
 }, **BEFORE}
+
+ALL_CLASSES = {
+    **vars(base),
+    **vars(node_module),
+    **vars(head_module),
+    **vars(block_module),
+    **vars(preprocessor_module),
+    **vars(hyperblock_module),
+}

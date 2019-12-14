@@ -2,15 +2,13 @@ import functools
 
 import kerastuner
 import tensorflow as tf
-from kerastuner.engine import hyperparameters as hp_module
 from tensorflow.python.util import nest
 
-import autokeras
 from autokeras.hypermodel import base
 from autokeras.hypermodel import compiler
 
 
-class Graph(base.Pickable):
+class Graph(base.Picklable):
     """A graph consists of connected Blocks, HyperBlocks, Preprocessors or Heads.
 
     # Arguments
@@ -106,7 +104,7 @@ class Graph(base.Pickable):
                 blocks.remove(block)
 
             for block in new_added:
-                # Add the collected blocks to the AutoModel.
+                # Add the collected blocks to the Graph.
                 self._add_block(block)
 
                 # Decrease the in degree of the output nodes.
@@ -157,42 +155,87 @@ class Graph(base.Pickable):
         raise ValueError('Cannot find block named {name}.'.format(name=name))
 
     def get_config(self):
-        block_config = {str(block_id): block.get_config()
-                        for block_id, block in enumerate(self.blocks)}
-        node_config = {str(node_id): node.get_config()
-                       for node_id, node in enumerate(self._nodes)}
-        override_hps = [(hp.__class__.__name__, hp.get_config())
+        blocks = [serialize(block) for block in self.blocks]
+        nodes = [serialize(node) for node in self._nodes]
+        override_hps = [tf.keras.utils.serialize_keras_object(hp)
                         for hp in self.override_hps]
+        block_inputs = {
+            str(block_id): [self._node_to_id[node]
+                            for node in block.inputs]
+            for block_id, block in enumerate(self.blocks)}
+        block_outputs = {
+            str(block_id): [self._node_to_id[node]
+                            for node in block.outputs]
+            for block_id, block in enumerate(self.blocks)}
+        node_inputs = {
+            str(node_id): [self._block_to_id[block]
+                           for block in node.in_blocks]
+            for node_id, node in enumerate(self._nodes)}
+        node_outputs = {
+            str(node_id): [self._block_to_id[block]
+                           for block in node.out_blocks]
+            for node_id, node in enumerate(self._nodes)}
+
+        inputs = [self._node_to_id[node] for node in self.inputs]
+        outputs = [self._node_to_id[node] for node in self.outputs]
+
         return {
-            'block_config': block_config,  # Dict {id: config}.
-            'node_config': node_config,  # Dict {id: config}.
-            'override_hps': override_hps,  # List of tuple of (class_name, config).
+            'override_hps': override_hps,  # List [serialized].
+            'blocks': blocks,  # Dict {id: serialized}.
+            'nodes': nodes,  # Dict {id: serialized}.
+            'inputs': inputs,  # List of node_ids.
+            'outputs': outputs,  # List of node_ids.
+            'block_inputs': block_inputs,  # Dict {id: List of node_ids}.
+            'block_outputs': block_outputs,  # Dict {id: List of node_ids}.
+            'node_inputs': node_inputs,  # Dict {id: List of block_ids}.
+            'node_outputs': node_outputs,  # Dict {id: List of block_ids}.
         }
 
-    def set_config(self, config):
-        block_config = config['block_config']
-        node_config = config['node_config']
+    @classmethod
+    def from_config(cls, config):
+        blocks = [deserialize(block) for block in config['blocks']]
+        nodes = [deserialize(node) for node in config['nodes']]
+        override_hps = [kerastuner.engine.hyperparameters.deserialize(config)
+                        for config in config['override_hps']]
 
-        for block_id, block in enumerate(self.blocks):
-            block.set_config(block_config[str(block_id)])
-        for node_id, node in enumerate(self._nodes):
-            node.set_config(node_config[str(node_id)])
+        block_to_id = {blocks[block_id]: block_id
+                       for block_id in range(len(blocks))}
+        node_to_id = {nodes[node_id]: node_id
+                      for node_id in range(len(nodes))}
 
-        self.override_hps = [getattr(hp_module, hp_class).from_config(config)
-                             for hp_class, config in config['override_hps']]
+        inputs = [nodes[node_id] for node_id in config['inputs']]
+        for block_id, block in enumerate(blocks):
+            input_nodes = [nodes[node_id]
+                           for node_id in config['block_inputs'][str(block_id)]]
+            block.outputs = [nodes[node_id]
+                             for node_id in config['block_outputs'][str(block_id)]]
+        for node_id, node in enumerate(nodes):
+            node.in_blocks = [blocks[block_id]
+                              for block_id in config['node_inputs'][str(node_id)]]
+            node.out_blocks = [blocks[block_id]
+                               for block_id in config['node_outputs'][str(node_id)]]
+
+        outputs = [nodes[node_id] for node_id in config['outputs']]
+        return cls(inputs=inputs, outputs=outputs, override_hps=override_hps)
 
     def build(self, hp):
         self._register_hps(hp)
 
-    def get_weights(self):
-        node_weights = {str(node_id): node.get_weights()
-                        for node_id, node in enumerate(self._nodes)}
-        return {'nodes': node_weights}
+    def get_state(self):
+        nodes_state = {str(node_id): node.get_state()
+                       for node_id, node in enumerate(self._nodes)}
+        blocks_state = {str(block_id): block.get_state()
+                        for block_id, block in enumerate(self.blocks)}
+        return {'nodes_state': nodes_state,
+                'blocks_state': blocks_state}
 
-    def set_weights(self, weights):
-        node_weights = weights['nodes']
+    def set_state(self, state):
+        nodes_state = state['nodes_state']
         for node_id, node in enumerate(self._nodes):
-            node.set_weights(node_weights[str(node_id)])
+            node.set_state(nodes_state[str(node_id)])
+        blocks_state = state['blocks_state']
+        for block_id, block in enumerate(self.blocks):
+            block.set_state(blocks_state[str(node_id)])
 
 
 class PlainGraph(Graph):
@@ -417,24 +460,36 @@ class PreprocessGraph(Graph):
         for block in self.blocks:
             block.build(hp)
 
-    def get_weights(self):
-        weights = super().get_weights()
-        block_weights = {str(block_id): block.get_weights()
-                         for block_id, block in enumerate(self.blocks)}
-        weights.update({'blocks': block_weights})
-        return weights
+    def get_state(self):
+        state = super().get_state()
+        block_state = {str(block_id): block.get_state()
+                       for block_id, block in enumerate(self.blocks)}
+        state.update({'blocks': block_state})
+        return state
 
-    def set_weights(self, weights):
-        super().set_weights(weights)
-        block_weights = weights['blocks']
+    def set_state(self, state):
+        super().set_state(state)
+        block_state = state['blocks']
         for block_id, block in enumerate(self.blocks):
-            block.set_weights(block_weights[str(block_id)])
+            block.set_state(block_state[str(block_id)])
 
 
 def copy(old_instance):
     instance = old_instance.__class__()
     instance.set_state(old_instance.get_state())
     return instance
+
+
+def serialize(obj):
+    return tf.keras.utils.serialize_keras_object(obj)
+
+
+def deserialize(config, custom_objects=None):
+    return tf.keras.utils.deserialize_keras_object(
+        config,
+        module_objects={**compiler.ALL_CLASSES},
+        custom_objects=custom_objects,
+        printable_module_name='graph')
 
 
 class HyperGraph(Graph):
@@ -479,66 +534,3 @@ class HyperGraph(Graph):
         return PlainGraph(inputs=inputs,
                           outputs=outputs,
                           override_hps=self.override_hps)
-
-    def get_config(self):
-        config = super().get_config()
-        block_classes = [block.__class__.__name__ for block in self.blocks]
-        node_classes = [node.__class__.__name__ for node in self._nodes]
-        block_inputs = {
-            str(block_id): [self._node_to_id[node]
-                            for node in block.inputs]
-            for block_id, block in enumerate(self.blocks)}
-        block_outputs = {
-            str(block_id): [self._node_to_id[node]
-                            for node in block.outputs]
-            for block_id, block in enumerate(self.blocks)}
-        node_inputs = {
-            str(node_id): [self._block_to_id[block]
-                           for block in node.in_blocks]
-            for node_id, node in enumerate(self._nodes)}
-        node_outputs = {
-            str(node_id): [self._block_to_id[block]
-                           for block in node.out_blocks]
-            for node_id, node in enumerate(self._nodes)}
-
-        inputs = [self._node_to_id[node] for node in self.inputs]
-        outputs = [self._node_to_id[node] for node in self.outputs]
-
-        config.update({
-            'inputs': inputs,  # List of node_ids.
-            'outputs': outputs,  # List of node_ids.
-            'block_classes': block_classes,  # List of strings of class names.
-            'node_classes': node_classes,  # List of strings of class names.
-            'block_inputs': block_inputs,  # Dict {id: List of node_ids}.
-            'block_outputs': block_outputs,  # Dict {id: List of node_ids}.
-            'node_inputs': node_inputs,  # Dict {id: List of block_ids}.
-            'node_outputs': node_outputs,  # Dict {id: List of block_ids}.
-        })
-        return config
-
-    def set_config(self, config):
-        self.blocks = [getattr(autokeras, block_class)()
-                       for block_class in config['block_classes']]
-        self._nodes = [getattr(autokeras, node_class)()
-                       for node_class in config['node_classes']]
-
-        self._block_to_id = {self.blocks[block_id]: block_id
-                             for block_id in range(len(self.blocks))}
-        self._node_to_id = {self._nodes[node_id]: node_id
-                            for node_id in range(len(self._nodes))}
-
-        for block_id, block in enumerate(self.blocks):
-            block.inputs = [self._nodes[node_id]
-                            for node_id in config['block_inputs'][str(block_id)]]
-            block.outputs = [self._nodes[node_id]
-                             for node_id in config['block_outputs'][str(block_id)]]
-        for node_id, node in enumerate(self._nodes):
-            node.in_blocks = [self.blocks[block_id]
-                              for block_id in config['node_inputs'][str(node_id)]]
-            node.out_blocks = [self.blocks[block_id]
-                               for block_id in config['node_outputs'][str(node_id)]]
-
-        self.inputs = [self._nodes[node_id] for node_id in config['inputs']]
-        self.outputs = [self._nodes[node_id] for node_id in config['outputs']]
-
-        super().set_config(config)

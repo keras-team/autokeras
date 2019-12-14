@@ -88,45 +88,25 @@ class ClassificationHead(base.Head):
 
     def get_config(self):
         config = super().get_config()
-        encoder_class = None
-        encoder_config = None
-        if isinstance(self.label_encoder, encoder.OneHotEncoder):
-            encoder_class = 'one_hot_encoder'
-        elif isinstance(self.label_encoder, encoder.LabelEncoder):
-            encoder_class = 'label_encoder'
-        if self.label_encoder:
-            encoder_config = self.label_encoder.get_config()
         config.update({
             'num_classes': self.num_classes,
             'multi_label': self.multi_label,
-            'dropout_rate': self.dropout_rate,
-            'encoder_class': encoder_class,
-            'encoder_config': encoder_config})
+            'dropout_rate': self.dropout_rate})
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.num_classes = config['num_classes']
-        self.multi_label = config['multi_label']
-        self.dropout_rate = config['dropout_rate']
-        self.label_encoder = None
-        if config['encoder_class'] == 'one_hot_encoder':
-            self.label_encoder = encoder.OneHotEncoder()
-        elif config['encoder_class'] == 'label_encoder':
-            self.label_encoder = encoder.LabelEncoder()
-        if self.label_encoder:
-            self.label_encoder.set_config(config['encoder_config'])
+    def get_state(self):
+        state = super().get_state()
+        state.update({
+            'encoder': encoder.serialize(self.label_encoder),
+            'encoder_state': self.label_encoder.get_state() if self.label_encoder
+            else None})
+        return state
 
-    def get_weights(self):
-        weights = super().get_weights()
-        if self.label_encoder:
-            weights.update({'label_encoder': self.label_encoder.get_weights()})
-        return weights
-
-    def set_weights(self, weights):
-        super().set_weights(weights)
-        if self.label_encoder:
-            self.label_encoder.set_weights(weights['label_encoder'])
+    def set_state(self, state):
+        super().set_state(state)
+        self.label_encoder = encoder.deserialize(state['encoder'])
+        if 'encoder_class' in state:
+            self.label_encoder.set_state(state['encoder_state'])
 
     def build(self, hp, inputs=None):
         if self.identity:
@@ -238,11 +218,6 @@ class RegressionHead(base.Head):
             'output_dim': self.output_dim,
             'dropout_rate': self.dropout_rate})
         return config
-
-    def set_config(self, config):
-        super().set_config(config)
-        self.output_dim = config['output_dim']
-        self.dropout_rate = config['dropout_rate']
 
     def build(self, hp, inputs=None):
         if self.identity:

@@ -10,7 +10,7 @@ from tensorflow.python.util import nest
 from autokeras import utils
 
 
-class Pickable(stateful.Stateful):
+class Picklable(stateful.Stateful):
     """The mixin for saving and loading config and weights for HyperModels.
 
     We define weights for any hypermodel as something that can only be know after
@@ -23,8 +23,7 @@ class Pickable(stateful.Stateful):
         # Returns
             Dictionary.
         """
-        return {'config': self.get_config(),
-                'weights': self.get_weights()}
+        raise NotImplementedError
 
     def set_state(self, state):
         """Sets the current state of this object.
@@ -32,8 +31,7 @@ class Pickable(stateful.Stateful):
         # Arguments
             state: Dict. The state to restore for this object.
         """
-        self.set_config(state['config'])
-        self.set_weights(state['weights'])
+        raise NotImplementedError
 
     def get_config(self):
         """Returns the current config of this object.
@@ -43,29 +41,14 @@ class Pickable(stateful.Stateful):
         """
         raise NotImplementedError
 
-    def set_config(self, config):
+    @classmethod
+    def from_config(cls, config):
         """Sets the current config of this object.
 
         # Arguments
             config: Dict. The config to restore for this object.
         """
-        raise NotImplementedError
-
-    def get_weights(self):
-        """Returns the current weights of this object.
-
-        # Returns
-            Dictionary.
-        """
-        raise NotImplementedError
-
-    def set_weights(self, weights):
-        """Sets the current weights of this object.
-
-        # Arguments
-            weights: Dict. The weights to restore for this object.
-        """
-        raise NotImplementedError
+        return cls(**config)
 
     def save(self, fname):
         """Save weights to file.
@@ -89,7 +72,7 @@ class Pickable(stateful.Stateful):
         self.set_state(state)
 
 
-class Node(Pickable):
+class Node(Picklable):
     """The nodes in a network connecting the blocks."""
 
     def __init__(self, shape=None):
@@ -110,17 +93,14 @@ class Node(Pickable):
     def get_config(self):
         return {}
 
-    def set_config(self, config):
-        pass
-
-    def get_weights(self):
+    def get_state(self):
         return {'shape': self.shape}
 
-    def set_weights(self, weights):
-        self.shape = weights['shape']
+    def set_state(self, state):
+        self.shape = state['shape']
 
 
-class Block(kerastuner.HyperModel, Pickable):
+class Block(kerastuner.HyperModel, Picklable):
     """The base class for different Block.
 
     The Block can be connected together to build the search space
@@ -195,18 +175,10 @@ class Block(kerastuner.HyperModel, Pickable):
         """
         return {'name': self.name}
 
-    def set_config(self, config):
-        """Set the configuration of the preprocessor.
-
-        # Arguments
-            config: A dictionary of the configurations of the preprocessor.
-        """
-        self.name = config['name']
-
-    def get_weights(self):
+    def get_state(self):
         return {}
 
-    def set_weights(self, weights):
+    def set_state(self, state):
         pass
 
 
@@ -235,21 +207,16 @@ class Head(Block):
         config.update({
             'loss': self.loss,
             'metrics': self.metrics,
-            'identity': self.identity
         })
         return config
 
-    def set_config(self, config):
-        super().set_config(config)
-        self.loss = config['loss']
-        self.metrics = config['metrics']
-        self.identity = config['identity']
+    def get_state(self):
+        return {'output_shape': self.output_shape,
+                'identity': self.identity}
 
-    def get_weights(self):
-        return {'output_shape': self.output_shape}
-
-    def set_weights(self, weights):
-        self.output_shape = weights['output_shape']
+    def set_state(self, state):
+        self.output_shape = state['output_shape']
+        self.identity = state['identity']
 
     def build(self, hp, inputs=None):
         raise NotImplementedError

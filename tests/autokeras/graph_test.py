@@ -111,7 +111,8 @@ def test_graph_save_load(tmp_dir):
         override_hps=[hp_module.Choice('dense_block_1/num_layers', [6], default=6)])
     path = os.path.join(tmp_dir, 'graph')
     graph.save(path)
-    graph = graph_module.HyperGraph()
+    config = graph.get_config()
+    graph = graph_module.HyperGraph.from_config(config)
     graph.reload(path)
 
     assert len(graph.inputs) == 2
