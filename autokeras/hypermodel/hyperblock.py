@@ -121,7 +121,7 @@ class StructuredDataBlock(base.HyperBlock):
         feature_engineering: Boolean. Whether to use feature engineering block.
             Defaults to True. If specified as None, it will be tuned automatically.
         module_type: String. 'dense' or 'lightgbm'. If it is 'dense', DenseBlock
-            will be used. If it is 'lightgbm', LightGBMBlock will be used. If
+            will be used. If it is 'lightgbm', LightGBM will be used. If
             unspecified, it will be tuned automatically.
         seed: Int. Random seed.
     """
@@ -176,7 +176,7 @@ class StructuredDataBlock(base.HyperBlock):
         if module_type == 'dense':
             output_node = block_module.DenseBlock()(input_node)
         elif module_type == 'lightgbm':
-            output_node = preprocessor_module.LightGBMBlock(
+            output_node = preprocessor_module.LightGBM(
                 seed=self.seed)(input_node)
         else:
             raise ValueError('Unsupported module'

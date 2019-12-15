@@ -17,22 +17,6 @@ class Picklable(stateful.Stateful):
     seeing the data. The rest of the states are configs.
     """
 
-    def get_state(self):
-        """Returns the current state of this object.
-
-        # Returns
-            Dictionary.
-        """
-        raise NotImplementedError
-
-    def set_state(self, state):
-        """Sets the current state of this object.
-
-        # Arguments
-            state: Dict. The state to restore for this object.
-        """
-        raise NotImplementedError
-
     def get_config(self):
         """Returns the current config of this object.
 
@@ -43,15 +27,15 @@ class Picklable(stateful.Stateful):
 
     @classmethod
     def from_config(cls, config):
-        """Sets the current config of this object.
+        """Build an instance from the config of this object.
 
         # Arguments
-            config: Dict. The config to restore for this object.
+            config: Dict. The config of the object.
         """
         return cls(**config)
 
     def save(self, fname):
-        """Save weights to file.
+        """Save state to file.
 
         # Arguments
             fname: String. The path to a file to save the state.
@@ -62,7 +46,7 @@ class Picklable(stateful.Stateful):
         return str(fname)
 
     def reload(self, fname):
-        """Load state to file.
+        """Load state from file.
 
         # Arguments
             fname: String. The path to a file to load the state.

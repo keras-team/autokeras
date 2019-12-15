@@ -442,19 +442,6 @@ class PreprocessGraph(Graph):
         for block in self.blocks:
             block.build(hp)
 
-    def get_state(self):
-        state = super().get_state()
-        block_state = {str(block_id): block.get_state()
-                       for block_id, block in enumerate(self.blocks)}
-        state.update({'blocks': block_state})
-        return state
-
-    def set_state(self, state):
-        super().set_state(state)
-        block_state = state['blocks']
-        for block_id, block in enumerate(self.blocks):
-            block.set_state(block_state[str(block_id)])
-
 
 def copy(old_instance):
     instance = old_instance.__class__.from_config(old_instance.get_config())

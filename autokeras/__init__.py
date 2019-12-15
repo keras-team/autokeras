@@ -26,7 +26,7 @@ from autokeras.hypermodel.node import StructuredDataInput
 from autokeras.hypermodel.node import TextInput
 from autokeras.hypermodel.preprocessor import FeatureEngineering
 from autokeras.hypermodel.preprocessor import ImageAugmentation
-from autokeras.hypermodel.preprocessor import LightGBMBlock
+from autokeras.hypermodel.preprocessor import LightGBM
 from autokeras.hypermodel.preprocessor import Normalization
 from autokeras.hypermodel.preprocessor import TextToIntSequence
 from autokeras.hypermodel.preprocessor import TextToNgramVector

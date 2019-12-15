@@ -101,7 +101,7 @@ def structured_data_block_heads(structured_data_block):
 # Compile the graph before the preprocessing step.
 BEFORE = {
     preprocessor_module.FeatureEngineering: feature_engineering_input,
-    preprocessor_module.LightGBMBlock: lightgbm_head,
+    preprocessor_module.LightGBM: lightgbm_head,
 }
 
 # Compile the graph after the preprocessing step.

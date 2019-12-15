@@ -382,7 +382,7 @@ class LightGBMRegressor(LightGBMModel):
         super().finalize()
 
 
-class LightGBMBlock(base.Preprocessor):
+class LightGBM(base.Preprocessor):
     """LightGBM Block for classification or regression task.
 
     # Arguments
