@@ -7,6 +7,8 @@ checks if the graph is valid, i.e., any blocks are connected incorrectly.
 
 import queue
 
+import tensorflow as tf
+
 from autokeras.hypermodel import base
 from autokeras.hypermodel import block as block_module
 from autokeras.hypermodel import head as head_module
@@ -122,3 +124,15 @@ ALL_CLASSES = {
     **vars(preprocessor_module),
     **vars(hyperblock_module),
 }
+
+
+def serialize(obj):
+    return tf.keras.utils.serialize_keras_object(obj)
+
+
+def deserialize(config, custom_objects=None):
+    return tf.keras.utils.deserialize_keras_object(
+        config,
+        module_objects={**ALL_CLASSES},
+        custom_objects=custom_objects,
+        printable_module_name='graph')

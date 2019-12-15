@@ -155,8 +155,8 @@ class Graph(base.Picklable):
         raise ValueError('Cannot find block named {name}.'.format(name=name))
 
     def get_config(self):
-        blocks = [serialize(block) for block in self.blocks]
-        nodes = {str(self._node_to_id[node]): serialize(node)
+        blocks = [compiler.serialize(block) for block in self.blocks]
+        nodes = {str(self._node_to_id[node]): compiler.serialize(node)
                  for node in self.inputs}
         override_hps = [tf.keras.utils.serialize_keras_object(hp)
                         for hp in self.override_hps]
@@ -182,8 +182,8 @@ class Graph(base.Picklable):
 
     @classmethod
     def from_config(cls, config):
-        blocks = [deserialize(block) for block in config['blocks']]
-        nodes = {int(node_id): deserialize(node)
+        blocks = [compiler.deserialize(block) for block in config['blocks']]
+        nodes = {int(node_id): compiler.deserialize(node)
                  for node_id, node in config['nodes'].items()}
         override_hps = [kerastuner.engine.hyperparameters.deserialize(config)
                         for config in config['override_hps']]
@@ -447,18 +447,6 @@ def copy(old_instance):
     instance = old_instance.__class__.from_config(old_instance.get_config())
     instance.set_state(old_instance.get_state())
     return instance
-
-
-def serialize(obj):
-    return tf.keras.utils.serialize_keras_object(obj)
-
-
-def deserialize(config, custom_objects=None):
-    return tf.keras.utils.deserialize_keras_object(
-        config,
-        module_objects={**compiler.ALL_CLASSES},
-        custom_objects=custom_objects,
-        printable_module_name='graph')
 
 
 class HyperGraph(Graph):
