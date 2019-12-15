@@ -504,18 +504,19 @@ class ImageAugmentation(base.Preprocessor):
 
     @staticmethod
     def _get_min_and_max(value, name):
-        if isinstance(value, (tuple, list)):
-            if len(value) != 2:
-                raise ValueError(
-                    'Argument %s expected either a float between 0 and 1, '
-                    'or a tuple of 2 floats between 0 and 1, '
-                    'but got: %s' % (value, name))
+        if isinstance(value, (tuple, list)) and len(value) == 2:
             min_value, max_value = value
+            return min_value, max_value
+        elif isinstance(value, (int, float)):
+            min_value = 1. - value
+            max_value = 1. + value
+            return min_value, max_value
         elif value == 0:
             return None
-        min_value = 1. - value
-        max_value = 1. + value
-        return min_value, max_value
+        else:
+            raise ValueError('Expected {name} to be either a float between 0 and 1, '
+                             'or a tuple of 2 floats between 0 and 1, '
+                             'but got {value}'.format(name=name, value=value))
 
     def update(self, x, y=None):
         x = nest.flatten(x)[0].numpy()

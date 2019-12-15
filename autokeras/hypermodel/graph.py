@@ -156,7 +156,8 @@ class Graph(base.Picklable):
 
     def get_config(self):
         blocks = [serialize(block) for block in self.blocks]
-        nodes = [serialize(node) for node in self._nodes]
+        nodes = {str(self._node_to_id[node]): serialize(node)
+                 for node in self.inputs}
         override_hps = [tf.keras.utils.serialize_keras_object(hp)
                         for hp in self.override_hps]
         block_inputs = {
@@ -167,53 +168,34 @@ class Graph(base.Picklable):
             str(block_id): [self._node_to_id[node]
                             for node in block.outputs]
             for block_id, block in enumerate(self.blocks)}
-        node_inputs = {
-            str(node_id): [self._block_to_id[block]
-                           for block in node.in_blocks]
-            for node_id, node in enumerate(self._nodes)}
-        node_outputs = {
-            str(node_id): [self._block_to_id[block]
-                           for block in node.out_blocks]
-            for node_id, node in enumerate(self._nodes)}
 
-        inputs = [self._node_to_id[node] for node in self.inputs]
         outputs = [self._node_to_id[node] for node in self.outputs]
 
         return {
             'override_hps': override_hps,  # List [serialized].
             'blocks': blocks,  # Dict {id: serialized}.
             'nodes': nodes,  # Dict {id: serialized}.
-            'inputs': inputs,  # List of node_ids.
             'outputs': outputs,  # List of node_ids.
             'block_inputs': block_inputs,  # Dict {id: List of node_ids}.
             'block_outputs': block_outputs,  # Dict {id: List of node_ids}.
-            'node_inputs': node_inputs,  # Dict {id: List of block_ids}.
-            'node_outputs': node_outputs,  # Dict {id: List of block_ids}.
         }
 
     @classmethod
     def from_config(cls, config):
         blocks = [deserialize(block) for block in config['blocks']]
-        nodes = [deserialize(node) for node in config['nodes']]
+        nodes = {int(node_id): deserialize(node)
+                 for node_id, node in config['nodes'].items()}
         override_hps = [kerastuner.engine.hyperparameters.deserialize(config)
                         for config in config['override_hps']]
 
-        block_to_id = {blocks[block_id]: block_id
-                       for block_id in range(len(blocks))}
-        node_to_id = {nodes[node_id]: node_id
-                      for node_id in range(len(nodes))}
-
-        inputs = [nodes[node_id] for node_id in config['inputs']]
+        inputs = [nodes[node_id] for node_id in nodes]
         for block_id, block in enumerate(blocks):
             input_nodes = [nodes[node_id]
                            for node_id in config['block_inputs'][str(block_id)]]
-            block.outputs = [nodes[node_id]
-                             for node_id in config['block_outputs'][str(block_id)]]
-        for node_id, node in enumerate(nodes):
-            node.in_blocks = [blocks[block_id]
-                              for block_id in config['node_inputs'][str(node_id)]]
-            node.out_blocks = [blocks[block_id]
-                               for block_id in config['node_outputs'][str(node_id)]]
+            output_nodes = nest.flatten(block(input_nodes))
+            for output_node, node_id in zip(
+                    output_nodes, config['block_outputs'][str(block_id)]):
+                nodes[node_id] = output_node
 
         outputs = [nodes[node_id] for node_id in config['outputs']]
         return cls(inputs=inputs, outputs=outputs, override_hps=override_hps)
@@ -235,7 +217,7 @@ class Graph(base.Picklable):
             node.set_state(nodes_state[str(node_id)])
         blocks_state = state['blocks_state']
         for block_id, block in enumerate(self.blocks):
-            block.set_state(blocks_state[str(node_id)])
+            block.set_state(blocks_state[str(block_id)])
 
 
 class PlainGraph(Graph):
@@ -475,7 +457,7 @@ class PreprocessGraph(Graph):
 
 
 def copy(old_instance):
-    instance = old_instance.__class__()
+    instance = old_instance.__class__.from_config(old_instance.get_config())
     instance.set_state(old_instance.get_state())
     return instance
 
