@@ -1,3 +1,5 @@
+from typing import Callable, Union
+
 import pandas as pd
 
 from autokeras import auto_model
@@ -34,15 +36,15 @@ class ImageClassifier(SupervisedImagePipeline):
     """
 
     def __init__(self,
-                 num_classes=None,
-                 multi_label=False,
-                 loss=None,
-                 metrics=None,
-                 name='image_classifier',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_loss',
-                 seed=None):
+                 num_classes: int = None,
+                 multi_label: bool = False,
+                 loss: Union[str, Callable] = None,
+                 metrics: Union[str, Callable] = None,
+                 name: str = 'image_classifier',
+                 max_trials: int = 100,
+                 directory: str = None,
+                 objective: str = 'val_loss',
+                 seed: int = None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
                                             multi_label=multi_label,
