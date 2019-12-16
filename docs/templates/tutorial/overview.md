@@ -51,7 +51,7 @@ The following are the links to the documentation of the predefined input nodes a
 
 [ImageAugmentation](/preprocessor/#imageaugmentation-class)
 
-[LightGBMBlock](/preprocessor/#lightgbmblock-class)
+[LightGBM](/preprocessor/#lightgbm-class)
 
 [Normalization](/preprocessor/#normalization-class)
 
