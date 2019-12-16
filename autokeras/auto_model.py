@@ -15,13 +15,36 @@ class AutoModel(object):
     The user can use it in a similar way to a Keras model since it
     also has `fit()` and  `predict()` methods.
 
-    There are two ways of using AutoModel: through IO API and functional API.
-    To use IO API, the user can specify the input nodes and output heads of the
-    AutoModel. The AutoModel will infer the part rest of the model.
+    The AutoModel has two use cases. In the first case, the user only specifies the
+    input nodes and output heads of the AutoModel. The AutoModel infers the rest part
+    of the model. In the second case, user can specify the high-level architecture of
+    the AutoModel by connecting the Blocks with the functional API, which is the same
+    as the Keras functional API.
 
-    To use functional API, the user can specify the high-level architecture of the
-    model by connecting the Blocks with the functional API, which is the same as
-    the Keras functional API.
+    # Example
+    ```python
+        # The user only specifies the input nodes and output heads.
+        import autokeras as ak
+        ak.AutoModel(
+            inputs=[ak.ImageInput(), ak.TextInput()],
+            outputs=[ak.ClassificationHead(), ak.RegressionHead()]
+        )
+    ```
+    ```python
+    # The user specifies the high-level architecture.
+        import autokeras as ak
+        image_input = ak.ImageInput()
+        image_output = ak.ImageBlock()(image_input)
+        text_input = ak.TextInput()
+        text_output = ak.TextBlock()(text_input)
+        output = ak.Merge()([image_output, text_output])
+        classification_output = ak.ClassificationHead()(output)
+        regression_output = ak.RegressionHead()(output)
+        ak.AutoModel(
+            inputs=[image_input, text_input],
+            outputs=[classification_output, regression_output]
+        )
+    ```
 
     # Arguments
         inputs: A list of Node instances.
