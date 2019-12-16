@@ -19,7 +19,7 @@ class AutoModel(object):
     input nodes and output heads of the AutoModel. The AutoModel infers the rest part
     of the model. In the second case, user can specify the high-level architecture of
     the AutoModel by connecting the Blocks with the functional API, which is the same
-    as the Keras functional API.
+    as the Keras [functional API](https://www.tensorflow.org/guide/keras/functional).
 
     # Example
     ```python
@@ -31,7 +31,7 @@ class AutoModel(object):
         )
     ```
     ```python
-    # The user specifies the high-level architecture.
+        # The user specifies the high-level architecture.
         import autokeras as ak
         image_input = ak.ImageInput()
         image_output = ak.ImageBlock()(image_input)
@@ -49,8 +49,8 @@ class AutoModel(object):
     # Arguments
         inputs: A list of Node instances.
             The input node(s) of the AutoModel.
-        outputs: A list of Node or a Head instances.
-            The output head(s) or node(s) of the AutoModel.
+        outputs: A list of Node or Head instances.
+            The output node(s) or head(s) of the AutoModel.
         name: String. The name of the AutoModel. Defaults to 'auto_model'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -96,9 +96,11 @@ class AutoModel(object):
             self.heads = [output_node.in_blocks[0] for output_node in self.outputs]
 
     def _meta_build(self, dataset):
+        # Using functional API.
         if all([isinstance(output, base.Node) for output in self.outputs]):
             self.hyper_graph = graph.HyperGraph(inputs=self.inputs,
                                                 outputs=self.outputs)
+        # Using input/output API.
         elif all([isinstance(output, base.Head) for output in self.outputs]):
             self.hyper_graph = meta_model.assemble(inputs=self.inputs,
                                                    outputs=self.outputs,
