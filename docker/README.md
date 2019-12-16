@@ -31,12 +31,7 @@ Build the container and start a bash
 For GPU support install NVIDIA drivers (ideally latest) and
 [nvidia-docker](https://github.com/NVIDIA/nvidia-docker). Run using
 
-    $ make notebook GPU=0 # or [ipython, bash]
-
-Switch between Theano and TensorFlow
-
-    $ make notebook BACKEND=theano
-    $ make notebook BACKEND=tensorflow
+    $ make notebook GPU=all # or [ipython, bash]
 
 Mount a volume for external data sets
 
@@ -45,9 +40,6 @@ Mount a volume for external data sets
 Prints all make tasks
 
     $ make help
-
-You can change Theano parameters by editing `/docker/theanorc`.
-
 
 Note: If you would have a problem running nvidia-docker you may try the old way
 we have used. But it is not recommended. If you find a bug in the nvidia-docker report
