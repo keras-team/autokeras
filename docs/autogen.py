@@ -75,7 +75,7 @@ PAGES = {
     'preprocessor.md': [
         'autokeras.FeatureEngineering',
         'autokeras.ImageAugmentation',
-        'autokeras.LightGBMBlock',
+        'autokeras.LightGBM',
         'autokeras.Normalization',
         'autokeras.TextToIntSequence',
         'autokeras.TextToNgramVector',
