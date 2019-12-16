@@ -1,13 +1,62 @@
+import pickle
+
 import kerastuner
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from kerastuner.engine import stateful
 from tensorflow.python.util import nest
 
 from autokeras import utils
 
 
-class Node(kerastuner.engine.stateful.Stateful):
+class Picklable(stateful.Stateful):
+    """The mixin for saving and loading config and weights for HyperModels.
+
+    We define weights for any hypermodel as something that can only be know after
+    seeing the data. The rest of the states are configs.
+    """
+
+    def get_config(self):
+        """Returns the current config of this object.
+
+        # Returns
+            Dictionary.
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def from_config(cls, config):
+        """Build an instance from the config of this object.
+
+        # Arguments
+            config: Dict. The config of the object.
+        """
+        return cls(**config)
+
+    def save(self, fname):
+        """Save state to file.
+
+        # Arguments
+            fname: String. The path to a file to save the state.
+        """
+        state = self.get_state()
+        with tf.io.gfile.GFile(fname, 'wb') as f:
+            pickle.dump(state, f)
+        return str(fname)
+
+    def reload(self, fname):
+        """Load state from file.
+
+        # Arguments
+            fname: String. The path to a file to load the state.
+        """
+        with tf.io.gfile.GFile(fname, 'rb') as f:
+            state = pickle.load(f)
+        self.set_state(state)
+
+
+class Node(Picklable):
     """The nodes in a network connecting the blocks."""
 
     def __init__(self, shape=None):
@@ -25,6 +74,9 @@ class Node(kerastuner.engine.stateful.Stateful):
     def build(self):
         return tf.keras.Input(shape=self.shape)
 
+    def get_config(self):
+        return {}
+
     def get_state(self):
         return {'shape': self.shape}
 
@@ -32,7 +84,7 @@ class Node(kerastuner.engine.stateful.Stateful):
         self.shape = state['shape']
 
 
-class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
+class Block(kerastuner.HyperModel, Picklable):
     """The base class for different Block.
 
     The Block can be connected together to build the search space
@@ -99,7 +151,7 @@ class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
         """
         return super().build(hp)
 
-    def get_state(self):
+    def get_config(self):
         """Get the configuration of the preprocessor.
 
         # Returns
@@ -107,13 +159,11 @@ class Block(kerastuner.HyperModel, kerastuner.engine.stateful.Stateful):
         """
         return {'name': self.name}
 
-    def set_state(self, state):
-        """Set the configuration of the preprocessor.
+    def get_state(self):
+        return {}
 
-        # Arguments
-            state: A dictionary of the configurations of the preprocessor.
-        """
-        self.name = state['name']
+    def set_state(self, state):
+        pass
 
 
 class Head(Block):
@@ -136,21 +186,20 @@ class Head(Block):
         # Mark if the head should directly output the input tensor.
         self.identity = False
 
-    def get_state(self):
-        state = super().get_state()
-        state.update({
-            'output_shape': self.output_shape,
+    def get_config(self):
+        config = super().get_config()
+        config.update({
             'loss': self.loss,
             'metrics': self.metrics,
-            'identity': self.identity
         })
-        return state
+        return config
+
+    def get_state(self):
+        return {'output_shape': self.output_shape,
+                'identity': self.identity}
 
     def set_state(self, state):
-        super().set_state(state)
         self.output_shape = state['output_shape']
-        self.loss = state['loss']
-        self.metrics = state['metrics']
         self.identity = state['identity']
 
     def build(self, hp, inputs=None):
@@ -301,46 +350,3 @@ class Preprocessor(Block):
     def finalize(self):
         """Training process of the preprocessor after update with all instances."""
         pass
-
-    def get_config(self):
-        """Get the configuration of the preprocessor.
-
-        # Returns
-            A dictionary of configurations of the preprocessor.
-        """
-        return {}
-
-    def set_config(self, config):
-        """Set the configuration of the preprocessor.
-
-        # Arguments
-            config: A dictionary of the configurations of the preprocessor.
-        """
-        pass
-
-    def get_weights(self):
-        """Get the trained weights of the preprocessor.
-
-        # Returns
-            A dictionary of trained weights of the preprocessor.
-        """
-        return {}
-
-    def set_weights(self, weights):
-        """Set the trained weights of the preprocessor.
-
-        # Arguments
-            weights: A dictionary of trained weights of the preprocessor.
-        """
-        pass
-
-    def get_state(self):
-        state = super().get_state()
-        state.update(self.get_config())
-        return {'config': state,
-                'weights': self.get_weights()}
-
-    def set_state(self, state):
-        self.set_config(state['config'])
-        super().set_state(state['config'])
-        self.set_weights(state['weights'])

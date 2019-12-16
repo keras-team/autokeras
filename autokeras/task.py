@@ -30,6 +30,9 @@ class ImageClassifier(SupervisedImagePipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
+            project of the same name if one is found. Otherwise, overwrites the
+            project.
         seed: Int. Random seed.
     """
 
@@ -42,6 +45,7 @@ class ImageClassifier(SupervisedImagePipeline):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
+                 overwrite=True,
                  seed=None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
@@ -53,6 +57,7 @@ class ImageClassifier(SupervisedImagePipeline):
             name=name,
             objective=objective,
             tuner='image_classifier',
+            overwrite=overwrite,
             seed=seed)
 
     def fit(self,
@@ -128,6 +133,9 @@ class ImageRegressor(SupervisedImagePipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
+            project of the same name if one is found. Otherwise, overwrites the
+            project.
         seed: Int. Random seed.
     """
 
@@ -139,6 +147,7 @@ class ImageRegressor(SupervisedImagePipeline):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
+                 overwrite=True,
                  seed=None):
         super().__init__(
             outputs=head.RegressionHead(output_dim=output_dim,
@@ -149,6 +158,7 @@ class ImageRegressor(SupervisedImagePipeline):
             name=name,
             objective=objective,
             tuner='image_regressor',
+            overwrite=overwrite,
             seed=seed)
 
     def fit(self,
@@ -233,6 +243,9 @@ class TextClassifier(SupervisedTextPipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
+            project of the same name if one is found. Otherwise, overwrites the
+            project.
         seed: Int. Random seed.
     """
 
@@ -245,6 +258,7 @@ class TextClassifier(SupervisedTextPipeline):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
+                 overwrite=True,
                  seed=None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
@@ -256,6 +270,7 @@ class TextClassifier(SupervisedTextPipeline):
             name=name,
             objective=objective,
             tuner='text_classifier',
+            overwrite=overwrite,
             seed=seed)
 
     def fit(self,
@@ -332,6 +347,9 @@ class TextRegressor(SupervisedTextPipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
+            project of the same name if one is found. Otherwise, overwrites the
+            project.
         seed: Int. Random seed.
     """
 
@@ -343,6 +361,7 @@ class TextRegressor(SupervisedTextPipeline):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
+                 overwrite=True,
                  seed=None):
         super().__init__(
             outputs=head.RegressionHead(output_dim=output_dim,
@@ -353,6 +372,7 @@ class TextRegressor(SupervisedTextPipeline):
             name=name,
             objective=objective,
             tuner='text_regressor',
+            overwrite=overwrite,
             seed=seed)
 
     def fit(self,
@@ -576,6 +596,9 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize. Defaults to 'val_accuracy'.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
+            project of the same name if one is found. Otherwise, overwrites the
+            project.
         seed: Int. Random seed.
     """
 
@@ -590,6 +613,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                  max_trials=100,
                  directory=None,
                  objective='val_accuracy',
+                 overwrite=True,
                  seed=None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
@@ -603,6 +627,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             name=name,
             objective=objective,
             tuner='structured_data_classifier',
+            overwrite=overwrite,
             seed=seed)
 
     def fit(self,
@@ -674,6 +699,9 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
+            project of the same name if one is found. Otherwise, overwrites the
+            project.
         seed: Int. Random seed.
     """
 
@@ -687,6 +715,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
+                 overwrite=True,
                  seed=None):
         super().__init__(
             outputs=head.RegressionHead(output_dim=output_dim,
@@ -699,6 +728,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             name=name,
             objective=objective,
             tuner='structured_data_regressor',
+            overwrite=overwrite,
             seed=seed)
 
 
@@ -738,6 +768,9 @@ class TimeSeriesForecaster(auto_model.AutoModel):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
+            project of the same name if one is found. Otherwise, overwrites the
+            project.
         seed: Int. Random seed.
     """
 
@@ -753,6 +786,7 @@ class TimeSeriesForecaster(auto_model.AutoModel):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
+                 overwrite=True,
                  seed=None):
         # TODO: implement.
         raise NotImplementedError
