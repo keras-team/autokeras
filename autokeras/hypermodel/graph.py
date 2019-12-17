@@ -1,5 +1,4 @@
 import functools
-import pickle
 
 import kerastuner
 import tensorflow as tf
@@ -9,7 +8,7 @@ from autokeras.hypermodel import base
 from autokeras.hypermodel import compiler
 
 
-class Graph(kerastuner.engine.stateful.Stateful):
+class Graph(base.Picklable):
     """A graph consists of connected Blocks, HyperBlocks, Preprocessors or Heads.
 
     # Arguments
@@ -20,7 +19,7 @@ class Graph(kerastuner.engine.stateful.Stateful):
             with the same names.
     """
 
-    def __init__(self, inputs, outputs, override_hps=None):
+    def __init__(self, inputs=None, outputs=None, override_hps=None):
         super().__init__()
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
@@ -28,7 +27,8 @@ class Graph(kerastuner.engine.stateful.Stateful):
         self._nodes = []
         self.blocks = []
         self._block_to_id = {}
-        self._build_network()
+        if inputs and outputs:
+            self._build_network()
         self.override_hps = override_hps or []
 
     def compile(self, func):
@@ -104,7 +104,7 @@ class Graph(kerastuner.engine.stateful.Stateful):
                 blocks.remove(block)
 
             for block in new_added:
-                # Add the collected blocks to the AutoModel.
+                # Add the collected blocks to the Graph.
                 self._add_block(block)
 
                 # Decrease the in degree of the output nodes.
@@ -154,36 +154,70 @@ class Graph(kerastuner.engine.stateful.Stateful):
                 return block
         raise ValueError('Cannot find block named {name}.'.format(name=name))
 
-    def get_state(self):
-        # TODO: Include everything including the graph structure.
-        block_state = {str(block_id): block.get_state()
-                       for block_id, block in enumerate(self.blocks)}
-        node_state = {str(node_id): node.get_state()
-                      for node_id, node in enumerate(self._nodes)}
-        return {'blocks': block_state, 'nodes': node_state}
+    def get_config(self):
+        blocks = [compiler.serialize(block) for block in self.blocks]
+        nodes = {str(self._node_to_id[node]): compiler.serialize(node)
+                 for node in self.inputs}
+        override_hps = [tf.keras.utils.serialize_keras_object(hp)
+                        for hp in self.override_hps]
+        block_inputs = {
+            str(block_id): [self._node_to_id[node]
+                            for node in block.inputs]
+            for block_id, block in enumerate(self.blocks)}
+        block_outputs = {
+            str(block_id): [self._node_to_id[node]
+                            for node in block.outputs]
+            for block_id, block in enumerate(self.blocks)}
 
-    def set_state(self, state):
-        # TODO: Include everything including the graph structure.
-        block_state = state['blocks']
-        node_state = state['nodes']
-        for block_id, block in enumerate(self.blocks):
-            block.set_state(block_state[str(block_id)])
-        for node_id, node in enumerate(self._nodes):
-            node.set_state(node_state[str(node_id)])
+        outputs = [self._node_to_id[node] for node in self.outputs]
 
-    def save(self, fname):
-        state = self.get_state()
-        with tf.io.gfile.GFile(fname, 'wb') as f:
-            pickle.dump(state, f)
-        return str(fname)
+        return {
+            'override_hps': override_hps,  # List [serialized].
+            'blocks': blocks,  # Dict {id: serialized}.
+            'nodes': nodes,  # Dict {id: serialized}.
+            'outputs': outputs,  # List of node_ids.
+            'block_inputs': block_inputs,  # Dict {id: List of node_ids}.
+            'block_outputs': block_outputs,  # Dict {id: List of node_ids}.
+        }
 
-    def reload(self, fname):
-        with tf.io.gfile.GFile(fname, 'rb') as f:
-            state = pickle.load(f)
-        self.set_state(state)
+    @classmethod
+    def from_config(cls, config):
+        blocks = [compiler.deserialize(block) for block in config['blocks']]
+        nodes = {int(node_id): compiler.deserialize(node)
+                 for node_id, node in config['nodes'].items()}
+        override_hps = [kerastuner.engine.hyperparameters.deserialize(config)
+                        for config in config['override_hps']]
+
+        inputs = [nodes[node_id] for node_id in nodes]
+        for block_id, block in enumerate(blocks):
+            input_nodes = [nodes[node_id]
+                           for node_id in config['block_inputs'][str(block_id)]]
+            output_nodes = nest.flatten(block(input_nodes))
+            for output_node, node_id in zip(
+                    output_nodes, config['block_outputs'][str(block_id)]):
+                nodes[node_id] = output_node
+
+        outputs = [nodes[node_id] for node_id in config['outputs']]
+        return cls(inputs=inputs, outputs=outputs, override_hps=override_hps)
 
     def build(self, hp):
         self._register_hps(hp)
+
+    def get_state(self):
+        nodes_state = {str(node_id): node.get_state()
+                       for node_id, node in enumerate(self._nodes)}
+        blocks_state = {str(block_id): block.get_state()
+                        for block_id, block in enumerate(self.blocks)}
+        return {'nodes_state': nodes_state,
+                'blocks_state': blocks_state}
+
+    def set_state(self, state):
+        nodes_state = state['nodes_state']
+        for node_id, node in enumerate(self._nodes):
+            node.set_state(nodes_state[str(node_id)])
+        blocks_state = state['blocks_state']
+        for block_id, block in enumerate(self.blocks):
+            block.set_state(blocks_state[str(block_id)])
 
 
 class PlainGraph(Graph):
@@ -192,15 +226,11 @@ class PlainGraph(Graph):
     A PlainGraph does not contain HyperBlock. HyperGraph's hyper_build function
     returns an instance of PlainGraph, which can be directly built into a KerasGraph
     and a PreprocessGraph.
-
-    # Arguments
-        inputs: A list of input node(s) for the PlainGraph.
-        outputs: A list of output node(s) for the PlainGraph.
     """
 
-    def __init__(self, inputs, outputs, **kwargs):
+    def __init__(self, **kwargs):
         self._keras_model_inputs = []
-        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
+        super().__init__(**kwargs)
 
     def _build_network(self):
         super()._build_network()
@@ -414,21 +444,16 @@ class PreprocessGraph(Graph):
 
 
 def copy(old_instance):
-    instance = old_instance.__class__()
+    instance = old_instance.__class__.from_config(old_instance.get_config())
     instance.set_state(old_instance.get_state())
     return instance
 
 
 class HyperGraph(Graph):
-    """A HyperModel based on connected Blocks and HyperBlocks.
+    """A HyperModel based on connected Blocks and HyperBlocks."""
 
-    # Arguments
-        inputs: A list of input node(s) for the HyperGraph.
-        outputs: A list of output node(s) for the HyperGraph.
-    """
-
-    def __init__(self, inputs, outputs, **kwargs):
-        super().__init__(inputs, outputs, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.compile(compiler.HYPER)
 
     def build_graphs(self, hp):
@@ -463,4 +488,6 @@ class HyperGraph(Graph):
         outputs = []
         for output_node in self.outputs:
             outputs.append(old_node_to_new[output_node])
-        return PlainGraph(inputs, outputs, override_hps=self.override_hps)
+        return PlainGraph(inputs=inputs,
+                          outputs=outputs,
+                          override_hps=self.override_hps)

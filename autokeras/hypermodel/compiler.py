@@ -7,6 +7,8 @@ checks if the graph is valid, i.e., any blocks are connected incorrectly.
 
 import queue
 
+import tensorflow as tf
+
 from autokeras.hypermodel import base
 from autokeras.hypermodel import block as block_module
 from autokeras.hypermodel import head as head_module
@@ -60,10 +62,10 @@ def fetch_heads(source_block):
 
 def lightgbm_head(lightgbm_block):
     """Fetch the heads for LightGBMBlock."""
-    lightgbm_block.heads = fetch_heads(lightgbm_block)
-    if len(lightgbm_block.heads) > 1:
+    heads = fetch_heads(lightgbm_block)
+    if len(heads) > 1:
         raise ValueError('LightGBMBlock can only be connected to one head.')
-    head = lightgbm_block.heads[0]
+    head = heads[0]
     if isinstance(head, head_module.ClassificationHead):
         classifier = preprocessor_module.LightGBMClassifier(seed=lightgbm_block.seed)
         classifier.num_classes = head.num_classes
@@ -95,13 +97,13 @@ def feature_engineering_input(fe_block):
 
 
 def structured_data_block_heads(structured_data_block):
-    structured_data_block.heads = fetch_heads(structured_data_block)
+    structured_data_block.num_heads = len(fetch_heads(structured_data_block))
 
 
 # Compile the graph before the preprocessing step.
 BEFORE = {
     preprocessor_module.FeatureEngineering: feature_engineering_input,
-    preprocessor_module.LightGBMBlock: lightgbm_head,
+    preprocessor_module.LightGBM: lightgbm_head,
 }
 
 # Compile the graph after the preprocessing step.
@@ -113,3 +115,24 @@ AFTER = {
 HYPER = {**{
     hyperblock_module.StructuredDataBlock: structured_data_block_heads,
 }, **BEFORE}
+
+ALL_CLASSES = {
+    **vars(base),
+    **vars(node_module),
+    **vars(head_module),
+    **vars(block_module),
+    **vars(preprocessor_module),
+    **vars(hyperblock_module),
+}
+
+
+def serialize(obj):
+    return tf.keras.utils.serialize_keras_object(obj)
+
+
+def deserialize(config, custom_objects=None):
+    return tf.keras.utils.deserialize_keras_object(
+        config,
+        module_objects={**ALL_CLASSES},
+        custom_objects=custom_objects,
+        printable_module_name='graph')
