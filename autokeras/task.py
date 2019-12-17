@@ -47,7 +47,7 @@ class ImageClassifier(SupervisedImagePipeline):
                  max_trials: int = 100,
                  directory: str = None,
                  objective: str = 'val_loss',
-                 overwrite=True,
+                 overwrite: bool = True,
                  seed: int = None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
