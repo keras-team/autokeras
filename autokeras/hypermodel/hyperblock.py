@@ -33,20 +33,13 @@ class ImageBlock(base.HyperBlock):
         self.augment = augment
         self.seed = seed
 
-    def get_state(self):
-        config = super().get_state()
+    def get_config(self):
+        config = super().get_config()
         config.update({'block_type': self.block_type,
                        'normalize': self.normalize,
                        'augment': self.augment,
                        'seed': self.seed})
         return config
-
-    def set_state(self, state):
-        super().set_state(state)
-        self.block_type = state.get('block_type')
-        self.normalize = state.get('normalize')
-        self.augment = state.get('augment')
-        self.seed = state.get('seed')
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
@@ -94,16 +87,11 @@ class TextBlock(base.HyperBlock):
         self.vectorizer = vectorizer
         self.pretraining = pretraining
 
-    def get_state(self):
-        state = super().get_state()
-        state.update({'vectorizer': self.vectorizer,
-                      'pretraining': self.pretraining})
-        return state
-
-    def set_state(self, state):
-        super().set_state(state)
-        self.vectorizer = state['vectorizer']
-        self.pretraining = state['pretraining']
+    def get_config(self):
+        config = super().get_config()
+        config.update({'vectorizer': self.vectorizer,
+                       'pretraining': self.pretraining})
+        return config
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
@@ -133,7 +121,7 @@ class StructuredDataBlock(base.HyperBlock):
         feature_engineering: Boolean. Whether to use feature engineering block.
             Defaults to True. If specified as None, it will be tuned automatically.
         module_type: String. 'dense' or 'lightgbm'. If it is 'dense', DenseBlock
-            will be used. If it is 'lightgbm', LightGBMBlock will be used. If
+            will be used. If it is 'lightgbm', LightGBM will be used. If
             unspecified, it will be tuned automatically.
         seed: Int. Random seed.
     """
@@ -146,23 +134,24 @@ class StructuredDataBlock(base.HyperBlock):
         super().__init__(**kwargs)
         self.feature_engineering = feature_engineering
         self.module_type = module_type
-        self.heads = None
+        self.num_heads = None
         self.seed = seed
 
-    def get_state(self):
-        config = super().get_state()
+    def get_config(self):
+        config = super().get_config()
         config.update({'feature_engineering': self.feature_engineering,
                        'module_type': self.module_type,
-                       'heads': self.heads,
                        'seed': self.seed})
         return config
 
+    def get_state(self):
+        state = super().get_state()
+        state.update({'num_heads': self.num_heads})
+        return state
+
     def set_state(self, state):
         super().set_state(state)
-        self.feature_engineering = state.get('feature_engineering')
-        self.module_type = state.get('module_type')
-        self.heads = state.get('heads')
-        self.seed = state.get('seed')
+        self.num_heads = state.get('num_heads')
 
     def build_feature_engineering(self, hp, input_node):
         output_node = input_node
@@ -177,7 +166,7 @@ class StructuredDataBlock(base.HyperBlock):
         return output_node
 
     def build_body(self, hp, input_node):
-        if len(self.heads) > 1:
+        if self.num_heads > 1:
             module_type_choices = ['dense']
         else:
             module_type_choices = ['lightgbm', 'dense']
@@ -187,7 +176,7 @@ class StructuredDataBlock(base.HyperBlock):
         if module_type == 'dense':
             output_node = block_module.DenseBlock()(input_node)
         elif module_type == 'lightgbm':
-            output_node = preprocessor_module.LightGBMBlock(
+            output_node = preprocessor_module.LightGBM(
                 seed=self.seed)(input_node)
         else:
             raise ValueError('Unsupported module'

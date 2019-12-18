@@ -1,8 +1,10 @@
-import kerastuner
 import numpy as np
+import tensorflow as tf
+
+from autokeras.hypermodel import base
 
 
-class Encoder(kerastuner.engine.stateful.Stateful):
+class Encoder(base.Picklable):
     """Base class for encoders of the prediction targets.
 
     # Arguments
@@ -44,13 +46,14 @@ class Encoder(kerastuner.engine.stateful.Stateful):
         """
         raise NotImplementedError
 
+    def get_config(self):
+        return {'num_classes': self.num_classes}
+
     def get_state(self):
-        return {'num_classes': self.num_classes,
-                'labels': self._labels,
+        return {'labels': self._labels,
                 'int_to_label': self._int_to_label}
 
     def set_state(self, state):
-        self.num_classes = state['num_classes']
         self._labels = state['labels']
         self._int_to_label = state['int_to_label']
 
@@ -210,3 +213,15 @@ class LabelEncoder(Encoder):
         """
         return np.array(list(map(lambda x: self._int_to_label[int(round(x[0]))],
                                  np.array(data)))).reshape(-1, 1)
+
+
+def serialize(encoder):
+    return tf.keras.utils.serialize_keras_object(encoder)
+
+
+def deserialize(config, custom_objects=None):
+    return tf.keras.utils.deserialize_keras_object(
+        config,
+        module_objects=globals(),
+        custom_objects=custom_objects,
+        printable_module_name='encoder')

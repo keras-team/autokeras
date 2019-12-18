@@ -182,7 +182,7 @@ def test_feature_engineering_new_categorical_value():
 def test_lgbm_classifier():
     dataset = common.generate_data(100, (32,), dtype='dataset')
     y = common.generate_one_hot_labels(100, num_classes=3, dtype='dataset')
-    instance = preprocessor_module.LightGBMBlock(seed=common.SEED)
+    instance = preprocessor_module.LightGBM(seed=common.SEED)
     instance.lightgbm_block = preprocessor_module.LightGBMClassifier(
         seed=common.SEED)
     instance.lightgbm_block.num_classes = 3
@@ -200,7 +200,7 @@ def test_lgbm_classifier_two_classes():
     dataset = common.generate_data(11, (32,), dtype='dataset')
     y = tf.data.Dataset.from_tensor_slices(
         np.random.randint(0, 2, 11).reshape(-1, 1))
-    instance = preprocessor_module.LightGBMBlock(seed=common.SEED)
+    instance = preprocessor_module.LightGBM(seed=common.SEED)
     instance.lightgbm_block = preprocessor_module.LightGBMClassifier(
         seed=common.SEED)
     instance.lightgbm_block.num_classes = 11
@@ -217,7 +217,7 @@ def test_lgbm_classifier_two_classes():
 def test_lgbm_regressor():
     dataset = common.generate_data(11, (32,), dtype='dataset')
     y = common.generate_data(11, (1,), dtype='dataset')
-    instance = preprocessor_module.LightGBMBlock(seed=common.SEED)
+    instance = preprocessor_module.LightGBM(seed=common.SEED)
     instance.lightgbm_block = preprocessor_module.LightGBMRegressor(seed=common.SEED)
     new_dataset = run_preprocessor(instance,
                                    dataset,

@@ -135,11 +135,17 @@ class StructuredDataInput(Input):
         self.count_unique_numerical = []
         self.num_col = None
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'column_names': self.column_names,
+            'column_types': self.column_types,
+        })
+        return config
+
     def get_state(self):
         state = super().get_state()
         state.update({
-            'column_names': self.column_names,
-            'column_types': self.column_types,
             'count_nan': self.count_nan,
             'count_numerical': self.count_numerical,
             'count_categorical': self.count_categorical,
@@ -150,8 +156,6 @@ class StructuredDataInput(Input):
 
     def set_state(self, state):
         super().set_state(state)
-        self.column_names = state['column_names']
-        self.column_types = state['column_types']
         self.count_nan = state['count_nan']
         self.count_numerical = state['count_numerical']
         self.count_categorical = state['count_categorical']

@@ -33,6 +33,9 @@ class AutoModel(object):
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         tuner: String. It should be one of 'greedy', 'bayesian', 'hyperband' or
             'random'. Defaults to 'greedy'.
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
+            project of the same name if one is found. Otherwise, overwrites the
+            project.
         seed: Int. Random seed.
     """
 
@@ -44,6 +47,7 @@ class AutoModel(object):
                  directory=None,
                  objective='val_loss',
                  tuner='greedy',
+                 overwrite=False,
                  seed=None):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
@@ -55,6 +59,7 @@ class AutoModel(object):
         self.objective = objective
         # TODO: Support passing a tuner instance.
         self.tuner = tuner_module.get_tuner_class(tuner)
+        self.overwrite = overwrite
         self._split_dataset = False
         if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
@@ -119,7 +124,8 @@ class AutoModel(object):
             validation_split=validation_split)
 
         # Initialize the hyper_graph.
-        self._meta_build(dataset)
+        if not self.hyper_graph:
+            self._meta_build(dataset)
 
         # Initialize the Tuner.
         # The hypermodel needs input_shape, which can only be known after
@@ -136,6 +142,7 @@ class AutoModel(object):
             hyper_graph=self.hyper_graph,
             hypermodel=keras_graph,
             fit_on_val_data=self._split_dataset,
+            overwrite=self.overwrite,
             objective=self.objective,
             max_trials=self.max_trials,
             directory=self.directory,
@@ -323,4 +330,5 @@ class GraphAutoModel(AutoModel):
         )
 
     def _meta_build(self, dataset):
-        self.hyper_graph = graph.HyperGraph(self.inputs, self.outputs)
+        self.hyper_graph = graph.HyperGraph(inputs=self.inputs,
+                                            outputs=self.outputs)

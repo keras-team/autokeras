@@ -29,7 +29,7 @@ def test_text_block():
 
 def test_structured_data_block():
     block = hyperblock_module.StructuredDataBlock()
-    block.heads = [ak.ClassificationHead()]
+    block.num_heads = 1
     block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
