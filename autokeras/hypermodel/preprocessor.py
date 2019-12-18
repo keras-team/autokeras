@@ -1,10 +1,10 @@
 import ast
+import re
 import warnings
 
 import numpy as np
 import tensorflow as tf
-from sklearn import feature_selection
-from sklearn.feature_extraction import text
+from sklearn.preprocessing import normalize
 from tensorflow.python.util import nest
 
 from autokeras import const
@@ -147,71 +147,174 @@ class TextToIntSequence(base.Preprocessor):
 
 
 class TextToNgramVector(base.Preprocessor):
-    """Convert raw texts to n-gram vectors."""
+    """Convert raw texts to n-gram vectors.
 
-    def __init__(self, **kwargs):
+    # Arguments
+        ngram_range: Int Tuple. Range of sizes of ngram tokens to be extracted.
+            If not specified, it will be tuned automatically. Defaults to None.
+        stop_words: Set or Iterable of strings. List of stop words to be removed
+            during tokenization. Defaults to use regular expression
+            "(?u)\\b\\w\\w+\\b".
+        max_features: Positive Int. Maximum number of words to be considered during
+            tokenization. Defaults to 20000.
+        norm: String. Can be ('l1', 'l2' or None) Attribute to replicate
+            normalization in sklearn TfidfVectorizer.
+            Defaults to 'l2'.
+    """
+
+    def __init__(self,
+                 ngram_range=None,
+                 stop_words=None,
+                 max_features=20000,
+                 norm='l2',
+                 **kwargs):
         super().__init__(**kwargs)
-        self.vectorizer = text.TfidfVectorizer(
-            ngram_range=(1, 2),
-            strip_accents='unicode',
-            decode_error='replace',
-            analyzer='word',
-            min_df=2)
-        self.selector = None
-        self.targets = None
-        self.vectorizer.max_features = const.Constant.VOCABULARY_SIZE
-        self._texts = []
-        self.shape = None
+        self.stop_words = stop_words
+        self.ngram_range = ngram_range
+        self.temp_ngram_range = None
+        self.norm = norm
+        if(self.norm not in ('l1', 'l2', None)):
+            raise ValueError(
+                "norm=%s, needs to be either 'l1','l2' or None."
+                % self.norm)
+        self._max_features = max_features
+        if(self._max_features <= 0):
+            raise ValueError(
+                "max_features=%r, needs to be a positive integer."
+                % self._max_features)
+        self._shape = None
+        self.vocabulary = {}  # Vocabulary(Increase with the inputs)
+        self.sentence_containers = {}  # Number of sentence that contains the token
+        self.word_count = {}  # Count of words across documents
+        self._idf_vec = {}  # IDF of all the tokens
+        self.stc_num = 0  # The number of all the sentences in the raw doc
+        self.k_best_idf_values = []
+
+    def build(self, hp):
+        self.temp_ngram_range = self.ngram_range or (1, hp.Choice(
+            'ngram_range', [1, 2], default=2))
+
+    def _word_ngram(self, tokens):
+        # handle stop words
+        if self.stop_words is not None:
+            tokens = [w for w in tokens if w not in self.stop_words]
+
+        # handle token n-grams
+        min_n, max_n = self.temp_ngram_range
+        if max_n != 1:
+            original_tokens = tokens
+            if min_n == 1:
+                # no need to do any slicing for unigrams
+                # just iterate through the original tokens
+                tokens = list(original_tokens)
+                min_n += 1
+            else:
+                tokens = []
+
+            n_original_tokens = len(original_tokens)
+
+            # bind method outside of loop to reduce overhead
+            tokens_append = tokens.append
+            space_join = " ".join
+
+            for n in range(min_n, min(max_n + 1, n_original_tokens + 1)):
+                for i in range(n_original_tokens - n + 1):
+                    tokens_append(space_join(original_tokens[i: i + n]))
+
+        return tokens
 
     def update(self, x, y=None):
-        # TODO: Implement a sequential version fit for both
-        #  TfidfVectorizer and SelectKBest
-        self._texts.append(nest.flatten(x)[0].numpy().decode('utf-8'))
+        x = nest.flatten(x)[0].numpy().decode('utf-8')
+        token_pattern = re.compile(r"(?u)\b\w\w+\b")
+        tokens = self._word_ngram(token_pattern.findall(x.lower()))
+        sentence_set = set()
+        self.stc_num += 1
+        for feature in tokens:
+            if feature not in self.vocabulary:
+                self.vocabulary[feature] = len(self.vocabulary)
+            if(feature not in self.word_count):
+                self.word_count[feature] = 1
+            else:
+                self.word_count[feature] += 1
+            sentence_set.add(feature)
+        for element in sentence_set:
+            if element not in self.sentence_containers:
+                self.sentence_containers[element] = 1
+            else:
+                self.sentence_containers[element] += 1
+        sentence_set.clear()
 
     def finalize(self):
-        self._texts = np.array(self._texts)
-        self.vectorizer.fit(self._texts)
-        data = self.vectorizer.transform(self._texts)
-        self.shape = data.shape[1:]
-        if self.targets:
-            self.selector = feature_selection.SelectKBest(
-                feature_selection.f_classif,
-                k=min(self.vectorizer.max_features, data.shape[1]))
-            self.selector.fit(data, self.targets)
+        self.stc_num += 1  # idf smoothing
+        for word in self.sentence_containers:
+            idf = (np.log((self.stc_num)/(self.sentence_containers[word] + 1)) + 1)
+            self._idf_vec[word] = idf
+        max_features = self._max_features
+        if len(self.vocabulary) < self._max_features:
+            max_features = len(self.vocabulary)
+        # Sort based on term frequency to match sklearn TfidfVectorizer
+        k_best_idfs = dict(sorted(self._idf_vec.items(),
+                                  key=(lambda item: self.word_count[item[0]]),
+                                  reverse=True)[0:max_features])
+        self.k_best_idf_values = np.array(list(dict(
+            sorted(k_best_idfs.items())).values()))
+        k_best_idf_keys = np.array(list(dict(
+            sorted(k_best_idfs.items())).keys()))
+        self.vocabulary.clear()
+        for i in range(max_features):
+            self.vocabulary[k_best_idf_keys[i]] = i
+        self._shape = np.shape(self.k_best_idf_values)
 
     def transform(self, x, fit=False):
-        sentence = nest.flatten(x)[0].numpy().decode('utf-8')
-        data = self.vectorizer.transform([sentence]).toarray()
-        if self.selector:
-            data = self.selector.transform(data).astype('float32')
-        return data[0]
+        # Calculate tf at doc level
+        tf = np.zeros(len(self.vocabulary), dtype=int)
+        x = nest.flatten(x)[0].numpy().decode('utf-8')
+        token_pattern = re.compile(r"(?u)\b\w\w+\b")
+        tokens = self._word_ngram(token_pattern.findall(x.lower()))
+
+        for feature in tokens:
+            if feature in self.vocabulary:
+                feature_idx = self.vocabulary[feature]
+                tf[feature_idx] += 1
+        result = tf * self.k_best_idf_values
+        result = normalize([result], norm=self.norm, copy=False)[0]
+        return result
 
     def output_types(self):
-        return (tf.float32,)
+        return (tf.float64,)
 
     @property
     def output_shape(self):
-        return self.shape
+        return self._shape
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'ngram_range': self.ngram_range,
+                       'max_features': self._max_features,
+                       'stop_words': self.stop_words,
+                       'norm': self.norm})
+        return config
 
     def get_state(self):
         state = super().get_state()
-        state.update({
-            'vectorizer': self.vectorizer,
-            'selector': self.selector,
-            'targets': self.targets,
-            'max_features': self.vectorizer.max_features,
-            'texts': self._texts,
-            'shape': self.shape})
+        state.update({'shape': self._shape,
+                      'k_best_idf_values': self.k_best_idf_values,
+                      'vocabulary': self.vocabulary,
+                      'idf_vec': self._idf_vec,
+                      'sentence_containers': self.sentence_containers,
+                      'word_count': self.word_count,
+                      'stc_num': self.stc_num})
         return state
 
     def set_state(self, state):
         super().set_state(state)
-        self.vectorizer = state['vectorizer']
-        self.selector = state['selector']
-        self.targets = state['targets']
-        self.vectorizer.max_features = state['max_features']
-        self._texts = state['texts']
-        self.shape = state['shape']
+        self._shape = state['shape']
+        self.k_best_idf_values = state['k_best_idf_values']
+        self.vocabulary = state['vocabulary']
+        self._idf_vec = state['idf_vec']
+        self.sentence_containers = state['sentence_containers']
+        self.word_count = state['word_count']
+        self.stc_num = state['stc_num']
 
 
 class LightGBMModel(base.Preprocessor):
@@ -431,9 +534,6 @@ class LightGBM(base.Preprocessor):
     @property
     def output_shape(self):
         return self.lightgbm_block.output_shape
-
-    def set_hp(self, hp):
-        self.lightgbm_block.set_hp(hp)
 
 
 class ImageAugmentation(base.Preprocessor):

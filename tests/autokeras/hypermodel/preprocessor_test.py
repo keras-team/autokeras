@@ -5,6 +5,8 @@ import kerastuner
 import numpy as np
 import pytest
 import tensorflow as tf
+from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 from autokeras.hypermodel import preprocessor as preprocessor_module
 from tests import common
@@ -72,12 +74,77 @@ def test_ngram():
              'The dog sat on the log.',
              'Dogs and cats living together.']
     dataset = tf.data.Dataset.from_tensor_slices(texts)
+    # Test Default Behaviour
     new_dataset = run_preprocessor(
         preprocessor_module.TextToNgramVector(),
         dataset,
         common.generate_data(dtype='dataset'),
         tf.float32)
     assert isinstance(new_dataset, tf.data.Dataset)
+
+
+def test_ngram_range():
+    texts = ['The cat sat on the mat.',
+             'The dog sat on the log.',
+             'Dogs and cats living together.']
+    dataset = tf.data.Dataset.from_tensor_slices(texts)
+    new_dataset = run_preprocessor(
+        preprocessor_module.TextToNgramVector(ngram_range=(1, 2)),
+        dataset,
+        common.generate_data(dtype='dataset'),
+        tf.float32)
+    assert isinstance(new_dataset, tf.data.Dataset)
+
+
+def test_ngram_stopwords():
+    texts = ['The cat sat on the mat.',
+             'The dog sat on the log.',
+             'Dogs and cats living together.']
+    dataset = tf.data.Dataset.from_tensor_slices(texts)
+    new_dataset = run_preprocessor(
+        preprocessor_module.TextToNgramVector(stop_words=ENGLISH_STOP_WORDS),
+        dataset,
+        common.generate_data(dtype='dataset'),
+        tf.float32)
+    assert isinstance(new_dataset, tf.data.Dataset)
+
+
+def test_ngram_max_features():
+    texts = ['The cat sat on the mat.',
+             'The dog sat on the log.',
+             'Dogs and cats living together.']
+    dataset = tf.data.Dataset.from_tensor_slices(texts)
+    new_dataset = run_preprocessor(
+        preprocessor_module.TextToNgramVector(max_features=2),
+        dataset,
+        common.generate_data(dtype='dataset'),
+        tf.float32)
+    assert isinstance(new_dataset, tf.data.Dataset)
+
+
+def test_ngram_result():
+    texts = ['The cat sat on the mat.',
+             'The dog sat on the log.',
+             'Dogs and cats living together.']
+    sklearn_vectorizer = TfidfVectorizer(ngram_range=(1, 2))
+    sklearn_vectorizer.fit(texts)
+    sklearn_vec = sklearn_vectorizer.transform([texts[0]]).toarray()[0]
+
+    dataset = tf.data.Dataset.from_tensor_slices(texts)
+    ngram_vectorizer = preprocessor_module.TextToNgramVector(ngram_range=(1, 2))
+    ngram_vectorizer.build(kerastuner.HyperParameters())
+    for text in dataset:
+        ngram_vectorizer.update([text])
+    ngram_vectorizer.finalize()
+    ngram_vec = []
+    for text in dataset:
+        ngram_vec.append(ngram_vectorizer.transform([text]))
+
+    assert len(ngram_vectorizer.vocabulary) == len(sklearn_vectorizer.vocabulary_)
+    for key in ngram_vectorizer.vocabulary.keys():
+        assert key in sklearn_vectorizer.vocabulary_
+        assert (sklearn_vec[sklearn_vectorizer.vocabulary_[key]] -
+                ngram_vec[0][ngram_vectorizer.vocabulary[key]] <= 0.001)
 
 
 def test_augment():
