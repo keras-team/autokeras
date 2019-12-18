@@ -126,17 +126,20 @@ def test_ngram_result():
     texts = ['The cat sat on the mat.',
              'The dog sat on the log.',
              'Dogs and cats living together.']
-    dataset = tf.data.Dataset.from_tensor_slices(texts)
-    sklearn_vectorizer = TfidfVectorizer()
-    ngram_vectorizer = preprocessor_module.TextToNgramVector()
+    sklearn_vectorizer = TfidfVectorizer(ngram_range=(1, 2))
     sklearn_vectorizer.fit(texts)
     sklearn_vec = sklearn_vectorizer.transform([texts[0]]).toarray()[0]
+
+    dataset = tf.data.Dataset.from_tensor_slices(texts)
+    ngram_vectorizer = preprocessor_module.TextToNgramVector(ngram_range=(1, 2))
+    ngram_vectorizer.build(kerastuner.HyperParameters())
     for text in dataset:
         ngram_vectorizer.update([text])
     ngram_vectorizer.finalize()
     ngram_vec = []
     for text in dataset:
         ngram_vec.append(ngram_vectorizer.transform([text]))
+
     assert len(ngram_vectorizer.vocabulary) == len(sklearn_vectorizer.vocabulary_)
     for key in ngram_vectorizer.vocabulary.keys():
         assert key in sklearn_vectorizer.vocabulary_

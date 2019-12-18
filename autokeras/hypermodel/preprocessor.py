@@ -151,33 +151,32 @@ class TextToNgramVector(base.Preprocessor):
 
     # Arguments
         ngram_range: Int Tuple. Range of sizes of ngram tokens to be extracted.
-            Defaults to (1, 1).
+            If not specified, it will be tuned automatically. Defaults to None.
         stop_words: Set or Iterable of strings. List of stop words to be removed
-            during tokenization.
+            during tokenization. Defaults to use regular expression "(?u)\b\w\w+\b".
         max_features: Positive Int. Maximum number of words to be considered during
-            tokenization.
+            tokenization. Defaults to 20000.
         norm: String. Can be ('l1', 'l2' or None) Attribute to replicate
             normalization in sklearn TfidfVectorizer.
             Defaults to 'l2'.
     """
 
     def __init__(self,
-                 ngram_range=(1, 1),
+                 ngram_range=None,
                  stop_words=None,
-                 max_features=None,
+                 max_features=20000,
                  norm='l2',
                  **kwargs):
         super().__init__(**kwargs)
         self.stop_words = stop_words
         self.ngram_range = ngram_range
+        self.temp_ngram_range = None
         self.norm = norm
         if(self.norm not in ('l1', 'l2', None)):
             raise ValueError(
                 "norm=%s, needs to be either 'l1','l2' or None."
                 % self.norm)
-        self.selector = None
-        self.targets = None
-        self._max_features = max_features or const.Constant.VOCABULARY_SIZE
+        self._max_features = max_features
         if(self._max_features <= 0):
             raise ValueError(
                 "max_features=%r, needs to be a positive integer."
@@ -190,14 +189,17 @@ class TextToNgramVector(base.Preprocessor):
         self.stc_num = 0  # The number of all the sentences in the raw doc
         self.k_best_idf_values = []
 
-    @staticmethod
-    def _word_ngram(tokens, ngram_range=(1, 1), stop_words=None):
+    def build(self, hp):
+        self.temp_ngram_range = self.ngram_range or (1, hp.Choice(
+            'ngram_range', [1, 2], default=2))
+
+    def _word_ngram(self, tokens):
         # handle stop words
-        if stop_words is not None:
-            tokens = [w for w in tokens if w not in stop_words]
+        if self.stop_words is not None:
+            tokens = [w for w in tokens if w not in self.stop_words]
 
         # handle token n-grams
-        min_n, max_n = ngram_range
+        min_n, max_n = self.temp_ngram_range
         if max_n != 1:
             original_tokens = tokens
             if min_n == 1:
@@ -223,8 +225,7 @@ class TextToNgramVector(base.Preprocessor):
     def update(self, x, y=None):
         x = nest.flatten(x)[0].numpy().decode('utf-8')
         token_pattern = re.compile(r"(?u)\b\w\w+\b")
-        tokens = self._word_ngram(token_pattern.findall(x.lower()), self.ngram_range,
-                                  self.stop_words)
+        tokens = self._word_ngram(token_pattern.findall(x.lower()))
         sentence_set = set()
         self.stc_num += 1
         for feature in tokens:
@@ -268,8 +269,7 @@ class TextToNgramVector(base.Preprocessor):
         tf = np.zeros(len(self.vocabulary), dtype=int)
         x = nest.flatten(x)[0].numpy().decode('utf-8')
         token_pattern = re.compile(r"(?u)\b\w\w+\b")
-        tokens = self._word_ngram(token_pattern.findall(x.lower()), self.ngram_range,
-                                  self.stop_words)
+        tokens = self._word_ngram(token_pattern.findall(x.lower()))
 
         for feature in tokens:
             if feature in self.vocabulary:
@@ -287,38 +287,33 @@ class TextToNgramVector(base.Preprocessor):
         return self._shape
 
     def get_config(self):
-        return {'selector': self.selector,
-                'targets': self.targets,
-                'ngram_range': self.ngram_range,
-                'max_features': self._max_features,
-                'stop_words': self.stop_words,
-                'norm': self.norm}
+        config = super().get_config()
+        config.update({'ngram_range': self.ngram_range,
+                       'max_features': self._max_features,
+                       'stop_words': self.stop_words,
+                       'norm': self.norm})
+        return config
 
-    def set_config(self, config):
-        self.selector = config['selector']
-        self.targets = config['targets']
-        self._max_features = config['max_features']
-        self.ngram_range = config['ngram_range']
-        self.stop_words = config['stop_words']
-        self.norm = config['norm']
+    def get_state(self):
+        state = super().get_state()
+        state.update({'shape': self._shape,
+                      'k_best_idf_values': self.k_best_idf_values,
+                      'vocabulary': self.vocabulary,
+                      'idf_vec': self._idf_vec,
+                      'sentence_containers': self.sentence_containers,
+                      'word_count': self.word_count,
+                      'stc_num': self.stc_num})
+        return state
 
-    def get_weights(self):
-        return {'shape': self._shape,
-                'k_best_idf_values': self.k_best_idf_values,
-                'vocabulary': self.vocabulary,
-                'idf_vec': self._idf_vec,
-                'sentence_containers': self.sentence_containers,
-                'word_count': self.word_count,
-                'stc_num': self.stc_num}
-
-    def set_weights(self, weights):
-        self._shape = weights['shape']
-        self.k_best_idf_values = weights['k_best_idf_values']
-        self.vocabulary = weights['vocabulary']
-        self._idf_vec = weights['idf_vec']
-        self.sentence_containers = weights['sentence_containers']
-        self.word_count = weights['word_count']
-        self.stc_num = weights['stc_num']
+    def set_state(self, state):
+        super().set_state(state)
+        self._shape = state['shape']
+        self.k_best_idf_values = state['k_best_idf_values']
+        self.vocabulary = state['vocabulary']
+        self._idf_vec = state['idf_vec']
+        self.sentence_containers = state['sentence_containers']
+        self.word_count = state['word_count']
+        self.stc_num = state['stc_num']
 
 
 class LightGBMModel(base.Preprocessor):
@@ -538,9 +533,6 @@ class LightGBM(base.Preprocessor):
     @property
     def output_shape(self):
         return self.lightgbm_block.output_shape
-
-    def set_hp(self, hp):
-        self.lightgbm_block.set_hp(hp)
 
 
 class ImageAugmentation(base.Preprocessor):
