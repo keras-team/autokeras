@@ -153,7 +153,8 @@ class TextToNgramVector(base.Preprocessor):
         ngram_range: Int Tuple. Range of sizes of ngram tokens to be extracted.
             If not specified, it will be tuned automatically. Defaults to None.
         stop_words: Set or Iterable of strings. List of stop words to be removed
-            during tokenization. Defaults to use regular expression "(?u)\b\w\w+\b".
+            during tokenization. Defaults to use regular expression
+            "(?u)\\b\\w\\w+\\b".
         max_features: Positive Int. Maximum number of words to be considered during
             tokenization. Defaults to 20000.
         norm: String. Can be ('l1', 'l2' or None) Attribute to replicate
