@@ -27,10 +27,10 @@ def test_evaluate(tuner_fn, tmp_dir):
     output_node = ak.DenseBlock()(output_node)
     output_node = ak.RegressionHead()(output_node)
 
-    auto_model = ak.GraphAutoModel(input_node,
-                                   output_node,
-                                   directory=tmp_dir,
-                                   max_trials=1)
+    auto_model = ak.AutoModel(input_node,
+                              output_node,
+                              directory=tmp_dir,
+                              max_trials=1)
     auto_model.fit(x_train, y_train, epochs=1, validation_data=(x_train, y_train))
     auto_model.evaluate(x_train, y_train)
     assert tuner_fn.called

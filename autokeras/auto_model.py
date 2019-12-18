@@ -15,14 +15,42 @@ class AutoModel(object):
     The user can use it in a similar way to a Keras model since it
     also has `fit()` and  `predict()` methods.
 
-    The user can specify the inputs and outputs of the AutoModel. It will infer
-    the rest of the high-level neural architecture.
+    The AutoModel has two use cases. In the first case, the user only specifies the
+    input nodes and output heads of the AutoModel. The AutoModel infers the rest part
+    of the model. In the second case, user can specify the high-level architecture of
+    the AutoModel by connecting the Blocks with the functional API, which is the same
+    as the Keras [functional API](https://www.tensorflow.org/guide/keras/functional).
+
+    # Example
+    ```python
+        # The user only specifies the input nodes and output heads.
+        import autokeras as ak
+        ak.AutoModel(
+            inputs=[ak.ImageInput(), ak.TextInput()],
+            outputs=[ak.ClassificationHead(), ak.RegressionHead()]
+        )
+    ```
+    ```python
+        # The user specifies the high-level architecture.
+        import autokeras as ak
+        image_input = ak.ImageInput()
+        image_output = ak.ImageBlock()(image_input)
+        text_input = ak.TextInput()
+        text_output = ak.TextBlock()(text_input)
+        output = ak.Merge()([image_output, text_output])
+        classification_output = ak.ClassificationHead()(output)
+        regression_output = ak.RegressionHead()(output)
+        ak.AutoModel(
+            inputs=[image_input, text_input],
+            outputs=[classification_output, regression_output]
+        )
+    ```
 
     # Arguments
-        inputs: A list of or a HyperNode instance.
+        inputs: A list of Node instances.
             The input node(s) of the AutoModel.
-        outputs: A list of or a HyperHead instance.
-            The output head(s) of the AutoModel.
+        outputs: A list of Node or Head instances.
+            The output node(s) or head(s) of the AutoModel.
         name: String. The name of the AutoModel. Defaults to 'auto_model'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -68,11 +96,17 @@ class AutoModel(object):
             self.heads = [output_node.in_blocks[0] for output_node in self.outputs]
 
     def _meta_build(self, dataset):
-        self.hyper_graph = meta_model.assemble(inputs=self.inputs,
-                                               outputs=self.outputs,
-                                               dataset=dataset,
-                                               seed=self.seed)
-        self.outputs = self.hyper_graph.outputs
+        # Using functional API.
+        if all([isinstance(output, base.Node) for output in self.outputs]):
+            self.hyper_graph = graph.HyperGraph(inputs=self.inputs,
+                                                outputs=self.outputs)
+        # Using input/output API.
+        elif all([isinstance(output, base.Head) for output in self.outputs]):
+            self.hyper_graph = meta_model.assemble(inputs=self.inputs,
+                                                   outputs=self.outputs,
+                                                   dataset=dataset,
+                                                   seed=self.seed)
+            self.outputs = self.hyper_graph.outputs
 
     def fit(self,
             x=None,
@@ -124,8 +158,7 @@ class AutoModel(object):
             validation_split=validation_split)
 
         # Initialize the hyper_graph.
-        if not self.hyper_graph:
-            self._meta_build(dataset)
+        self._meta_build(dataset)
 
         # Initialize the Tuner.
         # The hypermodel needs input_shape, which can only be known after
@@ -278,57 +311,3 @@ class AutoModel(object):
         data = preprocess_graph.preprocess(
             self._process_xy(x, y))[0].batch(batch_size)
         return model.evaluate(data, **kwargs)
-
-
-class GraphAutoModel(AutoModel):
-    """A HyperModel defined by a graph of HyperBlocks.
-
-    GraphAutoModel is a subclass of HyperModel. Besides the HyperModel properties,
-    it also has a tuner to tune the HyperModel. The user can use it in a similar
-    way to a Keras model since it also has `fit()` and  `predict()` methods.
-
-    The user can specify the high-level neural architecture by connecting the
-    HyperBlocks with the functional API, which is the same as
-    the Keras functional API.
-
-    # Arguments
-        inputs: A list of or a HyperNode instances.
-            The input node(s) of the GraphAutoModel.
-        outputs: A list of or a HyperNode instances.
-            The output node(s) of the GraphAutoModel.
-        name: String. The name of the AutoModel. Defaults to 'graph_auto_model'.
-        max_trials: Int. The maximum number of different Keras Models to try.
-            The search may finish before reaching the max_trials. Defaults to 100.
-        directory: String. The path to a directory for storing the search outputs.
-            Defaults to None, which would create a folder with the name of the
-            AutoModel in the current directory.
-        objective: String. Name of model metric to minimize
-            or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        tuner: String. It should be one of 'greedy', 'bayesian', 'hyperband' or
-            'random'. Defaults to 'greedy'.
-        seed: Int. Random seed.
-    """
-
-    def __init__(self,
-                 inputs,
-                 outputs,
-                 name='graph_auto_model',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_loss',
-                 tuner='greedy',
-                 seed=None):
-        super().__init__(
-            inputs=inputs,
-            outputs=outputs,
-            name=name,
-            max_trials=max_trials,
-            directory=directory,
-            objective=objective,
-            tuner=tuner,
-            seed=seed
-        )
-
-    def _meta_build(self, dataset):
-        self.hyper_graph = graph.HyperGraph(inputs=self.inputs,
-                                            outputs=self.outputs)

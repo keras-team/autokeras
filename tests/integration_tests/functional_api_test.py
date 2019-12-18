@@ -56,7 +56,7 @@ def test_functional_api(tmp_dir):
 
     regression_outputs = ak.RegressionHead()(merged_outputs)
     classification_outputs = ak.ClassificationHead()(merged_outputs)
-    automodel = ak.GraphAutoModel(
+    automodel = ak.AutoModel(
         inputs=[
             image_input,
             text_input,

@@ -59,7 +59,7 @@ Now we support `ImageInput`, `TextInput`, and `StructuredDataInput`.
 
 ## Functional API
 
-You can also define your own neural architecture with the predefined blocks and [GraphAutoModel](/graph_auto_model).
+You can also define your own neural architecture with the predefined blocks and [AutoModel](/auto_model).
 
 ```python
 import autokeras as ak
@@ -87,7 +87,7 @@ merged_outputs = ak.Merge()((image_outputs, structured_outputs))
 
 classification_outputs = ak.ClassificationHead()(merged_outputs)
 regression_outputs = ak.RegressionHead()(merged_outputs)
-automodel = ak.GraphAutoModel(inputs=inputs,
+automodel = ak.AutoModel(inputs=inputs,
                               outputs=[regression_outputs,
                                        classification_outputs])
 

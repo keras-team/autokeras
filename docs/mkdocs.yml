@@ -29,7 +29,6 @@ nav:
         - StructuredDataClassifier: structured_data_classifier.md
         - StructuredDataRegressor: structured_data_regressor.md
       - AutoModel: auto_model.md
-      - GraphAutoModel: graph_auto_model.md
       - Building Blocks:
         - Node: node.md
         - Preprocessor: preprocessor.md
