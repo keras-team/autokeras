@@ -18,8 +18,10 @@ setup(
     url='http://autokeras.com',
     download_url='https://github.com/keras-team/autokeras/archive/1.0.0a0.tar.gz',
     keywords=['AutoML', 'keras'],
+    # tensorflow isn't a dependency because it would force the
+    # download of the gpu version or the cpu version.
+    # users should install it manually.
     install_requires=[
-        'tensorflow>=2.0.0',
         'keras-tuner>=1.0.0',
         'scikit-learn',
         'numpy',

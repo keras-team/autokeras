@@ -1,3 +1,16 @@
+from packaging.version import parse
+import tensorflow
+
+if parse(tensorflow.__version__) < parse('2.0.0'):
+    raise ImportError(
+        f'The Tensorflow package version needs to be at least v2.0.0\n'
+        f'for AutoKeras to run. Currently, your TensorFlow version is \n'
+        f'v{tensorflow.__version__}. Please upgrade with '
+        f'`pip install --upgrade tensorflow` for the GPU version, or use'
+        f'`pip install --upgrade tensorflow-cpu` for the CPU version.'
+        f'You can use `pip freeze` to check afterwards that everything is ok.'
+    )
+
 from autokeras.auto_model import AutoModel
 from autokeras.const import Constant
 from autokeras.hypermodel.base import Block
