@@ -5,15 +5,18 @@ jobs:
   include:
     - stage: test
       script:
+        - pip install tensorflow
         - pip install -e .[tests] --progress-bar off
         - pytest tests --cov=autokeras --cov-report xml:coverage.xml
         - pip install python-coveralls && coveralls
     -
       script:
+        - pip install tensorflow
         - pip install -e .[tests] --progress-bar off
         - flake8
     -
       script:
+        - pip install tensorflow
         - pip install -e .[tests] --progress-bar off
         - pip install mkdocs
         - pip install mkdocs-material
