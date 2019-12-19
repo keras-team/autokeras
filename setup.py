@@ -22,6 +22,7 @@ setup(
     # download of the gpu version or the cpu version.
     # users should install it manually.
     install_requires=[
+        'packaging',
         'keras-tuner>=1.0.0',
         'scikit-learn',
         'numpy',
