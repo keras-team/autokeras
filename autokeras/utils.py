@@ -1,5 +1,6 @@
 import pickle
 import re
+from packaging.version import parse
 
 import numpy as np
 import tensorflow as tf
@@ -127,3 +128,15 @@ def to_type_key(dictionary, convert_func):
     """
     return {convert_func(key): value
             for key, value in dictionary.items()}
+
+
+def check_tf_version():
+    if parse(tf.__version__) < parse('2.0.0'):
+        raise ImportError(
+            f'The Tensorflow package version needs to be at least v2.0.0\n'
+            f'for AutoKeras to run. Currently, your TensorFlow version is \n'
+            f'v{tf.__version__}. Please upgrade with '
+            f'`pip install --upgrade tensorflow` for the GPU version, or use'
+            f'`pip install --upgrade tensorflow-cpu` for the CPU version.'
+            f'You can use `pip freeze` to check afterwards that everything is ok.'
+        )
