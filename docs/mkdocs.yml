@@ -13,6 +13,8 @@ site_url: http://autokeras.com
 edit_uri: ""
 site_description: 'Documentation for AutoKeras.'
 google_analytics: ['UA-44322747-3', 'autokeras.com']
+markdown_extensions:
+  - codehilite
 
 nav:
     - Home: index.md
