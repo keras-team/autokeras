@@ -21,7 +21,7 @@ AutoKeras provides functions to automatically search for architecture and hyperp
 To install the package, please use the `pip` installation as follows:
 
     pip3 install autokeras # for 0.4 version
-    pip3 install autokeras==1.0.0b # for 1.0 version
+    pip3 install autokeras==1.0.0b0 # for 1.0 version
 
 **Note:** currently, AutoKeras is only compatible with: **Python 3**.
 
