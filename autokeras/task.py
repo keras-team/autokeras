@@ -65,7 +65,7 @@ class ImageClassifier(SupervisedImagePipeline):
             y=None,
             epochs=None,
             callbacks=None,
-            validation_split=0,
+            validation_split=0.2,
             validation_data=None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
@@ -88,7 +88,7 @@ class ImageClassifier(SupervisedImagePipeline):
                 specified will determine early stopping).
             callbacks: List of Keras callbacks to apply during training and
                 validation.
-            validation_split: Float between 0 and 1.
+            validation_split: Float between 0 and 1. Defaults to 0.2.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
                 will not train on it, and will evaluate
@@ -122,7 +122,6 @@ class ImageRegressor(SupervisedImagePipeline):
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
             If None, it will infer from the data.
-        multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to 'image_regressor'.
@@ -166,7 +165,7 @@ class ImageRegressor(SupervisedImagePipeline):
             y=None,
             epochs=None,
             callbacks=None,
-            validation_split=0,
+            validation_split=0.2,
             validation_data=None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
@@ -190,7 +189,7 @@ class ImageRegressor(SupervisedImagePipeline):
                 specified will determine early stopping).
             callbacks: List of Keras callbacks to apply during training and
                 validation.
-            validation_split: Float between 0 and 1.
+            validation_split: Float between 0 and 1. Defaults to 0.2.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
                 will not train on it, and will evaluate
@@ -278,7 +277,7 @@ class TextClassifier(SupervisedTextPipeline):
             y=None,
             epochs=None,
             callbacks=None,
-            validation_split=0,
+            validation_split=0.2,
             validation_data=None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
@@ -302,7 +301,7 @@ class TextClassifier(SupervisedTextPipeline):
                 specified will determine early stopping).
             callbacks: List of Keras callbacks to apply during training and
                 validation.
-            validation_split: Float between 0 and 1.
+            validation_split: Float between 0 and 1. Defaults to 0.2.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
                 will not train on it, and will evaluate
@@ -336,7 +335,6 @@ class TextRegressor(SupervisedTextPipeline):
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
             If None, it will infer from the data.
-        multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to 'text_regressor'.
@@ -380,7 +378,7 @@ class TextRegressor(SupervisedTextPipeline):
             y=None,
             epochs=None,
             callbacks=None,
-            validation_split=0,
+            validation_split=0.2,
             validation_data=None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
@@ -405,7 +403,7 @@ class TextRegressor(SupervisedTextPipeline):
                 specified will determine early stopping).
             callbacks: List of Keras callbacks to apply during training and
                 validation.
-            validation_split: Float between 0 and 1.
+            validation_split: Float between 0 and 1. Defaults to 0.2.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
                 will not train on it, and will evaluate
@@ -466,7 +464,7 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             y=None,
             epochs=None,
             callbacks=None,
-            validation_split=0,
+            validation_split=0.2,
             validation_data=None,
             **kwargs):
         """Search for the best model and hyperparameters for the task.
@@ -484,7 +482,7 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                 with patience equal to 30.
             callbacks: List of Keras callbacks to apply during training and
                 validation.
-            validation_split: Float between 0 and 1.
+            validation_split: Float between 0 and 1. Defaults to 0.2.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
                 will not train on it, and will evaluate
@@ -635,7 +633,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             y=None,
             epochs=None,
             callbacks=None,
-            validation_split=0,
+            validation_split=0.2,
             validation_data=None,
             **kwargs):
         """Search for the best model and hyperparameters for the task.
@@ -654,7 +652,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                 with patience equal to 30.
             callbacks: List of Keras callbacks to apply during training and
                 validation.
-            validation_split: Float between 0 and 1.
+            validation_split: Float between 0 and 1. Defaults to 0.2.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
                 will not train on it, and will evaluate
@@ -794,7 +792,7 @@ class TimeSeriesForecaster(auto_model.AutoModel):
     def fit(self,
             x=None,
             y=None,
-            validation_split=0,
+            validation_split=0.2,
             validation_data=None,
             **kwargs):
         """Search for the best model and hyperparameters for the task.
@@ -810,7 +808,7 @@ class TimeSeriesForecaster(auto_model.AutoModel):
                 If it is multivariate forecasting, y should be a list of more than
                 one column names. If it is univariate forecasting, y should be a
                 string or a list of one string.
-            validation_split: Float between 0 and 1.
+            validation_split: Float between 0 and 1. Defaults to 0.2.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
                 will not train on it, and will evaluate

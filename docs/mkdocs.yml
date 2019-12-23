@@ -13,25 +13,37 @@ site_url: http://autokeras.com
 edit_uri: ""
 site_description: 'Documentation for AutoKeras.'
 google_analytics: ['UA-44322747-3', 'autokeras.com']
+markdown_extensions:
+  - codehilite
 
 nav:
-    - Home: index.md
-    - Getting Started 1.0: tutorial.md
-    - Getting Started 0.4: start.md
-    - Docker: docker.md
-    - Contributing Guide: contributing.md
-    - Documentation:
-      - Task APIs:
-        - ImageClassifier: image_classifier.md
-        - ImageRegressor: image_regressor.md
-        - TextClassifier: text_classifier.md
-        - TextRegressor: text_regressor.md
-        - StructuredDataClassifier: structured_data_classifier.md
-        - StructuredDataRegressor: structured_data_regressor.md
-      - AutoModel: auto_model.md
-      - Building Blocks:
-        - Node: node.md
-        - Preprocessor: preprocessor.md
-        - Block: block.md
-        - Head: head.md
-    - About: about.md
+  - Home: index.md
+  - Getting Started 1.0:
+    - Overview: tutorial/overview.md
+    - Image Classification: tutorial/image_classification.md
+    - Image Regression: tutorial/image_regression.md
+    - Text Classification: tutorial/text_classification.md
+    - Text Regression: tutorial/text_regression.md
+    - Structured Data Classification: tutorial/structured_data_classification.md
+    - Structured Data Regression: tutorial/structured_data_regression.md
+    - Multi-Modal and Multi-Task: tutorial/multi.md
+    - Customized Model: tutorial/customized.md
+    - Export Model: tutorial/export.md
+  - Getting Started 0.4: start.md
+  - Docker: docker.md
+  - Contributing Guide: contributing.md
+  - Documentation:
+    - Task APIs:
+      - ImageClassifier: image_classifier.md
+      - ImageRegressor: image_regressor.md
+      - TextClassifier: text_classifier.md
+      - TextRegressor: text_regressor.md
+      - StructuredDataClassifier: structured_data_classifier.md
+      - StructuredDataRegressor: structured_data_regressor.md
+    - AutoModel: auto_model.md
+    - Building Blocks:
+      - Node: node.md
+      - Preprocessor: preprocessor.md
+      - Block: block.md
+      - Head: head.md
+  - About: about.md
