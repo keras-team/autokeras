@@ -113,7 +113,7 @@ class AutoModel(object):
             y=None,
             epochs=None,
             callbacks=None,
-            validation_split=0,
+            validation_split=0.2,
             validation_data=None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
@@ -132,7 +132,7 @@ class AutoModel(object):
                 specified will determine early stopping).
             callbacks: List of Keras callbacks to apply during training and
                 validation.
-            validation_split: Float between 0 and 1.
+            validation_split: Float between 0 and 1. Defaults to 0.2.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
                 will not train on it, and will evaluate
