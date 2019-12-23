@@ -21,11 +21,44 @@ clf = ak.ImageClassifier()
 clf.fit(x_train,
         y_train,
         # It tries 10 different models.
-        max_trials=10)
+        max_trials=10,
+        # Split the training data and use the last 20% as validation data.
+        validation_split=0.2)
 # Predict with the best model.
 predicted_y = clf.predict(x_test)
 # Evaluate the best model with testing data.
 print(clf.evaluate(x_test, y_test))
+```
+
+
+## Validation Data
+As shown in the example above, you can use `validation_split` to split the training
+data into two training and validation set. You can also use your own validation set
+instead of splitting it from the training data with `validation_data`.
+
+```python
+import autokeras as ak
+
+# Initialize the image classifier.
+clf = ak.ImageClassifier()
+# Feed the image classifier with training data.
+clf.fit(x_train,
+        y_train,
+        # It tries 10 different models.
+        max_trials=10,
+        # Split the training data and use the last 20% as validation data.
+        validation_split=0.2)
+# Predict with the best model.
+predicted_y = clf.predict(x_test)
+# Evaluate the best model with testing data.
+print(clf.evaluate(x_test, y_test))
+```
+
+## Customized Search Space
+
+normalize, augment, resnet, conv.
+
+```python
 ```
 
 ## Data Format
@@ -64,10 +97,11 @@ print(y_train[:3])
 #        [0., 0., 0., 0., 1., 0., 0., 0., 0., 0.]])
 ```
 
-We also support using tensorflow Dataset format for the training data. In this case,
-the images would have to be 3-dimentional. The labels have to be one-hot encoded.  So
-you can wrap the prepared reshaped and one-hot encoded data above into tensorflow
-Dataset as follows.
+We also support using [tensorflow Dataset](
+https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable) format for
+the training data. In this case, the images would have to be 3-dimentional. The
+labels have to be one-hot encoded.  So you can wrap the prepared reshaped and one-hot
+encoded data above into tensorflow Dataset as follows.
 
 ```python
 import tensorflow as tf
@@ -78,28 +112,15 @@ clf = ak.ImageClassifier()
 # Feed the tensorflow Dataset to the classifier.
 clf.fit(train_set,
         # It tries 10 different models.
-        max_trials=10)
+        max_trials=10,
+        # Split the training data and use the last 20% as validation data.
+        validation_split=0.2)
 # Predict with the best model.
 predicted_y = clf.predict(test_set)
 # Evaluate the best model with testing data.
 print(clf.evaluate(test_set))
 ```
 
-
 ## Configuration
-loss
-metrics
-max_trials
-directory
-objective
-overwrite
-multi_label
-
-```python
-```
-
-validation_split & validation_data
-other training args
-
-```python
-```
+There are many configurations you can set for ImageClassifier. You can find them in
+the [documentation](/image_classifier).

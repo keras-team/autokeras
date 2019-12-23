@@ -122,7 +122,6 @@ class ImageRegressor(SupervisedImagePipeline):
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
             If None, it will infer from the data.
-        multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to 'image_regressor'.
@@ -336,7 +335,6 @@ class TextRegressor(SupervisedTextPipeline):
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
             If None, it will infer from the data.
-        multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to 'text_regressor'.
