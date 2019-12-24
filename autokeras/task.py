@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Union, Optional
 
 import pandas as pd
 
@@ -39,16 +39,16 @@ class ImageClassifier(SupervisedImagePipeline):
     """
 
     def __init__(self,
-                 num_classes: int = None,
+                 num_classes: Optional[int] = None,
                  multi_label: bool = False,
-                 loss: Union[str, Callable] = None,
-                 metrics: Union[str, Callable] = None,
+                 loss: Union[str, Callable, None] = None,
+                 metrics: Union[str, Callable, None] = None,
                  name: str = 'image_classifier',
                  max_trials: int = 100,
-                 directory: str = None,
+                 directory: Optional[str] = None,
                  objective: str = 'val_loss',
                  overwrite: bool = True,
-                 seed: int = None):
+                 seed: Optional[int] = None):
         super().__init__(
             outputs=head.ClassificationHead(num_classes=num_classes,
                                             multi_label=multi_label,
