@@ -102,7 +102,7 @@ clf.fit(x_train, y_train)
 ## Data Format
 The AutoKeras ImageClassifier is quite flexible for the data format.
 
-For the image, it accepts data formates both with channel dimension and without
+For the image, it accepts data formats both with and without the
 channel dimension. The images in the MNIST dataset do not have the channel dimension.
 Each image is a matrix with shape (28, 28).  AutoKeras also accepts images of three
 dimensions with the channel dimension at last, e.g., (32, 32, 3), (28, 28, 1).
