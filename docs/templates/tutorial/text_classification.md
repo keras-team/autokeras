@@ -3,15 +3,17 @@
 The first step is to prepare your data. Here we use IMDB dataset as an example.
 
 ```python
+import numpy as np
+from tensorflow.keras.datasets import imdb
+
 # Load the integer sequence IMDB dataset with Keras.
 index_offset = 3  # word index offset
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.imdb.load_data(
-    num_words=1000,
-    index_from=index_offset)
+(x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=1000,
+                                                      index_from=index_offset)
 y_train = y_train.reshape(-1, 1)
 y_test = y_test.reshape(-1, 1)
 # Prepare the dictionary of index to word.
-word_to_id = tf.keras.datasets.imdb.get_word_index()
+word_to_id = imdb.get_word_index()
 word_to_id = {k: (v + index_offset) for k, v in word_to_id.items()}
 word_to_id["<PAD>"] = 0
 word_to_id["<START>"] = 1
@@ -24,9 +26,9 @@ x_test = list(map(lambda sentence: ' '.join(
     id_to_word[i] for i in sentence), x_test))
 x_train = np.array(x_train, dtype=np.str)
 x_test = np.array(x_test, dtype=np.str)
-print(x_train.shape) #
-print(y_train.shape) #
-print(x_train[:3]) #
+print(x_train.shape)  # (25000,)
+print(y_train.shape)  # (25000, 1)
+print(x_train[0][:50])  # <START> this film was just brilliant casting <UNK>
 ```
 
 The second step is to run the [TextClassifier](/text_classifier).
@@ -34,9 +36,9 @@ The second step is to run the [TextClassifier](/text_classifier).
 ```python
 import autokeras as ak
 
-# Initialize the image classifier.
-clf = ak.ImageClassifier(max_trials=10) # It tries 10 different models.
-# Feed the image classifier with training data.
+# Initialize the text classifier.
+clf = ak.TextClassifier(max_trials=10) # It tries 10 different models.
+# Feed the text classifier with training data.
 clf.fit(x_train, y_train)
 # Predict with the best model.
 predicted_y = clf.predict(x_test)
@@ -74,8 +76,8 @@ clf.fit(x_train,
 ## Customized Search Space
 For advanced users, you may customize your search space by using
 [AutoModel](/auto_model/#automodel-class) instead of
-[ImageClassifier](/image_classifier). You can configure the
-[ImageBlock](/block/#imageblock-class) for some high-level configurations,
+[TextClassifier](/text_classifier). You can configure the
+[TextBlock](/block/#textblock-class) for some high-level configurations,
 `block_type` for the type of neural network to search, `normalize` for whether to do
 data normalization, `augment` for whether to do data augmentation. You can also
 do not specify these arguments, which would leave the different choices to be
