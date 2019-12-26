@@ -37,7 +37,7 @@ clf.fit(x_train, y_train)
 results = clf.predict(x_test)
 ```
 
-For detailed tutorial, please check [here](https://autokeras.com/tutorial/).
+For detailed tutorial, please check [here](https://autokeras.com/tutorial/overview/).
 
 ## Cite this work
 
