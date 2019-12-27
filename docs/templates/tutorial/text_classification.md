@@ -1,6 +1,8 @@
 # Text Classification
 ## A Simple Example
-The first step is to prepare your data. Here we use IMDB dataset as an example.
+The first step is to prepare your data. Here we use the [IMDB
+dataset](https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification) as
+an example.
 
 ```python
 import numpy as np

@@ -1,6 +1,8 @@
 # Image Classification
 ## A Simple Example
-The first step is to prepare your data. Here we use MNIST dataset as an example.
+The first step is to prepare your data. Here we use the [MNIST
+dataset](https://keras.io/datasets/#mnist-database-of-handwritten-digits) as an
+example.
 
 ```python
 from tensorflow.keras.datasets import mnist
