@@ -20,8 +20,10 @@ AutoKeras provides functions to automatically search for architecture and hyperp
 
 To install the package, please use the `pip` installation as follows:
 
-    pip3 install autokeras # for 0.4 version
-    pip3 install autokeras==1.0.0b0 # for 1.0 version
+```shell
+pip3 install autokeras # for 0.4 version
+pip3 install autokeras==1.0.0b0 # for 1.0 version
+```
 
 **Note:** currently, AutoKeras is only compatible with: **Python 3**.
 
@@ -29,7 +31,7 @@ To install the package, please use the `pip` installation as follows:
 
 Here is a short example of using the package.
 
-```python
+```
 import autokeras as ak
 
 clf = ak.ImageClassifier()
@@ -45,14 +47,16 @@ Haifeng Jin, Qingquan Song, and Xia Hu. "Auto-keras: An efficient neural archite
 
 Biblatex entry:
 
-    @inproceedings{jin2019auto,
-      title={Auto-Keras: An Efficient Neural Architecture Search System},
-      author={Jin, Haifeng and Song, Qingquan and Hu, Xia},
-      booktitle={Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining},
-      pages={1946--1956},
-      year={2019},
-      organization={ACM}
-    }
+```bibtex
+@inproceedings{jin2019auto,
+  title={Auto-Keras: An Efficient Neural Architecture Search System},
+  author={Jin, Haifeng and Song, Qingquan and Hu, Xia},
+  booktitle={Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining},
+  pages={1946--1956},
+  year={2019},
+  organization={ACM}
+}
+```
 
 ## Community
 

@@ -135,7 +135,7 @@ print(y_train[:3])
 #        [0., 0., 0., 0., 1., 0., 0., 0., 0., 0.]])
 ```
 
-We also support using [tensorflow Dataset](
+We also support using [tf.data.Dataset](
 https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable) format for
 the training data. In this case, the images would have to be 3-dimentional. The
 labels have to be one-hot encoded.  So you can wrap the prepared reshaped and one-hot
