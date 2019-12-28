@@ -61,18 +61,12 @@ print(type(x_train)) # numpy.ndarray
 print(type(y_train)) # numpy.ndarray
 
 # Preparing testing data.
-x_train = pd.read_csv('eval.csv')
-y_train = x_train.pop('survived')
-```
-You can also specify the column names and types for the data.
-```python
-# Initialize the text classifier.
-clf = ak.TextClassifier(
-    column_names=[],
-    column_types=[]
-    max_trials=10, # It tries 10 different models.
-)
-# Feed the text classifier with training data.
+x_test = pd.read_csv('eval.csv')
+y_test = x_test.pop('survived')
+
+# It tries 10 different models.
+clf = ak.StructuredDataClassifier(max_trials=10)
+# Feed the structured data classifier with training data.
 clf.fit(x_train, y_train)
 # Predict with the best model.
 predicted_y = clf.predict(x_test)
@@ -87,7 +81,7 @@ import tensorflow as tf
 train_set = tf.data.Dataset.from_tensor_slices(((x_train, ), (y_train, )))
 test_set = tf.data.Dataset.from_tensor_slices(((x_test, ), (y_test, )))
 
-clf = ak.TextClassifier(max_trials=10)
+clf = ak.StructuredDataClassifier(max_trials=10)
 # Feed the tensorflow Dataset to the classifier.
 clf.fit(train_set)
 # Predict with the best model.
@@ -95,6 +89,30 @@ predicted_y = clf.predict(test_set)
 # Evaluate the best model with testing data.
 print(clf.evaluate(test_set))
 ```
+
+You can also specify the column names and types for the data as follows.
+The `column_names` is optional if the training data already have the column names, e.g.
+pandas.DataFrame, CSV file.
+Any column, whose type is not specified will be inferred from the training data.
+
+```python
+# Initialize the structured data classifier.
+clf = ak.StructuredDataClassifier(
+    column_names=[
+        'sex',
+        'age',
+        'n_siblings_spouses',
+        'parch',
+        'fare',
+        'class',
+        'deck',
+        'embark_town',
+        'alone'],
+    column_types={'sex': 'categorical', 'fare': 'numerical'},
+    max_trials=10, # It tries 10 different models.
+)
+```
+
 
 ## Validation Data
 By default, AutoKeras use the last 20% of training data as validation data.
