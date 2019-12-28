@@ -18,8 +18,9 @@ setup(
     url='http://autokeras.com',
     download_url='https://github.com/keras-team/autokeras/archive/1.0.0b0.tar.gz',
     keywords=['AutoML', 'keras'],
+    # TODO: Do not install tensorflow if tensorflow-gpu is installed.
     install_requires=[
-        'tensorflow>=2.0.0',
+        'packaging',
         'keras-tuner>=1.0.0',
         'scikit-learn',
         'numpy',

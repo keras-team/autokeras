@@ -35,3 +35,6 @@ from autokeras.task import StructuredDataClassifier
 from autokeras.task import StructuredDataRegressor
 from autokeras.task import TextClassifier
 from autokeras.task import TextRegressor
+
+from .utils import check_tf_version
+check_tf_version()
