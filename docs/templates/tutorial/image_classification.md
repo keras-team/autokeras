@@ -139,9 +139,9 @@ print(y_train[:3])
 
 We also support using [tf.data.Dataset](
 https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable) format for
-the training data. In this case, the images would have to be 3-dimentional. The
-labels have to be one-hot encoded.  So you can wrap the prepared reshaped and one-hot
-encoded data above into tensorflow Dataset as follows.
+the training data. In this case, the images would have to be 3-dimentional.
+The labels have to be one-hot encoded for multi-class
+classification to be wrapped into tensorflow Dataset.
 
 ```python
 import tensorflow as tf

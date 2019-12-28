@@ -8,7 +8,7 @@ an example.
 import numpy as np
 from tensorflow.keras.datasets import imdb
 
-# Load the integer sequence IMDB dataset with Keras.
+# Load the integer sequence the IMDB dataset with Keras.
 index_offset = 3  # word index offset
 (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=1000,
                                                       index_from=index_offset)
@@ -125,12 +125,13 @@ The AutoKeras TextClassifier is quite flexible for the data format.
 For the text, the input data should be one-dimensional 
 For the classification labels, AutoKeras accepts both plain labels, i.e. strings or
 integers, and one-hot encoded encoded labels, i.e. vectors of 0s and 1s.
-Since IMDB dataset is binary classification, it should not be one-hot encoded.
 
 We also support using [tf.data.Dataset](
 https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable) format for
-the training data. The labels have to be one-hot encoded.  So you can wrap the data
-above into tensorflow Dataset as follows.
+the training data.
+The labels have to be one-hot encoded for multi-class
+classification to be wrapped into tensorflow Dataset.
+Since the IMDB dataset is binary classification, it should not be one-hot encoded.
 
 ```python
 import tensorflow as tf

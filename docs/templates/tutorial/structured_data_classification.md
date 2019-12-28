@@ -29,16 +29,58 @@ print(clf.evaluate('/path/to/eval.csv', 'survived'))
 The AutoKeras StructuredDataClassifier is quite flexible for the data format.
 
 The example above shows how to use the CSV files directly. Besides CSV files, it also
-supports numpy.ndarray, pandas.DataFrame or tensorflow.Dataset. The data should be
-two-dimensional with numerical or categorical values.  For the classification labels,
+supports numpy.ndarray, pandas.DataFrame or [tf.data.Dataset](
+https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable). The data should be
+two-dimensional with numerical or categorical values. For the classification labels,
 AutoKeras accepts both plain labels, i.e.  strings or integers, and one-hot encoded
-encoded labels, i.e. vectors of 0s and 1s.  Since IMDB dataset is binary
+encoded labels, i.e. vectors of 0s and 1s.
+The labels can be numpy.ndarray, pandas.DataFrame, or pandas.Series.
+The following examples show how the data can be prepared with numpy.ndarray,
+pandas.DataFrame, and tensorflow.data.Dataset.
+Notably, the labels have to be one-hot encoded for multi-class
+classification to be wrapped into tensorflow Dataset.
+Since the Titanic dataset is binary
 classification, it should not be one-hot encoded.
 
-We also support using [tf.data.Dataset](
-https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable) format for
-the training data. The labels have to be one-hot encoded.  So you can wrap the data
-above into tensorflow Dataset as follows.
+```python
+import pandas as pd
+# x_train as pandas.DataFrame, y_train as pandas.Series
+x_train = pd.read_csv('train.csv')
+print(type(x_train)) # pandas.DataFrame
+y_train = x_train.pop('survived')
+print(type(y_train)) # pandas.Series
+
+# You can also use pandas.DataFrame for y_train.
+y_train = pd.DataFrame(y_train)
+print(type(y_train)) # pandas.DataFrame
+
+# You can also use numpy.ndarray for x_train and y_train.
+x_train = x_train.to_numpy()
+y_train = y_train.to_numpy()
+print(type(x_train)) # numpy.ndarray
+print(type(y_train)) # numpy.ndarray
+
+# Preparing testing data.
+x_train = pd.read_csv('eval.csv')
+y_train = x_train.pop('survived')
+```
+You can also specify the column names and types for the data.
+```python
+# Initialize the text classifier.
+clf = ak.TextClassifier(
+    column_names=[],
+    column_types=[]
+    max_trials=10, # It tries 10 different models.
+)
+# Feed the text classifier with training data.
+clf.fit(x_train, y_train)
+# Predict with the best model.
+predicted_y = clf.predict(x_test)
+# Evaluate the best model with testing data.
+print(clf.evaluate(x_test, y_test))
+```
+
+Convert numpy.ndarray to tf.data.Dataset.
 
 ```python
 import tensorflow as tf
