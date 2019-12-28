@@ -58,8 +58,7 @@ class ImageBlock(base.HyperBlock):
         if normalize:
             output_node = preprocessor_module.Normalization()(output_node)
         if augment:
-            output_node = preprocessor_module.ImageAugmentation(
-                seed=self.seed)(output_node)
+            output_node = preprocessor_module.ImageAugmentation()(output_node)
         sub_block_name = self.name + '_' + block_type
         if block_type == 'resnet':
             output_node = block_module.ResNetBlock(name=sub_block_name)(output_node)
