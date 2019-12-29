@@ -1,6 +1,8 @@
 # Image Classification
 ## A Simple Example
-The first step is to prepare your data. Here we use MNIST dataset as an example.
+The first step is to prepare your data. Here we use the [MNIST
+dataset](https://keras.io/datasets/#mnist-database-of-handwritten-digits) as an
+example.
 
 ```python
 from tensorflow.keras.datasets import mnist
@@ -57,7 +59,7 @@ For advanced users, you may customize your search space by using
 [AutoModel](/auto_model/#automodel-class) instead of
 [ImageClassifier](/image_classifier). You can configure the
 [ImageBlock](/block/#imageblock-class) for some high-level configurations,
-`block_type` for the type of neural network to search, `normalize` for whether to do
+e.g., `block_type` for the type of neural network to search, `normalize` for whether to do
 data normalization, `augment` for whether to do data augmentation. You can also
 do not specify these arguments, which would leave the different choices to be
 tuned automatically.
@@ -137,9 +139,9 @@ print(y_train[:3])
 
 We also support using [tf.data.Dataset](
 https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable) format for
-the training data. In this case, the images would have to be 3-dimentional. The
-labels have to be one-hot encoded.  So you can wrap the prepared reshaped and one-hot
-encoded data above into tensorflow Dataset as follows.
+the training data. In this case, the images would have to be 3-dimentional.
+The labels have to be one-hot encoded for multi-class
+classification to be wrapped into tensorflow Dataset.
 
 ```python
 import tensorflow as tf

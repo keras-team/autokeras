@@ -35,4 +35,4 @@ def test_structured_data_block():
 
     block.build(hp, ak.Input())
 
-    assert common.name_in_hps('module_type', hp)
+    assert common.name_in_hps('block_type', hp)

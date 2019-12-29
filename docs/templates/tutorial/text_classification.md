@@ -1,12 +1,14 @@
 # Text Classification
 ## A Simple Example
-The first step is to prepare your data. Here we use IMDB dataset as an example.
+The first step is to prepare your data. Here we use the [IMDB
+dataset](https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification) as
+an example.
 
 ```python
 import numpy as np
 from tensorflow.keras.datasets import imdb
 
-# Load the integer sequence IMDB dataset with Keras.
+# Load the integer sequence the IMDB dataset with Keras.
 index_offset = 3  # word index offset
 (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=1000,
                                                       index_from=index_offset)
@@ -77,7 +79,7 @@ clf.fit(x_train,
 For advanced users, you may customize your search space by using
 [AutoModel](/auto_model/#automodel-class) instead of
 [TextClassifier](/text_classifier). You can configure the
-[TextBlock](/block/#textblock-class) for some high-level configurations, `vectorizer`
+[TextBlock](/block/#textblock-class) for some high-level configurations, e.g., `vectorizer`
 for the type of text vectorization method to use.  You can use 'sequence', which uses
 [TextToInteSequence](/preprocessor/#texttointsequence-class) to convert the words to
 integers and use [EmbeddingBlock](/block/#embeddingblock-class) for embedding the
@@ -108,10 +110,10 @@ further. See the following example.
 import autokeras as ak
 
 input_node = ak.TextInput()
-output_node = preprocessor_module.TextToIntSequence()(input_node)
-output_node = block_module.EmbeddingBlock()(output_node)
+output_node = ak.TextToIntSequence()(input_node)
+output_node = ak.EmbeddingBlock()(output_node)
 # Use separable Conv layers in Keras.
-output_node = block_module.ConvBlock(separable=True)(output_node)
+output_node = ak.ConvBlock(separable=True)(output_node)
 output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
 clf.fit(x_train, y_train)
@@ -123,12 +125,13 @@ The AutoKeras TextClassifier is quite flexible for the data format.
 For the text, the input data should be one-dimensional 
 For the classification labels, AutoKeras accepts both plain labels, i.e. strings or
 integers, and one-hot encoded encoded labels, i.e. vectors of 0s and 1s.
-Since IMDB dataset is binary classification, it should not be one-hot encoded.
 
 We also support using [tf.data.Dataset](
 https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable) format for
-the training data. The labels have to be one-hot encoded.  So you can wrap the data
-above into tensorflow Dataset as follows.
+the training data.
+The labels have to be one-hot encoded for multi-class
+classification to be wrapped into tensorflow Dataset.
+Since the IMDB dataset is binary classification, it should not be one-hot encoded.
 
 ```python
 import tensorflow as tf

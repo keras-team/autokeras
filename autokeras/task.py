@@ -573,9 +573,9 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
-            length of the list should be equal to the number of columns of the data.
-            Defaults to None. If None, it will be obtained from the header of the csv
-            file or the pandas.DataFrame.
+            length of the list should be equal to the number of columns of the data
+            excluding the target column. Defaults to None. If None, it will obtained
+            from the header of the csv file or the pandas.DataFrame.
         column_types: Dict. The keys are the column names. The values should either
             be 'numerical' or 'categorical', indicating the type of that column.
             Defaults to None. If not None, the column_names need to be specified.
@@ -681,9 +681,9 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
-            length of the list should be equal to the number of columns of the data.
-            Defaults to None. If None, it will obtained from the header of the csv
-            file or the pandas.DataFrame.
+            length of the list should be equal to the number of columns of the data
+            excluding the target column. Defaults to None. If None, it will obtained
+            from the header of the csv file or the pandas.DataFrame.
         column_types: Dict. The keys are the column names. The values should either
             be 'numerical' or 'categorical', indicating the type of that column.
             Defaults to None. If not None, the column_names need to be specified.
