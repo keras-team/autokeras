@@ -31,16 +31,15 @@ The AutoKeras StructuredDataClassifier is quite flexible for the data format.
 The example above shows how to use the CSV files directly. Besides CSV files, it also
 supports numpy.ndarray, pandas.DataFrame or [tf.data.Dataset](
 https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable). The data should be
-two-dimensional with numerical or categorical values. For the classification labels,
+two-dimensional with numerical or categorical values.
+
+For the classification labels,
 AutoKeras accepts both plain labels, i.e.  strings or integers, and one-hot encoded
 encoded labels, i.e. vectors of 0s and 1s.
 The labels can be numpy.ndarray, pandas.DataFrame, or pandas.Series.
+
 The following examples show how the data can be prepared with numpy.ndarray,
 pandas.DataFrame, and tensorflow.data.Dataset.
-Notably, the labels have to be one-hot encoded for multi-class
-classification to be wrapped into tensorflow Dataset.
-Since the Titanic dataset is binary
-classification, it should not be one-hot encoded.
 
 ```python
 import pandas as pd
@@ -74,7 +73,11 @@ predicted_y = clf.predict(x_test)
 print(clf.evaluate(x_test, y_test))
 ```
 
-Convert numpy.ndarray to tf.data.Dataset.
+The following code shows how to convert numpy.ndarray to tf.data.Dataset.
+Notably, the labels have to be one-hot encoded for multi-class
+classification to be wrapped into tensorflow Dataset.
+Since the Titanic dataset is binary
+classification, it should not be one-hot encoded.
 
 ```python
 import tensorflow as tf
