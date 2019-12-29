@@ -179,9 +179,8 @@ class StructuredDataBlock(base.HyperBlock):
             output_node = preprocessor_module.LightGBM(
                 seed=self.seed)(input_node)
         else:
-            raise ValueError('Unsupported module'
-                             'type: {block_type}'.format(
-                                 block_type=block_type))
+            raise ValueError('Expect the block_type to be "dense" or "lightgbm", '
+                             'but got {block_type}'.format(block_type=block_type))
         nest.flatten(output_node)[0].shape = self.output_shape
         return output_node
 
