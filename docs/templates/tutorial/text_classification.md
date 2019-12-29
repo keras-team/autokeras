@@ -79,7 +79,7 @@ clf.fit(x_train,
 For advanced users, you may customize your search space by using
 [AutoModel](/auto_model/#automodel-class) instead of
 [TextClassifier](/text_classifier). You can configure the
-[TextBlock](/block/#textblock-class) for some high-level configurations, `vectorizer`
+[TextBlock](/block/#textblock-class) for some high-level configurations, e.g., `vectorizer`
 for the type of text vectorization method to use.  You can use 'sequence', which uses
 [TextToInteSequence](/preprocessor/#texttointsequence-class) to convert the words to
 integers and use [EmbeddingBlock](/block/#embeddingblock-class) for embedding the
@@ -110,10 +110,10 @@ further. See the following example.
 import autokeras as ak
 
 input_node = ak.TextInput()
-output_node = preprocessor_module.TextToIntSequence()(input_node)
-output_node = block_module.EmbeddingBlock()(output_node)
+output_node = ak.TextToIntSequence()(input_node)
+output_node = ak.EmbeddingBlock()(output_node)
 # Use separable Conv layers in Keras.
-output_node = block_module.ConvBlock(separable=True)(output_node)
+output_node = ak.ConvBlock(separable=True)(output_node)
 output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
 clf.fit(x_train, y_train)

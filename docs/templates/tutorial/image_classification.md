@@ -59,7 +59,7 @@ For advanced users, you may customize your search space by using
 [AutoModel](/auto_model/#automodel-class) instead of
 [ImageClassifier](/image_classifier). You can configure the
 [ImageBlock](/block/#imageblock-class) for some high-level configurations,
-`block_type` for the type of neural network to search, `normalize` for whether to do
+e.g., `block_type` for the type of neural network to search, `normalize` for whether to do
 data normalization, `augment` for whether to do data augmentation. You can also
 do not specify these arguments, which would leave the different choices to be
 tuned automatically.

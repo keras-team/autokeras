@@ -129,7 +129,7 @@ You can also use your own validation set
 instead of splitting it from the training data with `validation_data`.
 
 ```python
-split = 5000
+split = 500
 x_val = x_train[split:]
 y_val = y_train[split:]
 x_train = x_train[:split]
@@ -143,21 +143,23 @@ clf.fit(x_train,
 ## Customized Search Space
 For advanced users, you may customize your search space by using
 [AutoModel](/auto_model/#automodel-class) instead of
-[TextClassifier](/text_classifier). You can configure the
-[TextBlock](/block/#textblock-class) for some high-level configurations, `vectorizer`
-for the type of text vectorization method to use.  You can use 'sequence', which uses
-[TextToInteSequence](/preprocessor/#texttointsequence-class) to convert the words to
-integers and use [EmbeddingBlock](/block/#embeddingblock-class) for embedding the
-integer sequences, or you can use 'ngram', which uses
-[TextToNgramVector](/preprocessor/#texttongramvector-class) to vectorize the
-sentences.  You can also do not specify these arguments, which would leave the
-different choices to be tuned automatically.  See the following example for detail.
+[StructuredDataClassifier](/structured_data_classifier). You can configure the
+[StructuredDataBlock](/block/#structureddatablock-class) for some high-level
+configurations, e.g., `feature_engineering` for whether to use the
+[FeatureEngineering](/preprocessor/#featureengineering-class) block, `block_type` for
+which type of block you want to use in the search space.  You can use 'dense' for
+[DenseBlock](/block/#denseblock-class), or you can use 'lightgbm' for
+[LightGBM](/preprocessor/#lightgbm-class).  You can also do not specify these
+arguments, which would leave the different choices to be tuned automatically. See
+the following example for detail.
 
 ```python
 import autokeras as ak
 
-input_node = ak.TextInput()
-output_node = ak.TextBlock(vectorizer='ngram')(input_node)
+input_node = ak.StructuredDataInput()
+output_node = ak.StructuredDataBlock(
+    feature_engineering=False,
+    block_type='dense')(input_node)
 output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
 clf.fit(x_train, y_train)
@@ -174,11 +176,9 @@ further. See the following example.
 ```python
 import autokeras as ak
 
-input_node = ak.TextInput()
-output_node = preprocessor_module.TextToIntSequence()(input_node)
-output_node = block_module.EmbeddingBlock()(output_node)
-# Use separable Conv layers in Keras.
-output_node = block_module.ConvBlock(separable=True)(output_node)
+input_node = ak.StructuredDataInput()
+output_node = ak.FeatureEngineering(max_columns=500)(input_node)
+output_node = ak.LightGBM()(output_node)
 output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
 clf.fit(x_train, y_train)
@@ -186,11 +186,11 @@ clf.fit(x_train, y_train)
 
 
 ## Reference
-[TextClassifier](/text_classifier),
+[StructuredDataClassifier](/structured_data_classifier),
 [AutoModel](/auto_model/#automodel-class),
-[TextBlock](/block/#textblock-class),
-[TextToInteSequence](/preprocessor/#texttointsequence-class)
-[EmbeddingBlock](/block/#embeddingblock-class) 
-[TextToNgramVector](/preprocessor/#texttongramvector-class) 
-[ConvBlock](/block/#convblock-class)
-[ClassificationHead](/head/#classification-head-class)
+[StructuredDataClassifier](/structured_data_classifier),
+[StructuredDataBlock](/block/#structureddatablock-class),
+[FeatureEngineering](/preprocessor/#featureengineering-class),
+[DenseBlock](/block/#denseblock-class),
+[LightGBM](/preprocessor/#lightgbm-class),
+[ClassificationHead](/head/#classification-head-class).

@@ -120,7 +120,7 @@ class StructuredDataBlock(base.HyperBlock):
     # Arguments
         feature_engineering: Boolean. Whether to use feature engineering block.
             Defaults to True. If specified as None, it will be tuned automatically.
-        module_type: String. 'dense' or 'lightgbm'. If it is 'dense', DenseBlock
+        block_type: String. 'dense' or 'lightgbm'. If it is 'dense', DenseBlock
             will be used. If it is 'lightgbm', LightGBM will be used. If
             unspecified, it will be tuned automatically.
         seed: Int. Random seed.
@@ -128,19 +128,19 @@ class StructuredDataBlock(base.HyperBlock):
 
     def __init__(self,
                  feature_engineering=True,
-                 module_type=None,
+                 block_type=None,
                  seed=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.feature_engineering = feature_engineering
-        self.module_type = module_type
+        self.block_type = block_type
         self.num_heads = None
         self.seed = seed
 
     def get_config(self):
         config = super().get_config()
         config.update({'feature_engineering': self.feature_engineering,
-                       'module_type': self.module_type,
+                       'block_type': self.block_type,
                        'seed': self.seed})
         return config
 
@@ -167,21 +167,21 @@ class StructuredDataBlock(base.HyperBlock):
 
     def build_body(self, hp, input_node):
         if self.num_heads > 1:
-            module_type_choices = ['dense']
+            block_type = ['dense']
         else:
-            module_type_choices = ['lightgbm', 'dense']
-        module_type = self.module_type or hp.Choice('module_type',
-                                                    module_type_choices,
-                                                    default=module_type_choices[0])
-        if module_type == 'dense':
+            block_type = ['lightgbm', 'dense']
+        block_type = self.block_type or hp.Choice('block_type',
+                                                  block_type,
+                                                  default=block_type[0])
+        if block_type == 'dense':
             output_node = block_module.DenseBlock()(input_node)
-        elif module_type == 'lightgbm':
+        elif block_type == 'lightgbm':
             output_node = preprocessor_module.LightGBM(
                 seed=self.seed)(input_node)
         else:
             raise ValueError('Unsupported module'
-                             'type: {module_type}'.format(
-                                 module_type=module_type))
+                             'type: {block_type}'.format(
+                                 block_type=block_type))
         nest.flatten(output_node)[0].shape = self.output_shape
         return output_node
 
