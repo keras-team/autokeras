@@ -311,3 +311,13 @@ class AutoModel(object):
         data = preprocess_graph.preprocess(
             self._process_xy(x, y))[0].batch(batch_size)
         return model.evaluate(data, **kwargs)
+
+    def export_model(self):
+        """Export the best Keras Model.
+
+        # Returns
+            tf.keras.Model instance. The best model found during the search, loaded
+            with trained weights.
+        """
+        # TODO: Implement.
+        raise NotImplementedError
