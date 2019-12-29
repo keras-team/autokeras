@@ -47,15 +47,13 @@ Please also read
 ## Pull Request Guide
 Before you submit a pull request, check that it meets these guidelines:
 
-1. Fork the repository. Create a new branch from the master branch. Give your new branch a **meaningful** name.
+1. Is this the first pull request that you're making with GitHub? If so, read the guide [Making a pull request to an open-source project](https://github.com/gabrieldemarmiesse/getting_started_open_source).
 
-2. Pull request from your new branch to the master branch of the original autokeras repo. Give your pull request a **meaningful** name.
+2. Include "resolves #issue_number" in the description of the pull request if applicable and briefly describe your contribution.
 
-3. Include "resolves #issue_number" in the description of the pull request if applicable and briefly describe your contribution.
+3. Submit the pull request from the first day of your development and create it as a [draft pull request](https://github.blog/2019-02-14-introducing-draft-pull-requests/). Click `ready for review` when finished and passed the all the checks.
 
-4. Submit the pull request from the first day of your development and create it as a [draft pull request](https://github.blog/2019-02-14-introducing-draft-pull-requests/). Click `ready for review` when finished and passed the all the checks.
-
-6. For the case of bug fixes, add new test cases which would fail before your bug fix.
+4. For the case of bug fixes, add new test cases which would fail before your bug fix.
 
 ## Code Style Guide
 1. Your code should pass the `flake8` check.
