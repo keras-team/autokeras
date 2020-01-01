@@ -319,5 +319,5 @@ class AutoModel(object):
             tf.keras.Model instance. The best model found during the search, loaded
             with trained weights.
         """
-        # TODO: Implement.
-        raise NotImplementedError
+        _, model = self.tuner.get_best_model()
+        return model

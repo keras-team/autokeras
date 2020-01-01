@@ -1,4 +1,5 @@
 import pytest
+import tensorflow as tf
 
 import autokeras as ak
 from tests import common
@@ -14,7 +15,9 @@ def test_image_classifier(tmp_dir):
     train_y = common.generate_one_hot_labels(num_instances=100, num_classes=10)
     clf = ak.ImageClassifier(directory=tmp_dir, max_trials=2, seed=common.SEED)
     clf.fit(train_x, train_y, epochs=1, validation_split=0.2)
+    keras_model = clf.export_model()
     assert clf.predict(train_x).shape == (len(train_x), 10)
+    assert isinstance(keras_model, tf.keras.Model)
 
 
 def test_image_regressor(tmp_dir):
