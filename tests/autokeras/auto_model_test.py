@@ -123,5 +123,5 @@ def test_export_model(tuner_fn, tmp_dir):
                               max_trials=2,
                               overwrite=False)
     auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
-    keras_model = auto_model.export_model()
+    auto_model.export_model()
     assert tuner.get_best_model.called
