@@ -111,6 +111,8 @@ def test_overwrite(tuner_fn, tmp_dir):
 @mock.patch('autokeras.auto_model.tuner_module.get_tuner_class')
 def test_export_model(tuner_fn, tmp_dir):
     tuner_class = tuner_fn.return_value
+    tuner = tuner_class.return_value
+    tuner.get_best_model.return_value = (mock.Mock(), mock.Mock())
 
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
@@ -122,4 +124,4 @@ def test_export_model(tuner_fn, tmp_dir):
                               overwrite=False)
     auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
     keras_model = auto_model.export_model()
-    assert tuner_class.export_model.called
+    assert tuner.get_best_model.called
