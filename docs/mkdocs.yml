@@ -15,9 +15,18 @@ site_description: 'Documentation for AutoKeras.'
 google_analytics: ['UA-44322747-3', 'autokeras.com']
 markdown_extensions:
   - codehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_div_format
+
+extra_javascript:
+  - https://unpkg.com/mermaid@8.4.4/dist/mermaid.min.js
 
 nav:
   - Home: index.md
+  - Installation: install.md
   - Getting Started 1.0:
     - Overview: tutorial/overview.md
     - Image Classification: tutorial/image_classification.md

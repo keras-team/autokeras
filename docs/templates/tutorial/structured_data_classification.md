@@ -196,4 +196,5 @@ clf.fit(x_train, y_train)
 [FeatureEngineering](/preprocessor/#featureengineering-class),
 [DenseBlock](/block/#denseblock-class),
 [LightGBM](/preprocessor/#lightgbm-class),
-[ClassificationHead](/head/#classification-head-class).
+[StructuredDataInput](/node/#structureddatainput-class),
+[ClassificationHead](/head/#classificationhead-class).
