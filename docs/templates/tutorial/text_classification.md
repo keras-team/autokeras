@@ -151,8 +151,9 @@ print(clf.evaluate(test_set))
 [TextClassifier](/text_classifier),
 [AutoModel](/auto_model/#automodel-class),
 [TextBlock](/block/#textblock-class),
-[TextToInteSequence](/preprocessor/#texttointsequence-class)
-[EmbeddingBlock](/block/#embeddingblock-class) 
-[TextToNgramVector](/preprocessor/#texttongramvector-class) 
-[ConvBlock](/block/#convblock-class)
-[ClassificationHead](/head/#classification-head-class)
+[TextToInteSequence](/preprocessor/#texttointsequence-class),
+[EmbeddingBlock](/block/#embeddingblock-class),
+[TextToNgramVector](/preprocessor/#texttongramvector-class),
+[ConvBlock](/block/#convblock-class),
+[TextInput](/node/#textinput-class),
+[ClassificationHead](/head/#classificationhead-class).

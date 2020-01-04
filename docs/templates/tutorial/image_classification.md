@@ -164,4 +164,5 @@ print(clf.evaluate(test_set))
 [Normalization](/preprocessor/#normalization-class),
 [ImageAugmentation](/preprocessor/#image-augmentation-class),
 [ResNetBlock](/block/#resnetblock-class),
-[ClassificationHead](/head/#classification-head-class)
+[ImageInput](/node/#imageinput-class),
+[ClassificationHead](/head/#classificationhead-class).
