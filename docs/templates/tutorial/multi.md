@@ -100,6 +100,20 @@ model.fit(x_train,
 
 You can customize your search space follow [this tutorial](/tutorial/customized).
 
+## Data Format
+You can refer to the documentation of
+[ImageInput](/node/#imageinput-class),
+[StructuredDataInput](/node/#structureddatainput-class),
+[TextInput](/node/#textinput-class),
+[RegressionHead](/head/#regressionhead-class),
+[ClassificationHead](/head/#classificationhead-class),
+for the format of different types of data.
+You can also refer to the Data Format section of the tutorials of
+[Image Classification](/tutorial/image_classification/#data-format),
+[Text Classification](/tutorial/text_classification/#data-format),
+[Structured Data Classification](/tutorial/structured_data_classification/#data-format).
+
+
 ## Reference
 [AutoModel](/auto_model/#automodel-class),
 [ImageInput](/node/#imageinput-class),
