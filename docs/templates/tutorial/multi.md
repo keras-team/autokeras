@@ -98,7 +98,49 @@ model.fit(x_train,
         validation_data=(x_val, y_val))
 ```
 
-You can customize your search space follow [this tutorial](/tutorial/customized).
+## Customized Search Space
+You can customize your search space.
+The following figure shows the search space we want to define.
+
+<div class="mermaid">
+graph LR
+    id1(ImageInput) --> id2(Normalization)
+    id2 --> id3(Image Augmentation)
+    id3 --> id4(Convolutional)
+    id3 --> id5(ResNet V2)
+    id4 --> id6(Merge)
+    id5 --> id6
+    id7(StructuredDataInput) --> id8(Feature Engineering)
+    id8 --> id9(LightGBM)
+    id6 --> id10(Merge)
+    id9 --> id10
+    id10 --> id11(Classification Head)
+    id10 --> id12(Regression Head)
+</div>
+
+```python
+import autokeras as ak
+
+input_node1 = ak.ImageInput()
+output_node = ak.Normalization()(input_node1)
+output_node = ak.ImageAugmentation()(output_node)
+output_node1 = ak.ConvBlock()(output_node)
+output_node2 = ak.ResNetBlock(version='v2')(output_node)
+output_node1 = ak.Merge()([output_node1, output_node2])
+
+input_node2 = ak.StructuredDataInput()
+output_node = ak.FeatureEngineering()(input_node2)
+output_node2 = ak.LightGBM()(output_node)
+
+output_node = ak.Merge()([output_node1, output_node2])
+output_node1 = ak.ClassificationHead()(output_node)
+output_node2 = ak.RegressionHead()(output_node)
+
+auto_model = ak.AutoModel(
+    inputs=[input_node1, input_node2], 
+    outputs=[]output_node1, output_node2],
+    max_trials=10)
+```
 
 ## Data Format
 You can refer to the documentation of
