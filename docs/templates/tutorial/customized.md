@@ -87,9 +87,52 @@ You can also refer to the Data Format section of the tutorials of
 
 ## Implement New Block
 
-We are still working on this tutorial. Thank you for your patience!
+You can extend the [Block](/base/#block-class) 
+class to implement your own building blocks and use it with 
+[AutoModel](/auto_model/#automodel-class).
+
+The first step is to learn how to write a build function for [KerasTuner](https://keras-team.github.io/keras-tuner/#usage-the-basics).
+You need to override the [build function](/base/#build-method) of the block.
+The following example shows how to implement a single Dense layer block whose number of neurons is tunable.
+
+```python
+import autokeras as ak
+import tensorflow as tf
+
+class SingleDenseLayerBlock(ak.Block):
+    
+    def build(self, hp, inputs=None):
+        # Get the input_node from inputs.
+        input_node = tf.python.util.nest.flatten(inputs)[0]
+        layer = tf.keras.layers.Dense(
+            hp.Int('num_units', min_value=32, max_value=512, step=32))
+        output_node = layer(input_node)
+        return output_node
+```
+
+You can connect it with other blocks and build it into an
+[AutoModel](/auto_model/#automodel-class).
+
+```python
+# Build the AutoModel
+input_node = ak.Input()
+output_node = SingleDenseLayerBlock()(input_node)
+output_node = ak.RegressionHead()(output_node)
+auto_model = ak.AutoModel(input_node, output_node, max_trials=10)
+# Prepare Data
+num_instances = 100
+x_train = np.random.rand(num_instances, 20).astype(np.float32)
+y_train = np.random.rand(num_instances, 1).astype(np.float32)
+x_test = np.random.rand(num_instances, 20).astype(np.float32)
+y_test = np.random.rand(num_instances, 1).astype(np.float32)
+# Train the model
+auto_model.fit(x_train, y_train)
+print(auto_model.evaluate(x_test, y_test))
+```
 
 ## Reference
+
+[AutoModel](/auto_model/#automodel-class)
 
 **Nodes**:
 [ImageInput](/node/#imageinput-class),

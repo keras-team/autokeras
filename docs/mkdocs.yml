@@ -51,6 +51,7 @@ nav:
       - StructuredDataRegressor: structured_data_regressor.md
     - AutoModel: auto_model.md
     - Building Blocks:
+      - Base Classes: base.md
       - Node: node.md
       - Preprocessor: preprocessor.md
       - Block: block.md
