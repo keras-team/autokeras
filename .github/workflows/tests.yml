@@ -1,7 +1,7 @@
 name: Tests
 
 on: 
-  push
+  push:
   pull_request:
     types: [closed]
 
