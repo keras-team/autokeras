@@ -2,8 +2,9 @@
 
 [![Build Status](https://travis-ci.org/keras-team/autokeras.svg?branch=master)](https://travis-ci.org/keras-team/autokeras)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/620bd322918c476aa33230ec911a4301)](https://www.codacy.com/app/jhfjhfj1/autokeras?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=keras-team/autokeras&amp;utm_campaign=Badge_Grade)
-[![Coverage Status](https://coveralls.io/repos/github/keras-team/autokeras/badge.svg)](https://coveralls.io/github/keras-team/autokeras)
-<a href="https://badge.fury.io/py/autokeras"><img src="https://badge.fury.io/py/autokeras.svg" alt="PyPI version" style="width: 125px"></a>
+[![codecov](https://codecov.io/gh/haifeng-jin/autokeras/branch/master/graph/badge.svg)](https://codecov.io/gh/haifeng-jin/autokeras)
+[![PyPI version](https://badge.fury.io/py/autokeras.svg)](https://badge.fury.io/py/autokeras")
+
 
 Official Website: [autokeras.com](https://autokeras.com)
 
