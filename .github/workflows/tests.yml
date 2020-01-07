@@ -25,8 +25,8 @@ jobs:
       run: |
         pip install pytest
         pytest --cov=autokeras --cov-report xml:coverage.xml
-    - name: Coveralls GitHub Action
-      uses: coverallsapp/github-action@v1.0.1
+    - name: Codecov
+      uses: codecov/codecov-action@v1
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: .coverage
+        token: ${{ secrets.CODECOV_TOKEN }} #required
+        file: ./coverage.xml #optional
