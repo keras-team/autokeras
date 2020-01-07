@@ -1,6 +1,6 @@
 <img src="https://autokeras.com/img/row_red.svg" alt="drawing" width="400px" style="display: block; margin-left: auto; margin-right: auto"/>
 
-[![Build Status](https://travis-ci.org/keras-team/autokeras.svg?branch=master)](https://travis-ci.org/keras-team/autokeras)
+![](https://github.com/actions/hello-world/workflows/Tests/badge.svg?branch=master)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/620bd322918c476aa33230ec911a4301)](https://www.codacy.com/app/jhfjhfj1/autokeras?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=keras-team/autokeras&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/haifeng-jin/autokeras/branch/master/graph/badge.svg)](https://codecov.io/gh/haifeng-jin/autokeras)
 [![PyPI version](https://badge.fury.io/py/autokeras.svg)](https://badge.fury.io/py/autokeras")
