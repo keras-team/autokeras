@@ -1,10 +1,6 @@
 name: Tests
 
-on: 
-  push:
-  pull_request:
-    types: [opened, reopened, synchronized, closed]
-
+on: [push, pull_request]
 jobs:
   build:
 
