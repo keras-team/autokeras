@@ -1,7 +1,7 @@
 <img src="https://autokeras.com/img/row_red.svg" alt="drawing" width="400px" style="display: block; margin-left: auto; margin-right: auto"/>
 
 ![](https://github.com/keras-team/autokeras/workflows/Tests/badge.svg?branch=master)
-[![codecov](https://codecov.io/gh/haifeng-jin/autokeras/branch/master/graph/badge.svg)](https://codecov.io/gh/haifeng-jin/autokeras)
+[![codecov](https://codecov.io/gh/keras-team/autokeras/branch/master/graph/badge.svg)](https://codecov.io/gh/keras-team/autokeras)
 [![PyPI version](https://badge.fury.io/py/autokeras.svg)](https://badge.fury.io/py/autokeras")
 
 
