@@ -5,7 +5,7 @@ import autokeras as ak
 
 def task_api():
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    clf = ak.ImageClassifier(seed=5, max_trials=3)
+    clf = ak.ImageClassifier(seed=5, max_trials=2)
     clf.fit(x_train, y_train, validation_split=0.2)
     return clf.evaluate(x_test, y_test)
 

@@ -25,20 +25,17 @@ class ImageBlock(base.HyperBlock):
                  block_type=None,
                  normalize=None,
                  augment=None,
-                 seed=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.block_type = block_type
         self.normalize = normalize
         self.augment = augment
-        self.seed = seed
 
     def get_config(self):
         config = super().get_config()
         config.update({'block_type': self.block_type,
                        'normalize': self.normalize,
-                       'augment': self.augment,
-                       'seed': self.seed})
+                       'augment': self.augment})
         return config
 
     def build(self, hp, inputs=None):

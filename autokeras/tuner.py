@@ -4,6 +4,7 @@ import random
 
 import kerastuner
 import kerastuner.engine.hypermodel as hm_module
+import numpy as np
 import tensorflow as tf
 
 from autokeras.hypermodel import base
@@ -210,8 +211,6 @@ class GreedyOracle(kerastuner.Oracle):
     def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
         self.hyper_graph = None
-        # Start from tuning the hyper block hps.
-        self._stage = GreedyOracle.HYPER
         # Sets of HyperParameter names.
         self._hp_names = {
             GreedyOracle.HYPER: set(),
@@ -220,13 +219,6 @@ class GreedyOracle(kerastuner.Oracle):
             GreedyOracle.ARCH: set(),
         }
         # The quota used to tune each category of hps.
-        self._capacity = {
-            GreedyOracle.HYPER: 1,
-            GreedyOracle.PREPROCESS: 1,
-            GreedyOracle.OPT: 1,
-            GreedyOracle.ARCH: 4,
-        }
-        self._stage_trial_count = 0
         self.seed = seed or random.randint(1, 1e4)
         # Incremented at every call to `populate_space`.
         self._seed_state = self.seed
@@ -235,14 +227,10 @@ class GreedyOracle(kerastuner.Oracle):
 
     def set_state(self, state):
         super().set_state(state)
-        self._stage = state['stage']
-        self._capacity = state['capacity']
 
     def get_state(self):
         state = super().get_state()
         state.update({
-            'stage': self._stage,
-            'capacity': self._capacity,
         })
         return state
 
@@ -272,38 +260,40 @@ class GreedyOracle(kerastuner.Oracle):
 
         super().update_space(hyperparameters)
 
+    def _generate_stage(self):
+        probabilities = np.array([pow(len(value), 2)
+                                  for value in self._hp_names.values()])
+        probabilities = probabilities / np.sum(probabilities)
+        return np.random.choice(list(self._hp_names.keys()), p=probabilities)
+
     def _populate_space(self, trial_id):
+        stage = self._generate_stage()
         for _ in range(len(GreedyOracle.STAGES)):
-            values = self._generate_stage_values()
+            values = self._generate_stage_values(stage)
             # Reached max collisions.
             if values is None:
                 # Try next stage.
-                self._stage = GreedyOracle.next_stage(self._stage)
-                self._stage_trial_count = 0
+                stage = GreedyOracle.next_stage(stage)
                 continue
             # Values found.
-            self._stage_trial_count += 1
-            if self._stage_trial_count == self._capacity[self._stage]:
-                self._stage = GreedyOracle.next_stage(self._stage)
-                self._stage_trial_count = 0
             return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
                     'values': values}
         # All stages reached max collisions.
         return {'status': kerastuner.engine.trial.TrialStatus.STOPPED,
                 'values': None}
 
-    def _generate_stage_values(self):
+    def _generate_stage_values(self, stage):
         best_trials = self.get_best_trials()
         if best_trials:
             best_values = best_trials[0].hyperparameters.values
         else:
             best_values = self.hyperparameters.values
         collisions = 0
-        while 1:
+        while True:
             # Generate new values for the current stage.
             values = {}
             for p in self.hyperparameters.space:
-                if p.name in self._hp_names[self._stage]:
+                if p.name in self._hp_names[stage]:
                     values[p.name] = p.random_sample(self._seed_state)
                     self._seed_state += 1
             values = {**best_values, **values}
