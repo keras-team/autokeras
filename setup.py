@@ -32,9 +32,7 @@ setup(
                   'flake8',
                   'pytest-xdist',
                   'pytest-cov',
-                  # can be removed once coveralls is compatible with
-                  # coverage 5.0
-                  'coverage==5.0.2'
+                  'coverage'
                   ],
     },
     packages=find_packages(exclude=('tests',)),
