@@ -34,7 +34,7 @@ setup(
                   'pytest-cov',
                   # can be removed once coveralls is compatible with
                   # coverage 5.0
-                  'coverage==4.5.4'
+                  'coverage==5.0.2'
                   ],
     },
     packages=find_packages(exclude=('tests',)),
