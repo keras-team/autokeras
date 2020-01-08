@@ -46,6 +46,13 @@ PAGES = {
         'autokeras.AutoModel.predict',
         'autokeras.AutoModel.evaluate',
     ],
+    'base.md': [
+        'autokeras.Node',
+        'autokeras.Preprocessor',
+        'autokeras.Block',
+        'autokeras.Block.build',
+        'autokeras.Head',
+    ],
     'node.md': [
         'autokeras.ImageInput',
         'autokeras.Input',

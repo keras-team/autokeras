@@ -93,9 +93,9 @@ regression_target = regression_target[:split]
 classification_target = classification_target[:split]
 
 model.fit(x_train,
-        y_train,
-        # Use your own validation set.
-        validation_data=(x_val, y_val))
+          y_train,
+          # Use your own validation set.
+          validation_data=(x_val, y_val))
 ```
 
 ## Customized Search Space
