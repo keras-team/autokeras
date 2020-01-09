@@ -85,9 +85,18 @@ class AutoModel(object):
         self.seed = seed
         self.hyper_graph = None
         self.objective = objective
-        # TODO: Support passing a tuner instance.
-        self.tuner = tuner_module.get_tuner_class(tuner)
         self.overwrite = overwrite
+        # TODO: Support passing a tuner instance.
+        if isinstance(tuner, tuner_module.AutoTuner):
+            self.tuner = tuner
+        else:
+            self.tuner = tuner_module.get_tuner_class(tuner)(
+                overwrite=self.overwrite,
+                objective=self.objective,
+                max_trials=self.max_trials,
+                directory=self.directory,
+                seed=self.seed,
+                project_name=self.name)
         self._split_dataset = False
         if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
@@ -160,27 +169,18 @@ class AutoModel(object):
         # Initialize the hyper_graph.
         self._meta_build(dataset)
 
-        # Initialize the Tuner.
-        # The hypermodel needs input_shape, which can only be known after
-        # preprocessing. So we preprocess the dataset once to get the input_shape,
-        # so that the hypermodel can be built in the initializer of the Tuner, which
-        # does not access the dataset.
+        # Preprocess the dataset.
         hp = kerastuner.HyperParameters()
         preprocess_graph, keras_graph = self.hyper_graph.build_graphs(hp)
         preprocess_graph.preprocess(
             dataset=dataset,
             validation_data=validation_data,
             fit=True)
-        self.tuner = self.tuner(
-            hyper_graph=self.hyper_graph,
-            hypermodel=keras_graph,
-            fit_on_val_data=self._split_dataset,
-            overwrite=self.overwrite,
-            objective=self.objective,
-            max_trials=self.max_trials,
-            directory=self.directory,
-            seed=self.seed,
-            project_name=self.name)
+
+        # Config the Tuner.
+        self.tuner.compile(
+            hyper_graph=self.hyper_graph, 
+            fit_on_val_data=self._split_dataset)
 
         # Process the args.
         if callbacks is None:

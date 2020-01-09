@@ -19,29 +19,43 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     PreprocessGraph and KerasGraph with the provided HyperParameters.
 
     # Arguments
-        hyper_graph: HyperGraph. The HyperGraph to be tuned.
-        hypermodel: KerasGraph. The KerasGraph built from the HyperGraph.
-        fit_on_val_data: Boolean. Use the training set and validation set for the
-            final fit of the best model.
-        overwrite: Boolean. default `True`. If `False`, reloads an existing project
-            of the same name if one is found. Otherwise, overwrites the project.
         **kwargs: The other args supported by KerasTuner.
     """
 
     def __init__(self,
-                 hyper_graph,
-                 hypermodel,
-                 fit_on_val_data=False,
-                 overwrite=True,
                  **kwargs):
-        self.hyper_graph = hyper_graph
         super().__init__(
-            hypermodel=hm_module.KerasHyperModel(hypermodel),
-            overwrite=overwrite,
+            hypermodel=lambda hp: None,
             **kwargs)
-        self.preprocess_graph = None
-        self.fit_on_val_data = fit_on_val_data
         self._finished = False
+        # hyper_graph is set during fit of AutoModel.
+        self.hyper_graph = None
+        self.preprocess_graph = None
+        self.fit_on_val_data = None
+
+    def _populate_initial_space(self):
+        # Override the function to prevent building the model during initialization.
+        pass
+
+    def compile(self, 
+                hyper_graph, 
+                fit_on_val_data=False):
+        """Config the AutoTuner.
+
+        The hyper_graph and fit_on_val_data can only be known in fit function.
+
+        # Arguments
+            hyper_graph: HyperGraph. The HyperGraph to be tuned.
+            fit_on_val_data: Boolean. Use the training set and validation set for the
+                final fit of the best model.
+        """
+        self.hyper_graph = hyper_graph
+        self.fit_on_val_data = fit_on_val_data
+        # Populate the initial space.
+        hp = self.oracle.get_space()
+        preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
+        keras_graph.build(hp)
+        self.oracle.update_space(hp)
 
     def run_trial(self, trial, **fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
@@ -201,9 +215,9 @@ class GreedyOracle(kerastuner.Oracle):
         stages = GreedyOracle.STAGES
         return stages[(stages.index(stage) + 1) % len(stages)]
 
-    def __init__(self, hyper_graph, seed=None, **kwargs):
+    def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
-        self.hyper_graph = hyper_graph
+        self.hyper_graph = None
         # Start from tuning the hyper block hps.
         self._stage = GreedyOracle.HYPER
         # Sets of HyperParameter names.
@@ -226,6 +240,9 @@ class GreedyOracle(kerastuner.Oracle):
         self._seed_state = self.seed
         self._tried_so_far = set()
         self._max_collisions = 5
+
+    def compile(self, hyper_graph):
+        self.hyper_graph = hyper_graph
 
     def set_state(self, state):
         super().set_state(state)
@@ -317,11 +334,8 @@ class GreedyOracle(kerastuner.Oracle):
 class Greedy(AutoTuner):
 
     def __init__(self,
-                 hyper_graph,
-                 hypermodel,
                  objective,
                  max_trials,
-                 fit_on_val_data=False,
                  seed=None,
                  hyperparameters=None,
                  tune_new_entries=True,
@@ -329,23 +343,19 @@ class Greedy(AutoTuner):
                  **kwargs):
         self.seed = seed
         oracle = GreedyOracle(
-            hyper_graph=hyper_graph,
             objective=objective,
             max_trials=max_trials,
             seed=seed,
             hyperparameters=hyperparameters,
             tune_new_entries=tune_new_entries,
             allow_new_entries=allow_new_entries)
-        hp = oracle.get_space()
-        preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
-        oracle.update_space(hp)
         super().__init__(
-            hyper_graph=hyper_graph,
-            fit_on_val_data=fit_on_val_data,
             oracle=oracle,
-            hypermodel=hypermodel,
             **kwargs)
 
+    def compile(self, hyper_graph, **kwargs):
+        super().compile(hyper_graph=hyper_graph, **kwargs)
+        self.oracle.compile(hyper_graph)
 
 TUNER_CLASSES = {
     'bayesian': BayesianOptimization,

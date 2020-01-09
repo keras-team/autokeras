@@ -62,7 +62,7 @@ def test_auto_model_predict(tuner_fn, tmp_dir):
 
 @mock.patch('autokeras.auto_model.tuner_module.get_tuner_class')
 def test_final_fit_concat(tuner_fn, tmp_dir):
-    tuner_class = tuner_fn.return_value
+    tuner = tuner_fn.return_value.return_value
 
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
@@ -73,12 +73,12 @@ def test_final_fit_concat(tuner_fn, tmp_dir):
                               max_trials=2)
     auto_model.fit(x_train, y_train, epochs=2, validation_split=0.2)
     assert auto_model._split_dataset
-    assert tuner_class.call_args_list[0][1]['fit_on_val_data']
+    assert tuner.compile.call_args_list[0][1]['fit_on_val_data']
 
 
 @mock.patch('autokeras.auto_model.tuner_module.get_tuner_class')
 def test_final_fit_not_concat(tuner_fn, tmp_dir):
-    tuner_class = tuner_fn.return_value
+    tuner = tuner_fn.return_value.return_value
 
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
@@ -89,7 +89,7 @@ def test_final_fit_not_concat(tuner_fn, tmp_dir):
                               max_trials=2)
     auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
     assert not auto_model._split_dataset
-    assert not tuner_class.call_args_list[0][1]['fit_on_val_data']
+    assert not tuner.compile.call_args_list[0][1]['fit_on_val_data']
 
 
 @mock.patch('autokeras.auto_model.tuner_module.get_tuner_class')

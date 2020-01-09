@@ -35,8 +35,6 @@ def test_add_early_stopping(_, base_tuner_search, tmp_dir):
     preprocess_graph.build(hp)
     keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
     tuner = tuner_module.Greedy(
-        hyper_graph=hyper_graph,
-        hypermodel=keras_graph,
         objective='val_loss',
         max_trials=1,
         directory=tmp_dir,
@@ -58,9 +56,9 @@ def test_add_early_stopping(_, base_tuner_search, tmp_dir):
 def test_random_oracle_state():
     hyper_graph = build_hyper_graph()
     oracle = tuner_module.GreedyOracle(
-        hyper_graph=hyper_graph,
         objective='val_loss',
     )
+    oracle.compile(hyper_graph=hyper_graph)
     oracle.set_state(oracle.get_state())
     assert oracle.hyper_graph is hyper_graph
 
@@ -69,7 +67,6 @@ def test_random_oracle_state():
 def test_random_oracle(fn):
     hyper_graph = build_hyper_graph()
     oracle = tuner_module.GreedyOracle(
-        hyper_graph=hyper_graph,
         objective='val_loss',
     )
     hp = kerastuner.HyperParameters()
@@ -77,6 +74,7 @@ def test_random_oracle(fn):
     preprocess_graph.build(hp)
     keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
     keras_graph.build(hp)
+    oracle.hyper_graph = hyper_graph
     trial = mock.Mock()
     trial.hyperparameters = hp
     fn.return_value = [trial]
@@ -101,14 +99,12 @@ def test_overwrite_init(_, base_tuner_init, tmp_dir):
     preprocess_graph.build(hp)
     keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
     tuner_module.Greedy(
-        hyper_graph=hyper_graph,
-        hypermodel=keras_graph,
         objective='val_loss',
         max_trials=1,
         directory=tmp_dir,
         seed=common.SEED)
 
-    assert base_tuner_init.call_args_list[0][1]['overwrite']
+    assert not base_tuner_init.call_args_list[0][1]['overwrite']
 
 
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
@@ -120,8 +116,6 @@ def test_overwrite_search(_, base_tuner_search, tmp_dir):
     preprocess_graph.build(hp)
     keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
     tuner = tuner_module.Greedy(
-        hyper_graph=hyper_graph,
-        hypermodel=keras_graph,
         objective='val_loss',
         max_trials=1,
         directory=tmp_dir,
