@@ -353,8 +353,8 @@ class Greedy(AutoTuner):
             **kwargs)
 
     def compile(self, hyper_graph, **kwargs):
-        super().compile(hyper_graph=hyper_graph, **kwargs)
         self.oracle.compile(hyper_graph)
+        super().compile(hyper_graph=hyper_graph, **kwargs)
 
 
 TUNER_CLASSES = {
