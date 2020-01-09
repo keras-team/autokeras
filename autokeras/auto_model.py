@@ -1,4 +1,3 @@
-import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
@@ -169,17 +168,9 @@ class AutoModel(object):
         # Initialize the hyper_graph.
         self._meta_build(dataset)
 
-        # Preprocess the dataset.
-        hp = kerastuner.HyperParameters()
-        preprocess_graph, keras_graph = self.hyper_graph.build_graphs(hp)
-        preprocess_graph.preprocess(
-            dataset=dataset,
-            validation_data=validation_data,
-            fit=True)
-
         # Config the Tuner.
         self.tuner.compile(
-            hyper_graph=self.hyper_graph, 
+            hyper_graph=self.hyper_graph,
             fit_on_val_data=self._split_dataset)
 
         # Process the args.

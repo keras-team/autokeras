@@ -93,11 +93,6 @@ def test_random_oracle(fn):
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.__init__')
 @mock.patch('autokeras.tuner.Greedy._prepare_run')
 def test_overwrite_init(_, base_tuner_init, tmp_dir):
-    hyper_graph = build_hyper_graph()
-    hp = kerastuner.HyperParameters()
-    preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
-    preprocess_graph.build(hp)
-    keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
     tuner_module.Greedy(
         objective='val_loss',
         max_trials=1,

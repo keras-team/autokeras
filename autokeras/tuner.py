@@ -37,8 +37,8 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         # Override the function to prevent building the model during initialization.
         pass
 
-    def compile(self, 
-                hyper_graph, 
+    def compile(self,
+                hyper_graph,
                 fit_on_val_data=False):
         """Config the AutoTuner.
 
@@ -53,8 +53,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         self.fit_on_val_data = fit_on_val_data
         # Populate the initial space.
         hp = self.oracle.get_space()
-        preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
-        keras_graph.build(hp)
+        hyper_graph.build_graphs(hp)
         self.oracle.update_space(hp)
 
     def run_trial(self, trial, **fit_kwargs):
@@ -356,6 +355,7 @@ class Greedy(AutoTuner):
     def compile(self, hyper_graph, **kwargs):
         super().compile(hyper_graph=hyper_graph, **kwargs)
         self.oracle.compile(hyper_graph)
+
 
 TUNER_CLASSES = {
     'bayesian': BayesianOptimization,
