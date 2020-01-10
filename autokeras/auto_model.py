@@ -80,7 +80,6 @@ class AutoModel(object):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self.seed = seed
-        self.hyper_graph = None
         # TODO: Support passing a tuner instance.
         if isinstance(tuner, str):
             tuner = tuner_module.get_tuner_class(tuner)
