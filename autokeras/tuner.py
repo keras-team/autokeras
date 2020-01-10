@@ -33,7 +33,8 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         self.hyper_graph = None
         self.preprocess_graph = None
 
-    def _populate_initial_space(self): # Override the function to prevent building the model during initialization.
+    # Override the function to prevent building the model during initialization.
+    def _populate_initial_space(self):
         pass
 
     def run_trial(self, trial, **fit_kwargs):
@@ -111,9 +112,9 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         model.load_weights(self.best_model_path)
         return preprocess_graph, model
 
-    def search(self, 
+    def search(self,
                hyper_graph,
-               callbacks=None, 
+               callbacks=None,
                fit_on_val_data=False,
                **fit_kwargs):
         """Search for the best HyperParameters.

@@ -122,7 +122,7 @@ def test_overwrite_search(_, base_tuner_search, tmp_dir):
     tuner.oracle = oracle
     mock_graph = mock.Mock()
     mock_graph.build_graphs.return_value = (mock.Mock(), mock.Mock())
-    
+
     tuner.search(mock_graph)
 
     assert tuner._finished

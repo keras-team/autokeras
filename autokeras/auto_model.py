@@ -123,13 +123,13 @@ class AutoModel(object):
         # Using functional API.
         if all([isinstance(output, base.Node) for output in self.outputs]):
             hyper_graph = graph.HyperGraph(inputs=self.inputs,
-                                                outputs=self.outputs)
+                                           outputs=self.outputs)
         # Using input/output API.
         elif all([isinstance(output, base.Head) for output in self.outputs]):
             hyper_graph = meta_model.assemble(inputs=self.inputs,
-                                                   outputs=self.outputs,
-                                                   dataset=dataset,
-                                                   seed=self.seed)
+                                              outputs=self.outputs,
+                                              dataset=dataset,
+                                              seed=self.seed)
             self.outputs = hyper_graph.outputs
 
         return hyper_graph
