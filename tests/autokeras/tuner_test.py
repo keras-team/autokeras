@@ -35,6 +35,7 @@ def test_add_early_stopping(_, base_tuner_search, tmp_dir):
     preprocess_graph.build(hp)
     keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
     tuner = tuner_module.Greedy(
+        hypermodel=lambda hp: None,
         objective='val_loss',
         max_trials=1,
         directory=tmp_dir,
@@ -44,9 +45,8 @@ def test_add_early_stopping(_, base_tuner_search, tmp_dir):
     tuner.oracle = oracle
     mock_graph = mock.Mock()
     mock_graph.build_graphs.return_value = (mock.Mock(), mock.Mock())
-    tuner.hyper_graph = mock_graph
 
-    tuner.search()
+    tuner.search(mock_graph)
 
     callbacks = base_tuner_search.call_args_list[0][1]['callbacks']
     assert any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
@@ -58,7 +58,7 @@ def test_random_oracle_state():
     oracle = tuner_module.GreedyOracle(
         objective='val_loss',
     )
-    oracle.compile(hyper_graph=hyper_graph)
+    oracle.hyper_graph = hyper_graph
     oracle.set_state(oracle.get_state())
     assert oracle.hyper_graph is hyper_graph
 
@@ -94,6 +94,7 @@ def test_random_oracle(fn):
 @mock.patch('autokeras.tuner.Greedy._prepare_run')
 def test_overwrite_init(_, base_tuner_init, tmp_dir):
     tuner_module.Greedy(
+        hypermodel=lambda hp: None,
         objective='val_loss',
         max_trials=1,
         directory=tmp_dir,
@@ -111,6 +112,7 @@ def test_overwrite_search(_, base_tuner_search, tmp_dir):
     preprocess_graph.build(hp)
     keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
     tuner = tuner_module.Greedy(
+        hypermodel=lambda hp: None,
         objective='val_loss',
         max_trials=1,
         directory=tmp_dir,
@@ -120,8 +122,7 @@ def test_overwrite_search(_, base_tuner_search, tmp_dir):
     tuner.oracle = oracle
     mock_graph = mock.Mock()
     mock_graph.build_graphs.return_value = (mock.Mock(), mock.Mock())
-    tuner.hyper_graph = mock_graph
-
-    tuner.search()
+    
+    tuner.search(mock_graph)
 
     assert tuner._finished

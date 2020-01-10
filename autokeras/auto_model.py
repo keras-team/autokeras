@@ -122,15 +122,17 @@ class AutoModel(object):
     def _meta_build(self, dataset):
         # Using functional API.
         if all([isinstance(output, base.Node) for output in self.outputs]):
-            self.hyper_graph = graph.HyperGraph(inputs=self.inputs,
+            hyper_graph = graph.HyperGraph(inputs=self.inputs,
                                                 outputs=self.outputs)
         # Using input/output API.
         elif all([isinstance(output, base.Head) for output in self.outputs]):
-            self.hyper_graph = meta_model.assemble(inputs=self.inputs,
+            hyper_graph = meta_model.assemble(inputs=self.inputs,
                                                    outputs=self.outputs,
                                                    dataset=dataset,
                                                    seed=self.seed)
-            self.outputs = self.hyper_graph.outputs
+            self.outputs = hyper_graph.outputs
+
+        return hyper_graph
 
     def fit(self,
             x=None,
@@ -182,12 +184,7 @@ class AutoModel(object):
             validation_split=validation_split)
 
         # Initialize the hyper_graph.
-        self._meta_build(dataset)
-
-        # Config the Tuner.
-        self.tuner.compile(
-            hyper_graph=self.hyper_graph,
-            fit_on_val_data=self._split_dataset)
+        hyper_graph = self._meta_build(dataset)
 
         # Process the args.
         if callbacks is None:
@@ -203,6 +200,8 @@ class AutoModel(object):
                           epochs=epochs,
                           callbacks=callbacks,
                           validation_data=validation_data,
+                          hyper_graph=hyper_graph,
+                          fit_on_val_data=self._split_dataset,
                           **kwargs)
 
     def _process_xy(self, x, y=None, fit=False, predict=False):
