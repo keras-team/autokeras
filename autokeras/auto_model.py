@@ -58,8 +58,9 @@ class AutoModel(object):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        tuner: String. It should be one of 'greedy', 'bayesian', 'hyperband' or
-            'random'. Defaults to 'greedy'.
+        tuner: String or subclass of AutoTuner. If use string, it should be one of
+            'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a subclass
+            of AutoTuner. Defaults to 'greedy'.
         overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
@@ -78,30 +79,45 @@ class AutoModel(object):
                  seed=None):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
-        self.name = name
-        self.max_trials = max_trials
-        self.directory = directory
         self.seed = seed
         self.hyper_graph = None
-        self.objective = objective
-        self.overwrite = overwrite
         # TODO: Support passing a tuner instance.
-        if isinstance(tuner, tuner_module.AutoTuner):
-            self.tuner = tuner
-        else:
-            self.tuner = tuner_module.get_tuner_class(tuner)(
-                overwrite=self.overwrite,
-                objective=self.objective,
-                max_trials=self.max_trials,
-                directory=self.directory,
-                seed=self.seed,
-                project_name=self.name)
+        if isinstance(tuner, str):
+            tuner = tuner_module.get_tuner_class(tuner)
+        self.tuner = tuner(
+            hypermodel=lambda hp: None,
+            overwrite=overwrite,
+            objective=objective,
+            max_trials=max_trials,
+            directory=directory,
+            seed=self.seed,
+            project_name=name)
         self._split_dataset = False
         if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
             self.heads = self.outputs
         else:
             self.heads = [output_node.in_blocks[0] for output_node in self.outputs]
+
+    @property
+    def overwrite(self):
+        return self.tuner.overwrite
+
+    @property
+    def objective(self):
+        return self.tuner.objective
+
+    @property
+    def max_trials(self):
+        return self.tuner.max_trials
+
+    @property
+    def directory(self):
+        return self.tuner.directory
+
+    @property
+    def name(self):
+        return self.tuner.project_name
 
     def _meta_build(self, dataset):
         # Using functional API.

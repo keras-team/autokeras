@@ -18,23 +18,23 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     both the Preprocessors and Hypermodel. For every trial, the HyperGraph build the
     PreprocessGraph and KerasGraph with the provided HyperParameters.
 
+    The AutoTuner uses EarlyStopping for acceleration during the search and fully
+    train the model with full epochs and with both training and validation data.
+    The fully trained model is the best model to be used by AutoModel.
+
     # Arguments
-        **kwargs: The other args supported by KerasTuner.
+        **kwargs: The args supported by KerasTuner.
     """
 
-    def __init__(self,
-                 **kwargs):
-        super().__init__(
-            hypermodel=lambda hp: None,
-            **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._finished = False
         # hyper_graph is set during fit of AutoModel.
         self.hyper_graph = None
         self.preprocess_graph = None
         self.fit_on_val_data = None
 
-    def _populate_initial_space(self):
-        # Override the function to prevent building the model during initialization.
+    def _populate_initial_space(self): # Override the function to prevent building the model during initialization.
         pass
 
     def compile(self,
@@ -333,6 +333,7 @@ class GreedyOracle(kerastuner.Oracle):
 class Greedy(AutoTuner):
 
     def __init__(self,
+                 hypermodel,
                  objective,
                  max_trials,
                  seed=None,
@@ -342,6 +343,7 @@ class Greedy(AutoTuner):
                  **kwargs):
         self.seed = seed
         oracle = GreedyOracle(
+            hypermodel=hypermodel,
             objective=objective,
             max_trials=max_trials,
             seed=seed,
