@@ -81,14 +81,9 @@ class AutoModel(object):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self.seed = seed
-<<<<<<< HEAD
-=======
         if seed:
             np.random.seed(seed)
             tf.random.set_seed(seed)
-        self.hyper_graph = None
-        self.objective = objective
->>>>>>> update greedy tuner
         # TODO: Support passing a tuner instance.
         if isinstance(tuner, str):
             tuner = tuner_module.get_tuner_class(tuner)
