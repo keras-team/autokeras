@@ -18,30 +18,24 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     both the Preprocessors and Hypermodel. For every trial, the HyperGraph build the
     PreprocessGraph and KerasGraph with the provided HyperParameters.
 
+    The AutoTuner uses EarlyStopping for acceleration during the search and fully
+    train the model with full epochs and with both training and validation data.
+    The fully trained model is the best model to be used by AutoModel.
+
     # Arguments
-        hyper_graph: HyperGraph. The HyperGraph to be tuned.
-        hypermodel: KerasGraph. The KerasGraph built from the HyperGraph.
-        fit_on_val_data: Boolean. Use the training set and validation set for the
-            final fit of the best model.
-        overwrite: Boolean. default `True`. If `False`, reloads an existing project
-            of the same name if one is found. Otherwise, overwrites the project.
-        **kwargs: The other args supported by KerasTuner.
+        **kwargs: The args supported by KerasTuner.
     """
 
-    def __init__(self,
-                 hyper_graph,
-                 hypermodel,
-                 fit_on_val_data=False,
-                 overwrite=True,
-                 **kwargs):
-        self.hyper_graph = hyper_graph
-        super().__init__(
-            hypermodel=hm_module.KerasHyperModel(hypermodel),
-            overwrite=overwrite,
-            **kwargs)
-        self.preprocess_graph = None
-        self.fit_on_val_data = fit_on_val_data
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._finished = False
+        # hyper_graph is set during fit of AutoModel.
+        self.hyper_graph = None
+        self.preprocess_graph = None
+
+    # Override the function to prevent building the model during initialization.
+    def _populate_initial_space(self):
+        pass
 
     def run_trial(self, trial, **fit_kwargs):
         """Preprocess the x and y before calling the base run_trial."""
@@ -118,15 +112,27 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         model.load_weights(self.best_model_path)
         return preprocess_graph, model
 
-    def search(self, callbacks=None, **fit_kwargs):
+    def search(self,
+               hyper_graph,
+               callbacks=None,
+               fit_on_val_data=False,
+               **fit_kwargs):
         """Search for the best HyperParameters.
 
         If there is not early-stopping in the callbacks, the early-stopping callback
         is injected to accelerate the search process. At the end of the search, the
         best model will be fully trained with the specified number of epochs.
+
+        # Arguments
+            hyper_graph: HyperGraph. The HyperGraph to be tuned.
+            callbacks: A list of callback functions. Defaults to None.
+            fit_on_val_data: Boolean. Use the training set and validation set for the
+                final fit of the best model.
         """
         if self._finished:
             return
+        self.hyper_graph = hyper_graph
+
         # Insert early-stopping for acceleration.
         if not callbacks:
             callbacks = []
@@ -139,13 +145,13 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
 
         # Fully train the best model with original callbacks.
         if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                    for callback in callbacks]) or self.fit_on_val_data:
+                    for callback in callbacks]) or fit_on_val_data:
             best_trial = self.oracle.get_best_trials(1)[0]
             best_hp = best_trial.hyperparameters
             preprocess_graph, keras_graph = self.hyper_graph.build_graphs(best_hp)
             fit_kwargs['callbacks'] = self._deepcopy_callbacks(callbacks)
             self._prepare_run(preprocess_graph, fit_kwargs, fit=True)
-            if self.fit_on_val_data:
+            if fit_on_val_data:
                 fit_kwargs['x'] = fit_kwargs['x'].concatenate(
                     fit_kwargs['validation_data'])
             model = keras_graph.build(best_hp)
@@ -201,9 +207,9 @@ class GreedyOracle(kerastuner.Oracle):
         stages = GreedyOracle.STAGES
         return stages[(stages.index(stage) + 1) % len(stages)]
 
-    def __init__(self, hyper_graph, seed=None, **kwargs):
+    def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
-        self.hyper_graph = hyper_graph
+        self.hyper_graph = None
         # Start from tuning the hyper block hps.
         self._stage = GreedyOracle.HYPER
         # Sets of HyperParameter names.
@@ -317,11 +323,9 @@ class GreedyOracle(kerastuner.Oracle):
 class Greedy(AutoTuner):
 
     def __init__(self,
-                 hyper_graph,
                  hypermodel,
                  objective,
                  max_trials,
-                 fit_on_val_data=False,
                  seed=None,
                  hyperparameters=None,
                  tune_new_entries=True,
@@ -329,22 +333,20 @@ class Greedy(AutoTuner):
                  **kwargs):
         self.seed = seed
         oracle = GreedyOracle(
-            hyper_graph=hyper_graph,
             objective=objective,
             max_trials=max_trials,
             seed=seed,
             hyperparameters=hyperparameters,
             tune_new_entries=tune_new_entries,
             allow_new_entries=allow_new_entries)
-        hp = oracle.get_space()
-        preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
-        oracle.update_space(hp)
         super().__init__(
-            hyper_graph=hyper_graph,
-            fit_on_val_data=fit_on_val_data,
-            oracle=oracle,
             hypermodel=hypermodel,
+            oracle=oracle,
             **kwargs)
+
+    def search(self, hyper_graph, **kwargs):
+        self.oracle.hyper_graph = hyper_graph
+        super().search(hyper_graph=hyper_graph, **kwargs)
 
 
 TUNER_CLASSES = {

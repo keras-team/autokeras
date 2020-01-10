@@ -1,9 +1,9 @@
 import pickle
 import re
-from packaging.version import parse
 
 import numpy as np
 import tensorflow as tf
+from packaging.version import parse
 from tensorflow.python.util import nest
 
 

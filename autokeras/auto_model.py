@@ -1,4 +1,3 @@
-import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
@@ -59,8 +58,9 @@ class AutoModel(object):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        tuner: String. It should be one of 'greedy', 'bayesian', 'hyperband' or
-            'random'. Defaults to 'greedy'.
+        tuner: String or subclass of AutoTuner. If use string, it should be one of
+            'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a subclass
+            of AutoTuner. Defaults to 'greedy'.
         overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
@@ -79,15 +79,18 @@ class AutoModel(object):
                  seed=None):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
-        self.name = name
-        self.max_trials = max_trials
-        self.directory = directory
         self.seed = seed
-        self.hyper_graph = None
-        self.objective = objective
         # TODO: Support passing a tuner instance.
-        self.tuner = tuner_module.get_tuner_class(tuner)
-        self.overwrite = overwrite
+        if isinstance(tuner, str):
+            tuner = tuner_module.get_tuner_class(tuner)
+        self.tuner = tuner(
+            hypermodel=lambda hp: None,
+            overwrite=overwrite,
+            objective=objective,
+            max_trials=max_trials,
+            directory=directory,
+            seed=self.seed,
+            project_name=name)
         self._split_dataset = False
         if all([isinstance(output_node, base.Head)
                 for output_node in self.outputs]):
@@ -95,18 +98,40 @@ class AutoModel(object):
         else:
             self.heads = [output_node.in_blocks[0] for output_node in self.outputs]
 
+    @property
+    def overwrite(self):
+        return self.tuner.overwrite
+
+    @property
+    def objective(self):
+        return self.tuner.objective
+
+    @property
+    def max_trials(self):
+        return self.tuner.max_trials
+
+    @property
+    def directory(self):
+        return self.tuner.directory
+
+    @property
+    def name(self):
+        return self.tuner.project_name
+
     def _meta_build(self, dataset):
         # Using functional API.
         if all([isinstance(output, base.Node) for output in self.outputs]):
-            self.hyper_graph = graph.HyperGraph(inputs=self.inputs,
-                                                outputs=self.outputs)
+            hyper_graph = graph.HyperGraph(inputs=self.inputs,
+                                           outputs=self.outputs)
         # Using input/output API.
         elif all([isinstance(output, base.Head) for output in self.outputs]):
-            self.hyper_graph = meta_model.assemble(inputs=self.inputs,
-                                                   outputs=self.outputs,
-                                                   dataset=dataset,
-                                                   seed=self.seed)
-            self.outputs = self.hyper_graph.outputs
+            hyper_graph = meta_model.assemble(inputs=self.inputs,
+                                              outputs=self.outputs,
+                                              dataset=dataset,
+                                              seed=self.seed)
+            self.outputs = hyper_graph.outputs
+
+        return hyper_graph
 
     def fit(self,
             x=None,
@@ -158,29 +183,7 @@ class AutoModel(object):
             validation_split=validation_split)
 
         # Initialize the hyper_graph.
-        self._meta_build(dataset)
-
-        # Initialize the Tuner.
-        # The hypermodel needs input_shape, which can only be known after
-        # preprocessing. So we preprocess the dataset once to get the input_shape,
-        # so that the hypermodel can be built in the initializer of the Tuner, which
-        # does not access the dataset.
-        hp = kerastuner.HyperParameters()
-        preprocess_graph, keras_graph = self.hyper_graph.build_graphs(hp)
-        preprocess_graph.preprocess(
-            dataset=dataset,
-            validation_data=validation_data,
-            fit=True)
-        self.tuner = self.tuner(
-            hyper_graph=self.hyper_graph,
-            hypermodel=keras_graph,
-            fit_on_val_data=self._split_dataset,
-            overwrite=self.overwrite,
-            objective=self.objective,
-            max_trials=self.max_trials,
-            directory=self.directory,
-            seed=self.seed,
-            project_name=self.name)
+        hyper_graph = self._meta_build(dataset)
 
         # Process the args.
         if callbacks is None:
@@ -196,6 +199,8 @@ class AutoModel(object):
                           epochs=epochs,
                           callbacks=callbacks,
                           validation_data=validation_data,
+                          hyper_graph=hyper_graph,
+                          fit_on_val_data=self._split_dataset,
                           **kwargs)
 
     def _process_xy(self, x, y=None, fit=False, predict=False):
