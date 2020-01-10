@@ -4,7 +4,6 @@ import kerastuner
 import pytest
 import tensorflow as tf
 
-import autokeras as ak
 from autokeras import tuner as tuner_module
 from tests import common
 
@@ -14,22 +13,10 @@ def tmp_dir(tmpdir_factory):
     return tmpdir_factory.mktemp('test_auto_model')
 
 
-def build_hyper_graph():
-    tf.keras.backend.clear_session()
-    image_input = ak.ImageInput(shape=(32, 32, 3))
-    merged_outputs = ak.ImageBlock()(image_input)
-    head = ak.ClassificationHead(num_classes=10)
-    head.output_shape = (10,)
-    classification_outputs = head(merged_outputs)
-    return ak.hypermodel.graph.HyperGraph(
-        inputs=image_input,
-        outputs=classification_outputs)
-
-
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
 @mock.patch('autokeras.tuner.Greedy._prepare_run')
 def test_add_early_stopping(_, base_tuner_search, tmp_dir):
-    hyper_graph = build_hyper_graph()
+    hyper_graph = common.build_hyper_graph()
     hp = kerastuner.HyperParameters()
     preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
     preprocess_graph.build(hp)
@@ -53,43 +40,6 @@ def test_add_early_stopping(_, base_tuner_search, tmp_dir):
                 for callback in callbacks])
 
 
-def test_random_oracle_state():
-    hyper_graph = build_hyper_graph()
-    oracle = tuner_module.GreedyOracle(
-        objective='val_loss',
-    )
-    oracle.hyper_graph = hyper_graph
-    oracle.set_state(oracle.get_state())
-    assert oracle.hyper_graph is hyper_graph
-
-
-@mock.patch('autokeras.tuner.GreedyOracle.get_best_trials')
-def test_random_oracle(fn):
-    hyper_graph = build_hyper_graph()
-    oracle = tuner_module.GreedyOracle(
-        objective='val_loss',
-    )
-    hp = kerastuner.HyperParameters()
-    preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
-    preprocess_graph.build(hp)
-    keras_graph.inputs[0].shape = hyper_graph.inputs[0].shape
-    keras_graph.build(hp)
-    oracle.hyper_graph = hyper_graph
-    trial = mock.Mock()
-    trial.hyperparameters = hp
-    fn.return_value = [trial]
-
-    oracle.update_space(hp)
-    for i in range(2000):
-        oracle._populate_space(str(i))
-
-    assert 'optimizer' in oracle._hp_names[tuner_module.GreedyOracle.OPT]
-    assert 'classification_head_1/dropout_rate' in oracle._hp_names[
-        tuner_module.GreedyOracle.ARCH]
-    assert 'image_block_1/block_type' in oracle._hp_names[
-        tuner_module.GreedyOracle.HYPER]
-
-
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.__init__')
 @mock.patch('autokeras.tuner.Greedy._prepare_run')
 def test_overwrite_init(_, base_tuner_init, tmp_dir):
@@ -106,7 +56,7 @@ def test_overwrite_init(_, base_tuner_init, tmp_dir):
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
 @mock.patch('autokeras.tuner.Greedy._prepare_run')
 def test_overwrite_search(_, base_tuner_search, tmp_dir):
-    hyper_graph = build_hyper_graph()
+    hyper_graph = common.build_hyper_graph()
     hp = kerastuner.HyperParameters()
     preprocess_graph, keras_graph = hyper_graph.build_graphs(hp)
     preprocess_graph.build(hp)
