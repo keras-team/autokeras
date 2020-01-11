@@ -86,7 +86,11 @@ class GreedyOracle(kerastuner.Oracle):
     def _generate_stage(self):
         probabilities = np.array([pow(len(value), 2)
                                   for value in self._hp_names.values()])
-        probabilities = probabilities / np.sum(probabilities)
+        sum_p = np.sum(probabilities)
+        if sum_p == 0:
+            probabilities = np.array([1] * len(probabilities))
+            sum_p = np.sum(probabilities)
+        probabilities = probabilities / sum_p
         return np.random.choice(list(self._hp_names.keys()), p=probabilities)
 
     def _populate_space(self, trial_id):
