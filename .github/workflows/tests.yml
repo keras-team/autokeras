@@ -28,6 +28,7 @@ jobs:
         pip install pytest
         pytest --cov=autokeras --cov-report xml:coverage.xml
     - name: Codecov
+      if: matrix.os == 'ubuntu-latest'
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }} #required
