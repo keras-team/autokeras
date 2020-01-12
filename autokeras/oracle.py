@@ -16,7 +16,10 @@ class GreedyOracle(kerastuner.Oracle):
     trial so far for the rest of the HyperParameters values.
 
     # Arguments
-        hyper_graph: HyperGraph. The hyper_graph model to be tuned.
+        initial_hps: A list of dictionaries in the form of
+            {HyperParameter name (String): HyperParameter value}.
+            Each dictionary is one set of HyperParameters, which are used as the
+            initial trials for the search. Defaults to None.
         seed: Int. Random seed.
     """
 
@@ -31,8 +34,13 @@ class GreedyOracle(kerastuner.Oracle):
         stages = GreedyOracle.STAGES
         return stages[(stages.index(stage) + 1) % len(stages)]
 
-    def __init__(self, seed=None, **kwargs):
+    def __init__(self,
+                 initial_hps=None,
+                 seed=None,
+                 **kwargs):
         super().__init__(**kwargs)
+        self.initial_hps = initial_hps or []
+        self._tried_initial_hps = [False] * len(self.initial_hps)
         self.hyper_graph = None
         # Sets of HyperParameter names.
         self._hp_names = {
@@ -93,7 +101,17 @@ class GreedyOracle(kerastuner.Oracle):
         probabilities = probabilities / sum_p
         return np.random.choice(list(self._hp_names.keys()), p=probabilities)
 
+    def _next_initial_hps(self):
+        for index, hps in enumerate(self.initial_hps):
+            if not self._tried_initial_hps[index]:
+                self._tried_initial_hps[index] = True
+                return hps
+
     def _populate_space(self, trial_id):
+        if not len(self._tried_initial_hps) == len(self.initial_hps):
+            return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
+                    'values': self._next_initial_hps()}
+
         stage = self._generate_stage()
         for _ in range(len(GreedyOracle.STAGES)):
             values = self._generate_stage_values(stage)

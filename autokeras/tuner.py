@@ -187,6 +187,7 @@ class Greedy(AutoTuner):
                  hypermodel,
                  objective,
                  max_trials,
+                 initial_hps=None,
                  seed=None,
                  hyperparameters=None,
                  tune_new_entries=True,
@@ -196,6 +197,7 @@ class Greedy(AutoTuner):
         oracle = oracle_module.GreedyOracle(
             objective=objective,
             max_trials=max_trials,
+            initial_hps=initial_hps,
             seed=seed,
             hyperparameters=hyperparameters,
             tune_new_entries=tune_new_entries,
@@ -210,12 +212,42 @@ class Greedy(AutoTuner):
         super().search(hyper_graph=hyper_graph, **kwargs)
 
 
+INITIAL_HPS = {
+    'image_classifier': [{
+        'image_block_1/block_type':
+        'vanilla', 'image_block_1/normalize': True,
+        'image_block_1/augment': False,
+        'image_block_1_vanilla/kernel_size': 3,
+        'image_block_1_vanilla/num_blocks': 2,
+        'image_block_1_vanilla/separable': True,
+        'image_block_1_vanilla/filters_0_1': 32,
+        'image_block_1_vanilla/filters_0_2': 32,
+        'image_block_1_vanilla/filters_1_1': 32,
+        'image_block_1_vanilla/filters_1_2': 16,
+        'spatial_reduction_1/reduction_type': 'global_avg',
+        'dense_block_1/num_layers': 2,
+        'dense_block_1/use_batchnorm': False,
+        'dense_block_1/dropout_rate': 0,
+        'dense_block_1/units_0': 32,
+        'dense_block_1/units_1': 32,
+        'optimizer': 'adam'
+    }],
+}
+
+
+class ImageClassifierTuner(Greedy):
+    def __init__(self, **kwargs):
+        super().__init__(
+            initial_hps=INITIAL_HPS['image_classifier'],
+            **kwargs)
+
+
 TUNER_CLASSES = {
     'bayesian': BayesianOptimization,
     'random': RandomSearch,
     'hyperband': Hyperband,
     'greedy': Greedy,
-    'image_classifier': Greedy,
+    'image_classifier': ImageClassifierTuner,
     'image_regressor': Greedy,
     'text_classifier': Greedy,
     'text_regressor': Greedy,
