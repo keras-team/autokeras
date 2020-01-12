@@ -19,11 +19,9 @@ jobs:
         pip install tensorflow
     - name: Lint with flake8
       run: |
-        pip install flake8
         flake8
     - name: Test with pytest
       run: |
-        pip install pytest
         pytest --cov=autokeras --cov-report xml:coverage.xml
     - name: Codecov
       uses: codecov/codecov-action@v1
