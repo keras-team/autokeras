@@ -4,7 +4,7 @@ on: [push, pull_request]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@v2
