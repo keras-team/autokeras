@@ -108,7 +108,7 @@ class GreedyOracle(kerastuner.Oracle):
                 return hps
 
     def _populate_space(self, trial_id):
-        if not len(self._tried_initial_hps) == len(self.initial_hps):
+        if not all(self._tried_initial_hps):
             return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
                     'values': self._next_initial_hps()}
 

@@ -48,10 +48,10 @@ class ImageBlock(base.HyperBlock):
 
         normalize = self.normalize
         if normalize is None:
-            normalize = hp.Choice('normalize', [True, False], default=True)
+            normalize = hp.Boolean('normalize', default=True)
         augment = self.augment
         if augment is None:
-            augment = hp.Choice('augment', [True, False], default=False)
+            augment = hp.Boolean('augment', default=False)
         if normalize:
             output_node = preprocessor_module.Normalization()(output_node)
         if augment:
