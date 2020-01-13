@@ -214,7 +214,7 @@ class Greedy(AutoTuner):
 
 INITIAL_HPS = {
     'image_classifier': [{
-        'image_block_1/block_type': 'vanilla', 
+        'image_block_1/block_type': 'vanilla',
         'image_block_1/normalize': True,
         'image_block_1/augment': False,
         'image_block_1_vanilla/kernel_size': 3,
