@@ -4,28 +4,16 @@
 [![codecov](https://codecov.io/gh/keras-team/autokeras/branch/master/graph/badge.svg)](https://codecov.io/gh/keras-team/autokeras)
 [![PyPI version](https://badge.fury.io/py/autokeras.svg)](https://badge.fury.io/py/autokeras")
 
-
 Official Website: [autokeras.com](https://autokeras.com)
 
 ##
 
-AutoKeras is an open source software library for automated machine learning (AutoML).
-It is developed by <a href="http://faculty.cs.tamu.edu/xiahu/index.html" target="_blank" rel="nofollow">DATA Lab</a> at Texas A&M University and community contributors.
-The ultimate goal of AutoML is to provide easily accessible deep learning tools to domain experts with limited data science or machine learning background.
-AutoKeras provides functions to automatically search for architecture and hyperparameters of deep learning models.
+AutoKeras: An AutoML system based on Keras.
+It is developed by <a href="http://faculty.cs.tamu.edu/xiahu/index.html" target="_blank" rel="nofollow">DATA Lab</a> at Texas A&M University.
+The goal of AutoKeras is to make machine learning accessible for everyone.
 
 # AutoKeras 1.0 is coming soon!
 
-## Installation
-
-To install the package, please use the `pip` installation as follows:
-
-```shell
-pip3 install autokeras # for 0.4 version
-pip3 install autokeras==1.0.0b0 # for 1.0 version
-```
-
-**Note:** currently, AutoKeras is only compatible with: **Python 3**.
 
 ## Example
 
@@ -40,6 +28,17 @@ results = clf.predict(x_test)
 ```
 
 For detailed tutorial, please check [here](https://autokeras.com/tutorial/overview/).
+
+## Installation
+
+To install the package, please use the `pip` installation as follows:
+
+```shell
+pip3 install autokeras # for 0.4 version
+pip3 install autokeras==1.0.0b0 # for 1.0 version
+```
+
+**Note:** currently, AutoKeras is only compatible with: **Python 3**.
 
 ## Cite this work
 
