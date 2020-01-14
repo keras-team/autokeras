@@ -230,6 +230,21 @@ INITIAL_HPS = {
         'dense_block_1/units_0': 128,
         'classification_head_1/dropout_rate': 0.5,
         'optimizer': 'adam'
+    }, {
+        'image_block_1/block_type': 'resnet',
+        'image_block_1/normalize': True,
+        'image_block_1/augment': True,
+        'image_block_1_resnet/version': 'v2',
+        'image_block_1_resnet/pooling': 'avg',
+        'image_block_1_resnet/conv3_depth': 4,
+        'image_block_1_resnet/conv4_depth': 6,
+        'dense_block_1/num_layers': 2,
+        'dense_block_1/use_batchnorm': False,
+        'dense_block_1/dropout_rate': 0,
+        'dense_block_1/units_0': 32,
+        'dense_block_1/units_1': 32,
+        'classification_head_1/dropout_rate': 0,
+        'optimizer': 'adam'
     }],
 }
 
