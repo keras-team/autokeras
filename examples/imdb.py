@@ -1,3 +1,7 @@
+"""
+Search for a good model for the
+[IMDB](https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification) dataset.
+"""
 import numpy as np
 import tensorflow as tf
 
@@ -32,36 +36,15 @@ def imdb_raw():
     return (x_train, y_train), (x_test, y_test)
 
 
-def task_api():
-    (x_train, y_train), (x_test, y_test) = imdb_raw()
-    clf = ak.TextClassifier(max_trials=3, seed=5)
-    clf.fit(x_train, y_train, validation_split=0.2)
-    return clf.evaluate(x_test, y_test)
+# Prepare the data.
+(x_train, y_train), (x_test, y_test) = imdb_raw()
+print(x_train.shape)  # (25000,)
+print(y_train.shape)  # (25000, 1)
+print(x_train[0][:50])  # <START> this film was just brilliant casting <UNK>
 
-
-def functional_api():
-    max_features = 20000
-    max_words = 400
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.imdb.load_data(
-        num_words=max_features,
-        index_from=3)
-    x_train = tf.keras.preprocessing.sequence.pad_sequences(
-        x_train, maxlen=max_words)
-    x_test = tf.keras.preprocessing.sequence.pad_sequences(x_test, maxlen=max_words)
-    print(x_train.dtype)
-    print(x_train[:10])
-    input_node = ak.Input()
-    output_node = input_node
-    output_node = ak.EmbeddingBlock(max_features=max_features)(output_node)
-    output_node = ak.ConvBlock()(output_node)
-    output_node = ak.SpatialReduction()(output_node)
-    output_node = ak.DenseBlock()(output_node)
-    output_node = ak.ClassificationHead()(output_node)
-    clf = ak.AutoModel(input_node, output_node, seed=5, max_trials=3)
-    clf.fit(x_train, y_train, validation_split=0.2)
-    return clf.evaluate(x_test, y_test)
-
-
-if __name__ == '__main__':
-    task_api()
-    # functional_api()
+# Initialize the TextClassifier
+clf = ak.TextClassifier(max_trials=3)
+# Search for the best model.
+clf.fit(x_train, y_train)
+# Evaluate on the testing data.
+print('Accuracy: {accuracy}'.format(clf.evaluate(x_test, y_test)))
