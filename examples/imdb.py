@@ -1,6 +1,7 @@
 """
 Search for a good model for the
-[IMDB](https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification) dataset.
+[IMDB](
+https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification) dataset.
 """
 import numpy as np
 import tensorflow as tf
