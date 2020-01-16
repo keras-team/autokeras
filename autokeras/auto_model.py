@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
@@ -80,6 +81,9 @@ class AutoModel(object):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self.seed = seed
+        if seed:
+            np.random.seed(seed)
+            tf.random.set_seed(seed)
         # TODO: Support passing a tuner instance.
         if isinstance(tuner, str):
             tuner = tuner_module.get_tuner_class(tuner)

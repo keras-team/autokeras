@@ -123,13 +123,17 @@ class ClassificationHead(base.Head):
         input_node = inputs[0]
         output_node = input_node
 
+        # Reduce the tensor to a vector.
         if len(output_node.shape) > 2:
-            dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
-                                                          [0.0, 0.25, 0.5],
-                                                          default=0)
-            if dropout_rate > 0:
-                output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
             output_node = block_module.SpatialReduction().build(hp, output_node)
+
+        if self.dropout_rate is not None:
+            dropout_rate = self.dropout_rate
+        else:
+            dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0)
+
+        if dropout_rate > 0:
+            output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
         if self.loss == 'binary_crossentropy':
             output_node = Sigmoid(name=self.name)(output_node)

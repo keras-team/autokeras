@@ -1,12 +1,12 @@
 import copy
 import os
-import random
 
 import kerastuner
 import kerastuner.engine.hypermodel as hm_module
 import tensorflow as tf
 
-from autokeras.hypermodel import base
+from autokeras import const
+from autokeras import oracle as oracle_module
 
 
 class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
@@ -182,159 +182,23 @@ class BayesianOptimization(AutoTuner, kerastuner.BayesianOptimization):
     pass
 
 
-class GreedyOracle(kerastuner.Oracle):
-    """An oracle combining random search and greedy algorithm.
-
-    It groups the HyperParameters into several categories, namely, HyperGraph,
-    Preprocessor, Architecture, and Optimization. The oracle tunes each group
-    separately using random search. In each trial, it use a greedy strategy to
-    generate new values for one of the categories of HyperParameters and use the best
-    trial so far for the rest of the HyperParameters values.
-
-    # Arguments
-        hyper_graph: HyperGraph. The hyper_graph model to be tuned.
-        seed: Int. Random seed.
-    """
-
-    HYPER = 'HYPER'
-    PREPROCESS = 'PREPROCESS'
-    OPT = 'OPT'
-    ARCH = 'ARCH'
-    STAGES = [HYPER, PREPROCESS, OPT, ARCH]
-
-    @staticmethod
-    def next_stage(stage):
-        stages = GreedyOracle.STAGES
-        return stages[(stages.index(stage) + 1) % len(stages)]
-
-    def __init__(self, seed=None, **kwargs):
-        super().__init__(**kwargs)
-        self.hyper_graph = None
-        # Start from tuning the hyper block hps.
-        self._stage = GreedyOracle.HYPER
-        # Sets of HyperParameter names.
-        self._hp_names = {
-            GreedyOracle.HYPER: set(),
-            GreedyOracle.PREPROCESS: set(),
-            GreedyOracle.OPT: set(),
-            GreedyOracle.ARCH: set(),
-        }
-        # The quota used to tune each category of hps.
-        self._capacity = {
-            GreedyOracle.HYPER: 1,
-            GreedyOracle.PREPROCESS: 1,
-            GreedyOracle.OPT: 1,
-            GreedyOracle.ARCH: 4,
-        }
-        self._stage_trial_count = 0
-        self.seed = seed or random.randint(1, 1e4)
-        # Incremented at every call to `populate_space`.
-        self._seed_state = self.seed
-        self._tried_so_far = set()
-        self._max_collisions = 5
-
-    def set_state(self, state):
-        super().set_state(state)
-        self._stage = state['stage']
-        self._capacity = state['capacity']
-
-    def get_state(self):
-        state = super().get_state()
-        state.update({
-            'stage': self._stage,
-            'capacity': self._capacity,
-        })
-        return state
-
-    def update_space(self, hyperparameters):
-        # Get the block names.
-        preprocess_graph, keras_graph = self.hyper_graph.build_graphs(
-            hyperparameters)
-
-        # Add the new Hyperparameters to different categories.
-        ref_names = {hp.name for hp in self.hyperparameters.space}
-        for hp in hyperparameters.space:
-            if hp.name not in ref_names:
-                hp_type = None
-                if any([hp.name.startswith(block.name)
-                        for block in self.hyper_graph.blocks
-                        if isinstance(block, base.HyperBlock)]):
-                    hp_type = GreedyOracle.HYPER
-                elif any([hp.name.startswith(block.name)
-                          for block in preprocess_graph.blocks]):
-                    hp_type = GreedyOracle.PREPROCESS
-                elif any([hp.name.startswith(block.name)
-                          for block in keras_graph.blocks]):
-                    hp_type = GreedyOracle.ARCH
-                else:
-                    hp_type = GreedyOracle.OPT
-                self._hp_names[hp_type].add(hp.name)
-
-        super().update_space(hyperparameters)
-
-    def _populate_space(self, trial_id):
-        for _ in range(len(GreedyOracle.STAGES)):
-            values = self._generate_stage_values()
-            # Reached max collisions.
-            if values is None:
-                # Try next stage.
-                self._stage = GreedyOracle.next_stage(self._stage)
-                self._stage_trial_count = 0
-                continue
-            # Values found.
-            self._stage_trial_count += 1
-            if self._stage_trial_count == self._capacity[self._stage]:
-                self._stage = GreedyOracle.next_stage(self._stage)
-                self._stage_trial_count = 0
-            return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
-                    'values': values}
-        # All stages reached max collisions.
-        return {'status': kerastuner.engine.trial.TrialStatus.STOPPED,
-                'values': None}
-
-    def _generate_stage_values(self):
-        best_trials = self.get_best_trials()
-        if best_trials:
-            best_values = best_trials[0].hyperparameters.values
-        else:
-            best_values = self.hyperparameters.values
-        collisions = 0
-        while 1:
-            # Generate new values for the current stage.
-            values = {}
-            for p in self.hyperparameters.space:
-                if p.name in self._hp_names[self._stage]:
-                    values[p.name] = p.random_sample(self._seed_state)
-                    self._seed_state += 1
-            values = {**best_values, **values}
-            # Keep trying until the set of values is unique,
-            # or until we exit due to too many collisions.
-            values_hash = self._compute_values_hash(values)
-            if values_hash not in self._tried_so_far:
-                self._tried_so_far.add(values_hash)
-                break
-            collisions += 1
-            if collisions > self._max_collisions:
-                # Reached max collisions. No value to return.
-                return None
-        return values
-
-
 class Greedy(AutoTuner):
 
     def __init__(self,
                  hypermodel,
                  objective,
                  max_trials,
+                 initial_hps=None,
                  seed=None,
                  hyperparameters=None,
                  tune_new_entries=True,
                  allow_new_entries=True,
                  **kwargs):
         self.seed = seed
-        oracle = GreedyOracle(
+        oracle = oracle_module.GreedyOracle(
             objective=objective,
             max_trials=max_trials,
+            initial_hps=initial_hps,
             seed=seed,
             hyperparameters=hyperparameters,
             tune_new_entries=tune_new_entries,
@@ -349,12 +213,19 @@ class Greedy(AutoTuner):
         super().search(hyper_graph=hyper_graph, **kwargs)
 
 
+class ImageClassifierTuner(Greedy):
+    def __init__(self, **kwargs):
+        super().__init__(
+            initial_hps=const.INITIAL_HPS['image_classifier'],
+            **kwargs)
+
+
 TUNER_CLASSES = {
     'bayesian': BayesianOptimization,
     'random': RandomSearch,
     'hyperband': Hyperband,
     'greedy': Greedy,
-    'image_classifier': Greedy,
+    'image_classifier': ImageClassifierTuner,
     'image_regressor': Greedy,
     'text_classifier': Greedy,
     'text_regressor': Greedy,

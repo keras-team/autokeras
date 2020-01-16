@@ -52,10 +52,11 @@ class DenseBlock(base.Block):
         num_layers = self.num_layers or hp.Choice('num_layers', [1, 2, 3], default=2)
         use_batchnorm = self.use_batchnorm
         if use_batchnorm is None:
-            use_batchnorm = hp.Choice('use_batchnorm', [True, False], default=False)
-        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
-                                                      [0.0, 0.25, 0.5],
-                                                      default=0)
+            use_batchnorm = hp.Boolean('use_batchnorm', default=False)
+        if self.dropout_rate is not None:
+            dropout_rate = self.dropout_rate
+        else:
+            dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0)
 
         for i in range(num_layers):
             units = hp.Choice(
@@ -66,7 +67,8 @@ class DenseBlock(base.Block):
             if use_batchnorm:
                 output_node = tf.keras.layers.BatchNormalization()(output_node)
             output_node = tf.keras.layers.ReLU()(output_node)
-            output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
+            if dropout_rate > 0:
+                output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         return output_node
 
 
@@ -121,7 +123,7 @@ class RNNBlock(base.Block):
 
         bidirectional = self.bidirectional
         if bidirectional is None:
-            bidirectional = hp.Choice('bidirectional', [True, False], default=True)
+            bidirectional = hp.Boolean('bidirectional', default=True)
         layer_type = self.layer_type or hp.Choice('layer_type',
                                                   ['gru', 'lstm'],
                                                   default='lstm')
@@ -157,24 +159,30 @@ class ConvBlock(base.Block):
             tuned automatically.
         separable: Boolean. Whether to use separable conv layers.
             If left unspecified, it will be tuned automatically.
+        dropout_rate: Float. Between 0 and 1. The dropout rate for after the
+            convolutional layers. If left unspecified, it will be tuned
+            automatically.
     """
 
     def __init__(self,
                  kernel_size=None,
                  num_blocks=None,
                  separable=None,
+                 dropout_rate=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.kernel_size = kernel_size
         self.num_blocks = num_blocks
         self.separable = separable
+        self.dropout_rate = dropout_rate
 
     def get_config(self):
         config = super().get_config()
         config.update({
             'kernel_size': self.kernel_size,
             'num_blocks': self.num_blocks,
-            'separable': self.separable})
+            'separable': self.separable,
+            'dropout_rate': self.dropout_rate})
         return config
 
     def build(self, hp, inputs=None):
@@ -191,13 +199,18 @@ class ConvBlock(base.Block):
                                                   default=2)
         separable = self.separable
         if separable is None:
-            separable = hp.Choice('separable', [True, False], default=False)
+            separable = hp.Boolean('separable', default=False)
 
         if separable:
             conv = utils.get_sep_conv(input_node.shape)
         else:
             conv = utils.get_conv(input_node.shape)
         pool = utils.get_max_pooling(input_node.shape)
+
+        if self.dropout_rate is not None:
+            dropout_rate = self.dropout_rate
+        else:
+            dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0)
 
         for i in range(num_blocks):
             output_node = conv(
@@ -217,6 +230,8 @@ class ConvBlock(base.Block):
             output_node = pool(
                 kernel_size - 1,
                 padding=self._get_padding(kernel_size - 1, output_node))(output_node)
+            if dropout_rate > 0:
+                output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         return output_node
 
     @staticmethod
@@ -546,9 +561,10 @@ class EmbeddingBlock(base.Block):
                 input_length=input_node.shape[1],
                 trainable=True)
         output_node = layer(input_node)
-        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
-                                                      [0.0, 0.25, 0.5],
-                                                      default=0.25)
+        if self.dropout_rate is not None:
+            dropout_rate = self.dropout_rate
+        else:
+            dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0.25)
         if dropout_rate > 0:
             output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         return output_node
