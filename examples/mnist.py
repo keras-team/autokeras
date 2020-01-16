@@ -5,11 +5,8 @@ import autokeras as ak
 
 def task_api():
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    clf = ak.ImageClassifier(seed=5, max_trials=1)
-    clf.fit(x_train, y_train, validation_split=0.2, epochs=1)
-    ak.utils.pickle_to_file(
-        clf.tuner.oracle.get_best_trials(1)[0].hyperparameters.values,
-        '/tmp/mnist_best_hps')
+    clf = ak.ImageClassifier(seed=5, max_trials=3)
+    clf.fit(x_train, y_train, validation_split=0.2)
     return clf.evaluate(x_test, y_test)
 
 
