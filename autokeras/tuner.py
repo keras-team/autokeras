@@ -213,7 +213,6 @@ class Greedy(AutoTuner):
         super().search(hyper_graph=hyper_graph, **kwargs)
 
 
-
 class ImageClassifierTuner(Greedy):
     def __init__(self, **kwargs):
         super().__init__(

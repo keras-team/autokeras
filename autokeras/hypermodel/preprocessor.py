@@ -88,7 +88,7 @@ class Normalization(base.Preprocessor):
 
 class TextToIntSequence(base.Preprocessor):
     """Convert raw texts to sequences of word indices.
-    
+
     # Arguments
         max_len: Int. The maximum length of a sentence. If unspecified, the length of
             the longest sentence will be used.
@@ -97,8 +97,8 @@ class TextToIntSequence(base.Preprocessor):
             Defaults to 20000.
     """
 
-    def __init__(self, 
-                 max_len=None, 
+    def __init__(self,
+                 max_len=None,
                  num_words=20000,
                  **kwargs):
         super().__init__(**kwargs)

@@ -33,4 +33,3 @@ INITIAL_HPS = {
         'optimizer': 'adam'
     }],
 }
-
