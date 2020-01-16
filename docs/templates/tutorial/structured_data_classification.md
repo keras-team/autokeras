@@ -2,7 +2,7 @@
 ## A Simple Example
 The first step is to prepare your data. Here we use the [Titanic
 dataset](https://www.kaggle.com/c/titanic) as an example. You can download the CSV
-files [here](https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification).
+files [here](https://github.com/keras-team/autokeras/tree/master/tests/fixtures/titanic).
 
 The second step is to run the
 [StructuredDataClassifier](/structured_data_classifier).

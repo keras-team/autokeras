@@ -27,7 +27,7 @@ extra_javascript:
 nav:
   - Home: index.md
   - Installation: install.md
-  - Getting Started 1.0:
+  - Getting Started:
     - Overview: tutorial/overview.md
     - Image Classification: tutorial/image_classification.md
     - Image Regression: tutorial/image_regression.md
@@ -38,7 +38,10 @@ nav:
     - Multi-Modal and Multi-Task: tutorial/multi.md
     - Customized Model: tutorial/customized.md
     - Export Model: tutorial/export.md
-  - Getting Started 0.4: start.md
+  - Examples:
+    - MNIST Hand-Written Digits: examples/mnist.md
+    - IMDB Movie Reviews: examples/imdb.md
+    - Titanic Survival Prediction: examples/titanic.md
   - Docker: docker.md
   - Contributing Guide: contributing.md
   - Documentation:

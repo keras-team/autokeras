@@ -12,9 +12,6 @@ AutoKeras: An AutoML system based on Keras.
 It is developed by <a href="http://faculty.cs.tamu.edu/xiahu/index.html" target="_blank" rel="nofollow">DATA Lab</a> at Texas A&M University.
 The goal of AutoKeras is to make machine learning accessible for everyone.
 
-# AutoKeras 1.0 is coming soon!
-
-
 ## Example
 
 Here is a short example of using the package.
@@ -34,11 +31,11 @@ For detailed tutorial, please check [here](https://autokeras.com/tutorial/overvi
 To install the package, please use the `pip` installation as follows:
 
 ```shell
-pip3 install autokeras # for 0.4 version
-pip3 install autokeras==1.0.0b0 # for 1.0 version
+pip3 install autokeras
 ```
 
-**Note:** currently, AutoKeras is only compatible with: **Python 3**.
+Please follow the [installation guide](https://autokeras.com/install) for more details.
+**Note:** Currently, AutoKeras is only compatible with **Python 3**.
 
 ## Cite this work
 
