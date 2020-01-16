@@ -18,6 +18,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e .[tests] --progress-bar off
         pip install tensorflow
+        pip install twine
     - name: Lint with flake8
       run: |
         pip install flake8
