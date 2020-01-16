@@ -28,7 +28,7 @@ def assemble(inputs, outputs, dataset, seed=None):
         if isinstance(input_node, node.TextInput):
             assemblers.append(TextAssembler())
         if isinstance(input_node, node.ImageInput):
-            assemblers.append(ImageAssembler(seed=seed))
+            assemblers.append(ImageAssembler())
         if isinstance(input_node, node.StructuredDataInput):
             assemblers.append(StructuredDataAssembler(seed=seed))
         if isinstance(input_node, node.TimeSeriesInput):
@@ -125,9 +125,8 @@ class TextAssembler(Assembler):
 class ImageAssembler(Assembler):
     """Assembles the ImageBlock based on training dataset."""
 
-    def __init__(self, seed=None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.seed = seed
         self._shape = None
         self._num_samples = 0
 
@@ -136,7 +135,7 @@ class ImageAssembler(Assembler):
         self._num_samples += 1
 
     def assemble(self, input_node):
-        block = hyperblock.ImageBlock(seed=self.seed)
+        block = hyperblock.ImageBlock()
         if max(self._shape[0], self._shape[1]) < 32:
             if self._num_samples < 10000:
                 self.hps.append(hp_module.Choice(

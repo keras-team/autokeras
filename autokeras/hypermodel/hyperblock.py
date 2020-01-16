@@ -25,20 +25,17 @@ class ImageBlock(base.HyperBlock):
                  block_type=None,
                  normalize=None,
                  augment=None,
-                 seed=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.block_type = block_type
         self.normalize = normalize
         self.augment = augment
-        self.seed = seed
 
     def get_config(self):
         config = super().get_config()
         config.update({'block_type': self.block_type,
                        'normalize': self.normalize,
-                       'augment': self.augment,
-                       'seed': self.seed})
+                       'augment': self.augment})
         return config
 
     def build(self, hp, inputs=None):
@@ -51,10 +48,10 @@ class ImageBlock(base.HyperBlock):
 
         normalize = self.normalize
         if normalize is None:
-            normalize = hp.Choice('normalize', [True, False], default=True)
+            normalize = hp.Boolean('normalize', default=True)
         augment = self.augment
         if augment is None:
-            augment = hp.Choice('augment', [True, False], default=False)
+            augment = hp.Boolean('augment', default=False)
         if normalize:
             output_node = preprocessor_module.Normalization()(output_node)
         if augment:
@@ -77,8 +74,9 @@ class TextBlock(base.HyperBlock):
         vectorizer: String. 'sequence' or 'ngram'. If it is 'sequence',
             TextToIntSequence will be used. If it is 'ngram', TextToNgramVector will
             be used. If unspecified, it will be tuned automatically.
-        pretraining: Boolean. Whether to use pretraining weights in the N-gram
-            vectorizer. If unspecified, it will be tuned automatically.
+        pretraining: String. 'random' (use random weights instead any pretrained
+            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
+            If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self, vectorizer=None, pretraining=None, **kwargs):
