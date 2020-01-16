@@ -74,8 +74,9 @@ class TextBlock(base.HyperBlock):
         vectorizer: String. 'sequence' or 'ngram'. If it is 'sequence',
             TextToIntSequence will be used. If it is 'ngram', TextToNgramVector will
             be used. If unspecified, it will be tuned automatically.
-        pretraining: Boolean. Whether to use pretraining weights in the N-gram
-            vectorizer. If unspecified, it will be tuned automatically.
+        pretraining: String. 'random' (use random weights instead any pretrained
+            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
+            If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self, vectorizer=None, pretraining=None, **kwargs):

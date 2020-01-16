@@ -7,7 +7,6 @@ import tensorflow as tf
 from sklearn.preprocessing import normalize
 from tensorflow.python.util import nest
 
-from autokeras import const
 from autokeras import encoder
 from autokeras import utils
 from autokeras.hypermodel import base
@@ -88,14 +87,26 @@ class Normalization(base.Preprocessor):
 
 
 class TextToIntSequence(base.Preprocessor):
-    """Convert raw texts to sequences of word indices."""
+    """Convert raw texts to sequences of word indices.
+    
+    # Arguments
+        max_len: Int. The maximum length of a sentence. If unspecified, the length of
+            the longest sentence will be used.
+        num_words: Int. The size of the maximum number of words to keep, based
+            on word frequency. Only the most common num_words-1 words will be kept.
+            Defaults to 20000.
+    """
 
-    def __init__(self, max_len=None, **kwargs):
+    def __init__(self, 
+                 max_len=None, 
+                 num_words=20000,
+                 **kwargs):
         super().__init__(**kwargs)
         self.max_len = max_len
         self.max_len_in_data = 0
+        self.num_words = num_words
         self.tokenizer = tf.keras.preprocessing.text.Tokenizer(
-            num_words=const.Constant.VOCABULARY_SIZE)
+            num_words=num_words)
         self.max_len_to_use = None
         self.max_features = None
 
@@ -127,7 +138,10 @@ class TextToIntSequence(base.Preprocessor):
 
     def get_config(self):
         config = super().get_config()
-        config.update({'max_len': self.max_len})
+        config.update({
+            'max_len': self.max_len,
+            'num_words': self.num_words,
+        })
         return config
 
     def get_state(self):
