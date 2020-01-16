@@ -688,8 +688,12 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             be 'numerical' or 'categorical', indicating the type of that column.
             Defaults to None. If not None, the column_names need to be specified.
             If None, it will be inferred from the data.
+        output_dim: Int. The number of output dimensions. Defaults to None.
+            If None, it will infer from the data.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
+        name: String. The name of the AutoModel. Defaults to
+            'structured_data_regressor'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
