@@ -1,4 +1,4 @@
-from typing import Callable, Union, Optional
+from typing import Callable, Union, Optional, List
 
 import pandas as pd
 
@@ -42,7 +42,7 @@ class ImageClassifier(SupervisedImagePipeline):
                  num_classes: Optional[int] = None,
                  multi_label: bool = False,
                  loss: Union[str, Callable, None] = None,
-                 metrics: Union[str, Callable, None] = None,
+                 metrics: Optional[List[Union[str, Callable]]] = None,
                  name: str = 'image_classifier',
                  max_trials: int = 100,
                  directory: Optional[str] = None,
