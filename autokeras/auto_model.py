@@ -141,7 +141,7 @@ class AutoModel(object):
             x=None,
             y=None,
             epochs=None,
-            callbacks=None,
+            callbacks=[],
             validation_split=0.2,
             validation_data=None,
             **kwargs):
@@ -190,8 +190,6 @@ class AutoModel(object):
         hyper_graph = self._meta_build(dataset)
 
         # Process the args.
-        if callbacks is None:
-            callbacks = []
         if epochs is None:
             epochs = 1000
             if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
