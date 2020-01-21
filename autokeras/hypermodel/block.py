@@ -1,6 +1,8 @@
 import tensorflow as tf
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
+from tensorflow.keras import layers
+from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
 from autokeras import utils
@@ -63,12 +65,12 @@ class DenseBlock(base.Block):
                 'units_{i}'.format(i=i),
                 [16, 32, 64, 128, 256, 512, 1024],
                 default=32)
-            output_node = tf.keras.layers.Dense(units)(output_node)
+            output_node = layers.Dense(units)(output_node)
             if use_batchnorm:
-                output_node = tf.keras.layers.BatchNormalization()(output_node)
-            output_node = tf.keras.layers.ReLU()(output_node)
+                output_node = layers.BatchNormalization()(output_node)
+            output_node = layers.ReLU()(output_node)
             if dropout_rate > 0:
-                output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
+                output_node = layers.Dropout(dropout_rate)(output_node)
         return output_node
 
 
@@ -131,8 +133,8 @@ class RNNBlock(base.Block):
                                                   [1, 2, 3],
                                                   default=2)
         rnn_layers = {
-            'gru': tf.keras.layers.GRU,
-            'lstm': tf.keras.layers.LSTM
+            'gru': layers.GRU,
+            'lstm': layers.LSTM
         }
         in_layer = rnn_layers[layer_type]
         for i in range(num_layers):
@@ -140,7 +142,7 @@ class RNNBlock(base.Block):
             if i == num_layers - 1:
                 return_sequences = self.return_sequences
             if bidirectional:
-                output_node = tf.keras.layers.Bidirectional(
+                output_node = layers.Bidirectional(
                     in_layer(feature_size,
                              return_sequences=return_sequences))(output_node)
             else:
@@ -231,7 +233,7 @@ class ConvBlock(base.Block):
                 kernel_size - 1,
                 padding=self._get_padding(kernel_size - 1, output_node))(output_node)
             if dropout_rate > 0:
-                output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
+                output_node = layers.Dropout(dropout_rate)(output_node)
         return output_node
 
     @staticmethod
@@ -390,9 +392,9 @@ class Merge(base.Block):
         #  shape
         if all([input_node.shape == inputs[0].shape for input_node in inputs]):
             if merge_type == 'add':
-                return tf.keras.layers.Add(inputs)
+                return layers.Add(inputs)
 
-        return tf.keras.layers.Concatenate()(inputs)
+        return layers.Concatenate()(inputs)
 
 
 class Flatten(base.Block):
@@ -403,7 +405,7 @@ class Flatten(base.Block):
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         if len(input_node.shape) > 2:
-            return tf.keras.layers.Flatten()(input_node)
+            return layers.Flatten()(input_node)
         return input_node
 
 
@@ -548,14 +550,14 @@ class EmbeddingBlock(base.Block):
             default=128)
         if pretraining != 'none':
             # TODO: load from pretrained weights
-            layer = tf.keras.layers.Embedding(
+            layer = layers.Embedding(
                 input_dim=self.max_features,
                 output_dim=embedding_dim,
                 input_length=input_node.shape[1])
             # trainable=False,
             # weights=[embedding_matrix])
         else:
-            layer = tf.keras.layers.Embedding(
+            layer = layers.Embedding(
                 input_dim=self.max_features,
                 output_dim=embedding_dim,
                 input_length=input_node.shape[1],
@@ -566,7 +568,7 @@ class EmbeddingBlock(base.Block):
         else:
             dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0.25)
         if dropout_rate > 0:
-            output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
+            output_node = layers.Dropout(dropout_rate)(output_node)
         return output_node
 
 
@@ -766,3 +768,27 @@ class GeneralBlock(base.Block):
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
+
+
+class Normalization(base.block):
+    """ Perform basic image transformation and augmentation.
+
+    # Arguments
+        axis: Integer or tuple of integers, the axis or axes that should be normalized
+            (typically the features axis). We will normalize each element in the
+            specified axis. The default is '-1' (the innermost axis); 0 (the batch
+            axis) is not allowed.
+    """
+
+    def __init__(self, axis=-1, **kwargs):
+        super().__init__(**kwargs)
+        self.axis = axis
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        output_node = preprocessing.Normalization(axis=self.axis)(input_node)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'axis': self.axis})
+        return config

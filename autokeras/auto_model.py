@@ -2,11 +2,11 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras import meta_model
 from autokeras import tuner as tuner_module
 from autokeras import utils
 from autokeras.hypermodel import base
-from autokeras.hypermodel import graph
+from autokeras.hypermodel import graph as graph_module
+from autokeras.hypermodel import block as block_module
 
 
 class AutoModel(object):
@@ -85,10 +85,12 @@ class AutoModel(object):
             np.random.seed(seed)
             tf.random.set_seed(seed)
         # TODO: Support passing a tuner instance.
+        # Initialize the hyper_graph.
+        graph = self._build_graph(dataset)
         if isinstance(tuner, str):
             tuner = tuner_module.get_tuner_class(tuner)
         self.tuner = tuner(
-            hypermodel=lambda hp: None,
+            hypermodel=graph,
             overwrite=overwrite,
             objective=objective,
             max_trials=max_trials,
@@ -122,20 +124,44 @@ class AutoModel(object):
     def name(self):
         return self.tuner.project_name
 
-    def _meta_build(self, dataset):
+    def _assemble(self):
+        """Assemble the Blocks based on the input output nodes."""
+        inputs = nest.flatten(self.inputs)
+        outputs = nest.flatten(self.outputs)
+    
+        middle_nodes = []
+        for input_node in inputs:
+            if isinstance(input_node, node.TextInput):
+                middle_nodes.append(block_module.TextBlock()(input_node))
+            if isinstance(input_node, node.ImageInput):
+                middle_nodes.append(block_module.ImageBlock()(input_node))
+            if isinstance(input_node, node.StructuredDataInput):
+                middle_nodes.append(block_module.StructuredDataBlock()(input_node))
+            if isinstance(input_node, node.TimeSeriesInput):
+                middle_nodes.append(block_module.TimeSeriesBlock()(input_node))
+            if isinstance(input_node, node.Input):
+                middle_nodes.append(block_module.GeneralBlock()(input_node))
+    
+        # Merge the middle nodes.
+        if len(middle_nodes) > 1:
+            output_node = block_module.Merge()(middle_nodes)
+        else:
+            output_node = middle_nodes[0]
+    
+        outputs = nest.flatten([output_blocks(output_node)
+                                for output_blocks in outputs])
+        return graph.Graph(inputs=inputs, outputs=outputs)
+    
+    def _build_graph(self, dataset):
         # Using functional API.
         if all([isinstance(output, base.Node) for output in self.outputs]):
-            hyper_graph = graph.HyperGraph(inputs=self.inputs,
-                                           outputs=self.outputs)
+            graph = graph.Graph(inputs=self.inputs, outputs=self.outputs)
         # Using input/output API.
         elif all([isinstance(output, base.Head) for output in self.outputs]):
-            hyper_graph = meta_model.assemble(inputs=self.inputs,
-                                              outputs=self.outputs,
-                                              dataset=dataset,
-                                              seed=self.seed)
-            self.outputs = hyper_graph.outputs
+            graph = self._assemble(inputs=self.inputs, outputs=self.outputs)
+            self.outputs = graph.outputs
 
-        return hyper_graph
+        return graph
 
     def fit(self,
             x=None,
@@ -186,9 +212,6 @@ class AutoModel(object):
             validation_data=validation_data,
             validation_split=validation_split)
 
-        # Initialize the hyper_graph.
-        hyper_graph = self._meta_build(dataset)
-
         # Process the args.
         if callbacks is None:
             callbacks = []
@@ -203,7 +226,6 @@ class AutoModel(object):
                           epochs=epochs,
                           callbacks=callbacks,
                           validation_data=validation_data,
-                          hyper_graph=hyper_graph,
                           fit_on_val_data=self._split_dataset,
                           **kwargs)
 
@@ -282,9 +304,7 @@ class AutoModel(object):
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        preprocess_graph, model = self.tuner.get_best_model()
-        x = preprocess_graph.preprocess(
-            self._process_xy(x, None, predict=True))[0].batch(batch_size)
+        model = self.tuner.get_best_model()
         y = model.predict(x, **kwargs)
         y = self._postprocess(y)
         if isinstance(y, list) and len(y) == 1:
@@ -316,10 +336,7 @@ class AutoModel(object):
             The attribute model.metrics_names will give you the display labels for
             the scalar outputs.
         """
-        preprocess_graph, model = self.tuner.get_best_model()
-        data = preprocess_graph.preprocess(
-            self._process_xy(x, y))[0].batch(batch_size)
-        return model.evaluate(data, **kwargs)
+        return self.tuner.get_best_model().evaluate(data, **kwargs)
 
     def export_model(self):
         """Export the best Keras Model.
@@ -328,5 +345,4 @@ class AutoModel(object):
             tf.keras.Model instance. The best model found during the search, loaded
             with trained weights.
         """
-        _, model = self.tuner.get_best_model()
-        return model
+        return self.tuner.get_best_model()

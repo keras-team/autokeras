@@ -35,13 +35,14 @@ class GreedyOracle(kerastuner.Oracle):
         return stages[(stages.index(stage) + 1) % len(stages)]
 
     def __init__(self,
+                 hypermodel,
                  initial_hps=None,
                  seed=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.initial_hps = initial_hps or []
         self._tried_initial_hps = [False] * len(self.initial_hps)
-        self.hyper_graph = None
+        self.hypermodel = hypermodel
         # Sets of HyperParameter names.
         self._hp_names = {
             GreedyOracle.HYPER: set(),
@@ -56,18 +57,9 @@ class GreedyOracle(kerastuner.Oracle):
         self._tried_so_far = set()
         self._max_collisions = 5
 
-    def set_state(self, state):
-        super().set_state(state)
-
-    def get_state(self):
-        state = super().get_state()
-        state.update({
-        })
-        return state
-
     def update_space(self, hyperparameters):
         # Get the block names.
-        preprocess_graph, keras_graph = self.hyper_graph.build_graphs(
+        preprocess_graph, keras_graph = self.hypermodel.build_graphs(
             hyperparameters)
 
         # Add the new Hyperparameters to different categories.
@@ -76,7 +68,7 @@ class GreedyOracle(kerastuner.Oracle):
             if hp.name not in ref_names:
                 hp_type = None
                 if any([hp.name.startswith(block.name)
-                        for block in self.hyper_graph.blocks
+                        for block in self.hypermodel.blocks
                         if isinstance(block, base.HyperBlock)]):
                     hp_type = GreedyOracle.HYPER
                 elif any([hp.name.startswith(block.name)
