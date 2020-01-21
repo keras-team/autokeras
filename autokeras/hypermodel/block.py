@@ -568,3 +568,201 @@ class EmbeddingBlock(base.Block):
         if dropout_rate > 0:
             output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
         return output_node
+
+
+class ImageBlock(base.Block):
+    """Block for image data.
+
+    The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
+    which is controlled by a hyperparameter, 'block_type'.
+
+    # Arguments
+        block_type: String. 'resnet', 'xception', 'vanilla'. The type of Block
+            to use. If unspecified, it will be tuned automatically.
+        normalize: Boolean. Whether to channel-wise normalize the images.
+            If unspecified, it will be tuned automatically.
+        augment: Boolean. Whether to do image augmentation. If unspecified,
+            it will be tuned automatically.
+    """
+
+    def __init__(self,
+                 block_type=None,
+                 normalize=None,
+                 augment=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.block_type = block_type
+        self.normalize = normalize
+        self.augment = augment
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'block_type': self.block_type,
+                       'normalize': self.normalize,
+                       'augment': self.augment})
+        return config
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        output_node = input_node
+
+        block_type = self.block_type or hp.Choice('block_type',
+                                                  ['resnet', 'xception', 'vanilla'],
+                                                  default='vanilla')
+
+        normalize = self.normalize
+        if normalize is None:
+            normalize = hp.Boolean('normalize', default=True)
+        augment = self.augment
+        if augment is None:
+            augment = hp.Boolean('augment', default=False)
+        if normalize:
+            output_node = block_module.Normalization().build(hp, output_node)
+        if augment:
+            output_node = block_module.ImageAugmentation().build(hp, output_node)
+        if block_type == 'resnet':
+            output_node = block_module.ResNetBlock().build(hp, output_node)
+        elif block_type == 'xception':
+            output_node = block_module.XceptionBlock().build(hp, output_node)
+        elif block_type == 'vanilla':
+            output_node = block_module.ConvBlock().build(hp, output_node)
+        return output_node
+
+
+class TextBlock(base.Block):
+    """Block for text data.
+
+    # Arguments
+        vectorizer: String. 'sequence' or 'ngram'. If it is 'sequence',
+            TextToIntSequence will be used. If it is 'ngram', TextToNgramVector will
+            be used. If unspecified, it will be tuned automatically.
+        pretraining: String. 'random' (use random weights instead any pretrained
+            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
+            If left unspecified, it will be tuned automatically.
+    """
+
+    def __init__(self, vectorizer=None, pretraining=None, **kwargs):
+        super().__init__(**kwargs)
+        self.vectorizer = vectorizer
+        self.pretraining = pretraining
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'vectorizer': self.vectorizer,
+                       'pretraining': self.pretraining})
+        return config
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        output_node = input_node
+        vectorizer = self.vectorizer or hp.Choice('vectorizer',
+                                                  ['sequence', 'ngram'],
+                                                  default='sequence')
+        if vectorizer == 'ngram':
+            output_node = block_module.TextToNgramVector().build(hp, output_node)
+            output_node = block_module.DenseBlock().build(hp, output_node)
+        else:
+            output_node = block_module.TextToIntSequence().build(hp, output_node)
+            output_node = block_module.EmbeddingBlock(
+                pretraining=self.pretraining).build(hp, output_node)
+            output_node = block_module.ConvBlock(separable=True).build(hp, output_node)
+            output_node = block_module.SpatialReduction().build(hp, output_node)
+            output_node = block_module.DenseBlock().build(hp, output_node)
+        return output_node
+
+
+class StructuredDataBlock(base.Block):
+    """Block for structured data.
+
+    # Arguments
+        feature_engineering: Boolean. Whether to use feature engineering block.
+            Defaults to True. If specified as None, it will be tuned automatically.
+        block_type: String. 'dense' or 'lightgbm'. If it is 'dense', DenseBlock
+            will be used. If it is 'lightgbm', LightGBM will be used. If
+            unspecified, it will be tuned automatically.
+        seed: Int. Random seed.
+    """
+
+    def __init__(self,
+                 feature_engineering=True,
+                 block_type=None,
+                 seed=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.feature_engineering = feature_engineering
+        self.block_type = block_type
+        self.num_heads = None
+        self.seed = seed
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'feature_engineering': self.feature_engineering,
+                       'block_type': self.block_type,
+                       'seed': self.seed})
+        return config
+
+    def get_state(self):
+        state = super().get_state()
+        state.update({'num_heads': self.num_heads})
+        return state
+
+    def set_state(self, state):
+        super().set_state(state)
+        self.num_heads = state.get('num_heads')
+
+    def build_feature_engineering(self, hp, input_node):
+        output_node = input_node
+        feature_engineering = self.feature_engineering
+        if feature_engineering is None:
+            # TODO: If False, use plain label encoding.
+            feature_engineering = hp.Choice('feature_engineering',
+                                            [True],
+                                            default=True)
+        if feature_engineering:
+            output_node = block_module.FeatureEngineering().build(hp, output_node)
+        return output_node
+
+    def build_body(self, hp, input_node):
+        if self.num_heads > 1:
+            block_type = ['dense']
+        else:
+            block_type = ['lightgbm', 'dense']
+        block_type = self.block_type or hp.Choice('block_type',
+                                                  block_type,
+                                                  default=block_type[0])
+        if block_type == 'dense':
+            output_node = block_module.DenseBlock()(input_node)
+        elif block_type == 'lightgbm':
+            output_node = block_module.LightGBM(
+                seed=self.seed)(input_node)
+        else:
+            raise ValueError('Expect the block_type to be "dense" or "lightgbm", '
+                             'but got {block_type}'.format(block_type=block_type))
+        nest.flatten(output_node)[0].shape = self.output_shape
+        return output_node
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        output_node = self.build_feature_engineering(hp, input_node)
+        output_node = self.build_body(hp, output_node)
+        return output_node
+
+
+class TimeSeriesBlock(base.Block):
+
+    def build(self, hp, inputs=None):
+        raise NotImplementedError
+
+
+class GeneralBlock(base.Block):
+    """A general neural network block when the input type is unknown.
+
+    When the input type is unknown. The GeneralBlock would search in a large space
+    for a good model.
+
+    # Arguments
+        name: String.
+    """
+
+    def build(self, hp, inputs=None):
+        raise NotImplementedError
