@@ -7,10 +7,6 @@ from autokeras import utils
 from autokeras.hypermodel import base
 
 
-class TextNode(base.Node):
-    pass
-
-
 class Input(base.Node):
     """Input node for tensor data.
 
@@ -76,7 +72,7 @@ class ImageInput(Input):
         return super()._convert_to_dataset(x)
 
 
-class TextInput(Input, TextNode):
+class TextInput(Input):
     """Input node for text data.
 
     The input data should be numpy.ndarray or tf.data.Dataset. The data should be
@@ -103,6 +99,9 @@ class TextInput(Input, TextNode):
         if isinstance(x, np.ndarray):
             x = tf.data.Dataset.from_tensor_slices(x)
         return x
+
+    def build(self):
+        return tf.keras.Input(shape=self.shape, dtype=tf.string)
 
 
 class StructuredDataInput(Input):

@@ -72,7 +72,7 @@ class Node(Picklable):
         self.out_blocks.append(hypermodel)
 
     def build(self):
-        return tf.keras.Input(shape=self.shape)
+        return tf.keras.Input(shape=self.shape, dtype=tf.float32)
 
     def get_config(self):
         return {}

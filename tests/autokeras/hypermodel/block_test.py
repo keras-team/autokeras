@@ -124,7 +124,7 @@ def test_spatial_reduction():
 
 def test_embedding_block():
     input_shape = (32,)
-    block = block_module.EmbeddingBlock()
+    block = block_module.Embedding()
     block.max_features = 100
     block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
@@ -140,7 +140,7 @@ def test_image_block():
     block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
-    block.build(hp, ak.Input())
+    block.build(hp, ak.ImageInput(shape=(32, 32, 3)).build())
 
     assert common.name_in_hps('block_type', hp)
     assert common.name_in_hps('normalize', hp)
@@ -152,7 +152,7 @@ def test_text_block():
     block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
-    block.build(hp, ak.TextInput())
+    block.build(hp, ak.TextInput(shape=(1,)).build())
 
     assert common.name_in_hps('vectorizer', hp)
 
@@ -163,6 +163,6 @@ def test_structured_data_block():
     block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
-    block.build(hp, ak.Input())
+    block.build(hp, ak.StructuredDataInput(shape=(10,)).build())
 
     assert common.name_in_hps('block_type', hp)

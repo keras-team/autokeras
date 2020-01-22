@@ -1,8 +1,6 @@
-import copy
 import os
 
 import kerastuner
-import kerastuner.engine.hypermodel as hm_module
 import tensorflow as tf
 
 from autokeras import const
@@ -33,12 +31,12 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     # Override the function to prevent building the model during initialization.
     def _populate_initial_space(self):
         pass
-    
+
     def get_best_model(self):
         model = super().get_best_models()[0]
         model.load_weights(self.best_model_path)
         return model
-    
+
     def search(self,
                callbacks=None,
                fit_on_val_data=False,

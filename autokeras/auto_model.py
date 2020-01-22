@@ -5,8 +5,8 @@ from tensorflow.python.util import nest
 from autokeras import tuner as tuner_module
 from autokeras import utils
 from autokeras.hypermodel import base
-from autokeras.hypermodel import graph as graph_module
 from autokeras.hypermodel import block as block_module
+from autokeras.hypermodel import graph as graph_module
 from autokeras.hypermodel import node as node_module
 
 
@@ -129,7 +129,7 @@ class AutoModel(object):
         """Assemble the Blocks based on the input output nodes."""
         inputs = nest.flatten(self.inputs)
         outputs = nest.flatten(self.outputs)
-    
+
         middle_nodes = []
         for input_node in inputs:
             if isinstance(input_node, node_module.TextInput):
@@ -142,21 +142,21 @@ class AutoModel(object):
                 middle_nodes.append(block_module.TimeSeriesBlock()(input_node))
             if isinstance(input_node, node_module.Input):
                 middle_nodes.append(block_module.GeneralBlock()(input_node))
-    
+
         # Merge the middle nodes.
         if len(middle_nodes) > 1:
             output_node = block_module.Merge()(middle_nodes)
         else:
             output_node = middle_nodes[0]
-    
+
         outputs = nest.flatten([output_blocks(output_node)
                                 for output_blocks in outputs])
         return graph_module.Graph(inputs=inputs, outputs=outputs)
-    
+
     def _build_graph(self):
         # Using functional API.
         if all([isinstance(output, base.Node) for output in self.outputs]):
-            graph = graph.Graph(inputs=self.inputs, outputs=self.outputs)
+            graph = graph_module.Graph(inputs=self.inputs, outputs=self.outputs)
         # Using input/output API.
         elif all([isinstance(output, base.Head) for output in self.outputs]):
             graph = self._assemble()
@@ -337,7 +337,11 @@ class AutoModel(object):
             The attribute model.metrics_names will give you the display labels for
             the scalar outputs.
         """
-        return self.tuner.get_best_model().evaluate(data, **kwargs)
+        return self.tuner.get_best_model().evaluate(
+            x=x,
+            y=y,
+            batch_size=batch_size,
+            **kwargs)
 
     def export_model(self):
         """Export the best Keras Model.

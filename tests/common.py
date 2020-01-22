@@ -237,13 +237,13 @@ def name_in_hps(hp_name, hp):
     return any([hp_name in name for name in hp.values])
 
 
-def build_hyper_graph():
+def build_graph():
     tf.keras.backend.clear_session()
     image_input = ak.ImageInput(shape=(32, 32, 3))
     merged_outputs = ak.ImageBlock()(image_input)
     head = ak.ClassificationHead(num_classes=10)
     head.output_shape = (10,)
     classification_outputs = head(merged_outputs)
-    return ak.hypermodel.graph.HyperGraph(
+    return ak.hypermodel.graph.Graph(
         inputs=image_input,
         outputs=classification_outputs)

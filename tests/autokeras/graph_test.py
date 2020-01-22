@@ -2,12 +2,10 @@ import os
 
 import kerastuner
 import pytest
-import tensorflow as tf
 from kerastuner.engine import hyperparameters as hp_module
 
 import autokeras as ak
 from autokeras.hypermodel import graph as graph_module
-from tests import common
 
 
 @pytest.fixture(scope='module')
@@ -23,13 +21,12 @@ def test_set_hp():
     head.output_shape = (1,)
     output_node = head(output_node)
 
-    graph = graph_module.HyperGraph(
+    graph = graph_module.Graph(
         inputs=input_node,
         outputs=output_node,
         override_hps=[hp_module.Choice('dense_block_1/num_layers', [6], default=6)])
     hp = kerastuner.HyperParameters()
-    plain_graph = graph.hyper_build(hp)
-    plain_graph.build_keras_graph().build(hp)
+    graph.build(hp)
 
     for single_hp in hp.space:
         if single_hp.name == 'dense_block_1/num_layers':
@@ -50,7 +47,7 @@ def test_input_output_disconnect():
     output_node = ak.RegressionHead()(output_node)
 
     with pytest.raises(ValueError) as info:
-        graph_module.HyperGraph(inputs=input_node1, outputs=output_node)
+        graph_module.Graph(inputs=input_node1, outputs=output_node)
     assert 'Inputs and outputs not connected.' in str(info.value)
 
 
@@ -65,8 +62,8 @@ def test_hyper_graph_cycle():
     head.outputs = output_node1
 
     with pytest.raises(ValueError) as info:
-        graph_module.HyperGraph(inputs=[input_node1, input_node2],
-                                outputs=output_node)
+        graph_module.Graph(inputs=[input_node1, input_node2],
+                           outputs=output_node)
     assert 'The network has a cycle.' in str(info.value)
 
 
@@ -79,8 +76,8 @@ def test_input_missing():
     output_node = ak.RegressionHead()(output_node)
 
     with pytest.raises(ValueError) as info:
-        graph_module.HyperGraph(inputs=input_node1,
-                                outputs=output_node)
+        graph_module.Graph(inputs=input_node1,
+                           outputs=output_node)
     assert 'A required input is missing for HyperModel' in str(info.value)
 
 
@@ -90,8 +87,9 @@ def test_graph_basics():
     output_node = ak.DenseBlock()(output_node)
     output_node = ak.RegressionHead(output_shape=(1,))(output_node)
 
-    graph = graph_module.PlainGraph(inputs=input_node, outputs=output_node)
-    model = graph.build_keras_graph().build(kerastuner.HyperParameters())
+    model = graph_module.Graph(
+        inputs=input_node,
+        outputs=output_node).build(kerastuner.HyperParameters())
     assert model.input_shape == (None, 30)
     assert model.output_shape == (None, 1)
 
@@ -105,14 +103,14 @@ def test_graph_save_load(tmp_dir):
     output1 = ak.RegressionHead()(output)
     output2 = ak.ClassificationHead()(output)
 
-    graph = graph_module.HyperGraph(
+    graph = graph_module.Graph(
         inputs=[input1, input2],
         outputs=[output1, output2],
         override_hps=[hp_module.Choice('dense_block_1/num_layers', [6], default=6)])
     path = os.path.join(tmp_dir, 'graph')
     graph.save(path)
     config = graph.get_config()
-    graph = graph_module.HyperGraph.from_config(config)
+    graph = graph_module.Graph.from_config(config)
     graph.reload(path)
 
     assert len(graph.inputs) == 2
@@ -130,47 +128,8 @@ def test_merge():
     output_node = ak.Merge()([output_node1, output_node2])
     output_node = ak.RegressionHead(output_shape=(1,))(output_node)
 
-    graph = graph_module.PlainGraph(inputs=[input_node1, input_node2],
-                                    outputs=output_node)
-    model = graph.build_keras_graph().build(kerastuner.HyperParameters())
+    model = graph_module.Graph(
+        inputs=[input_node1, input_node2],
+        outputs=output_node).build(kerastuner.HyperParameters())
     assert model.input_shape == [(None, 30), (None, 40)]
     assert model.output_shape == (None, 1)
-
-
-def test_preprocessing():
-    input_shape = (33,)
-    output_shape = (1,)
-    x_train_1 = common.generate_data(
-        num_instances=100,
-        shape=input_shape,
-        dtype='dataset')
-    x_train_2 = common.generate_data(
-        num_instances=100,
-        shape=input_shape,
-        dtype='dataset')
-    y_train = common.generate_data(
-        num_instances=100,
-        shape=output_shape,
-        dtype='dataset')
-    dataset = tf.data.Dataset.zip(((x_train_1, x_train_2), y_train))
-
-    input_node1 = ak.Input(shape=input_shape)
-    temp_node1 = ak.Normalization()(input_node1)
-    output_node1 = ak.DenseBlock()(temp_node1)
-
-    output_node3 = ak.Normalization()(temp_node1)
-    output_node3 = ak.DenseBlock()(output_node3)
-
-    input_node2 = ak.Input(shape=input_shape)
-    output_node2 = ak.Normalization()(input_node2)
-    output_node2 = ak.DenseBlock()(output_node2)
-
-    output_node = ak.Merge()([output_node1, output_node2, output_node3])
-    output_node = ak.RegressionHead()(output_node)
-
-    graph = graph_module.PlainGraph(inputs=[input_node1, input_node2],
-                                    outputs=output_node)
-    graph.build_preprocess_graph().preprocess(
-        dataset=dataset,
-        validation_data=dataset,
-        fit=True)

@@ -62,23 +62,23 @@ def fetch_heads(source_block):
     # """Fetch the heads for LightGBMBlock."""
     # heads = fetch_heads(lightgbm_block)
     # if len(heads) > 1:
-        # raise ValueError('LightGBMBlock can only be connected to one head.')
+    # raise ValueError('LightGBMBlock can only be connected to one head.')
     # head = heads[0]
     # if isinstance(head, head_module.ClassificationHead):
-        # classifier = preprocessor_module.LightGBMClassifier(seed=lightgbm_block.seed)
-        # classifier.num_classes = head.num_classes
-        # lightgbm_block.lightgbm_block = classifier
+    # classifier = preprocessor_module.LightGBMClassifier(seed=lightgbm_block.seed)
+    # classifier.num_classes = head.num_classes
+    # lightgbm_block.lightgbm_block = classifier
     # if isinstance(head, head_module.RegressionHead):
-        # lightgbm_block.lightgbm_block = preprocessor_module.LightGBMRegressor(
-            # seed=lightgbm_block.seed)
+    # lightgbm_block.lightgbm_block = preprocessor_module.LightGBMRegressor(
+    # seed=lightgbm_block.seed)
 
     # in_block = head
     # # Check if the head has no other input but only LightGBMBlock.
     # while in_block is not lightgbm_block:
-        # # The head has other inputs.
-        # if len(in_block.inputs) > 1:
-            # return
-        # in_block = in_block.inputs[0].in_blocks[0]
+    # # The head has other inputs.
+    # if len(in_block.inputs) > 1:
+    # return
+    # in_block = in_block.inputs[0].in_blocks[0]
     # head.identity = True
 
 

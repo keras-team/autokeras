@@ -4,6 +4,7 @@ import kerastuner
 import numpy as np
 
 from autokeras.hypermodel import base
+from autokeras.hypermodel import block as block_module
 
 
 class GreedyOracle(kerastuner.Oracle):
@@ -59,8 +60,7 @@ class GreedyOracle(kerastuner.Oracle):
 
     def update_space(self, hyperparameters):
         # Get the block names.
-        preprocess_graph, keras_graph = self.hypermodel.build_graphs(
-            hyperparameters)
+        self.hypermodel.build(hyperparameters)
 
         # Add the new Hyperparameters to different categories.
         ref_names = {hp.name for hp in self.hyperparameters.space}
@@ -68,14 +68,24 @@ class GreedyOracle(kerastuner.Oracle):
             if hp.name not in ref_names:
                 hp_type = None
                 if any([hp.name.startswith(block.name)
-                        for block in self.hypermodel.blocks
-                        if isinstance(block, base.HyperBlock)]):
+                        for block in self.hypermodel.blocks if isinstance(block, (
+                            block_module.ImageBlock,
+                            block_module.TextBlock,
+                            block_module.StructuredDataBlock,
+                        ))]):
                     hp_type = GreedyOracle.HYPER
                 elif any([hp.name.startswith(block.name)
-                          for block in preprocess_graph.blocks]):
+                          for block in self.hypermodel.blocks if isinstance(block, (
+                              block_module.TextToIntSequence,
+                              block_module.TextToNgramVector,
+                              block_module.Normalization,
+                              block_module.ImageAugmentation,
+                              block_module.CategoricalEncoding
+                          ))]):
                     hp_type = GreedyOracle.PREPROCESS
                 elif any([hp.name.startswith(block.name)
-                          for block in keras_graph.blocks]):
+                          for block in self.hypermodel.blocks
+                          if isinstance(block, base.Block)]):
                     hp_type = GreedyOracle.ARCH
                 else:
                     hp_type = GreedyOracle.OPT
