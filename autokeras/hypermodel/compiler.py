@@ -12,9 +12,7 @@ import tensorflow as tf
 from autokeras.hypermodel import base
 from autokeras.hypermodel import block as block_module
 from autokeras.hypermodel import head as head_module
-from autokeras.hypermodel import hyperblock as hyperblock_module
 from autokeras.hypermodel import node as node_module
-from autokeras.hypermodel import preprocessor as preprocessor_module
 
 
 def embedding_max_features(embedding_block):
@@ -28,8 +26,8 @@ def embedding_max_features(embedding_block):
                              'TextToIntSequence, max_features must be '
                              'specified.')
         block = input_node.in_blocks[0]
-        if isinstance(block, preprocessor_module.TextToIntSequence):
-            embedding_block.max_features = block.max_features
+        if isinstance(block, block_module.TextToIntSequence):
+            embedding_block.max_features = block.max_tokens
             return
         input_node = block.inputs[0]
 
@@ -60,28 +58,28 @@ def fetch_heads(source_block):
     return heads
 
 
-def lightgbm_head(lightgbm_block):
-    """Fetch the heads for LightGBMBlock."""
-    heads = fetch_heads(lightgbm_block)
-    if len(heads) > 1:
-        raise ValueError('LightGBMBlock can only be connected to one head.')
-    head = heads[0]
-    if isinstance(head, head_module.ClassificationHead):
-        classifier = preprocessor_module.LightGBMClassifier(seed=lightgbm_block.seed)
-        classifier.num_classes = head.num_classes
-        lightgbm_block.lightgbm_block = classifier
-    if isinstance(head, head_module.RegressionHead):
-        lightgbm_block.lightgbm_block = preprocessor_module.LightGBMRegressor(
-            seed=lightgbm_block.seed)
+# def lightgbm_head(lightgbm_block):
+    # """Fetch the heads for LightGBMBlock."""
+    # heads = fetch_heads(lightgbm_block)
+    # if len(heads) > 1:
+        # raise ValueError('LightGBMBlock can only be connected to one head.')
+    # head = heads[0]
+    # if isinstance(head, head_module.ClassificationHead):
+        # classifier = preprocessor_module.LightGBMClassifier(seed=lightgbm_block.seed)
+        # classifier.num_classes = head.num_classes
+        # lightgbm_block.lightgbm_block = classifier
+    # if isinstance(head, head_module.RegressionHead):
+        # lightgbm_block.lightgbm_block = preprocessor_module.LightGBMRegressor(
+            # seed=lightgbm_block.seed)
 
-    in_block = head
-    # Check if the head has no other input but only LightGBMBlock.
-    while in_block is not lightgbm_block:
-        # The head has other inputs.
-        if len(in_block.inputs) > 1:
-            return
-        in_block = in_block.inputs[0].in_blocks[0]
-    head.identity = True
+    # in_block = head
+    # # Check if the head has no other input but only LightGBMBlock.
+    # while in_block is not lightgbm_block:
+        # # The head has other inputs.
+        # if len(in_block.inputs) > 1:
+            # return
+        # in_block = in_block.inputs[0].in_blocks[0]
+    # head.identity = True
 
 
 def feature_engineering_input(fe_block):
@@ -100,29 +98,17 @@ def structured_data_block_heads(structured_data_block):
     structured_data_block.num_heads = len(fetch_heads(structured_data_block))
 
 
-# Compile the graph before the preprocessing step.
-BEFORE = {
-    preprocessor_module.FeatureEngineering: feature_engineering_input,
-    preprocessor_module.LightGBM: lightgbm_head,
+# Compile the graph.
+COMPILE_FUNCTIONS = {
+    block_module.Embedding: embedding_max_features,
+    block_module.StructuredDataBlock: structured_data_block_heads,
 }
-
-# Compile the graph after the preprocessing step.
-AFTER = {
-    block_module.EmbeddingBlock: embedding_max_features,
-}
-
-# Compile the HyperGraph.
-HYPER = {**{
-    hyperblock_module.StructuredDataBlock: structured_data_block_heads,
-}, **BEFORE}
 
 ALL_CLASSES = {
     **vars(base),
     **vars(node_module),
     **vars(head_module),
     **vars(block_module),
-    **vars(preprocessor_module),
-    **vars(hyperblock_module),
 }
 
 

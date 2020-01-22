@@ -497,7 +497,7 @@ class TemporalReduction(base.Block):
         return output_node
 
 
-class EmbeddingBlock(base.Block):
+class Embedding(base.Block):
     """Word embedding block for sequences.
 
     The input should be tokenized sequences with the same length, where each element
@@ -619,15 +619,15 @@ class ImageBlock(base.Block):
         if augment is None:
             augment = hp.Boolean('augment', default=False)
         if normalize:
-            output_node = block_module.Normalization().build(hp, output_node)
+            output_node = Normalization().build(hp, output_node)
         if augment:
-            output_node = block_module.ImageAugmentation().build(hp, output_node)
+            output_node = ImageAugmentation().build(hp, output_node)
         if block_type == 'resnet':
-            output_node = block_module.ResNetBlock().build(hp, output_node)
+            output_node = ResNetBlock().build(hp, output_node)
         elif block_type == 'xception':
-            output_node = block_module.XceptionBlock().build(hp, output_node)
+            output_node = XceptionBlock().build(hp, output_node)
         elif block_type == 'vanilla':
-            output_node = block_module.ConvBlock().build(hp, output_node)
+            output_node = ConvBlock().build(hp, output_node)
         return output_node
 
 
@@ -661,15 +661,15 @@ class TextBlock(base.Block):
                                                   ['sequence', 'ngram'],
                                                   default='sequence')
         if vectorizer == 'ngram':
-            output_node = block_module.TextToNgramVector().build(hp, output_node)
-            output_node = block_module.DenseBlock().build(hp, output_node)
+            output_node = TextToNgramVector().build(hp, output_node)
+            output_node = DenseBlock().build(hp, output_node)
         else:
-            output_node = block_module.TextToIntSequence().build(hp, output_node)
-            output_node = block_module.EmbeddingBlock(
+            output_node = TextToIntSequence().build(hp, output_node)
+            output_node = EmbeddingBlock(
                 pretraining=self.pretraining).build(hp, output_node)
-            output_node = block_module.ConvBlock(separable=True).build(hp, output_node)
-            output_node = block_module.SpatialReduction().build(hp, output_node)
-            output_node = block_module.DenseBlock().build(hp, output_node)
+            output_node = ConvBlock(separable=True).build(hp, output_node)
+            output_node = SpatialReduction().build(hp, output_node)
+            output_node = DenseBlock().build(hp, output_node)
         return output_node
 
 
@@ -679,8 +679,8 @@ class StructuredDataBlock(base.Block):
     # Arguments
         feature_engineering: Boolean. Whether to use feature engineering block.
             Defaults to True. If specified as None, it will be tuned automatically.
-        block_type: String. 'dense' or 'lightgbm'. If it is 'dense', DenseBlock
-            will be used. If it is 'lightgbm', LightGBM will be used. If
+        block_type: String. 'dense' or 'conv'. If it is 'dense', DenseBlock
+            will be used. If it is 'conv', ConvBlock will be used. If
             unspecified, it will be tuned automatically.
         seed: Int. Random seed.
     """
@@ -721,26 +721,20 @@ class StructuredDataBlock(base.Block):
                                             [True],
                                             default=True)
         if feature_engineering:
-            output_node = block_module.FeatureEngineering().build(hp, output_node)
+            output_node = FeatureEngineering().build(hp, output_node)
         return output_node
 
     def build_body(self, hp, input_node):
-        if self.num_heads > 1:
-            block_type = ['dense']
-        else:
-            block_type = ['lightgbm', 'dense']
         block_type = self.block_type or hp.Choice('block_type',
-                                                  block_type,
-                                                  default=block_type[0])
+                                                  ['dense', 'conv'],
+                                                  default='dense')
         if block_type == 'dense':
-            output_node = block_module.DenseBlock()(input_node)
-        elif block_type == 'lightgbm':
-            output_node = block_module.LightGBM(
-                seed=self.seed)(input_node)
+            output_node = DenseBlock().build(hp, input_node)
+        elif block_type == 'conv':
+            output_node = ConvBlock().build(hp, input_node)
         else:
-            raise ValueError('Expect the block_type to be "dense" or "lightgbm", '
+            raise ValueError('Expect the block_type to be "dense" or "conv", '
                              'but got {block_type}'.format(block_type=block_type))
-        nest.flatten(output_node)[0].shape = self.output_shape
         return output_node
 
     def build(self, hp, inputs=None):
@@ -770,7 +764,7 @@ class GeneralBlock(base.Block):
         raise NotImplementedError
 
 
-class Normalization(base.block):
+class Normalization(base.Block):
     """ Perform basic image transformation and augmentation.
 
     # Arguments
@@ -791,4 +785,490 @@ class Normalization(base.block):
     def get_config(self):
         config = super().get_config()
         config.update({'axis': self.axis})
+        return config
+
+
+class TextToIntSequence(base.Block):
+    """Convert raw texts to sequences of word indices.
+
+    # Arguments
+        output_sequence_length: Int. The maximum length of a sentence. If
+            unspecified, it would be tuned automatically.
+        max_tokens: Int. The maximum size of the vocabulary. Defaults to 20000.
+    """
+
+    def __init__(self,
+                 output_sequence_length=None,
+                 max_tokens=20000,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.output_sequence_length = output_sequence_length
+        self.max_tokens = max_tokens
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'max_len': self.max_len,
+            'max_tokens': self.vocab_size,
+        })
+        return config
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        if self.output_sequence_length is not None:
+            output_sequence_length = self.output_sequence_length
+        else:
+            output_sequence_length = hp.Int('output_sequence_length', 
+                                            [64, 128, 256, 512], default=64)
+        return preprocessing.TextVectorization(
+            max_tokens=self.max_tokens,
+            output_mode='int',
+            output_sequence_length=output_sequence_length)(input_node)
+
+
+class TextToNgramVector(base.Block):
+    """Convert raw texts to n-gram vectors.
+
+    # Arguments
+        max_tokens: Int. The maximum size of the vocabulary. Defaults to 20000.
+    """
+
+    def __init__(self,
+                 max_tokens=20000,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.max_tokens = max_tokens
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        return preprocessing.TextVectorization(
+            max_tokens=self.max_tokens,
+            output_mode='tf-idf')(input_node)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'max_tokens': self.max_tokens})
+        return config
+
+
+class ImageAugmentation(base.Block):
+    """Collection of various image augmentation methods.
+
+    # Arguments
+        percentage: Float. The percentage of data to augment.
+        rotation_range: Int. The value can only be 0, 90, or 180.
+            Degree range for random rotations. Default to 180.
+        random_crop: Boolean. Whether to crop the image randomly. Default to True.
+        brightness_range: Positive float.
+            Serve as 'max_delta' in tf.image.random_brightness. Default to 0.5.
+            Equivalent to adjust brightness using a 'delta' randomly picked in
+            the interval [-max_delta, max_delta).
+        saturation_range: Positive float or Tuple.
+            If given a positive float, _get_min_and_max() will automated generate
+            a tuple for saturation range. If given a tuple directly, it will serve
+            as a range for picking a saturation shift value from. Default to 0.5.
+        contrast_range: Positive float or Tuple.
+            If given a positive float, _get_min_and_max() will automated generate
+            a tuple for contrast range. If given a tuple directly, it will serve
+            as a range for picking a contrast shift value from. Default to 0.5.
+        translation: Boolean. Whether to translate the image.
+        horizontal_flip: Boolean. Whether to flip the image horizontally.
+        vertical_flip: Boolean. Whether to flip the image vertically.
+        gaussian_noise: Boolean. Whether to add gaussian noise to the image.
+    """
+
+    def __init__(self,
+                 percentage=0.25,
+                 rotation_range=180,
+                 random_crop=True,
+                 brightness_range=0.5,
+                 saturation_range=0.5,
+                 contrast_range=0.5,
+                 translation=True,
+                 horizontal_flip=True,
+                 vertical_flip=True,
+                 gaussian_noise=True,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.percentage = percentage
+        self.rotation_range = rotation_range
+        self._rotate_choices = [0]
+        if self.rotation_range == 90:
+            self._rotate_choices = [0, 1, 3]
+        elif self.rotation_range == 180:
+            self._rotate_choices = [0, 1, 2, 3]
+        self.random_crop = random_crop
+        if self.random_crop:
+            # Generate 20 crop settings, ranging from a 1% to 20% crop.
+            self.scales = list(np.arange(0.8, 1.0, 0.01))
+            self.boxes = np.zeros((len(self.scales), 4))
+            for i, scale in enumerate(self.scales):
+                x1 = y1 = 0.5 - (0.5 * scale)
+                x2 = y2 = 0.5 + (0.5 * scale)
+                self.boxes[i] = [x1, y1, x2, y2]
+        self.brightness_range = brightness_range
+        self.saturation_range = self._get_min_and_max(saturation_range,
+                                                      'saturation_range')
+        self.contrast_range = self._get_min_and_max(contrast_range,
+                                                    'contrast_range')
+        self.translation = translation
+        self.horizontal_flip = horizontal_flip
+        self.vertical_flip = vertical_flip
+        self.gaussian_noise = gaussian_noise
+        self.shape = None
+
+    def build(self, hp, inputs=None):
+        return inputs
+
+    @staticmethod
+    def _get_min_and_max(value, name):
+        if isinstance(value, (tuple, list)) and len(value) == 2:
+            min_value, max_value = value
+            return min_value, max_value
+        elif isinstance(value, (int, float)):
+            min_value = 1. - value
+            max_value = 1. + value
+            return min_value, max_value
+        elif value == 0:
+            return None
+        else:
+            raise ValueError('Expected {name} to be either a float between 0 and 1, '
+                             'or a tuple of 2 floats between 0 and 1, '
+                             'but got {value}'.format(name=name, value=value))
+
+    def update(self, x, y=None):
+        x = nest.flatten(x)[0].numpy()
+        self.shape = x.shape
+
+    def transform(self, x, fit=False):
+        self.shape = x.shape
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if fit and choice < self.percentage:
+            return self._augment(x)
+        return x
+
+    def _rotate(self, x):
+        rotate_choice = tf.random.uniform(
+            shape=[],
+            minval=0,
+            maxval=len(self._rotate_choices),
+            dtype=tf.int64)
+        return tf.image.rot90(x, k=self._rotate_choices[rotate_choice])
+
+    def _random_crop(self, x):
+        crops = tf.image.crop_and_resize(
+            [x],
+            boxes=self.boxes,
+            box_indices=np.zeros(len(self.scales)),
+            crop_size=self.shape[:2])
+        return crops[tf.random.uniform(shape=[],
+                                       minval=0,
+                                       maxval=len(self.scales),
+                                       dtype=tf.int32)]
+
+    def _augment(self, x):
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if self.rotation_range != 0 and choice < 0.5:
+            x = self._rotate(x)
+
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if self.random_crop and choice < 0.5:
+            x = self._random_crop(x)
+
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if self.brightness_range != 0 and choice < 0.5:
+            x = tf.image.random_brightness(x,
+                                           self.brightness_range)
+
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if self.saturation_range and self.shape[-1] == 3 and choice > 0.5:
+            x = tf.image.random_saturation(x,
+                                           self.saturation_range[0],
+                                           self.saturation_range[1])
+
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        if self.contrast_range and choice < 0.5:
+            x = tf.image.random_contrast(x,
+                                         self.contrast_range[0],
+                                         self.contrast_range[1])
+
+        if self.horizontal_flip:
+            x = tf.image.random_flip_left_right(x)
+
+        if self.vertical_flip:
+            x = tf.image.random_flip_up_down(x)
+
+        choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        noise = tf.random.normal(shape=tf.shape(x),
+                                 mean=0.0,
+                                 stddev=1.0,
+                                 dtype=tf.float32)
+        if self.gaussian_noise and choice < 0.5:
+            x = tf.add(x, noise)
+        return x
+
+    def output_types(self):
+        return (tf.float32,)
+
+    @property
+    def output_shape(self):
+        return self.shape
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'percentage': self.percentage,
+            'rotation_range': self.rotation_range,
+            'random_crop': self.random_crop,
+            'brightness_range': self.brightness_range,
+            'saturation_range': self.saturation_range,
+            'contrast_range': self.contrast_range,
+            'translation': self.translation,
+            'horizontal_flip': self.horizontal_flip,
+            'vertical_flip': self.vertical_flip,
+            'gaussian_noise': self.gaussian_noise})
+        return config
+
+    def get_state(self):
+        state = super().get_state()
+        state.update({'shape': self.shape})
+        return state
+
+    def set_state(self, state):
+        super().set_state(state)
+        self.shape = state['shape']
+
+
+class FeatureEngineering(base.Block):
+    """A preprocessor block does feature engineering for the data.
+
+    # Arguments
+        max_columns: Int. The maximum number of columns after feature engineering.
+            Defaults to 1000.
+    """
+
+    def __init__(self, max_columns=1000, **kwargs):
+        super().__init__(**kwargs)
+        self.column_names = None
+        self.column_types = None
+        self.max_columns = max_columns
+        self.num_columns = 0
+        self.num_rows = 0
+        self.shape = None
+        # A list of categorical column indices.
+        self.categorical_col = []
+        # A list of numerical column indices.
+        self.numerical_col = []
+        self.label_encoders = {}
+        self.value_counters = {}
+        self.categorical_categorical = {}
+        self.numerical_categorical = {}
+        self.count_frequency = {}
+        # more than 32, less than 100
+        self.high_level1_col = []
+        # more than 100
+        self.high_level2_col = []
+        self.high_level_cat_cat = {}
+        self.high_level_num_cat = {}
+
+    def build(self, hp, inputs=None):
+        return inputs
+
+    def initialize(self):
+        for column_name, column_type in self.column_types.items():
+            if column_type == 'categorical':
+                self.categorical_col.append(
+                    self.column_names.index(column_name))
+            elif column_type == 'numerical':
+                self.numerical_col.append(
+                    self.column_names.index(column_name))
+            else:
+                raise ValueError('Unsupported column type: '
+                                 '{type}'.format(type=column_type))
+
+        for index, cat_col_index1 in enumerate(self.categorical_col):
+            self.label_encoders[cat_col_index1] = encoder.LabelEncoder()
+            self.value_counters[cat_col_index1] = {}
+            self.count_frequency[cat_col_index1] = {}
+            for cat_col_index2 in self.categorical_col[index + 1:]:
+                self.categorical_categorical[(cat_col_index1, cat_col_index2)] = {}
+            for num_col_index in self.numerical_col:
+                self.numerical_categorical[(num_col_index, cat_col_index1)] = {}
+
+    def update(self, x, y=None):
+        if self.num_rows == 0:
+            self.num_columns = len(self.column_types)
+            self.initialize()
+
+        self.num_rows += 1
+        x = nest.flatten(x)[0].numpy()
+
+        self.fill_missing(x)
+
+        for col_index in self.categorical_col:
+            key = str(x[col_index])
+            self.label_encoders[col_index].update(key)
+            self.value_counters[col_index].setdefault(key, 0)
+            self.value_counters[col_index][key] += 1
+
+        for col_index1, col_index2 in self.categorical_categorical.keys():
+            key = str((x[col_index1], x[col_index2]))
+            self.categorical_categorical[(col_index1, col_index2)].setdefault(key, 0)
+            self.categorical_categorical[(col_index1, col_index2)][key] += 1
+
+        for num_col_index, cat_col_index in self.numerical_categorical.keys():
+            key = str(x[cat_col_index])
+            v = x[num_col_index]
+            self.numerical_categorical[(
+                num_col_index, cat_col_index)].setdefault(key, 0)
+            self.numerical_categorical[(num_col_index, cat_col_index)][key] += v
+
+    def transform(self, x, fit=False):
+        x = nest.flatten(x)[0].numpy()
+
+        self.fill_missing(x)
+
+        new_values = []
+        # append frequency
+        for col_index in self.high_level1_col:
+            cat_name = str(x[col_index])
+            new_value = self.count_frequency[col_index][cat_name] if \
+                cat_name in self.count_frequency[col_index] else -1
+            new_values.append(new_value)
+
+        # append cat-cat value
+        for key, value in self.high_level_cat_cat.items():
+            col_index1, col_index2 = key
+            pair = str((x[col_index1], x[col_index2]))
+            new_value = value[pair] if pair in value else -1
+            new_values.append(new_value)
+
+        # append num-cat value
+        for key, value in self.high_level_num_cat.items():
+            num_col_index, cat_col_index = key
+            cat_name = str(x[cat_col_index])
+            new_value = value[cat_name] if cat_name in value else -1
+            new_values.append(new_value)
+
+        # LabelEncoding
+        for col_index in self.categorical_col:
+            key = str(x[col_index])
+            try:
+                x[col_index] = self.label_encoders[col_index].transform(key)
+            except KeyError:
+                x[col_index] = -1
+        return np.hstack((x, np.array(new_values)))
+
+    def fill_missing(self, x):
+        for col_index in range(self.num_columns):
+            x[col_index] = x[col_index].decode('utf-8')
+            if col_index in self.numerical_col:
+                if x[col_index] == 'nan':
+                    x[col_index] = 0.0
+                else:
+                    x[col_index] = float(x[col_index])
+            else:
+                if x[col_index] == 'nan':
+                    x[col_index] = 0
+
+    def finalize(self):
+        # divide column according to category number of the column
+        for col_index in self.value_counters.keys():
+            num_cat = len(self.value_counters[col_index])
+            if num_cat > 32 and num_cat <= 100:
+                self.high_level1_col.append(col_index)
+                self.count_frequency[col_index] = {
+                    key: value / (self.num_rows * num_cat)
+                    for key, value in self.value_counters[col_index].items()}
+            elif num_cat > 100:
+                self.high_level2_col.append(col_index)
+
+        self.high_level2_col.sort()
+
+        for index, cat_col_index1 in enumerate(self.high_level2_col):
+            # extract high level columns from cat-cat dict
+            for cat_col_index2 in self.high_level2_col[index + 1:]:
+                pair = (cat_col_index1, cat_col_index2)
+                self.high_level_cat_cat[pair] = self.categorical_categorical[pair]
+
+            # extract high level columns from num-cat dict and calculate mean
+            for num_col_index in self.numerical_col:
+                pair = (num_col_index, cat_col_index1)
+                self.high_level_num_cat[pair] = self.numerical_categorical[pair]
+                for key, value in self.high_level_num_cat[pair].items():
+                    self.high_level_num_cat[pair][key] /= self.value_counters[
+                        cat_col_index1][key]
+
+        self.shape = (len(self.column_types)
+                      + len(self.high_level1_col)
+                      + len(self.high_level_cat_cat)
+                      + len(self.high_level_num_cat),)
+
+    def output_types(self):
+        return (tf.float32,)
+
+    @property
+    def output_shape(self):
+        return self.shape
+
+    def get_state(self):
+        state = super().get_state()
+        label_encoders = {
+            key: encoder.serialize(label_encoder)
+            for key, label_encoder in self.label_encoders.items()}
+        label_encoders_state = {
+            key: label_encoder.get_state()
+            for key, label_encoder in self.label_encoders.items()}
+        state.update({
+            'shape': self.shape,
+            'num_rows': self.num_rows,
+            'categorical_col': self.categorical_col,
+            'numerical_col': self.numerical_col,
+            'label_encoders': utils.to_type_key(label_encoders, str),
+            'label_encoders_state': utils.to_type_key(label_encoders_state, str),
+            'value_counters': utils.to_type_key(self.value_counters, str),
+            'categorical_categorical': utils.to_type_key(
+                self.categorical_categorical, str),
+            'numerical_categorical': utils.to_type_key(
+                self.numerical_categorical, str),
+            'count_frequency': utils.to_type_key(self.count_frequency, str),
+            'high_level1_col': self.high_level1_col,
+            'high_level2_col': self.high_level2_col,
+            'high_level_cat_cat': utils.to_type_key(self.high_level_cat_cat, str),
+            'high_level_num_cat': utils.to_type_key(self.high_level_num_cat, str),
+            'column_names': self.column_names,
+            'column_types': utils.to_type_key(self.column_types, str),
+            'num_columns': self.num_columns,
+        })
+        return state
+
+    def set_state(self, state):
+        super().set_state(state)
+        for key, label_encoder in state['label_encoders'].items():
+            self.label_encoders[key] = encoder.deserialize(label_encoder)
+        for key, label_encoder_state in state['label_encoders_state'].items():
+            self.label_encoders[key].set_state(label_encoder_state)
+        self.column_names = state['column_names']
+        self.column_types = state['column_types']
+        self.num_columns = state['num_columns']
+        self.shape = state['shape']
+        self.num_rows = state['num_rows']
+        self.categorical_col = state['categorical_col']
+        self.numerical_col = state['numerical_col']
+        self.value_counters = utils.to_type_key(state['value_counters'], int)
+        self.categorical_categorical = utils.to_type_key(
+            state['categorical_categorical'], ast.literal_eval)
+        self.numerical_categorical = utils.to_type_key(
+            state['numerical_categorical'], ast.literal_eval)
+        self.count_frequency = utils.to_type_key(state['count_frequency'], int)
+        self.high_level1_col = state['high_level1_col']
+        self.high_level2_col = state['high_level2_col']
+        self.high_level_cat_cat = utils.to_type_key(
+            state['high_level_cat_cat'], ast.literal_eval)
+        self.high_level_num_cat = utils.to_type_key(
+            state['high_level_num_cat'], ast.literal_eval)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'max_columns': self.max_columns})
         return config

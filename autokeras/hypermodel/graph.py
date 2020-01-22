@@ -8,8 +8,8 @@ from autokeras.hypermodel import base
 from autokeras.hypermodel import compiler
 
 
-class Graph(base.Picklable):
-    """A graph consists of connected Blocks, HyperBlocks, Preprocessors or Heads.
+class Graph(kerastuner.HyperModel, base.Picklable):
+    """A graph consists of connected Blocks, or Heads.
 
     # Arguments
         inputs: A list of input node(s) for the Graph.
@@ -219,14 +219,12 @@ class Graph(base.Picklable):
     def build(self, hp):
         """Build the HyperModel into a Keras Model."""
         self._register_hps(hp)
-        self.compile(compiler.AFTER)
+        self.compile(compiler.COMPILE_FUNCTIONS)
         real_nodes = {}
         for input_node in self.inputs:
             node_id = self._node_to_id[input_node]
             real_nodes[node_id] = input_node.build()
         for block in self.blocks:
-            if isinstance(block, base.Preprocessor):
-                continue
             temp_inputs = [real_nodes[self._node_to_id[input_node]]
                            for input_node in block.inputs]
             outputs = block.build(hp, inputs=temp_inputs)

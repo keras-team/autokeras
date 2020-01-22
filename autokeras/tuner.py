@@ -40,7 +40,6 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         return model
     
     def search(self,
-               hyper_graph,
                callbacks=None,
                fit_on_val_data=False,
                **fit_kwargs):
@@ -51,7 +50,6 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         best model will be fully trained with the specified number of epochs.
 
         # Arguments
-            hyper_graph: HyperGraph. The HyperGraph to be tuned.
             callbacks: A list of callback functions. Defaults to None.
             fit_on_val_data: Boolean. Use the training set and validation set for the
                 final fit of the best model.

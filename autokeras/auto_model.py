@@ -7,6 +7,7 @@ from autokeras import utils
 from autokeras.hypermodel import base
 from autokeras.hypermodel import graph as graph_module
 from autokeras.hypermodel import block as block_module
+from autokeras.hypermodel import node as node_module
 
 
 class AutoModel(object):
@@ -86,7 +87,7 @@ class AutoModel(object):
             tf.random.set_seed(seed)
         # TODO: Support passing a tuner instance.
         # Initialize the hyper_graph.
-        graph = self._build_graph(dataset)
+        graph = self._build_graph()
         if isinstance(tuner, str):
             tuner = tuner_module.get_tuner_class(tuner)
         self.tuner = tuner(
@@ -131,15 +132,15 @@ class AutoModel(object):
     
         middle_nodes = []
         for input_node in inputs:
-            if isinstance(input_node, node.TextInput):
+            if isinstance(input_node, node_module.TextInput):
                 middle_nodes.append(block_module.TextBlock()(input_node))
-            if isinstance(input_node, node.ImageInput):
+            if isinstance(input_node, node_module.ImageInput):
                 middle_nodes.append(block_module.ImageBlock()(input_node))
-            if isinstance(input_node, node.StructuredDataInput):
+            if isinstance(input_node, node_module.StructuredDataInput):
                 middle_nodes.append(block_module.StructuredDataBlock()(input_node))
-            if isinstance(input_node, node.TimeSeriesInput):
+            if isinstance(input_node, node_module.TimeSeriesInput):
                 middle_nodes.append(block_module.TimeSeriesBlock()(input_node))
-            if isinstance(input_node, node.Input):
+            if isinstance(input_node, node_module.Input):
                 middle_nodes.append(block_module.GeneralBlock()(input_node))
     
         # Merge the middle nodes.
@@ -150,15 +151,15 @@ class AutoModel(object):
     
         outputs = nest.flatten([output_blocks(output_node)
                                 for output_blocks in outputs])
-        return graph.Graph(inputs=inputs, outputs=outputs)
+        return graph_module.Graph(inputs=inputs, outputs=outputs)
     
-    def _build_graph(self, dataset):
+    def _build_graph(self):
         # Using functional API.
         if all([isinstance(output, base.Node) for output in self.outputs]):
             graph = graph.Graph(inputs=self.inputs, outputs=self.outputs)
         # Using input/output API.
         elif all([isinstance(output, base.Head) for output in self.outputs]):
-            graph = self._assemble(inputs=self.inputs, outputs=self.outputs)
+            graph = self._assemble()
             self.outputs = graph.outputs
 
         return graph

@@ -133,3 +133,36 @@ def test_embedding_block():
 
     assert common.name_in_hps('pretraining', hp)
     assert common.name_in_hps('embedding_dim', hp)
+
+
+def test_image_block():
+    block = block_module.ImageBlock(normalize=None, augment=None)
+    block.set_state(block.get_state())
+    hp = kerastuner.HyperParameters()
+
+    block.build(hp, ak.Input())
+
+    assert common.name_in_hps('block_type', hp)
+    assert common.name_in_hps('normalize', hp)
+    assert common.name_in_hps('augment', hp)
+
+
+def test_text_block():
+    block = block_module.TextBlock()
+    block.set_state(block.get_state())
+    hp = kerastuner.HyperParameters()
+
+    block.build(hp, ak.TextInput())
+
+    assert common.name_in_hps('vectorizer', hp)
+
+
+def test_structured_data_block():
+    block = block_module.StructuredDataBlock()
+    block.num_heads = 1
+    block.set_state(block.get_state())
+    hp = kerastuner.HyperParameters()
+
+    block.build(hp, ak.Input())
+
+    assert common.name_in_hps('block_type', hp)
