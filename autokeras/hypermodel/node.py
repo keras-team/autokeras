@@ -96,6 +96,8 @@ class TextInput(Input):
                             '{type}.'.format(type=x.dtype))
 
     def _convert_to_dataset(self, x):
+        if len(x.shape) == 1:
+            x = x.reshape(-1, 1)
         if isinstance(x, np.ndarray):
             x = tf.data.Dataset.from_tensor_slices(x)
         return x

@@ -140,8 +140,6 @@ class AutoModel(object):
                 middle_nodes.append(block_module.StructuredDataBlock()(input_node))
             if isinstance(input_node, node_module.TimeSeriesInput):
                 middle_nodes.append(block_module.TimeSeriesBlock()(input_node))
-            if isinstance(input_node, node_module.Input):
-                middle_nodes.append(block_module.GeneralBlock()(input_node))
 
         # Merge the middle nodes.
         if len(middle_nodes) > 1:
@@ -167,6 +165,7 @@ class AutoModel(object):
     def fit(self,
             x=None,
             y=None,
+            batch_size=32,
             epochs=None,
             callbacks=None,
             validation_split=0.2,
@@ -180,6 +179,7 @@ class AutoModel(object):
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x.
             y: numpy.ndarray or tensorflow.Dataset. Training data y.
+            batch_size: Int. Number of samples per gradient update. Defaults to 32.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, by default we train for a maximum of 1000 epochs,
                 but we stop training if the validation loss stops improving for 10
@@ -223,6 +223,8 @@ class AutoModel(object):
                 callbacks = callbacks + [
                     tf.keras.callbacks.EarlyStopping(patience=10)]
 
+        dataset = dataset.batch(batch_size)
+        validation_data = validation_data.batch(batch_size)
         self.tuner.search(x=dataset,
                           epochs=epochs,
                           callbacks=callbacks,
@@ -293,12 +295,11 @@ class AutoModel(object):
             dataset, validation_data = utils.split_dataset(dataset, validation_split)
         return dataset, validation_data
 
-    def predict(self, x, batch_size=32, **kwargs):
+    def predict(self, x, **kwargs):
         """Predict the output for a given testing data.
 
         # Arguments
             x: Any allowed types according to the input node. Testing data.
-            batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
 
         # Returns
@@ -321,14 +322,13 @@ class AutoModel(object):
             new_y.append(temp_y)
         return new_y
 
-    def evaluate(self, x, y=None, batch_size=32, **kwargs):
+    def evaluate(self, x, y=None, **kwargs):
         """Evaluate the best model for the given data.
 
         # Arguments
             x: Any allowed types according to the input node. Testing data.
             y: Any allowed types according to the head. Testing targets.
                 Defaults to None.
-            batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
         # Returns
@@ -340,7 +340,6 @@ class AutoModel(object):
         return self.tuner.get_best_model().evaluate(
             x=x,
             y=y,
-            batch_size=batch_size,
             **kwargs)
 
     def export_model(self):

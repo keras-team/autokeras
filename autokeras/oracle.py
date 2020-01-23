@@ -80,7 +80,7 @@ class GreedyOracle(kerastuner.Oracle):
                               block_module.TextToNgramVector,
                               block_module.Normalization,
                               block_module.ImageAugmentation,
-                              block_module.CategoricalEncoding
+                              block_module.FeatureEncoding
                           ))]):
                     hp_type = GreedyOracle.PREPROCESS
                 elif any([hp.name.startswith(block.name)

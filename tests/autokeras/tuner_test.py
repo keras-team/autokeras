@@ -1,5 +1,6 @@
 from unittest import mock
 
+import kerastuner
 import pytest
 import tensorflow as tf
 
@@ -13,7 +14,8 @@ def tmp_dir(tmpdir_factory):
 
 
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
-def test_add_early_stopping(base_tuner_search, tmp_dir):
+@mock.patch('tensorflow.keras.Model.fit')
+def test_add_early_stopping(fit_fn, base_tuner_search, tmp_dir):
     graph = common.build_graph()
     tuner = tuner_module.Greedy(
         hypermodel=graph,
@@ -21,8 +23,11 @@ def test_add_early_stopping(base_tuner_search, tmp_dir):
         max_trials=1,
         directory=tmp_dir,
         seed=common.SEED)
+    hp = kerastuner.HyperParameters()
+    trial = mock.Mock()
+    trial.hyperparameters = hp
     oracle = mock.Mock()
-    oracle.get_best_trials.return_value = (mock.Mock(),)
+    oracle.get_best_trials.return_value = (trial,)
     tuner.oracle = oracle
 
     tuner.search()
@@ -45,7 +50,8 @@ def test_overwrite_init(base_tuner_init, tmp_dir):
 
 
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
-def test_overwrite_search(base_tuner_search, tmp_dir):
+@mock.patch('tensorflow.keras.Model.fit')
+def test_overwrite_search(fit_fn, base_tuner_search, tmp_dir):
     graph = common.build_graph()
     tuner = tuner_module.Greedy(
         hypermodel=graph,
@@ -53,8 +59,11 @@ def test_overwrite_search(base_tuner_search, tmp_dir):
         max_trials=1,
         directory=tmp_dir,
         seed=common.SEED)
+    hp = kerastuner.HyperParameters()
+    trial = mock.Mock()
+    trial.hyperparameters = hp
     oracle = mock.Mock()
-    oracle.get_best_trials.return_value = (mock.Mock(),)
+    oracle.get_best_trials.return_value = (trial,)
     tuner.oracle = oracle
 
     tuner.search()

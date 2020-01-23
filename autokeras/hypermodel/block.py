@@ -506,8 +506,7 @@ class Embedding(base.Block):
 
     # Arguments
         max_features: Int. Size of the vocabulary. Must be set if not using
-            TextToIntSequence before this block. If not specified, we will use the
-            vocabulary size in the preceding TextToIntSequence vocabulary size.
+            TextToIntSequence before this block. Defaults to 20000.
         pretraining: String. 'random' (use random weights instead any pretrained
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
@@ -517,7 +516,7 @@ class Embedding(base.Block):
     """
 
     def __init__(self,
-                 max_features=None,
+                 max_features=20000,
                  pretraining=None,
                  embedding_dim=None,
                  dropout_rate=None,
@@ -560,9 +559,9 @@ class Embedding(base.Block):
         else:
             layer = layers.Embedding(
                 input_dim=self.max_features,
-                output_dim=embedding_dim,
-                input_length=input_node.shape[1],
-                trainable=True)
+                output_dim=embedding_dim)
+            # input_length=input_node.shape[1],
+            # trainable=True)
         output_node = layer(input_node)
         if self.dropout_rate is not None:
             dropout_rate = self.dropout_rate
@@ -615,7 +614,7 @@ class ImageBlock(base.Block):
 
         normalize = self.normalize
         if normalize is None:
-            normalize = hp.Boolean('normalize', default=True)
+            normalize = hp.Boolean('normalize', default=False)
         augment = self.augment
         if augment is None:
             augment = hp.Boolean('augment', default=False)
@@ -722,7 +721,7 @@ class StructuredDataBlock(base.Block):
                                             [True],
                                             default=True)
         if feature_engineering:
-            output_node = CategoricalEncoding().build(hp, output_node)
+            output_node = FeatureEncoding().build(hp, output_node)
         return output_node
 
     def build_body(self, hp, input_node):
@@ -919,11 +918,27 @@ class ImageAugmentation(base.Block):
         self.gaussian_noise = gaussian_noise
         self.shape = None
 
+    @staticmethod
+    def _get_min_and_max(value, name):
+        if isinstance(value, (tuple, list)) and len(value) == 2:
+            min_value, max_value = value
+            return min_value, max_value
+        elif isinstance(value, (int, float)):
+            min_value = 1. - value
+            max_value = 1. + value
+            return min_value, max_value
+        elif value == 0:
+            return None
+        else:
+            raise ValueError('Expected {name} to be either a float between 0 and 1, '
+                             'or a tuple of 2 floats between 0 and 1, '
+                             'but got {value}'.format(name=name, value=value))
+
     def build(self, hp, inputs=None):
         return inputs
 
 
-class CategoricalEncoding(base.Block):
+class FeatureEncoding(base.Block):
 
     def build(self, hp, inputs=None):
         return inputs

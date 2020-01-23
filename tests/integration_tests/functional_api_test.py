@@ -33,12 +33,12 @@ def test_functional_api(tmp_dir):
     image_output = ak.Merge()((outputs1, outputs2))
 
     structured_data_input = ak.StructuredDataInput()
-    structured_data_output = ak.FeatureEngineering()(structured_data_input)
+    structured_data_output = ak.FeatureEncoding()(structured_data_input)
     structured_data_output = ak.DenseBlock()(structured_data_output)
 
     text_input = ak.TextInput()
     outputs1 = ak.TextToIntSequence()(text_input)
-    outputs1 = ak.EmbeddingBlock()(outputs1)
+    outputs1 = ak.Embedding()(outputs1)
     outputs1 = ak.ConvBlock(separable=True)(outputs1)
     outputs1 = ak.SpatialReduction()(outputs1)
     outputs2 = ak.TextToNgramVector()(text_input)
@@ -49,7 +49,7 @@ def test_functional_api(tmp_dir):
     ))
 
     merged_outputs = ak.Merge()((
-        structured_data_output,
+        # structured_data_output,
         image_output,
         text_output
     ))
@@ -60,11 +60,13 @@ def test_functional_api(tmp_dir):
         inputs=[
             image_input,
             text_input,
-            structured_data_input
+            # structured_data_input
         ],
         directory=tmp_dir,
-        outputs=[regression_outputs,
-                 classification_outputs],
+        outputs=[
+            regression_outputs,
+            classification_outputs
+        ],
         max_trials=2,
         seed=common.SEED)
 
@@ -72,8 +74,11 @@ def test_functional_api(tmp_dir):
         (
             image_x,
             text_x,
-            structured_data_x
+            # structured_data_x
         ),
-        (regression_y, classification_y),
+        (
+            regression_y,
+            classification_y
+        ),
         validation_split=0.2,
         epochs=1)
