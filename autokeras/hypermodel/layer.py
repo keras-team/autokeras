@@ -4,6 +4,7 @@ import inspect
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras import backend as K
 
 CombinerPreprocessingLayer = inspect.getmro(preprocessing.Normalization)[1]
 Combiner = inspect.getmro(preprocessing.Normalization()._combiner.__class__)[1]
@@ -19,39 +20,40 @@ class FeatureEncodingLayer(CombinerPreprocessingLayer):
             combiner=FeatureEncodingCombiner(encoding),
             **kwargs)
         self.encoding = encoding
-        self.categorical_values = {}
+        self.tables = {
+            index: tf.lookup.experimental.DenseHashTable(
+                key_dtype=tf.string,
+                value_dtype=tf.int64,
+                default_value=-1,
+                empty_key='-2',
+                deleted_key='-1'
+            )
+            for index, method in enumerate(self.encoding)
+            if method in [INT, ONE_HOT]
+        }
 
-    def build(self, input_shape):
-        super().build(input_shape)
-        for index in range(input_shape[0]):
-            if self.encoding[index] in [INT, ONE_HOT]:
-                categorical_value_dict = self._add_state_variable(
-                    name=str(index),
-                    shape=(None,),
-                    dtype=tf.string,
-                    initializer=lambda shape, dtype=None: [],
-                )
-                self.categorical_values[index] = categorical_value_dict
+        for key, table in self.tables.items():
+            tracked_table = self._add_trackable(table, trainable=False)
+            tracked_table.shape = tf.TensorShape((0,))
+
+    def _set_state_variables(self, updates):
+        for key, vocab in updates.items():
+            self.tables[int(key)].insert(
+                np.array(vocab, dtype=np.str), 
+                np.arange(len(vocab))
+            )
+            print(self.tables[int(key)].export())
 
     def call(self, inputs):
-        value_to_encoding = {}
-        for key, values in self.categorical_values.items():
-            mapping = {}
-            value_to_encoding[key] = mapping
-            for encoding, value in enumerate(values.numpy()):
-                mapping[value] = encoding
-
         outputs = []
-        for element in inputs.numpy():
-            row = []
-            for index, value in enumerate(element):
-                if self.encoding[index] == INT:
-                    print(value_to_encoding[index].keys())
-                    row.append(value_to_encoding[index][value])
-                else:
-                    row.append(float(value))
-            outputs.append(row)
-        return np.array(outputs).astype(np.float32)
+        for index in range(len(self.encoding)):
+            col = tf.slice(inputs, [0, index], [-1, 1])
+            if self.encoding[index] in [INT, ONE_HOT]:
+                col = self.tables[index].lookup(col)
+            outputs.append(col)
+        outputs = tf.concat(outputs, axis=-1)
+        outputs.set_shape(inputs.shape)
+        return outputs
 
     def compute_output_shape(self, input_shape):
         return input_shape
