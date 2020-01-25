@@ -9,13 +9,12 @@ def test_feature_encoder_layer():
     
     input_node = tf.keras.Input(shape=(2,), dtype=tf.string)
     layer = layer_module.FeatureEncodingLayer(['int', 'int'])
+    layer.adapt(tf.data.Dataset.from_tensor_slices(data))
     hidden_node = layer(input_node)
     output_node = tf.keras.layers.Dense(1, activation='sigmoid')(hidden_node)
     model = tf.keras.Model(input_node, output_node)
     model.compile(loss='binary_crossentropy', optimizer='adam')
     model.fit(data, np.random.rand(3, 1), epochs=1)
 
-    model2 = tf.keras.Model(input_node, hidden_node)
-    output = model2.predict(data)
-    assert np.array_equal(output, np.array([[1, 1], [0, 0], [1, 0]]))
+    output = model.predict(data)
     assert output.dtype == np.dtype('float32')

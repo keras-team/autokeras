@@ -8,6 +8,7 @@ from tensorflow.python.util import nest
 
 from autokeras import utils
 from autokeras.hypermodel import base
+from autokeras.hypermodel import layer as layer_module
 
 
 def set_hp_value(hp, name, value):
@@ -940,5 +941,17 @@ class ImageAugmentation(base.Block):
 
 class FeatureEncoding(base.Block):
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.column_types = None
+        
     def build(self, hp, inputs=None):
-        return inputs
+        input_node = nest.flatten(inputs)[0]
+        encoding = []
+        for column_type in self.column_types:
+            if column_type == 'categorical':
+                # TODO: Search to use one-hot or int.
+                encoding.append(layer_module.FeatureEncoding.INT)
+            else:
+                encoding.append(layer_module.FeatureEncoding.NONE)
+        return layer_module.FeatureEncoding(encoding)(input_node)

@@ -58,37 +58,13 @@ def fetch_heads(source_block):
     return heads
 
 
-# def lightgbm_head(lightgbm_block):
-    # """Fetch the heads for LightGBMBlock."""
-    # heads = fetch_heads(lightgbm_block)
-    # if len(heads) > 1:
-    # raise ValueError('LightGBMBlock can only be connected to one head.')
-    # head = heads[0]
-    # if isinstance(head, head_module.ClassificationHead):
-    # classifier = preprocessor_module.LightGBMClassifier(seed=lightgbm_block.seed)
-    # classifier.num_classes = head.num_classes
-    # lightgbm_block.lightgbm_block = classifier
-    # if isinstance(head, head_module.RegressionHead):
-    # lightgbm_block.lightgbm_block = preprocessor_module.LightGBMRegressor(
-    # seed=lightgbm_block.seed)
-
-    # in_block = head
-    # # Check if the head has no other input but only LightGBMBlock.
-    # while in_block is not lightgbm_block:
-    # # The head has other inputs.
-    # if len(in_block.inputs) > 1:
-    # return
-    # in_block = in_block.inputs[0].in_blocks[0]
-    # head.identity = True
-
-
-def feature_engineering_input(fe_block):
+def feature_encoding_input(fe_block):
     """Fetch the column_types and column_names.
 
-    The values are fetched for FeatureEngineering from StructuredDataInput.
+    The values are fetched for FeatureEncoding from StructuredDataInput.
     """
     if not isinstance(fe_block.inputs[0], node_module.StructuredDataInput):
-        raise TypeError('FeatureEngineering block can only be used '
+        raise TypeError('FeatureEncoding block can only be used '
                         'with StructuredDataInput.')
     fe_block.column_types = fe_block.inputs[0].column_types
     fe_block.column_names = fe_block.inputs[0].column_names
@@ -102,6 +78,7 @@ def structured_data_block_heads(structured_data_block):
 COMPILE_FUNCTIONS = {
     block_module.Embedding: embedding_max_features,
     block_module.StructuredDataBlock: structured_data_block_heads,
+    block_module.FeatureEncoding: feature_encoding_input,
 }
 
 ALL_CLASSES = {

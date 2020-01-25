@@ -5,15 +5,17 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.keras import backend as K
+from tensorflow.python.util import nest
 
 CombinerPreprocessingLayer = inspect.getmro(preprocessing.Normalization)[1]
 Combiner = inspect.getmro(preprocessing.Normalization()._combiner.__class__)[1]
 
-INT = 'int'
-ONE_HOT = 'one-hot'
-
 
 class FeatureEncodingLayer(CombinerPreprocessingLayer):
+
+    INT = 'int'
+    ONE_HOT = 'one-hot'
+    # TODO: Support one-hot encoding.
 
     def __init__(self, encoding, **kwargs):
         super().__init__(
@@ -24,12 +26,12 @@ class FeatureEncodingLayer(CombinerPreprocessingLayer):
             index: tf.lookup.experimental.DenseHashTable(
                 key_dtype=tf.string,
                 value_dtype=tf.int64,
-                default_value=-1,
+                default_value=-3,
                 empty_key='-2',
                 deleted_key='-1'
             )
             for index, method in enumerate(self.encoding)
-            if method in [INT, ONE_HOT]
+            if method in [self.INT, self.ONE_HOT]
         }
 
         for key, table in self.tables.items():
@@ -42,13 +44,13 @@ class FeatureEncodingLayer(CombinerPreprocessingLayer):
                 np.array(vocab, dtype=np.str), 
                 np.arange(len(vocab))
             )
-            print(self.tables[int(key)].export())
 
     def call(self, inputs):
+        inputs = nest.flatten(inputs)[0]
         outputs = []
         for index in range(len(self.encoding)):
             col = tf.slice(inputs, [0, index], [-1, 1])
-            if self.encoding[index] in [INT, ONE_HOT]:
+            if self.encoding[index] in [self.INT, self.ONE_HOT]:
                 col = self.tables[index].lookup(col)
             outputs.append(col)
         outputs = tf.concat(outputs, axis=-1)
@@ -75,8 +77,8 @@ class FeatureEncodingCombiner(Combiner):
     def compute(self, values, accumulator=None):
         if accumulator is None:
             accumulator = collections.defaultdict(set)
-        for index, value in enumerate(values.numpy()):
-            if self.encoding[index] in [INT, ONE_HOT]:
+        for index, value in enumerate(K.get_value(values)):
+            if self.encoding[index] in [self.INT, self.ONE_HOT]:
                 accumulator[index].add(value)
         return accumulator
 
@@ -84,7 +86,7 @@ class FeatureEncodingCombiner(Combiner):
         base_accumulator = collections.defaultdict(set)
         for accumulator in accumulators:
             for index, method in enumerate(self.encoding):
-                if method in [INT, ONE_HOT]:
+                if method in [self.INT, self.ONE_HOT]:
                     print(accumulator[index])
                     base_accumulator[index] = base_accumulator[index].union(
                         accumulator[index])
