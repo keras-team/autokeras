@@ -16,6 +16,14 @@ ONE_HOT = 'one-hot'
 
 
 class FeatureEncodingLayer(CombinerPreprocessingLayer):
+    """Encode the categorical features to numerical features.
+
+    # Arguments
+        encoding: A list of strings, which has the same number of elements as the
+            columns in the structured data. Each of the strings specifies the
+            encoding method used for the corresponding column. Use 'int' for
+            categorical columns and 'none' for numerical columns.
+    """
 
     # TODO: Support one-hot encoding.
 

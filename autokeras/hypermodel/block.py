@@ -932,6 +932,7 @@ class ImageAugmentation(base.Block):
 
 
 class FeatureEncoding(base.Block):
+    """Encode the categorical features to numerical features."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
