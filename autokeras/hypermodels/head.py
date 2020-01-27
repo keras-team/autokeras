@@ -1,37 +1,96 @@
+import numpy as np
 import pandas as pd
 import tensorflow as tf
+from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
 from autokeras import encoder
+from autokeras import keras_layers
 from autokeras import utils
-from autokeras.hypermodel import base
-from autokeras.hypermodel import block as block_module
+from autokeras.engine import block as block_module
+from autokeras.hypermodels import reduction
 
 
-class IdentityLayer(tf.keras.layers.Layer):
-    """A Keras Layer returns the inputs."""
+class Head(block_module.Block):
+    """Base class for the heads, e.g. classification, regression.
 
-    def compute_output_shape(self, input_shape):
-        return input_shape
+    # Arguments
+        loss: A Keras loss function. Defaults to None. If None, the loss will be
+            inferred from the AutoModel.
+        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
+            be inferred from the AutoModel.
+        output_shape: Tuple of int(s). Defaults to None. If None, the output shape
+            will be inferred from the AutoModel.
+    """
 
-    def call(self, inputs, *args, **kwargs):
-        return tf.identity(nest.flatten(inputs)[0])
-
-
-class Sigmoid(tf.keras.layers.Layer):
-    """Sigmoid activation function."""
-
-    def __init__(self, **kwargs):
+    def __init__(self, loss=None, metrics=None, output_shape=None, **kwargs):
         super().__init__(**kwargs)
+        self.output_shape = output_shape
+        self.loss = loss
+        self.metrics = metrics
+        # Mark if the head should directly output the input tensor.
 
-    def call(self, inputs):
-        return tf.keras.activations.sigmoid(inputs)
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'loss': self.loss,
+            'metrics': self.metrics,
+        })
+        return config
 
-    def compute_output_shape(self, input_shape):
-        return input_shape
+    def get_state(self):
+        return {'output_shape': self.output_shape}
+
+    def set_state(self, state):
+        self.output_shape = state['output_shape']
+
+    def build(self, hp, inputs=None):
+        raise NotImplementedError
+
+    def _check(self, y):
+        supported_types = (tf.data.Dataset, np.ndarray, pd.DataFrame, pd.Series)
+        if not isinstance(y, supported_types):
+            raise TypeError('Expect the target data of {name} to be tf.data.Dataset,'
+                            ' np.ndarray, pd.DataFrame or pd.Series, but got {type}.'
+                            .format(name=self.name, type=type(y)))
+
+    def _record_dataset_shape(self, dataset):
+        self.output_shape = utils.dataset_shape(dataset)
+
+    def _fit(self, y):
+        pass
+
+    def fit_transform(self, y):
+        self._check(y)
+        self._fit(y)
+        dataset = self._convert_to_dataset(y)
+        self._record_dataset_shape(dataset)
+        return dataset
+
+    def transform(self, y):
+        """Transform y into a compatible type (tf.data.Dataset)."""
+        self._check(y)
+        dataset = self._convert_to_dataset(y)
+        return dataset
+
+    def _convert_to_dataset(self, y):
+        if isinstance(y, tf.data.Dataset):
+            return y
+        if isinstance(y, np.ndarray):
+            if len(y.shape) == 1:
+                y = y.reshape(-1, 1)
+            return tf.data.Dataset.from_tensor_slices(y)
+        if isinstance(y, pd.DataFrame):
+            return tf.data.Dataset.from_tensor_slices(y.values)
+        if isinstance(y, pd.Series):
+            return tf.data.Dataset.from_tensor_slices(y.values.reshape(-1, 1))
+
+    def postprocess(self, y):
+        """Postprocess the output of the Keras Model."""
+        return y
 
 
-class ClassificationHead(base.Head):
+class ClassificationHead(Head):
     """Classification Dense layers.
 
     Use sigmoid and binary crossentropy for binary classification and multi-label
@@ -109,8 +168,6 @@ class ClassificationHead(base.Head):
             self.label_encoder.set_state(state['encoder_state'])
 
     def build(self, hp, inputs=None):
-        if self.identity:
-            return IdentityLayer(name=self.name)(inputs)
         if self.num_classes:
             expected = self.num_classes if self.num_classes > 2 else 1
             if self.output_shape[-1] != expected:
@@ -125,7 +182,7 @@ class ClassificationHead(base.Head):
 
         # Reduce the tensor to a vector.
         if len(output_node.shape) > 2:
-            output_node = block_module.SpatialReduction().build(hp, output_node)
+            output_node = reduction.SpatialReduction().build(hp, output_node)
 
         if self.dropout_rate is not None:
             dropout_rate = self.dropout_rate
@@ -133,12 +190,12 @@ class ClassificationHead(base.Head):
             dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0)
 
         if dropout_rate > 0:
-            output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
-        output_node = tf.keras.layers.Dense(self.output_shape[-1])(output_node)
+            output_node = layers.Dropout(dropout_rate)(output_node)
+        output_node = layers.Dense(self.output_shape[-1])(output_node)
         if self.loss == 'binary_crossentropy':
-            output_node = Sigmoid(name=self.name)(output_node)
+            output_node = keras_layers.Sigmoid(name=self.name)(output_node)
         else:
-            output_node = tf.keras.layers.Softmax(name=self.name)(output_node)
+            output_node = layers.Softmax(name=self.name)(output_node)
         return output_node
 
     def _fit(self, y):
@@ -184,7 +241,7 @@ class ClassificationHead(base.Head):
         return y
 
 
-class RegressionHead(base.Head):
+class RegressionHead(Head):
     """Regression Dense layers.
 
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
@@ -224,8 +281,6 @@ class RegressionHead(base.Head):
         return config
 
     def build(self, hp, inputs=None):
-        if self.identity:
-            return IdentityLayer(name=self.name)(inputs)
         if self.output_dim and self.output_shape[-1] != self.output_dim:
             raise ValueError(
                 'The data doesn\'t match the output_dim. '
@@ -241,8 +296,8 @@ class RegressionHead(base.Head):
                                                       default=0)
 
         if dropout_rate > 0:
-            output_node = tf.keras.layers.Dropout(dropout_rate)(output_node)
-        output_node = block_module.Flatten().build(hp, output_node)
-        output_node = tf.keras.layers.Dense(self.output_shape[-1],
-                                            name=self.name)(output_node)
+            output_node = layers.Dropout(dropout_rate)(output_node)
+        output_node = reduction.Flatten().build(hp, output_node)
+        output_node = layers.Dense(self.output_shape[-1],
+                                   name=self.name)(output_node)
         return output_node

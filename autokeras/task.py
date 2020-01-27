@@ -6,8 +6,8 @@ from typing import Union
 import pandas as pd
 
 from autokeras import auto_model
-from autokeras.hypermodel import head
-from autokeras.hypermodel import node
+from autokeras.hypermodels import head
+from autokeras.hypermodels import node
 
 
 class SupervisedImagePipeline(auto_model.AutoModel):

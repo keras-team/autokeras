@@ -3,8 +3,11 @@ import random
 import kerastuner
 import numpy as np
 
-from autokeras.hypermodel import base
-from autokeras.hypermodel import block as block_module
+from autokeras.engine import tuner as tuner_module
+from autokeras.hypermodels import basic
+from autokeras.hypermodels import preprocessing
+from autokeras.hypermodels import reduction
+from autokeras.hypermodels import wrapper
 
 
 class GreedyOracle(kerastuner.Oracle):
@@ -69,23 +72,33 @@ class GreedyOracle(kerastuner.Oracle):
                 hp_type = None
                 if any([hp.name.startswith(block.name)
                         for block in self.hypermodel.blocks if isinstance(block, (
-                            block_module.ImageBlock,
-                            block_module.TextBlock,
-                            block_module.StructuredDataBlock,
+                            wrapper.ImageBlock,
+                            wrapper.TextBlock,
+                            wrapper.StructuredDataBlock,
                         ))]):
                     hp_type = GreedyOracle.HYPER
                 elif any([hp.name.startswith(block.name)
                           for block in self.hypermodel.blocks if isinstance(block, (
-                              block_module.TextToIntSequence,
-                              block_module.TextToNgramVector,
-                              block_module.Normalization,
-                              block_module.ImageAugmentation,
-                              block_module.FeatureEncoding
+                              preprocessing.TextToIntSequence,
+                              preprocessing.TextToNgramVector,
+                              preprocessing.Normalization,
+                              preprocessing.ImageAugmentation,
+                              preprocessing.FeatureEncoding
                           ))]):
                     hp_type = GreedyOracle.PREPROCESS
                 elif any([hp.name.startswith(block.name)
-                          for block in self.hypermodel.blocks
-                          if isinstance(block, base.Block)]):
+                          for block in self.hypermodel.blocks if isinstance(block, (
+                              basic.Embedding,
+                              basic.ConvBlock,
+                              basic.RNNBlock,
+                              basic.DenseBlock,
+                              basic.ResNetBlock,
+                              basic.XceptionBlock,
+                              reduction.Merge,
+                              reduction.Flatten,
+                              reduction.SpatialReduction,
+                              reduction.TemporalReduction,
+                          ))]):
                     hp_type = GreedyOracle.ARCH
                 else:
                     hp_type = GreedyOracle.OPT
@@ -155,3 +168,31 @@ class GreedyOracle(kerastuner.Oracle):
                 # Reached max collisions. No value to return.
                 return None
         return values
+
+
+class Greedy(tuner_module.AutoTuner):
+
+    def __init__(self,
+                 hypermodel,
+                 objective,
+                 max_trials,
+                 initial_hps=None,
+                 seed=None,
+                 hyperparameters=None,
+                 tune_new_entries=True,
+                 allow_new_entries=True,
+                 **kwargs):
+        self.seed = seed
+        oracle = GreedyOracle(
+            hypermodel=hypermodel,
+            objective=objective,
+            max_trials=max_trials,
+            initial_hps=initial_hps,
+            seed=seed,
+            hyperparameters=hyperparameters,
+            tune_new_entries=tune_new_entries,
+            allow_new_entries=allow_new_entries)
+        super().__init__(
+            hypermodel=hypermodel,
+            oracle=oracle,
+            **kwargs)

@@ -3,9 +3,6 @@ import os
 import kerastuner
 import tensorflow as tf
 
-from autokeras import const
-from autokeras import oracle as oracle_module
-
 
 class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     """A Tuner class based on KerasTuner for AutoKeras.
@@ -85,76 +82,3 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     @property
     def best_model_path(self):
         return os.path.join(self.project_dir, 'best_model')
-
-
-class RandomSearch(AutoTuner, kerastuner.RandomSearch):
-    """KerasTuner RandomSearch with preprocessing layer tuning."""
-    pass
-
-
-class Hyperband(AutoTuner, kerastuner.Hyperband):
-    """KerasTuner Hyperband with preprocessing layer tuning."""
-    pass
-
-
-class BayesianOptimization(AutoTuner, kerastuner.BayesianOptimization):
-    """KerasTuner BayesianOptimization with preprocessing layer tuning."""
-    pass
-
-
-class Greedy(AutoTuner):
-
-    def __init__(self,
-                 hypermodel,
-                 objective,
-                 max_trials,
-                 initial_hps=None,
-                 seed=None,
-                 hyperparameters=None,
-                 tune_new_entries=True,
-                 allow_new_entries=True,
-                 **kwargs):
-        self.seed = seed
-        oracle = oracle_module.GreedyOracle(
-            hypermodel=hypermodel,
-            objective=objective,
-            max_trials=max_trials,
-            initial_hps=initial_hps,
-            seed=seed,
-            hyperparameters=hyperparameters,
-            tune_new_entries=tune_new_entries,
-            allow_new_entries=allow_new_entries)
-        super().__init__(
-            hypermodel=hypermodel,
-            oracle=oracle,
-            **kwargs)
-
-
-class ImageClassifierTuner(Greedy):
-    def __init__(self, **kwargs):
-        super().__init__(
-            initial_hps=const.INITIAL_HPS['image_classifier'],
-            **kwargs)
-
-
-TUNER_CLASSES = {
-    'bayesian': BayesianOptimization,
-    'random': RandomSearch,
-    'hyperband': Hyperband,
-    'greedy': Greedy,
-    'image_classifier': ImageClassifierTuner,
-    'image_regressor': Greedy,
-    'text_classifier': Greedy,
-    'text_regressor': Greedy,
-    'structured_data_classifier': Greedy,
-    'structured_data_regressor': Greedy,
-}
-
-
-def get_tuner_class(tuner):
-    if isinstance(tuner, str) and tuner in TUNER_CLASSES:
-        return TUNER_CLASSES.get(tuner)
-    else:
-        raise ValueError('The value {tuner} passed for argument tuner is invalid, '
-                         'expected one of "greedy", "random", "hyperband", '
-                         '"bayesian".'.format(tuner=tuner))

@@ -2,12 +2,40 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras import tuner as tuner_module
 from autokeras import utils
-from autokeras.hypermodel import base
-from autokeras.hypermodel import block as block_module
-from autokeras.hypermodel import graph as graph_module
-from autokeras.hypermodel import node as node_module
+from autokeras.engine import block as block_module
+from autokeras.hypermodels import graph as graph_module
+from autokeras.hypermodels import head as head_module
+from autokeras.hypermodels import node as node_module
+from autokeras.hypermodels import reduction
+from autokeras.hypermodels import wrapper
+from autokeras.tuners import bayesian_optimization
+from autokeras.tuners import greedy
+from autokeras.tuners import hyperband
+from autokeras.tuners import random_search
+from autokeras.tuners import task_specific
+
+TUNER_CLASSES = {
+    'bayesian': bayesian_optimization.BayesianOptimization,
+    'random': random_search.RandomSearch,
+    'hyperband': hyperband.Hyperband,
+    'greedy': greedy.Greedy,
+    'image_classifier': task_specific.ImageClassifierTuner,
+    'image_regressor': greedy.Greedy,
+    'text_classifier': greedy.Greedy,
+    'text_regressor': greedy.Greedy,
+    'structured_data_classifier': greedy.Greedy,
+    'structured_data_regressor': greedy.Greedy,
+}
+
+
+def get_tuner_class(tuner):
+    if isinstance(tuner, str) and tuner in TUNER_CLASSES:
+        return TUNER_CLASSES.get(tuner)
+    else:
+        raise ValueError('The value {tuner} passed for argument tuner is invalid, '
+                         'expected one of "greedy", "random", "hyperband", '
+                         '"bayesian".'.format(tuner=tuner))
 
 
 class AutoModel(object):
@@ -89,7 +117,7 @@ class AutoModel(object):
         # Initialize the hyper_graph.
         graph = self._build_graph()
         if isinstance(tuner, str):
-            tuner = tuner_module.get_tuner_class(tuner)
+            tuner = get_tuner_class(tuner)
         self.tuner = tuner(
             hypermodel=graph,
             overwrite=overwrite,
@@ -99,7 +127,7 @@ class AutoModel(object):
             seed=self.seed,
             project_name=name)
         self._split_dataset = False
-        if all([isinstance(output_node, base.Head)
+        if all([isinstance(output_node, head_module.Head)
                 for output_node in self.outputs]):
             self.heads = self.outputs
         else:
@@ -133,17 +161,17 @@ class AutoModel(object):
         middle_nodes = []
         for input_node in inputs:
             if isinstance(input_node, node_module.TextInput):
-                middle_nodes.append(block_module.TextBlock()(input_node))
+                middle_nodes.append(wrapper.TextBlock()(input_node))
             if isinstance(input_node, node_module.ImageInput):
-                middle_nodes.append(block_module.ImageBlock()(input_node))
+                middle_nodes.append(wrapper.ImageBlock()(input_node))
             if isinstance(input_node, node_module.StructuredDataInput):
-                middle_nodes.append(block_module.StructuredDataBlock()(input_node))
+                middle_nodes.append(wrapper.StructuredDataBlock()(input_node))
             if isinstance(input_node, node_module.TimeSeriesInput):
-                middle_nodes.append(block_module.TimeSeriesBlock()(input_node))
+                middle_nodes.append(wrapper.TimeSeriesBlock()(input_node))
 
         # Merge the middle nodes.
         if len(middle_nodes) > 1:
-            output_node = block_module.Merge()(middle_nodes)
+            output_node = reduction.Merge()(middle_nodes)
         else:
             output_node = middle_nodes[0]
 
@@ -153,10 +181,10 @@ class AutoModel(object):
 
     def _build_graph(self):
         # Using functional API.
-        if all([isinstance(output, base.Node) for output in self.outputs]):
+        if all([isinstance(output, block_module.Node) for output in self.outputs]):
             graph = graph_module.Graph(inputs=self.inputs, outputs=self.outputs)
         # Using input/output API.
-        elif all([isinstance(output, base.Head) for output in self.outputs]):
+        elif all([isinstance(output, head_module.Head) for output in self.outputs]):
             graph = self._assemble()
             self.outputs = graph.outputs
 
@@ -317,7 +345,7 @@ class AutoModel(object):
         y = nest.flatten(y)
         new_y = []
         for temp_y, head_block in zip(y, self.heads):
-            if isinstance(head_block, base.Head):
+            if isinstance(head_block, head_module.Head):
                 temp_y = head_block.postprocess(temp_y)
             new_y.append(temp_y)
         return new_y

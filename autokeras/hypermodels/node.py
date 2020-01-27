@@ -4,10 +4,10 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import utils
-from autokeras.hypermodel import base
+from autokeras.engine import block as block_module
 
 
-class Input(base.Node):
+class Input(block_module.Node):
     """Input node for tensor data.
 
     The data should be numpy.ndarray or tf.data.Dataset.

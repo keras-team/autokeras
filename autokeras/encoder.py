@@ -1,10 +1,10 @@
 import numpy as np
 import tensorflow as tf
 
-from autokeras.hypermodel import base
+from autokeras.engine import picklable
 
 
-class Encoder(base.Picklable):
+class Encoder(picklable.Picklable):
     """Base class for encoders of the prediction targets.
 
     # Arguments
