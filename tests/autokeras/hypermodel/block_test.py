@@ -2,6 +2,7 @@ from unittest import mock
 
 import kerastuner
 import pytest
+import tensorflow as tf
 
 import autokeras as ak
 from autokeras.hypermodel import block as block_module
@@ -160,9 +161,14 @@ def test_text_block():
 def test_structured_data_block():
     block = block_module.StructuredDataBlock()
     block.num_heads = 1
+    block.column_names = ['0', '1']
+    block.column_types = {
+        '0': ak.StructuredDataInput.CATEGORICAL,
+        '1': ak.StructuredDataInput.CATEGORICAL,
+    }
     block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
-    block.build(hp, ak.StructuredDataInput(shape=(10,)).build())
+    output = block.build(hp, ak.StructuredDataInput(shape=(2,)).build())
 
-    assert common.name_in_hps('block_type', hp)
+    assert isinstance(output, tf.Tensor)

@@ -49,7 +49,7 @@ def test_functional_api(tmp_dir):
     ))
 
     merged_outputs = ak.Merge()((
-        # structured_data_output,
+        structured_data_output,
         image_output,
         text_output
     ))
@@ -60,7 +60,7 @@ def test_functional_api(tmp_dir):
         inputs=[
             image_input,
             text_input,
-            # structured_data_input
+            structured_data_input
         ],
         directory=tmp_dir,
         outputs=[
@@ -74,7 +74,7 @@ def test_functional_api(tmp_dir):
         (
             image_x,
             text_x,
-            # structured_data_x
+            structured_data_x
         ),
         (
             regression_y,

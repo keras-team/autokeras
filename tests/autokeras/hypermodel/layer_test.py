@@ -6,9 +6,12 @@ from autokeras.hypermodel import layer as layer_module
 
 def test_feature_encoder_layer():
     data = np.array([['a', 'ab'], ['b', 'bc'], ['a', 'bc']])
-    
+
     input_node = tf.keras.Input(shape=(2,), dtype=tf.string)
-    layer = layer_module.FeatureEncodingLayer(['int', 'int'])
+    layer = layer_module.FeatureEncodingLayer([
+        layer_module.INT,
+        layer_module.INT,
+    ])
     layer.adapt(tf.data.Dataset.from_tensor_slices(data))
     hidden_node = layer(input_node)
     output_node = tf.keras.layers.Dense(1, activation='sigmoid')(hidden_node)

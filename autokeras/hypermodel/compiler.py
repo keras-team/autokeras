@@ -58,16 +58,16 @@ def fetch_heads(source_block):
     return heads
 
 
-def feature_encoding_input(fe_block):
+def feature_encoding_input(block):
     """Fetch the column_types and column_names.
 
     The values are fetched for FeatureEncoding from StructuredDataInput.
     """
-    if not isinstance(fe_block.inputs[0], node_module.StructuredDataInput):
+    if not isinstance(block.inputs[0], node_module.StructuredDataInput):
         raise TypeError('FeatureEncoding block can only be used '
                         'with StructuredDataInput.')
-    fe_block.column_types = fe_block.inputs[0].column_types
-    fe_block.column_names = fe_block.inputs[0].column_names
+    block.column_types = block.inputs[0].column_types
+    block.column_names = block.inputs[0].column_names
 
 
 def structured_data_block_heads(structured_data_block):
@@ -79,6 +79,7 @@ COMPILE_FUNCTIONS = {
     block_module.Embedding: embedding_max_features,
     block_module.StructuredDataBlock: structured_data_block_heads,
     block_module.FeatureEncoding: feature_encoding_input,
+    block_module.StructuredDataBlock: feature_encoding_input,
 }
 
 ALL_CLASSES = {

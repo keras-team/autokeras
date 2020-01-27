@@ -125,6 +125,9 @@ class StructuredDataInput(Input):
             number of instances.
     """
 
+    CATEGORICAL = 'categorical'
+    NUMERICAL = 'numerical'
+
     def __init__(self, column_names=None, column_types=None, **kwargs):
         super().__init__(**kwargs)
         self.column_names = column_names
@@ -135,6 +138,9 @@ class StructuredDataInput(Input):
         self.count_categorical = None
         self.count_unique_numerical = []
         self.num_col = None
+
+    def build(self):
+        return tf.keras.Input(shape=self.shape, dtype=tf.string)
 
     def get_config(self):
         config = super().get_config()
@@ -197,11 +203,10 @@ class StructuredDataInput(Input):
     def _convert_to_dataset(self, x):
         if isinstance(x, pd.DataFrame):
             # Convert x, y, validation_data to tf.Dataset.
-            x = tf.data.Dataset.from_tensor_slices(
-                x.values.astype(np.unicode))
+            x = x.values.astype(np.unicode)
         if isinstance(x, np.ndarray):
-            x = tf.data.Dataset.from_tensor_slices(x.astype(np.unicode))
-        dataset = super()._convert_to_dataset(x)
+            x = x.astype(np.unicode)
+        dataset = tf.data.Dataset.from_tensor_slices(x)
         for x in dataset:
             self.update(x)
         self.infer_column_types()
@@ -240,11 +245,11 @@ class StructuredDataInput(Input):
         column_types = {}
         for i in range(self.num_col):
             if self.count_categorical[i] > 0:
-                column_types[self.column_names[i]] = 'categorical'
+                column_types[self.column_names[i]] = self.CATEGORICAL
             elif len(self.count_unique_numerical[i])/self.count_numerical[i] < 0.05:
-                column_types[self.column_names[i]] = 'categorical'
+                column_types[self.column_names[i]] = self.CATEGORICAL
             else:
-                column_types[self.column_names[i]] = 'numerical'
+                column_types[self.column_names[i]] = self.NUMERICAL
         # Partial column_types is provided.
         if self.column_types is None:
             self.column_types = {}

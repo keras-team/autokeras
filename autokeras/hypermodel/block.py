@@ -9,6 +9,7 @@ from tensorflow.python.util import nest
 from autokeras import utils
 from autokeras.hypermodel import base
 from autokeras.hypermodel import layer as layer_module
+from autokeras.hypermodel import node as node_module
 
 
 def set_hp_value(hp, name, value):
@@ -240,8 +241,8 @@ class ConvBlock(base.Block):
 
     @staticmethod
     def _get_padding(kernel_size, output_node):
-        if (kernel_size * 2 <= output_node.shape[1] and
-                kernel_size * 2 <= output_node.shape[2]):
+        if all([kernel_size * 2 <= length
+                for length in output_node.shape[1:-1]]):
             return 'valid'
         return 'same'
 
@@ -678,29 +679,27 @@ class StructuredDataBlock(base.Block):
     """Block for structured data.
 
     # Arguments
-        feature_engineering: Boolean. Whether to use feature engineering block.
-            Defaults to True. If specified as None, it will be tuned automatically.
-        block_type: String. 'dense' or 'conv'. If it is 'dense', DenseBlock
-            will be used. If it is 'conv', ConvBlock will be used. If
-            unspecified, it will be tuned automatically.
+        feature_encoding: Boolean. Whether to use feature encoding block to encode
+            the categorical features. Defaults to True. If specified as None, it will
+            be tuned automatically.
         seed: Int. Random seed.
     """
 
     def __init__(self,
-                 feature_engineering=True,
+                 feature_encoding=True,
                  block_type=None,
                  seed=None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.feature_engineering = feature_engineering
-        self.block_type = block_type
+        self.feature_encoding = feature_encoding
         self.num_heads = None
         self.seed = seed
+        self.column_types = None
+        self.column_names = None
 
     def get_config(self):
         config = super().get_config()
-        config.update({'feature_engineering': self.feature_engineering,
-                       'block_type': self.block_type,
+        config.update({'feature_encoding': self.feature_encoding,
                        'seed': self.seed})
         return config
 
@@ -713,34 +712,27 @@ class StructuredDataBlock(base.Block):
         super().set_state(state)
         self.num_heads = state.get('num_heads')
 
-    def build_feature_engineering(self, hp, input_node):
+    def build_feature_encoding(self, hp, input_node):
         output_node = input_node
-        feature_engineering = self.feature_engineering
-        if feature_engineering is None:
-            # TODO: If False, use plain label encoding.
-            feature_engineering = hp.Choice('feature_engineering',
-                                            [True],
-                                            default=True)
-        if feature_engineering:
-            output_node = FeatureEncoding().build(hp, output_node)
+        feature_encoding = self.feature_encoding
+        if feature_encoding is None:
+            feature_encoding = hp.Choice('feature_encoding',
+                                         [True, False],
+                                         default=True)
+        if feature_encoding:
+            block = FeatureEncoding()
+            block.column_types = self.column_types
+            block.column_names = self.column_names
+            output_node = block.build(hp, output_node)
         return output_node
 
     def build_body(self, hp, input_node):
-        block_type = self.block_type or hp.Choice('block_type',
-                                                  ['dense', 'conv'],
-                                                  default='dense')
-        if block_type == 'dense':
-            output_node = DenseBlock().build(hp, input_node)
-        elif block_type == 'conv':
-            output_node = ConvBlock().build(hp, input_node)
-        else:
-            raise ValueError('Expect the block_type to be "dense" or "conv", '
-                             'but got {block_type}'.format(block_type=block_type))
+        output_node = DenseBlock().build(hp, input_node)
         return output_node
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
-        output_node = self.build_feature_engineering(hp, input_node)
+        output_node = self.build_feature_encoding(hp, input_node)
         output_node = self.build_body(hp, output_node)
         return output_node
 
@@ -944,14 +936,16 @@ class FeatureEncoding(base.Block):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.column_types = None
-        
+        self.column_names = None
+
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         encoding = []
-        for column_type in self.column_types:
-            if column_type == 'categorical':
+        for column_name in self.column_names:
+            column_type = self.column_types[column_name]
+            if column_type == node_module.StructuredDataInput.CATEGORICAL:
                 # TODO: Search to use one-hot or int.
-                encoding.append(layer_module.FeatureEncoding.INT)
+                encoding.append(layer_module.INT)
             else:
-                encoding.append(layer_module.FeatureEncoding.NONE)
-        return layer_module.FeatureEncoding(encoding)(input_node)
+                encoding.append(layer_module.NONE)
+        return layer_module.FeatureEncodingLayer(encoding)(input_node)
