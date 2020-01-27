@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from autokeras.hypermodel import layer as layer_module
+from autokeras import keras_layers as layer_module
 
 
 def test_feature_encoder_layer():

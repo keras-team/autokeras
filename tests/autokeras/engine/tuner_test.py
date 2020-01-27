@@ -4,8 +4,8 @@ import kerastuner
 import pytest
 import tensorflow as tf
 
-from autokeras import tuner as tuner_module
-from tests import common
+from autokeras.engine import tuner as tuner_module
+from tests import utils
 
 
 @pytest.fixture(scope='module')
@@ -13,16 +13,16 @@ def tmp_dir(tmpdir_factory):
     return tmpdir_factory.mktemp('test_auto_model')
 
 
+@mock.patch('kerastuner.engine.base_tuner.BaseTuner.__init__')
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
 @mock.patch('tensorflow.keras.Model.fit')
-def test_add_early_stopping(fit_fn, base_tuner_search, tmp_dir):
-    graph = common.build_graph()
-    tuner = tuner_module.Greedy(
-        hypermodel=graph,
-        objective='val_loss',
-        max_trials=1,
-        directory=tmp_dir,
-        seed=common.SEED)
+def test_add_early_stopping(fit_fn, base_tuner_search, init, tmp_dir):
+    graph = utils.build_graph()
+    tuner = tuner_module.AutoTuner(oracle=mock.Mock(), hypermodel=graph)
+    tuner.hypermodel = graph
+    tuner.oracle = mock.Mock()
+    tuner.directory = tmp_dir
+    tuner.project_name = ''
     hp = kerastuner.HyperParameters()
     trial = mock.Mock()
     trial.hyperparameters = hp
@@ -39,26 +39,24 @@ def test_add_early_stopping(fit_fn, base_tuner_search, tmp_dir):
 
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.__init__')
 def test_overwrite_init(base_tuner_init, tmp_dir):
-    tuner_module.Greedy(
+    tuner_module.AutoTuner(
+        oracle=mock.Mock(),
         hypermodel=lambda hp: None,
-        objective='val_loss',
-        max_trials=1,
-        directory=tmp_dir,
-        seed=common.SEED)
+        directory=tmp_dir)
 
     assert not base_tuner_init.call_args_list[0][1]['overwrite']
 
 
+@mock.patch('kerastuner.engine.base_tuner.BaseTuner.__init__')
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
 @mock.patch('tensorflow.keras.Model.fit')
-def test_overwrite_search(fit_fn, base_tuner_search, tmp_dir):
-    graph = common.build_graph()
-    tuner = tuner_module.Greedy(
-        hypermodel=graph,
-        objective='val_loss',
-        max_trials=1,
-        directory=tmp_dir,
-        seed=common.SEED)
+def test_overwrite_search(fit_fn, base_tuner_search, init, tmp_dir):
+    graph = utils.build_graph()
+    tuner = tuner_module.AutoTuner(oracle=mock.Mock(), hypermodel=graph)
+    tuner.hypermodel = graph
+    tuner.oracle = mock.Mock()
+    tuner.directory = tmp_dir
+    tuner.project_name = ''
     hp = kerastuner.HyperParameters()
     trial = mock.Mock()
     trial.hyperparameters = hp

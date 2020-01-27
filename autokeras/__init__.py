@@ -1,5 +1,6 @@
 from autokeras.auto_model import AutoModel
 from autokeras.engine.block import Block
+from autokeras.engine.block import Head
 from autokeras.engine.block import Node
 from autokeras.hypermodels.basic import ConvBlock
 from autokeras.hypermodels.basic import DenseBlock
@@ -8,7 +9,6 @@ from autokeras.hypermodels.basic import ResNetBlock
 from autokeras.hypermodels.basic import RNNBlock
 from autokeras.hypermodels.basic import XceptionBlock
 from autokeras.hypermodels.head import ClassificationHead
-from autokeras.hypermodels.head import Head
 from autokeras.hypermodels.head import RegressionHead
 from autokeras.hypermodels.node import ImageInput
 from autokeras.hypermodels.node import Input

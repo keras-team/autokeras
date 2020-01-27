@@ -5,6 +5,7 @@ import numpy as np
 
 from autokeras.engine import tuner as tuner_module
 from autokeras.hypermodels import basic
+from autokeras.hypermodels import head
 from autokeras.hypermodels import preprocessing
 from autokeras.hypermodels import reduction
 from autokeras.hypermodels import wrapper
@@ -98,6 +99,8 @@ class GreedyOracle(kerastuner.Oracle):
                               reduction.Flatten,
                               reduction.SpatialReduction,
                               reduction.TemporalReduction,
+                              head.ClassificationHead,
+                              head.RegressionHead,
                           ))]):
                     hp_type = GreedyOracle.ARCH
                 else:

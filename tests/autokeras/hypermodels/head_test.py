@@ -3,13 +3,13 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from autokeras.hypermodel import head as head_module
-from autokeras.hypermodel import node as node_module
-from tests import common
+from autokeras.hypermodels import head as head_module
+from autokeras.hypermodels import node as node_module
+from tests import utils
 
 
 def test_y_is_pd_series():
-    (x, y), (val_x, val_y) = common.dataframe_series()
+    (x, y), (val_x, val_y) = utils.dataframe_series()
     head = head_module.ClassificationHead()
     head.fit_transform(y)
     assert isinstance(head.transform(y), tf.data.Dataset)

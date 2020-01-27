@@ -5,7 +5,6 @@ from tensorflow.python.util import nest
 from autokeras import utils
 from autokeras.engine import block as block_module
 from autokeras.hypermodels import graph as graph_module
-from autokeras.hypermodels import head as head_module
 from autokeras.hypermodels import node as node_module
 from autokeras.hypermodels import reduction
 from autokeras.hypermodels import wrapper
@@ -127,7 +126,7 @@ class AutoModel(object):
             seed=self.seed,
             project_name=name)
         self._split_dataset = False
-        if all([isinstance(output_node, head_module.Head)
+        if all([isinstance(output_node, block_module.Head)
                 for output_node in self.outputs]):
             self.heads = self.outputs
         else:
@@ -184,7 +183,7 @@ class AutoModel(object):
         if all([isinstance(output, block_module.Node) for output in self.outputs]):
             graph = graph_module.Graph(inputs=self.inputs, outputs=self.outputs)
         # Using input/output API.
-        elif all([isinstance(output, head_module.Head) for output in self.outputs]):
+        elif all([isinstance(output, block_module.Head) for output in self.outputs]):
             graph = self._assemble()
             self.outputs = graph.outputs
 
@@ -345,7 +344,7 @@ class AutoModel(object):
         y = nest.flatten(y)
         new_y = []
         for temp_y, head_block in zip(y, self.heads):
-            if isinstance(head_block, head_module.Head):
+            if isinstance(head_block, block_module.Head):
                 temp_y = head_block.postprocess(temp_y)
             new_y.append(temp_y)
         return new_y

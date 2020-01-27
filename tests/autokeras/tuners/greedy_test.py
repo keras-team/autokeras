@@ -2,13 +2,13 @@ from unittest import mock
 
 import kerastuner
 
-from autokeras import oracle as oracle_module
-from tests import common
+from autokeras.tuners import greedy
+from tests import utils
 
 
 def test_random_oracle_state():
-    graph = common.build_graph()
-    oracle = oracle_module.GreedyOracle(
+    graph = utils.build_graph()
+    oracle = greedy.GreedyOracle(
         hypermodel=graph,
         objective='val_loss',
     )
@@ -17,10 +17,10 @@ def test_random_oracle_state():
     assert oracle.hypermodel is graph
 
 
-@mock.patch('autokeras.oracle.GreedyOracle.get_best_trials')
+@mock.patch('autokeras.tuners.greedy.GreedyOracle.get_best_trials')
 def test_random_oracle(fn):
-    graph = common.build_graph()
-    oracle = oracle_module.GreedyOracle(
+    graph = utils.build_graph()
+    oracle = greedy.GreedyOracle(
         hypermodel=graph,
         objective='val_loss',
     )
@@ -34,8 +34,8 @@ def test_random_oracle(fn):
     for i in range(2000):
         oracle._populate_space(str(i))
 
-    assert 'optimizer' in oracle._hp_names[oracle_module.GreedyOracle.OPT]
+    assert 'optimizer' in oracle._hp_names[greedy.GreedyOracle.OPT]
     assert 'classification_head_1/dropout_rate' in oracle._hp_names[
-        oracle_module.GreedyOracle.ARCH]
+        greedy.GreedyOracle.ARCH]
     assert 'image_block_1/block_type' in oracle._hp_names[
-        oracle_module.GreedyOracle.HYPER]
+        greedy.GreedyOracle.HYPER]

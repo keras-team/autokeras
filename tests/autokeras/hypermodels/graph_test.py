@@ -5,7 +5,7 @@ import pytest
 from kerastuner.engine import hyperparameters as hp_module
 
 import autokeras as ak
-from autokeras.hypermodel import graph as graph_module
+from autokeras.hypermodels import graph as graph_module
 
 
 @pytest.fixture(scope='module')

@@ -4,6 +4,7 @@ import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras.engine import block as block_module
 from autokeras.engine import picklable
 from autokeras.hypermodels import basic
 from autokeras.hypermodels import head as head_module
@@ -46,7 +47,7 @@ def fetch_heads(source_block):
     q.put(source_block)
     while not q.empty():
         block = q.get()
-        if isinstance(block, head_module.Head):
+        if isinstance(block, block_module.Head):
             heads.append(block)
         for output_node in block.outputs:
             for next_block in output_node.out_blocks:
@@ -332,7 +333,7 @@ class Graph(kerastuner.HyperModel, picklable.Picklable):
         metrics = {}
         for output_node in self.outputs:
             block = output_node.in_blocks[0]
-            if isinstance(block, head_module.Head):
+            if isinstance(block, block_module.Head):
                 metrics[block.name] = block.metrics
         return metrics
 
@@ -340,7 +341,7 @@ class Graph(kerastuner.HyperModel, picklable.Picklable):
         loss = {}
         for output_node in self.outputs:
             block = output_node.in_blocks[0]
-            if isinstance(block, head_module.Head):
+            if isinstance(block, block_module.Head):
                 loss[block.name] = block.loss
         return loss
 

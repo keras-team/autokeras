@@ -2,7 +2,7 @@ import pytest
 from tensorflow.python.keras.datasets import mnist
 
 import autokeras as ak
-from tests import common
+from tests import utils
 
 
 @pytest.fixture(scope='module')
@@ -14,15 +14,15 @@ def test_functional_api(tmp_dir):
     # Prepare the data.
     num_instances = 20
     (image_x, train_y), (test_x, test_y) = mnist.load_data()
-    (text_x, train_y), (test_x, test_y) = common.imdb_raw()
-    (structured_data_x, train_y), (test_x, test_y) = common.dataframe_numpy()
+    (text_x, train_y), (test_x, test_y) = utils.imdb_raw()
+    (structured_data_x, train_y), (test_x, test_y) = utils.dataframe_numpy()
 
     image_x = image_x[:num_instances]
     text_x = text_x[:num_instances]
     structured_data_x = structured_data_x[:num_instances]
-    classification_y = common.generate_one_hot_labels(num_instances=num_instances,
-                                                      num_classes=3)
-    regression_y = common.generate_data(num_instances=num_instances, shape=(1,))
+    classification_y = utils.generate_one_hot_labels(num_instances=num_instances,
+                                                     num_classes=3)
+    regression_y = utils.generate_data(num_instances=num_instances, shape=(1,))
 
     # Build model and train.
     image_input = ak.ImageInput()
@@ -68,7 +68,7 @@ def test_functional_api(tmp_dir):
             classification_outputs
         ],
         max_trials=2,
-        seed=common.SEED)
+        seed=utils.SEED)
 
     automodel.fit(
         (
