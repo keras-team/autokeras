@@ -1,0 +1,87 @@
+from autokeras.engine import adapter
+
+
+class HeadAdapter(adapter.Adapter):
+
+    def check(self, dataset):
+        supported_types = (tf.data.Dataset, np.ndarray, pd.DataFrame, pd.Series)
+        if not isinstance(dataset, supported_types):
+            raise TypeError('Expect the target data of {name} to be tf.data.Dataset,'
+                            ' np.ndarray, pd.DataFrame or pd.Series, but got {type}.'
+                            .format(name=self.name, type=type(dataset)))
+
+    def convert_to_dataset(self, dataset):
+        if isinstance(dataset, np.ndarray):
+            if len(dataset.shape) == 1:
+                dataset = dataset.reshape(-1, 1)
+        if isinstance(dataset, pd.DataFrame):
+            dataset = dataset.values
+        if isinstance(dataset, pd.Series):
+            dataset = dataset.values.reshape(-1, 1)
+        return super().convert_to_dataset(dataset)
+
+    def postprocess(self, y):
+        """Postprocess the output of the Keras Model."""
+        return y
+
+
+class ClassificationHeadAdapter(adapter.Adapter):
+
+    def __init__(self, num_classes=None):
+        self.num_classes = num_classes
+        self.label_encoder = None
+
+    def get_state(self):
+        state = super().get_state()
+        state.update({
+            'encoder': encoder.serialize(self.label_encoder),
+            'encoder_state': self.label_encoder.get_state() if self.label_encoder
+            else None})
+        return state
+
+    def set_state(self, state):
+        super().set_state(state)
+        self.label_encoder = encoder.deserialize(state['encoder'])
+        if 'encoder_class' in state:
+            self.label_encoder.set_state(state['encoder_state'])
+
+    def fit_before_convert(self, dataset):
+        # If in tf.data.Dataset, must be encoded already.
+        if isinstance(dataset, tf.data.Dataset):
+            if not self.num_classes:
+                shape = dataset.take(1).shape[1]
+                if shape == 1:
+                    self.num_classes = 2
+                else:
+                    self.num_classes = shape
+            return
+        if isinstance(dataset, pd.DataFrame):
+            dataset = dataset.values
+        if isinstance(dataset, pd.Series):
+            dataset = dataset.values.reshape(-1, 1)
+        # Not label.
+        if len(dataset.flatten()) != len(dataset):
+            self.num_classes = dataset.shape[1]
+            return
+        labels = set(dataset.flatten())
+        if self.num_classes is None:
+            self.num_classes = len(labels)
+        if self.num_classes == 2:
+            self.label_encoder = encoder.LabelEncoder()
+        elif self.num_classes > 2:
+            self.label_encoder = encoder.OneHotEncoder()
+        self.label_encoder.fit_with_labels(dataset)
+
+    def convert_to_dataset(self, dataset):
+        if self.label_encoder:
+            dataset = self.label_encoder.encode(dataset)
+        return super()._convert_to_dataset(dataset)
+
+    def postprocess(self, y):
+        if self.label_encoder:
+            y = self.label_encoder.decode(y)
+        return y
+
+
+class RegressionHeadAdapter(adapter.Adapter):
+    pass

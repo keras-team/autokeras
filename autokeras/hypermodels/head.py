@@ -49,7 +49,6 @@ class ClassificationHead(block_module.Head):
         if not self.metrics:
             self.metrics = ['accuracy']
         self.dropout_rate = dropout_rate
-        self.label_encoder = None
         self.set_loss()
 
     def set_loss(self):
@@ -72,20 +71,6 @@ class ClassificationHead(block_module.Head):
             'multi_label': self.multi_label,
             'dropout_rate': self.dropout_rate})
         return config
-
-    def get_state(self):
-        state = super().get_state()
-        state.update({
-            'encoder': encoder.serialize(self.label_encoder),
-            'encoder_state': self.label_encoder.get_state() if self.label_encoder
-            else None})
-        return state
-
-    def set_state(self, state):
-        super().set_state(state)
-        self.label_encoder = encoder.deserialize(state['encoder'])
-        if 'encoder_class' in state:
-            self.label_encoder.set_state(state['encoder_state'])
 
     def build(self, hp, inputs=None):
         if self.num_classes:
@@ -117,48 +102,6 @@ class ClassificationHead(block_module.Head):
         else:
             output_node = layers.Softmax(name=self.name)(output_node)
         return output_node
-
-    def _fit(self, y):
-        super()._fit(y)
-        if isinstance(y, tf.data.Dataset):
-            if not self.num_classes:
-                for y in tf.data.Dataset:
-                    shape = y.shape[0]
-                    break
-                if shape == 1:
-                    self.num_classes = 2
-                else:
-                    self.num_classes = shape
-            self.set_loss()
-            return
-        if isinstance(y, pd.DataFrame):
-            y = y.values
-        if isinstance(y, pd.Series):
-            y = y.values.reshape(-1, 1)
-        # Not label.
-        if len(y.flatten()) != len(y):
-            self.num_classes = y.shape[1]
-            self.set_loss()
-            return
-        labels = set(y.flatten())
-        if self.num_classes is None:
-            self.num_classes = len(labels)
-        if self.num_classes == 2:
-            self.label_encoder = encoder.LabelEncoder()
-        elif self.num_classes > 2:
-            self.label_encoder = encoder.OneHotEncoder()
-        self.set_loss()
-        self.label_encoder.fit_with_labels(y)
-
-    def _convert_to_dataset(self, y):
-        if self.label_encoder:
-            y = self.label_encoder.encode(y)
-        return super()._convert_to_dataset(y)
-
-    def postprocess(self, y):
-        if self.label_encoder:
-            y = self.label_encoder.decode(y)
-        return y
 
 
 class RegressionHead(block_module.Head):
