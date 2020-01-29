@@ -3,12 +3,10 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras import utils
-from autokeras.engine import node as node_module
 from autokeras.engine import adapter as adapter_module
 
 
-class InputAdapter(adapter.Adapter):
+class InputAdapter(adapter_module.Adapter):
 
     def check(self, x):
         """Record any information needed by transform."""
@@ -20,7 +18,7 @@ class InputAdapter(adapter.Adapter):
                             '{type}.'.format(type=x.dtype))
 
 
-class ImageInputAdapter(adapter.Adapter):
+class ImageInputAdapter(adapter_module.Adapter):
 
     def check(self, x):
         """Record any information needed by transform."""
@@ -39,10 +37,10 @@ class ImageInputAdapter(adapter.Adapter):
         if isinstance(x, np.ndarray):
             if x.ndim == 3:
                 x = np.expand_dims(x, axis=3)
-        return super()._convert_to_dataset(x)
+        return super().convert_to_dataset(x)
 
 
-class TextInputAdapter(adapter.Adapter):
+class TextInputAdapter(adapter_module.Adapter):
 
     def check(self, x):
         """Record any information needed by transform."""
@@ -67,9 +65,12 @@ class TextInputAdapter(adapter.Adapter):
         return x
 
 
-class StructuredDataInputAdapter(adapter.Adapter):
+class StructuredDataInputAdapter(adapter_module.Adapter):
 
-    def __init__(self):
+    CATEGORICAL = 'categorical'
+    NUMERICAL = 'numerical'
+
+    def __init__(self, column_names=None, column_types=None):
         super().__init__()
         self.column_names = column_names
         self.column_types = column_types
@@ -140,6 +141,7 @@ class StructuredDataInputAdapter(adapter.Adapter):
         return dataset
 
     def fit(self, dataset):
+        super().fit(dataset)
         for x in dataset:
             self.update(x)
         self.infer_column_types()
@@ -188,4 +190,3 @@ class StructuredDataInputAdapter(adapter.Adapter):
         for key, value in column_types.items():
             if key not in self.column_types:
                 self.column_types[key] = value
-

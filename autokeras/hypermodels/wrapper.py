@@ -124,7 +124,6 @@ class StructuredDataBlock(block_module.Block):
                  **kwargs):
         super().__init__(**kwargs)
         self.feature_encoding = feature_encoding
-        self.num_heads = None
         self.seed = seed
         self.column_types = None
         self.column_names = None
@@ -134,15 +133,6 @@ class StructuredDataBlock(block_module.Block):
         config.update({'feature_encoding': self.feature_encoding,
                        'seed': self.seed})
         return config
-
-    def get_state(self):
-        state = super().get_state()
-        state.update({'num_heads': self.num_heads})
-        return state
-
-    def set_state(self, state):
-        super().set_state(state)
-        self.num_heads = state.get('num_heads')
 
     def build_feature_encoding(self, hp, input_node):
         output_node = input_node

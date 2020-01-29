@@ -1,9 +1,11 @@
 import tensorflow as tf
 
+from autokeras.adapters import input_adapter
+from autokeras.engine import io_hypermodel
 from autokeras.engine import node as node_module
 
 
-class Input(node_module.Node):
+class Input(node_module.Node, io_hypermodel.IOHyperModel):
     """Input node for tensor data.
 
     The data should be numpy.ndarray or tf.data.Dataset.
@@ -11,6 +13,12 @@ class Input(node_module.Node):
 
     def build(self):
         return tf.keras.Input(shape=self.shape, dtype=tf.float32)
+
+    def get_adapter(self):
+        return input_adapter.InputAdapter()
+
+    def config_from_adapter(self, adapter):
+        self.shape = adapter.shape
 
 
 class ImageInput(Input):
@@ -20,7 +28,9 @@ class ImageInput(Input):
     should be 3 or 4 dimensional, the last dimension of which should be channel
     dimension.
     """
-    pass
+
+    def get_adapter(self):
+        return input_adapter.ImageInputAdapter()
 
 
 class TextInput(Input):
@@ -33,6 +43,9 @@ class TextInput(Input):
 
     def build(self):
         return tf.keras.Input(shape=self.shape, dtype=tf.string)
+
+    def get_adapter(self):
+        return input_adapter.TextInputAdapter()
 
 
 class StructuredDataInput(Input):
@@ -54,9 +67,6 @@ class StructuredDataInput(Input):
             number of instances.
     """
 
-    CATEGORICAL = 'categorical'
-    NUMERICAL = 'numerical'
-
     def __init__(self, column_names=None, column_types=None, **kwargs):
         super().__init__(**kwargs)
         self.column_names = column_names
@@ -72,6 +82,17 @@ class StructuredDataInput(Input):
             'column_types': self.column_types,
         })
         return config
+
+    def get_adapter(self):
+        return input_adapter.StructuredDataInputAdapter(
+            self.column_names,
+            self.column_types
+        )
+
+    def config_from_adapter(self, adapter):
+        super().config_from_adapter(adapter)
+        self.column_names = adapter.column_names
+        self.column_types = adapter.column_types
 
 
 class TimeSeriesInput(Input):

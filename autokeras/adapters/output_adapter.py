@@ -1,7 +1,15 @@
-from autokeras.engine import adapter
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+
+from autokeras import encoder
+from autokeras.engine import adapter as adapter_module
 
 
-class HeadAdapter(adapter.Adapter):
+class HeadAdapter(adapter_module.Adapter):
+
+    def __init__(self, name):
+        self.name = name
 
     def check(self, dataset):
         supported_types = (tf.data.Dataset, np.ndarray, pd.DataFrame, pd.Series)
@@ -25,9 +33,10 @@ class HeadAdapter(adapter.Adapter):
         return y
 
 
-class ClassificationHeadAdapter(adapter.Adapter):
+class ClassificationHeadAdapter(HeadAdapter):
 
-    def __init__(self, num_classes=None):
+    def __init__(self, num_classes=None, **kwargs):
+        super().__init__(**kwargs)
         self.num_classes = num_classes
         self.label_encoder = None
 
@@ -70,12 +79,16 @@ class ClassificationHeadAdapter(adapter.Adapter):
             self.label_encoder = encoder.LabelEncoder()
         elif self.num_classes > 2:
             self.label_encoder = encoder.OneHotEncoder()
+        elif self.num_classes < 2:
+            raise ValueError('Expect the target data for {name} to have '
+                             'at least 2 classes, but got {num_classes}.'
+                             .format(name=self.name, num_classes=self.num_classes))
         self.label_encoder.fit_with_labels(dataset)
 
     def convert_to_dataset(self, dataset):
         if self.label_encoder:
             dataset = self.label_encoder.encode(dataset)
-        return super()._convert_to_dataset(dataset)
+        return super().convert_to_dataset(dataset)
 
     def postprocess(self, y):
         if self.label_encoder:
@@ -83,5 +96,5 @@ class ClassificationHeadAdapter(adapter.Adapter):
         return y
 
 
-class RegressionHeadAdapter(adapter.Adapter):
+class RegressionHeadAdapter(HeadAdapter):
     pass

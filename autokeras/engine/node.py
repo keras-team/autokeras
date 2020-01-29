@@ -20,11 +20,4 @@ class Node(picklable.Picklable):
         raise NotImplementedError
 
     def get_config(self):
-        return {}
-
-    def get_state(self):
         return {'shape': self.shape}
-
-    def set_state(self, state):
-        self.shape = state['shape']
-

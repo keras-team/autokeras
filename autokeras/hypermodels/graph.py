@@ -4,11 +4,10 @@ import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras.engine import block as block_module
 from autokeras.engine import picklable
 from autokeras.hypermodels import basic
 from autokeras.hypermodels import head as head_module
-from autokeras.hypermodels import node as node_module
+from autokeras.hypermodels import input_node as input_module
 from autokeras.hypermodels import preprocessing
 from autokeras.hypermodels import reduction
 from autokeras.hypermodels import wrapper
@@ -47,7 +46,7 @@ def fetch_heads(source_block):
     q.put(source_block)
     while not q.empty():
         block = q.get()
-        if isinstance(block, block_module.Head):
+        if isinstance(block, head_module.Head):
             heads.append(block)
         for output_node in block.outputs:
             for next_block in output_node.out_blocks:
@@ -62,27 +61,22 @@ def feature_encoding_input(block):
 
     The values are fetched for FeatureEncoding from StructuredDataInput.
     """
-    if not isinstance(block.inputs[0], node_module.StructuredDataInput):
+    if not isinstance(block.inputs[0], input_module.StructuredDataInput):
         raise TypeError('FeatureEncoding block can only be used '
                         'with StructuredDataInput.')
     block.column_types = block.inputs[0].column_types
     block.column_names = block.inputs[0].column_names
 
 
-def structured_data_block_heads(structured_data_block):
-    structured_data_block.num_heads = len(fetch_heads(structured_data_block))
-
-
 # Compile the graph.
 COMPILE_FUNCTIONS = {
     basic.Embedding: [embedding_max_features],
-    wrapper.StructuredDataBlock: [structured_data_block_heads,
-                                  feature_encoding_input],
+    wrapper.StructuredDataBlock: [feature_encoding_input],
     preprocessing.FeatureEncoding: [feature_encoding_input],
 }
 
 ALL_CLASSES = {
-    **vars(node_module),
+    **vars(input_module),
     **vars(head_module),
     **vars(wrapper),
     **vars(preprocessing),
@@ -290,22 +284,6 @@ class Graph(kerastuner.HyperModel, picklable.Picklable):
         outputs = [nodes[node_id] for node_id in config['outputs']]
         return cls(inputs=inputs, outputs=outputs, override_hps=override_hps)
 
-    def get_state(self):
-        nodes_state = {str(node_id): node.get_state()
-                       for node_id, node in enumerate(self._nodes)}
-        blocks_state = {str(block_id): block.get_state()
-                        for block_id, block in enumerate(self.blocks)}
-        return {'nodes_state': nodes_state,
-                'blocks_state': blocks_state}
-
-    def set_state(self, state):
-        nodes_state = state['nodes_state']
-        for node_id, node in enumerate(self._nodes):
-            node.set_state(nodes_state[str(node_id)])
-        blocks_state = state['blocks_state']
-        for block_id, block in enumerate(self.blocks):
-            block.set_state(blocks_state[str(block_id)])
-
     def build(self, hp):
         """Build the HyperModel into a Keras Model."""
         self._register_hps(hp)
@@ -333,7 +311,7 @@ class Graph(kerastuner.HyperModel, picklable.Picklable):
         metrics = {}
         for output_node in self.outputs:
             block = output_node.in_blocks[0]
-            if isinstance(block, block_module.Head):
+            if isinstance(block, head_module.Head):
                 metrics[block.name] = block.metrics
         return metrics
 
@@ -341,7 +319,7 @@ class Graph(kerastuner.HyperModel, picklable.Picklable):
         loss = {}
         for output_node in self.outputs:
             block = output_node.in_blocks[0]
-            if isinstance(block, block_module.Head):
+            if isinstance(block, head_module.Head):
                 loss[block.name] = block.loss
         return loss
 

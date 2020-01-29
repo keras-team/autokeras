@@ -7,13 +7,15 @@ import pandas as pd
 
 from autokeras import auto_model
 from autokeras.hypermodels import head
-from autokeras.hypermodels import node
+from autokeras.hypermodels import input_node as input_module
+from autokeras.tuners import greedy
+from autokeras.tuners import task_specific
 
 
 class SupervisedImagePipeline(auto_model.AutoModel):
 
     def __init__(self, outputs, **kwargs):
-        super().__init__(inputs=node.ImageInput(),
+        super().__init__(inputs=input_module.ImageInput(),
                          outputs=outputs,
                          **kwargs)
 
@@ -61,7 +63,7 @@ class ImageClassifier(SupervisedImagePipeline):
             directory=directory,
             name=name,
             objective=objective,
-            tuner='image_classifier',
+            tuner=task_specific.ImageClassifierTuner,
             overwrite=overwrite,
             seed=seed)
 
@@ -161,7 +163,7 @@ class ImageRegressor(SupervisedImagePipeline):
             directory=directory,
             name=name,
             objective=objective,
-            tuner='image_regressor',
+            tuner=greedy.Greedy,
             overwrite=overwrite,
             seed=seed)
 
@@ -225,7 +227,7 @@ class ImageRegressor(SupervisedImagePipeline):
 class SupervisedTextPipeline(auto_model.AutoModel):
 
     def __init__(self, outputs, **kwargs):
-        super().__init__(inputs=node.TextInput(),
+        super().__init__(inputs=input_module.TextInput(),
                          outputs=outputs,
                          **kwargs)
 
@@ -273,7 +275,7 @@ class TextClassifier(SupervisedTextPipeline):
             directory=directory,
             name=name,
             objective=objective,
-            tuner='text_classifier',
+            tuner=greedy.Greedy,
             overwrite=overwrite,
             seed=seed)
 
@@ -374,7 +376,7 @@ class TextRegressor(SupervisedTextPipeline):
             directory=directory,
             name=name,
             objective=objective,
-            tuner='text_regressor',
+            tuner=greedy.Greedy,
             overwrite=overwrite,
             seed=seed)
 
@@ -439,7 +441,7 @@ class TextRegressor(SupervisedTextPipeline):
 class SupervisedStructuredDataPipeline(auto_model.AutoModel):
 
     def __init__(self, outputs, column_names, column_types, **kwargs):
-        inputs = node.StructuredDataInput()
+        inputs = input_module.StructuredDataInput()
         inputs.column_types = column_types
         inputs.column_names = column_names
         if column_types:
@@ -629,7 +631,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             directory=directory,
             name=name,
             objective=objective,
-            tuner='structured_data_classifier',
+            tuner=greedy.Greedy,
             overwrite=overwrite,
             seed=seed)
 
@@ -734,7 +736,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             directory=directory,
             name=name,
             objective=objective,
-            tuner='structured_data_regressor',
+            tuner=greedy.Greedy,
             overwrite=overwrite,
             seed=seed)
 

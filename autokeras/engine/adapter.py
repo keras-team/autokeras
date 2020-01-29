@@ -1,3 +1,7 @@
+import numpy as np
+import tensorflow as tf
+
+from autokeras import utils
 from autokeras.engine import picklable
 
 
@@ -23,7 +27,7 @@ class Adapter(picklable.Picklable):
     def fit_transform(self, dataset):
         self.check(dataset)
         self.fit_before_convert(dataset)
-        dataset = self.convert_to_dataset(y)
+        dataset = self.convert_to_dataset(dataset)
         self.fit(dataset)
         return dataset
 

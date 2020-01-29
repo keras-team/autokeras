@@ -3,12 +3,12 @@ import tensorflow as tf
 
 import autokeras as ak
 from autokeras.hypermodels import wrapper
+from autokeras.adapters import input_adapter
 from tests import utils
 
 
 def test_image_block():
     block = wrapper.ImageBlock(normalize=None, augment=None)
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.ImageInput(shape=(32, 32, 3)).build())
@@ -20,7 +20,6 @@ def test_image_block():
 
 def test_text_block():
     block = wrapper.TextBlock()
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.TextInput(shape=(1,)).build())
@@ -33,10 +32,9 @@ def test_structured_data_block():
     block.num_heads = 1
     block.column_names = ['0', '1']
     block.column_types = {
-        '0': ak.StructuredDataInput.CATEGORICAL,
-        '1': ak.StructuredDataInput.CATEGORICAL,
+        '0': input_adapter.StructuredDataInputAdapter.CATEGORICAL,
+        '1': input_adapter.StructuredDataInputAdapter.CATEGORICAL,
     }
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     output = block.build(hp, ak.StructuredDataInput(shape=(2,)).build())
