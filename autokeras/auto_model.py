@@ -2,11 +2,11 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras import graph as graph_module
 from autokeras import hypermodels
 from autokeras import nodes as input_module
 from autokeras import tuners
 from autokeras import utils
-from autokeras import graph as graph_module
 from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
 
