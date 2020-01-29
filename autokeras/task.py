@@ -6,8 +6,8 @@ from typing import Union
 import pandas as pd
 
 from autokeras import auto_model
-from autokeras.hypermodels import head
-from autokeras.hypermodels import input_node as input_module
+from autokeras import hypermodels
+from autokeras import nodes as input_module
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
 
@@ -55,10 +55,10 @@ class ImageClassifier(SupervisedImagePipeline):
                  overwrite: bool = True,
                  seed: Optional[int] = None):
         super().__init__(
-            outputs=head.ClassificationHead(num_classes=num_classes,
-                                            multi_label=multi_label,
-                                            loss=loss,
-                                            metrics=metrics),
+            outputs=hypermodels.ClassificationHead(num_classes=num_classes,
+                                                   multi_label=multi_label,
+                                                   loss=loss,
+                                                   metrics=metrics),
             max_trials=max_trials,
             directory=directory,
             name=name,
@@ -156,9 +156,9 @@ class ImageRegressor(SupervisedImagePipeline):
                  overwrite=True,
                  seed=None):
         super().__init__(
-            outputs=head.RegressionHead(output_dim=output_dim,
-                                        loss=loss,
-                                        metrics=metrics),
+            outputs=hypermodels.RegressionHead(output_dim=output_dim,
+                                               loss=loss,
+                                               metrics=metrics),
             max_trials=max_trials,
             directory=directory,
             name=name,
@@ -267,10 +267,10 @@ class TextClassifier(SupervisedTextPipeline):
                  overwrite=True,
                  seed=None):
         super().__init__(
-            outputs=head.ClassificationHead(num_classes=num_classes,
-                                            multi_label=multi_label,
-                                            loss=loss,
-                                            metrics=metrics),
+            outputs=hypermodels.ClassificationHead(num_classes=num_classes,
+                                                   multi_label=multi_label,
+                                                   loss=loss,
+                                                   metrics=metrics),
             max_trials=max_trials,
             directory=directory,
             name=name,
@@ -369,9 +369,9 @@ class TextRegressor(SupervisedTextPipeline):
                  overwrite=True,
                  seed=None):
         super().__init__(
-            outputs=head.RegressionHead(output_dim=output_dim,
-                                        loss=loss,
-                                        metrics=metrics),
+            outputs=hypermodels.RegressionHead(output_dim=output_dim,
+                                               loss=loss,
+                                               metrics=metrics),
             max_trials=max_trials,
             directory=directory,
             name=name,
@@ -461,7 +461,8 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                          **kwargs)
         self._target_col_name = None
 
-    def _read_from_csv(self, x, y):
+    @staticmethod
+    def _read_from_csv(x, y):
         df = pd.read_csv(x)
         target = df.pop(y).to_numpy()
         return df, target
@@ -510,7 +511,7 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
         """
         # x is file path of training data
         if isinstance(x, str):
-            self._target_column_name = y
+            self._target_col_name = y
             x, y = self._read_from_csv(x, y)
         if validation_data:
             x_val, y_val = validation_data
@@ -621,10 +622,10 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                  overwrite=True,
                  seed=None):
         super().__init__(
-            outputs=head.ClassificationHead(num_classes=num_classes,
-                                            multi_label=multi_label,
-                                            loss=loss,
-                                            metrics=metrics),
+            outputs=hypermodels.ClassificationHead(num_classes=num_classes,
+                                                   multi_label=multi_label,
+                                                   loss=loss,
+                                                   metrics=metrics),
             column_names=column_names,
             column_types=column_types,
             max_trials=max_trials,
@@ -727,9 +728,9 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
                  overwrite=True,
                  seed=None):
         super().__init__(
-            outputs=head.RegressionHead(output_dim=output_dim,
-                                        loss=loss,
-                                        metrics=metrics),
+            outputs=hypermodels.RegressionHead(output_dim=output_dim,
+                                               loss=loss,
+                                               metrics=metrics),
             column_names=column_names,
             column_types=column_types,
             max_trials=max_trials,

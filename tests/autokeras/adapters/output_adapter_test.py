@@ -1,10 +1,7 @@
-import kerastuner
 import numpy as np
 import pytest
 import tensorflow as tf
 
-from autokeras.hypermodels import head as head_module
-from autokeras.hypermodels import input_node as input_module
 from autokeras.adapters import output_adapter
 from tests import utils
 

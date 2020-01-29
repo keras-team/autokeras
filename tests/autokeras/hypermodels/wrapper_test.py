@@ -2,8 +2,8 @@ import kerastuner
 import tensorflow as tf
 
 import autokeras as ak
-from autokeras.hypermodels import wrapper
 from autokeras.adapters import input_adapter
+from autokeras.hypermodels import wrapper
 from tests import utils
 
 

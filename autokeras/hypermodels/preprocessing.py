@@ -3,9 +3,8 @@ from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
 from autokeras import keras_layers
-from autokeras.engine import block as block_module
-from autokeras.hypermodels import input_node as input_module
 from autokeras.adapters import input_adapter
+from autokeras.engine import block as block_module
 
 
 class Normalization(block_module.Block):

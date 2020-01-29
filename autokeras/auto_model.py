@@ -2,24 +2,18 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras import hypermodels
+from autokeras import nodes as input_module
+from autokeras import tuners
 from autokeras import utils
-from autokeras.engine import block as block_module
+from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
-from autokeras.hypermodels import graph as graph_module
-from autokeras.hypermodels import head as head_module
-from autokeras.hypermodels import input_node as input_module
-from autokeras.hypermodels import reduction
-from autokeras.hypermodels import wrapper
-from autokeras.tuners import bayesian_optimization
-from autokeras.tuners import greedy
-from autokeras.tuners import hyperband
-from autokeras.tuners import random_search
 
 TUNER_CLASSES = {
-    'bayesian': bayesian_optimization.BayesianOptimization,
-    'random': random_search.RandomSearch,
-    'hyperband': hyperband.Hyperband,
-    'greedy': greedy.Greedy,
+    'bayesian': tuners.BayesianOptimization,
+    'random': tuners.RandomSearch,
+    'hyperband': tuners.Hyperband,
+    'greedy': tuners.Greedy,
 }
 
 
@@ -155,28 +149,28 @@ class AutoModel(object):
         middle_nodes = []
         for input_node in inputs:
             if isinstance(input_node, input_module.TextInput):
-                middle_nodes.append(wrapper.TextBlock()(input_node))
+                middle_nodes.append(hypermodels.TextBlock()(input_node))
             if isinstance(input_node, input_module.ImageInput):
-                middle_nodes.append(wrapper.ImageBlock()(input_node))
+                middle_nodes.append(hypermodels.ImageBlock()(input_node))
             if isinstance(input_node, input_module.StructuredDataInput):
-                middle_nodes.append(wrapper.StructuredDataBlock()(input_node))
+                middle_nodes.append(hypermodels.StructuredDataBlock()(input_node))
             if isinstance(input_node, input_module.TimeSeriesInput):
-                middle_nodes.append(wrapper.TimeSeriesBlock()(input_node))
+                middle_nodes.append(hypermodels.TimeSeriesBlock()(input_node))
 
         # Merge the middle nodes.
         if len(middle_nodes) > 1:
-            output_node = reduction.Merge()(middle_nodes)
+            output_node = hypermodels.Merge()(middle_nodes)
         else:
             output_node = middle_nodes[0]
 
         outputs = nest.flatten([output_blocks(output_node)
                                 for output_blocks in outputs])
-        return graph_module.Graph(inputs=inputs, outputs=outputs)
+        return hypermodels.Graph(inputs=inputs, outputs=outputs)
 
     def _build_graph(self):
         # Using functional API.
         if all([isinstance(output, node_module.Node) for output in self.outputs]):
-            graph = graph_module.Graph(inputs=self.inputs, outputs=self.outputs)
+            graph = hypermodels.Graph(inputs=self.inputs, outputs=self.outputs)
         # Using input/output API.
         elif all([isinstance(output, head_module.Head) for output in self.outputs]):
             graph = self._assemble()

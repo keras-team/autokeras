@@ -1,11 +1,8 @@
 import kerastuner
 import numpy as np
-import pytest
-import tensorflow as tf
 
-from autokeras.hypermodels import head as head_module
-from autokeras.hypermodels import input_node as input_module
-from tests import utils
+from autokeras import nodes as input_module
+from autokeras.hypermodels import heads as head_module
 
 
 def test_two_classes():

@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from autokeras.adapters import input_adapter
+from autokeras import adapters
 from autokeras.engine import io_hypermodel
 from autokeras.engine import node as node_module
 
@@ -15,7 +15,7 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
         return tf.keras.Input(shape=self.shape, dtype=tf.float32)
 
     def get_adapter(self):
-        return input_adapter.InputAdapter()
+        return adapters.InputAdapter()
 
     def config_from_adapter(self, adapter):
         self.shape = adapter.shape
@@ -30,7 +30,7 @@ class ImageInput(Input):
     """
 
     def get_adapter(self):
-        return input_adapter.ImageInputAdapter()
+        return adapters.ImageInputAdapter()
 
 
 class TextInput(Input):
@@ -45,7 +45,7 @@ class TextInput(Input):
         return tf.keras.Input(shape=self.shape, dtype=tf.string)
 
     def get_adapter(self):
-        return input_adapter.TextInputAdapter()
+        return adapters.TextInputAdapter()
 
 
 class StructuredDataInput(Input):
@@ -84,7 +84,7 @@ class StructuredDataInput(Input):
         return config
 
     def get_adapter(self):
-        return input_adapter.StructuredDataInputAdapter(
+        return adapters.StructuredDataInputAdapter(
             self.column_names,
             self.column_types
         )

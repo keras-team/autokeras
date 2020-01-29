@@ -4,13 +4,10 @@ import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras import hypermodels
+from autokeras import nodes
+from autokeras.engine import head as head_module
 from autokeras.engine import picklable
-from autokeras.hypermodels import basic
-from autokeras.hypermodels import head as head_module
-from autokeras.hypermodels import input_node as input_module
-from autokeras.hypermodels import preprocessing
-from autokeras.hypermodels import reduction
-from autokeras.hypermodels import wrapper
 
 
 def embedding_max_features(embedding_block):
@@ -24,7 +21,7 @@ def embedding_max_features(embedding_block):
                              'TextToIntSequence, max_features must be '
                              'specified.')
         block = input_node.in_blocks[0]
-        if isinstance(block, preprocessing.TextToIntSequence):
+        if isinstance(block, hypermodels.TextToIntSequence):
             embedding_block.max_features = block.max_tokens
             return
         input_node = block.inputs[0]
@@ -61,7 +58,7 @@ def feature_encoding_input(block):
 
     The values are fetched for FeatureEncoding from StructuredDataInput.
     """
-    if not isinstance(block.inputs[0], input_module.StructuredDataInput):
+    if not isinstance(block.inputs[0], nodes.StructuredDataInput):
         raise TypeError('FeatureEncoding block can only be used '
                         'with StructuredDataInput.')
     block.column_types = block.inputs[0].column_types
@@ -70,18 +67,14 @@ def feature_encoding_input(block):
 
 # Compile the graph.
 COMPILE_FUNCTIONS = {
-    basic.Embedding: [embedding_max_features],
-    wrapper.StructuredDataBlock: [feature_encoding_input],
-    preprocessing.FeatureEncoding: [feature_encoding_input],
+    hypermodels.Embedding: [embedding_max_features],
+    hypermodels.StructuredDataBlock: [feature_encoding_input],
+    hypermodels.FeatureEncoding: [feature_encoding_input],
 }
 
 ALL_CLASSES = {
-    **vars(input_module),
-    **vars(head_module),
-    **vars(wrapper),
-    **vars(preprocessing),
-    **vars(basic),
-    **vars(reduction),
+    **vars(nodes),
+    **vars(hypermodels),
 }
 
 

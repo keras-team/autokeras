@@ -1,50 +1,14 @@
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
+from autokeras import adapters
 from autokeras import keras_layers
 from autokeras import utils
-from autokeras.adapters import output_adapter
-from autokeras.engine import block as block_module
-from autokeras.engine import io_hypermodel
+from autokeras.engine import head as head_module
 from autokeras.hypermodels import reduction
 
 
-class Head(block_module.Block, io_hypermodel.IOHyperModel):
-    """Base class for the heads, e.g. classification, regression.
-
-    # Arguments
-        loss: A Keras loss function. Defaults to None. If None, the loss will be
-            inferred from the AutoModel.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
-        output_shape: Tuple of int(s). Defaults to None. If None, the output shape
-            will be inferred from the AutoModel.
-    """
-
-    def __init__(self, loss=None, metrics=None, output_shape=None, **kwargs):
-        super().__init__(**kwargs)
-        self.output_shape = output_shape
-        self.loss = loss
-        self.metrics = metrics
-        # Mark if the head should directly output the input tensor.
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            'loss': self.loss,
-            'metrics': self.metrics,
-            'output_shape': self.output_shape
-        })
-        return config
-
-    def build(self, hp, inputs=None):
-        raise NotImplementedError
-
-    def config_from_adapter(self, adapter):
-        self.output_shape = adapter.shape
-
-
-class ClassificationHead(Head):
+class ClassificationHead(head_module.Head):
     """Classification Dense layers.
 
     Use sigmoid and binary crossentropy for binary classification and multi-label
@@ -134,7 +98,7 @@ class ClassificationHead(Head):
         return output_node
 
     def get_adapter(self):
-        return output_adapter.ClassificationHeadAdapter(name=self.name)
+        return adapters.ClassificationHeadAdapter(name=self.name)
 
     def config_from_adapter(self, adapter):
         super().config_from_adapter(adapter)
@@ -142,7 +106,7 @@ class ClassificationHead(Head):
         self.set_loss()
 
 
-class RegressionHead(Head):
+class RegressionHead(head_module.Head):
     """Regression Dense layers.
 
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
@@ -204,4 +168,4 @@ class RegressionHead(Head):
         return output_node
 
     def get_adapter(self):
-        return output_adapter.RegressionHeadAdapter(name=self.name)
+        return adapters.RegressionHeadAdapter(name=self.name)
