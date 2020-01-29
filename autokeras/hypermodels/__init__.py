@@ -4,7 +4,6 @@ from autokeras.hypermodels.basic import Embedding
 from autokeras.hypermodels.basic import ResNetBlock
 from autokeras.hypermodels.basic import RNNBlock
 from autokeras.hypermodels.basic import XceptionBlock
-from autokeras.hypermodels.graph import Graph
 from autokeras.hypermodels.heads import ClassificationHead
 from autokeras.hypermodels.heads import RegressionHead
 from autokeras.hypermodels.preprocessing import FeatureEncoding

@@ -6,6 +6,7 @@ from autokeras import hypermodels
 from autokeras import nodes as input_module
 from autokeras import tuners
 from autokeras import utils
+from autokeras import graph as graph_module
 from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
 
@@ -165,12 +166,12 @@ class AutoModel(object):
 
         outputs = nest.flatten([output_blocks(output_node)
                                 for output_blocks in outputs])
-        return hypermodels.Graph(inputs=inputs, outputs=outputs)
+        return graph_module.Graph(inputs=inputs, outputs=outputs)
 
     def _build_graph(self):
         # Using functional API.
         if all([isinstance(output, node_module.Node) for output in self.outputs]):
-            graph = hypermodels.Graph(inputs=self.inputs, outputs=self.outputs)
+            graph = graph_module.Graph(inputs=self.inputs, outputs=self.outputs)
         # Using input/output API.
         elif all([isinstance(output, head_module.Head) for output in self.outputs]):
             graph = self._assemble()
