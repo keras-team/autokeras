@@ -7,7 +7,7 @@ from tensorflow.python.util import nest
 from autokeras import hypermodels
 from autokeras import nodes
 from autokeras.engine import head as head_module
-from autokeras.engine import picklable
+from autokeras.engine import serializable
 
 
 def embedding_max_features(embedding_block):
@@ -90,7 +90,7 @@ def deserialize(config, custom_objects=None):
         printable_module_name='graph')
 
 
-class Graph(kerastuner.HyperModel, picklable.Picklable):
+class Graph(kerastuner.HyperModel, serializable.Serializable):
     """A graph consists of connected Blocks, or Heads.
 
     # Arguments

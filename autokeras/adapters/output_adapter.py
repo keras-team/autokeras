@@ -8,7 +8,8 @@ from autokeras.engine import adapter as adapter_module
 
 class HeadAdapter(adapter_module.Adapter):
 
-    def __init__(self, name):
+    def __init__(self, name, **kwargs):
+        super().__init__(**kwargs)
         self.name = name
 
     def check(self, dataset):
@@ -32,6 +33,13 @@ class HeadAdapter(adapter_module.Adapter):
         """Postprocess the output of the Keras Model."""
         return y
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'name': self.name,
+        })
+        return config
+
 
 class ClassificationHeadAdapter(HeadAdapter):
 
@@ -40,19 +48,17 @@ class ClassificationHeadAdapter(HeadAdapter):
         self.num_classes = num_classes
         self.label_encoder = None
 
-    def get_state(self):
-        state = super().get_state()
-        state.update({
+    def get_config(self):
+        config = super().get_config()
+        config.update({
             'encoder': encoder.serialize(self.label_encoder),
-            'encoder_state': self.label_encoder.get_state() if self.label_encoder
-            else None})
-        return state
+        })
+        return config
 
-    def set_state(self, state):
-        super().set_state(state)
-        self.label_encoder = encoder.deserialize(state['encoder'])
-        if 'encoder_class' in state:
-            self.label_encoder.set_state(state['encoder_state'])
+    @classmethod
+    def from_config(cls, config):
+        obj = super().from_config(config)
+        obj.label_encoder = encoder.deserialize(config['encoder'])
 
     def fit_before_convert(self, dataset):
         # If in tf.data.Dataset, must be encoded already.

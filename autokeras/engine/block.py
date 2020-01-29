@@ -4,10 +4,10 @@ from tensorflow.python.util import nest
 
 from autokeras import utils
 from autokeras.engine import node as node_module
-from autokeras.engine import picklable
+from autokeras.engine import serializable
 
 
-class Block(kerastuner.HyperModel, picklable.Picklable):
+class Block(kerastuner.HyperModel, serializable.Serializable):
     """The base class for different Block.
 
     The Block can be connected together to build the search space

@@ -70,8 +70,8 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
     CATEGORICAL = 'categorical'
     NUMERICAL = 'numerical'
 
-    def __init__(self, column_names=None, column_types=None):
-        super().__init__()
+    def __init__(self, column_names=None, column_types=None, **kwargs):
+        super().__init__(**kwargs)
         self.column_names = column_names
         self.column_types = column_types
         # Variables for inferring column types.
@@ -81,24 +81,25 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
         self.count_unique_numerical = []
         self.num_col = None
 
-    def get_state(self):
-        state = super().get_state()
-        state.update({
+    def get_config(self):
+        config = super().get_config()
+        config.update({
             'count_nan': self.count_nan,
             'count_numerical': self.count_numerical,
             'count_categorical': self.count_categorical,
             'count_unique_numerical': self.count_unique_numerical,
             'num_col': self.num_col
         })
-        return state
+        return config
 
-    def set_state(self, state):
-        super().set_state(state)
-        self.count_nan = state['count_nan']
-        self.count_numerical = state['count_numerical']
-        self.count_categorical = state['count_categorical']
-        self.count_unique_numerical = state['count_unique_numerical']
-        self.num_col = state['num_col']
+    @classmethod
+    def from_config(cls, config):
+        obj = super().from_config(config)
+        obj.count_nan = config['count_nan']
+        obj.count_numerical = config['count_numerical']
+        obj.count_categorical = config['count_categorical']
+        obj.count_unique_numerical = config['count_unique_numerical']
+        obj.num_col = config['num_col']
 
     def check(self, x):
         if not isinstance(x, (pd.DataFrame, np.ndarray)):

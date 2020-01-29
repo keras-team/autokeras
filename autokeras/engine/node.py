@@ -1,7 +1,7 @@
-from autokeras.engine import picklable
+from autokeras.engine import serializable
 
 
-class Node(picklable.Picklable):
+class Node(serializable.Serializable):
     """The nodes in a network connecting the blocks."""
 
     def __init__(self, shape=None):

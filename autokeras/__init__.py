@@ -26,12 +26,12 @@ from autokeras.nodes import ImageInput
 from autokeras.nodes import Input
 from autokeras.nodes import StructuredDataInput
 from autokeras.nodes import TextInput
-from autokeras.task import ImageClassifier
-from autokeras.task import ImageRegressor
-from autokeras.task import StructuredDataClassifier
-from autokeras.task import StructuredDataRegressor
-from autokeras.task import TextClassifier
-from autokeras.task import TextRegressor
+from autokeras.tasks import ImageClassifier
+from autokeras.tasks import ImageRegressor
+from autokeras.tasks import StructuredDataClassifier
+from autokeras.tasks import StructuredDataRegressor
+from autokeras.tasks import TextClassifier
+from autokeras.tasks import TextRegressor
 
 from .utils import check_tf_version
 
