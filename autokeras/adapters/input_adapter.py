@@ -3,17 +3,12 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras import utils
-from autokeras.engine import block as block_module
+from autokeras.engine import adapter as adapter_module
 
 
-class Input(block_module.Node):
-    """Input node for tensor data.
+class InputAdapter(adapter_module.Adapter):
 
-    The data should be numpy.ndarray or tf.data.Dataset.
-    """
-
-    def _check(self, x):
+    def check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (np.ndarray, tf.data.Dataset)):
             raise TypeError('Expect the data to Input to be numpy.ndarray or '
@@ -22,37 +17,10 @@ class Input(block_module.Node):
             raise TypeError('Expect the data to Input to be numerical, but got '
                             '{type}.'.format(type=x.dtype))
 
-    def _convert_to_dataset(self, x):
-        if isinstance(x, tf.data.Dataset):
-            return x
-        if isinstance(x, np.ndarray):
-            x = x.astype(np.float32)
-            return tf.data.Dataset.from_tensor_slices(x)
 
-    def _record_dataset_shape(self, dataset):
-        self.shape = utils.dataset_shape(dataset)
+class ImageInputAdapter(adapter_module.Adapter):
 
-    def fit_transform(self, x):
-        dataset = self.transform(x)
-        self._record_dataset_shape(dataset)
-        return dataset
-
-    def transform(self, x):
-        """Transform x into a compatible type (tf.data.Dataset)."""
-        self._check(x)
-        dataset = self._convert_to_dataset(x)
-        return dataset
-
-
-class ImageInput(Input):
-    """Input node for image data.
-
-    The input data should be numpy.ndarray or tf.data.Dataset. The shape of the data
-    should be 3 or 4 dimensional, the last dimension of which should be channel
-    dimension.
-    """
-
-    def _check(self, x):
+    def check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (np.ndarray, tf.data.Dataset)):
             raise TypeError('Expect the data to ImageInput to be numpy.ndarray or '
@@ -65,22 +33,16 @@ class ImageInput(Input):
             raise TypeError('Expect the data to ImageInput to be numerical, but got '
                             '{type}.'.format(type=x.dtype))
 
-    def _convert_to_dataset(self, x):
+    def convert_to_dataset(self, x):
         if isinstance(x, np.ndarray):
             if x.ndim == 3:
                 x = np.expand_dims(x, axis=3)
-        return super()._convert_to_dataset(x)
+        return super().convert_to_dataset(x)
 
 
-class TextInput(Input):
-    """Input node for text data.
+class TextInputAdapter(adapter_module.Adapter):
 
-    The input data should be numpy.ndarray or tf.data.Dataset. The data should be
-    one-dimensional. Each element in the data should be a string which is a full
-    sentence.
-    """
-
-    def _check(self, x):
+    def check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (np.ndarray, tf.data.Dataset)):
             raise TypeError('Expect the data to TextInput to be numpy.ndarray or '
@@ -95,35 +57,15 @@ class TextInput(Input):
             raise TypeError('Expect the data to TextInput to be strings, but got '
                             '{type}.'.format(type=x.dtype))
 
-    def _convert_to_dataset(self, x):
+    def convert_to_dataset(self, x):
         if len(x.shape) == 1:
             x = x.reshape(-1, 1)
         if isinstance(x, np.ndarray):
             x = tf.data.Dataset.from_tensor_slices(x)
         return x
 
-    def build(self):
-        return tf.keras.Input(shape=self.shape, dtype=tf.string)
 
-
-class StructuredDataInput(Input):
-    """Input node for structured data.
-
-    The input data should be numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
-    The data should be two-dimensional with numerical or categorical values.
-
-    # Arguments
-        column_names: A list of strings specifying the names of the columns. The
-            length of the list should be equal to the number of columns of the data.
-            Defaults to None. If None, it will be obtained from the header of the csv
-            file or the pandas.DataFrame.
-        column_types: Dict. The keys are the column names. The values should either
-            be 'numerical' or 'categorical', indicating the type of that column.
-            Defaults to None. If not None, the column_names need to be specified.
-            If None, it will be inferred from the data. A column will be judged as
-            categorical if the number of different values is less than 5% of the
-            number of instances.
-    """
+class StructuredDataInputAdapter(adapter_module.Adapter):
 
     CATEGORICAL = 'categorical'
     NUMERICAL = 'numerical'
@@ -139,37 +81,27 @@ class StructuredDataInput(Input):
         self.count_unique_numerical = []
         self.num_col = None
 
-    def build(self):
-        return tf.keras.Input(shape=self.shape, dtype=tf.string)
-
     def get_config(self):
         config = super().get_config()
         config.update({
-            'column_names': self.column_names,
-            'column_types': self.column_types,
-        })
-        return config
-
-    def get_state(self):
-        state = super().get_state()
-        state.update({
             'count_nan': self.count_nan,
             'count_numerical': self.count_numerical,
             'count_categorical': self.count_categorical,
             'count_unique_numerical': self.count_unique_numerical,
             'num_col': self.num_col
         })
-        return state
+        return config
 
-    def set_state(self, state):
-        super().set_state(state)
-        self.count_nan = state['count_nan']
-        self.count_numerical = state['count_numerical']
-        self.count_categorical = state['count_categorical']
-        self.count_unique_numerical = state['count_unique_numerical']
-        self.num_col = state['num_col']
+    @classmethod
+    def from_config(cls, config):
+        obj = super().from_config(config)
+        obj.count_nan = config['count_nan']
+        obj.count_numerical = config['count_numerical']
+        obj.count_categorical = config['count_categorical']
+        obj.count_unique_numerical = config['count_unique_numerical']
+        obj.num_col = config['num_col']
 
-    def _check(self, x):
+    def check(self, x):
         if not isinstance(x, (pd.DataFrame, np.ndarray)):
             raise TypeError('Unsupported type {type} for '
                             '{name}.'.format(type=type(x),
@@ -200,17 +132,20 @@ class StructuredDataInput(Input):
                                  expect=x.shape[1],
                                  actual=len(self.column_names)))
 
-    def _convert_to_dataset(self, x):
+    def convert_to_dataset(self, x):
         if isinstance(x, pd.DataFrame):
             # Convert x, y, validation_data to tf.Dataset.
             x = x.values.astype(np.unicode)
         if isinstance(x, np.ndarray):
             x = x.astype(np.unicode)
         dataset = tf.data.Dataset.from_tensor_slices(x)
+        return dataset
+
+    def fit(self, dataset):
+        super().fit(dataset)
         for x in dataset:
             self.update(x)
         self.infer_column_types()
-        return dataset
 
     def update(self, x):
         # Calculate the statistics.
@@ -256,7 +191,3 @@ class StructuredDataInput(Input):
         for key, value in column_types.items():
             if key not in self.column_types:
                 self.column_types[key] = value
-
-
-class TimeSeriesInput(Input):
-    pass

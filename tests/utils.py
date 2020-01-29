@@ -192,7 +192,7 @@ def generate_one_hot_labels(num_instances=100, num_classes=10, dtype='np'):
 
 
 def fit_predict_with_graph(inputs, outputs, x, y):
-    model = ak.hypermodels.graph.HyperBuiltGraphHyperModel(
+    model = ak.graph.HyperBuiltGraphHyperModel(
         inputs, outputs).build(kerastuner.HyperParameters())
     model.fit(x, y,
               epochs=1,
@@ -244,6 +244,6 @@ def build_graph():
     head = ak.ClassificationHead(num_classes=10)
     head.output_shape = (10,)
     classification_outputs = head(merged_outputs)
-    return ak.hypermodels.graph.Graph(
+    return ak.graph.Graph(
         inputs=image_input,
         outputs=classification_outputs)

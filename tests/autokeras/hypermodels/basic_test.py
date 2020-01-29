@@ -20,7 +20,6 @@ def test_type_error_for_call():
 def test_resnet_block(init, build):
     input_shape = (32, 32, 3)
     block = basic.ResNetBlock()
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.Input(shape=input_shape).build())
@@ -36,7 +35,6 @@ def test_resnet_block(init, build):
 def test_xception_block(init, build):
     input_shape = (32, 32, 3)
     block = basic.XceptionBlock()
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.Input(shape=input_shape).build())
@@ -52,7 +50,6 @@ def test_xception_block(init, build):
 def test_conv_block():
     input_shape = (32, 32, 3)
     block = basic.ConvBlock()
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.Input(shape=input_shape).build())
@@ -65,7 +62,6 @@ def test_conv_block():
 def test_rnn_block():
     input_shape = (32, 10)
     block = basic.RNNBlock()
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.Input(shape=input_shape).build())
@@ -78,7 +74,6 @@ def test_rnn_block():
 def test_dense_block():
     input_shape = (32,)
     block = basic.DenseBlock()
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.Input(shape=input_shape).build())
@@ -91,7 +86,6 @@ def test_embedding_block():
     input_shape = (32,)
     block = basic.Embedding()
     block.max_features = 100
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.Input(shape=input_shape).build())

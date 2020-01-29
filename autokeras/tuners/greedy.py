@@ -3,12 +3,8 @@ import random
 import kerastuner
 import numpy as np
 
+from autokeras import hypermodels
 from autokeras.engine import tuner as tuner_module
-from autokeras.hypermodels import basic
-from autokeras.hypermodels import head
-from autokeras.hypermodels import preprocessing
-from autokeras.hypermodels import reduction
-from autokeras.hypermodels import wrapper
 
 
 class GreedyOracle(kerastuner.Oracle):
@@ -73,34 +69,34 @@ class GreedyOracle(kerastuner.Oracle):
                 hp_type = None
                 if any([hp.name.startswith(block.name)
                         for block in self.hypermodel.blocks if isinstance(block, (
-                            wrapper.ImageBlock,
-                            wrapper.TextBlock,
-                            wrapper.StructuredDataBlock,
+                            hypermodels.ImageBlock,
+                            hypermodels.TextBlock,
+                            hypermodels.StructuredDataBlock,
                         ))]):
                     hp_type = GreedyOracle.HYPER
                 elif any([hp.name.startswith(block.name)
                           for block in self.hypermodel.blocks if isinstance(block, (
-                              preprocessing.TextToIntSequence,
-                              preprocessing.TextToNgramVector,
-                              preprocessing.Normalization,
-                              preprocessing.ImageAugmentation,
-                              preprocessing.FeatureEncoding
+                              hypermodels.TextToIntSequence,
+                              hypermodels.TextToNgramVector,
+                              hypermodels.Normalization,
+                              hypermodels.ImageAugmentation,
+                              hypermodels.FeatureEncoding
                           ))]):
                     hp_type = GreedyOracle.PREPROCESS
                 elif any([hp.name.startswith(block.name)
                           for block in self.hypermodel.blocks if isinstance(block, (
-                              basic.Embedding,
-                              basic.ConvBlock,
-                              basic.RNNBlock,
-                              basic.DenseBlock,
-                              basic.ResNetBlock,
-                              basic.XceptionBlock,
-                              reduction.Merge,
-                              reduction.Flatten,
-                              reduction.SpatialReduction,
-                              reduction.TemporalReduction,
-                              head.ClassificationHead,
-                              head.RegressionHead,
+                              hypermodels.Embedding,
+                              hypermodels.ConvBlock,
+                              hypermodels.RNNBlock,
+                              hypermodels.DenseBlock,
+                              hypermodels.ResNetBlock,
+                              hypermodels.XceptionBlock,
+                              hypermodels.Merge,
+                              hypermodels.Flatten,
+                              hypermodels.SpatialReduction,
+                              hypermodels.TemporalReduction,
+                              hypermodels.ClassificationHead,
+                              hypermodels.RegressionHead,
                           ))]):
                     hp_type = GreedyOracle.ARCH
                 else:

@@ -82,3 +82,11 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     @property
     def best_model_path(self):
         return os.path.join(self.project_dir, 'best_model')
+
+    @property
+    def objective(self):
+        return self.tuner.objective
+
+    @property
+    def max_trials(self):
+        return self.oracle.max_trials

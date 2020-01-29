@@ -16,6 +16,7 @@ def test_image_classifier(tmp_dir):
     clf = ak.ImageClassifier(directory=tmp_dir, max_trials=2, seed=utils.SEED)
     clf.fit(train_x, train_y, epochs=1, validation_split=0.2)
     keras_model = clf.export_model()
+    clf.evaluate(train_x, train_y)
     assert clf.predict(train_x).shape == (len(train_x), 10)
     assert isinstance(keras_model, tf.keras.Model)
 

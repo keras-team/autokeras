@@ -2,29 +2,19 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras import graph as graph_module
+from autokeras import hypermodels
+from autokeras import nodes as input_module
+from autokeras import tuners
 from autokeras import utils
-from autokeras.engine import block as block_module
-from autokeras.hypermodels import graph as graph_module
-from autokeras.hypermodels import node as node_module
-from autokeras.hypermodels import reduction
-from autokeras.hypermodels import wrapper
-from autokeras.tuners import bayesian_optimization
-from autokeras.tuners import greedy
-from autokeras.tuners import hyperband
-from autokeras.tuners import random_search
-from autokeras.tuners import task_specific
+from autokeras.engine import head as head_module
+from autokeras.engine import node as node_module
 
 TUNER_CLASSES = {
-    'bayesian': bayesian_optimization.BayesianOptimization,
-    'random': random_search.RandomSearch,
-    'hyperband': hyperband.Hyperband,
-    'greedy': greedy.Greedy,
-    'image_classifier': task_specific.ImageClassifierTuner,
-    'image_regressor': greedy.Greedy,
-    'text_classifier': greedy.Greedy,
-    'text_regressor': greedy.Greedy,
-    'structured_data_classifier': greedy.Greedy,
-    'structured_data_regressor': greedy.Greedy,
+    'bayesian': tuners.BayesianOptimization,
+    'random': tuners.RandomSearch,
+    'hyperband': tuners.Hyperband,
+    'greedy': tuners.Greedy,
 }
 
 
@@ -126,11 +116,11 @@ class AutoModel(object):
             seed=self.seed,
             project_name=name)
         self._split_dataset = False
-        if all([isinstance(output_node, block_module.Head)
-                for output_node in self.outputs]):
-            self.heads = self.outputs
-        else:
-            self.heads = [output_node.in_blocks[0] for output_node in self.outputs]
+        self._heads = [output_node.in_blocks[0] for output_node in self.outputs]
+        self._input_adapters = [input_node.get_adapter()
+                                for input_node in self.inputs]
+        self._output_adapters = [head.get_adapter()
+                                 for head in self._heads]
 
     @property
     def overwrite(self):
@@ -159,18 +149,18 @@ class AutoModel(object):
 
         middle_nodes = []
         for input_node in inputs:
-            if isinstance(input_node, node_module.TextInput):
-                middle_nodes.append(wrapper.TextBlock()(input_node))
-            if isinstance(input_node, node_module.ImageInput):
-                middle_nodes.append(wrapper.ImageBlock()(input_node))
-            if isinstance(input_node, node_module.StructuredDataInput):
-                middle_nodes.append(wrapper.StructuredDataBlock()(input_node))
-            if isinstance(input_node, node_module.TimeSeriesInput):
-                middle_nodes.append(wrapper.TimeSeriesBlock()(input_node))
+            if isinstance(input_node, input_module.TextInput):
+                middle_nodes.append(hypermodels.TextBlock()(input_node))
+            if isinstance(input_node, input_module.ImageInput):
+                middle_nodes.append(hypermodels.ImageBlock()(input_node))
+            if isinstance(input_node, input_module.StructuredDataInput):
+                middle_nodes.append(hypermodels.StructuredDataBlock()(input_node))
+            if isinstance(input_node, input_module.TimeSeriesInput):
+                middle_nodes.append(hypermodels.TimeSeriesBlock()(input_node))
 
         # Merge the middle nodes.
         if len(middle_nodes) > 1:
-            output_node = reduction.Merge()(middle_nodes)
+            output_node = hypermodels.Merge()(middle_nodes)
         else:
             output_node = middle_nodes[0]
 
@@ -180,10 +170,10 @@ class AutoModel(object):
 
     def _build_graph(self):
         # Using functional API.
-        if all([isinstance(output, block_module.Node) for output in self.outputs]):
+        if all([isinstance(output, node_module.Node) for output in self.outputs]):
             graph = graph_module.Graph(inputs=self.inputs, outputs=self.outputs)
         # Using input/output API.
-        elif all([isinstance(output, block_module.Head) for output in self.outputs]):
+        elif all([isinstance(output, head_module.Head) for output in self.outputs]):
             graph = self._assemble()
             self.outputs = graph.outputs
 
@@ -259,47 +249,48 @@ class AutoModel(object):
                           fit_on_val_data=self._split_dataset,
                           **kwargs)
 
-    def _process_xy(self, x, y=None, fit=False, predict=False):
+    def _process_x(self, x, fit):
+        x = nest.flatten(x)
+        new_x = []
+        for data, input_node, adapter in zip(x, self.inputs, self._input_adapters):
+            if fit:
+                data = adapter.fit_transform(data)
+            else:
+                data = adapter.transform(data)
+            new_x.append(data)
+            input_node.config_from_adapter(adapter)
+        return tf.data.Dataset.zip(tuple(new_x))
+
+    def _process_y(self, y, fit):
+        y = nest.flatten(y)
+        new_y = []
+        for data, head, adapter in zip(y, self._heads, self._output_adapters):
+            if fit:
+                data = adapter.fit_transform(data)
+            else:
+                data = adapter.transform(data)
+            new_y.append(data)
+            head.config_from_adapter(adapter)
+        return tf.data.Dataset.zip(tuple(new_y))
+
+    def _process_xy(self, x, y, fit):
         """Convert x, y to tf.data.Dataset.
 
         # Arguments
             x: Any type allowed by the corresponding input node.
             y: Any type allowed by the corresponding head.
             fit: Boolean. Whether to fit the type converter with the provided data.
-            predict: Boolean. If it is called by the predict function of AutoModel.
 
         # Returns
             A tf.data.Dataset containing both x and y.
         """
-        if isinstance(x, tf.data.Dataset):
-            if y is None and not predict:
-                return x
-            if isinstance(y, tf.data.Dataset):
-                return tf.data.Dataset.zip((x, y))
+        if isinstance(x, tf.data.Dataset) and y is None:
+            dataset = x
+            x = dataset.map(lambda a, b: a)
+            y = dataset.map(lambda a, b: b)
 
-        x = nest.flatten(x)
-        new_x = []
-        for data, input_node in zip(x, self.inputs):
-            if fit:
-                data = input_node.fit_transform(data)
-            else:
-                data = input_node.transform(data)
-            new_x.append(data)
-        x = tf.data.Dataset.zip(tuple(new_x))
-
-        if predict:
-            return tf.data.Dataset.zip((x, x))
-
-        if not isinstance(y, tf.data.Dataset):
-            y = nest.flatten(y)
-            new_y = []
-            for data, head_block in zip(y, self.heads):
-                if fit:
-                    data = head_block.fit_transform(data)
-                else:
-                    data = head_block.transform(data)
-                new_y.append(data)
-            y = tf.data.Dataset.zip(tuple(new_y))
+        x = self._process_x(x, fit)
+        y = self._process_y(y, fit)
 
         return tf.data.Dataset.zip((x, y))
 
@@ -311,30 +302,36 @@ class AutoModel(object):
                              'should be provided.')
         # TODO: Handle other types of input, zip dataset, tensor, dict.
         # Prepare the dataset.
-        dataset = self._process_xy(x, y, fit=True)
+        dataset = self._process_xy(x, y, True)
         if validation_data:
             self._split_dataset = False
             val_x, val_y = validation_data
-            validation_data = self._process_xy(val_x, val_y)
+            validation_data = self._process_xy(val_x, val_y, False)
         # Split the data with validation_split.
         if validation_data is None and validation_split:
             self._split_dataset = True
             dataset, validation_data = utils.split_dataset(dataset, validation_split)
         return dataset, validation_data
 
-    def predict(self, x, **kwargs):
+    def predict(self, x, batch_size=32, **kwargs):
         """Predict the output for a given testing data.
 
         # Arguments
             x: Any allowed types according to the input node. Testing data.
+            batch_size: Int. Number of samples per gradient update. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
 
         # Returns
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
+        if isinstance(x, tf.data.Dataset):
+            dataset = self._process_xy(x, None, False)
+        else:
+            dataset = self._process_x(x, False)
+        dataset = dataset.batch(batch_size)
         model = self.tuner.get_best_model()
-        y = model.predict(x, **kwargs)
+        y = model.predict(dataset, **kwargs)
         y = self._postprocess(y)
         if isinstance(y, list) and len(y) == 1:
             y = y[0]
@@ -343,19 +340,19 @@ class AutoModel(object):
     def _postprocess(self, y):
         y = nest.flatten(y)
         new_y = []
-        for temp_y, head_block in zip(y, self.heads):
-            if isinstance(head_block, block_module.Head):
-                temp_y = head_block.postprocess(temp_y)
+        for temp_y, adapter in zip(y, self._output_adapters):
+            temp_y = adapter.postprocess(temp_y)
             new_y.append(temp_y)
         return new_y
 
-    def evaluate(self, x, y=None, **kwargs):
+    def evaluate(self, x, y=None, batch_size=32, **kwargs):
         """Evaluate the best model for the given data.
 
         # Arguments
             x: Any allowed types according to the input node. Testing data.
             y: Any allowed types according to the head. Testing targets.
                 Defaults to None.
+            batch_size: Int. Number of samples per gradient update. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
         # Returns
@@ -364,10 +361,9 @@ class AutoModel(object):
             The attribute model.metrics_names will give you the display labels for
             the scalar outputs.
         """
-        return self.tuner.get_best_model().evaluate(
-            x=x,
-            y=y,
-            **kwargs)
+        dataset = self._process_xy(x, y, False)
+        dataset = dataset.batch(batch_size)
+        return self.tuner.get_best_model().evaluate(x=dataset, **kwargs)
 
     def export_model(self):
         """Export the best Keras Model.

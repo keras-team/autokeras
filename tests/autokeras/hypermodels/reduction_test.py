@@ -9,7 +9,6 @@ def test_merge():
     input_shape_1 = (32,)
     input_shape_2 = (4, 8)
     block = reduction.Merge()
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, [ak.Input(shape=input_shape_1).build(),
@@ -21,7 +20,6 @@ def test_merge():
 def test_temporal_reduction():
     input_shape = (32, 10)
     block = reduction.TemporalReduction()
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.Input(shape=input_shape).build())
@@ -32,7 +30,6 @@ def test_temporal_reduction():
 def test_spatial_reduction():
     input_shape = (32, 32, 3)
     block = reduction.SpatialReduction()
-    block.set_state(block.get_state())
     hp = kerastuner.HyperParameters()
 
     block.build(hp, ak.Input(shape=input_shape).build())
