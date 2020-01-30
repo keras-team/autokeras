@@ -15,7 +15,7 @@ NONE = 'none'
 ONE_HOT = 'one-hot'
 
 
-class FeatureEncodingLayer(CombinerPreprocessingLayer):
+class CategoricalEncoding(CombinerPreprocessingLayer):
     """Encode the categorical features to numerical features.
 
     # Arguments
@@ -29,7 +29,7 @@ class FeatureEncodingLayer(CombinerPreprocessingLayer):
 
     def __init__(self, encoding, **kwargs):
         super().__init__(
-            combiner=FeatureEncodingCombiner(encoding),
+            combiner=CategoricalEncodingCombiner(encoding),
             **kwargs)
         self.encoding = encoding
         self.tables = {
@@ -82,7 +82,7 @@ class FeatureEncodingLayer(CombinerPreprocessingLayer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-class FeatureEncodingCombiner(Combiner):
+class CategoricalEncodingCombiner(Combiner):
 
     def __init__(self, encoding):
         self.encoding = encoding

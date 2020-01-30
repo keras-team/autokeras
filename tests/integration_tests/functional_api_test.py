@@ -33,7 +33,7 @@ def test_functional_api(tmp_dir):
     image_output = ak.Merge()((outputs1, outputs2))
 
     structured_data_input = ak.StructuredDataInput()
-    structured_data_output = ak.FeatureEncoding()(structured_data_input)
+    structured_data_output = ak.CategoricalToNumerical()(structured_data_input)
     structured_data_output = ak.DenseBlock()(structured_data_output)
 
     text_input = ak.TextInput()

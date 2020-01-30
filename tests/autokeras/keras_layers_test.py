@@ -8,7 +8,7 @@ def test_feature_encoder_layer():
     data = np.array([['a', 'ab'], ['b', 'bc'], ['a', 'bc']])
 
     input_node = tf.keras.Input(shape=(2,), dtype=tf.string)
-    layer = layer_module.FeatureEncodingLayer([
+    layer = layer_module.CategoricalEncoding([
         layer_module.INT,
         layer_module.INT,
     ])

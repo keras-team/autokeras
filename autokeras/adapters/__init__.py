@@ -1,3 +1,5 @@
+from autokeras.adapters.input_adapter import CATEGORICAL
+from autokeras.adapters.input_adapter import NUMERICAL
 from autokeras.adapters.input_adapter import ImageInputAdapter
 from autokeras.adapters.input_adapter import InputAdapter
 from autokeras.adapters.input_adapter import StructuredDataInputAdapter

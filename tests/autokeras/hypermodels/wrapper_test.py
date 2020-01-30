@@ -2,7 +2,7 @@ import kerastuner
 import tensorflow as tf
 
 import autokeras as ak
-from autokeras.adapters import input_adapter
+from autokeras import adapters
 from autokeras.hypermodels import wrapper
 from tests import utils
 
@@ -32,8 +32,8 @@ def test_structured_data_block():
     block.num_heads = 1
     block.column_names = ['0', '1']
     block.column_types = {
-        '0': input_adapter.StructuredDataInputAdapter.CATEGORICAL,
-        '1': input_adapter.StructuredDataInputAdapter.CATEGORICAL,
+        '0': adapters.CATEGORICAL,
+        '1': adapters.CATEGORICAL,
     }
     hp = kerastuner.HyperParameters()
 

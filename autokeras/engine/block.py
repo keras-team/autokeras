@@ -16,7 +16,7 @@ class Block(kerastuner.HyperModel, serializable.Serializable):
 
     # Arguments
         name: String. The name of the block. If unspecified, it will be set
-        automatically with the class name.
+            automatically with the class name.
     """
 
     def __init__(self, name=None, **kwargs):

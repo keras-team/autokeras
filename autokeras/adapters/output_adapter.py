@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from autokeras import encoder
+from autokeras import encoders
 from autokeras.engine import adapter as adapter_module
 
 
@@ -51,14 +51,14 @@ class ClassificationHeadAdapter(HeadAdapter):
     def get_config(self):
         config = super().get_config()
         config.update({
-            'encoder': encoder.serialize(self.label_encoder),
+            'encoder': encoders.serialize(self.label_encoder),
         })
         return config
 
     @classmethod
     def from_config(cls, config):
         obj = super().from_config(config)
-        obj.label_encoder = encoder.deserialize(config['encoder'])
+        obj.label_encoder = encoders.deserialize(config['encoder'])
 
     def fit_before_convert(self, dataset):
         # If in tf.data.Dataset, must be encoded already.
@@ -82,9 +82,9 @@ class ClassificationHeadAdapter(HeadAdapter):
         if self.num_classes is None:
             self.num_classes = len(labels)
         if self.num_classes == 2:
-            self.label_encoder = encoder.LabelEncoder()
+            self.label_encoder = encoders.LabelEncoder()
         elif self.num_classes > 2:
-            self.label_encoder = encoder.OneHotEncoder()
+            self.label_encoder = encoders.OneHotEncoder()
         elif self.num_classes < 2:
             raise ValueError('Expect the target data for {name} to have '
                              'at least 2 classes, but got {num_classes}.'

@@ -2,11 +2,11 @@ from autokeras.auto_model import AutoModel
 from autokeras.engine.block import Block
 from autokeras.engine.head import Head
 from autokeras.engine.node import Node
+from autokeras.hypermodels import CategoricalToNumerical
 from autokeras.hypermodels import ClassificationHead
 from autokeras.hypermodels import ConvBlock
 from autokeras.hypermodels import DenseBlock
 from autokeras.hypermodels import Embedding
-from autokeras.hypermodels import FeatureEncoding
 from autokeras.hypermodels import Flatten
 from autokeras.hypermodels import ImageAugmentation
 from autokeras.hypermodels import ImageBlock

@@ -69,7 +69,7 @@ def feature_encoding_input(block):
 COMPILE_FUNCTIONS = {
     hypermodels.Embedding: [embedding_max_features],
     hypermodels.StructuredDataBlock: [feature_encoding_input],
-    hypermodels.FeatureEncoding: [feature_encoding_input],
+    hypermodels.CategoricalToNumerical: [feature_encoding_input],
 }
 
 ALL_CLASSES = {

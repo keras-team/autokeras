@@ -3,13 +3,12 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras import utils
+from autokeras.engine import node as node_module
 from autokeras.engine import adapter as adapter_module
 
-CATEGORICAL = 'categorical'
-NUMERICAL = 'numerical'
 
-
-class InputAdapter(adapter_module.Adapter):
+class InputAdapter(adapter.Adapter):
 
     def check(self, x):
         """Record any information needed by transform."""
@@ -21,7 +20,7 @@ class InputAdapter(adapter_module.Adapter):
                             '{type}.'.format(type=x.dtype))
 
 
-class ImageInputAdapter(adapter_module.Adapter):
+class ImageInputAdapter(adapter.Adapter):
 
     def check(self, x):
         """Record any information needed by transform."""
@@ -40,10 +39,10 @@ class ImageInputAdapter(adapter_module.Adapter):
         if isinstance(x, np.ndarray):
             if x.ndim == 3:
                 x = np.expand_dims(x, axis=3)
-        return super().convert_to_dataset(x)
+        return super()._convert_to_dataset(x)
 
 
-class TextInputAdapter(adapter_module.Adapter):
+class TextInputAdapter(adapter.Adapter):
 
     def check(self, x):
         """Record any information needed by transform."""
@@ -68,10 +67,10 @@ class TextInputAdapter(adapter_module.Adapter):
         return x
 
 
-class StructuredDataInputAdapter(adapter_module.Adapter):
+class StructuredDataInputAdapter(adapter.Adapter):
 
-    def __init__(self, column_names=None, column_types=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.column_names = column_names
         self.column_types = column_types
         # Variables for inferring column types.
@@ -81,25 +80,24 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
         self.count_unique_numerical = []
         self.num_col = None
 
-    def get_config(self):
-        config = super().get_config()
-        config.update({
+    def get_state(self):
+        state = super().get_state()
+        state.update({
             'count_nan': self.count_nan,
             'count_numerical': self.count_numerical,
             'count_categorical': self.count_categorical,
             'count_unique_numerical': self.count_unique_numerical,
             'num_col': self.num_col
         })
-        return config
+        return state
 
-    @classmethod
-    def from_config(cls, config):
-        obj = super().from_config(config)
-        obj.count_nan = config['count_nan']
-        obj.count_numerical = config['count_numerical']
-        obj.count_categorical = config['count_categorical']
-        obj.count_unique_numerical = config['count_unique_numerical']
-        obj.num_col = config['num_col']
+    def set_state(self, state):
+        super().set_state(state)
+        self.count_nan = state['count_nan']
+        self.count_numerical = state['count_numerical']
+        self.count_categorical = state['count_categorical']
+        self.count_unique_numerical = state['count_unique_numerical']
+        self.num_col = state['num_col']
 
     def check(self, x):
         if not isinstance(x, (pd.DataFrame, np.ndarray)):
@@ -142,7 +140,6 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
         return dataset
 
     def fit(self, dataset):
-        super().fit(dataset)
         for x in dataset:
             self.update(x)
         self.infer_column_types()
@@ -180,14 +177,15 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
         column_types = {}
         for i in range(self.num_col):
             if self.count_categorical[i] > 0:
-                column_types[self.column_names[i]] = CATEGORICAL
+                column_types[self.column_names[i]] = self.CATEGORICAL
             elif len(self.count_unique_numerical[i])/self.count_numerical[i] < 0.05:
-                column_types[self.column_names[i]] = CATEGORICAL
+                column_types[self.column_names[i]] = self.CATEGORICAL
             else:
-                column_types[self.column_names[i]] = NUMERICAL
+                column_types[self.column_names[i]] = self.NUMERICAL
         # Partial column_types is provided.
         if self.column_types is None:
             self.column_types = {}
         for key, value in column_types.items():
             if key not in self.column_types:
                 self.column_types[key] = value
+

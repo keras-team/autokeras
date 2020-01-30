@@ -2,8 +2,8 @@ import numpy as np
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
+from autokeras import adapters
 from autokeras import keras_layers
-from autokeras.adapters import input_adapter
 from autokeras.engine import block as block_module
 
 
@@ -181,7 +181,7 @@ class ImageAugmentation(block_module.Block):
         return inputs
 
 
-class FeatureEncoding(block_module.Block):
+class CategoricalToNumerical(block_module.Block):
     """Encode the categorical features to numerical features."""
 
     def __init__(self, **kwargs):
@@ -194,9 +194,9 @@ class FeatureEncoding(block_module.Block):
         encoding = []
         for column_name in self.column_names:
             column_type = self.column_types[column_name]
-            if column_type == input_adapter.StructuredDataInputAdapter.CATEGORICAL:
+            if column_type == adapters.CATEGORICAL:
                 # TODO: Search to use one-hot or int.
                 encoding.append(keras_layers.INT)
             else:
                 encoding.append(keras_layers.NONE)
-        return keras_layers.FeatureEncodingLayer(encoding)(input_node)
+        return keras_layers.CategoricalEncoding(encoding)(input_node)

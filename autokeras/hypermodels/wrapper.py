@@ -142,7 +142,7 @@ class StructuredDataBlock(block_module.Block):
                                          [True, False],
                                          default=True)
         if feature_encoding:
-            block = preprocessing.FeatureEncoding()
+            block = preprocessing.CategoricalToNumerical()
             block.column_types = self.column_types
             block.column_names = self.column_names
             output_node = block.build(hp, output_node)
