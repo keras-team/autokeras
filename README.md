@@ -56,8 +56,8 @@ Biblatex entry:
 
 ## Community
 
-You can use Gitter to communicate with people who are also interested in AutoKeras.
-<a href="https://gitter.im/autokeras/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/autokeras/Lobby.svg" alt="Join the chat at https://gitter.im/autokeras/Lobby" style="width: 92px"></a>
+Use [this link](https://keras-slack-autojoin.herokuapp.com/) to request an invitation for **Keras** Slack workspace.
+Use the [#autokeras](https://kerasteam.slack.com/#autokeras) channel under the Keras workspace for communication.
 
 You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
 
