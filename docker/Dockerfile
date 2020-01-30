@@ -1,19 +1,6 @@
-FROM python:3.6.8-slim-jessie
+ARG TF_VERSION=2.1.0
+FROM tensorflow/tensorflow:${TF_VERSION}-gpu-py3-jupyter
 
-RUN mkdir /app
+RUN pip install autokeras
 
-WORKDIR /app
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        gcc \
-        build-essential \
-        && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN python -m pip install keras
-
-RUN python -m pip install numpy==1.15.4
-
-RUN python -m pip install autokeras
-
+CMD jupyter notebook --port=8888 --ip=0.0.0.0

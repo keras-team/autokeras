@@ -2,7 +2,7 @@
 
 ![](https://github.com/keras-team/autokeras/workflows/Tests/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/keras-team/autokeras/branch/master/graph/badge.svg)](https://codecov.io/gh/keras-team/autokeras)
-[![PyPI version](https://badge.fury.io/py/autokeras.svg)](https://badge.fury.io/py/autokeras")
+[![PyPI version](https://badge.fury.io/py/autokeras.svg)](https://badge.fury.io/py/autokeras)
 
 Official Website: [autokeras.com](https://autokeras.com)
 
@@ -56,8 +56,8 @@ Biblatex entry:
 
 ## Community
 
-You can use Gitter to communicate with people who are also interested in AutoKeras.
-<a href="https://gitter.im/autokeras/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/autokeras/Lobby.svg" alt="Join the chat at https://gitter.im/autokeras/Lobby" style="width: 92px"></a>
+Use [this link](https://keras-slack-autojoin.herokuapp.com/) to request an invitation for **Keras** Slack workspace.
+Use the [#autokeras](https://kerasteam.slack.com/#autokeras) channel under the Keras workspace for communication.
 
 You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
 
