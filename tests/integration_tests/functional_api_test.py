@@ -2,7 +2,7 @@ import pytest
 from tensorflow.python.keras.datasets import mnist
 
 import autokeras as ak
-from tests import common
+from tests import utils
 
 
 @pytest.fixture(scope='module')
@@ -14,15 +14,15 @@ def test_functional_api(tmp_dir):
     # Prepare the data.
     num_instances = 20
     (image_x, train_y), (test_x, test_y) = mnist.load_data()
-    (text_x, train_y), (test_x, test_y) = common.imdb_raw()
-    (structured_data_x, train_y), (test_x, test_y) = common.dataframe_numpy()
+    (text_x, train_y), (test_x, test_y) = utils.imdb_raw()
+    (structured_data_x, train_y), (test_x, test_y) = utils.dataframe_numpy()
 
     image_x = image_x[:num_instances]
     text_x = text_x[:num_instances]
     structured_data_x = structured_data_x[:num_instances]
-    classification_y = common.generate_one_hot_labels(num_instances=num_instances,
-                                                      num_classes=3)
-    regression_y = common.generate_data(num_instances=num_instances, shape=(1,))
+    classification_y = utils.generate_one_hot_labels(num_instances=num_instances,
+                                                     num_classes=3)
+    regression_y = utils.generate_data(num_instances=num_instances, shape=(1,))
 
     # Build model and train.
     image_input = ak.ImageInput()
@@ -33,12 +33,12 @@ def test_functional_api(tmp_dir):
     image_output = ak.Merge()((outputs1, outputs2))
 
     structured_data_input = ak.StructuredDataInput()
-    structured_data_output = ak.FeatureEngineering()(structured_data_input)
+    structured_data_output = ak.CategoricalToNumerical()(structured_data_input)
     structured_data_output = ak.DenseBlock()(structured_data_output)
 
     text_input = ak.TextInput()
     outputs1 = ak.TextToIntSequence()(text_input)
-    outputs1 = ak.EmbeddingBlock()(outputs1)
+    outputs1 = ak.Embedding()(outputs1)
     outputs1 = ak.ConvBlock(separable=True)(outputs1)
     outputs1 = ak.SpatialReduction()(outputs1)
     outputs2 = ak.TextToNgramVector()(text_input)
@@ -63,10 +63,12 @@ def test_functional_api(tmp_dir):
             structured_data_input
         ],
         directory=tmp_dir,
-        outputs=[regression_outputs,
-                 classification_outputs],
+        outputs=[
+            regression_outputs,
+            classification_outputs
+        ],
         max_trials=2,
-        seed=common.SEED)
+        seed=utils.SEED)
 
     automodel.fit(
         (
@@ -74,6 +76,9 @@ def test_functional_api(tmp_dir):
             text_x,
             structured_data_x
         ),
-        (regression_y, classification_y),
+        (
+            regression_y,
+            classification_y
+        ),
         validation_split=0.2,
         epochs=1)
