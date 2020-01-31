@@ -134,3 +134,9 @@ class Sigmoid(tf.keras.layers.Layer):
 
     def compute_output_shape(self, input_shape):
         return input_shape
+
+
+CUSTOM_OBJECTS = {
+    'CategoricalEncoding': CategoricalEncoding,
+    'Sigmoid': Sigmoid,
+}

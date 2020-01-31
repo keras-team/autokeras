@@ -22,6 +22,7 @@ from autokeras.hypermodels import TextBlock
 from autokeras.hypermodels import TextToIntSequence
 from autokeras.hypermodels import TextToNgramVector
 from autokeras.hypermodels import XceptionBlock
+from autokeras.keras_layers import CUSTOM_OBJECTS
 from autokeras.nodes import ImageInput
 from autokeras.nodes import Input
 from autokeras.nodes import StructuredDataInput
