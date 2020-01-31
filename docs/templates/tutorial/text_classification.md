@@ -82,7 +82,7 @@ For advanced users, you may customize your search space by using
 [TextBlock](/block/#textblock-class) for some high-level configurations, e.g., `vectorizer`
 for the type of text vectorization method to use.  You can use 'sequence', which uses
 [TextToInteSequence](/preprocessor/#texttointsequence-class) to convert the words to
-integers and use [EmbeddingBlock](/block/#embeddingblock-class) for embedding the
+integers and use [Embedding](/block/#embedding-class) for embedding the
 integer sequences, or you can use 'ngram', which uses
 [TextToNgramVector](/preprocessor/#texttongramvector-class) to vectorize the
 sentences.  You can also do not specify these arguments, which would leave the
@@ -111,7 +111,7 @@ import autokeras as ak
 
 input_node = ak.TextInput()
 output_node = ak.TextToIntSequence()(input_node)
-output_node = ak.EmbeddingBlock()(output_node)
+output_node = ak.Embedding()(output_node)
 # Use separable Conv layers in Keras.
 output_node = ak.ConvBlock(separable=True)(output_node)
 output_node = ak.ClassificationHead()(output_node)
@@ -152,7 +152,7 @@ print(clf.evaluate(test_set))
 [AutoModel](/auto_model/#automodel-class),
 [TextBlock](/block/#textblock-class),
 [TextToInteSequence](/preprocessor/#texttointsequence-class),
-[EmbeddingBlock](/block/#embeddingblock-class),
+[Embedding](/block/#embedding-class),
 [TextToNgramVector](/preprocessor/#texttongramvector-class),
 [ConvBlock](/block/#convblock-class),
 [TextInput](/node/#textinput-class),

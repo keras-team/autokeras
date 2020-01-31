@@ -151,7 +151,7 @@ print(auto_model.evaluate(x_test, y_test))
 **Blocks**:
 [ConvBlock](/block/#convblock-class),
 [DenseBlock](/block/#denseblock-class),
-[EmbeddingBlock](/block/#embeddingblock-class),
+[Embedding](/block/#embedding-class),
 [Merge](/block/#merge-class),
 [ResNetBlock](/block/#resnetblock-class),
 [RNNBlock](/block/#rnnblock-class),

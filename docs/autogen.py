@@ -55,7 +55,6 @@ PAGES = {
     ],
     'base.md': [
         'autokeras.Node',
-        'autokeras.Preprocessor',
         'autokeras.Block',
         'autokeras.Block.build',
         'autokeras.Head',
@@ -69,7 +68,7 @@ PAGES = {
     'block.md': [
         'autokeras.ConvBlock',
         'autokeras.DenseBlock',
-        'autokeras.EmbeddingBlock',
+        'autokeras.Embedding',
         'autokeras.Merge',
         'autokeras.ResNetBlock',
         'autokeras.RNNBlock',
@@ -81,12 +80,11 @@ PAGES = {
         'autokeras.TextBlock',
     ],
     'preprocessor.md': [
-        'autokeras.FeatureEngineering',
         'autokeras.ImageAugmentation',
-        'autokeras.LightGBM',
         'autokeras.Normalization',
         'autokeras.TextToIntSequence',
         'autokeras.TextToNgramVector',
+        'autokeras.CategoricalToNumerical',
     ],
     'head.md': [
         'autokeras.ClassificationHead',
