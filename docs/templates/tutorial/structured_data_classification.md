@@ -148,11 +148,8 @@ For advanced users, you may customize your search space by using
 [AutoModel](/auto_model/#automodel-class) instead of
 [StructuredDataClassifier](/structured_data_classifier). You can configure the
 [StructuredDataBlock](/block/#structureddatablock-class) for some high-level
-configurations, e.g., `feature_engineering` for whether to use the
-[FeatureEngineering](/preprocessor/#featureengineering-class) block, `block_type` for
-which type of block you want to use in the search space.  You can use 'dense' for
-[DenseBlock](/block/#denseblock-class), or you can use 'lightgbm' for
-[LightGBM](/preprocessor/#lightgbm-class).  You can also do not specify these
+configurations, e.g., `categorical_encoding` for whether to use the
+[CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class). You can also do not specify these
 arguments, which would leave the different choices to be tuned automatically. See
 the following example for detail.
 
@@ -161,7 +158,7 @@ import autokeras as ak
 
 input_node = ak.StructuredDataInput()
 output_node = ak.StructuredDataBlock(
-    feature_engineering=False,
+    categorical_encoding=True,
     block_type='dense')(input_node)
 output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
@@ -180,8 +177,8 @@ further. See the following example.
 import autokeras as ak
 
 input_node = ak.StructuredDataInput()
-output_node = ak.FeatureEngineering(max_columns=500)(input_node)
-output_node = ak.LightGBM()(output_node)
+output_node = ak.CategoricalToNumerical()(input_node)
+output_node = ak.DenseBlock()(output_node)
 output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
 clf.fit(x_train, y_train)
@@ -193,8 +190,7 @@ clf.fit(x_train, y_train)
 [AutoModel](/auto_model/#automodel-class),
 [StructuredDataClassifier](/structured_data_classifier),
 [StructuredDataBlock](/block/#structureddatablock-class),
-[FeatureEngineering](/preprocessor/#featureengineering-class),
 [DenseBlock](/block/#denseblock-class),
-[LightGBM](/preprocessor/#lightgbm-class),
 [StructuredDataInput](/node/#structureddatainput-class),
-[ClassificationHead](/head/#classificationhead-class).
+[ClassificationHead](/head/#classificationhead-class),
+[CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class).

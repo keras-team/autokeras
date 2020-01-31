@@ -111,19 +111,18 @@ class StructuredDataBlock(block_module.Block):
     """Block for structured data.
 
     # Arguments
-        feature_encoding: Boolean. Whether to use feature encoding block to encode
-            the categorical features. Defaults to True. If specified as None, it will
-            be tuned automatically.
+        categorical_encoding: Boolean. Whether to use the CategoricalToNumerical to
+            encode the categorical features to numerical features. Defaults to True.
+            If specified as None, it will be tuned automatically.
         seed: Int. Random seed.
     """
 
     def __init__(self,
-                 feature_encoding=True,
-                 block_type=None,
+                 categorical_encoding=True,
                  seed=None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.feature_encoding = feature_encoding
+        self.categorical_encoding = categorical_encoding
         self.seed = seed
         self.column_types = None
         self.column_names = None
@@ -136,12 +135,12 @@ class StructuredDataBlock(block_module.Block):
 
     def build_feature_encoding(self, hp, input_node):
         output_node = input_node
-        feature_encoding = self.feature_encoding
-        if feature_encoding is None:
-            feature_encoding = hp.Choice('feature_encoding',
-                                         [True, False],
-                                         default=True)
-        if feature_encoding:
+        categorical_encoding = self.categorical_encoding
+        if categorical_encoding is None:
+            categorical_encoding = hp.Choice('feature_encoding',
+                                             [True, False],
+                                             default=True)
+        if categorical_encoding:
             block = preprocessing.CategoricalToNumerical()
             block.column_types = self.column_types
             block.column_names = self.column_names

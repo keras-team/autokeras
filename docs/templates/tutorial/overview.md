@@ -39,17 +39,16 @@ The following are the links to the documentation of the predefined input nodes a
 [TextInput](/node/#textinput-class).
 
 **Preprocessors**:
-[FeatureEngineering](/preprocessor/#featureengineering-class),
 [ImageAugmentation](/preprocessor/#imageaugmentation-class),
-[LightGBM](/preprocessor/#lightgbm-class),
 [Normalization](/preprocessor/#normalization-class),
 [TextToIntSequence](/preprocessor/#texttointsequence-class),
-[TextToNgramVector](/preprocessor/#texttongramvector-class).
+[TextToNgramVector](/preprocessor/#texttongramvector-class),
+[CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class).
 
 **Blocks**:
 [ConvBlock](/block/#convblock-class),
 [DenseBlock](/block/#denseblock-class),
-[EmbeddingBlock](/block/#embeddingblock-class),
+[Embedding](/block/#embedding-class),
 [Merge](/block/#merge-class),
 [ResNetBlock](/block/#resnetblock-class),
 [RNNBlock](/block/#rnnblock-class),
