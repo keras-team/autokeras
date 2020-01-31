@@ -19,10 +19,10 @@ jobs:
         pip install -e .[tests] --progress-bar off
         pip install tensorflow
         pip install twine
-    - name: Lint with flake8
+    - name: Lint
       run: |
-        pip install flake8
         flake8
+        isort -sl -rc -c
     - name: Test with pytest
       run: |
         pip install pytest
