@@ -22,6 +22,7 @@ jobs:
     - name: Lint with flake8
       run: |
         flake8
+        isort -sl -rc -c
     - name: Test with pytest
       run: |
         pytest --cov=autokeras --cov-report xml:coverage.xml
