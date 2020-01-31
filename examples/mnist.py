@@ -3,9 +3,16 @@ Search for a good model for the
 [MNIST](https://keras.io/datasets/#mnist-database-of-handwritten-digits) dataset.
 """
 
+import tensorflow as tf
+gpus = tf.config.experimental.list_physical_devices('GPU')
+print( gpus )
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
+
 from tensorflow.keras.datasets import mnist
 
 import autokeras as ak
+
 
 # Prepare the dataset.
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
