@@ -111,9 +111,9 @@ class StructuredDataBlock(block_module.Block):
     """Block for structured data.
 
     # Arguments
-        categorical_encoding: Boolean. Whether to use the CategoricalToNumerical to encode
-            the categorical features to numerical features. Defaults to True. If
-            specified as None, it will be tuned automatically.
+        categorical_encoding: Boolean. Whether to use the CategoricalToNumerical to
+            encode the categorical features to numerical features. Defaults to True.
+            If specified as None, it will be tuned automatically.
         seed: Int. Random seed.
     """
 
