@@ -30,6 +30,7 @@ setup(
     extras_require={
         'tests': ['pytest>=4.4.0',
                   'flake8',
+                  'isort',
                   'pytest-xdist',
                   'pytest-cov',
                   'coverage'
