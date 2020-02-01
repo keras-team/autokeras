@@ -25,7 +25,6 @@ setup(
         'scikit-learn',
         'numpy',
         'pandas',
-        'lightgbm',
     ],
     extras_require={
         'tests': ['pytest>=4.4.0',
