@@ -1,7 +1,11 @@
+import collections
+import copy
 import os
 
 import kerastuner
+import numpy as np
 import tensorflow as tf
+from tensorflow.python.util import nest
 
 
 class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
@@ -33,6 +37,71 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         model = super().get_best_models()[0]
         model.load_weights(self.best_model_path)
         return model
+
+    @staticmethod
+    def _adapt_model(model, dataset):
+        from tensorflow.keras.layers.experimental import preprocessing
+        x = dataset.map(lambda x, y: x)
+
+        def get_output_layer(tensor):
+            tensor = nest.flatten(tensor)[0]
+            for layer in model.layers:
+                if isinstance(layer, tf.keras.layers.InputLayer):
+                    continue
+                input_node = nest.flatten(layer.input)[0]
+                if input_node is tensor:
+                    return layer
+            return None
+
+        for index, input_node in enumerate(nest.flatten(model.input)):
+            def get_data(*args):
+                return args[index]
+
+            temp_x = x.map(get_data)
+            layer = get_output_layer(input_node)
+            while isinstance(layer, preprocessing.PreprocessingLayer):
+                layer.adapt(temp_x)
+                layer = get_output_layer(layer.output)
+        return model
+
+    def run_trial(self, trial, x=None, *fit_args, **fit_kwargs):
+        model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
+            filepath=self._get_checkpoint_fname(
+                trial.trial_id, self._reported_step),
+            monitor=self.oracle.objective.name,
+            mode=self.oracle.objective.direction,
+            save_best_only=True,
+            save_weights_only=True)
+        original_callbacks = fit_kwargs.pop('callbacks', [])
+
+        # Run the training process multiple times.
+        metrics = collections.defaultdict(list)
+        for execution in range(self.executions_per_trial):
+            copied_fit_kwargs = copy.copy(fit_kwargs)
+            callbacks = self._deepcopy_callbacks(original_callbacks)
+            self._configure_tensorboard_dir(callbacks, trial.trial_id, execution)
+            callbacks.append(
+                kerastuner.engine.tuner_utils.TunerCallback(self, trial))
+            # Only checkpoint the best epoch across all executions.
+            callbacks.append(model_checkpoint)
+            copied_fit_kwargs['callbacks'] = callbacks
+
+            model = self.hypermodel.build(trial.hyperparameters)
+            self._adapt_model(model, x)
+            history = model.fit(x, *fit_args, **copied_fit_kwargs)
+            for metric, epoch_values in history.history.items():
+                if self.oracle.objective.direction == 'min':
+                    best_value = np.min(epoch_values)
+                else:
+                    best_value = np.max(epoch_values)
+                metrics[metric].append(best_value)
+
+        # Average the results across executions and send to the Oracle.
+        averaged_metrics = {}
+        for metric, execution_values in metrics.items():
+            averaged_metrics[metric] = np.mean(execution_values)
+        self.oracle.update_trial(
+            trial.trial_id, metrics=averaged_metrics, step=self._reported_step)
 
     def search(self,
                callbacks=None,
