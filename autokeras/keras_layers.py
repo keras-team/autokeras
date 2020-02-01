@@ -90,9 +90,10 @@ class CategoricalEncodingCombiner(Combiner):
     def compute(self, values, accumulator=None):
         if accumulator is None:
             accumulator = collections.defaultdict(set)
-        for index, value in enumerate(K.get_value(values)):
-            if self.encoding[index] in [INT, ONE_HOT]:
-                accumulator[str(index)].add(value)
+        for line in K.get_value(values):
+            for index, value in enumerate(line):
+                if self.encoding[index] in [INT, ONE_HOT]:
+                    accumulator[str(index)].add(value)
         return accumulator
 
     def merge(self, accumulators):
