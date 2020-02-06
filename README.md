@@ -35,7 +35,8 @@ pip3 install autokeras
 ```
 
 Please follow the [installation guide](https://autokeras.com/install) for more details.
-**Note:** Currently, AutoKeras is only compatible with **Python 3**.
+
+**Note:** Currently, AutoKeras is only compatible with **Python 3** and **TensorFlow >= 2.1.0**.
 
 ## Cite this work
 
@@ -57,7 +58,7 @@ Biblatex entry:
 ## Community
 
 Use [this link](https://keras-slack-autojoin.herokuapp.com/) to request an invitation for **Keras** Slack workspace.
-Use the [#autokeras](https://kerasteam.slack.com/#autokeras) channel under the Keras workspace for communication.
+Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel under the Keras workspace for communication.
 
 You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
 

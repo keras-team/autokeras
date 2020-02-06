@@ -4,7 +4,7 @@
 
 **Pip**: Follow the TensorFlow install steps to install Pip.
 
-**Tensorflow**: AutoKeras is based on TensorFlow.
+**Tensorflow >= 2.1.0**: AutoKeras is based on TensorFlow.
 Please follow
 [this tutorial](https://www.tensorflow.org/install/pip) to install TensorFlow for python3.
 
