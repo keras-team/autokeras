@@ -1,16 +1,10 @@
 # Contributing Guide
 
 Contributions are welcome, and greatly appreciated!
-We recommend you to check our [Developer Tools Guide](#developer-tools-guide)
-to make the development process easier and standard.
-
-Notably, you can follow the tag of [call for contributors](https://github.com/keras-team/autokeras/labels/call%20for%20contributors) in the issues.
-Those issues are designed for the external contributors to solve.
-The easiest ones are tagged with [good first issue](https://github.com/keras-team/autokeras/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
-The pull requests solving these issues are most likely to be merged.
+Follow the tag of [good first issue](https://github.com/keras-team/autokeras/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+for the issues for beginner.
 
 ## Pull Request Guide
-Before you submit a pull request, check that it meets these guidelines:
 
 1. Is this the first pull request that you're making with GitHub? If so, read the guide [Making a pull request to an open-source project](https://github.com/gabrieldemarmiesse/getting_started_open_source).
 
@@ -21,33 +15,65 @@ Before you submit a pull request, check that it meets these guidelines:
 4. For the case of bug fixes, add new test cases which would fail before your bug fix.
 
 
-## Setup your environment
+## Setup Environment
 
 ### virtualenv
 Install [Virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
-Create a new virtualenv based on python3.6+.
+Create a new virtualenv named `ak` based on python3.
+```
+mkvirtualenv -p python3 ak 
+```
+Please use this virtualenv for development.
 
 ### Installation
-Clone the repo. Go to the repo directory. Activate the virtualenv. Run the following commands.
+Clone the repo. Go to the repo directory.
+Run the following commands.
 ```
+workon ak
+
 pip install -e ".[tests]"
 pip uninstall autokeras
 add2virtualenv .
+
 pip install mkdocs
 pip install mkdocs-material
-pip install isort
 pip install autopep8
 ``` 
 
-### pre-commit hook
-You can make git run `flake8` before every commit automatically. It will make you go faster by
-avoiding pushing commit which are not passing the flake8 tests. To do this,
-open `.git/hooks/pre-commit` with a text editor and write `flake8` inside. If the `flake8` doesn't
-pass, the commit will be aborted.
+
+## Run Tests
+
+Activate the virtualenv.
+Go to the repo directory
+Run the following lines to run the tests.
+
+Run all the tests.
+```
+pytest tests
+```
+
+Run all the unit tests.
+```
+pytest tests/autokeras
+```
+
+Run all the integration tests.
+```
+pytest tests/integration_tests
+```
 
 ## Code Style Guide
 1. Run `shell/format.sh` to format your code.
-2. Run `flake8` to check.
+2. Run `shell/lint.sh` to check.
 3. Docstrings should follow our style.
 
 For "our style", just check the code of AutoKeras.
+
+### pre-commit hook
+Check code style automatically at every commit. 
+Go to the repo directory.
+```
+cp shell/lint.sh .git/hooks/pre-commit
+```
+If the check doesn't pass, the commit will be aborted.
+
