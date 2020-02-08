@@ -28,6 +28,7 @@ output_node = ak.ImageAugmentation()(output_node)
 output_node1 = ak.ConvBlock()(output_node)
 output_node2 = ak.ResNetBlock(version='v2')(output_node)
 output_node = ak.Merge()([output_node1, output_node2])
+output_node = ak.ClassificationHead()(output_node)
 
 auto_model = ak.AutoModel(
     inputs=input_node, 
