@@ -62,19 +62,20 @@ Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel u
 
 You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
 
-## Contributing Code
+## Contributors
 
-You can follow the [Contributing Guide](https://autokeras.com/contributing/) for details.
+You can follow the [Contributing Guide](https://autokeras.com/contributing/) to become a contributor.
+Thank all the contributors for supporting us!
 
-## Support AutoKeras
+<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://opencollective.com/autokeras/contributors.svg?avatarHeight=36&width=890&button=false" /></a>
 
-We accept donations on [Open Collective](https://opencollective.com/autokeras).
+
+## Backers
+
+We accept financial support on [Open Collective](https://opencollective.com/autokeras).
 Thank every backer for supporting us!
 
-<a href="https://opencollective.com/autokeras/donate" target="_blank">
-  <img src="https://opencollective.com/autokeras/donate/button@2x.png?color=blue" width=200 />
-</a>
-
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=36&width=890"></a>
 
 ## DISCLAIMER
 
