@@ -44,7 +44,8 @@ EXCEPTION_LIST = [
     autokeras.StructuredDataClassifier,
     autokeras.StructuredDataRegressor,
     autokeras.TextClassifier,
-    autokeras.TextRegressor
+    autokeras.TextRegressor,
+    autokeras.check_tf_version
 ]
 
 
