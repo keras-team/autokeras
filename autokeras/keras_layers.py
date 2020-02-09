@@ -124,6 +124,56 @@ class CategoricalEncodingCombiner(Combiner):
         pass
 
 
+class LookbackPreprocessing(CombinerPreprocessingLayer):
+    """Transform 2-D time series data to 3-D to be consumed by RNN.
+
+    # Arguments
+        lookback: Int. Number of previous time step features to take per time step.
+    """
+
+    def __init__(self, encoding, **kwargs):
+        raise NotImplementedError
+
+    def _set_state_variables(self, updates):
+        raise NotImplementedError
+
+    def call(self, inputs):
+        raise NotImplementedError
+
+    def compute_output_shape(self, input_shape):
+        raise NotImplementedError
+
+    def compute_output_signature(self, input_spec):
+        raise NotImplementedError
+
+    def get_config(self):
+        raise NotImplementedError
+
+
+class LookbackPreprocessingCombiner(Combiner):
+
+    def __init__(self, lookback, **kwargs):
+        raise NotImplementedError
+
+    def compute(self, values, accumulator=None):
+        raise NotImplementedError
+
+    def merge(self, accumulators):
+        raise NotImplementedError
+
+    def extract(self, accumulator):
+        raise NotImplementedError
+
+    def restore(self, output):
+        raise NotImplementedError
+
+    def serialize(self, accumulator):
+        pass
+
+    def deserialize(self, encoded_accumulator):
+        pass
+
+
 class Sigmoid(tf.keras.layers.Layer):
     """Sigmoid activation function."""
 

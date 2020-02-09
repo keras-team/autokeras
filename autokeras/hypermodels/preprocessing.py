@@ -200,3 +200,26 @@ class CategoricalToNumerical(block_module.Block):
             else:
                 encoding.append(keras_layers.NONE)
         return keras_layers.CategoricalEncoding(encoding)(input_node)
+
+
+class TimeSeriesLookbackPreprocessor(block_module.Block):
+    """Converts time series data to format accepted by RNN.
+
+    # Arguments
+        lookback: Int. Number of previous time step features to take per time step.
+    """
+
+    def __init__(self, lookback=None, **kwargs):
+        super().__init__(**kwargs)
+        self.lookback = lookback
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+        if self.lookback is not None:
+            lookback = self.lookback
+        else:
+            # TODO determine good hyperparameter space or give choice to user.
+            lookback = hp.Choice('output_sequence_length',
+                                 [10, 20, 50, 100], default=64)
+        # TODO implement the custom keras layer that performs the lookback transform.
+        return keras_layers.CategoricalEncoding(lookback)(input_node)
