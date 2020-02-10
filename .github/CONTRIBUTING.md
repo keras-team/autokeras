@@ -38,6 +38,7 @@ add2virtualenv .
 pip install mkdocs
 pip install mkdocs-material
 pip install autopep8
+pip install git+https://github.com/gabrieldemarmiesse/typed_api.git@0.1.1
 ``` 
 
 

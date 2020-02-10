@@ -129,15 +129,15 @@ class StructuredDataBlock(block_module.Block):
 
     def get_config(self):
         config = super().get_config()
-        config.update({'feature_encoding': self.feature_encoding,
+        config.update({'categorical_encoding': self.categorical_encoding,
                        'seed': self.seed})
         return config
 
-    def build_feature_encoding(self, hp, input_node):
+    def build_categorical_encoding(self, hp, input_node):
         output_node = input_node
         categorical_encoding = self.categorical_encoding
         if categorical_encoding is None:
-            categorical_encoding = hp.Choice('feature_encoding',
+            categorical_encoding = hp.Choice('categorical_encoding',
                                              [True, False],
                                              default=True)
         if categorical_encoding:
@@ -153,7 +153,7 @@ class StructuredDataBlock(block_module.Block):
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
-        output_node = self.build_feature_encoding(hp, input_node)
+        output_node = self.build_categorical_encoding(hp, input_node)
         output_node = self.build_body(hp, output_node)
         return output_node
 

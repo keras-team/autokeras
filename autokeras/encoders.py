@@ -27,7 +27,7 @@ class OneHotEncoder(encoder_module.Encoder):
         obj = super().from_config(config)
         obj._label_to_vec = config['label_to_vec']
 
-    def fit_with_labels(self, data):
+    def fit(self, data):
         """Create mapping from label to vector, and vector to label.
 
         # Arguments
@@ -44,22 +44,6 @@ class OneHotEncoder(encoder_module.Encoder):
             vec[index] = 1
             self._label_to_vec[label] = vec
             self._int_to_label[index] = label
-
-    def fit_with_one_hot_encoded(self, data):
-        """Create mapping from label to vector, and vector to label from one-hot.
-
-        # Arguments
-            data: numpy.ndarray. The one-hot encoded labels.
-        """
-        data = np.array(data)
-        if not self.num_classes:
-            self.num_classes = data.shape[1]
-        self._labels = set(range(self.num_classes))
-        for label in self._labels:
-            vec = np.array([0] * self.num_classes)
-            vec[label] = 1
-            self._label_to_vec[label] = vec
-            self._int_to_label[label] = label
 
     def encode(self, data):
         """Get vector for every element in the data array.
@@ -109,7 +93,7 @@ class LabelEncoder(encoder_module.Encoder):
         obj = super().from_config(config)
         obj._label_to_int = config['label_to_int']
 
-    def fit_with_labels(self, data):
+    def fit(self, data):
         """Fit the encoder with all the labels.
 
         # Arguments
@@ -124,13 +108,6 @@ class LabelEncoder(encoder_module.Encoder):
         for index, label in enumerate(self._labels):
             self._int_to_label[index] = label
             self._label_to_int[label] = index
-
-    def update(self, x):
-        if not self.num_classes:
-            self.num_classes = 0
-        if x not in self._label_to_int:
-            self._label_to_int[x] = self.num_classes
-            self.num_classes += 1
 
     def transform(self, x):
         return self._label_to_int[x]
