@@ -4,6 +4,7 @@ import kerastuner
 import pytest
 
 import autokeras as ak
+from autokeras import graph as graph_module
 from autokeras.hypermodels import basic
 from tests import utils
 
@@ -22,6 +23,7 @@ def test_resnet_block(init, build):
     block = basic.ResNetBlock()
     hp = kerastuner.HyperParameters()
 
+    block = graph_module.deserialize(graph_module.serialize(block))
     block.build(hp, ak.Input(shape=input_shape).build())
 
     assert utils.name_in_hps('version', hp)
@@ -37,6 +39,7 @@ def test_xception_block(init, build):
     block = basic.XceptionBlock()
     hp = kerastuner.HyperParameters()
 
+    block = graph_module.deserialize(graph_module.serialize(block))
     block.build(hp, ak.Input(shape=input_shape).build())
 
     assert utils.name_in_hps('activation', hp)
@@ -52,6 +55,7 @@ def test_conv_block():
     block = basic.ConvBlock()
     hp = kerastuner.HyperParameters()
 
+    block = graph_module.deserialize(graph_module.serialize(block))
     block.build(hp, ak.Input(shape=input_shape).build())
 
     assert utils.name_in_hps('kernel_size', hp)
@@ -64,6 +68,7 @@ def test_rnn_block():
     block = basic.RNNBlock()
     hp = kerastuner.HyperParameters()
 
+    block = graph_module.deserialize(graph_module.serialize(block))
     block.build(hp, ak.Input(shape=input_shape).build())
 
     assert utils.name_in_hps('bidirectional', hp)
@@ -76,6 +81,7 @@ def test_dense_block():
     block = basic.DenseBlock()
     hp = kerastuner.HyperParameters()
 
+    block = graph_module.deserialize(graph_module.serialize(block))
     block.build(hp, ak.Input(shape=input_shape).build())
 
     assert utils.name_in_hps('num_layers', hp)
@@ -88,6 +94,7 @@ def test_embedding_block():
     block.max_features = 100
     hp = kerastuner.HyperParameters()
 
+    block = graph_module.deserialize(graph_module.serialize(block))
     block.build(hp, ak.Input(shape=input_shape).build())
 
     assert utils.name_in_hps('pretraining', hp)

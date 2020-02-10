@@ -1,6 +1,7 @@
 import kerastuner
 
 import autokeras as ak
+from autokeras import graph as graph_module
 from autokeras.hypermodels import reduction
 from tests import utils
 
@@ -11,6 +12,7 @@ def test_merge():
     block = reduction.Merge()
     hp = kerastuner.HyperParameters()
 
+    block = graph_module.deserialize(graph_module.serialize(block))
     block.build(hp, [ak.Input(shape=input_shape_1).build(),
                      ak.Input(shape=input_shape_2).build()])
 
@@ -22,6 +24,7 @@ def test_temporal_reduction():
     block = reduction.TemporalReduction()
     hp = kerastuner.HyperParameters()
 
+    block = graph_module.deserialize(graph_module.serialize(block))
     block.build(hp, ak.Input(shape=input_shape).build())
 
     assert utils.name_in_hps('reduction_type', hp)
@@ -32,6 +35,7 @@ def test_spatial_reduction():
     block = reduction.SpatialReduction()
     hp = kerastuner.HyperParameters()
 
+    block = graph_module.deserialize(graph_module.serialize(block))
     block.build(hp, ak.Input(shape=input_shape).build())
 
     assert utils.name_in_hps('reduction_type', hp)

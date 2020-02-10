@@ -89,7 +89,7 @@ class ClassificationHeadAdapter(HeadAdapter):
             raise ValueError('Expect the target data for {name} to have '
                              'at least 2 classes, but got {num_classes}.'
                              .format(name=self.name, num_classes=self.num_classes))
-        self.label_encoder.fit_with_labels(dataset)
+        self.label_encoder.fit(dataset)
 
     def convert_to_dataset(self, dataset):
         if self.label_encoder:
