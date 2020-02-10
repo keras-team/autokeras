@@ -1,5 +1,3 @@
-import queue
-
 import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
