@@ -38,6 +38,30 @@ Please follow the [installation guide](https://autokeras.com/install) for more d
 
 **Note:** Currently, AutoKeras is only compatible with **Python 3** and **TensorFlow >= 2.1.0**.
 
+## Community
+<a href="https://keras-slack-autojoin.herokuapp.com/"><img src="https://github.com/keras-team/autokeras/blob/readme/docs/templates/img/slack.png?raw=true" alt="drawing" width="150"/></a>
+
+[Request an invitation](https://keras-slack-autojoin.herokuapp.com/).
+Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel for communication.
+
+You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
+
+## Contributors
+
+You can follow the [Contributing Guide](https://autokeras.com/contributing/) to become a contributor.
+Thank all the contributors!
+
+<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://opencollective.com/autokeras/contributors.svg?avatarHeight=36&width=890&button=false" /></a>
+
+
+## Backers
+
+We accept financial support on [Open Collective](https://opencollective.com/autokeras).
+Thank every backer for supporting us!
+
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/sponsor.svg?avatarHeight=36&width=890"></a>
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=36&width=890"></a>
+
 ## Cite this work
 
 Haifeng Jin, Qingquan Song, and Xia Hu. "Auto-keras: An efficient neural architecture search system." Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining. ACM, 2019. ([Download](https://www.kdd.org/kdd2019/accepted-papers/view/auto-keras-an-efficient-neural-architecture-search-system))
@@ -54,27 +78,6 @@ Biblatex entry:
   organization={ACM}
 }
 ```
-
-## Community
-
-Use [this link](https://keras-slack-autojoin.herokuapp.com/) to request an invitation for **Keras** Slack workspace.
-Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel under the Keras workspace for communication.
-
-You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
-
-## Contributing Code
-
-You can follow the [Contributing Guide](https://autokeras.com/contributing/) for details.
-
-## Support AutoKeras
-
-We accept donations on [Open Collective](https://opencollective.com/autokeras).
-Thank every backer for supporting us!
-
-<a href="https://opencollective.com/autokeras/donate" target="_blank">
-  <img src="https://opencollective.com/autokeras/donate/button@2x.png?color=blue" width=200 />
-</a>
-
 
 ## DISCLAIMER
 
