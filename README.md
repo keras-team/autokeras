@@ -56,9 +56,10 @@ Biblatex entry:
 ```
 
 ## Community
+<a href="https://keras-slack-autojoin.herokuapp.com/"><img src="https://github.com/keras-team/autokeras/blob/readme/docs/templates/img/slack.png?raw=true" alt="drawing" width="150"/></a>
 
-Use [this link](https://keras-slack-autojoin.herokuapp.com/) to request an invitation for **Keras** Slack workspace.
-Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel under the Keras workspace for communication.
+[Request an invitation](https://keras-slack-autojoin.herokuapp.com/).
+Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel for communication.
 
 You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
 
