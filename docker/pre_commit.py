@@ -13,7 +13,7 @@ def _run_format_and_flake8():
     except CalledProcessError:
         check_bash_call("isort -sl -rc")
         files_changed = True
-
+    """
     try:
         check_bash_call("autopep8 --exit-code -i -r .")
     except CalledProcessError as error:
@@ -22,7 +22,7 @@ def _run_format_and_flake8():
         else:
             # there was another type of error
             raise
-
+    """
     if files_changed:
         print("Some files have changed.")
         print("Please do git add and git commit again")
