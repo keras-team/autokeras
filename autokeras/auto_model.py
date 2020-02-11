@@ -1,7 +1,11 @@
+from typing import Optional
+from typing import Union
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras.engine.tuner import AutoTuner
 from autokeras import graph as graph_module
 from autokeras import hypermodels
 from autokeras import nodes as input_module
@@ -87,15 +91,15 @@ class AutoModel(object):
     """
 
     def __init__(self,
-                 inputs,
-                 outputs,
-                 name='auto_model',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_loss',
-                 tuner='greedy',
-                 overwrite=False,
-                 seed=None):
+                 inputs: list,
+                 outputs: list,
+                 name: str = 'auto_model',
+                 max_trials: int = 100,
+                 directory: Optional[str] = None,
+                 objective: str = 'val_loss',
+                 tuner: Union[str, AutoTuner] = 'greedy',
+                 overwrite: bool = False,
+                 seed: Optional[int] = None):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self.seed = seed
