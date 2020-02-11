@@ -1,4 +1,5 @@
-from subprocess import check_call, CalledProcessError
+from subprocess import CalledProcessError
+from subprocess import check_call
 
 
 def check_bash_call(string):
