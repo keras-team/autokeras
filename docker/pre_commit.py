@@ -12,7 +12,7 @@ def _run_format_and_flake8():
     try:
         check_bash_call("isort -sl -rc -c")
     except CalledProcessError:
-        check_bash_call("isort -sl -rc")
+        check_bash_call("isort -y -sl -rc")
         files_changed = True
 
     try:
