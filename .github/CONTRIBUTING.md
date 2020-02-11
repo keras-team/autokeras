@@ -64,6 +64,16 @@ pytest tests/integration_tests
 ```
 
 ## Code Style Guide
+
+We provide a pre-commit that works with docker for formatting.
+You don't need to understand docker to be able to use it. 
+Docker just needs to be installed. Install the pre-commit hook with:
+```bash
+cd .git/hooks && ln -s -f ../../shell/pre-commit.sh pre-commit
+```
+
+or manually:
+
 1. Run `shell/format.sh` to format your code.
 2. Run `shell/lint.sh` to check.
 3. Docstrings should follow our style.
