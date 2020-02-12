@@ -1,20 +1,12 @@
-from pathlib import Path
 from unittest import mock
 
 import numpy as np
-import pytest
 
 import autokeras as ak
 
 
-@pytest.fixture(scope='module')
-def tmp_dir(tmpdir_factory):
-    return tmpdir_factory.mktemp('test_auto_model')
-
-
 @mock.patch('autokeras.auto_model.get_tuner_class')
-def test_evaluate(tuner_fn, tmp_dir):
-    tmp_dir = Path(tmp_dir)
+def test_evaluate(tuner_fn, tmp_path):
     x_train = np.random.rand(100, 32)
     y_train = np.random.rand(100, 1)
 
@@ -25,7 +17,7 @@ def test_evaluate(tuner_fn, tmp_dir):
 
     auto_model = ak.AutoModel(input_node,
                               output_node,
-                              directory=tmp_dir,
+                              directory=tmp_path,
                               max_trials=1)
     auto_model.fit(x_train, y_train, epochs=1, validation_data=(x_train, y_train))
     auto_model.evaluate(x_train, y_train)
@@ -33,14 +25,13 @@ def test_evaluate(tuner_fn, tmp_dir):
 
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
-def test_auto_model_predict(tuner_fn, tmp_dir):
-    tmp_dir = Path(tmp_dir)
+def test_auto_model_predict(tuner_fn, tmp_path):
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
 
     auto_model = ak.AutoModel(ak.ImageInput(),
                               ak.RegressionHead(),
-                              directory=tmp_dir,
+                              directory=tmp_path,
                               max_trials=2)
     auto_model.fit(x_train, y_train, epochs=2, validation_split=0.2)
     auto_model.predict(x_train)
@@ -48,8 +39,7 @@ def test_auto_model_predict(tuner_fn, tmp_dir):
 
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
-def test_final_fit_concat(tuner_fn, tmp_dir):
-    tmp_dir = Path(tmp_dir)
+def test_final_fit_concat(tuner_fn, tmp_path):
     tuner = tuner_fn.return_value.return_value
 
     x_train = np.random.rand(100, 32, 32, 3)
@@ -57,7 +47,7 @@ def test_final_fit_concat(tuner_fn, tmp_dir):
 
     auto_model = ak.AutoModel(ak.ImageInput(),
                               ak.RegressionHead(),
-                              directory=tmp_dir,
+                              directory=tmp_path,
                               max_trials=2)
     auto_model.fit(x_train, y_train, epochs=2, validation_split=0.2)
     assert auto_model._split_dataset
@@ -65,8 +55,7 @@ def test_final_fit_concat(tuner_fn, tmp_dir):
 
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
-def test_final_fit_not_concat(tuner_fn, tmp_dir):
-    tmp_dir = Path(tmp_dir)
+def test_final_fit_not_concat(tuner_fn, tmp_path):
     tuner = tuner_fn.return_value.return_value
 
     x_train = np.random.rand(100, 32, 32, 3)
@@ -74,7 +63,7 @@ def test_final_fit_not_concat(tuner_fn, tmp_dir):
 
     auto_model = ak.AutoModel(ak.ImageInput(),
                               ak.RegressionHead(),
-                              directory=tmp_dir,
+                              directory=tmp_path,
                               max_trials=2)
     auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
     assert not auto_model._split_dataset
@@ -82,8 +71,7 @@ def test_final_fit_not_concat(tuner_fn, tmp_dir):
 
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
-def test_overwrite(tuner_fn, tmp_dir):
-    tmp_dir = Path(tmp_dir)
+def test_overwrite(tuner_fn, tmp_path):
     tuner_class = tuner_fn.return_value
 
     x_train = np.random.rand(100, 32, 32, 3)
@@ -91,7 +79,7 @@ def test_overwrite(tuner_fn, tmp_dir):
 
     auto_model = ak.AutoModel(ak.ImageInput(),
                               ak.RegressionHead(),
-                              directory=tmp_dir,
+                              directory=tmp_path,
                               max_trials=2,
                               overwrite=False)
     auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
@@ -99,8 +87,7 @@ def test_overwrite(tuner_fn, tmp_dir):
 
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
-def test_export_model(tuner_fn, tmp_dir):
-    tmp_dir = Path(tmp_dir)
+def test_export_model(tuner_fn, tmp_path):
     tuner_class = tuner_fn.return_value
     tuner = tuner_class.return_value
 
@@ -109,7 +96,7 @@ def test_export_model(tuner_fn, tmp_dir):
 
     auto_model = ak.AutoModel(ak.ImageInput(),
                               ak.RegressionHead(),
-                              directory=tmp_dir,
+                              directory=tmp_path,
                               max_trials=2,
                               overwrite=False)
     auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
