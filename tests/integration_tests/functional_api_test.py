@@ -1,16 +1,10 @@
-import pytest
 from tensorflow.python.keras.datasets import mnist
 
 import autokeras as ak
 from tests import utils
 
 
-@pytest.fixture(scope='module')
-def tmp_dir(tmpdir_factory):
-    return tmpdir_factory.mktemp('test_functional_api')
-
-
-def test_functional_api(tmp_dir):
+def test_functional_api(tmp_path):
     # Prepare the data.
     num_instances = 20
     (image_x, train_y), (test_x, test_y) = mnist.load_data()
@@ -62,7 +56,7 @@ def test_functional_api(tmp_dir):
             text_input,
             structured_data_input
         ],
-        directory=tmp_dir,
+        directory=tmp_path,
         outputs=[
             regression_outputs,
             classification_outputs
