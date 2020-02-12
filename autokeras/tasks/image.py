@@ -1,9 +1,8 @@
+from pathlib import Path
 from typing import Callable
 from typing import List
 from typing import Optional
 from typing import Union
-
-from pathlib import Path
 
 from autokeras import auto_model
 from autokeras import hypermodels

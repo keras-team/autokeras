@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import List
 from typing import Optional
-from typing import Union
 from typing import Type
+from typing import Union
 
 import numpy as np
 import tensorflow as tf
