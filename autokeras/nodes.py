@@ -38,7 +38,6 @@ class TextInput(Input):
 
     The input data should be numpy.ndarray or tf.data.Dataset. The data should be
     one-dimensional. Each element in the data should be a string which is a full
-    sentence.
     """
 
     def build(self):
