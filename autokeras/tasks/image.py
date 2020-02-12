@@ -3,6 +3,8 @@ from typing import List
 from typing import Optional
 from typing import Union
 
+from pathlib import Path
+
 from autokeras import auto_model
 from autokeras import hypermodels
 from autokeras import nodes as input_module
@@ -48,7 +50,7 @@ class ImageClassifier(SupervisedImagePipeline):
                  metrics: Optional[List[Union[str, Callable]]] = None,
                  name: str = 'image_classifier',
                  max_trials: int = 100,
-                 directory: Optional[str] = None,
+                 directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  overwrite: bool = True,
                  seed: Optional[int] = None):

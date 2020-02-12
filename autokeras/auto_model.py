@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List
 from typing import Optional
 from typing import Union
+from typing import Type
 
 import numpy as np
 import tensorflow as tf
@@ -24,8 +25,6 @@ TUNER_CLASSES = {
     'hyperband': tuners.Hyperband,
     'greedy': tuners.Greedy,
 }
-
-ValidOutput = Union[Node, Block]
 
 
 def get_tuner_class(tuner):
@@ -98,12 +97,12 @@ class AutoModel(object):
 
     def __init__(self,
                  inputs: Union[Node, List[Node]],
-                 outputs: Union[ValidOutput, List[ValidOutput]],
+                 outputs: Union[Block, Node, list],
                  name: str = 'auto_model',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
-                 tuner: Union[str, AutoTuner] = 'greedy',
+                 tuner: Union[str, Type[AutoTuner]] = 'greedy',
                  overwrite: bool = False,
                  seed: Optional[int] = None):
         self.inputs = nest.flatten(inputs)
