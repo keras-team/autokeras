@@ -101,7 +101,7 @@ class AutoModel(object):
                  outputs: Union[ValidOutput, List[ValidOutput]],
                  name: str = 'auto_model',
                  max_trials: int = 100,
-                 directory: Optional[Union[str, Path]] = None,
+                 directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  tuner: Union[str, AutoTuner] = 'greedy',
                  overwrite: bool = False,
