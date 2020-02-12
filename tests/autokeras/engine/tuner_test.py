@@ -1,27 +1,21 @@
 from unittest import mock
 
 import kerastuner
-import pytest
 import tensorflow as tf
 
 from autokeras.engine import tuner as tuner_module
 from tests import utils
 
 
-@pytest.fixture(scope='module')
-def tmp_dir(tmpdir_factory):
-    return tmpdir_factory.mktemp('test_auto_model')
-
-
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.__init__')
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
 @mock.patch('tensorflow.keras.Model.fit')
-def test_add_early_stopping(fit_fn, base_tuner_search, init, tmp_dir):
+def test_add_early_stopping(fit_fn, base_tuner_search, init, tmp_path):
     graph = utils.build_graph()
     tuner = tuner_module.AutoTuner(oracle=mock.Mock(), hypermodel=graph)
     tuner.hypermodel = graph
     tuner.oracle = mock.Mock()
-    tuner.directory = tmp_dir
+    tuner.directory = tmp_path
     tuner.project_name = ''
     hp = kerastuner.HyperParameters()
     trial = mock.Mock()
@@ -38,11 +32,11 @@ def test_add_early_stopping(fit_fn, base_tuner_search, init, tmp_dir):
 
 
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.__init__')
-def test_overwrite_init(base_tuner_init, tmp_dir):
+def test_overwrite_init(base_tuner_init, tmp_path):
     tuner_module.AutoTuner(
         oracle=mock.Mock(),
         hypermodel=lambda hp: None,
-        directory=tmp_dir)
+        directory=tmp_path)
 
     assert not base_tuner_init.call_args_list[0][1]['overwrite']
 
@@ -50,12 +44,12 @@ def test_overwrite_init(base_tuner_init, tmp_dir):
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.__init__')
 @mock.patch('kerastuner.engine.base_tuner.BaseTuner.search')
 @mock.patch('tensorflow.keras.Model.fit')
-def test_overwrite_search(fit_fn, base_tuner_search, init, tmp_dir):
+def test_overwrite_search(fit_fn, base_tuner_search, init, tmp_path):
     graph = utils.build_graph()
     tuner = tuner_module.AutoTuner(oracle=mock.Mock(), hypermodel=graph)
     tuner.hypermodel = graph
     tuner.oracle = mock.Mock()
-    tuner.directory = tmp_dir
+    tuner.directory = tmp_path
     tuner.project_name = ''
     hp = kerastuner.HyperParameters()
     trial = mock.Mock()
