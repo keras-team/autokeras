@@ -1,3 +1,5 @@
+from pathlib import Path
+from typing import List
 from typing import Optional
 from typing import Union
 
@@ -12,6 +14,8 @@ from autokeras import tuners
 from autokeras import utils
 from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
+from autokeras.engine.block import Block
+from autokeras.engine.node import Node
 from autokeras.engine.tuner import AutoTuner
 
 TUNER_CLASSES = {
@@ -20,6 +24,8 @@ TUNER_CLASSES = {
     'hyperband': tuners.Hyperband,
     'greedy': tuners.Greedy,
 }
+
+ValidOutput = Union[Node, Block]
 
 
 def get_tuner_class(tuner):
@@ -91,11 +97,11 @@ class AutoModel(object):
     """
 
     def __init__(self,
-                 inputs: list,
-                 outputs: list,
+                 inputs: Union[Node, List[Node]],
+                 outputs: Union[ValidOutput, List[ValidOutput]],
                  name: str = 'auto_model',
                  max_trials: int = 100,
-                 directory: Optional[str] = None,
+                 directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  tuner: Union[str, AutoTuner] = 'greedy',
                  overwrite: bool = False,
