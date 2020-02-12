@@ -63,18 +63,17 @@ Run all the integration tests.
 pytest tests/integration_tests
 ```
 
-## Code Style Guide
+## Code Style
+### Option 1: Automatic
+It automatically formats the code every time you commit.
+To setup:
+1. Install Docker.
+2. Run `cd .git/hooks && ln -s -f ../../shell/pre-commit.sh pre-commit` from the repo directory.
+### Option 2: Manually
+You can run the following manually every time you want to format your code.
 1. Run `shell/format.sh` to format your code.
 2. Run `shell/lint.sh` to check.
-3. Docstrings should follow our style.
 
-For "our style", just check the code of AutoKeras.
-
-### pre-commit hook
-Check code style automatically at every commit. 
-Go to the repo directory.
-```
-cp shell/lint.sh .git/hooks/pre-commit
-```
-If the check doesn't pass, the commit will be aborted.
-
+## Docstrings
+Docstrings should follow our style.
+Just check the style of other docstrings in AutoKeras.

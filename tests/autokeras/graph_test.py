@@ -6,11 +6,6 @@ import autokeras as ak
 from autokeras import graph as graph_module
 
 
-@pytest.fixture(scope='module')
-def tmp_dir(tmpdir_factory):
-    return tmpdir_factory.mktemp('test_graph')
-
-
 def test_set_hp():
     input_node = ak.Input((32,))
     output_node = input_node
@@ -92,7 +87,7 @@ def test_graph_basics():
     assert model.output_shape == (None, 1)
 
 
-def test_graph_save_load(tmp_dir):
+def test_graph_save_load(tmp_path):
     input1 = ak.Input()
     input2 = ak.Input()
     output1 = ak.DenseBlock()(input1)

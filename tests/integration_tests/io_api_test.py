@@ -1,16 +1,10 @@
-import pytest
 from tensorflow.python.keras.datasets import mnist
 
 import autokeras as ak
 from tests import utils
 
 
-@pytest.fixture(scope='module')
-def tmp_dir(tmpdir_factory):
-    return tmpdir_factory.mktemp('test_io_api')
-
-
-def test_io_api(tmp_dir):
+def test_io_api(tmp_path):
     (image_x, train_y), (test_x, test_y) = mnist.load_data()
     (text_x, train_y), (test_x, test_y) = utils.imdb_raw()
 
@@ -32,7 +26,7 @@ def test_io_api(tmp_dir):
         outputs=[ak.RegressionHead(metrics=['mae']),
                  ak.ClassificationHead(loss='categorical_crossentropy',
                                        metrics=['accuracy'])],
-        directory=tmp_dir,
+        directory=tmp_path,
         max_trials=2,
         seed=utils.SEED)
     automodel.fit([
