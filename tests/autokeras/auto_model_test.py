@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest import mock
 
 import numpy as np
@@ -13,6 +14,7 @@ def tmp_dir(tmpdir_factory):
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
 def test_evaluate(tuner_fn, tmp_dir):
+    tmp_dir = Path(tmp_dir)
     x_train = np.random.rand(100, 32)
     y_train = np.random.rand(100, 1)
 
@@ -32,6 +34,7 @@ def test_evaluate(tuner_fn, tmp_dir):
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
 def test_auto_model_predict(tuner_fn, tmp_dir):
+    tmp_dir = Path(tmp_dir)
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
 
@@ -46,6 +49,7 @@ def test_auto_model_predict(tuner_fn, tmp_dir):
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
 def test_final_fit_concat(tuner_fn, tmp_dir):
+    tmp_dir = Path(tmp_dir)
     tuner = tuner_fn.return_value.return_value
 
     x_train = np.random.rand(100, 32, 32, 3)
@@ -62,6 +66,7 @@ def test_final_fit_concat(tuner_fn, tmp_dir):
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
 def test_final_fit_not_concat(tuner_fn, tmp_dir):
+    tmp_dir = Path(tmp_dir)
     tuner = tuner_fn.return_value.return_value
 
     x_train = np.random.rand(100, 32, 32, 3)
@@ -78,6 +83,7 @@ def test_final_fit_not_concat(tuner_fn, tmp_dir):
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
 def test_overwrite(tuner_fn, tmp_dir):
+    tmp_dir = Path(tmp_dir)
     tuner_class = tuner_fn.return_value
 
     x_train = np.random.rand(100, 32, 32, 3)
@@ -94,6 +100,7 @@ def test_overwrite(tuner_fn, tmp_dir):
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
 def test_export_model(tuner_fn, tmp_dir):
+    tmp_dir = Path(tmp_dir)
     tuner_class = tuner_fn.return_value
     tuner = tuner_class.return_value
 

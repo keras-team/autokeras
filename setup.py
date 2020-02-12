@@ -32,7 +32,8 @@ setup(
                   'isort',
                   'pytest-xdist',
                   'pytest-cov',
-                  'coverage'
+                  'coverage',
+                  'typeguard==2.7.1'
                   ],
     },
     packages=find_packages(exclude=('tests',)),
