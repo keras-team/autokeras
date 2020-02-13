@@ -33,7 +33,7 @@ setup(
                   'pytest-xdist',
                   'pytest-cov',
                   'coverage',
-                  'typeguard==2.7.1'
+                  'typeguard>=2,<3'
                   ],
     },
     packages=find_packages(exclude=('tests',)),

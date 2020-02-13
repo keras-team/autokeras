@@ -15,9 +15,8 @@ from autokeras import tuners
 from autokeras import utils
 from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
-from autokeras.engine.block import Block
-from autokeras.engine.node import Node
 from autokeras.engine.tuner import AutoTuner
+from autokeras.nodes import Input
 
 TUNER_CLASSES = {
     'bayesian': tuners.BayesianOptimization,
@@ -96,8 +95,8 @@ class AutoModel(object):
     """
 
     def __init__(self,
-                 inputs: Union[Node, List[Node]],
-                 outputs: Union[Block, Node, list],
+                 inputs: Union[Input, List[Input]],
+                 outputs: Union[head_module.Head, list],
                  name: str = 'auto_model',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
