@@ -3,8 +3,8 @@ import pandas as pd
 import tensorflow as tf
 
 from autokeras import encoders
-from autokeras.engine import adapter as adapter_module
 from autokeras import utils
+from autokeras.engine import adapter as adapter_module
 
 
 class HeadAdapter(adapter_module.Adapter):

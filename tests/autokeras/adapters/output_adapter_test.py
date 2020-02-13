@@ -30,7 +30,7 @@ def test_one_class():
 
 
 def test_tf_dataset():
-    y = utils.generate_one_hot_labels(dtype='dataset') 
+    y = utils.generate_one_hot_labels(dtype='dataset')
     head = output_adapter.ClassificationHeadAdapter(name='a')
     y = head.fit_transform(y)
     assert isinstance(head.transform(y), tf.data.Dataset)
