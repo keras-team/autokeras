@@ -27,3 +27,10 @@ def test_one_class():
     with pytest.raises(ValueError) as info:
         head.fit_transform(y)
     assert 'Expect the target data' in str(info.value)
+
+
+def test_tf_dataset():
+    y = utils.generate_one_hot_labels(dtype='dataset')
+    head = output_adapter.ClassificationHeadAdapter(name='a')
+    y = head.fit_transform(y)
+    assert isinstance(head.transform(y), tf.data.Dataset)
