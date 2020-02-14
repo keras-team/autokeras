@@ -7,6 +7,9 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras import graph as graph_module
+from autokeras import utils
+
 
 class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     """A Tuner class based on KerasTuner for AutoKeras.
@@ -28,6 +31,9 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._finished = False
+        # Save or load the HyperModel.
+        utils.save_json(os.path.join(self.directory, 'graph'), 
+                        graph_module.serialize(self.hypermodel.hypermodel))
 
     # Override the function to prevent building the model during initialization.
     def _populate_initial_space(self):

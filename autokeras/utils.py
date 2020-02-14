@@ -1,4 +1,4 @@
-import pickle
+import json
 import re
 
 import numpy as np
@@ -99,16 +99,6 @@ def is_label(y):
     return len(y.flatten()) == len(y)
 
 
-def pickle_from_file(path):
-    """Load the pickle file from the provided path and returns the object."""
-    return pickle.load(open(path, 'rb'))
-
-
-def pickle_to_file(obj, path):
-    """Save the pickle file to the specified path."""
-    pickle.dump(obj, open(path, 'wb'))
-
-
 def to_snake_case(name):
     intermediate = re.sub('(.)([A-Z][a-z0-9]+)', r'\1_\2', name)
     insecure = re.sub('([a-z])([A-Z])', r'\1_\2', intermediate).lower()
@@ -142,3 +132,15 @@ def check_tf_version():
             'You can use `pip freeze` to check afterwards that everything is '
             'ok.'.format(version=tf.__version__)
         )
+
+
+def save_json(path, obj):
+    obj = json.dumps(obj)
+    with tf.io.gfile.GFile(path, 'w') as f:
+        f.write(obj)
+
+
+def load_json(path):
+    with tf.io.gfile.GFile(path, 'r') as f:
+        obj = f.read()
+    return json.loads(obj)
