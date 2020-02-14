@@ -1,4 +1,5 @@
 from autokeras.auto_model import AutoModel
+from autokeras.dataloader import NERData
 from autokeras.engine.block import Block
 from autokeras.engine.head import Head
 from autokeras.engine.node import Node

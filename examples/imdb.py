@@ -5,9 +5,14 @@ https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification) dataset.
 """
 import numpy as np
 import tensorflow as tf
-
 import autokeras as ak
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = '5'
+
+gpus = tf.config.experimental.list_physical_devices("GPU")
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 def imdb_raw():
     max_features = 20000
