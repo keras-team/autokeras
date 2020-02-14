@@ -32,7 +32,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         super().__init__(**kwargs)
         self._finished = False
         # Save or load the HyperModel.
-        utils.save_json(os.path.join(self.directory, 'graph'), 
+        utils.save_json(os.path.join(self.directory, 'graph'),
                         graph_module.serialize(self.hypermodel.hypermodel))
 
     # Override the function to prevent building the model during initialization.

@@ -15,7 +15,7 @@ def test_add_early_stopping(fit_fn, base_tuner_search, tmp_path):
     tuner = tuner_module.AutoTuner(
         oracle=greedy.GreedyOracle(graph, objective='val_loss'),
         hypermodel=graph,
-        directory = tmp_path)
+        directory=tmp_path)
     hp = kerastuner.HyperParameters()
     trial = mock.Mock()
     trial.hyperparameters = hp
@@ -37,7 +37,7 @@ def test_overwrite_search(fit_fn, base_tuner_search, tmp_path):
     tuner = tuner_module.AutoTuner(
         oracle=greedy.GreedyOracle(graph, objective='val_loss'),
         hypermodel=graph,
-        directory = tmp_path)
+        directory=tmp_path)
     hp = kerastuner.HyperParameters()
     trial = mock.Mock()
     trial.hyperparameters = hp
