@@ -18,3 +18,9 @@ model = clf.export_model()
 
 print(type(model))  # <class 'tensorflow.python.keras.engine.training.Model'>
 ```
+
+To save and reload Keras Model, you need:
+
+```python
+load_model(path, custom_objects=ak.CUSTOM_OBJECTS)
+```

@@ -38,6 +38,7 @@ nav:
     - Multi-Modal and Multi-Task: tutorial/multi.md
     - Customized Model: tutorial/customized.md
     - Export Model: tutorial/export.md
+    - FAQ: tutorial/faq.md
   - Examples:
     - MNIST Hand-Written Digits: examples/mnist.md
     - IMDB Movie Reviews: examples/imdb.md

@@ -1,4 +1,4 @@
-import pickle
+import json
 import re
 
 import numpy as np
@@ -99,16 +99,6 @@ def is_label(y):
     return len(y.flatten()) == len(y)
 
 
-def pickle_from_file(path):
-    """Load the pickle file from the provided path and returns the object."""
-    return pickle.load(open(path, 'rb'))
-
-
-def pickle_to_file(obj, path):
-    """Save the pickle file to the specified path."""
-    pickle.dump(obj, open(path, 'wb'))
-
-
 def to_snake_case(name):
     intermediate = re.sub('(.)([A-Z][a-z0-9]+)', r'\1_\2', name)
     insecure = re.sub('([a-z])([A-Z])', r'\1_\2', intermediate).lower()
@@ -131,13 +121,26 @@ def to_type_key(dictionary, convert_func):
 
 
 def check_tf_version():
-    if parse(tf.__version__) < parse('2.0.0'):
+    if parse(tf.__version__) < parse('2.1.0'):
         raise ImportError(
-            f'The Tensorflow package version needs to be at least v2.0.0 \n'
-            f'for AutoKeras to run. Currently, your TensorFlow version is \n'
-            f'v{tf.__version__}. Please upgrade with \n'
-            f'`$ pip install --upgrade tensorflow` -> GPU version \n'
-            f'or \n'
-            f'`$ pip install --upgrade tensorflow-cpu` -> CPU version. \n'
-            f'You can use `pip freeze` to check afterwards that everything is ok.'
+            'The Tensorflow package version needs to be at least v2.1.0 \n'
+            'for AutoKeras to run. Currently, your TensorFlow version is \n'
+            'v{version}. Please upgrade with \n'
+            '`$ pip install --upgrade tensorflow` -> GPU version \n'
+            'or \n'
+            '`$ pip install --upgrade tensorflow-cpu` -> CPU version. \n'
+            'You can use `pip freeze` to check afterwards that everything is '
+            'ok.'.format(version=tf.__version__)
         )
+
+
+def save_json(path, obj):
+    obj = json.dumps(obj)
+    with tf.io.gfile.GFile(path, 'w') as f:
+        f.write(obj)
+
+
+def load_json(path):
+    with tf.io.gfile.GFile(path, 'r') as f:
+        obj = f.read()
+    return json.loads(obj)

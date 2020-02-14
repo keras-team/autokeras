@@ -3,6 +3,7 @@ import pandas as pd
 import tensorflow as tf
 
 from autokeras import encoders
+from autokeras import utils
 from autokeras.engine import adapter as adapter_module
 
 
@@ -64,7 +65,8 @@ class ClassificationHeadAdapter(HeadAdapter):
         # If in tf.data.Dataset, must be encoded already.
         if isinstance(dataset, tf.data.Dataset):
             if not self.num_classes:
-                shape = dataset.take(1).shape[1]
+                shape = utils.dataset_shape(dataset)[0]
+                # Single column with 0s and 1s.
                 if shape == 1:
                     self.num_classes = 2
                 else:
@@ -89,7 +91,7 @@ class ClassificationHeadAdapter(HeadAdapter):
             raise ValueError('Expect the target data for {name} to have '
                              'at least 2 classes, but got {num_classes}.'
                              .format(name=self.name, num_classes=self.num_classes))
-        self.label_encoder.fit_with_labels(dataset)
+        self.label_encoder.fit(dataset)
 
     def convert_to_dataset(self, dataset):
         if self.label_encoder:

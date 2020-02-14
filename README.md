@@ -35,7 +35,32 @@ pip3 install autokeras
 ```
 
 Please follow the [installation guide](https://autokeras.com/install) for more details.
-**Note:** Currently, AutoKeras is only compatible with **Python 3**.
+
+**Note:** Currently, AutoKeras is only compatible with **Python 3** and **TensorFlow >= 2.1.0**.
+
+## Community
+<a href="https://keras-slack-autojoin.herokuapp.com/"><img src="https://github.com/keras-team/autokeras/blob/master/docs/templates/img/slack.png?raw=true" alt="drawing" width="150"/></a>
+
+[Request an invitation](https://keras-slack-autojoin.herokuapp.com/).
+Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel for communication.
+
+You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
+
+## Contributors
+
+You can follow the [Contributing Guide](https://autokeras.com/contributing/) to become a contributor.
+Thank all the contributors!
+
+<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://opencollective.com/autokeras/contributors.svg?avatarHeight=36&width=890&button=false" /></a>
+
+
+## Backers
+
+We accept financial support on [Open Collective](https://opencollective.com/autokeras).
+Thank every backer for supporting us!
+
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/sponsor.svg?avatarHeight=36&width=890"></a>
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=36&width=890"></a>
 
 ## Cite this work
 
@@ -53,29 +78,6 @@ Biblatex entry:
   organization={ACM}
 }
 ```
-
-## Community
-
-Use [this link](https://keras-slack-autojoin.herokuapp.com/) to request an invitation for **Keras** Slack workspace.
-Use the [#autokeras](https://kerasteam.slack.com/#autokeras) channel under the Keras workspace for communication.
-
-You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
-
-## Contributing Code
-
-You can follow the [Contributing Guide](https://autokeras.com/contributing/) for details.
-The easist way to contribute is to resolve the issues with the "[call for contributors](https://github.com/keras-team/autokeras/labels/call%20for%20contributors)" tag.
-They are friendly to beginners.
-
-## Support AutoKeras
-
-We accept donations on [Open Collective](https://opencollective.com/autokeras).
-Thank every backer for supporting us!
-
-<a href="https://opencollective.com/autokeras/donate" target="_blank">
-  <img src="https://opencollective.com/autokeras/donate/button@2x.png?color=blue" width=200 />
-</a>
-
 
 ## DISCLAIMER
 

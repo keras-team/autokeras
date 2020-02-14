@@ -110,8 +110,8 @@ graph LR
     id3 --> id5(ResNet V2)
     id4 --> id6(Merge)
     id5 --> id6
-    id7(StructuredDataInput) --> id8(Feature Engineering)
-    id8 --> id9(LightGBM)
+    id7(StructuredDataInput) --> id8(CategoricalToNumerical)
+    id8 --> id9(DenseBlock)
     id6 --> id10(Merge)
     id9 --> id10
     id10 --> id11(Classification Head)
@@ -129,8 +129,8 @@ output_node2 = ak.ResNetBlock(version='v2')(output_node)
 output_node1 = ak.Merge()([output_node1, output_node2])
 
 input_node2 = ak.StructuredDataInput()
-output_node = ak.FeatureEngineering()(input_node2)
-output_node2 = ak.LightGBM()(output_node)
+output_node = ak.CategoricalToNumerical()(input_node2)
+output_node2 = ak.DenseBlock()(output_node)
 
 output_node = ak.Merge()([output_node1, output_node2])
 output_node1 = ak.ClassificationHead()(output_node)
@@ -160,5 +160,7 @@ You can also refer to the Data Format section of the tutorials of
 [AutoModel](/auto_model/#automodel-class),
 [ImageInput](/node/#imageinput-class),
 [StructuredDataInput](/node/#structureddatainput-class),
-[RegressionHead](/head/#regressionhead-class).
-[ClassificationHead](/head/#classificationhead-class).
+[DenseBlock](/block/#denseblock-class),
+[RegressionHead](/head/#regressionhead-class),
+[ClassificationHead](/head/#classificationhead-class),
+[CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class).

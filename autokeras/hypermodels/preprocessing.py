@@ -51,8 +51,8 @@ class TextToIntSequence(block_module.Block):
     def get_config(self):
         config = super().get_config()
         config.update({
-            'max_len': self.max_len,
-            'max_tokens': self.vocab_size,
+            'output_sequence_length': self.output_sequence_length,
+            'max_tokens': self.max_tokens,
         })
         return config
 
