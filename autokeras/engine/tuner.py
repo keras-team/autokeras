@@ -136,20 +136,23 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         # Fully train the best model with original callbacks.
         if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                     for callback in callbacks]) or fit_on_val_data:
-            best_trial = self.oracle.get_best_trials(1)[0]
-            best_hp = best_trial.hyperparameters
-            fit_kwargs['callbacks'] = self._deepcopy_callbacks(callbacks)
             if fit_on_val_data:
                 fit_kwargs['x'] = fit_kwargs['x'].concatenate(
                     fit_kwargs['validation_data'])
-            model = self.hypermodel.build(best_hp)
-            self._adapt_model(model, fit_kwargs['x'])
-            model.fit(**fit_kwargs)
+                fit_kwargs['callbacks'] = self._deepcopy_callbacks(callbacks)
+            self.final_fit(**fit_kwargs)
         else:
             model = self.get_best_models()[0]
 
         model.save_weights(self.best_model_path)
         self._finished = True
+
+    def final_fit(self, x=None, **fit_kwargs):
+        best_trial = self.oracle.get_best_trials(1)[0]
+        best_hp = best_trial.hyperparameters
+        model = self.hypermodel.build(best_hp)
+        self._adapt_model(model, x)
+        model.fit(x, **fit_kwargs)
 
     @property
     def best_model_path(self):

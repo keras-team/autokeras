@@ -24,7 +24,7 @@ def test_add_early_stopping(fit_fn, base_tuner_search, init, tmp_path):
     oracle.get_best_trials.return_value = (trial,)
     tuner.oracle = oracle
 
-    tuner.search()
+    tuner.search(x=None)
 
     callbacks = base_tuner_search.call_args_list[0][1]['callbacks']
     assert any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
