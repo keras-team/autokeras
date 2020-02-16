@@ -5,7 +5,6 @@ import os
 import kerastuner
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.util import nest
 
 from autokeras import graph as graph_module
 from autokeras import utils
@@ -44,33 +43,8 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         model.load_weights(self.best_model_path)
         return model
 
-    @staticmethod
-    def _adapt_model(model, dataset):
-        from tensorflow.keras.layers.experimental import preprocessing
-        x = dataset.map(lambda x, y: x)
-
-        def get_output_layer(tensor):
-            tensor = nest.flatten(tensor)[0]
-            for layer in model.layers:
-                if isinstance(layer, tf.keras.layers.InputLayer):
-                    continue
-                input_node = nest.flatten(layer.input)[0]
-                if input_node is tensor:
-                    return layer
-            return None
-
-        for index, input_node in enumerate(nest.flatten(model.input)):
-            def get_data(*args):
-                return args[index]
-
-            temp_x = x.map(get_data)
-            layer = get_output_layer(input_node)
-            while isinstance(layer, preprocessing.PreprocessingLayer):
-                layer.adapt(temp_x)
-                layer = get_output_layer(layer.output)
-        return model
-
     def run_trial(self, trial, x=None, *fit_args, **fit_kwargs):
+        # TODO: Remove this function after TF has fit-to-adapt feature.
         model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
             filepath=self._get_checkpoint_fname(
                 trial.trial_id, self._reported_step),
@@ -93,7 +67,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             copied_fit_kwargs['callbacks'] = callbacks
 
             model = self.hypermodel.build(trial.hyperparameters)
-            self._adapt_model(model, x)
+            utils.adapt_model(model, x)
             history = model.fit(x, *fit_args, **copied_fit_kwargs)
             for metric, epoch_values in history.history.items():
                 if self.oracle.objective.direction == 'min':
@@ -140,19 +114,24 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         # Fully train the best model with original callbacks.
         if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
                     for callback in callbacks]) or fit_on_val_data:
-            best_trial = self.oracle.get_best_trials(1)[0]
-            best_hp = best_trial.hyperparameters
-            fit_kwargs['callbacks'] = self._deepcopy_callbacks(callbacks)
             if fit_on_val_data:
                 fit_kwargs['x'] = fit_kwargs['x'].concatenate(
                     fit_kwargs['validation_data'])
-            model = self.hypermodel.build(best_hp)
-            model.fit(**fit_kwargs)
+                fit_kwargs['callbacks'] = self._deepcopy_callbacks(callbacks)
+            model = self.final_fit(**fit_kwargs)
         else:
             model = self.get_best_models()[0]
 
         model.save_weights(self.best_model_path)
         self._finished = True
+
+    def final_fit(self, x=None, **fit_kwargs):
+        best_trial = self.oracle.get_best_trials(1)[0]
+        best_hp = best_trial.hyperparameters
+        model = self.hypermodel.build(best_hp)
+        utils.adapt_model(model, x)
+        model.fit(x, **fit_kwargs)
+        return model
 
     @property
     def best_model_path(self):

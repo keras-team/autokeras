@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 from autokeras import keras_layers as layer_module
-from autokeras.engine import tuner
+from autokeras import utils
 
 
 def test_feature_encoder_layer():
@@ -21,7 +21,7 @@ def test_feature_encoder_layer():
         (tf.data.Dataset.from_tensor_slices(data).batch(32),),
         (tf.data.Dataset.from_tensor_slices(np.random.rand(3, 1)).batch(32),),
     ))
-    tuner.AutoTuner._adapt_model(model, dataset)
+    utils.adapt_model(model, dataset)
 
     model.fit(data, np.random.rand(3, 1), epochs=1)
 
