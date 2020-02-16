@@ -40,6 +40,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
 
     @staticmethod
     def _adapt_model(model, dataset):
+        # TODO: Remove this function after TF has fit-to-adapt feature.
         from tensorflow.keras.layers.experimental import preprocessing
         x = dataset.map(lambda x, y: x)
 
@@ -65,6 +66,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         return model
 
     def run_trial(self, trial, x=None, *fit_args, **fit_kwargs):
+        # TODO: Remove this function after TF has fit-to-adapt feature.
         model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
             filepath=self._get_checkpoint_fname(
                 trial.trial_id, self._reported_step),
@@ -141,6 +143,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
                 fit_kwargs['x'] = fit_kwargs['x'].concatenate(
                     fit_kwargs['validation_data'])
             model = self.hypermodel.build(best_hp)
+            self._adapt_model(model, fit_kwargs['x'])
             model.fit(**fit_kwargs)
         else:
             model = self.get_best_models()[0]
