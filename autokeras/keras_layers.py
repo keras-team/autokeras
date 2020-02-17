@@ -128,44 +128,60 @@ class LookbackPreprocessing(CombinerPreprocessingLayer):
     """Transform 2-D time series data to 3-D to be consumed by RNN.
 
     # Arguments
-        lookback: Int. Number of previous time step features to take per time step.
+        lookback: Int. The range of history steps to consider for each prediction.
+            For example, if lookback=n, the data in the range of [i - n, i - 1]
+            is used to predict the value of step i. If unspecified, it will be tuned
+            automatically.
     """
 
-    def __init__(self, encoding, **kwargs):
-        raise NotImplementedError
+    def __init__(self, lookback, **kwargs):
+        super().__init__(
+            combiner=LookbackPreprocessingCombiner(lookback),
+            **kwargs)
+        self.lookback = lookback
 
     def _set_state_variables(self, updates):
-        raise NotImplementedError
+        pass
 
     def call(self, inputs):
-        raise NotImplementedError
+        # TODO Handle inputs that are smaller than lookback.
+        inputs = nest.flatten(inputs)[0]
+        outputs = []
+        for i in range(len(inputs) - self.lookback):
+            outputs.append(inputs[i:i+self.lookback])
+        outputs = nest.flatten(outputs)[0]
+        return outputs
 
     def compute_output_shape(self, input_shape):
-        raise NotImplementedError
+        output_shape = input_shape + (self.lookback, )
+        return output_shape
 
     def compute_output_signature(self, input_spec):
-        raise NotImplementedError
+        return input_spec
 
     def get_config(self):
-        raise NotImplementedError
+        config = {'lookback': self.lookback}
+        base_config = super().get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 
 class LookbackPreprocessingCombiner(Combiner):
 
     def __init__(self, lookback, **kwargs):
-        raise NotImplementedError
+        self.lookback = lookback
 
+    # TODO. Determine what to keep in accumulator. Not necessary though.
     def compute(self, values, accumulator=None):
-        raise NotImplementedError
+        pass
 
     def merge(self, accumulators):
-        raise NotImplementedError
+        pass
 
     def extract(self, accumulator):
-        raise NotImplementedError
+        pass
 
     def restore(self, output):
-        raise NotImplementedError
+        pass
 
     def serialize(self, accumulator):
         pass
@@ -189,5 +205,6 @@ class Sigmoid(tf.keras.layers.Layer):
 
 CUSTOM_OBJECTS = {
     'CategoricalEncoding': CategoricalEncoding,
+    'LookbackPreprocessing': LookbackPreprocessing,
     'Sigmoid': Sigmoid,
 }

@@ -206,7 +206,10 @@ class TimeSeriesLookbackPreprocessor(block_module.Block):
     """Converts time series data to format accepted by RNN.
 
     # Arguments
-        lookback: Int. Number of previous time step features to take per time step.
+        lookback: Int. The range of history steps to consider for each prediction.
+            For example, if lookback=n, the data in the range of [i - n, i - 1]
+            is used to predict the value of step i. If unspecified, it will be tuned
+            automatically.
     """
 
     def __init__(self, lookback=None, **kwargs):
@@ -222,4 +225,4 @@ class TimeSeriesLookbackPreprocessor(block_module.Block):
             lookback = hp.Choice('output_sequence_length',
                                  [10, 20, 50, 100], default=64)
         # TODO implement the custom keras layer that performs the lookback transform.
-        return keras_layers.CategoricalEncoding(lookback)(input_node)
+        return keras_layers.LookbackPreprocessing(lookback)(input_node)
