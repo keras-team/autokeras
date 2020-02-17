@@ -19,7 +19,7 @@ class Block(kerastuner.HyperModel, serializable.Serializable):
             automatically with the class name.
     """
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name: str = None, **kwargs):
         super().__init__(**kwargs)
         if not name:
             prefix = self.__class__.__name__
