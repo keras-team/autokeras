@@ -1,3 +1,5 @@
+from typing import Optional
+
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
 from tensorflow.keras import layers
@@ -307,10 +309,10 @@ class XceptionBlock(block_module.Block, xception.HyperXception):
     """
 
     def __init__(self,
-                 activation=None,
-                 initial_strides=None,
-                 num_residual_blocks=None,
-                 pooling=None,
+                 activation: Optional[str] = None,
+                 initial_strides: Optional[int] = None,
+                 num_residual_blocks: Optional[int] = None,
+                 pooling: Optional[str] = None,
                  **kwargs):
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
         self.activation = activation
