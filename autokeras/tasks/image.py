@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -48,7 +49,7 @@ class ImageClassifier(SupervisedImagePipeline):
                  metrics: Optional[List[Union[str, Callable]]] = None,
                  name: str = 'image_classifier',
                  max_trials: int = 100,
-                 directory: Optional[str] = None,
+                 directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  overwrite: bool = True,
                  seed: Optional[int] = None):

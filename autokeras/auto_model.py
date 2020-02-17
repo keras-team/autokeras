@@ -1,3 +1,9 @@
+from pathlib import Path
+from typing import List
+from typing import Optional
+from typing import Type
+from typing import Union
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
@@ -9,6 +15,8 @@ from autokeras import tuners
 from autokeras import utils
 from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
+from autokeras.engine.tuner import AutoTuner
+from autokeras.nodes import Input
 
 TUNER_CLASSES = {
     'bayesian': tuners.BayesianOptimization,
@@ -87,15 +95,15 @@ class AutoModel(object):
     """
 
     def __init__(self,
-                 inputs,
-                 outputs,
-                 name='auto_model',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_loss',
-                 tuner='greedy',
-                 overwrite=False,
-                 seed=None):
+                 inputs: Union[Input, List[Input]],
+                 outputs: Union[head_module.Head, node_module.Node, list],
+                 name: str = 'auto_model',
+                 max_trials: int = 100,
+                 directory: Union[str, Path, None] = None,
+                 objective: str = 'val_loss',
+                 tuner: Union[str, Type[AutoTuner]] = 'greedy',
+                 overwrite: bool = False,
+                 seed: Optional[int] = None):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self.seed = seed

@@ -11,7 +11,6 @@ HELP_MESSAGE = (
 # TODO: add types and remove all elements from
 # the exception list.
 EXCEPTION_LIST = [
-    autokeras.AutoModel,
     autokeras.Block,
     autokeras.Head,
     autokeras.Node,
