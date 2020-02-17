@@ -2,6 +2,7 @@ import pathlib
 from typing import Callable
 from typing import List
 from typing import Optional
+from typing import Union
 
 from autokeras import auto_model
 from autokeras import hypermodels
@@ -47,7 +48,7 @@ class TextClassifier(SupervisedTextPipeline):
                  metrics: Optional[List[Callable]] = None,
                  name: str = 'text_classifier',
                  max_trials: int = 100,
-                 directory: Optional[str, pathlib.Path, None] = None,
+                 directory: Union[str, pathlib.Path, None] = None,
                  objective: str = 'val_loss',
                  overwrite: bool = True,
                  seed: Optional[int] = None):
