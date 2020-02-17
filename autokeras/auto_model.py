@@ -96,7 +96,7 @@ class AutoModel(object):
 
     def __init__(self,
                  inputs: Union[Input, List[Input]],
-                 outputs: Union[head_module.Head, list],
+                 outputs: Union[head_module.Head, node_module.Node, list],
                  name: str = 'auto_model',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,

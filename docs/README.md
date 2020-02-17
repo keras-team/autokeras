@@ -6,7 +6,7 @@ Our documentation uses extended Markdown, as implemented by [MkDocs](http://mkdo
 ## Building the documentation
 
 - Install MkDocs and the material theme: `pip install mkdocs mkdocs-material`
-- Install keras-autodoc: `pip install keras-autodoc==0.4.0`
+- Install keras-autodoc: `pip install keras-autodoc==0.4.1`
 - `pip install -e .` to make sure that Python will import your modified version of AutoKeras.
 - From the root directory, `cd` into the `docs/` folder and run:
     - `python autogen.py`
