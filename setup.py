@@ -25,7 +25,7 @@ setup(
         'scikit-learn',
         'numpy',
         'pandas',
-        'typing_extensions'
+        'typing-extensions'
     ],
     extras_require={
         'tests': ['pytest>=4.4.0',
