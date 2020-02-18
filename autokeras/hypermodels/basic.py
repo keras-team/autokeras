@@ -4,6 +4,7 @@ from kerastuner.applications import resnet
 from kerastuner.applications import xception
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
+from typing_extensions import Literal
 
 from autokeras import utils
 from autokeras.engine import block as block_module
@@ -304,15 +305,15 @@ class XceptionBlock(block_module.Block, xception.HyperXception):
         initial_strides: Int. If left unspecified, it will be tuned automatically.
         num_residual_blocks: Int. If left unspecified, it will be tuned
             automatically.
-        pooling: String. 'ave', 'flatten', or 'max'. If left unspecified, it will be
+        pooling: String. 'avg', 'flatten', or 'max'. If left unspecified, it will be
             tuned automatically.
     """
 
     def __init__(self,
-                 activation: Optional[str] = None,
+                 activation: Literal['selu', 'relu', None] = None,
                  initial_strides: Optional[int] = None,
                  num_residual_blocks: Optional[int] = None,
-                 pooling: Optional[str] = None,
+                 pooling: Literal['avg', 'flatten', 'max', None] = None,
                  **kwargs):
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
         self.activation = activation
