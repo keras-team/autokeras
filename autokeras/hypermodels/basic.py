@@ -1,3 +1,5 @@
+from typing import Optional
+
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
 from tensorflow.keras import layers
@@ -88,10 +90,10 @@ class RNNBlock(block_module.Block):
     """
 
     def __init__(self,
-                 return_sequences=False,
-                 bidirectional=None,
-                 num_layers=None,
-                 layer_type=None,
+                 return_sequences: bool = False,
+                 bidirectional: Optional[bool] = None,
+                 num_layers: Optional[int] = None,
+                 layer_type: Optional[int] = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.return_sequences = return_sequences
