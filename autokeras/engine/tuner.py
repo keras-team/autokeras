@@ -83,6 +83,8 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         self.oracle.update_trial(
             trial.trial_id, metrics=averaged_metrics, step=self._reported_step)
 
+        tf.keras.backend.clear_session()
+
     def search(self,
                callbacks=None,
                fit_on_val_data=False,
