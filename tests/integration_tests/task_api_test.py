@@ -28,11 +28,8 @@ def test_text_classifier(tmp_path):
     (train_x, train_y), (test_x, test_y) = utils.imdb_raw()
     clf = ak.TextClassifier(directory=tmp_path, max_trials=2, seed=utils.SEED)
     clf.fit(train_x, train_y, epochs=1, validation_data=(test_x, test_y))
-    model = clf.export_model()
-    print(clf.tuner.oracle.get_best_trials(1)[0].hyperparameters.values)
-    model.summary()
-    assert False
-    assert clf.predict(test_x).shape == (len(test_x), 1)
+    clf.export_model()
+    assert clf.predict(test_x).shape == (len(test_x), 2)
 
 
 def test_text_regressor(tmp_path):
