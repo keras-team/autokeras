@@ -29,7 +29,7 @@ def test_text_classifier(tmp_path):
     clf = ak.TextClassifier(directory=tmp_path, max_trials=2, seed=utils.SEED)
     clf.fit(train_x, train_y, epochs=1, validation_data=(test_x, test_y))
     clf.export_model()
-    assert clf.predict(test_x).shape == (len(test_x), 2)
+    assert clf.predict(test_x).shape == (len(test_x), 1)
 
 
 def test_text_regressor(tmp_path):
