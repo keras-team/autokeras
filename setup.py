@@ -37,5 +37,18 @@ setup(
                   'typedapi>=0.2,<0.3'
                   ],
     },
+    classifiers=[
+        "Intended Audience :: Developers",
+        "Intended Audience :: Education",
+        "Intended Audience :: Science/Research",
+        'License :: OSI Approved :: MIT License',
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Topic :: Scientific/Engineering :: Mathematics",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: Software Development :: Libraries",
+    ],
+    license="MIT",
     packages=find_packages(exclude=('tests',)),
 )
