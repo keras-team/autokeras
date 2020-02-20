@@ -24,7 +24,6 @@ EXCEPTION_LIST = [
     autokeras.Merge,
     autokeras.RegressionHead,
     autokeras.RNNBlock,
-    autokeras.SpatialReduction,
     autokeras.StructuredDataBlock,
     autokeras.TemporalReduction,
     autokeras.TextBlock,

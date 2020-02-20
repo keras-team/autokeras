@@ -1,3 +1,5 @@
+from typing import Optional
+
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
@@ -77,7 +79,7 @@ class SpatialReduction(block_module.Block):
             If left unspecified, it will be tuned automatically.
     """
 
-    def __init__(self, reduction_type=None, **kwargs):
+    def __init__(self, reduction_type: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         self.reduction_type = reduction_type
 
