@@ -101,7 +101,7 @@ class TextBlock(block_module.Block):
             output_node = preprocessing.TextToIntSequence().build(hp, output_node)
             output_node = basic.Embedding(
                 pretraining=self.pretraining).build(hp, output_node)
-            output_node = basic.ConvBlock(separable=True).build(hp, output_node)
+            output_node = basic.ConvBlock().build(hp, output_node)
             output_node = reduction.SpatialReduction().build(hp, output_node)
             output_node = basic.DenseBlock().build(hp, output_node)
         return output_node

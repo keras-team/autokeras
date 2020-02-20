@@ -17,7 +17,7 @@ class Normalization(block_module.Block):
             batch axis) is not allowed.
     """
 
-    def __init__(self, axis=-1, **kwargs):
+    def __init__(self, axis: int = -1, **kwargs):
         super().__init__(**kwargs)
         self.axis = axis
 

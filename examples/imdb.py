@@ -46,6 +46,6 @@ print(x_train[0][:50])  # <START> this film was just brilliant casting <UNK>
 # Initialize the TextClassifier
 clf = ak.TextClassifier(max_trials=3)
 # Search for the best model.
-clf.fit(x_train, y_train)
+clf.fit(x_train, y_train, epochs=2)
 # Evaluate on the testing data.
 print('Accuracy: {accuracy}'.format(clf.evaluate(x_test, y_test)))

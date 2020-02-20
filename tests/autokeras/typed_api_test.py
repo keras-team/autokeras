@@ -11,7 +11,6 @@ HELP_MESSAGE = (
 # TODO: add types and remove all elements from
 # the exception list.
 EXCEPTION_LIST = [
-    autokeras.Block,
     autokeras.Head,
     autokeras.Node,
     autokeras.CategoricalToNumerical,
@@ -23,11 +22,7 @@ EXCEPTION_LIST = [
     autokeras.ImageAugmentation,
     autokeras.ImageBlock,
     autokeras.Merge,
-    autokeras.Normalization,
     autokeras.RegressionHead,
-    autokeras.ResNetBlock,
-    autokeras.RNNBlock,
-    autokeras.SpatialReduction,
     autokeras.StructuredDataBlock,
     autokeras.TemporalReduction,
     autokeras.TextBlock,
@@ -43,7 +38,6 @@ EXCEPTION_LIST = [
     autokeras.StructuredDataClassifier,
     autokeras.TextClassifier,
     autokeras.TextRegressor,
-    autokeras.check_tf_version
 ]
 
 
