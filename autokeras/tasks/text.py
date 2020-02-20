@@ -2,6 +2,7 @@ from autokeras import auto_model
 from autokeras import hypermodels
 from autokeras import nodes as input_module
 from autokeras.tuners import greedy
+from autokeras.tuners import task_specific
 
 
 class SupervisedTextPipeline(auto_model.AutoModel):
@@ -55,7 +56,7 @@ class TextClassifier(SupervisedTextPipeline):
             directory=directory,
             name=name,
             objective=objective,
-            tuner=greedy.Greedy,
+            tuner=task_specific.TextClassifierTuner,
             overwrite=overwrite,
             seed=seed)
 

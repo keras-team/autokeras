@@ -156,8 +156,13 @@ class ConvBlock(block_module.Block):
 
     # Arguments
         kernel_size: Int. If left unspecified, it will be tuned automatically.
-        num_blocks: Int. The number of conv blocks. If left unspecified, it will be
-            tuned automatically.
+        num_blocks: Int. The number of conv blocks, each of which may contain
+            convolutional, max pooling, dropout, and activation. If left unspecified,
+            it will be tuned automatically.
+        num_layers: Int. The number of convolutional layers in each block. If left
+            unspecified, it will be tuned automatically.
+        max_pooling: Boolean. Whether to use max pooling layer in each block. If left
+            unspecified, it will be tuned automatically.
         separable: Boolean. Whether to use separable conv layers.
             If left unspecified, it will be tuned automatically.
         dropout_rate: Float. Between 0 and 1. The dropout rate for after the
@@ -168,12 +173,16 @@ class ConvBlock(block_module.Block):
     def __init__(self,
                  kernel_size=None,
                  num_blocks=None,
+                 num_layers=None,
+                 max_pooling=None,
                  separable=None,
                  dropout_rate=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.kernel_size = kernel_size
         self.num_blocks = num_blocks
+        self.num_layers = num_layers
+        self.max_pooling = max_pooling
         self.separable = separable
         self.dropout_rate = dropout_rate
 
@@ -198,6 +207,9 @@ class ConvBlock(block_module.Block):
         num_blocks = self.num_blocks or hp.Choice('num_blocks',
                                                   [1, 2, 3],
                                                   default=2)
+        num_layers = self.num_layers or hp.Choice('num_layers',
+                                                  [1, 2],
+                                                  default=2)
         separable = self.separable
         if separable is None:
             separable = hp.Boolean('separable', default=False)
@@ -206,6 +218,10 @@ class ConvBlock(block_module.Block):
             conv = utils.get_sep_conv(input_node.shape)
         else:
             conv = utils.get_conv(input_node.shape)
+
+        max_pooling = self.max_pooling
+        if max_pooling is None:
+            max_pooling = hp.Boolean('max_pooling', default=True)
         pool = utils.get_max_pooling(input_node.shape)
 
         if self.dropout_rate is not None:
@@ -214,23 +230,19 @@ class ConvBlock(block_module.Block):
             dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0)
 
         for i in range(num_blocks):
-            output_node = conv(
-                hp.Choice('filters_{i}_1'.format(i=i),
-                          [16, 32, 64],
-                          default=32),
-                kernel_size,
-                padding=self._get_padding(kernel_size, output_node),
-                activation='relu')(output_node)
-            output_node = conv(
-                hp.Choice('filters_{i}_2'.format(i=i),
-                          [16, 32, 64],
-                          default=32),
-                kernel_size,
-                padding=self._get_padding(kernel_size, output_node),
-                activation='relu')(output_node)
-            output_node = pool(
-                kernel_size - 1,
-                padding=self._get_padding(kernel_size - 1, output_node))(output_node)
+            for j in range(num_layers):
+                output_node = conv(
+                    hp.Choice('filters_{i}_{j}'.format(i=i, j=j),
+                              [16, 32, 64, 128, 256, 512],
+                              default=32),
+                    kernel_size,
+                    padding=self._get_padding(kernel_size, output_node),
+                    activation='relu')(output_node)
+            if max_pooling:
+                output_node = pool(
+                    kernel_size - 1,
+                    padding=self._get_padding(kernel_size - 1,
+                                              output_node))(output_node)
             if dropout_rate > 0:
                 output_node = layers.Dropout(dropout_rate)(output_node)
         return output_node

@@ -31,7 +31,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         super().__init__(**kwargs)
         self._finished = False
         # Save or load the HyperModel.
-        utils.save_json(os.path.join(self.directory, 'graph'),
+        utils.save_json(os.path.join(self.project_dir, 'graph'),
                         graph_module.serialize(self.hypermodel.hypermodel))
 
     # Override the function to prevent building the model during initialization.
@@ -82,6 +82,8 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             averaged_metrics[metric] = np.mean(execution_values)
         self.oracle.update_trial(
             trial.trial_id, metrics=averaged_metrics, step=self._reported_step)
+
+        tf.keras.backend.clear_session()
 
     def search(self,
                callbacks=None,
