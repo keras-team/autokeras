@@ -120,7 +120,7 @@ def to_type_key(dictionary, convert_func):
             for key, value in dictionary.items()}
 
 
-def check_tf_version():
+def check_tf_version() -> None:
     if parse(tf.__version__) < parse('2.1.0'):
         raise ImportError(
             'The Tensorflow package version needs to be at least v2.1.0 \n'
