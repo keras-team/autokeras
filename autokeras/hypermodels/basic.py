@@ -254,8 +254,8 @@ class ResNetBlock(block_module.Block, resnet.HyperResNet):
     """
 
     def __init__(self,
-                 version=None,
-                 pooling=None,
+                 version: str = None,
+                 pooling: str = None,
                  **kwargs):
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
         self.version = version
