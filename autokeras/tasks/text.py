@@ -1,12 +1,11 @@
 import pathlib
-from typing import Callable
-from typing import List
 from typing import Optional
 from typing import Union
 
 from autokeras import auto_model
 from autokeras import hypermodels
 from autokeras import nodes as input_module
+from autokeras import utils
 from autokeras.tuners import greedy
 
 
@@ -44,8 +43,8 @@ class TextClassifier(SupervisedTextPipeline):
     def __init__(self,
                  num_classes: Optional[int] = None,
                  multi_label: bool = False,
-                 loss: Callable = None,
-                 metrics: Optional[List[Callable]] = None,
+                 loss: utils.AcceptableLoss = None,
+                 metrics: utils.AcceptableMetrics = None,
                  name: str = 'text_classifier',
                  max_trials: int = 100,
                  directory: Union[str, pathlib.Path, None] = None,
