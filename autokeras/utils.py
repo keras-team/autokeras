@@ -1,10 +1,24 @@
 import json
 import re
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Union
 
 import numpy as np
 import tensorflow as tf
 from packaging.version import parse
+from tensorflow.keras.losses import Loss
+from tensorflow.keras.metrics import Metric
 from tensorflow.python.util import nest
+
+# some types
+AcceptableLoss = Union[str, Callable, Loss, None]
+AcceptableMetric = Union[str, Callable, Metric, None]
+AcceptableMetrics = Union[List[AcceptableMetric],
+                          List[List[AcceptableMetric]],
+                          Dict[str, AcceptableMetric],
+                          None]
 
 
 def get_global_average_pooling(shape):
