@@ -1,5 +1,4 @@
 import pathlib
-from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -10,6 +9,7 @@ import pandas as pd
 from autokeras import auto_model
 from autokeras import hypermodels
 from autokeras import nodes as input_module
+from autokeras import utils
 from autokeras.tuners import greedy
 
 
@@ -294,8 +294,8 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
                  column_names: Optional[List[str]] = None,
                  column_types: Optional[Dict[str, str]] = None,
                  output_dim: Optional[int] = None,
-                 loss: Union[str, Callable] = 'mean_squared_error',
-                 metrics: Union[str, Callable] = None,
+                 loss: utils.AcceptableLoss = 'mean_squared_error',
+                 metrics: utils.AcceptableMetrics = None,
                  name: str = 'structured_data_regressor',
                  max_trials: int = 100,
                  directory: Union[str, pathlib.Path, None] = None,
