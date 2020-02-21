@@ -32,3 +32,23 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }} #required
         file: ./coverage.xml #optional
+  build-docs:
+    name: Build the docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.6
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools
+          pip install -e .
+          pip install tf-nightly
+          pip install -r docs/requirements.txt
+      - name: Build the docs
+        run: |
+          cd docs
+          python autogen.py
+          mkdocs generate
