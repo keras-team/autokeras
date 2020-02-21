@@ -1,6 +1,11 @@
+import pathlib
+from typing import Optional
+from typing import Union
+
 from autokeras import auto_model
 from autokeras import hypermodels
 from autokeras import nodes as input_module
+from autokeras import utils
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
 
@@ -37,16 +42,16 @@ class TextClassifier(SupervisedTextPipeline):
     """
 
     def __init__(self,
-                 num_classes=None,
-                 multi_label=False,
-                 loss=None,
-                 metrics=None,
-                 name='text_classifier',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_loss',
-                 overwrite=True,
-                 seed=None):
+                 num_classes: Optional[int] = None,
+                 multi_label: bool = False,
+                 loss: utils.AcceptableLoss = None,
+                 metrics: utils.AcceptableMetrics = None,
+                 name: str = 'text_classifier',
+                 max_trials: int = 100,
+                 directory: Union[str, pathlib.Path, None] = None,
+                 objective: str = 'val_loss',
+                 overwrite: bool = True,
+                 seed: Optional[int] = None):
         super().__init__(
             outputs=hypermodels.ClassificationHead(num_classes=num_classes,
                                                    multi_label=multi_label,

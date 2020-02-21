@@ -37,7 +37,6 @@ EXCEPTION_LIST = [
     autokeras.ImageRegressor,
     autokeras.StructuredDataClassifier,
     autokeras.StructuredDataRegressor,
-    autokeras.TextClassifier,
     autokeras.TextRegressor,
 ]
 
