@@ -48,4 +48,4 @@ clf = ak.TextClassifier(max_trials=3)
 # Search for the best model.
 clf.fit(x_train, y_train, epochs=2)
 # Evaluate on the testing data.
-print('Accuracy: {accuracy}'.format(clf.evaluate(x_test, y_test)))
+print('Accuracy: {accuracy}'.format(accuracy=clf.evaluate(x_test, y_test)))

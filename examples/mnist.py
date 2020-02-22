@@ -16,7 +16,7 @@ print(y_train[:3])  # array([7, 2, 1], dtype=uint8)
 # Initialize the ImageClassifier.
 clf = ak.ImageClassifier(max_trials=3)
 # Search for the best model.
-clf.fit(x_train, y_train)
+clf.fit(x_train, y_train, epochs=10)
 # Evaluate on the testing data.
 print('Accuracy: {accuracy}'.format(
     accuracy=clf.evaluate(x_test, y_test)))
