@@ -1,8 +1,15 @@
+import pathlib
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
+
 import pandas as pd
 
 from autokeras import auto_model
 from autokeras import hypermodels
 from autokeras import nodes as input_module
+from autokeras import utils
 from autokeras.tuners import greedy
 
 
@@ -284,17 +291,17 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
     """
 
     def __init__(self,
-                 column_names=None,
-                 column_types=None,
-                 output_dim=None,
-                 loss='mean_squared_error',
-                 metrics=None,
-                 name='structured_data_regressor',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_loss',
-                 overwrite=True,
-                 seed=None):
+                 column_names: Optional[List[str]] = None,
+                 column_types: Optional[Dict[str, str]] = None,
+                 output_dim: Optional[int] = None,
+                 loss: utils.AcceptableLoss = 'mean_squared_error',
+                 metrics: utils.AcceptableMetrics = None,
+                 name: str = 'structured_data_regressor',
+                 max_trials: int = 100,
+                 directory: Union[str, pathlib.Path, None] = None,
+                 objective: str = 'val_loss',
+                 overwrite: bool = True,
+                 seed: Optional[int] = None):
         super().__init__(
             outputs=hypermodels.RegressionHead(output_dim=output_dim,
                                                loss=loss,
