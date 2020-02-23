@@ -28,9 +28,9 @@ class DenseBlock(block_module.Block):
     """
 
     def __init__(self,
-                 num_layers=None,
-                 use_batchnorm=None,
-                 dropout_rate=None,
+                 num_layers: int = None,
+                 use_batchnorm: bool = None,
+                 dropout_rate: float = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.num_layers = num_layers
