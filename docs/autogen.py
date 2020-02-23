@@ -1,3 +1,4 @@
+import os
 import pathlib
 import shutil
 
@@ -98,6 +99,13 @@ ROOT = 'http://autokeras.com/'
 autokeras_dir = pathlib.Path(__file__).resolve().parents[1]
 
 
+def convert_jupyter(dest_dir):
+    for filename in dest_dir.glob('**/*.ipynb'):
+        print(filename)
+        os.system('jupyter nbconvert --to markdown ' + str(filename))
+        os.remove(filename)
+
+
 def generate(dest_dir):
     template_dir = autokeras_dir / 'docs' / 'templates'
     doc_generator = keras_autodoc.DocumentationGenerator(
@@ -113,6 +121,8 @@ def generate(dest_dir):
     (dest_dir / 'index.md').write_text(index, encoding='utf-8')
     shutil.copyfile(autokeras_dir / '.github' / 'CONTRIBUTING.md',
                     dest_dir / 'contributing.md')
+
+    convert_jupyter(dest_dir)
 
 
 if __name__ == '__main__':
