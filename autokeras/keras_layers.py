@@ -150,11 +150,13 @@ class LookbackPreprocessing(CombinerPreprocessingLayer):
         inputs = nest.flatten(inputs)[0]
         input_shape = K.shape(inputs)
         input_len = input_shape[0]
+        pad = tf.zeros(shape=(self.lookback-1, self.lookback, input_shape[1]))
         outputs = tf.map_fn(
-            lambda i: inputs[max(i-self.lookback+1, 0):i],
-            tf.range(input_len),
+            lambda i: inputs[i:i+self.lookback],
+            tf.range(input_len - self.lookback + 1),
             dtype=tf.float32)
         outputs.set_shape(self.compute_output_shape(K.int_shape(inputs)))
+        outputs = tf.concat([pad, outputs], 0)
         # outputs = nest.flatten(inputs)[0]
         # outputs.set_shape(compute_output_shape(inputs.shape))
         return outputs

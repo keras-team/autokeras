@@ -37,14 +37,14 @@ def test_feature_encoder_layer():
 
 
 def test_lookback_preprocessor_layer():
-    data = np.array([[0.12, 0.12], [0.12, 0.12], [0.12, 0.12], [0.12, 0.12],
-                     [0.12, 0.12]])
+    data = np.array([[0.12, 0.12], [0.13, 0.13], [0.14, 0.14], [0.15, 0.15],
+                     [0.16, 0.16]])
 
     predict = np.random.rand(5, 1)
-    predict[0] = 0
+    lookback = 2
 
     input_node = tf.keras.Input(shape=(2,), dtype=tf.float32)
-    layer = layer_module.LookbackPreprocessing(2)
+    layer = layer_module.LookbackPreprocessing(lookback)
     hidden_node = layer(input_node)
     lstm_node = tf.keras.layers.LSTM(10, activation='relu')(hidden_node)
     output_node = tf.keras.layers.Dense(1, activation='sigmoid')(lstm_node)
@@ -62,8 +62,6 @@ def test_lookback_preprocessor_layer():
 
     model2 = tf.keras.Model(input_node, hidden_node)
     result = model2.predict(data)
-    assert result[0][0] == result[2][0]
-    assert result[0][0] != result[1][0]
-    assert result[0][1] != result[1][1]
-    assert result[0][1] != result[2][1]
+    assert result.shape == (5, 2, 2)
+    assert np.sum(result[0]) == 0.0
     assert output.dtype == np.dtype('float32')
