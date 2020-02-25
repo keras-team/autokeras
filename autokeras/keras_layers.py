@@ -142,8 +142,9 @@ class LookbackPreprocessing(CombinerPreprocessingLayer):
         self.lookback = lookback
 
     def _set_state_variables(self, updates):
-        for key, value in updates.items():
-            self.output_len = value - self.lookback + 1
+        # for key, value in updates.items():
+        #     self.output_len = value - self.lookback + 1
+        pass
 
     def call(self, inputs):
         # TODO Handle inputs that are smaller than lookback.
@@ -182,29 +183,33 @@ class LookbackPreprocessingCombiner(Combiner):
 
     # TODO. Determine what to keep in accumulator. Not necessary though.
     def compute(self, values, accumulator=None):
-        if accumulator is None:
-            accumulator = collections.defaultdict(int)
-        for line in K.get_value(values):
-            accumulator["input_len"] += 1
-        return accumulator
+        # if accumulator is None:
+        #     accumulator = collections.defaultdict(int)
+        # for line in K.get_value(values):
+        #     accumulator["input_len"] += 1
+        # return accumulator
+        pass
 
     def merge(self, accumulators):
-        base_accumulator = collections.defaultdict(int)
-        for accumulator in accumulators:
-            base_accumulator["input_len"] += accumulator["input_len"]
-        return base_accumulator
+        # base_accumulator = collections.defaultdict(int)
+        # for accumulator in accumulators:
+        #     base_accumulator["input_len"] += accumulator["input_len"]
+        # return base_accumulator
+        pass
 
     def extract(self, accumulator):
-        return {
-            key: value
-            for key, value in accumulator.items()
-        }
+        # return {
+        #     key: value
+        #     for key, value in accumulator.items()
+        # }
+        pass
 
     def restore(self, output):
-        return {
-            key: value
-            for key, value in output
-        }
+        # return {
+        #     key: value
+        #     for key, value in output
+        # }
+        pass
 
     def serialize(self, accumulator):
         pass
