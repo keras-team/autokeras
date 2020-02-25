@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.python.framework import tensor_shape
 from tensorflow.python.util import nest
 
 CombinerPreprocessingLayer = inspect.getmro(preprocessing.Normalization)[1]
@@ -141,20 +142,27 @@ class LookbackPreprocessing(CombinerPreprocessingLayer):
         self.lookback = lookback
 
     def _set_state_variables(self, updates):
-        pass
+        for key, value in updates.items():
+            self.output_len = value - self.lookback + 1
 
     def call(self, inputs):
         # TODO Handle inputs that are smaller than lookback.
         inputs = nest.flatten(inputs)[0]
-        outputs = []
-        for i in range(len(inputs) - self.lookback):
-            outputs.append(inputs[i:i+self.lookback])
-        outputs = nest.flatten(outputs)[0]
+        input_shape = K.shape(inputs)
+        input_len = input_shape[0]
+        outputs = tf.map_fn(
+            lambda i: inputs[max(i-self.lookback+1, 0):i],
+            tf.range(input_len),
+            dtype=tf.float32)
+        outputs.set_shape(self.compute_output_shape(K.int_shape(inputs)))
+        # outputs = nest.flatten(inputs)[0]
+        # outputs.set_shape(compute_output_shape(inputs.shape))
         return outputs
 
     def compute_output_shape(self, input_shape):
-        output_shape = input_shape + (self.lookback, )
-        return output_shape
+        return tensor_shape.TensorShape([input_shape[0],
+                                         self.lookback,
+                                         input_shape[1]])
 
     def compute_output_signature(self, input_spec):
         return input_spec
@@ -172,16 +180,29 @@ class LookbackPreprocessingCombiner(Combiner):
 
     # TODO. Determine what to keep in accumulator. Not necessary though.
     def compute(self, values, accumulator=None):
-        pass
+        if accumulator is None:
+            accumulator = collections.defaultdict(int)
+        for line in K.get_value(values):
+            accumulator["input_len"] += 1
+        return accumulator
 
     def merge(self, accumulators):
-        pass
+        base_accumulator = collections.defaultdict(int)
+        for accumulator in accumulators:
+            base_accumulator["input_len"] += accumulator["input_len"]
+        return base_accumulator
 
     def extract(self, accumulator):
-        pass
+        return {
+            key: value
+            for key, value in accumulator.items()
+        }
 
     def restore(self, output):
-        pass
+        return {
+            key: value
+            for key, value in output
+        }
 
     def serialize(self, accumulator):
         pass
