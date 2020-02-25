@@ -18,7 +18,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip setuptools
         pip install -e .[tests] --progress-bar off
-        pip install tf-nightly==2.2.0.dev20200218
+        pip install tf-nightly==2.2.0.dev20200217
     - name: Test with pytest
       run: |
         pytest --cov=autokeras --cov-report xml:coverage.xml
