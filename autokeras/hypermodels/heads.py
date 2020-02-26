@@ -169,3 +169,40 @@ class RegressionHead(head_module.Head):
 
     def get_adapter(self):
         return adapters.RegressionHeadAdapter(name=self.name)
+
+class SegmentationHead(head_module.Head):
+    """Regression Dense layers.
+
+    The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
+    pd.DataFrame or pd.Series. It can be single-column or multi-column. The
+    values should all be numerical.
+
+    # Arguments
+        output_dim: Int. The number of output dimensions. Defaults to None.
+            If None, it will infer from the data.
+        multi_label: Boolean. Defaults to False.
+        loss: A Keras loss function. Defaults to use `mean_squared_error`.
+        metrics: A list of Keras metrics. Defaults to use `mean_squared_error`.
+        dropout_rate: Float. The dropout rate for the layers.
+            If left unspecified, it will be tuned automatically.
+    """
+    def __init__(self,
+                 column_names=None,
+                 column_types=None,
+                 lookback=None,
+                 predict_from=None,
+                 predict_until=None,
+                 loss=None,
+                 metrics=None,
+                 **kwargs):
+        super().__init__(loss=loss,
+                         metrics=metrics,
+                         **kwargs)
+        self.column_names = column_names
+        self.column_types = column_types
+        self.lookback = lookback
+        self.predict_from = predict_from
+        self.predict_until = predict_until
+        if not self.metrics:
+            self.metrics = ['accuracy']
+        self.set_loss()

@@ -33,10 +33,18 @@ IMAGE_CLASSIFIER = [{
     'classification_head_1/dropout_rate': 0,
     'optimizer': 'adam'
 }]
+IMAGE_SEGMENTER = [{
 
+}]
 
 class ImageClassifierTuner(greedy.Greedy):
     def __init__(self, **kwargs):
         super().__init__(
             initial_hps=IMAGE_CLASSIFIER,
+            **kwargs)
+
+class ImageSetmenterTuner(greedy.Greedy):
+    def __init__(self, **kwargs):
+        super().__init__(
+            initial_hps=IMAGE_SEGMENTER,
             **kwargs)
