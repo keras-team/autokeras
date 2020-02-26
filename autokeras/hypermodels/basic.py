@@ -173,12 +173,12 @@ class ConvBlock(block_module.Block):
     """
 
     def __init__(self,
-                 kernel_size=None,
-                 num_blocks=None,
-                 num_layers=None,
-                 max_pooling=None,
-                 separable=None,
-                 dropout_rate=None,
+                 kernel_size: Optional[int] = None,
+                 num_blocks: Optional[int] = None,
+                 num_layers: Optional[int] = None,
+                 max_pooling: Optional[bool] = None,
+                 separable: Optional[bool] = None,
+                 dropout_rate: Optional[float] = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.kernel_size = kernel_size
