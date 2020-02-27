@@ -282,8 +282,8 @@ class ImageSegmenter(SupervisedImagePipeline):
             x: numpy.ndarray or tensorflow.Dataset. Training image dataset x. The shape of the
                 data should be 3 or 4 dimensional, the last dimension of which should
                 be channel dimension.
-            y: numpy.ndarray or tensorflow.Dataset. Training image dataset y. It should
-                be the groundtruth image dataset as the label.
+            y: numpy.ndarray or tensorflow.Dataset. Training image dataset y.
+                It should be the groundtruth image dataset as the label.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, by default we train for a maximum of 1000 epochs,
                 but we stop training if the validation loss stops improving for 10
