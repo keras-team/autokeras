@@ -222,6 +222,7 @@ class ImageRegressor(SupervisedImagePipeline):
                     validation_data=validation_data,
                     **kwargs)
 
+
 class ImageSegmenter(SupervisedImagePipeline):
     """AutoKeras image segmentation class.
 
@@ -245,9 +246,9 @@ class ImageSegmenter(SupervisedImagePipeline):
     """
 
     def __init__(self,
-                 num_classes = None,
+                 num_classes=None,
                  loss=None,
-                 metrics = None,
+                 metrics=None,
                  name='image_segmenter',
                  max_trials=100,
                  directory=None,
@@ -255,9 +256,9 @@ class ImageSegmenter(SupervisedImagePipeline):
                  overwrite=True,
                  seed=None):
         super().__init__(
-            outputs=hypermodels.SegmenterHead(num_classes = num_classes,
-                                               loss=loss,
-                                               metrics=metrics),
+            outputs=hypermodels.SegmenterHead(num_classes=num_classes,
+                                              loss=loss,
+                                              metrics=metrics),
             max_trials=max_trials,
             directory=directory,
             name=name,
