@@ -222,7 +222,7 @@ class ImageRegressor(SupervisedImagePipeline):
                     validation_data=validation_data,
                     **kwargs)
 
-        
+
 class ImageSegmenter(SupervisedImagePipeline):
     """AutoKeras image segmentation class.
 
