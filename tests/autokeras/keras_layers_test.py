@@ -16,7 +16,7 @@ def test_feature_encoder_layer():
     output_node = tf.keras.layers.Dense(1, activation='sigmoid')(hidden_node)
     model = tf.keras.Model(input_node, output_node)
     model.compile(loss='binary_crossentropy', optimizer='adam')
-    dataset = tf.data.Dataset.zip((
+    tf.data.Dataset.zip((
         (tf.data.Dataset.from_tensor_slices(data).batch(32),),
         (tf.data.Dataset.from_tensor_slices(np.random.rand(3, 1)).batch(32),),
     ))

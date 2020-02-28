@@ -1,9 +1,6 @@
-import collections
-import copy
 import os
 
 import kerastuner
-import numpy as np
 import tensorflow as tf
 
 from autokeras import graph as graph_module
