@@ -99,30 +99,21 @@ class ImageAugmentation(block_module.Block):
     """Collection of various image augmentation methods.
 
     # Arguments
-        percentage: Float. The percentage of data to augment.
+        translation: Boolean. Whether to translate the image.
+        horizontal_flip: Boolean. Whether to flip the image horizontally.
+        vertical_flip: Boolean. Whether to flip the image vertically.
         rotation_range: Int. The value can only be 0, 90, or 180.
             Degree range for random rotations. Default to 180.
         random_crop: Boolean. Whether to crop the image randomly. Default to True.
-        brightness_range: Positive float.
-            Serve as 'max_delta' in tf.image.random_brightness. Default to 0.5.
-            Equivalent to adjust brightness using a 'delta' randomly picked in
-            the interval [-max_delta, max_delta).
-        saturation_range: Positive float or Tuple.
-            If given a positive float, _get_min_and_max() will automated generate
-            a tuple for saturation range. If given a tuple directly, it will serve
-            as a range for picking a saturation shift value from. Default to 0.5.
+        zoom_factor: Boolean.
+
         contrast_range: Positive float or Tuple.
             If given a positive float, _get_min_and_max() will automated generate
             a tuple for contrast range. If given a tuple directly, it will serve
             as a range for picking a contrast shift value from. Default to 0.5.
-        translation: Boolean. Whether to translate the image.
-        horizontal_flip: Boolean. Whether to flip the image horizontally.
-        vertical_flip: Boolean. Whether to flip the image vertically.
-        gaussian_noise: Boolean. Whether to add gaussian noise to the image.
     """
 
     def __init__(self,
-                 percentage=0.25,
                  rotation_range=180,
                  random_crop=True,
                  brightness_range=0.5,
