@@ -322,7 +322,7 @@ class XceptionBlock(block_module.Block, xception.HyperXception):
 
     def __init__(self,
                  activation: Optional[str] = None,
-                 initial_strides=None,
+                 initial_strides: Optional[int] = None,
                  num_residual_blocks=None,
                  pooling=None,
                  **kwargs):
