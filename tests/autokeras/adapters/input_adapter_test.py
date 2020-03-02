@@ -146,3 +146,35 @@ def test_text_string():
     with pytest.raises(TypeError) as info:
         x = input_node.transform(x)
     assert 'Expect the data to TextInput to be strings' in str(info.value)
+
+
+def test_time_series_input_type_error():
+    x = 'unknown'
+    input_node = input_adapter.TimeSeriesInputAdapter(2)
+    with pytest.raises(TypeError) as info:
+        x = input_node.transform(x)
+    assert 'Expect the data in TimeSeriesInput to be numpy' in str(info.value)
+
+
+def test_time_series_input_with_illegal_dim():
+    x = utils.generate_data(shape=(32, 32))
+    input_node = input_adapter.TimeSeriesInputAdapter(2)
+    with pytest.raises(ValueError) as info:
+        x = input_node.transform(x)
+    assert 'Expect the data in TimeSeriesInput to have 2' in str(info.value)
+
+
+def test_time_series_numerical():
+    x = np.array([["test", "test"], ["test", "test"]])
+    input_node = input_adapter.TimeSeriesInputAdapter(2)
+    with pytest.raises(TypeError) as info:
+        x = input_node.transform(x)
+    assert 'Expect the data in TimeSeriesInput to be numerical' in str(info.value)
+
+
+def test_time_series_input_transform():
+    x = utils.generate_data(shape=(32,))
+    input_node = input_adapter.TimeSeriesInputAdapter(2)
+    x = input_node.transform(x)
+    for row in x.as_numpy_iterator():
+        assert row.ndim == 2

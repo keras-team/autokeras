@@ -96,4 +96,32 @@ class StructuredDataInput(Input):
 
 
 class TimeSeriesInput(Input):
-    pass
+    """Input node for Time Series data.
+
+    # Arguments
+        lookback: Int. The range of history steps to consider for each prediction.
+            For example, if lookback=n, the data in the range of [i - n, i - 1]
+            is used to predict the value of step i. If unspecified, it will be tuned
+            automatically.
+    """
+
+    def __init__(self, lookback=None, **kwargs):
+        super().__init__(**kwargs)
+        self.lookback = lookback
+
+    def build(self):
+        return tf.keras.Input(shape=self.shape, dtype=tf.float32)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'lookback': self.lookback,
+        })
+        return config
+
+    def get_adapter(self):
+        return adapters.TimeSeriesInputAdapter(self.lookback)
+
+    def config_from_adapter(self, adapter):
+        super().config_from_adapter(adapter)
+        self.lookback = adapter.lookback

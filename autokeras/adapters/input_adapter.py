@@ -191,3 +191,49 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
         for key, value in column_types.items():
             if key not in self.column_types:
                 self.column_types[key] = value
+
+
+class TimeSeriesInputAdapter(adapter_module.Adapter):
+
+    def __init__(self, lookback=None, **kwargs):
+        super().__init__(**kwargs)
+        self.lookback = lookback
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'lookback': self.lookback,
+        })
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        obj = super().from_config(config)
+        obj.lookback = config['lookback']
+
+    def check(self, x):
+        """Record any information needed by transform."""
+        if not isinstance(x, (np.ndarray, tf.data.Dataset)):
+            raise TypeError('Expect the data in TimeSeriesInput to be numpy.ndarray'
+                            ' or tf.data.Dataset, but got {type}.'.format(
+                                type=type(x)))
+
+        if isinstance(x, np.ndarray) and x.ndim != 2:
+            raise ValueError('Expect the data in TimeSeriesInput to have 2 dimension'
+                             ', but got input shape {shape} with {ndim} '
+                             'dimensions'.format(
+                                 shape=x.shape,
+                                 ndim=x.ndim))
+        if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.number):
+            raise TypeError('Expect the data in TimeSeriesInput to be numerical, but'
+                            'got {type}.'.format(type=x.dtype))
+
+    def convert_to_dataset(self, x):
+        if isinstance(x, np.ndarray):
+            x = tf.data.Dataset.from_tensor_slices(x)
+        x = x.window(self.lookback, shift=1, drop_remainder=True)
+        final_data = []
+        for window in x:
+            final_data.append([elems.numpy() for elems in window])
+        final_data = tf.data.Dataset.from_tensor_slices(final_data)
+        return final_data
