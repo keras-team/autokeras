@@ -249,6 +249,7 @@ class ImageSegmenter(SupervisedImagePipeline):
 
     def __init__(self,
                  num_classes=None,
+                 multi_label = False,
                  loss=None,
                  metrics=None,
                  name='image_segmenter',
@@ -259,6 +260,7 @@ class ImageSegmenter(SupervisedImagePipeline):
                  seed=None):
         super().__init__(
             outputs=hypermodels.SegmenterHead(num_classes=num_classes,
+                                              multi_label=multi_label,
                                               loss=loss,
                                               metrics=metrics),
             max_trials=max_trials,
