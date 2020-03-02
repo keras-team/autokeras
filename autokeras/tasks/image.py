@@ -249,7 +249,7 @@ class ImageSegmenter(SupervisedImagePipeline):
 
     def __init__(self,
                  num_classes=None,
-                 multi_label = False,
+                 multi_label=False,
                  loss=None,
                  metrics=None,
                  name='image_segmenter',
