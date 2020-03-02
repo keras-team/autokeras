@@ -228,9 +228,11 @@ class ImageSegmenter(SupervisedImagePipeline):
 
     # Arguments
         num_classes: Int. Defaults to None. If None, it will infer from the data.
-        loss: A loss function. Defaults to use 'tf.losses.softmax_cross_entropy'.
+        multi_label: Boolean. Defaults to False.
+        loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
+            'categorical_crossentropy' based on the number of classes.
         metrics: A list of metrics used to measure the accuracy of the model,
-        default to 'mIoU'
+            default to 'accuracy'.
         name: String. The name of the AutoModel. Defaults to 'image_segmenter'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -285,7 +287,8 @@ class ImageSegmenter(SupervisedImagePipeline):
                 The shape of the data should be 3 or 4 dimensional, the last
                 dimension of which should be channel dimension.
             y: numpy.ndarray or tensorflow.Dataset. Training image data
-                set y. It should be the groundtruth image data set as the label.
+                set y. It should be a tensor with the same shape of x. Each
+                element in the tensor is the label of the corresponding pixel.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, by default we train for a maximum of 1000 epochs,
                 but we stop training if the validation loss stops improving for 10
