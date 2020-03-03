@@ -23,7 +23,8 @@ class ImageClassifier(SupervisedImagePipeline):
     """AutoKeras image classification class.
 
     # Arguments
-        num_classes: Int. Defaults to None. If None, it will be inferred from the data.
+        num_classes: Int. Defaults to None. If None, it will be inferred from the
+            data.
         multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
             'categorical_crossentropy' based on the number of classes.
@@ -80,10 +81,10 @@ class ImageClassifier(SupervisedImagePipeline):
         validation data.
 
         # Arguments
-            x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape of the
-                data should be 3 or 4 dimensional, the first three dimensions should be
-                samples, width and height of the image dataset,the last dimension of
-                which should be channel dimension.
+            x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape of
+                the data should be 3 or 4 dimensional, the first three dimensions
+                should be samples, width and height of the image dataset,the last
+                dimension of which should be channel dimension.
             y: numpy.ndarray or tensorflow.Dataset. Training data y. It can be raw
                 labels, one-hot encoded if more than two classes, or binary encoded
                 for binary classification.
@@ -146,7 +147,7 @@ class ImageRegressor(SupervisedImagePipeline):
     """
 
     def __init__(self,
-                 output_dim : Optional[int] = None,
+                 output_dim: Optional[int] = None,
                  loss: str = 'mean_squared_error',
                  metrics: Optional[List[Union[str, Callable]]] = None,
                  name: str = 'image_regressor',
@@ -181,10 +182,10 @@ class ImageRegressor(SupervisedImagePipeline):
         validation data.
 
         # Arguments
-            x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape of the
-                data should be 3 or 4 dimensional, the first three dimensions should be
-                samples, width and height of the image dataset,the last dimension of
-                which should be channel dimension.
+            x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape of
+                the data should be 3 or 4 dimensional, the first three dimensions
+                should be samples, width and height of the image dataset,the last
+                dimension of which should be channel dimension.
             y: numpy.ndarray or tensorflow.Dataset. Training data y. The targets
                 passing to the head would have to be tf.data.Dataset, np.ndarray,
                 pd.DataFrame or pd.Series. It can be single-column or multi-column.
@@ -229,7 +230,8 @@ class ImageSegmenter(SupervisedImagePipeline):
     """AutoKeras image segmentation class.
 
     # Arguments
-        num_classes: Int. Defaults to None. If None, it will be inferred from the data.
+        num_classes: Int. Defaults to None. If None, it will be inferred from the
+            data.
         multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
             'categorical_crossentropy' based on the number of classes.
