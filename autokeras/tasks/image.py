@@ -23,7 +23,7 @@ class ImageClassifier(SupervisedImagePipeline):
     """AutoKeras image classification class.
 
     # Arguments
-        num_classes: Int. Defaults to None. If None, it will infer from the data.
+        num_classes: Int. Defaults to None. If None, it will be inferred from the data.
         multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
             'categorical_crossentropy' based on the number of classes.
@@ -81,8 +81,9 @@ class ImageClassifier(SupervisedImagePipeline):
 
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape of the
-                data should be 3 or 4 dimensional, the last dimension of which should
-                be channel dimension.
+                data should be 3 or 4 dimensional, the first three dimensions should be
+                samples, width and height of the image dataset,the last dimension of
+                which should be channel dimension.
             y: numpy.ndarray or tensorflow.Dataset. Training data y. It can be raw
                 labels, one-hot encoded if more than two classes, or binary encoded
                 for binary classification.
@@ -127,7 +128,7 @@ class ImageRegressor(SupervisedImagePipeline):
 
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
-            If None, it will infer from the data.
+            If None, it will be inferred from the data.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to 'image_regressor'.
@@ -145,15 +146,15 @@ class ImageRegressor(SupervisedImagePipeline):
     """
 
     def __init__(self,
-                 output_dim=None,
-                 loss='mean_squared_error',
-                 metrics=None,
-                 name='image_regressor',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_loss',
-                 overwrite=True,
-                 seed=None):
+                 output_dim : Optional[int] = None,
+                 loss: str = 'mean_squared_error',
+                 metrics: Optional[List[Union[str, Callable]]] = None,
+                 name: str = 'image_regressor',
+                 max_trials: int = 100,
+                 directory: Union[str, Path, None] = None,
+                 objective: str = 'val_loss',
+                 overwrite: bool = True,
+                 seed: Optional[int] = None):
         super().__init__(
             outputs=hypermodels.RegressionHead(output_dim=output_dim,
                                                loss=loss,
@@ -181,8 +182,9 @@ class ImageRegressor(SupervisedImagePipeline):
 
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape of the
-                data should be 3 or 4 dimensional, the last dimension of which should
-                be channel dimension.
+                data should be 3 or 4 dimensional, the first three dimensions should be
+                samples, width and height of the image dataset,the last dimension of
+                which should be channel dimension.
             y: numpy.ndarray or tensorflow.Dataset. Training data y. The targets
                 passing to the head would have to be tf.data.Dataset, np.ndarray,
                 pd.DataFrame or pd.Series. It can be single-column or multi-column.
@@ -227,7 +229,7 @@ class ImageSegmenter(SupervisedImagePipeline):
     """AutoKeras image segmentation class.
 
     # Arguments
-        num_classes: Int. Defaults to None. If None, it will infer from the data.
+        num_classes: Int. Defaults to None. If None, it will be inferred from the data.
         multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
             'categorical_crossentropy' based on the number of classes.
@@ -248,16 +250,16 @@ class ImageSegmenter(SupervisedImagePipeline):
     """
 
     def __init__(self,
-                 num_classes=None,
-                 multi_label=False,
-                 loss=None,
-                 metrics=None,
-                 name='image_segmenter',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_accuracy',
-                 overwrite=True,
-                 seed=None):
+                 num_classes: Optional[int] = None,
+                 multi_label: bool = False,
+                 loss: Union[str, Callable, None] = None,
+                 metrics: Optional[List[Union[str, Callable]]] = None,
+                 name: str = 'image_classifier',
+                 max_trials: int = 100,
+                 directory: Union[str, Path, None] = None,
+                 objective: str = 'val_loss',
+                 overwrite: bool = True,
+                 seed: Optional[int] = None,):
         super().__init__(
             outputs=hypermodels.SegmenterHead(num_classes=num_classes,
                                               multi_label=multi_label,
@@ -286,11 +288,13 @@ class ImageSegmenter(SupervisedImagePipeline):
 
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training image dataset x.
-                The shape of the data should be 3 or 4 dimensional, the last
-                dimension of which should be channel dimension.
-            y: numpy.ndarray or tensorflow.Dataset. Training image data
-                set y. It should be a tensor with the same shape of x. Each
-                element in the tensor is the label of the corresponding pixel.
+                The shape of the data should be 3 or 4 dimensional, the first three
+                dimensions should be samples, width and height of the image dataset,
+                the last dimension of which should be channel dimension.
+            y: numpy.ndarray or tensorflow.Dataset. Training image data set y.
+                It should be a tensor and the height and width should be the same
+                as x. Each element in the tensor is the label of the corresponding
+                pixel.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, by default we train for a maximum of 1000 epochs,
                 but we stop training if the validation loss stops improving for 10
