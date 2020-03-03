@@ -267,7 +267,7 @@ class ImageSegmenter(SupervisedImagePipeline):
             directory=directory,
             name=name,
             objective=objective,
-            tuner=task_specific.ImageSegmenterTuner,
+            tuner=greedy.Greedy,
             overwrite=overwrite,
             seed=seed)
 
