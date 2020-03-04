@@ -324,7 +324,7 @@ class XceptionBlock(block_module.Block, xception.HyperXception):
                  activation: Optional[str] = None,
                  initial_strides: Optional[int] = None,
                  num_residual_blocks: Optional[int] = None,
-                 pooling=None,
+                 pooling: Optional[str] = None,
                  **kwargs):
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
         self.activation = activation
