@@ -26,7 +26,6 @@ EXCEPTION_LIST = [
     autokeras.TextBlock,
     autokeras.TextToIntSequence,
     autokeras.TextToNgramVector,
-    autokeras.XceptionBlock,
     autokeras.ImageInput,
     autokeras.Input,
     autokeras.StructuredDataInput,
