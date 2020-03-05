@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -68,12 +69,12 @@ class ImageClassifier(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x=None,
-            y=None,
-            epochs=None,
-            callbacks=None,
-            validation_split=0.2,
-            validation_data=None,
+            x: Any = None,
+            y: Any = None,
+            epochs: Optional[int] = None,
+            callbacks: Optional[List[Union[str, Callable]]] = None,
+            validation_split: int = 0.2,
+            validation_data: Any = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -82,9 +83,8 @@ class ImageClassifier(SupervisedImagePipeline):
 
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape of
-                the data should be 3 or 4 dimensional, the first three dimensions
-                should be samples, width and height of the image dataset,the last
-                dimension of which should be channel dimension.
+                the data should be (samples, width, height)
+                or (samples, width, height, channels).
             y: numpy.ndarray or tensorflow.Dataset. Training data y. It can be raw
                 labels, one-hot encoded if more than two classes, or binary encoded
                 for binary classification.
@@ -169,12 +169,12 @@ class ImageRegressor(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x=None,
-            y=None,
-            epochs=None,
-            callbacks=None,
-            validation_split=0.2,
-            validation_data=None,
+            x: Any = None,
+            y: Any = None,
+            epochs: Optional[int] = None,
+            callbacks: Optional[List[Union[str, Callable]]] = None,
+            validation_split: int = 0.2,
+            validation_data: Any = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -183,9 +183,8 @@ class ImageRegressor(SupervisedImagePipeline):
 
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape of
-                the data should be 3 or 4 dimensional, the first three dimensions
-                should be samples, width and height of the image dataset,the last
-                dimension of which should be channel dimension.
+                the data should be (samples, width, height) or
+                (samples, width, height, channels).
             y: numpy.ndarray or tensorflow.Dataset. Training data y. The targets
                 passing to the head would have to be tf.data.Dataset, np.ndarray,
                 pd.DataFrame or pd.Series. It can be single-column or multi-column.
@@ -276,12 +275,12 @@ class ImageSegmenter(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x=None,
-            y=None,
-            epochs=None,
-            callbacks=None,
-            validation_split=0.2,
-            validation_data=None,
+            x: Any = None,
+            y: Any = None,
+            epochs: Optional[int] = None,
+            callbacks: Optional[List[Union[str, Callable]]] = None,
+            validation_split: int = 0.2,
+            validation_data: Any = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -290,9 +289,8 @@ class ImageSegmenter(SupervisedImagePipeline):
 
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training image dataset x.
-                The shape of the data should be 3 or 4 dimensional, the first three
-                dimensions should be samples, width and height of the image dataset,
-                the last dimension of which should be channel dimension.
+                The shape of the data should be (samples, width, height) or
+                (samples, width, height, channels).
             y: numpy.ndarray or tensorflow.Dataset. Training image data set y.
                 It should be a tensor and the height and width should be the same
                 as x. Each element in the tensor is the label of the corresponding

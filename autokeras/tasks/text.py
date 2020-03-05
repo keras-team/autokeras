@@ -22,7 +22,8 @@ class TextClassifier(SupervisedTextPipeline):
     """AutoKeras text classification class.
 
     # Arguments
-        num_classes: Int. Defaults to None. If None, it will infer from the data.
+        num_classes: Int. Defaults to None. If None, it will be inferred from the
+            data.
         multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
             'categorical_crossentropy' based on the number of classes.
@@ -127,7 +128,7 @@ class TextRegressor(SupervisedTextPipeline):
 
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
-            If None, it will infer from the data.
+            If None, it will be inferred from the data.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         name: String. The name of the AutoModel. Defaults to 'text_regressor'.
