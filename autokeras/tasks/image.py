@@ -6,11 +6,11 @@ from typing import Union
 
 import numpy as np
 import tensorflow as tf
-import utils
 
 from autokeras import auto_model
 from autokeras import hypermodels
 from autokeras import nodes as input_module
+from autokeras import utils
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
 
