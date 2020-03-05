@@ -73,7 +73,7 @@ class ImageClassifier(SupervisedImagePipeline):
             y: Any = None,
             epochs: Optional[int] = None,
             callbacks: Optional[List[Union[str, Callable]]] = None,
-            validation_split: Optional[int] = 0.2,
+            validation_split=0.2,
             validation_data: Any = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
@@ -173,7 +173,7 @@ class ImageRegressor(SupervisedImagePipeline):
             y: Any = None,
             epochs: Optional[int] = None,
             callbacks: Optional[List[Union[str, Callable]]] = None,
-            validation_split: Optional[int] = 0.2,
+            validation_split=0.2,
             validation_data: Any = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
@@ -279,7 +279,7 @@ class ImageSegmenter(SupervisedImagePipeline):
             y: Any = None,
             epochs: Optional[int] = None,
             callbacks: Optional[List[Union[str, Callable]]] = None,
-            validation_split: Optional[int] = 0.2,
+            validation_split=0.2,
             validation_data: Any = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
