@@ -1,9 +1,12 @@
 from pathlib import Path
 from typing import Any
-from typing import Callable
 from typing import List
 from typing import Optional
 from typing import Union
+
+import numpy as np
+import tensorflow as tf
+import utils
 
 from autokeras import auto_model
 from autokeras import hypermodels
@@ -47,8 +50,8 @@ class ImageClassifier(SupervisedImagePipeline):
     def __init__(self,
                  num_classes: Optional[int] = None,
                  multi_label: bool = False,
-                 loss: Union[str, Callable, None] = None,
-                 metrics: Optional[List[Union[str, Callable]]] = None,
+                 loss: utils.AcceptableLoss = None,
+                 metrics: utils.AcceptableMetrics = None,
                  name: str = 'image_classifier',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
@@ -69,10 +72,10 @@ class ImageClassifier(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x: Any = None,
-            y: Any = None,
+            x: Union[np.ndarray, tf.data.Dataset] = None,
+            y: Union[np.ndarray, tf.data.Dataset] = None,
             epochs: Optional[int] = None,
-            callbacks: Optional[List[Union[str, Callable]]] = None,
+            callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
             validation_split: Optional[float] = 0.2,
             validation_data: Any = None,
             **kwargs):
@@ -148,8 +151,8 @@ class ImageRegressor(SupervisedImagePipeline):
 
     def __init__(self,
                  output_dim: Optional[int] = None,
-                 loss: str = 'mean_squared_error',
-                 metrics: Optional[List[Union[str, Callable]]] = None,
+                 loss: utils.AcceptableLoss = None,
+                 metrics: utils.AcceptableMetrics = None,
                  name: str = 'image_regressor',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
@@ -169,10 +172,10 @@ class ImageRegressor(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x: Any = None,
-            y: Any = None,
+            x: Union[np.ndarray, tf.data.Dataset] = None,
+            y: Union[np.ndarray, tf.data.Dataset] = None,
             epochs: Optional[int] = None,
-            callbacks: Optional[List[Union[str, Callable]]] = None,
+            callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
             validation_split: Optional[float] = 0.2,
             validation_data: Any = None,
             **kwargs):
@@ -253,8 +256,8 @@ class ImageSegmenter(SupervisedImagePipeline):
     def __init__(self,
                  num_classes: Optional[int] = None,
                  multi_label: bool = False,
-                 loss: Union[str, Callable, None] = None,
-                 metrics: Optional[List[Union[str, Callable]]] = None,
+                 loss: utils.AcceptableLoss = None,
+                 metrics: utils.AcceptableMetrics = None,
                  name: str = 'image_classifier',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
@@ -275,10 +278,10 @@ class ImageSegmenter(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x: Any = None,
-            y: Any = None,
+            x: Union[np.ndarray, tf.data.Dataset] = None,
+            y: Union[np.ndarray, tf.data.Dataset] = None,
             epochs: Optional[int] = None,
-            callbacks: Optional[List[Union[str, Callable]]] = None,
+            callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
             validation_split: Optional[float] = 0.2,
             validation_data: Any = None,
             **kwargs):
