@@ -13,8 +13,8 @@ from tensorflow.keras.metrics import Metric
 from tensorflow.python.util import nest
 
 # some types
-AcceptableLoss = Union[str, Callable, Loss, None]
-AcceptableMetric = Union[str, Callable, Metric, None]
+AcceptableLoss = Union[str, Callable, Loss]
+AcceptableMetric = Union[str, Callable, Metric]
 AcceptableMetrics = Union[List[AcceptableMetric],
                           List[List[AcceptableMetric]],
                           Dict[str, AcceptableMetric],
