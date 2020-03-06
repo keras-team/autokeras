@@ -380,7 +380,7 @@ class Embedding(block_module.Block):
                  max_features: int = 20000,
                  pretraining: Optional[str] = None,
                  embedding_dim: Optional[int] = None,
-                 dropout_rate=None,
+                 dropout_rate: Optional[float] = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.max_features = max_features
