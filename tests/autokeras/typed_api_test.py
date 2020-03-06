@@ -15,7 +15,6 @@ EXCEPTION_LIST = [
     autokeras.Node,
     autokeras.CategoricalToNumerical,
     autokeras.ClassificationHead,
-    autokeras.Embedding,
     autokeras.Flatten,
     autokeras.ImageAugmentation,
     autokeras.ImageBlock,
