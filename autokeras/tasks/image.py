@@ -151,7 +151,7 @@ class ImageRegressor(SupervisedImagePipeline):
 
     def __init__(self,
                  output_dim: Optional[int] = None,
-                 loss: utils.AcceptableLoss = None,
+                 loss: utils.AcceptableLoss = 'mean_squared_error',
                  metrics: utils.AcceptableMetrics = None,
                  name: str = 'image_regressor',
                  max_trials: int = 100,
