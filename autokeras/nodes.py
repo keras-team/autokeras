@@ -25,8 +25,8 @@ class ImageInput(Input):
     """Input node for image data.
 
     The input data should be numpy.ndarray or tf.data.Dataset. The shape of the data
-    should be 3 or 4 dimensional, the last dimension of which should be channel
-    dimension.
+    should be should be (samples, width, height) or
+    (samples, width, height, channels).
     """
 
     def get_adapter(self):
