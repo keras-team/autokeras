@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Any
 from typing import List
 from typing import Optional
 from typing import Union
@@ -72,12 +71,12 @@ class ImageClassifier(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x: Union[np.ndarray, tf.data.Dataset] = None,
-            y: Union[np.ndarray, tf.data.Dataset] = None,
+            x: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
+            y: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
             epochs: Optional[int] = None,
             callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
             validation_split: Optional[float] = 0.2,
-            validation_data: Any = None,
+            validation_data: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -172,12 +171,12 @@ class ImageRegressor(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x: Union[np.ndarray, tf.data.Dataset] = None,
-            y: Union[np.ndarray, tf.data.Dataset] = None,
+            x: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
+            y: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
             epochs: Optional[int] = None,
             callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
             validation_split: Optional[float] = 0.2,
-            validation_data: Any = None,
+            validation_data: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -263,7 +262,7 @@ class ImageSegmenter(SupervisedImagePipeline):
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  overwrite: bool = True,
-                 seed: Optional[int] = None,):
+                 seed: Optional[int] = None):
         super().__init__(
             outputs=hypermodels.SegmenterHead(num_classes=num_classes,
                                               multi_label=multi_label,
@@ -278,12 +277,12 @@ class ImageSegmenter(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x: Union[np.ndarray, tf.data.Dataset] = None,
-            y: Union[np.ndarray, tf.data.Dataset] = None,
+            x: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
+            y: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
             epochs: Optional[int] = None,
             callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
             validation_split: Optional[float] = 0.2,
-            validation_data: Any = None,
+            validation_data: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
