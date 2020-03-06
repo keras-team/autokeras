@@ -2,9 +2,9 @@ import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras import utils
 from autokeras.engine import node as node_module
 from autokeras.engine import serializable
+from autokeras.utils import utils
 
 
 class Block(kerastuner.HyperModel, serializable.Serializable):

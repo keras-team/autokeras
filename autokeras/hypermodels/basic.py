@@ -5,9 +5,10 @@ from kerastuner.applications import xception
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
-from autokeras import utils
 from autokeras.engine import block as block_module
 from autokeras.hypermodels import reduction
+from autokeras.utils import layer_utils
+from autokeras.utils import utils
 
 
 def set_hp_value(hp, name, value):
@@ -217,14 +218,14 @@ class ConvBlock(block_module.Block):
             separable = hp.Boolean('separable', default=False)
 
         if separable:
-            conv = utils.get_sep_conv(input_node.shape)
+            conv = layer_utils.get_sep_conv(input_node.shape)
         else:
-            conv = utils.get_conv(input_node.shape)
+            conv = layer_utils.get_conv(input_node.shape)
 
         max_pooling = self.max_pooling
         if max_pooling is None:
             max_pooling = hp.Boolean('max_pooling', default=True)
-        pool = utils.get_max_pooling(input_node.shape)
+        pool = layer_utils.get_max_pooling(input_node.shape)
 
         if self.dropout_rate is not None:
             dropout_rate = self.dropout_rate

@@ -9,9 +9,9 @@ import tensorflow as tf
 from autokeras import auto_model
 from autokeras import hypermodels
 from autokeras import nodes as input_module
-from autokeras import utils
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
+from autokeras.utils import types
 
 
 class SupervisedImagePipeline(auto_model.AutoModel):
@@ -49,8 +49,8 @@ class ImageClassifier(SupervisedImagePipeline):
     def __init__(self,
                  num_classes: Optional[int] = None,
                  multi_label: bool = False,
-                 loss: utils.AcceptableLoss = None,
-                 metrics: utils.AcceptableMetrics = None,
+                 loss: types.AcceptableLoss = None,
+                 metrics: types.AcceptableMetrics = None,
                  name: str = 'image_classifier',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
@@ -150,8 +150,8 @@ class ImageRegressor(SupervisedImagePipeline):
 
     def __init__(self,
                  output_dim: Optional[int] = None,
-                 loss: utils.AcceptableLoss = 'mean_squared_error',
-                 metrics: utils.AcceptableMetrics = None,
+                 loss: types.AcceptableLoss = 'mean_squared_error',
+                 metrics: types.AcceptableMetrics = None,
                  name: str = 'image_regressor',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
@@ -255,8 +255,8 @@ class ImageSegmenter(SupervisedImagePipeline):
     def __init__(self,
                  num_classes: Optional[int] = None,
                  multi_label: bool = False,
-                 loss: utils.AcceptableLoss = None,
-                 metrics: utils.AcceptableMetrics = None,
+                 loss: types.AcceptableLoss = None,
+                 metrics: types.AcceptableMetrics = None,
                  name: str = 'image_classifier',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
