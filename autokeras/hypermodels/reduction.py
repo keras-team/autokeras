@@ -4,8 +4,9 @@ import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
-from autokeras import utils
 from autokeras.engine import block as block_module
+from autokeras.utils import layer_utils
+from autokeras.utils import utils
 
 
 def shape_compatible(shape1, shape2):
@@ -106,10 +107,10 @@ class SpatialReduction(block_module.Block):
         if reduction_type == 'flatten':
             output_node = Flatten().build(hp, output_node)
         elif reduction_type == 'global_max':
-            output_node = utils.get_global_max_pooling(
+            output_node = layer_utils.get_global_max_pooling(
                 output_node.shape)()(output_node)
         elif reduction_type == 'global_avg':
-            output_node = utils.get_global_average_pooling(
+            output_node = layer_utils.get_global_average_pooling(
                 output_node.shape)()(output_node)
         return output_node
 

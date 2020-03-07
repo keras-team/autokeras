@@ -4,7 +4,7 @@ import kerastuner
 import tensorflow as tf
 
 from autokeras import graph as graph_module
-from autokeras import utils
+from autokeras.utils import utils
 
 
 class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
