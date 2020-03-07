@@ -140,4 +140,5 @@ class Sigmoid(tf.keras.layers.Layer):
 CUSTOM_OBJECTS = {
     'CategoricalEncoding': CategoricalEncoding,
     'Sigmoid': Sigmoid,
+    'Normalization': preprocessing.Normalization
 }
