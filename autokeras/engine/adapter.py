@@ -1,8 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
-from autokeras import utils
 from autokeras.engine import serializable
+from autokeras.utils import data_utils
 
 
 class Adapter(serializable.Serializable):
@@ -71,7 +71,7 @@ class Adapter(serializable.Serializable):
         return dataset
 
     def record_dataset_shape(self, dataset):
-        self.shape = utils.dataset_shape(dataset)
+        self.shape = data_utils.dataset_shape(dataset)
 
     def transform(self, dataset):
         """Transform the input dataset to tf.data.Dataset.

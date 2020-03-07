@@ -3,9 +3,9 @@ from tensorflow.python.util import nest
 
 from autokeras import adapters
 from autokeras import keras_layers
-from autokeras import utils
 from autokeras.engine import head as head_module
 from autokeras.hypermodels import reduction
+from autokeras.utils import utils
 
 
 class ClassificationHead(head_module.Head):

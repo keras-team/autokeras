@@ -12,11 +12,11 @@ from autokeras import graph as graph_module
 from autokeras import hypermodels
 from autokeras import nodes as input_module
 from autokeras import tuners
-from autokeras import utils
 from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
 from autokeras.engine.tuner import AutoTuner
 from autokeras.nodes import Input
+from autokeras.utils import data_utils
 
 TUNER_CLASSES = {
     'bayesian': tuners.BayesianOptimization,
@@ -318,7 +318,9 @@ class AutoModel(object):
         # Split the data with validation_split.
         if validation_data is None and validation_split:
             self._split_dataset = True
-            dataset, validation_data = utils.split_dataset(dataset, validation_split)
+            dataset, validation_data = data_utils.split_dataset(
+                dataset,
+                validation_split)
         return dataset, validation_data
 
     def predict(self, x, batch_size=32, **kwargs):
