@@ -1,3 +1,5 @@
+from typing import Optional
+
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
@@ -34,7 +36,7 @@ class ClassificationHead(head_module.Head):
     """
 
     def __init__(self,
-                 num_classes=None,
+                 num_classes: Optional[int] = None,
                  multi_label=False,
                  loss=None,
                  metrics=None,
