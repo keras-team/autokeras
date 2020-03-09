@@ -8,6 +8,7 @@ from autokeras import keras_layers
 from autokeras.engine import head as head_module
 from autokeras.hypermodels import reduction
 from autokeras.utils import utils
+from autokeras.utils import types
 
 
 class ClassificationHead(head_module.Head):
@@ -38,7 +39,7 @@ class ClassificationHead(head_module.Head):
     def __init__(self,
                  num_classes: Optional[int] = None,
                  multi_label: bool = False,
-                 loss=None,
+                 loss: Optional[types.LossType] = None,
                  metrics=None,
                  dropout_rate=None,
                  **kwargs):
