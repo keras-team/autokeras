@@ -37,7 +37,7 @@ class ClassificationHead(head_module.Head):
 
     def __init__(self,
                  num_classes: Optional[int] = None,
-                 multi_label: bool=False,
+                 multi_label: bool = False,
                  loss=None,
                  metrics=None,
                  dropout_rate=None,
