@@ -105,9 +105,15 @@ class TimeSeriesInput(Input):
             automatically.
     """
 
-    def __init__(self, lookback=None, **kwargs):
+    def __init__(self,
+                 lookback=None,
+                 column_names=None,
+                 column_types=None,
+                 **kwargs):
         super().__init__(**kwargs)
         self.lookback = lookback
+        self.column_names = column_names
+        self.column_types = column_types
 
     def build(self):
         return tf.keras.Input(shape=self.shape, dtype=tf.float32)
@@ -116,11 +122,15 @@ class TimeSeriesInput(Input):
         config = super().get_config()
         config.update({
             'lookback': self.lookback,
+            'column_name': self.column_names,
+            'column_types': self.column_types
         })
         return config
 
     def get_adapter(self):
-        return adapters.TimeSeriesInputAdapter(self.lookback)
+        return adapters.TimeSeriesInputAdapter(lookback=self.lookback,
+                                               column_names=self.column_names,
+                                               column_types=self.column_types)
 
     def config_from_adapter(self, adapter):
         super().config_from_adapter(adapter)
