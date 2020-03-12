@@ -27,6 +27,7 @@ from autokeras.nodes import ImageInput
 from autokeras.nodes import Input
 from autokeras.nodes import StructuredDataInput
 from autokeras.nodes import TextInput
+from autokeras.nodes import TimeSeriesInput
 from autokeras.tasks import ImageClassifier
 from autokeras.tasks import ImageRegressor
 from autokeras.tasks import StructuredDataClassifier

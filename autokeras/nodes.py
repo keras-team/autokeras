@@ -145,3 +145,5 @@ class TimeSeriesInput(Input):
     def config_from_adapter(self, adapter):
         super().config_from_adapter(adapter)
         self.lookback = adapter.lookback
+        self.column_names = adapter.column_names
+        self.column_types = adapter.column_types
