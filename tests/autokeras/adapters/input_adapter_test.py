@@ -55,6 +55,12 @@ def test_structured_data_input_transform():
     assert input_node.column_names[0] == 'sex'
     assert input_node.column_types == utils.COLUMN_TYPES_FROM_CSV
 
+    x = utils.generate_data(shape=(32,))
+    input_node = input_adapter.StructuredDataInputAdapter()
+    x = input_node.fit_transform(x)
+    for row in x.as_numpy_iterator():
+        assert row.ndim == 1
+
 
 def test_partial_column_types():
     input_node = input_adapter.StructuredDataInputAdapter(
@@ -156,14 +162,6 @@ def test_time_series_input_type_error():
     assert 'Expect the data in TimeSeriesInput to be numpy' in str(info.value)
 
 
-def test_time_series_input_with_illegal_dim():
-    x = utils.generate_data(shape=(32, 32))
-    input_node = input_adapter.TimeSeriesInputAdapter(2)
-    with pytest.raises(ValueError) as info:
-        x = input_node.transform(x)
-    assert 'Expect the data in TimeSeriesInput to have 2' in str(info.value)
-
-
 def test_time_series_input_col_type_without_name():
     num_data = 500
     train_x = utils.generate_structured_data(num_data)
@@ -200,7 +198,7 @@ def test_time_series_input_name_type_mismatch():
 def test_time_series_input_transform():
     x = utils.generate_data(shape=(32,))
     input_node = input_adapter.TimeSeriesInputAdapter(2)
-    x = input_node.transform(x)
+    x = input_node.fit_transform(x)
     for row in x.as_numpy_iterator():
         assert row.ndim == 2
 
