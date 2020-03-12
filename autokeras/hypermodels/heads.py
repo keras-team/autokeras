@@ -41,7 +41,7 @@ class ClassificationHead(head_module.Head):
                  multi_label: bool = False,
                  loss: Optional[types.LossType] = None,
                  metrics: Optional[types.MetricsType] = None,
-                 dropout_rate=None,
+                 dropout_rate: Optional[float] = None,
                  **kwargs):
         super().__init__(loss=loss,
                          metrics=metrics,
