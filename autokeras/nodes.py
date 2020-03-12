@@ -103,6 +103,16 @@ class TimeSeriesInput(Input):
             For example, if lookback=n, the data in the range of [i - n, i - 1]
             is used to predict the value of step i. If unspecified, it will be tuned
             automatically.
+        column_names: A list of strings specifying the names of the columns. The
+            length of the list should be equal to the number of columns of the data.
+            Defaults to None. If None, it will be obtained from the header of the csv
+            file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should either
+            be 'numerical' or 'categorical', indicating the type of that column.
+            Defaults to None. If not None, the column_names need to be specified.
+            If None, it will be inferred from the data. A column will be judged as
+            categorical if the number of different values is less than 5% of the
+            number of instances.
     """
 
     def __init__(self,
