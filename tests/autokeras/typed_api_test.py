@@ -1,5 +1,6 @@
-import autokeras
 from typedapi import ensure_api_is_typed
+
+import autokeras
 
 HELP_MESSAGE = (
     "You can also take a look at this issue:\n"
