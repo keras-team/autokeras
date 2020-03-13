@@ -150,7 +150,7 @@ def test_text_string():
 
 def test_time_series_input_type_error():
     x = 'unknown'
-    input_node = input_adapter.TimeSeriesInputAdapter(2)
+    input_node = input_adapter.TimeseriesInputAdapter(2)
     with pytest.raises(TypeError) as info:
         x = input_node.transform(x)
     assert 'Expect the data in TimeSeriesInput to be numpy' in str(info.value)
@@ -158,7 +158,7 @@ def test_time_series_input_type_error():
 
 def test_time_series_input_with_illegal_dim():
     x = utils.generate_data(shape=(32, 32))
-    input_node = input_adapter.TimeSeriesInputAdapter(2)
+    input_node = input_adapter.TimeseriesInputAdapter(2)
     with pytest.raises(ValueError) as info:
         x = input_node.transform(x)
     assert 'Expect the data in TimeSeriesInput to have 2' in str(info.value)
@@ -168,7 +168,7 @@ def test_time_series_input_col_type_without_name():
     num_data = 500
     train_x = utils.generate_structured_data(num_data)
     with pytest.raises(ValueError) as info:
-        input_node = input_adapter.TimeSeriesInputAdapter(
+        input_node = input_adapter.TimeseriesInputAdapter(
             lookback=2,
             column_types=utils.COLUMN_TYPES_FROM_NUMPY)
         input_node.transform(train_x)
@@ -178,7 +178,7 @@ def test_time_series_input_col_type_without_name():
 def test_time_series_input_less_col_name():
     (x, _), _1 = utils.dataframe_numpy()
     with pytest.raises(ValueError) as info:
-        input_node = input_adapter.TimeSeriesInputAdapter(
+        input_node = input_adapter.TimeseriesInputAdapter(
             lookback=2,
             column_names=utils.LESS_COLUMN_NAMES_FROM_CSV)
         input_node.transform(x)
@@ -190,7 +190,7 @@ def test_time_series_input_name_type_mismatch():
     column_types = copy.copy(utils.COLUMN_TYPES_FROM_CSV)
     column_types['age_'] = column_types.pop('age')
     with pytest.raises(ValueError) as info:
-        input_node = input_adapter.TimeSeriesInputAdapter(
+        input_node = input_adapter.TimeseriesInputAdapter(
             lookback=2,
             column_types=column_types)
         input_node.transform(x)
@@ -199,13 +199,13 @@ def test_time_series_input_name_type_mismatch():
 
 def test_time_series_input_transform():
     x = utils.generate_data(shape=(32,))
-    input_node = input_adapter.TimeSeriesInputAdapter(2)
+    input_node = input_adapter.TimeseriesInputAdapter(2)
     x = input_node.transform(x)
     for row in x.as_numpy_iterator():
         assert row.ndim == 2
 
     (x, _), _1 = utils.dataframe_dataframe()
-    input_node = input_adapter.TimeSeriesInputAdapter(lookback=2)
+    input_node = input_adapter.TimeseriesInputAdapter(lookback=2)
     x = input_node.fit_transform(x)
     assert input_node.column_names[0] == 'sex'
     for row in x.as_numpy_iterator():

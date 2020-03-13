@@ -193,7 +193,7 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
                 self.column_types[key] = value
 
 
-class TimeSeriesInputAdapter(adapter_module.Adapter):
+class TimeseriesInputAdapter(adapter_module.Adapter):
 
     def __init__(self,
                  lookback=None,
@@ -209,7 +209,7 @@ class TimeSeriesInputAdapter(adapter_module.Adapter):
         config = super().get_config()
         config.update({
             'lookback': self.lookback,
-            'column_name': self.column_names,
+            'column_names': self.column_names,
             'column_types': self.column_types
         })
         return config

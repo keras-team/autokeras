@@ -95,8 +95,8 @@ class StructuredDataInput(Input):
         self.column_types = adapter.column_types
 
 
-class TimeSeriesInput(Input):
-    """Input node for Time Series data.
+class TimeseriesInput(Input):
+    """Input node for Timeseries data.
 
     # Arguments
         lookback: Int. The range of history steps to consider for each prediction.
@@ -132,7 +132,7 @@ class TimeSeriesInput(Input):
         config = super().get_config()
         config.update({
             'lookback': self.lookback,
-            'column_name': self.column_names,
+            'column_names': self.column_names,
             'column_types': self.column_types
         })
         return config

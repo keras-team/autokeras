@@ -30,7 +30,7 @@ EXCEPTION_LIST = [
     autokeras.ImageInput,
     autokeras.Input,
     autokeras.StructuredDataInput,
-    autokeras.TimeSeriesInput,
+    autokeras.TimeseriesInput,
     autokeras.TextInput,
     autokeras.ImageClassifier,
     autokeras.ImageRegressor,
