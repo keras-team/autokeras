@@ -138,7 +138,7 @@ class TimeseriesInput(Input):
         return config
 
     def get_adapter(self):
-        return adapters.TimeSeriesInputAdapter(lookback=self.lookback,
+        return adapters.TimeseriesInputAdapter(lookback=self.lookback,
                                                column_names=self.column_names,
                                                column_types=self.column_types)
 

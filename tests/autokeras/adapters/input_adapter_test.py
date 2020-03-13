@@ -153,7 +153,7 @@ def test_time_series_input_type_error():
     input_node = input_adapter.TimeseriesInputAdapter(2)
     with pytest.raises(TypeError) as info:
         x = input_node.transform(x)
-    assert 'Expect the data in TimeSeriesInput to be numpy' in str(info.value)
+    assert 'Expect the data in TimeseriesInput to be numpy' in str(info.value)
 
 
 def test_time_series_input_with_illegal_dim():
@@ -161,7 +161,7 @@ def test_time_series_input_with_illegal_dim():
     input_node = input_adapter.TimeseriesInputAdapter(2)
     with pytest.raises(ValueError) as info:
         x = input_node.transform(x)
-    assert 'Expect the data in TimeSeriesInput to have 2' in str(info.value)
+    assert 'Expect the data in TimeseriesInput to have 2' in str(info.value)
 
 
 def test_time_series_input_col_type_without_name():

@@ -163,7 +163,7 @@ class AutoModel(object):
                 middle_nodes.append(hypermodels.ImageBlock()(input_node))
             if isinstance(input_node, input_module.StructuredDataInput):
                 middle_nodes.append(hypermodels.StructuredDataBlock()(input_node))
-            if isinstance(input_node, input_module.TimeSeriesInput):
+            if isinstance(input_node, input_module.TimeseriesInput):
                 middle_nodes.append(hypermodels.TimeSeriesBlock()(input_node))
 
         # Merge the middle nodes.

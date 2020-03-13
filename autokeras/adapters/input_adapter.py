@@ -217,12 +217,12 @@ class TimeseriesInputAdapter(adapter_module.Adapter):
     def check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (pd.DataFrame, np.ndarray, tf.data.Dataset)):
-            raise TypeError('Expect the data in TimeSeriesInput to be numpy.ndarray'
+            raise TypeError('Expect the data in TimeseriesInput to be numpy.ndarray'
                             ' or tf.data.Dataset or pd.DataFrame, but got {type}.'.
                             format(type=type(x)))
 
         if isinstance(x, np.ndarray) and x.ndim != 2:
-            raise ValueError('Expect the data in TimeSeriesInput to have 2 dimension'
+            raise ValueError('Expect the data in TimeseriesInput to have 2 dimension'
                              ', but got input shape {shape} with {ndim} '
                              'dimensions'.format(
                                  shape=x.shape,
