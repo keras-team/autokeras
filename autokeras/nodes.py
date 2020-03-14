@@ -96,7 +96,7 @@ class StructuredDataInput(Input):
 
 
 class TimeseriesInput(Input):
-    """Input node for Timeseries data.
+    """Input node for timeseries data.
 
     # Arguments
         lookback: Int. The range of history steps to consider for each prediction.
