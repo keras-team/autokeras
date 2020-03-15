@@ -5,7 +5,8 @@ Download [Auto MPG Data Set](https://archive.ics.uci.edu/ml/datasets/auto+mpg):
 ```python
 import tensorflow as tf
 import pandas as pd
-
+column_names = ['MPG','Cylinders','Displacement','Horsepower','Weight',
+                'Acceleration', 'Model Year', 'Origin']
 dataset_path = "http://archive.ics.uci.edu/ml/machine-learning-databases/auto-mpg/auto-mpg.data"
 raw_dataset = pd.read_csv(dataset_path, names=column_names,
                       na_values = "?", comment='\t',
