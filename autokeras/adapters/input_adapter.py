@@ -191,3 +191,78 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
         for key, value in column_types.items():
             if key not in self.column_types:
                 self.column_types[key] = value
+
+
+class TimeseriesInputAdapter(adapter_module.Adapter):
+
+    def __init__(self,
+                 lookback=None,
+                 column_names=None,
+                 column_types=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.lookback = lookback
+        self.column_names = column_names
+        self.column_types = column_types
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'lookback': self.lookback,
+            'column_names': self.column_names,
+            'column_types': self.column_types
+        })
+        return config
+
+    def check(self, x):
+        """Record any information needed by transform."""
+        if not isinstance(x, (pd.DataFrame, np.ndarray, tf.data.Dataset)):
+            raise TypeError('Expect the data in TimeseriesInput to be numpy.ndarray'
+                            ' or tf.data.Dataset or pd.DataFrame, but got {type}.'.
+                            format(type=type(x)))
+
+        if isinstance(x, np.ndarray) and x.ndim != 2:
+            raise ValueError('Expect the data in TimeseriesInput to have 2 dimension'
+                             ', but got input shape {shape} with {ndim} '
+                             'dimensions'.format(
+                                 shape=x.shape,
+                                 ndim=x.ndim))
+
+        # Extract column_names from pd.DataFrame.
+        if isinstance(x, pd.DataFrame) and self.column_names is None:
+            self.column_names = list(x.columns)
+            # column_types is provided by user
+            if self.column_types:
+                for column_name in self.column_types:
+                    if column_name not in self.column_names:
+                        raise ValueError('Column_names and column_types are '
+                                         'mismatched. Cannot find column name '
+                                         '{name} in the data.'.format(
+                                             name=column_name))
+
+        # Generate column_names.
+        if self.column_names is None:
+            if self.column_types:
+                raise ValueError('Column names must be specified.')
+            self.column_names = [index for index in range(x.shape[1])]
+
+        # Check if column_names has the correct length.
+        if len(self.column_names) != x.shape[1]:
+            raise ValueError('Expect column_names to have length {expect} '
+                             'but got {actual}.'.format(
+                                 expect=x.shape[1],
+                                 actual=len(self.column_names)))
+
+    def convert_to_dataset(self, x):
+        if isinstance(x, pd.DataFrame):
+            # Convert x, y, validation_data to tf.Dataset.
+            x = x.values.astype(np.unicode)
+        if isinstance(x, np.ndarray):
+            x = x.astype(np.unicode)
+        x = tf.data.Dataset.from_tensor_slices(x)
+        x = x.window(self.lookback, shift=1, drop_remainder=True)
+        final_data = []
+        for window in x:
+            final_data.append([elems.numpy() for elems in window])
+        final_data = tf.data.Dataset.from_tensor_slices(final_data)
+        return final_data
