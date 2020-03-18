@@ -257,29 +257,20 @@ class AutoModel(object):
                           fit_on_val_data=self._split_dataset,
                           **kwargs)
 
-    def _process_x(self, x, fit):
-        x = nest.flatten(x)
-        new_x = []
-        for data, input_node, adapter in zip(x, self.inputs, self._input_adapters):
+    @staticmethod
+    def _adapt(sources, fit, hms, adapters):
+        sources = nest.flatten(sources)
+        adapted = []
+        for source, hm, adapter in zip(sources, hms, adapters):
             if fit:
-                data = adapter.fit_transform(data)
+                source = adapter.fit_transform(source)
             else:
-                data = adapter.transform(data)
-            new_x.append(data)
-            input_node.config_from_adapter(adapter)
-        return tf.data.Dataset.zip(tuple(new_x))
-
-    def _process_y(self, y, fit):
-        y = nest.flatten(y)
-        new_y = []
-        for data, head, adapter in zip(y, self._heads, self._output_adapters):
-            if fit:
-                data = adapter.fit_transform(data)
-            else:
-                data = adapter.transform(data)
-            new_y.append(data)
-            head.config_from_adapter(adapter)
-        return tf.data.Dataset.zip(tuple(new_y))
+                source = adapter.transform(source)
+            adapted.append(source)
+            hm.config_from_adapter(adapter)
+        if len(adapted) == 1:
+            return adapted[0]
+        return tf.data.Dataset.zip(tuple(adapted))
 
     def _process_xy(self, x, y, fit):
         """Convert x, y to tf.data.Dataset.
@@ -297,8 +288,8 @@ class AutoModel(object):
             x = dataset.map(lambda a, b: a)
             y = dataset.map(lambda a, b: b)
 
-        x = self._process_x(x, fit)
-        y = self._process_y(y, fit)
+        x = self._adapt(x, fit, self.inputs, self._input_adapters)
+        y = self._adapt(y, fit, self._heads, self._output_adapters)
 
         return tf.data.Dataset.zip((x, y))
 
@@ -338,7 +329,7 @@ class AutoModel(object):
         if isinstance(x, tf.data.Dataset):
             dataset = self._process_xy(x, None, False)
         else:
-            dataset = self._process_x(x, False)
+            dataset = self._adapt(x, False, self.inputs, self._input_adapters)
         dataset = dataset.batch(batch_size)
         model = self.tuner.get_best_model()
         y = model.predict(dataset, **kwargs)
