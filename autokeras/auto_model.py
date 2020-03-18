@@ -329,7 +329,7 @@ class AutoModel(object):
         if isinstance(x, tf.data.Dataset):
             dataset = self._process_xy(x, None, False)
         else:
-            dataset = self._process_x(x, False)
+            dataset = self._adapt(x, False, self.inputs, self._input_adapters)
         dataset = dataset.batch(batch_size)
         model = self.tuner.get_best_model()
         y = model.predict(dataset, **kwargs)
