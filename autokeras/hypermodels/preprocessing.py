@@ -106,11 +106,10 @@ class ImageAugmentation(block_module.Block):
             Degree range for random rotations. Default to 180.
         random_crop: Boolean. Whether to crop the image randomly. Default to True.
         zoom_factor: Boolean.
-
-        contrast_range: Positive float or Tuple.
-            If given a positive float, _get_min_and_max() will automated generate
-            a tuple for contrast range. If given a tuple directly, it will serve
-            as a range for picking a contrast shift value from. Default to 0.5.
+        contrast_range: a positive float represented as fraction of value, or a tuple
+            of size 2 representing lower and upper bound. When represented as a
+            single float, lower = upper. The contrast factor will be randomly picked
+            between [1.0 - lower, 1.0 + upper].
     """
 
     def __init__(self,
