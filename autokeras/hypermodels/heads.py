@@ -130,7 +130,7 @@ class RegressionHead(head_module.Head):
     def __init__(self,
                  output_dim: Optional[int] = None,
                  loss: types.LossType = 'mean_squared_error',
-                 metrics=None,
+                 metrics: Optional[types.MetricsType] = None,
                  dropout_rate=None,
                  **kwargs):
         super().__init__(loss=loss,
