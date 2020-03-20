@@ -18,7 +18,6 @@ EXCEPTION_LIST = [
     autokeras.ImageAugmentation,
     autokeras.ImageBlock,
     autokeras.Merge,
-    autokeras.RegressionHead,
     autokeras.StructuredDataBlock,
     autokeras.TemporalReduction,
     autokeras.TextBlock,
