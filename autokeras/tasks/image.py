@@ -257,7 +257,7 @@ class ImageSegmenter(SupervisedImagePipeline):
                  multi_label: bool = False,
                  loss: utils.AcceptableLoss = None,
                  metrics: utils.AcceptableMetrics = None,
-                 name: str = 'image_classifier',
+                 name: str = 'image_segmenter',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
