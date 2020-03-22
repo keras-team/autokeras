@@ -9,7 +9,6 @@ import tensorflow as tf
 from autokeras import auto_model
 from autokeras import hypermodels
 from autokeras import nodes as input_module
-from autokeras import utils
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
 from autokeras.utils import types
