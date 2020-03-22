@@ -25,7 +25,7 @@ class Merge(block_module.Block):
             tuned automatically.
     """
 
-    def __init__(self, merge_type=None, **kwargs):
+    def __init__(self, merge_type: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         self.merge_type = merge_type
 
