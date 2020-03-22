@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import List
 from typing import Optional
+from typing import Tuple
 from typing import Union
 
-import numpy as np
 import tensorflow as tf
 
 from autokeras import auto_model
@@ -12,6 +12,7 @@ from autokeras import nodes as input_module
 from autokeras import utils
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
+from autokeras.utils import types
 
 
 class SupervisedImagePipeline(auto_model.AutoModel):
@@ -49,8 +50,8 @@ class ImageClassifier(SupervisedImagePipeline):
     def __init__(self,
                  num_classes: Optional[int] = None,
                  multi_label: bool = False,
-                 loss: utils.AcceptableLoss = None,
-                 metrics: utils.AcceptableMetrics = None,
+                 loss: types.LossType = None,
+                 metrics: Optional[types.MetricsType] = None,
                  name: str = 'image_classifier',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
@@ -71,12 +72,13 @@ class ImageClassifier(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
-            y: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
+            x: Optional[types.DatasetType] = None,
+            y: Optional[types.DatasetType] = None,
             epochs: Optional[int] = None,
             callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
             validation_split: Optional[float] = 0.2,
-            validation_data: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
+            validation_data: Union[types.DatasetType,
+                                   Tuple[types.DatasetType], None] = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -150,8 +152,8 @@ class ImageRegressor(SupervisedImagePipeline):
 
     def __init__(self,
                  output_dim: Optional[int] = None,
-                 loss: utils.AcceptableLoss = 'mean_squared_error',
-                 metrics: utils.AcceptableMetrics = None,
+                 loss: types.LossType = 'mean_squared_error',
+                 metrics: Optional[types.MetricsType] = None,
                  name: str = 'image_regressor',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
@@ -171,12 +173,13 @@ class ImageRegressor(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
-            y: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
+            x: Optional[types.DatasetType] = None,
+            y: Optional[types.DatasetType] = None,
             epochs: Optional[int] = None,
             callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
             validation_split: Optional[float] = 0.2,
-            validation_data: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
+            validation_data: Union[types.DatasetType,
+                                   Tuple[types.DatasetType], None] = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -255,9 +258,9 @@ class ImageSegmenter(SupervisedImagePipeline):
     def __init__(self,
                  num_classes: Optional[int] = None,
                  multi_label: bool = False,
-                 loss: utils.AcceptableLoss = None,
-                 metrics: utils.AcceptableMetrics = None,
-                 name: str = 'image_segmenter',
+                 loss: types.LossType = None,
+                 metrics: Optional[types.MetricsType] = None,
+                 name: str = 'image_classifier',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
@@ -277,12 +280,13 @@ class ImageSegmenter(SupervisedImagePipeline):
             seed=seed)
 
     def fit(self,
-            x: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
-            y: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
+            x: Optional[types.DatasetType] = None,
+            y: Optional[types.DatasetType] = None,
             epochs: Optional[int] = None,
             callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
             validation_split: Optional[float] = 0.2,
-            validation_data: Optional[Union[np.ndarray, tf.data.Dataset]] = None,
+            validation_data: Union[types.DatasetType,
+                                   Tuple[types.DatasetType], None] = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
