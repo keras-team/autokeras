@@ -71,7 +71,8 @@ class ImageClassifier(SupervisedImagePipeline):
             overwrite=overwrite,
             seed=seed)
 
-    def fit(self,
+    def fit(
+            self,
             x: Optional[types.DatasetType] = None,
             y: Optional[types.DatasetType] = None,
             epochs: Optional[int] = None,
@@ -172,7 +173,8 @@ class ImageRegressor(SupervisedImagePipeline):
             overwrite=overwrite,
             seed=seed)
 
-    def fit(self,
+    def fit(
+            self,
             x: Optional[types.DatasetType] = None,
             y: Optional[types.DatasetType] = None,
             epochs: Optional[int] = None,
@@ -279,7 +281,8 @@ class ImageSegmenter(SupervisedImagePipeline):
             overwrite=overwrite,
             seed=seed)
 
-    def fit(self,
+    def fit(
+            self,
             x: Optional[types.DatasetType] = None,
             y: Optional[types.DatasetType] = None,
             epochs: Optional[int] = None,
