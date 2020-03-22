@@ -15,6 +15,7 @@ def test_image_regressor(auto_model, tmp_path):
     image.ImageRegressor(directory=tmp_path, max_trials=2, seed=utils.SEED)
     assert auto_model.called
 
+
 @mock.patch('autokeras.auto_model.AutoModel.__init__')
 def test_image_segmenter(auto_model, tmp_path):
     image.ImageSegmenter(directory=tmp_path, max_trials=2, seed=utils.SEED)
