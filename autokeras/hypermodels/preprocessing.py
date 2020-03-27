@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
@@ -41,7 +43,7 @@ class TextToIntSequence(block_module.Block):
     """
 
     def __init__(self,
-                 output_sequence_length=None,
+                 output_sequence_length: Optional[int] = None,
                  max_tokens=20000,
                  **kwargs):
         super().__init__(**kwargs)
