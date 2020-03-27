@@ -44,7 +44,7 @@ class TextToIntSequence(block_module.Block):
 
     def __init__(self,
                  output_sequence_length: Optional[int] = None,
-                 max_tokens=20000,
+                 max_tokens: int = 20000,
                  **kwargs):
         super().__init__(**kwargs)
         self.output_sequence_length = output_sequence_length
