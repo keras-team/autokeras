@@ -40,8 +40,8 @@ class ClassificationHead(head_module.Head):
                  num_classes: Optional[int] = None,
                  multi_label: bool = False,
                  loss: Optional[types.LossType] = None,
-                 metrics=None,
-                 dropout_rate=None,
+                 metrics: Optional[types.MetricsType] = None,
+                 dropout_rate: Optional[float] = None,
                  **kwargs):
         super().__init__(loss=loss,
                          metrics=metrics,
@@ -129,9 +129,9 @@ class RegressionHead(head_module.Head):
 
     def __init__(self,
                  output_dim: Optional[int] = None,
-                 loss='mean_squared_error',
-                 metrics=None,
-                 dropout_rate=None,
+                 loss: types.LossType = 'mean_squared_error',
+                 metrics: Optional[types.MetricsType] = None,
+                 dropout_rate: Optional[float] = None,
                  **kwargs):
         super().__init__(loss=loss,
                          metrics=metrics,
