@@ -1,6 +1,5 @@
 from typing import Optional
 
-import numpy as np
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
@@ -101,83 +100,44 @@ class ImageAugmentation(block_module.Block):
     """Collection of various image augmentation methods.
 
     # Arguments
-        percentage: Float. The percentage of data to augment.
-        rotation_range: Int. The value can only be 0, 90, or 180.
-            Degree range for random rotations. Default to 180.
-        random_crop: Boolean. Whether to crop the image randomly. Default to True.
-        brightness_range: Positive float.
-            Serve as 'max_delta' in tf.image.random_brightness. Default to 0.5.
-            Equivalent to adjust brightness using a 'delta' randomly picked in
-            the interval [-max_delta, max_delta).
-        saturation_range: Positive float or Tuple.
-            If given a positive float, _get_min_and_max() will automated generate
-            a tuple for saturation range. If given a tuple directly, it will serve
-            as a range for picking a saturation shift value from. Default to 0.5.
-        contrast_range: Positive float or Tuple.
-            If given a positive float, _get_min_and_max() will automated generate
-            a tuple for contrast range. If given a tuple directly, it will serve
-            as a range for picking a contrast shift value from. Default to 0.5.
-        translation: Boolean. Whether to translate the image.
+        translation: Boolean. Whether to translate the image. Defaults to True.
         horizontal_flip: Boolean. Whether to flip the image horizontally.
+            Defaults to True.
         vertical_flip: Boolean. Whether to flip the image vertically.
-        gaussian_noise: Boolean. Whether to add gaussian noise to the image.
+            Defaults to True.
+        rotation_range: A positive float represented as fraction of 2pi, or a tuple
+            of size 2 representing lower and upper bound for rotating clockwise and
+            counter-clockwise. When represented as a single float, lower = upper.
+            Defaults to 0.5.
+        random_crop: Boolean. Whether to crop the image randomly. Default to True.
+        zoom_range: Boolean. A positive float represented as fraction value, or a
+            tuple of 2 representing fraction for zooming horizontally and vertically.
+            For instance, `zoom_range=0.2` result in a random zoom range from 80% to
+            120%. Defaults to 0.5.
+        contrast_range: A positive float represented as fraction of value, or a tuple
+            of size 2 representing lower and upper bound. When represented as a
+            single float, lower = upper. The contrast factor will be randomly picked
+            between [1.0 - lower, 1.0 + upper]. Defaults to 0.5.
     """
 
     def __init__(self,
-                 percentage=0.25,
-                 rotation_range=180,
-                 random_crop=True,
-                 brightness_range=0.5,
-                 saturation_range=0.5,
-                 contrast_range=0.5,
                  translation=True,
                  horizontal_flip=True,
                  vertical_flip=True,
-                 gaussian_noise=True,
+                 rotation_range=0.5,
+                 random_crop=True,
+                 zoom_range=0.5,
+                 contrast_range=0.5,
                  **kwargs):
         super().__init__(**kwargs)
-        self.percentage = percentage
-        self.rotation_range = rotation_range
-        self._rotate_choices = [0]
-        if self.rotation_range == 90:
-            self._rotate_choices = [0, 1, 3]
-        elif self.rotation_range == 180:
-            self._rotate_choices = [0, 1, 2, 3]
-        self.random_crop = random_crop
-        if self.random_crop:
-            # Generate 20 crop settings, ranging from a 1% to 20% crop.
-            self.scales = list(np.arange(0.8, 1.0, 0.01))
-            self.boxes = np.zeros((len(self.scales), 4))
-            for i, scale in enumerate(self.scales):
-                x1 = y1 = 0.5 - (0.5 * scale)
-                x2 = y2 = 0.5 + (0.5 * scale)
-                self.boxes[i] = [x1, y1, x2, y2]
-        self.brightness_range = brightness_range
-        self.saturation_range = self._get_min_and_max(saturation_range,
-                                                      'saturation_range')
-        self.contrast_range = self._get_min_and_max(contrast_range,
-                                                    'contrast_range')
-        self.translation = translation
-        self.horizontal_flip = horizontal_flip
-        self.vertical_flip = vertical_flip
-        self.gaussian_noise = gaussian_noise
+        self.translation = translation,
+        self.horizontal_flip = horizontal_flip,
+        self.vertical_flip = vertical_flip,
+        self.rotation_range = rotation_range,
+        self.random_crop = random_crop,
+        self.zoom_range = zoom_range,
+        self.contrast_range = contrast_range,
         self.shape = None
-
-    @staticmethod
-    def _get_min_and_max(value, name):
-        if isinstance(value, (tuple, list)) and len(value) == 2:
-            min_value, max_value = value
-            return min_value, max_value
-        elif isinstance(value, (int, float)):
-            min_value = 1. - value
-            max_value = 1. + value
-            return min_value, max_value
-        elif value == 0:
-            return None
-        else:
-            raise ValueError('Expected {name} to be either a float between 0 and 1, '
-                             'or a tuple of 2 floats between 0 and 1, '
-                             'but got {value}'.format(name=name, value=value))
 
     def build(self, hp, inputs=None):
         return inputs
