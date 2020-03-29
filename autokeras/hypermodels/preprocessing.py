@@ -140,13 +140,13 @@ class ImageAugmentation(block_module.Block):
         self.shape = None
 
     def build(self, hp, inputs=None):
-        list(
+        list([
             preprocessing.RandomContrast,
             preprocessing.RandomTranslation,
             preprocessing.RandomFlip,
             preprocessing.RandomRotation,
             preprocessing.RandomZoom
-        )
+        ])
         return inputs
 
 
