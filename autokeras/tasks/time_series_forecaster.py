@@ -2,6 +2,7 @@ import pandas as pd
 
 from autokeras import auto_model
 from autokeras import nodes as input_module
+from autokeras.tuners import greedy
 
 
 class SupervisedTimeseriesDataPipeline(auto_model.AutoModel):
@@ -36,11 +37,12 @@ class SupervisedTimeseriesDataPipeline(auto_model.AutoModel):
         self.predict_from = predict_from
         self.predict_until = predict_until
         self._target_col_name = None
+        self.train_len = 0
 
     @staticmethod
     def _read_from_csv(x, y):
         df = pd.read_csv(x)
-        target = df.pop(y).to_numpy()
+        target = df.pop(y).dropna().to_numpy()
         return df, target
 
     def fit(self,
@@ -51,40 +53,6 @@ class SupervisedTimeseriesDataPipeline(auto_model.AutoModel):
             validation_split=0.2,
             validation_data=None,
             **kwargs):
-        """Search for the best model and hyperparameters for the task.
-
-        # Arguments
-            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
-                Training data x. If the data is from a csv file, it should be a
-                string specifying the path of the csv file of the training data.
-            y: String, numpy.ndarray, or tensorflow.Dataset. Training data y.
-                If the data is from a csv file, it should be a string, which is the
-                name of the target column. Otherwise, it can be single-column or
-                multi-column. The values should all be numerical.
-            epochs: Int. The number of epochs to train each model during the search.
-                If unspecified, we would use epochs equal to 1000 and early stopping
-                with patience equal to 30.
-            callbacks: List of Keras callbacks to apply during training and
-                validation.
-            validation_split: Float between 0 and 1. Defaults to 0.2.
-                Fraction of the training data to be used as validation data.
-                The model will set apart this fraction of the training data,
-                will not train on it, and will evaluate
-                the loss and any model metrics
-                on this data at the end of each epoch.
-                The validation data is selected from the last samples
-                in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a dataset.
-                The best model found would be fit on the entire dataset including the
-                validation data.
-            validation_data: Data on which to evaluate the loss and any model metrics
-                at the end of each epoch. The model will not be trained on this data.
-                `validation_data` will override `validation_split`. The type of the
-                validation data should be the same as the training data.
-                The best model found would be fit on the training dataset without the
-                validation data.
-            **kwargs: Any arguments supported by keras.Model.fit.
-        """
         # x is file path of training data
         if isinstance(x, str):
             self._target_col_name = y
@@ -94,8 +62,10 @@ class SupervisedTimeseriesDataPipeline(auto_model.AutoModel):
             if isinstance(x_val, str):
                 validation_data = self._read_from_csv(x_val, y_val)
 
-        super().fit(x=x,
-                    y=y,
+        self.train_len = len(y)
+
+        super().fit(x=x[:self.train_len],
+                    y=y[self.lookback-1:],
                     epochs=epochs,
                     callbacks=callbacks,
                     validation_split=validation_split,
@@ -103,27 +73,17 @@ class SupervisedTimeseriesDataPipeline(auto_model.AutoModel):
                     **kwargs)
 
     def predict(self, x, batch_size=32, **kwargs):
-        """Predict the output for a given testing data.
-
-        # Arguments
-            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
-                Testing data x. If the data is from a csv file, it should be a
-                string specifying the path of the csv file of the testing data.
-            batch_size: Int. Defaults to 32.
-            **kwargs: Any arguments supported by keras.Model.predict.
-
-        # Returns
-            A list of numpy.ndarray objects or a single numpy.ndarray.
-            The predicted results.
-        """
         if isinstance(x, str):
             x = pd.read_csv(x)
             if self._target_col_name in x:
                 x.pop(self._target_col_name)
 
-        return super().predict(x=x,
-                               batch_size=batch_size,
-                               **kwargs)
+        y_pred = super().predict(x=x,
+                                 batch_size=batch_size,
+                                 **kwargs)
+        lower_bound = self.train_len + self.predict_from
+        upper_bound = min(self.train_len + self.predict_until + 1, len(y_pred))
+        return y_pred[lower_bound:upper_bound]
 
     def evaluate(self, x, y=None, batch_size=32, **kwargs):
         """Evaluate the best model for the given data.
@@ -146,8 +106,8 @@ class SupervisedTimeseriesDataPipeline(auto_model.AutoModel):
         """
         if isinstance(x, str):
             x, y = self._read_from_csv(x, y)
-        return super().evaluate(x=x,
-                                y=y,
+        return super().evaluate(x=x[:len(y)],
+                                y=y[self.lookback-1:],
                                 batch_size=batch_size,
                                 **kwargs)
 
@@ -208,8 +168,23 @@ class TimeSeriesForecaster(SupervisedTimeseriesDataPipeline):
                  objective='val_loss',
                  overwrite=True,
                  seed=None):
-        # TODO: implement.
-        raise NotImplementedError
+        super().__init__(column_names=column_names,
+                         column_types=column_types,
+                         lookback=lookback,
+                         predict_from=predict_from,
+                         predict_until=predict_until,
+                         loss=loss,
+                         metrics=metrics,
+                         name=name,
+                         max_trials=max_trials,
+                         directory=directory,
+                         objective=objective,
+                         tuner=greedy.Greedy,
+                         overwrite=overwrite,
+                         seed=seed)
+        self.lookback = lookback
+        self.predict_from = predict_from
+        self.predict_until = predict_until
 
     def fit(self,
             x=None,
@@ -249,5 +224,72 @@ class TimeSeriesForecaster(SupervisedTimeseriesDataPipeline):
                 validation data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        # TODO: implement.
-        raise NotImplementedError
+        super().fit(x=x,
+                    y=y,
+                    validation_split=validation_split,
+                    validation_data=validation_data,
+                    **kwargs)
+
+    def predict(self, x=None, batch_size=32, **kwargs):
+        """Predict the output for a given testing data.
+
+        # Arguments
+            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+                Testing data x. If the data is from a csv file, it should be a
+                string specifying the path of the csv file of the testing data.
+            batch_size: Int. Defaults to 32.
+            **kwargs: Any arguments supported by keras.Model.predict.
+
+        # Returns
+            A list of numpy.ndarray objects or a single numpy.ndarray.
+            The predicted results.
+        """
+        return super().predict(x=x, batch_size=batch_size, **kwargs)
+
+    def fit_and_predict(self,
+                        x=None,
+                        y=None,
+                        validation_split=0.2,
+                        validation_data=None,
+                        batch_size=32,
+                        **kwargs):
+        """Search for the best model and then predict for remaining data points.
+
+        # Arguments
+            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+                Training data x. If the data is from a csv file, it should be a
+                string specifying the path of the csv file of the training data.
+            y: String, a list of string(s), numpy.ndarray, pandas.DataFrame or
+                tensorflow.Dataset. Training data y.
+                If the data is from a csv file, it should be a list of string(s)
+                specifying the name(s) of the column(s) need to be forecasted.
+                If it is multivariate forecasting, y should be a list of more than
+                one column names. If it is univariate forecasting, y should be a
+                string or a list of one string.
+            validation_split: Float between 0 and 1. Defaults to 0.2.
+                Fraction of the training data to be used as validation data.
+                The model will set apart this fraction of the training data,
+                will not train on it, and will evaluate
+                the loss and any model metrics
+                on this data at the end of each epoch.
+                The validation data is selected from the last samples
+                in the `x` and `y` data provided, before shuffling. This argument is
+                not supported when `x` is a dataset.
+                The best model found would be fit on the entire dataset including the
+                validation data.
+            validation_data: Data on which to evaluate the loss and any model metrics
+                at the end of each epoch. The model will not be trained on this data.
+                `validation_data` will override `validation_split`. The type of the
+                validation data should be the same as the training data.
+                The best model found would be fit on the training dataset without the
+                validation data.
+            batch_size: Int. Defaults to 32.
+            **kwargs: Any arguments supported by keras.Model.fit.
+        """
+        self.fit(x=x,
+                 y=y,
+                 validation_split=validation_split,
+                 validation_data=validation_data,
+                 **kwargs)
+
+        return self.predict(x=x, batch_size=batch_size)
