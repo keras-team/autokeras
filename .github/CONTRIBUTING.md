@@ -4,6 +4,9 @@ Contributions are welcome, and greatly appreciated!
 Follow the tag of [good first issue](https://github.com/keras-team/autokeras/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 for the issues for beginner.
 
+If you don't know where to start, please join our community on [Slack](https://autokeras.com/#community) and ask us.
+We will help you get started!
+
 ## Pull Request Guide
 
 1. Is this the first pull request that you're making with GitHub? If so, read the guide [Making a pull request to an open-source project](https://github.com/gabrieldemarmiesse/getting_started_open_source).
