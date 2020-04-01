@@ -46,9 +46,13 @@ Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel f
 
 You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
 
-## Contributors
+## Contributing
 
 You can follow the [Contributing Guide](https://autokeras.com/contributing/) to become a contributor.
+
+If you don't know where to start, please join our community on [Slack](https://autokeras.com/#community) and ask us.
+We will help you get started!
+
 Thank all the contributors!
 
 <a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://opencollective.com/autokeras/contributors.svg?avatarHeight=36&width=890&button=false" /></a>
@@ -59,8 +63,11 @@ Thank all the contributors!
 We accept financial support on [Open Collective](https://opencollective.com/autokeras).
 Thank every backer for supporting us!
 
-<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/sponsor.svg?avatarHeight=36&width=890"></a>
-<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=36&width=890"></a>
+Organizations:
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/sponsor.svg?avatarHeight=36&width=890&button=false"></a>
+
+Individuals:
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=36&width=890&button=false"></a>
 
 ## Cite this work
 
