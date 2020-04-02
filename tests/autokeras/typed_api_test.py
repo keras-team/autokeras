@@ -33,6 +33,7 @@ EXCEPTION_LIST = [
     autokeras.ImageRegressor,
     autokeras.StructuredDataClassifier,
     autokeras.TextRegressor,
+    autokeras.TimeseriesForecaster,
 ]
 
 

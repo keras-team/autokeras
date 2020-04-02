@@ -73,14 +73,15 @@ def test_structured_data_from_numpy_classifier(tmp_path):
 
 
 def test_timeseries_forecaster(tmp_path):
+    lookback = 2
     train_x = utils.generate_data(num_instances=100, shape=(32,))
-    train_y = utils.generate_data(num_instances=100, shape=(1,))
-    clf = ak.TimeseriesForecaster(lookback=2,
+    train_y = utils.generate_data(num_instances=80, shape=(1,))
+    clf = ak.TimeseriesForecaster(lookback=lookback,
                                   directory=tmp_path,
                                   max_trials=2,
                                   seed=utils.SEED)
     clf.fit(train_x, train_y, epochs=1, validation_split=0.2)
     keras_model = clf.export_model()
     clf.evaluate(train_x, train_y)
-    assert clf.predict(train_x).shape == (len(train_x), 10)
+    assert clf.predict(train_x).shape == (len(train_x) - len(train_y), 1)
     assert isinstance(keras_model, tf.keras.Model)
