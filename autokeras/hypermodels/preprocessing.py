@@ -122,7 +122,7 @@ class ImageAugmentation(block_module.Block):
     """
 
     def __init__(self,
-                 translation=0.5,
+                 translation_range=0.5,
                  vertical_flip=None,
                  horizontal_flip=None,
                  rotation_range=0.5,
@@ -130,12 +130,12 @@ class ImageAugmentation(block_module.Block):
                  contrast_range=0.5,
                  **kwargs):
         super().__init__(**kwargs)
-        self.translation = translation,
-        self.horizontal_flip = horizontal_flip,
-        self.vertical_flip = vertical_flip,
-        self.rotation_range = rotation_range,
-        self.zoom_range = zoom_range,
-        self.contrast_range = contrast_range,
+        self.translation_range = translation_range
+        self.horizontal_flip = horizontal_flip
+        self.vertical_flip = vertical_flip
+        self.rotation_range = rotation_range
+        self.zoom_range = zoom_range
+        self.contrast_range = contrast_range
         self.shape = None
 
     @staticmethod
@@ -148,11 +148,11 @@ class ImageAugmentation(block_module.Block):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
 
-        if self.translation != 0 and self.translation != (0, 0):
+        if self.translation_range != 0 and self.translation_range != (0, 0):
             height_factor, width_factor = self._get_fraction_value(
-                self.translation)
+                self.translation_range)
             output_node = preprocessing.RandomTranslation(
-                height_factor, width_factor)(output_node),
+                height_factor, width_factor)(output_node)
 
         horizontal_flip = self.horizontal_flip
         if horizontal_flip is None:
@@ -174,13 +174,13 @@ class ImageAugmentation(block_module.Block):
 
         if self.rotation_range != 0:
             output_node = preprocessing.RandomRotation(
-                self.rotation_range)(output_node),
+                self.rotation_range)(output_node)
 
         if self.zoom_range != 0 and self.zoom_range != (0, 0):
             height_factor, width_factor = self._get_fraction_value(
                 self.zoom_range)
             output_node = preprocessing.RandomZoom(
-                height_factor, width_factor)(output_node),
+                height_factor, width_factor)(output_node)
 
         if self.contrast_range != 0 and self.contrast_range != (0, 0):
             output_node = preprocessing.RandomContrast(
