@@ -88,5 +88,9 @@ def test_timeseries_forecaster(tmp_path):
     keras_model = clf.export_model()
     clf.evaluate(train_x, train_y)
     assert clf.predict(train_x).shape == (predict_until - predict_from + 1, 1)
-    assert clf.fit_and_predict(train_x).shape == (len(train_x) - len(train_y), 1)
+    assert clf.fit_and_predict(train_x,
+                               train_y,
+                               epochs=1,
+                               validation_split=0.2).shape == (predict_until -
+                                                               predict_from + 1, 1)
     assert isinstance(keras_model, tf.keras.Model)
