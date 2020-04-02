@@ -3,3 +3,4 @@ mkdocs
 mkdocs-material
 pygments
 jupyter
+pymdown-extensions
