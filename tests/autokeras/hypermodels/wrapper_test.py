@@ -48,3 +48,23 @@ def test_structured_data_block():
     output = block.build(hp, ak.StructuredDataInput(shape=(2,)).build())
 
     assert isinstance(output, tf.Tensor)
+
+
+def test_timeseries_block():
+    block = wrapper.TimeseriesBlock()
+    hp = kerastuner.HyperParameters()
+    block.column_names = ['0', '1']
+    block.column_types = {
+        '0': adapters.NUMERICAL,
+        '1': adapters.NUMERICAL,
+    }
+    block = graph_module.deserialize(graph_module.serialize(block))
+
+    block.column_names = ['0', '1']
+    block.column_types = {
+        '0': adapters.NUMERICAL,
+        '1': adapters.NUMERICAL,
+    }
+    output = block.build(hp, ak.TimeseriesInput(shape=(32,), lookback=2).build())
+
+    assert isinstance(output, tf.Tensor)

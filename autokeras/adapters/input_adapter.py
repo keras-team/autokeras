@@ -256,9 +256,9 @@ class TimeseriesInputAdapter(adapter_module.Adapter):
     def convert_to_dataset(self, x):
         if isinstance(x, pd.DataFrame):
             # Convert x, y, validation_data to tf.Dataset.
-            x = x.values.astype(np.unicode)
+            x = x.values.astype(np.float32)
         if isinstance(x, np.ndarray):
-            x = x.astype(np.unicode)
+            x = x.astype(np.float32)
         x = tf.data.Dataset.from_tensor_slices(x)
         x = x.window(self.lookback, shift=1, drop_remainder=True)
         final_data = []

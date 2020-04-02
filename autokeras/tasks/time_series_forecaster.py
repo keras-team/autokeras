@@ -1,6 +1,7 @@
 import pandas as pd
 
 from autokeras import auto_model
+from autokeras import hypermodels
 from autokeras import nodes as input_module
 from autokeras.tuners import greedy
 
@@ -15,10 +16,9 @@ class SupervisedTimeseriesDataPipeline(auto_model.AutoModel):
                  predict_from=1,
                  predict_until=10,
                  **kwargs):
-        inputs = input_module.TimeseriesInput()
-        inputs.lookback = lookback
-        inputs.column_types = column_types
-        inputs.column_names = column_names
+        inputs = input_module.TimeseriesInput(lookback=lookback,
+                                              column_names=column_names,
+                                              column_types=column_types)
         if column_types:
             for column_type in column_types.values():
                 if column_type not in ['categorical', 'numerical']:
@@ -112,7 +112,7 @@ class SupervisedTimeseriesDataPipeline(auto_model.AutoModel):
                                 **kwargs)
 
 
-class TimeSeriesForecaster(SupervisedTimeseriesDataPipeline):
+class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
     """AutoKeras time series data forecast class.
 
     # Arguments
@@ -155,6 +155,7 @@ class TimeSeriesForecaster(SupervisedTimeseriesDataPipeline):
     """
 
     def __init__(self,
+                 output_dim=None,
                  column_names=None,
                  column_types=None,
                  lookback=None,
@@ -168,13 +169,14 @@ class TimeSeriesForecaster(SupervisedTimeseriesDataPipeline):
                  objective='val_loss',
                  overwrite=True,
                  seed=None):
-        super().__init__(column_names=column_names,
+        super().__init__(outputs=hypermodels.RegressionHead(output_dim=output_dim,
+                                                            loss=loss,
+                                                            metrics=metrics),
+                         column_names=column_names,
                          column_types=column_types,
                          lookback=lookback,
                          predict_from=predict_from,
                          predict_until=predict_until,
-                         loss=loss,
-                         metrics=metrics,
                          name=name,
                          max_trials=max_trials,
                          directory=directory,
