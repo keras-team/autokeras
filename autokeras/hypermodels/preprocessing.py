@@ -100,47 +100,93 @@ class ImageAugmentation(block_module.Block):
     """Collection of various image augmentation methods.
 
     # Arguments
-        translation: Boolean. Whether to translate the image. Defaults to True.
-        horizontal_flip: Boolean. Whether to flip the image horizontally.
-            Defaults to True.
+        translation_factor: A positive float represented as fraction value, or a
+            tuple of 2 representing fraction for translation vertically and
+            horizontally.  For instance, `translation_factor=0.2` result in a random
+            translation factor within 20% of the width and height. Defaults to 0.5.
         vertical_flip: Boolean. Whether to flip the image vertically.
-            Defaults to True.
-        rotation_range: A positive float represented as fraction of 2pi, or a tuple
-            of size 2 representing lower and upper bound for rotating clockwise and
-            counter-clockwise. When represented as a single float, lower = upper.
-            Defaults to 0.5.
-        random_crop: Boolean. Whether to crop the image randomly. Default to True.
-        zoom_range: Boolean. A positive float represented as fraction value, or a
-            tuple of 2 representing fraction for zooming horizontally and vertically.
-            For instance, `zoom_range=0.2` result in a random zoom range from 80% to
+            If left unspecified, it will be tuned automatically.
+        horizontal_flip: Boolean. Whether to flip the image horizontally.
+            If left unspecified, it will be tuned automatically.
+        rotation_factor: Float. A positive float represented as fraction of 2pi
+            upper bound for rotating clockwise and counter-clockwise. When
+            represented as a single float, lower = upper.  Defaults to 0.5.
+        zoom_factor: A positive float represented as fraction value, or a tuple of 2
+            representing fraction for zooming vertically and horizontally. For
+            instance, `zoom_factor=0.2` result in a random zoom factor from 80% to
             120%. Defaults to 0.5.
-        contrast_range: A positive float represented as fraction of value, or a tuple
-            of size 2 representing lower and upper bound. When represented as a
+        contrast_factor: A positive float represented as fraction of value, or a
+            tuple of size 2 representing lower and upper bound. When represented as a
             single float, lower = upper. The contrast factor will be randomly picked
             between [1.0 - lower, 1.0 + upper]. Defaults to 0.5.
     """
 
     def __init__(self,
-                 translation=True,
-                 horizontal_flip=True,
-                 vertical_flip=True,
-                 rotation_range=0.5,
-                 random_crop=True,
-                 zoom_range=0.5,
-                 contrast_range=0.5,
+                 translation_factor=0.5,
+                 vertical_flip=None,
+                 horizontal_flip=None,
+                 rotation_factor=0.5,
+                 zoom_factor=0.5,
+                 contrast_factor=0.5,
                  **kwargs):
         super().__init__(**kwargs)
-        self.translation = translation,
-        self.horizontal_flip = horizontal_flip,
-        self.vertical_flip = vertical_flip,
-        self.rotation_range = rotation_range,
-        self.random_crop = random_crop,
-        self.zoom_range = zoom_range,
-        self.contrast_range = contrast_range,
+        self.translation_factor = translation_factor
+        self.horizontal_flip = horizontal_flip
+        self.vertical_flip = vertical_flip
+        self.rotation_factor = rotation_factor
+        self.zoom_factor = zoom_factor
+        self.contrast_factor = contrast_factor
         self.shape = None
 
+    @staticmethod
+    def _get_fraction_value(value):
+        if isinstance(value, tuple):
+            return value
+        return value, value
+
     def build(self, hp, inputs=None):
-        return inputs
+        input_node = nest.flatten(inputs)[0]
+        output_node = input_node
+
+        if self.translation_factor != 0 and self.translation_factor != (0, 0):
+            height_factor, width_factor = self._get_fraction_value(
+                self.translation_factor)
+            output_node = preprocessing.RandomTranslation(
+                height_factor, width_factor)(output_node)
+
+        horizontal_flip = self.horizontal_flip
+        if horizontal_flip is None:
+            horizontal_flip = hp.Boolean('horizontal_flip', default=True)
+        vertical_flip = self.vertical_flip
+        if self.vertical_flip is None:
+            vertical_flip = hp.Boolean('vertical_flip', default=True)
+        if not horizontal_flip and not vertical_flip:
+            flip_mode = ''
+        elif horizontal_flip and vertical_flip:
+            flip_mode = 'horizontal_and_vertical'
+        elif horizontal_flip and not vertical_flip:
+            flip_mode = 'horizontal'
+        elif not horizontal_flip and vertical_flip:
+            flip_mode = 'vertical'
+        if flip_mode != '':
+            output_node = preprocessing.RandomFlip(
+                mode=flip_mode)(output_node)
+
+        if self.rotation_factor != 0:
+            output_node = preprocessing.RandomRotation(
+                self.rotation_factor)(output_node)
+
+        if self.zoom_factor != 0 and self.zoom_factor != (0, 0):
+            height_factor, width_factor = self._get_fraction_value(
+                self.zoom_factor)
+            output_node = preprocessing.RandomZoom(
+                height_factor, width_factor)(output_node)
+
+        if self.contrast_factor != 0 and self.contrast_factor != (0, 0):
+            output_node = preprocessing.RandomContrast(
+                self.contrast_factor)(output_node)
+
+        return output_node
 
 
 class CategoricalToNumerical(block_module.Block):

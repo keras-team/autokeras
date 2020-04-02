@@ -23,6 +23,8 @@ IMAGE_CLASSIFIER = [{
     'image_block_1/block_type': 'resnet',
     'image_block_1/normalize': True,
     'image_block_1/augment': True,
+    'image_block_1/image_augmentation_1/horizontal_flip': True,
+    'image_block_1/image_augmentation_1/vertical_flip': True,
     'image_block_1/res_net_block_1/version': 'v2',
     'image_block_1/res_net_block_1/pooling': 'avg',
     'image_block_1/res_net_block_1/conv3_depth': 4,
