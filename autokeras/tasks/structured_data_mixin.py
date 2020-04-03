@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-class StructuredDataMixin(object.object):
+class StructuredDataMixin(object):
 
     def check(self, column_names, column_types):
         if column_types:
