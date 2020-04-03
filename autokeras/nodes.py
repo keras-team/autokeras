@@ -126,7 +126,7 @@ class TimeseriesInput(Input):
         self.column_types = column_types
 
     def build(self):
-        if(len(self.shape) == 1):
+        if len(self.shape) == 1:
             self.shape = (self.lookback, self.shape[0],)
         return tf.keras.Input(shape=self.shape, dtype=tf.float32)
 
