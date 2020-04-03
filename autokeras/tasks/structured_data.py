@@ -20,7 +20,7 @@ class SupervisedStructuredDataPipeline(StructuredDataMixin, auto_model.AutoModel
         inputs = input_module.StructuredDataInput()
         inputs.column_types = column_types
         inputs.column_names = column_names
-        self.check(column_types, column_types)
+        self.check(column_names, column_types)
         super().__init__(inputs=inputs,
                          outputs=outputs,
                          **kwargs)
