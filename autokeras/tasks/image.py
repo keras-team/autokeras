@@ -233,11 +233,9 @@ class ImageRegressor(SupervisedImagePipeline):
 
 class ImageSegmenter(SupervisedImagePipeline):
     """AutoKeras image segmentation class.
-
     # Arguments
         num_classes: Int. Defaults to None. If None, it will be inferred from the
             data.
-        multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
             'categorical_crossentropy' based on the number of classes.
         metrics: A list of metrics used to measure the accuracy of the model,
@@ -258,10 +256,9 @@ class ImageSegmenter(SupervisedImagePipeline):
 
     def __init__(self,
                  num_classes: Optional[int] = None,
-                 multi_label: bool = False,
                  loss: types.LossType = None,
                  metrics: Optional[types.MetricsType] = None,
-                 name: str = 'image_classifier',
+                 name: str = 'image_segmenter',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
@@ -269,7 +266,6 @@ class ImageSegmenter(SupervisedImagePipeline):
                  seed: Optional[int] = None):
         super().__init__(
             outputs=hypermodels.SegmenterHead(num_classes=num_classes,
-                                              multi_label=multi_label,
                                               loss=loss,
                                               metrics=metrics),
             max_trials=max_trials,
