@@ -40,10 +40,6 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         model.load_weights(self.best_model_path)
         return model
 
-    def run_trial(self, *args, **kwargs):
-        tf.keras.backend.clear_session()
-        super().run_trial(*args, **kwargs)
-
     def search(self,
                callbacks=None,
                fit_on_val_data=False,
