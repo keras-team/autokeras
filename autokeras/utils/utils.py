@@ -92,3 +92,8 @@ def adapt_model(model, dataset):
             layer.adapt(temp_x)
             layer = get_output_layer(layer.output)
     return model
+
+
+def contain_instance(instance_list, instance_type):
+    return any([isinstance(instance, instance_type)
+                for instance in instance_list])

@@ -5,6 +5,7 @@ import os
 import kerastuner
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras import callbacks as tf_callbacks
 
 from autokeras import graph as graph_module
 from autokeras.utils import utils
@@ -82,6 +83,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
             trial.trial_id, metrics=averaged_metrics, step=self._reported_step)
 
     def search(self,
+               epochs=None,
                callbacks=None,
                fit_on_val_data=False,
                **fit_kwargs):
@@ -99,29 +101,46 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
         if self._finished:
             return
 
-        # Insert early-stopping for acceleration.
-        if not callbacks:
+        if callbacks is None:
             callbacks = []
-        new_callbacks = self._deepcopy_callbacks(callbacks)
-        if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                    for callback in callbacks]):
-            new_callbacks.append(tf.keras.callbacks.EarlyStopping(patience=10))
 
-        super().search(callbacks=new_callbacks, **fit_kwargs)
+        # Insert early-stopping for adaptive number of epochs.
+        if epochs is None:
+            epochs = 1000
+            if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
+                callbacks.append(tf_callbacks.EarlyStopping(patience=10))
+
+        # Insert early-stopping for acceleration.
+        acceleration = False
+        new_callbacks = self._deepcopy_callbacks(callbacks)
+        if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
+            acceleration = True
+            new_callbacks.append(tf_callbacks.EarlyStopping(patience=10))
+
+        super().search(epochs=epochs, callbacks=new_callbacks, **fit_kwargs)
 
         # Fully train the best model with original callbacks.
-        if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                    for callback in callbacks]) or fit_on_val_data:
+        if acceleration or fit_on_val_data:
             if fit_on_val_data:
+                # Concatenate training and validation data.
                 fit_kwargs['x'] = fit_kwargs['x'].concatenate(
                     fit_kwargs['validation_data'])
-                fit_kwargs['callbacks'] = self._deepcopy_callbacks(callbacks)
+                fit_kwargs.pop('validation_data')
+                # Remove early-stopping since no validation data.
+                if utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
+                    fit_kwargs['callbacks'] = self._deepcopy_callbacks(callbacks)
+                    # Use best trial number of epochs.
+                    fit_kwargs['epochs'] = self._get_best_trial_epochs()
             model = self.final_fit(**fit_kwargs)
         else:
             model = self.get_best_models()[0]
 
         model.save_weights(self.best_model_path)
         self._finished = True
+
+    def _get_best_trial_epochs(self):
+        best_trial = self.oracle.get_best_trials(1)[0]
+        return len(best_trial.metrics['val_loss']._observations)
 
     def final_fit(self, x=None, **fit_kwargs):
         best_trial = self.oracle.get_best_trials(1)[0]

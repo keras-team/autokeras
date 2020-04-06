@@ -16,7 +16,7 @@ def test_add_early_stopping(fit_fn, base_tuner_search, tmp_path):
         hypermodel=graph,
         directory=tmp_path)
 
-    tuner.search(x=None)
+    tuner.search(x=None, epochs=10)
 
     callbacks = base_tuner_search.call_args_list[0][1]['callbacks']
     assert any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
@@ -32,6 +32,6 @@ def test_overwrite_search(fit_fn, base_tuner_search, tmp_path):
         hypermodel=graph,
         directory=tmp_path)
 
-    tuner.search()
+    tuner.search(epochs=10)
 
     assert tuner._finished
