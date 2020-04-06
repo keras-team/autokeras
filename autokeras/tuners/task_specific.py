@@ -42,6 +42,7 @@ TEXT_CLASSIFIER = [{
     'text_block_1/vectorizer': 'sequence',
     'classification_head_1/dropout_rate': 0,
     'optimizer': 'adam',
+    'text_block_1/max_tokens': 5000,
     'text_block_1/conv_block_1/separable': False,
     'text_block_1/text_to_int_sequence_1/output_sequence_length': 512,
     'text_block_1/embedding_1/pretraining': 'none',
