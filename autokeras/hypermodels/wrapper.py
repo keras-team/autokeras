@@ -81,8 +81,8 @@ class TextBlock(block_module.Block):
 
     def __init__(self,
                  max_tokens=None,
-                 vectorizer=None, 
-                 pretraining=None, 
+                 vectorizer=None,
+                 pretraining=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.max_tokens = max_tokens
