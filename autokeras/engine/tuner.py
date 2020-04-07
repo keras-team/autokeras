@@ -1,17 +1,15 @@
-import collections
 import copy
 import os
 
 import kerastuner
-import numpy as np
-import tensorflow as tf
+from kerastuner.engine import tuner_utils
 from tensorflow.keras import callbacks as tf_callbacks
 
 from autokeras import graph as graph_module
 from autokeras.utils import utils
 
 
-class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
+class AutoTuner(kerastuner.engine.tuner.Tuner):
     """A Tuner class based on KerasTuner for AutoKeras.
 
     Different from KerasTuner's Tuner class. AutoTuner's not only tunes the
@@ -46,41 +44,25 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
 
     def run_trial(self, trial, x=None, *fit_args, **fit_kwargs):
         # TODO: Remove this function after TF has fit-to-adapt feature.
-        model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
-            filepath=self._get_checkpoint_fname(
-                trial.trial_id, self._reported_step),
-            monitor=self.oracle.objective.name,
-            mode=self.oracle.objective.direction,
-            save_best_only=True,
-            save_weights_only=True)
-        original_callbacks = fit_kwargs.pop('callbacks', [])
-        # Run the training process multiple times.
-        metrics = collections.defaultdict(list)
-        for execution in range(self.executions_per_trial):
-            copied_fit_kwargs = copy.copy(fit_kwargs)
-            callbacks = self._deepcopy_callbacks(original_callbacks)
-            self._configure_tensorboard_dir(callbacks, trial.trial_id, execution)
-            callbacks.append(
-                kerastuner.engine.tuner_utils.TunerCallback(self, trial))
-            # Only checkpoint the best epoch across all executions.
-            callbacks.append(model_checkpoint)
-            copied_fit_kwargs['callbacks'] = callbacks
+        # Handle any callbacks passed to `fit`.
+        copied_fit_kwargs = copy.copy(fit_kwargs)
+        callbacks = fit_kwargs.pop('callbacks', [])
+        callbacks = self._deepcopy_callbacks(callbacks)
+        self._configure_tensorboard_dir(callbacks, trial.trial_id)
+        # `TunerCallback` calls:
+        # - `Tuner.on_epoch_begin`
+        # - `Tuner.on_batch_begin`
+        # - `Tuner.on_batch_end`
+        # - `Tuner.on_epoch_end`
+        # These methods report results to the `Oracle` and save the trained Model. If
+        # you are subclassing `Tuner` to write a custom training loop, you should
+        # make calls to these methods within `run_trial`.
+        callbacks.append(tuner_utils.TunerCallback(self, trial))
+        copied_fit_kwargs['callbacks'] = callbacks
 
-            model = self.hypermodel.build(trial.hyperparameters)
-            utils.adapt_model(model, x)
-            history = model.fit(x, *fit_args, **copied_fit_kwargs)
-            for metric, epoch_values in history.history.items():
-                if self.oracle.objective.direction == 'min':
-                    best_value = np.min(epoch_values)
-                else:
-                    best_value = np.max(epoch_values)
-                metrics[metric].append(best_value)
-        # Average the results across executions and send to the Oracle.
-        averaged_metrics = {}
-        for metric, execution_values in metrics.items():
-            averaged_metrics[metric] = np.mean(execution_values)
-        self.oracle.update_trial(
-            trial.trial_id, metrics=averaged_metrics, step=self._reported_step)
+        model = self.hypermodel.build(trial.hyperparameters)
+        utils.adapt_model(model, x)
+        model.fit(x, *fit_args, **copied_fit_kwargs)
 
     def search(self,
                epochs=None,
@@ -121,17 +103,21 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
 
         # Fully train the best model with original callbacks.
         if acceleration or fit_on_val_data:
+            copied_fit_kwargs = copy.copy(fit_kwargs)
             if fit_on_val_data:
                 # Concatenate training and validation data.
-                fit_kwargs['x'] = fit_kwargs['x'].concatenate(
+                copied_fit_kwargs['x'] = copied_fit_kwargs['x'].concatenate(
                     fit_kwargs['validation_data'])
-                fit_kwargs.pop('validation_data')
+                copied_fit_kwargs.pop('validation_data')
                 # Remove early-stopping since no validation data.
                 if utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
-                    fit_kwargs['callbacks'] = self._deepcopy_callbacks(callbacks)
+                    copied_fit_kwargs['callbacks'] = [
+                        copy.deepcopy(callbacks)
+                        for callback in callbacks
+                        if not isinstance(callback, tf_callbacks.EarlyStopping)]
                     # Use best trial number of epochs.
-                    fit_kwargs['epochs'] = self._get_best_trial_epochs()
-            model = self.final_fit(**fit_kwargs)
+                    copied_fit_kwargs['epochs'] = self._get_best_trial_epochs()
+            model = self.final_fit(**copied_fit_kwargs)
         else:
             model = self.get_best_models()[0]
 
@@ -140,7 +126,7 @@ class AutoTuner(kerastuner.engine.multi_execution_tuner.MultiExecutionTuner):
 
     def _get_best_trial_epochs(self):
         best_trial = self.oracle.get_best_trials(1)[0]
-        return len(best_trial.metrics['val_loss']._observations)
+        return len(best_trial.metrics.metrics['val_loss']._observations)
 
     def final_fit(self, x=None, **fit_kwargs):
         best_trial = self.oracle.get_best_trials(1)[0]

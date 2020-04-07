@@ -78,9 +78,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         for single_hp in self.override_hps:
             name = single_hp.name
             if name not in hp.values:
-                hp.register(single_hp.name,
-                            single_hp.__class__.__name__,
-                            single_hp.get_config())
+                hp._register(single_hp)
                 hp.values[name] = single_hp.default
 
     def _build_network(self):

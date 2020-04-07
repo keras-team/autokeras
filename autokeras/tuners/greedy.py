@@ -1,3 +1,4 @@
+import copy
 import random
 
 import kerastuner
@@ -123,8 +124,16 @@ class GreedyOracle(kerastuner.Oracle):
 
     def _populate_space(self, trial_id):
         if not all(self._tried_initial_hps):
+            values = self._next_initial_hps()
+            hp = self.get_space()
+            # while not all initial_hps are registered in hp.
+            while len(set(values.keys()) - set(hp.values.keys())) != 0:
+                hp.values = copy.copy(values)
+                self.hypermodel.build(hp)
+                self.update_space(hp)
+                hp = self.get_space()
             return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
-                    'values': self._next_initial_hps()}
+                    'values': values}
 
         stage = self._generate_stage()
         for _ in range(len(GreedyOracle.STAGES)):

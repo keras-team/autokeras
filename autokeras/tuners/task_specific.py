@@ -12,10 +12,6 @@ IMAGE_CLASSIFIER = [{
     'image_block_1/conv_block_1/dropout_rate': 0.25,
     'image_block_1/conv_block_1/filters_0_0': 32,
     'image_block_1/conv_block_1/filters_0_1': 64,
-    'dense_block_1/num_layers': 1,
-    'dense_block_1/use_batchnorm': False,
-    'dense_block_1/dropout_rate': 0,
-    'dense_block_1/units_0': 128,
     'classification_head_1/spatial_reduction_1/reduction_type': 'flatten',
     'classification_head_1/dropout_rate': 0.5,
     'optimizer': 'adam'
@@ -29,11 +25,6 @@ IMAGE_CLASSIFIER = [{
     'image_block_1/res_net_block_1/pooling': 'avg',
     'image_block_1/res_net_block_1/conv3_depth': 4,
     'image_block_1/res_net_block_1/conv4_depth': 6,
-    'dense_block_1/num_layers': 2,
-    'dense_block_1/use_batchnorm': False,
-    'dense_block_1/dropout_rate': 0,
-    'dense_block_1/units_0': 32,
-    'dense_block_1/units_1': 32,
     'classification_head_1/dropout_rate': 0,
     'optimizer': 'adam'
 }]

@@ -8,7 +8,7 @@ readme = this_file.parent / 'README.md'
 
 setup(
     name='autokeras',
-    version='1.0.2',
+    version='1.0.3',
     description='AutoML for deep learning',
     package_data={'': ['README.md']},
     long_description=readme.read_text(encoding='utf-8'),
@@ -20,7 +20,7 @@ setup(
     keywords=['AutoML', 'Keras'],
     install_requires=[
         'packaging',
-        'keras-tuner>=1.0.1',
+        # 'keras-tuner>=1.0.1',
         'scikit-learn',
         'numpy',
         'pandas',
