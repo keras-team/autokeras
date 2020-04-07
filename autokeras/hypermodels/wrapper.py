@@ -69,6 +69,8 @@ class TextBlock(block_module.Block):
     """Block for text data.
 
     # Arguments
+        max_tokens: Int. The maximum size of the vocabulary.
+            If left unspecified, it will be tuned automatically.
         vectorizer: String. 'sequence' or 'ngram'. If it is 'sequence',
             TextToIntSequence will be used. If it is 'ngram', TextToNgramVector will
             be used. If unspecified, it will be tuned automatically.
@@ -77,15 +79,22 @@ class TextBlock(block_module.Block):
             If left unspecified, it will be tuned automatically.
     """
 
-    def __init__(self, vectorizer=None, pretraining=None, **kwargs):
+    def __init__(self,
+                 max_tokens=None,
+                 vectorizer=None,
+                 pretraining=None,
+                 **kwargs):
         super().__init__(**kwargs)
+        self.max_tokens = max_tokens
         self.vectorizer = vectorizer
         self.pretraining = pretraining
 
     def get_config(self):
         config = super().get_config()
-        config.update({'vectorizer': self.vectorizer,
-                       'pretraining': self.pretraining})
+        config.update({
+            'max_tokens': self.max_tokens,
+            'vectorizer': self.vectorizer,
+            'pretraining': self.pretraining})
         return config
 
     def build(self, hp, inputs=None):
@@ -94,12 +103,18 @@ class TextBlock(block_module.Block):
         vectorizer = self.vectorizer or hp.Choice('vectorizer',
                                                   ['sequence', 'ngram'],
                                                   default='sequence')
+        max_tokens = self.max_tokens or hp.Choice('max_tokens',
+                                                  [500, 5000, 20000],
+                                                  default=5000)
         if vectorizer == 'ngram':
-            output_node = preprocessing.TextToNgramVector().build(hp, output_node)
+            output_node = preprocessing.TextToNgramVector(
+                max_tokens=max_tokens).build(hp, output_node)
             output_node = basic.DenseBlock().build(hp, output_node)
         else:
-            output_node = preprocessing.TextToIntSequence().build(hp, output_node)
+            output_node = preprocessing.TextToIntSequence(
+                max_tokens=max_tokens).build(hp, output_node)
             output_node = basic.Embedding(
+                max_features=max_tokens,
                 pretraining=self.pretraining).build(hp, output_node)
             output_node = basic.ConvBlock().build(hp, output_node)
             output_node = reduction.SpatialReduction().build(hp, output_node)

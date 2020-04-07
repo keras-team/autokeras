@@ -26,10 +26,12 @@ def test_image_regressor(tmp_path):
 
 def test_text_classifier(tmp_path):
     (train_x, train_y), (test_x, test_y) = utils.imdb_raw()
-    clf = ak.TextClassifier(directory=tmp_path, max_trials=2, seed=utils.SEED)
-    clf.fit(train_x, train_y, epochs=1, validation_data=(test_x, test_y))
+    clf = ak.TextClassifier(directory=tmp_path, max_trials=2, seed=utils.SEED,
+                            metrics=['accuracy'], objective='accuracy')
+    clf.fit(train_x, train_y, epochs=2, validation_data=(test_x, test_y))
     clf.export_model()
     assert clf.predict(test_x).shape == (len(test_x), 1)
+    assert clf.tuner._get_best_trial_epochs() == 2
 
 
 def test_text_regressor(tmp_path):

@@ -238,16 +238,6 @@ class AutoModel(object):
             validation_data=validation_data,
             validation_split=validation_split)
 
-        # Process the args.
-        if callbacks is None:
-            callbacks = []
-        if epochs is None:
-            epochs = 1000
-            if not any([isinstance(callback, tf.keras.callbacks.EarlyStopping)
-                        for callback in callbacks]):
-                callbacks = callbacks + [
-                    tf.keras.callbacks.EarlyStopping(patience=10)]
-
         dataset = dataset.batch(batch_size)
         validation_data = validation_data.batch(batch_size)
         self.tuner.search(x=dataset,
