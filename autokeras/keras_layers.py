@@ -124,21 +124,7 @@ class CategoricalEncodingCombiner(Combiner):
         pass
 
 
-class Sigmoid(tf.keras.layers.Layer):
-    """Sigmoid activation function."""
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def call(self, inputs):
-        return tf.keras.activations.sigmoid(inputs)
-
-    def compute_output_shape(self, input_shape):
-        return input_shape
-
-
 CUSTOM_OBJECTS = {
     'CategoricalEncoding': CategoricalEncoding,
-    'Sigmoid': Sigmoid,
     'Normalization': preprocessing.Normalization
 }
