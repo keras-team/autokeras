@@ -114,7 +114,7 @@ class TextBlock(block_module.Block):
             output_node = preprocessing.TextToIntSequence(
                 max_tokens=max_tokens).build(hp, output_node)
             output_node = basic.Embedding(
-                max_features=max_tokens,
+                max_features=max_tokens + 1,
                 pretraining=self.pretraining).build(hp, output_node)
             output_node = basic.ConvBlock().build(hp, output_node)
             output_node = reduction.SpatialReduction().build(hp, output_node)
