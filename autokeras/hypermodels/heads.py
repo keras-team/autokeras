@@ -208,8 +208,8 @@ class SegmentationHead(ClassificationHead):
                  **kwargs):
         super().__init__(loss=loss,
                          metrics=metrics,
-                         num_classes = num_classes,
-                         dropout_rate = dropout_rate,
+                         num_classes=num_classes,
+                         dropout_rate=dropout_rate,
                          **kwargs)
         self.num_classes = num_classes
         if not self.metrics:
@@ -225,8 +225,8 @@ class SegmentationHead(ClassificationHead):
 
     def build(self, hp, inputs=None):
         return super().build(
-            hp = hp,
-            inputs = inputs
+            hp=hp,
+            inputs=inputs
         )
 
     def get_adapter(self):

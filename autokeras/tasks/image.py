@@ -266,8 +266,8 @@ class ImageSegmenter(SupervisedImagePipeline):
                  seed: Optional[int] = None):
         super().__init__(
             outputs=hypermodels.SegmentationHead(num_classes=num_classes,
-                                              loss=loss,
-                                              metrics=metrics),
+                                                 loss=loss,
+                                                 metrics=metrics),
             max_trials=max_trials,
             directory=directory,
             name=name,

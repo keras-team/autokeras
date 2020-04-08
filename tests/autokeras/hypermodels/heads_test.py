@@ -1,12 +1,10 @@
 import kerastuner
 import numpy as np
-import autokeras as ak
 
-from autokeras import nodes as input_module
-from autokeras.hypermodels import basic
+import autokeras as ak
 from autokeras import graph as graph_module
+from autokeras import nodes as input_module
 from autokeras.hypermodels import heads as head_module
-from tests import utils
 
 
 def test_two_classes():
@@ -40,4 +38,3 @@ def test_segmentation():
 
     head = graph_module.deserialize(graph_module.serialize(head))
     head.build(hp, ak.Input(shape=input_shape).build())
-
