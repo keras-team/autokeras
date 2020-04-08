@@ -175,7 +175,7 @@ class RegressionHead(head_module.Head):
         return adapters.RegressionHeadAdapter(name=self.name)
 
 
-class SegmenterHead(head_module.Head):
+class SegmentationHead(ClassificationHead):
     """Classification Dense layers.
 
     Use sigmoid and binary crossentropy for binary element segmentation.
@@ -208,6 +208,8 @@ class SegmenterHead(head_module.Head):
                  **kwargs):
         super().__init__(loss=loss,
                          metrics=metrics,
+                         num_classes = num_classes,
+                         dropout_rate = dropout_rate,
                          **kwargs)
         self.num_classes = num_classes
         if not self.metrics:
@@ -216,51 +218,16 @@ class SegmenterHead(head_module.Head):
         self.set_loss()
 
     def set_loss(self):
-        if not self.num_classes:
-            return
-        if not self.loss:
-            if self.num_classes == 2:
-                self.loss = 'binary_crossentropy'
-            elif self.num_classes > 2:
-                self.loss = 'categorical_crossentropy'
+        super().set_loss()
 
     def get_config(self):
-        config = super().get_config()
-        config.update({
-            'num_classes': self.num_classes,
-            'dropout_rate': self.dropout_rate})
-        return config
+        return super().get_config()
 
     def build(self, hp, inputs=None):
-        if self.num_classes:
-            expected = self.num_classes if self.num_classes > 2 else 1
-            if self.output_shape[-1] != expected:
-                raise ValueError(
-                    'The data doesn\'t match the expected shape. '
-                    'Expecting {} but got {}'.format(expected,
-                                                     self.output_shape[-1]))
-        inputs = nest.flatten(inputs)
-        utils.validate_num_inputs(inputs, 1)
-        input_node = inputs[0]
-        output_node = input_node
-
-        # Reduce the tensor to a vector.
-        if len(output_node.shape) > 2:
-            output_node = reduction.SpatialReduction().build(hp, output_node)
-
-        if self.dropout_rate is not None:
-            dropout_rate = self.dropout_rate
-        else:
-            dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0)
-
-        if dropout_rate > 0:
-            output_node = layers.Dropout(dropout_rate)(output_node)
-        output_node = layers.Dense(self.output_shape[-1])(output_node)
-        if self.loss == 'binary_crossentropy':
-            output_node = keras_layers.Sigmoid(name=self.name)(output_node)
-        else:
-            output_node = layers.Softmax(name=self.name)(output_node)
-        return output_node
+        return super().build(
+            hp = hp,
+            inputs = inputs
+        )
 
     def get_adapter(self):
         return adapters.ClassificationHeadAdapter(name=self.name)

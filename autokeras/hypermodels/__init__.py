@@ -6,7 +6,7 @@ from autokeras.hypermodels.basic import RNNBlock
 from autokeras.hypermodels.basic import XceptionBlock
 from autokeras.hypermodels.heads import ClassificationHead
 from autokeras.hypermodels.heads import RegressionHead
-from autokeras.hypermodels.heads import SegmenterHead
+from autokeras.hypermodels.heads import SegmentationHead
 from autokeras.hypermodels.preprocessing import CategoricalToNumerical
 from autokeras.hypermodels.preprocessing import ImageAugmentation
 from autokeras.hypermodels.preprocessing import Normalization
