@@ -378,7 +378,7 @@ class Embedding(block_module.Block):
     """
 
     def __init__(self,
-                 max_features: int = 20000,
+                 max_features: int = 20001,
                  pretraining: Optional[str] = None,
                  embedding_dim: Optional[int] = None,
                  dropout_rate: Optional[float] = None,
