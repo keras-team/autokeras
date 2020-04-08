@@ -18,3 +18,4 @@ from autokeras.hypermodels.reduction import TemporalReduction
 from autokeras.hypermodels.wrapper import ImageBlock
 from autokeras.hypermodels.wrapper import StructuredDataBlock
 from autokeras.hypermodels.wrapper import TextBlock
+from autokeras.hypermodels.wrapper import TimeseriesBlock

@@ -9,28 +9,18 @@ import pandas as pd
 from autokeras import auto_model
 from autokeras import hypermodels
 from autokeras import nodes as input_module
+from autokeras.tasks.structured_data_mixin import StructuredDataMixin
 from autokeras.tuners import greedy
 from autokeras.utils import types
 
 
-class SupervisedStructuredDataPipeline(auto_model.AutoModel):
+class SupervisedStructuredDataPipeline(StructuredDataMixin, auto_model.AutoModel):
 
     def __init__(self, outputs, column_names, column_types, **kwargs):
         inputs = input_module.StructuredDataInput()
         inputs.column_types = column_types
         inputs.column_names = column_names
-        if column_types:
-            for column_type in column_types.values():
-                if column_type not in ['categorical', 'numerical']:
-                    raise ValueError(
-                        'Column_types should be either "categorical" '
-                        'or "numerical", but got {name}'.format(name=column_type))
-        if column_names and column_types:
-            for column_name in column_types:
-                if column_name not in column_names:
-                    raise ValueError('Column_names and column_types are '
-                                     'mismatched. Cannot find column name '
-                                     '{name} in the data.'.format(name=column_name))
+        self.check(column_names, column_types)
         super().__init__(inputs=inputs,
                          outputs=outputs,
                          **kwargs)
@@ -115,10 +105,7 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        if isinstance(x, str):
-            x = pd.read_csv(x)
-            if self._target_col_name in x:
-                x.pop(self._target_col_name)
+        x = self.read_for_predict(x)
 
         return super().predict(x=x,
                                batch_size=batch_size,

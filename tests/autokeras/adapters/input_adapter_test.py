@@ -203,10 +203,3 @@ def test_time_series_input_transform():
     x = input_node.transform(x)
     for row in x.as_numpy_iterator():
         assert row.ndim == 2
-
-    (x, _), _1 = utils.dataframe_dataframe()
-    input_node = input_adapter.TimeseriesInputAdapter(lookback=2)
-    x = input_node.fit_transform(x)
-    assert input_node.column_names[0] == 'sex'
-    for row in x.as_numpy_iterator():
-        assert row.ndim == 2

@@ -173,10 +173,19 @@ class StructuredDataBlock(block_module.Block):
         return output_node
 
 
-class TimeSeriesBlock(block_module.Block):
+class TimeseriesBlock(block_module.Block):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def get_config(self):
+        config = super().get_config()
+        return config
 
     def build(self, hp, inputs=None):
-        raise NotImplementedError
+        input_node = nest.flatten(inputs)[0]
+        output_node = input_node
+        output_node = basic.RNNBlock().build(hp, output_node)
+        return output_node
 
 
 class GeneralBlock(block_module.Block):
