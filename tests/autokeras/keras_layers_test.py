@@ -4,11 +4,11 @@ import tensorflow as tf
 from autokeras import keras_layers as layer_module
 
 
-def test_feature_encoder_layer():
+def test_feature_encoder_layer(tmp_path):
     data = np.array([['a', 'ab'], ['b', 'bc'], ['a', 'bc']])
 
     input_node = tf.keras.Input(shape=(2,), dtype=tf.string)
-    layer = layer_module.CategoricalEncoding([
+    layer = layer_module.MultiColumnCategoricalEncoding([
         layer_module.INT,
         layer_module.INT,
     ])
@@ -20,7 +20,7 @@ def test_feature_encoder_layer():
         (tf.data.Dataset.from_tensor_slices(data).batch(32),),
         (tf.data.Dataset.from_tensor_slices(np.random.rand(3, 1)).batch(32),),
     ))
-    layer.adapt(data)
+    layer.adapt(tf.data.Dataset.from_tensor_slices(data).batch(32))
 
     model.fit(data, np.random.rand(3, 1), epochs=1)
 
@@ -28,7 +28,6 @@ def test_feature_encoder_layer():
 
     model2 = tf.keras.Model(input_node, hidden_node)
     result = model2.predict(data)
-    print(result)
     assert result[0][0] == result[2][0]
     assert result[0][0] != result[1][0]
     assert result[0][1] != result[1][1]
