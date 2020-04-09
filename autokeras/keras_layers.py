@@ -49,7 +49,7 @@ class MultiColumnCategoricalEncoding(preprocessing.PreprocessingLayer):
         output_nodes = []
         for input_node, encoding_layer in zip(split_inputs, self.encoding_layers):
             if encoding_layer is None:
-                output_nodes.append(tf.cast(input_node, tf.float32))
+                output_nodes.append(tf.strings.to_number(input_node, tf.float32))
             else:
                 output_nodes.append(tf.cast(encoding_layer(input_node), tf.float32))
         return tf.keras.layers.Concatenate()(output_nodes)

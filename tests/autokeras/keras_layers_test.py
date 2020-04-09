@@ -5,12 +5,14 @@ from autokeras import keras_layers as layer_module
 
 
 def test_feature_encoder_layer(tmp_path):
-    data = np.array([['a', 'ab'], ['b', 'bc'], ['a', 'bc']])
+    data = np.array([['a', 'ab', 2.1], ['b', 'bc', 1.0], ['a', 'bc', 3.5]])
+    data2 = np.array([['a', 'ab', 2.1], ['x', 'bc', 1.0], ['a', 'bc', 3.5]])
 
-    input_node = tf.keras.Input(shape=(2,), dtype=tf.string)
+    input_node = tf.keras.Input(shape=(3,), dtype=tf.string)
     layer = layer_module.MultiColumnCategoricalEncoding([
         layer_module.INT,
         layer_module.INT,
+        layer_module.NONE,
     ])
     hidden_node = layer(input_node)
     output_node = tf.keras.layers.Dense(1, activation='sigmoid')(hidden_node)
@@ -28,6 +30,7 @@ def test_feature_encoder_layer(tmp_path):
 
     model2 = tf.keras.Model(input_node, hidden_node)
     result = model2.predict(data)
+    model2.predict(data2)
     assert result[0][0] == result[2][0]
     assert result[0][0] != result[1][0]
     assert result[0][1] != result[1][1]
