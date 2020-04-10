@@ -23,11 +23,16 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
     The fully trained model is the best model to be used by AutoModel.
 
     # Arguments
+        pipelines: An instance or a list of Pipeline corresponding to each of the
+            input node, which transforms tensorflow.data.Dataset instance using
+            tensorflow.data operations before feeding into the neural network.
+            Defaults to None, which does no transformations.
         **kwargs: The args supported by KerasTuner.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, pipelines=None, **kwargs):
         super().__init__(**kwargs)
+        self.pipelines = pipelines
         self._finished = False
         # Save or load the HyperModel.
         utils.save_json(os.path.join(self.project_dir, 'graph'),
@@ -42,8 +47,8 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         model.load_weights(self.best_model_path)
         return model
 
-    def run_trial(self, trial, x=None, *fit_args, **fit_kwargs):
-        # TODO: Remove this function after TF has fit-to-adapt feature.
+    def _super_run_trial(self, trial, x=None, *fit_args, **fit_kwargs):
+        # TODO: Remove this function after TF can adapt in fit.
         # Handle any callbacks passed to `fit`.
         copied_fit_kwargs = copy.copy(fit_kwargs)
         callbacks = fit_kwargs.pop('callbacks', [])
@@ -63,6 +68,15 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         model = self.hypermodel.build(trial.hyperparameters)
         utils.adapt_model(model, x)
         model.fit(x, *fit_args, **copied_fit_kwargs)
+
+    def run_trial(self, trial, x=None, *fit_args, **fit_kwargs):
+        self._super_run_trial(
+            trial=trial,
+            x=self.build_pipelines(trial.hyperparameters, x, **fit_kwargs),
+            **fit_kwargs)
+
+    def build_pipelines(self, hp, x, **fit_kwargs):
+        pass
 
     def search(self,
                epochs=None,

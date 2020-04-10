@@ -14,7 +14,8 @@ from autokeras import nodes as input_module
 from autokeras import tuners
 from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
-from autokeras.engine.tuner import AutoTuner
+from autokeras.engine import tuner
+from autokeras.engine import pipeline
 from autokeras.nodes import Input
 from autokeras.utils import data_utils
 
@@ -77,6 +78,10 @@ class AutoModel(object):
             The input node(s) of the AutoModel.
         outputs: A list of Node or Head instances.
             The output node(s) or head(s) of the AutoModel.
+        pipelines: An instance or a list of Pipeline corresponding to each of the
+            input node, which transforms tensorflow.data.Dataset instance using
+            tensorflow.data operations before feeding into the neural network.
+            Defaults to None, which does no transformations.
         name: String. The name of the AutoModel. Defaults to 'auto_model'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -97,11 +102,13 @@ class AutoModel(object):
     def __init__(self,
                  inputs: Union[Input, List[Input]],
                  outputs: Union[head_module.Head, node_module.Node, list],
+                 pipelines: Optional[
+                     Union[pipeline.Pipeline, List[pipeline.Pipeline]]] = None,
                  name: str = 'auto_model',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
-                 tuner: Union[str, Type[AutoTuner]] = 'greedy',
+                 tuner: Union[str, Type[tuner.AutoTuner]] = 'greedy',
                  overwrite: bool = False,
                  seed: Optional[int] = None):
         self.inputs = nest.flatten(inputs)
@@ -117,6 +124,7 @@ class AutoModel(object):
             tuner = get_tuner_class(tuner)
         self.tuner = tuner(
             hypermodel=graph,
+            pipelines=pipelines,
             overwrite=overwrite,
             objective=objective,
             max_trials=max_trials,
@@ -149,6 +157,10 @@ class AutoModel(object):
     @property
     def name(self):
         return self.tuner.project_name
+
+    @property
+    def pipelines(self):
+        return self.tuner.pipelines
 
     def _assemble(self):
         """Assemble the Blocks based on the input output nodes."""
