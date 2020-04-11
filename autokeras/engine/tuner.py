@@ -4,6 +4,7 @@ import os
 import kerastuner
 from kerastuner.engine import tuner_utils
 from tensorflow.keras import callbacks as tf_callbacks
+from tensorflow.python.util import nest
 
 from autokeras import graph as graph_module
 from autokeras.utils import utils
@@ -32,7 +33,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
     def __init__(self, pipelines=None, **kwargs):
         super().__init__(**kwargs)
-        self.pipelines = pipelines
+        self.pipelines = nest.flatten(pipelines)
         self._finished = False
         # Save or load the HyperModel.
         utils.save_json(os.path.join(self.project_dir, 'graph'),
@@ -69,15 +70,24 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         utils.adapt_model(model, x)
         model.fit(x, *fit_args, **copied_fit_kwargs)
 
-    def run_trial(self, trial, x=None, *fit_args, **fit_kwargs):
+    def run_trial(self, 
+                  trial, 
+                  x=None, 
+                  validation_data=None, 
+                  *fit_args, 
+                  **fit_kwargs):
+        x, validation_data = self.build_pipelines(
+            trial.hyperparameters, x, validation_data)
         self._super_run_trial(
             trial=trial,
-            x=self.build_pipelines(trial.hyperparameters, x, **fit_kwargs),
+            x=x,
+            validation_data=validation_data,
+            *fit_args,
             **fit_kwargs)
 
-    def build_pipelines(self, hp, x, **fit_kwargs):
+    def build_pipelines(self, hp, x=None, validation_data=None):
         # TODO: Split x and build the pipeline for each input node.
-        pass
+        return x, validation_data
 
     def search(self,
                epochs=None,
