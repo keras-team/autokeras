@@ -70,11 +70,11 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         utils.adapt_model(model, x)
         model.fit(x, *fit_args, **copied_fit_kwargs)
 
-    def run_trial(self, 
-                  trial, 
-                  x=None, 
-                  validation_data=None, 
-                  *fit_args, 
+    def run_trial(self,
+                  trial,
+                  x=None,
+                  validation_data=None,
+                  *fit_args,
                   **fit_kwargs):
         x, validation_data = self.build_pipelines(
             trial.hyperparameters, x, validation_data)
