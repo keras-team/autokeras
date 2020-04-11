@@ -76,6 +76,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             **fit_kwargs)
 
     def build_pipelines(self, hp, x, **fit_kwargs):
+        # TODO: Split x and build the pipeline for each input node.
         pass
 
     def search(self,

@@ -14,8 +14,8 @@ from autokeras import nodes as input_module
 from autokeras import tuners
 from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
-from autokeras.engine import tuner
 from autokeras.engine import pipeline
+from autokeras.engine import tuner
 from autokeras.nodes import Input
 from autokeras.utils import data_utils
 
