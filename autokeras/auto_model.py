@@ -77,7 +77,7 @@ class AutoModel(object):
             The input node(s) of the AutoModel.
         outputs: A list of Node or Head instances.
             The output node(s) or head(s) of the AutoModel.
-        name: String. The name of the AutoModel. Defaults to 'auto_model'.
+        project_name: String. The name of the AutoModel. Defaults to 'auto_model'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
@@ -92,18 +92,20 @@ class AutoModel(object):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        **kwargs: Any arguments supported by kerastuner.Tuner.
     """
 
     def __init__(self,
                  inputs: Union[Input, List[Input]],
                  outputs: Union[head_module.Head, node_module.Node, list],
-                 name: str = 'auto_model',
+                 project_name: str = 'auto_model',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  tuner: Union[str, Type[AutoTuner]] = 'greedy',
                  overwrite: bool = False,
-                 seed: Optional[int] = None):
+                 seed: Optional[int] = None,
+                 **kwargs):
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self.seed = seed
@@ -122,7 +124,8 @@ class AutoModel(object):
             max_trials=max_trials,
             directory=directory,
             seed=self.seed,
-            project_name=name)
+            project_name=project_name,
+            **kwargs)
         self._split_dataset = False
         self._heads = [output_node.in_blocks[0] for output_node in self.outputs]
         self._input_adapters = [input_node.get_adapter()
@@ -147,7 +150,7 @@ class AutoModel(object):
         return self.tuner.directory
 
     @property
-    def name(self):
+    def project_name(self):
         return self.tuner.project_name
 
     def _assemble(self):

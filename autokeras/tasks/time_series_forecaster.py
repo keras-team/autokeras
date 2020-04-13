@@ -125,7 +125,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
             N + predict_until. Defaults to 10.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
-        name: String. The name of the AutoModel. Defaults to
+        project_name: String. The name of the AutoModel. Defaults to
             'time_series_forecaster'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -138,6 +138,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        **kwargs: Any arguments supported by AutoModel.
     """
 
     def __init__(self,
@@ -149,12 +150,13 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
                  predict_until=10,
                  loss='mean_squared_error',
                  metrics=None,
-                 name='time_series_forecaster',
+                 project_name='time_series_forecaster',
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
                  overwrite=True,
-                 seed=None):
+                 seed=None,
+                 **kwargs):
         super().__init__(outputs=hypermodels.RegressionHead(output_dim=output_dim,
                                                             loss=loss,
                                                             metrics=metrics),
@@ -163,13 +165,14 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
                          lookback=lookback,
                          predict_from=predict_from,
                          predict_until=predict_until,
-                         name=name,
+                         project_name=project_name,
                          max_trials=max_trials,
                          directory=directory,
                          objective=objective,
                          tuner=greedy.Greedy,
                          overwrite=overwrite,
-                         seed=seed)
+                         seed=seed,
+                         **kwargs)
         self.lookback = lookback
         self.predict_from = predict_from
         self.predict_until = predict_until
@@ -310,7 +313,7 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
             N + predict_until. Defaults to 10.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
-        name: String. The name of the AutoModel. Defaults to
+        project_name: String. The name of the AutoModel. Defaults to
             'time_series_forecaster'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -323,6 +326,7 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        **kwargs: Any arguments supported by AutoModel.
     """
 
     def __init__(self,
@@ -334,12 +338,13 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
                  predict_until=10,
                  loss='mean_squared_error',
                  metrics=None,
-                 name='time_series_classifier',
+                 project_name='time_series_classifier',
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
                  overwrite=True,
-                 seed=None):
+                 seed=None,
+                 **kwargs):
         raise NotImplementedError
 
     def fit(self,

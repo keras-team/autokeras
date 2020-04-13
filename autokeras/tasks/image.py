@@ -32,7 +32,8 @@ class ImageClassifier(SupervisedImagePipeline):
         loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
             'categorical_crossentropy' based on the number of classes.
         metrics: A list of Keras metrics. Defaults to use 'accuracy'.
-        name: String. The name of the AutoModel. Defaults to 'image_classifier'.
+        project_name: String. The name of the AutoModel.
+            Defaults to 'image_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
@@ -44,6 +45,7 @@ class ImageClassifier(SupervisedImagePipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        **kwargs: Any arguments supported by AutoModel.
     """
 
     def __init__(self,
@@ -51,12 +53,13 @@ class ImageClassifier(SupervisedImagePipeline):
                  multi_label: bool = False,
                  loss: types.LossType = None,
                  metrics: Optional[types.MetricsType] = None,
-                 name: str = 'image_classifier',
+                 project_name: str = 'image_classifier',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  overwrite: bool = True,
-                 seed: Optional[int] = None):
+                 seed: Optional[int] = None,
+                 **kwargs):
         super().__init__(
             outputs=hypermodels.ClassificationHead(num_classes=num_classes,
                                                    multi_label=multi_label,
@@ -64,11 +67,12 @@ class ImageClassifier(SupervisedImagePipeline):
                                                    metrics=metrics),
             max_trials=max_trials,
             directory=directory,
-            name=name,
+            project_name=project_name,
             objective=objective,
             tuner=task_specific.ImageClassifierTuner,
             overwrite=overwrite,
-            seed=seed)
+            seed=seed,
+            **kwargs)
 
     def fit(
             self,
@@ -136,7 +140,8 @@ class ImageRegressor(SupervisedImagePipeline):
             If None, it will be inferred from the data.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
-        name: String. The name of the AutoModel. Defaults to 'image_regressor'.
+        project_name: String. The name of the AutoModel.
+            Defaults to 'image_regressor'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
@@ -148,29 +153,32 @@ class ImageRegressor(SupervisedImagePipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        **kwargs: Any arguments supported by AutoModel.
     """
 
     def __init__(self,
                  output_dim: Optional[int] = None,
                  loss: types.LossType = 'mean_squared_error',
                  metrics: Optional[types.MetricsType] = None,
-                 name: str = 'image_regressor',
+                 project_name: str = 'image_regressor',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  overwrite: bool = True,
-                 seed: Optional[int] = None):
+                 seed: Optional[int] = None,
+                 **kwargs):
         super().__init__(
             outputs=hypermodels.RegressionHead(output_dim=output_dim,
                                                loss=loss,
                                                metrics=metrics),
             max_trials=max_trials,
             directory=directory,
-            name=name,
+            project_name=project_name,
             objective=objective,
             tuner=greedy.Greedy,
             overwrite=overwrite,
-            seed=seed)
+            seed=seed,
+            **kwargs)
 
     def fit(
             self,
@@ -242,7 +250,8 @@ class ImageSegmenter(SupervisedImagePipeline):
             'categorical_crossentropy' based on the number of classes.
         metrics: A list of metrics used to measure the accuracy of the model,
             default to 'accuracy'.
-        name: String. The name of the AutoModel. Defaults to 'image_segmenter'.
+        project_name: String. The name of the AutoModel.
+            Defaults to 'image_segmenter'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
@@ -254,6 +263,7 @@ class ImageSegmenter(SupervisedImagePipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        **kwargs: Any arguments supported by AutoModel.
     """
 
     def __init__(self,
@@ -261,12 +271,13 @@ class ImageSegmenter(SupervisedImagePipeline):
                  multi_label: bool = False,
                  loss: types.LossType = None,
                  metrics: Optional[types.MetricsType] = None,
-                 name: str = 'image_classifier',
+                 project_name: str = 'image_classifier',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  overwrite: bool = True,
-                 seed: Optional[int] = None):
+                 seed: Optional[int] = None,
+                 **kwargs):
         super().__init__(
             outputs=hypermodels.SegmenterHead(num_classes=num_classes,
                                               multi_label=multi_label,
@@ -274,11 +285,12 @@ class ImageSegmenter(SupervisedImagePipeline):
                                               metrics=metrics),
             max_trials=max_trials,
             directory=directory,
-            name=name,
+            project_name=project_name,
             objective=objective,
             tuner=greedy.Greedy,
             overwrite=overwrite,
-            seed=seed)
+            seed=seed,
+            **kwargs)
 
     def fit(
             self,

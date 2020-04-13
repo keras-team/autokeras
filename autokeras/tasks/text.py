@@ -28,7 +28,8 @@ class TextClassifier(SupervisedTextPipeline):
         loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
             'categorical_crossentropy' based on the number of classes.
         metrics: A list of Keras metrics. Defaults to use 'accuracy'.
-        name: String. The name of the AutoModel. Defaults to 'text_classifier'.
+        project_name: String. The name of the AutoModel.
+            Defaults to 'text_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
@@ -40,6 +41,7 @@ class TextClassifier(SupervisedTextPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        **kwargs: Any arguments supported by AutoModel.
     """
 
     def __init__(self,
@@ -47,12 +49,13 @@ class TextClassifier(SupervisedTextPipeline):
                  multi_label: bool = False,
                  loss: types.LossType = None,
                  metrics: Optional[types.MetricsType] = None,
-                 name: str = 'text_classifier',
+                 project_name: str = 'text_classifier',
                  max_trials: int = 100,
                  directory: Union[str, pathlib.Path, None] = None,
                  objective: str = 'val_loss',
                  overwrite: bool = True,
-                 seed: Optional[int] = None):
+                 seed: Optional[int] = None,
+                 **kwargs):
         super().__init__(
             outputs=hypermodels.ClassificationHead(num_classes=num_classes,
                                                    multi_label=multi_label,
@@ -60,11 +63,12 @@ class TextClassifier(SupervisedTextPipeline):
                                                    metrics=metrics),
             max_trials=max_trials,
             directory=directory,
-            name=name,
+            project_name=project_name,
             objective=objective,
             tuner=task_specific.TextClassifierTuner,
             overwrite=overwrite,
-            seed=seed)
+            seed=seed,
+            **kwargs)
 
     def fit(self,
             x=None,
@@ -131,7 +135,8 @@ class TextRegressor(SupervisedTextPipeline):
             If None, it will be inferred from the data.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
-        name: String. The name of the AutoModel. Defaults to 'text_regressor'.
+        project_name: String. The name of the AutoModel.
+            Defaults to 'text_regressor'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
         directory: String. The path to a directory for storing the search outputs.
@@ -143,29 +148,32 @@ class TextRegressor(SupervisedTextPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        **kwargs: Any arguments supported by AutoModel.
     """
 
     def __init__(self,
                  output_dim=None,
                  loss='mean_squared_error',
                  metrics=None,
-                 name='text_regressor',
+                 project_name='text_regressor',
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
                  overwrite=True,
-                 seed=None):
+                 seed=None,
+                 **kwargs):
         super().__init__(
             outputs=hypermodels.RegressionHead(output_dim=output_dim,
                                                loss=loss,
                                                metrics=metrics),
             max_trials=max_trials,
             directory=directory,
-            name=name,
+            project_name=project_name,
             objective=objective,
             tuner=greedy.Greedy,
             overwrite=overwrite,
-            seed=seed)
+            seed=seed,
+            **kwargs)
 
     def fit(self,
             x=None,
