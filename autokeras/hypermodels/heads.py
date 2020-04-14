@@ -176,7 +176,7 @@ class RegressionHead(head_module.Head):
 
 
 class SegmentationHead(ClassificationHead):
-    """Classification Dense layers.
+    """Segmentation layers.
 
     Use sigmoid and binary crossentropy for binary element segmentation.
     Use softmax and categorical crossentropy for multi-class
@@ -211,28 +211,39 @@ class SegmentationHead(ClassificationHead):
                          num_classes=num_classes,
                          dropout_rate=dropout_rate,
                          **kwargs)
-        self.num_classes = num_classes
-        if not self.metrics:
-            self.metrics = ['accuracy']
-        self.dropout_rate = dropout_rate
-        self.set_loss()
 
-    def set_loss(self):
-        super().set_loss()
+    def build(self, hp, inputs):
+        """
+         # Arguments
+             inputs1: Tensor. Encoder layer's output.
+             inputs2: Tensor. Decoder layer's input.
+         """
+        if self.num_classes:
+            expected = self.num_classes if self.num_classes > 2 else 1
+            if self.output_shape[-1] != expected:
+                raise ValueError(
+                    'The data doesn\'t match the expected shape. '
+                    'Expecting {} but got {}'.format(expected,
+                                                     self.output_shape[-1]))
+        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
+                                                      [0.0, 0.25, 0.5],
+                                                      default=0)
 
-    def get_config(self):
-        return super().get_config()
-
-    def build(self, hp, inputs=None):
-        return super().build(
-            hp=hp,
-            inputs=inputs
-        )
+        if dropout_rate > 0:
+            output_node = layers.Dropout(dropout_rate)(inputs)
+            # Up convolution which restores the original image size
+            output_node = layers.Conv2DTranspose(21, kernel_size=(16, 16),
+                                                 strides=(8, 8),
+                                                 padding="valid",
+                                                 activation=None,
+                                                 name="upsample")(output_node)
+        else:
+            output_node = layers.Conv2DTranspose(21, kernel_size=(16, 16),
+                                                 strides=(8, 8),
+                                                 padding="valid",
+                                                 activation=None,
+                                                 name="upsample")(inputs)
+        return output_node
 
     def get_adapter(self):
-        return adapters.ClassificationHeadAdapter(name=self.name)
-
-    def config_from_adapter(self, adapter):
-        super().config_from_adapter(adapter)
-        self.num_classes = adapter.num_classes
-        self.set_loss()
+        return adapters.SegmentationHeadAdapter(name=self.name)

@@ -29,12 +29,11 @@ def test_three_classes():
 
 def test_segmentation():
     y = np.array(['a', 'a', 'c', 'b'])
-    input_shape = (32,)
-    head = head_module.SegmentationHead()
+    head = head_module.SegmentationHead(name='a')
     adapter = head.get_adapter()
     adapter.fit_transform(y)
     head.config_from_adapter(adapter)
+    input_shape = (64, 64, 21)
     hp = kerastuner.HyperParameters()
-
     head = graph_module.deserialize(graph_module.serialize(head))
     head.build(hp, ak.Input(shape=input_shape).build())
