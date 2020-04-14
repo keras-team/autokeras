@@ -258,7 +258,7 @@ class ImageSegmenter(SupervisedImagePipeline):
                  num_classes: Optional[int] = None,
                  loss: types.LossType = None,
                  metrics: Optional[types.MetricsType] = None,
-                 name: str = 'image_segmenter',
+                 name: str = 'image_classifier',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
