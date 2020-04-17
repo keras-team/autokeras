@@ -68,7 +68,7 @@ class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel
                                  batch_size=batch_size,
                                  **kwargs)
         lower_bound = self.train_len + self.predict_from
-        if(self.predict_until == None):
+        if self.predict_until is None:
             self.predict_until = len(y_pred)
         upper_bound = min(self.train_len + self.predict_until + 1, len(y_pred))
         return y_pred[lower_bound:upper_bound]
