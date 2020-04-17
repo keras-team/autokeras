@@ -212,7 +212,7 @@ class SegmentationHead(ClassificationHead):
                          dropout_rate=dropout_rate,
                          **kwargs)
 
-    def build(self, hp,inputs):
+    def build(self, hp, inputs):
         return inputs
 
     def get_adapter(self):
