@@ -212,38 +212,8 @@ class SegmentationHead(ClassificationHead):
                          dropout_rate=dropout_rate,
                          **kwargs)
 
-    def build(self, hp, inputs):
-        """
-         # Arguments
-             inputs1: Tensor. Encoder layer's output.
-             inputs2: Tensor. Decoder layer's input.
-         """
-        if self.num_classes:
-            expected = self.num_classes if self.num_classes > 2 else 1
-            if self.output_shape[-1] != expected:
-                raise ValueError(
-                    'The data doesn\'t match the expected shape. '
-                    'Expecting {} but got {}'.format(expected,
-                                                     self.output_shape[-1]))
-        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
-                                                      [0.0, 0.25, 0.5],
-                                                      default=0)
-
-        if dropout_rate > 0:
-            output_node = layers.Dropout(dropout_rate)(inputs)
-            # Up convolution which restores the original image size
-            output_node = layers.Conv2DTranspose(21, kernel_size=(16, 16),
-                                                 strides=(8, 8),
-                                                 padding="valid",
-                                                 activation=None,
-                                                 name="upsample")(output_node)
-        else:
-            output_node = layers.Conv2DTranspose(21, kernel_size=(16, 16),
-                                                 strides=(8, 8),
-                                                 padding="valid",
-                                                 activation=None,
-                                                 name="upsample")(inputs)
-        return output_node
+    def build(self, hp,inputs):
+        return inputs
 
     def get_adapter(self):
         return adapters.SegmentationHeadAdapter(name=self.name)
