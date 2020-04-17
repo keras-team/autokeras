@@ -15,7 +15,7 @@ class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel
                  column_types=None,
                  lookback=None,
                  predict_from=1,
-                 predict_until=10,
+                 predict_until=None,
                  **kwargs):
         inputs = input_module.TimeseriesInput(lookback=lookback,
                                               column_names=column_names,
@@ -68,6 +68,8 @@ class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel
                                  batch_size=batch_size,
                                  **kwargs)
         lower_bound = self.train_len + self.predict_from
+        if self.predict_until is None:
+            self.predict_until = len(y_pred)
         upper_bound = min(self.train_len + self.predict_until + 1, len(y_pred))
         return y_pred[lower_bound:upper_bound]
 
@@ -122,7 +124,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
         predict_until: Int. The end point of the forecast for each sample (in number
             of steps) after the last time step in the input. If N is the last step in
             the input, then the last step of the predicted output will be
-            N + predict_until. Defaults to 10.
+            N + predict_until. Defaults to None.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         project_name: String. The name of the AutoModel. Defaults to
@@ -147,7 +149,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
                  column_types=None,
                  lookback=None,
                  predict_from=1,
-                 predict_until=10,
+                 predict_until=None,
                  loss='mean_squared_error',
                  metrics=None,
                  project_name='time_series_forecaster',
@@ -310,7 +312,7 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
         predict_until: Int. The end point of the forecast for each sample (in number
             of steps) after the last time step in the input. If N is the last step in
             the input, then the last step of the predicted output will be
-            N + predict_until. Defaults to 10.
+            N + predict_until. Defaults to None.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         project_name: String. The name of the AutoModel. Defaults to
@@ -335,7 +337,7 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
                  column_types=None,
                  lookback=None,
                  predict_from=1,
-                 predict_until=10,
+                 predict_until=None,
                  loss='mean_squared_error',
                  metrics=None,
                  project_name='time_series_classifier',
