@@ -27,7 +27,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         pipelines: An instance or a list of Pipeline corresponding to each of the
             input node, which transforms tensorflow.data.Dataset instance using
             tensorflow.data operations before feeding into the neural network.
-            Defaults to None, which does no transformations.
+            Defaults to None.
         **kwargs: The args supported by KerasTuner.
     """
 
