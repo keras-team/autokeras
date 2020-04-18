@@ -1,10 +1,10 @@
 from typing import Optional
 
+from tensorflow.keras import activations
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
 from autokeras import adapters
-from autokeras import keras_layers
 from autokeras.engine import head as head_module
 from autokeras.hypermodels import reduction
 from autokeras.utils import types
@@ -96,7 +96,8 @@ class ClassificationHead(head_module.Head):
             output_node = layers.Dropout(dropout_rate)(output_node)
         output_node = layers.Dense(self.output_shape[-1])(output_node)
         if self.loss == 'binary_crossentropy':
-            output_node = keras_layers.Sigmoid(name=self.name)(output_node)
+            output_node = layers.Activation(activations.sigmoid,
+                                            name=self.name)(output_node)
         else:
             output_node = layers.Softmax(name=self.name)(output_node)
         return output_node

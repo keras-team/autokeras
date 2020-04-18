@@ -207,4 +207,4 @@ class CategoricalToNumerical(block_module.Block):
                 encoding.append(keras_layers.INT)
             else:
                 encoding.append(keras_layers.NONE)
-        return keras_layers.CategoricalEncoding(encoding)(input_node)
+        return keras_layers.MultiColumnCategoricalEncoding(encoding)(input_node)
