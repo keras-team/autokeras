@@ -7,3 +7,4 @@ from autokeras.adapters.input_adapter import TextInputAdapter
 from autokeras.adapters.input_adapter import TimeseriesInputAdapter
 from autokeras.adapters.output_adapter import ClassificationHeadAdapter
 from autokeras.adapters.output_adapter import RegressionHeadAdapter
+from autokeras.adapters.output_adapter import SegmentationHeadAdapter

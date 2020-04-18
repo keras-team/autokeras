@@ -156,7 +156,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
         loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
             'categorical_crossentropy' based on the number of classes.
         metrics: A list of Keras metrics. Defaults to use 'accuracy'.
-        name: String. The name of the AutoModel. Defaults to
+        project_name: String. The name of the AutoModel. Defaults to
             'structured_data_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -169,6 +169,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        **kwargs: Any arguments supported by AutoModel.
     """
 
     def __init__(self,
@@ -178,12 +179,13 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                  multi_label=False,
                  loss=None,
                  metrics=None,
-                 name='structured_data_classifier',
+                 project_name='structured_data_classifier',
                  max_trials=100,
                  directory=None,
                  objective='val_accuracy',
                  overwrite=True,
-                 seed=None):
+                 seed=None,
+                 **kwargs):
         super().__init__(
             outputs=hypermodels.ClassificationHead(num_classes=num_classes,
                                                    multi_label=multi_label,
@@ -193,11 +195,12 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             column_types=column_types,
             max_trials=max_trials,
             directory=directory,
-            name=name,
+            project_name=project_name,
             objective=objective,
             tuner=greedy.Greedy,
             overwrite=overwrite,
-            seed=seed)
+            seed=seed,
+            **kwargs)
 
     def fit(self,
             x=None,
@@ -263,7 +266,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             If None, it will be inferred from the data.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
-        name: String. The name of the AutoModel. Defaults to
+        project_name: String. The name of the AutoModel. Defaults to
             'structured_data_regressor'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -276,6 +279,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        **kwargs: Any arguments supported by AutoModel.
     """
 
     def __init__(self,
@@ -284,12 +288,13 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
                  output_dim: Optional[int] = None,
                  loss: types.LossType = 'mean_squared_error',
                  metrics: Optional[types.MetricsType] = None,
-                 name: str = 'structured_data_regressor',
+                 project_name: str = 'structured_data_regressor',
                  max_trials: int = 100,
                  directory: Union[str, pathlib.Path, None] = None,
                  objective: str = 'val_loss',
                  overwrite: bool = True,
-                 seed: Optional[int] = None):
+                 seed: Optional[int] = None,
+                 **kwargs):
         super().__init__(
             outputs=hypermodels.RegressionHead(output_dim=output_dim,
                                                loss=loss,
@@ -298,8 +303,9 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             column_types=column_types,
             max_trials=max_trials,
             directory=directory,
-            name=name,
+            project_name=project_name,
             objective=objective,
             tuner=greedy.Greedy,
             overwrite=overwrite,
-            seed=seed)
+            seed=seed,
+            **kwargs)
