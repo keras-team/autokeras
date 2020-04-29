@@ -24,16 +24,15 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
     The fully trained model is the best model to be used by AutoModel.
 
     # Arguments
-        pipelines: An instance or a list of Pipeline corresponding to each of the
-            input node, which transforms tensorflow.data.Dataset instance using
-            tensorflow.data operations before feeding into the neural network.
-            Defaults to None.
+        preprocessors: An instance or list of Pipeline objects corresponding to each
+            AutoModel input, to preprocess a tf.data.Dataset before passing it to the
+            model. Defaults to None (no external preprocessing).
         **kwargs: The args supported by KerasTuner.
     """
 
-    def __init__(self, pipelines=None, **kwargs):
+    def __init__(self, preprocessors=None, **kwargs):
         super().__init__(**kwargs)
-        self.pipelines = nest.flatten(pipelines)
+        self.preprocessors = nest.flatten(preprocessors)
         self._finished = False
         # Save or load the HyperModel.
         utils.save_json(os.path.join(self.project_dir, 'graph'),
@@ -76,7 +75,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
                   validation_data=None,
                   *fit_args,
                   **fit_kwargs):
-        x, validation_data = self.build_pipelines(
+        x, validation_data = self.build_preprocessors(
             trial.hyperparameters, x, validation_data)
         self._super_run_trial(
             trial=trial,
@@ -85,8 +84,8 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             *fit_args,
             **fit_kwargs)
 
-    def build_pipelines(self, hp, x=None, validation_data=None):
-        # TODO: Split x and build the pipeline for each input node.
+    def build_preprocessors(self, hp, x=None, validation_data=None):
+        # TODO: Split x and build the preprocessor for each input node.
         return x, validation_data
 
     def search(self,
