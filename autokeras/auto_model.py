@@ -103,7 +103,7 @@ class AutoModel(object):
                  inputs: Union[Input, List[Input]],
                  outputs: Union[head_module.Head, node_module.Node, list],
                  preprocessors: Optional[
-                     Union[preprocessor.Preprocessor, 
+                     Union[preprocessor.Preprocessor,
                            List[preprocessor.Preprocessor]]] = None,
                  project_name: str = 'auto_model',
                  max_trials: int = 100,
