@@ -7,7 +7,7 @@ class Preprocessor(kerastuner.HyperModel, serializable.Serializable):
     """Input data preprocessor search space.
 
     This class defines the search space for input data preprocessor. A
-    preprocessor transoforms the dataset using `tf.data` operations.
+    preprocessor transforms the dataset using `tf.data` operations.
     """
 
     def build(self, hp, x):
