@@ -78,9 +78,9 @@ class AutoModel(object):
             The input node(s) of the AutoModel.
         outputs: A list of Node or Head instances.
             The output node(s) or head(s) of the AutoModel.
-        preprocessors: An instance or list of Pipeline objects corresponding to each
-            AutoModel input, to preprocess a tf.data.Dataset before passing it to the
-            model. Defaults to None (no external preprocessing).
+        preprocessors: An instance or list of `Preprocessor` objects corresponding to
+            each AutoModel input, to preprocess a `tf.data.Dataset` before passing it
+            to the model. Defaults to None (no external preprocessing).
         project_name: String. The name of the AutoModel. Defaults to 'auto_model'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.

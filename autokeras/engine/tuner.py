@@ -24,9 +24,9 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
     The fully trained model is the best model to be used by AutoModel.
 
     # Arguments
-        preprocessors: An instance or list of Pipeline objects corresponding to each
-            AutoModel input, to preprocess a tf.data.Dataset before passing it to the
-            model. Defaults to None (no external preprocessing).
+        preprocessors: An instance or list of `Preprocessor` objects corresponding to
+            each AutoModel input, to preprocess a `tf.data.Dataset` before passing it
+            to the model. Defaults to None (no external preprocessing).
         **kwargs: The args supported by KerasTuner.
     """
 

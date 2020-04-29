@@ -7,17 +7,18 @@ class Preprocessor(kerastuner.HyperModel, serializable.Serializable):
     """Input data preprocessor search space.
 
     This class defines the search space for input data preprocessor. A
-    preprocessor transoforms the dataset using tensorflow.data operations.
+    preprocessor transoforms the dataset using `tf.data` operations.
     """
 
     def build(self, hp, x):
-        """Build the tensorflow.data input preprocessor.
+        """Build the `tf.data` input preprocessor.
 
         # Arguments
-            hp: HyperParameters. The hyperparameters for building the model.
-            x: An instance of tensorflow.data.Dataset.
+            hp: `HyperParameters` instance. The hyperparameters for building the
+                model.
+            x: `tf.data.Dataset` instance. The input data for preprocessing.
 
         # Returns
-            tensorflow.data.Dataset instance.
+            `tf.data.Dataset`. The preprocessed data to pass to the model.
         """
         raise NotImplementedError
