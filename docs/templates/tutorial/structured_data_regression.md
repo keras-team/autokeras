@@ -19,6 +19,8 @@ dataset.tail()
 
 Make all but the last feature ('Origin') numerical.
 ```python
+column_names.remove('MPG')
+data_cols =column_names 
 data_type = (len(data_cols)-1) * ['numerical'] + ['categorical']
 data_type = dict(zip(data_cols, data_type))
 ```
@@ -32,7 +34,7 @@ train_dataset.describe()
 ```python
 import autokeras as ak
 
-regressor = ak.StructuredDataRegressor(max_trials=100, column_names=None, column_types=data_type)
+regressor = ak.StructuredDataRegressor(max_trials=100, column_names=data_cols, column_types=data_type)
 regressor.fit(x=train_dataset.drop(columns=['MPG']), y=train_dataset['MPG'])
 # Evaluate the accuracy of the found model.
 print('Accuracy: {accuracy}'.format(
