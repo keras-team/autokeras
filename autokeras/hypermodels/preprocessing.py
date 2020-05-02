@@ -179,8 +179,9 @@ class ImageAugmentation(block_module.Block):
         if self.zoom_factor != 0 and self.zoom_factor != (0, 0):
             height_factor, width_factor = self._get_fraction_value(
                 self.zoom_factor)
-            output_node = preprocessing.RandomZoom(
-                height_factor, width_factor)(output_node)
+            # TODO: Add back RandomZoom when it is ready.
+            # output_node = preprocessing.RandomZoom(
+            # height_factor, width_factor)(output_node)
 
         if self.contrast_factor != 0 and self.contrast_factor != (0, 0):
             output_node = preprocessing.RandomContrast(
