@@ -66,7 +66,7 @@ PAGES = {
         'autokeras.StructuredDataInput',
         'autokeras.TextInput',
     ],
-    'block.md': [
+    'network.md': [
         'autokeras.ConvBlock',
         'autokeras.DenseBlock',
         'autokeras.Embedding',
@@ -80,7 +80,7 @@ PAGES = {
         'autokeras.StructuredDataBlock',
         'autokeras.TextBlock',
     ],
-    'preprocessor.md': [
+    'preprocessing.md': [
         'autokeras.ImageAugmentation',
         'autokeras.Normalization',
         'autokeras.TextToIntSequence',
