@@ -39,14 +39,16 @@ Please follow the [installation guide](https://autokeras.com/install) for more d
 **Note:** Currently, AutoKeras is only compatible with **Python >= 3.5** and **TensorFlow >= 2.1.0**.
 
 ## Community
-**Slack**:
+
+
+### <img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/slack.svg" width="20px">  Slack
 [Request an invitation](https://keras-slack-autojoin.herokuapp.com/).
 Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel for communication.
 
-**Twitter**:
+### <img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/twitter.svg" width="20px">  Twitter:
 You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
 
-**Newsletter**:
+### <img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/gmail.svg" width="20px">  Newsletter:
 Subscribe our [email list](https://groups.google.com/forum/#!forum/autokeras-announce/join) to receive newsletter and announcements.
 
 ## Contributing
