@@ -37,4 +37,5 @@ from autokeras.tasks import TextRegressor
 from autokeras.tasks import TimeseriesForecaster
 from autokeras.utils.utils import check_tf_version
 
+__version__ = '1.0.3'
 check_tf_version()
