@@ -94,6 +94,14 @@ PAGES = {
 }
 
 
+aliases_needed = [
+    'tensorflow.keras.callbacks.Callback',
+    'tensorflow.keras.losses.Loss',
+    'tensorflow.keras.metrics.Metric',
+    'tensorflow.data.Dataset'
+]
+
+
 ROOT = 'http://autokeras.com/'
 
 autokeras_dir = pathlib.Path(__file__).resolve().parents[1]
@@ -113,6 +121,7 @@ def generate(dest_dir):
         'https://github.com/keras-team/autokeras/blob/master',
         template_dir,
         autokeras_dir / 'examples',
+        extra_aliases=aliases_needed,
     )
     doc_generator.generate(dest_dir)
     readme = (autokeras_dir / 'README.md').read_text()
