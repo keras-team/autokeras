@@ -368,7 +368,7 @@ class Embedding(block_module.Block):
 
     # Arguments
         max_features: Int. Size of the vocabulary. Must be set if not using
-            TextToIntSequence before this block. Defaults to 20000.
+            TextToIntSequence before this block. Defaults to 20001.
         pretraining: String. 'random' (use random weights instead any pretrained
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
