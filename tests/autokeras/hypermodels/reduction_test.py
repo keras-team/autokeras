@@ -1,41 +1,31 @@
-import kerastuner
+import tensorflow as tf
 
-import autokeras as ak
-from autokeras import graph as graph_module
 from autokeras.hypermodels import reduction
-from tests import utils
+from tests.autokeras.hypermodels import utils
 
 
 def test_merge():
-    input_shape_1 = (32,)
-    input_shape_2 = (4, 8)
-    block = reduction.Merge()
-    hp = kerastuner.HyperParameters()
-
-    block = graph_module.deserialize(graph_module.serialize(block))
-    block.build(hp, [ak.Input(shape=input_shape_1).build(),
-                     ak.Input(shape=input_shape_2).build()])
-
-    assert utils.name_in_hps('merge_type', hp)
+    utils.block_basic_exam(
+        reduction.Merge(),
+        [
+            tf.keras.Input(shape=(32,), dtype=tf.float32),
+            tf.keras.Input(shape=(4, 8), dtype=tf.float32),
+        ],
+        ['merge_type'],
+    )
 
 
 def test_temporal_reduction():
-    input_shape = (32, 10)
-    block = reduction.TemporalReduction()
-    hp = kerastuner.HyperParameters()
-
-    block = graph_module.deserialize(graph_module.serialize(block))
-    block.build(hp, ak.Input(shape=input_shape).build())
-
-    assert utils.name_in_hps('reduction_type', hp)
+    utils.block_basic_exam(
+        reduction.TemporalReduction(),
+        tf.keras.Input(shape=(32, 10), dtype=tf.float32),
+        ['reduction_type'],
+    )
 
 
 def test_spatial_reduction():
-    input_shape = (32, 32, 3)
-    block = reduction.SpatialReduction()
-    hp = kerastuner.HyperParameters()
-
-    block = graph_module.deserialize(graph_module.serialize(block))
-    block.build(hp, ak.Input(shape=input_shape).build())
-
-    assert utils.name_in_hps('reduction_type', hp)
+    utils.block_basic_exam(
+        reduction.SpatialReduction(),
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        ['reduction_type'],
+    )

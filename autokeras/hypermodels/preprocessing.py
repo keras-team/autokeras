@@ -1,4 +1,6 @@
 from typing import Optional
+from typing import Tuple
+from typing import Union
 
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
@@ -76,23 +78,37 @@ class TextToNgramVector(block_module.Block):
 
     # Arguments
         max_tokens: Int. The maximum size of the vocabulary. Defaults to 20000.
+        ngrams: Int or tuple of ints. Passing an integer will create ngrams up to
+            that integer, and passing a tuple of integers will create ngrams for the
+            specified values in the tuple. If left unspecified, it will be tuned
+            automatically.
     """
 
     def __init__(self,
                  max_tokens: int = 20000,
+                 ngrams: Union[int, Tuple[int], None] = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.max_tokens = max_tokens
+        self.ngrams = ngrams
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
+        if self.ngrams is not None:
+            ngrams = self.ngrams
+        else:
+            ngrams = hp.Int('ngrams', min_value=1, max_value=3)
         return preprocessing.TextVectorization(
             max_tokens=self.max_tokens,
+            ngrams=ngrams,
             output_mode='tf-idf')(input_node)
 
     def get_config(self):
         config = super().get_config()
-        config.update({'max_tokens': self.max_tokens})
+        config.update({
+            'max_tokens': self.max_tokens,
+            'ngrams': self.ngrams,
+        })
         return config
 
 
