@@ -142,10 +142,21 @@ class StructuredDataBlock(block_module.Block):
         self.column_types = None
         self.column_names = None
 
+    @classmethod
+    def from_config(cls, config):
+        column_types = config.pop('column_types')
+        column_names = config.pop('column_names')
+        instance = cls(**config)
+        instance.column_types = column_types
+        instance.column_names = column_names
+        return instance
+
     def get_config(self):
         config = super().get_config()
         config.update({'categorical_encoding': self.categorical_encoding,
-                       'seed': self.seed})
+                       'seed': self.seed,
+                       'column_types': self.column_types,
+                       'column_names': self.column_names})
         return config
 
     def build_categorical_encoding(self, hp, input_node):

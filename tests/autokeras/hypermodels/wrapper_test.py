@@ -1,70 +1,56 @@
-import kerastuner
 import tensorflow as tf
+from tensorflow.python.util import nest
 
-import autokeras as ak
 from autokeras import adapters
-from autokeras import graph as graph_module
 from autokeras.hypermodels import wrapper
-from tests import utils
+from tests.autokeras.hypermodels import utils
 
 
 def test_image_block():
-    block = wrapper.ImageBlock(normalize=None, augment=None)
-    hp = kerastuner.HyperParameters()
-
-    block = graph_module.deserialize(graph_module.serialize(block))
-    block.build(hp, ak.ImageInput(shape=(32, 32, 3)).build())
-
-    assert utils.name_in_hps('block_type', hp)
-    assert utils.name_in_hps('normalize', hp)
-    assert utils.name_in_hps('augment', hp)
+    utils.block_basic_exam(
+        wrapper.ImageBlock(normalize=None, augment=None),
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        [
+            'block_type',
+            'normalize',
+            'augment',
+        ],
+    )
 
 
 def test_text_block():
-    block = wrapper.TextBlock()
-    hp = kerastuner.HyperParameters()
-
-    block = graph_module.deserialize(graph_module.serialize(block))
-    block.build(hp, ak.TextInput(shape=(1,)).build())
-
-    assert utils.name_in_hps('vectorizer', hp)
+    utils.block_basic_exam(
+        wrapper.TextBlock(),
+        tf.keras.Input(shape=(1,), dtype=tf.string),
+        ['vectorizer'],
+    )
 
 
 def test_structured_data_block():
     block = wrapper.StructuredDataBlock()
     block.column_names = ['0', '1']
     block.column_types = {
-        '0': adapters.CATEGORICAL,
-        '1': adapters.CATEGORICAL,
+        '0': adapters.NUMERICAL,
+        '1': adapters.NUMERICAL,
     }
-    hp = kerastuner.HyperParameters()
-
-    block = graph_module.deserialize(graph_module.serialize(block))
-    block.column_names = ['0', '1']
-    block.column_types = {
-        '0': adapters.CATEGORICAL,
-        '1': adapters.CATEGORICAL,
-    }
-    output = block.build(hp, ak.StructuredDataInput(shape=(2,)).build())
-
-    assert isinstance(output, tf.Tensor)
+    outputs = utils.block_basic_exam(
+        block,
+        tf.keras.Input(shape=(2,), dtype=tf.string),
+        [],
+    )
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_timeseries_block():
     block = wrapper.TimeseriesBlock()
-    hp = kerastuner.HyperParameters()
     block.column_names = ['0', '1']
     block.column_types = {
         '0': adapters.NUMERICAL,
         '1': adapters.NUMERICAL,
     }
-    block = graph_module.deserialize(graph_module.serialize(block))
-
-    block.column_names = ['0', '1']
-    block.column_types = {
-        '0': adapters.NUMERICAL,
-        '1': adapters.NUMERICAL,
-    }
-    output = block.build(hp, ak.TimeseriesInput(shape=(32,), lookback=2).build())
-
-    assert isinstance(output, tf.Tensor)
+    outputs = utils.block_basic_exam(
+        block,
+        tf.keras.Input(shape=(32, 2), dtype=tf.float32),
+        [],
+    )
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
