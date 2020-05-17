@@ -66,7 +66,7 @@ PAGES = {
         'autokeras.StructuredDataInput',
         'autokeras.TextInput',
     ],
-    'network.md': [
+    'block.md': [
         'autokeras.ConvBlock',
         'autokeras.DenseBlock',
         'autokeras.Embedding',
@@ -79,15 +79,11 @@ PAGES = {
         'autokeras.ImageBlock',
         'autokeras.StructuredDataBlock',
         'autokeras.TextBlock',
-    ],
-    'preprocessing.md': [
         'autokeras.ImageAugmentation',
         'autokeras.Normalization',
         'autokeras.TextToIntSequence',
         'autokeras.TextToNgramVector',
         'autokeras.CategoricalToNumerical',
-    ],
-    'head.md': [
         'autokeras.ClassificationHead',
         'autokeras.RegressionHead',
     ],
