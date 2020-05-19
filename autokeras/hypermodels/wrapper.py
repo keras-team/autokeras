@@ -1,18 +1,7 @@
 import numpy as np
 from tensorflow.keras import backend as K
+from tensorflow.keras import layers
 from tensorflow.keras.activations import relu
-from tensorflow.keras.layers import Activation
-from tensorflow.keras.layers import Add
-from tensorflow.keras.layers import AveragePooling2D
-from tensorflow.keras.layers import BatchNormalization
-from tensorflow.keras.layers import Concatenate
-from tensorflow.keras.layers import Conv2D
-from tensorflow.keras.layers import DepthwiseConv2D
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import Input
-from tensorflow.keras.layers import Lambda
-from tensorflow.keras.layers import Reshape
-from tensorflow.keras.layers import ZeroPadding2D
 from tensorflow.keras.models import Model
 from tensorflow.keras.utils import get_source_inputs
 from tensorflow.python.util import nest
@@ -220,7 +209,8 @@ class GeneralBlock(block_module.Block):
 
 
 class SegmentationBlock(block_module.Block):
-    """Block for image segmentation.
+    """Block for image semantic segmentation from the paper
+                        https://arxiv.org/pdf/1606.00915.pdf.
 
     The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
     which is controlled by a hyperparameter, 'block_type'.
@@ -228,24 +218,30 @@ class SegmentationBlock(block_module.Block):
     # Arguments
         block_type: String. 'resnet', 'xception', 'vanilla'. The type of Block
             to use. If unspecified, it will be tuned automatically.
-        normalize: Boolean. Whether to channel-wise normalize the images.
-            If unspecified, it will be tuned automatically.
-        augment: Boolean. Whether to do image augmentation. If unspecified,
-            it will be tuned automatically.
+        classes: Int. Number of desired classes. If classes != 21,
+                last layer is initialized randomly.
+        backbone: String. Backbone to use. one of {'xception','mobilenetv2'}
+        OS: Int. determines input_shape/feature_extractor_output ratio.
+                One of {8,16}. Used only for xception backbone.
+        alpha: Float. Controls the width of the MobileNetV2 network.
+                This is known as the width multiplier in the MobileNetV2 paper.
+                    - If `alpha` < 1.0, proportionally decreases the number
+                        of filters in each layer.
+                    - If `alpha` > 1.0, proportionally increases the number
+                        of filters in each layer.
+                    - If `alpha` = 1, default number of filters from the paper
+                        are used at each layer.
+                Used only for mobilenetv2 backbone
     """
 
     def __init__(self,
                  block_type=None,
-                 normalize=None,
-                 augment=None,
                  OS=None,
                  alpha=None,
                  classes=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.block_type = block_type
-        self.normalize = normalize
-        self.augment = augment
         self.OS = OS
         self.alpha = alpha
         self.classes = classes
@@ -253,9 +249,9 @@ class SegmentationBlock(block_module.Block):
     def get_config(self):
         config = super().get_config()
         config.update({'block_type': self.block_type,
-                       'normalize': self.normalize,
-                       'augment': self.augment,
-                       'OS': self.OS})
+                       'OS': self.OS,
+                       'alpha': self.alpha,
+                       'classes': self.classes})
         return config
 
     def SepConv_BN(self, x, filters, prefix, stride=1, kernel_size=3, rate=1,
@@ -263,15 +259,15 @@ class SegmentationBlock(block_module.Block):
         """ SepConv with BN between depthwise & pointwise. Optionally
             add activation after BN Implements right "same" padding for
             even kernel sizes.
-            Args:
-                x: input tensor
-                filters: num of filters in pointwise convolution
-                prefix: prefix before name
-                stride: stride at depthwise conv
-                kernel_size: kernel size for depthwise convolution
-                rate: atrous rate for depthwise convolution
-                depth_activation: flag to use activation between depthwise &
-                        pointwise convs epsilon: epsilon to use in BN layer
+        # Arguments
+            x: Numpy.ndarray or tensorflow.Dataset. Input tensor.
+            filters: Int. Num of filters in pointwise convolution.
+            prefix: String. Prefix before name.
+            stride: Int. Stride at depthwise convolution.
+            kernel_size: Int. Kernel size for depthwise convolution.
+            rate: Int. Atrous rate for depthwise convolution.
+            depth_activation: Boolean. Flag to use activation between depthwise &
+                        pointwise convs epsilon: epsilon to use in BN layer.
         """
 
         if stride == 1:
@@ -281,71 +277,76 @@ class SegmentationBlock(block_module.Block):
             pad_total = kernel_size_effective - 1
             pad_beg = pad_total // 2
             pad_end = pad_total - pad_beg
-            x = ZeroPadding2D((pad_beg, pad_end))(x)
+            x = layers.ZeroPadding2D((pad_beg, pad_end))(x)
             depth_padding = 'valid'
 
         if not depth_activation:
-            x = Activation('relu')(x)
-        x = DepthwiseConv2D((kernel_size, kernel_size), strides=(stride, stride),
-                            dilation_rate=(rate, rate), padding=depth_padding,
-                            use_bias=False, name=prefix + '_depthwise')(x)
-        x = BatchNormalization(name=prefix + '_depthwise_BN', epsilon=epsilon)(x)
+            x = layers.Activation('relu')(x)
+        x = layers.DepthwiseConv2D((kernel_size, kernel_size),
+                                   strides=(stride, stride),
+                                   dilation_rate=(rate, rate),
+                                   padding=depth_padding,
+                                   use_bias=False,
+                                   name=prefix + '_depthwise')(x)
+        x = layers.BatchNormalization(
+            name=prefix + '_depthwise_BN', epsilon=epsilon)(x)
         if depth_activation:
-            x = Activation('relu')(x)
-        x = Conv2D(filters, (1, 1), padding='same',
-                   use_bias=False, name=prefix + '_pointwise')(x)
-        x = BatchNormalization(name=prefix + '_pointwise_BN', epsilon=epsilon)(x)
+            x = layers.Activation('relu')(x)
+        x = layers.Conv2D(filters, (1, 1), padding='same',
+                          use_bias=False, name=prefix + '_pointwise')(x)
+        x = layers.BatchNormalization(
+            name=prefix + '_pointwise_BN', epsilon=epsilon)(x)
         if depth_activation:
-            x = Activation('relu')(x)
+            x = layers.Activation('relu')(x)
 
         return x
 
     def _conv2d_same(self, x, filters, prefix, stride=1, kernel_size=3, rate=1):
         """Implements right 'same' padding for even kernel sizes
             Without this there is a 1 pixel drift when stride = 2
-            Args:
-                x: input tensor
-                filters: num of filters in pointwise convolution
-                prefix: prefix before name
-                stride: stride at depthwise conv
-                kernel_size: kernel size for depthwise convolution
-                rate: atrous rate for depthwise convolution
+        # Arguments
+            x: Numpy.ndarray or tensorflow.Dataset. Input tensor.
+            filters: Int. Num of filters in pointwise convolution.
+            prefix: String. Prefix before name.
+            stride: Int. Stride at depthwise convolution.
+            kernel_size: Int. Kernel size for depthwise convolution.
+            rate: Int. Atrous rate for depthwise convolution.
         """
         if stride == 1:
-            return Conv2D(filters,
-                          (kernel_size, kernel_size),
-                          strides=(stride, stride),
-                          padding='same', use_bias=False,
-                          dilation_rate=(rate, rate),
-                          name=prefix)(x)
+            return layers.Conv2D(filters,
+                                 (kernel_size, kernel_size),
+                                 strides=(stride, stride),
+                                 padding='same', use_bias=False,
+                                 dilation_rate=(rate, rate),
+                                 name=prefix)(x)
         else:
             kernel_size_effective = kernel_size + (kernel_size - 1) * (rate - 1)
             pad_total = kernel_size_effective - 1
             pad_beg = pad_total // 2
             pad_end = pad_total - pad_beg
-            x = ZeroPadding2D((pad_beg, pad_end))(x)
-            return Conv2D(filters,
-                          (kernel_size, kernel_size),
-                          strides=(stride, stride),
-                          padding='valid',
-                          use_bias=False,
-                          dilation_rate=(rate, rate),
-                          name=prefix)(x)
+            x = layers.ZeroPadding2D((pad_beg, pad_end))(x)
+            return layers.Conv2D(filters,
+                                 (kernel_size, kernel_size),
+                                 strides=(stride, stride),
+                                 padding='valid',
+                                 use_bias=False,
+                                 dilation_rate=(rate, rate),
+                                 name=prefix)(x)
 
     def _xception_block(self, inputs, depth_list, prefix, skip_connection_type,
                         stride, rate=1, depth_activation=False, return_skip=False):
         """ Basic building block of modified Xception network
-            Args:
-                inputs: input tensor
-                depth_list: number of filters in each SepConv layer.
+        # Arguments
+            x: Numpy.ndarray or tensorflow.Dataset. Input tensor.
+            depth_list: Int. Number of filters in each SepConv layer.
                             len(depth_list) == 3.
-                prefix: prefix before name
-                skip_connection_type: one of {'conv','sum','none'}
-                stride: stride at last depthwise conv
-                rate: atrous rate for depthwise convolution
-                depth_activation: flag to use activation between
-                                  depthwise & pointwise convs
-                return_skip: flag to return additional tensor after
+            prefix: String. Prefix before name.
+            skip_connection_type: String. One of {'conv','sum','none'}
+            stride: Int. Stride at depthwise convolution.
+            rate: Int. Atrous rate for depthwise convolution.
+            depth_activation: Boolean. Flag to use activation between depthwise &
+                        pointwise convs epsilon: epsilon to use in BN layer.
+            return_skip: Boolean. Flag to return additional tensor after
                              2 SepConvs for decoder
                 """
         residual = inputs
@@ -363,7 +364,8 @@ class SegmentationBlock(block_module.Block):
                                          prefix + '_shortcut',
                                          kernel_size=1,
                                          stride=stride)
-            shortcut = BatchNormalization(name=prefix + '_shortcut_BN')(shortcut)
+            shortcut = layers.BatchNormalization(
+                name=prefix + '_shortcut_BN')(shortcut)
             outputs = self.layers.add([residual, shortcut])
         elif skip_connection_type == 'sum':
             outputs = self.layers.add([residual, inputs])
@@ -392,39 +394,40 @@ class SegmentationBlock(block_module.Block):
         prefix = 'expanded_conv_{}_'.format(block_id)
         if block_id:
             # Expand
-            x = Conv2D(expansion * in_channels, kernel_size=1, padding='same',
-                       use_bias=False, activation=None,
-                       name=prefix + 'expand')(x)
-            x = BatchNormalization(epsilon=1e-3, momentum=0.999,
-                                   name=prefix + 'expand_BN')(x)
+            x = layers.Conv2D(expansion * in_channels, kernel_size=1, padding='same',
+                              use_bias=False, activation=None,
+                              name=prefix + 'expand')(x)
+            x = layers.BatchNormalization(epsilon=1e-3, momentum=0.999,
+                                          name=prefix + 'expand_BN')(x)
             # x = Lambda(lambda x: relu(x, max_value=6.))(x)
-            x = Lambda(lambda x: relu(x, max_value=6.),
-                       name=prefix + 'expand_relu')(x)
+            x = layers.Lambda(lambda x: relu(x, max_value=6.),
+                              name=prefix + 'expand_relu')(x)
             # x = Activation(relu(x, max_value=6.), name=prefix + 'expand_relu')(x)
         else:
             prefix = 'expanded_conv_'
         # Depthwise
-        x = DepthwiseConv2D(kernel_size=3, strides=stride, activation=None,
-                            use_bias=False, padding='same',
-                            dilation_rate=(rate, rate),
-                            name=prefix + 'depthwise')(x)
-        x = BatchNormalization(epsilon=1e-3, momentum=0.999,
-                               name=prefix + 'depthwise_BN')(x)
+        x = layers.DepthwiseConv2D(kernel_size=3, strides=stride, activation=None,
+                                   use_bias=False, padding='same',
+                                   dilation_rate=(rate, rate),
+                                   name=prefix + 'depthwise')(x)
+        x = layers.BatchNormalization(epsilon=1e-3, momentum=0.999,
+                                      name=prefix + 'depthwise_BN')(x)
         # x = Activation(relu(x, max_value=6.), name=prefix + 'depthwise_relu')(x)
-        x = Lambda(lambda x: relu(x, max_value=6.),
-                   name=prefix + 'depthwise_relu')(x)
+        x = layers.Lambda(lambda x: relu(x, max_value=6.),
+                          name=prefix + 'depthwise_relu')(x)
 
-        x = Conv2D(pointwise_filters,
-                   kernel_size=1, padding='same', use_bias=False, activation=None,
-                   name=prefix + 'project')(x)
-        x = BatchNormalization(epsilon=1e-3, momentum=0.999,
-                               name=prefix + 'project_BN')(x)
+        x = layers.Conv2D(pointwise_filters,
+                          kernel_size=1, padding='same',
+                          use_bias=False, activation=None,
+                          name=prefix + 'project')(x)
+        x = layers.BatchNormalization(epsilon=1e-3, momentum=0.999,
+                                      name=prefix + 'project_BN')(x)
 
         if skip_connection:
-            return Add(name=prefix + 'add')([inputs, x])
+            return layers.Add(name=prefix + 'add')([inputs, x])
 
         if in_channels == pointwise_filters and stride == 1:
-            return Add(name='res_connect_' + str(block_id))([inputs, x])
+            return layers.Add(name='res_connect_' + str(block_id))([inputs, x])
 
         return x
 
@@ -435,20 +438,6 @@ class SegmentationBlock(block_module.Block):
                 to use as image input for the model.
             input_shape: shape of input image. format HxWxC
                 PASCAL VOC model was trained on (512,512,3) images
-            classes: number of desired classes. If classes != 21,
-                last layer is initialized randomly
-            backbone: backbone to use. one of {'xception','mobilenetv2'}
-            OS: determines input_shape/feature_extractor_output ratio.
-                One of {8,16}. Used only for xception backbone.
-            alpha: controls the width of the MobileNetV2 network.
-                This is known as the width multiplier in the MobileNetV2 paper.
-                    - If `alpha` < 1.0, proportionally decreases the number
-                        of filters in each layer.
-                    - If `alpha` > 1.0, proportionally increases the number
-                        of filters in each layer.
-                    - If `alpha` = 1, default number of filters from the paper
-                        are used at each layer.
-                Used only for mobilenetv2 backbone
         # Returns
             A Keras model instance.
         # Raises
@@ -460,10 +449,6 @@ class SegmentationBlock(block_module.Block):
         block_type = self.block_type or hp.Choice('block_type',
                                                   ['mobilenetv2', 'xception'],
                                                   default='xception')
-        # if not (weights in {'pascal_voc', None}):
-        #     raise ValueError('The `weights` argument should be either '
-        #                      '`None` (random initialization) or `pascal_voc` '
-        #                      '(pre-trained on PASCAL VOC)')
 
         if K.backend() != 'tensorflow':
             raise RuntimeError('The Deeplabv3+ model is only available with '
@@ -474,14 +459,15 @@ class SegmentationBlock(block_module.Block):
                              '`xception`  or `mobilenetv2` ')
 
         if inputs is None:
-            img_input = Input(inputs.shape.as_list()[:3])
+            img_input = layers.Input(inputs.shape.as_list()[:3])
         else:
             if not K.is_keras_tensor(inputs):
-                img_input = Input(tensor=inputs, shape=inputs.shape.as_list()[:3])
+                img_input = layers.Input(
+                    tensor=inputs, shape=inputs.shape.as_list()[:3])
             else:
                 img_input = inputs
 
-        batches_input = Lambda(lambda x: x / 127.5 - 1)(img_input)
+        batches_input = layers.Lambda(lambda x: x / 127.5 - 1)(img_input)
         input_shape = inputs.shape.as_list()[:3]
         if block_type == 'xception':
             if self.OS == 8:
@@ -494,18 +480,19 @@ class SegmentationBlock(block_module.Block):
                 middle_block_rate = 1
                 exit_block_rates = (1, 2)
                 atrous_rates = (6, 12, 18)
-            x = Conv2D(32, (3, 3), strides=(2, 2),
-                       name='entry_flow_conv1_1',
-                       use_bias=False, padding='same')(batches_input)
+            x = layers.Conv2D(32, (3, 3), strides=(2, 2),
+                              name='entry_flow_conv1_1',
+                              use_bias=False, padding='same')(batches_input)
 
-            x = BatchNormalization(name='entry_flow_conv1_1_BN')(x)
-            x = Activation('relu')(x)
+            x = layers.BatchNormalization(name='entry_flow_conv1_1_BN')(x)
+            x = layers.Activation('relu')(x)
 
-            # x = _conv2d_same(x, 64, 'entry_flow_conv1_2', kernel_size=3, stride=1)
-            x = basic.ConvBlock(kernel_size=3, num_blocks=64,
-                                name='entry_flow_conv1_2').build(hp, inputs=x)
-            x = BatchNormalization(name='entry_flow_conv1_2_BN')(x)
-            x = Activation('relu')(x)
+            x = self._conv2d_same(x, 64, 'entry_flow_conv1_2',
+                                  kernel_size=3, stride=1)
+            # x = basic.ConvBlock(kernel_size=3, num_blocks=64,
+            #                     name='entry_flow_conv1_2').build(hp, inputs=x)
+            x = layers.BatchNormalization(name='entry_flow_conv1_2_BN')(x)
+            x = layers.Activation('relu')(x)
 
             x = self._xception_block(x, [128, 128, 128], 'entry_flow_block1',
                                      skip_connection_type='conv', stride=2,
@@ -539,14 +526,14 @@ class SegmentationBlock(block_module.Block):
         else:
             self.OS = 8
             first_block_filters = self._make_divisible(32 * self.alpha, 8)
-            x = Conv2D(first_block_filters,
-                       kernel_size=3,
-                       strides=(2, 2), padding='same',
-                       use_bias=False, name='Conv')(batches_input)
-            x = BatchNormalization(
+            x = layers.Conv2D(first_block_filters,
+                              kernel_size=3,
+                              strides=(2, 2), padding='same',
+                              use_bias=False, name='Conv')(batches_input)
+            x = layers.BatchNormalization(
                 epsilon=1e-3, momentum=0.999, name='Conv_BN')(x)
 
-            x = Lambda(lambda x: relu(x, max_value=6.))(x)
+            x = layers.Lambda(lambda x: relu(x, max_value=6.))(x)
 
             x = self._inverted_res_block(x, filters=16, alpha=self.alpha, stride=1,
                                          expansion=1, block_id=0,
@@ -624,23 +611,24 @@ class SegmentationBlock(block_module.Block):
 
         # Image Feature branch
         # out_shape = int(np.ceil(input_shape[0] / OS))
-        b4 = AveragePooling2D(pool_size=(
+        b4 = layers.AveragePooling2D(pool_size=(
             int(np.ceil((512, 512, 3)[0] / self.OS)),
             int(np.ceil((512, 512, 3)[1] / self.OS))))(x)
 
-        b4 = Conv2D(256, (1, 1), padding='same',
-                    use_bias=False, name='image_pooling')(b4)
-        b4 = BatchNormalization(name='image_pooling_BN', epsilon=1e-5)(b4)
-        b4 = Activation('relu')(b4)
+        b4 = layers.Conv2D(256, (1, 1), padding='same',
+                           use_bias=False, name='image_pooling')(b4)
+        b4 = layers.BatchNormalization(name='image_pooling_BN', epsilon=1e-5)(b4)
+        b4 = layers.Activation('relu')(b4)
 
-        b4 = Lambda(lambda x: K.tf.image.resize_bilinear(x, size=(
+        b4 = layers.Lambda(lambda x: K.tf.image.resize_bilinear(x, size=(
             int(np.ceil(input_shape[0] / self.OS)),
             int(np.ceil(input_shape[1] / self.OS)))))(b4)
 
         # simple 1x1
-        b0 = Conv2D(256, (1, 1), padding='same', use_bias=False, name='aspp0')(x)
-        b0 = BatchNormalization(name='aspp0_BN', epsilon=1e-5)(b0)
-        b0 = Activation('relu', name='aspp0_activation')(b0)
+        b0 = layers.Conv2D(256, (1, 1), padding='same',
+                           use_bias=False, name='aspp0')(x)
+        b0 = layers.BatchNormalization(name='aspp0_BN', epsilon=1e-5)(b0)
+        b0 = layers.Activation('relu', name='aspp0_activation')(b0)
 
         # there are only 2 branches in mobilenetV2. not sure why
         if block_type == 'xception':
@@ -658,15 +646,15 @@ class SegmentationBlock(block_module.Block):
                                  depth_activation=True, epsilon=1e-5)
 
             # concatenate ASPP branches & project
-            x = Concatenate()([b4, b0, b1, b2, b3])
+            x = layers.Concatenate()([b4, b0, b1, b2, b3])
         else:
-            x = Concatenate()([b4, b0])
+            x = layers.Concatenate()([b4, b0])
 
-        x = Conv2D(256, (1, 1), padding='same',
-                   use_bias=False, name='concat_projection')(x)
-        x = BatchNormalization(name='concat_projection_BN', epsilon=1e-5)(x)
-        x = Activation('relu')(x)
-        x = Dropout(0.1)(x)
+        x = layers.Conv2D(256, (1, 1), padding='same',
+                          use_bias=False, name='concat_projection')(x)
+        x = layers.BatchNormalization(name='concat_projection_BN', epsilon=1e-5)(x)
+        x = layers.Activation('relu')(x)
+        x = layers.Dropout(0.1)(x)
 
         # DeepLab v.3+ decoder
 
@@ -674,16 +662,17 @@ class SegmentationBlock(block_module.Block):
             # Feature projection
             # x4 (x2) block
 
-            x = Lambda(lambda x: K.tf.image.resize_bilinear(x, size=(
+            x = layers.Lambda(lambda x: K.tf.image.resize_bilinear(x, size=(
                 int(np.ceil(input_shape[0] / 4)),
                 int(np.ceil(input_shape[1] / 4)))))(x)
 
-            dec_skip1 = Conv2D(48, (1, 1), padding='same',
-                               use_bias=False, name='feature_projection0')(skip1)
-            dec_skip1 = BatchNormalization(
+            dec_skip1 = layers.Conv2D(48, (1, 1), padding='same',
+                                      use_bias=False,
+                                      name='feature_projection0')(skip1)
+            dec_skip1 = layers.BatchNormalization(
                 name='feature_projection0_BN', epsilon=1e-5)(dec_skip1)
-            dec_skip1 = Activation('relu')(dec_skip1)
-            x = Concatenate()([x, dec_skip1])
+            dec_skip1 = layers.Activation('relu')(dec_skip1)
+            x = layers.Concatenate()([x, dec_skip1])
             x = self.SepConv_BN(x, 256, 'decoder_conv0',
                                 depth_activation=True, epsilon=1e-5)
             x = self.SepConv_BN(x, 256, 'decoder_conv1',
@@ -695,12 +684,13 @@ class SegmentationBlock(block_module.Block):
         else:
             last_layer_name = 'custom_logits_semantic'
 
-        x = Conv2D(self.classes, (1, 1), padding='same', name=last_layer_name)(x)
-        x = Lambda(lambda x: K.tf.image.resize_bilinear(
+        x = layers.Conv2D(self.classes, (1, 1), padding='same',
+                          name=last_layer_name)(x)
+        x = layers.Lambda(lambda x: K.tf.image.resize_bilinear(
             x, size=(input_shape[0], input_shape[1])))(x)
 
-        x = Reshape((input_shape[0] * input_shape[1], self.classes))(x)
-        x = Activation('softmax')(x)
+        x = layers.Reshape((input_shape[0] * input_shape[1], self.classes))(x)
+        x = layers.Activation('softmax')(x)
         # Ensure that the model takes into account
         # any potential predecessors of `input_tensor`.
         if inputs is not None:
