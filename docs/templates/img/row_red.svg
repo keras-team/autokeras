@@ -12,11 +12,11 @@
 </g>
 <defs>
   <style type="text/css">
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP');
+    @import url('https://fonts.googleapis.com/css2?family=Roboto');
  </style>
 </defs>
 <g transform="translate(155, 85)">
-<text font-size="95" style="font-family: 'Noto Sans JP', sans-serif;">
+<text font-size="95" style="font-family: 'Roboto', sans-serif;">
   AutoKeras 
 </text>
 </g>
