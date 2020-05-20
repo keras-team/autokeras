@@ -19,7 +19,7 @@ jobs:
         python -m pip install --upgrade pip setuptools
         pip install -e .[tests] --progress-bar off
         pip install tensorflow==2.2.0
-        pip install git+git://github.com/keras-team/keras-tuner.git@d2d69cba21a0b482a85ce2a38893e2322e139c01
+        pip install git+git://github.com/keras-team/keras-tuner.git@deef71222908e17685714c5994bf9d6fab036957
     - name: Test with pytest
       run: |
         pytest --cov=autokeras --cov-report xml:coverage.xml
@@ -50,7 +50,7 @@ jobs:
           python -m pip install --upgrade pip setuptools
           pip install -e .
           pip install tensorflow==2.2.0
-          pip install git+git://github.com/keras-team/keras-tuner.git@d2d69cba21a0b482a85ce2a38893e2322e139c01
+          pip install git+git://github.com/keras-team/keras-tuner.git@deef71222908e17685714c5994bf9d6fab036957
           pip install -r docs/requirements.txt
       - name: Build the docs
         run: |
