@@ -67,33 +67,6 @@ def load_json(path):
     return json.loads(obj)
 
 
-def adapt_model(model, dataset):
-    # TODO: Remove this function after TF has fit-to-adapt feature.
-    from tensorflow.keras.layers.experimental import preprocessing
-    x = dataset.map(lambda x, y: x)
-
-    def get_output_layer(tensor):
-        tensor = nest.flatten(tensor)[0]
-        for layer in model.layers:
-            if isinstance(layer, tf.keras.layers.InputLayer):
-                continue
-            input_node = nest.flatten(layer.input)[0]
-            if input_node is tensor:
-                return layer
-        return None
-
-    for index, input_node in enumerate(nest.flatten(model.input)):
-        def get_data(*args):
-            return args[index]
-
-        temp_x = x.map(get_data)
-        layer = get_output_layer(input_node)
-        while isinstance(layer, preprocessing.PreprocessingLayer):
-            layer.adapt(temp_x)
-            layer = get_output_layer(layer.output)
-    return model
-
-
 def contain_instance(instance_list, instance_type):
     return any([isinstance(instance, instance_type)
                 for instance in instance_list])
