@@ -134,6 +134,7 @@ class AutoModel(object):
             seed=self.seed,
             project_name=project_name,
             **kwargs)
+        # Used by tuner to decide whether to use validation set for final fit.
         self._split_dataset = False
         self._heads = [output_node.in_blocks[0] for output_node in self.outputs]
         self._input_adapters = [input_node.get_adapter()
@@ -288,15 +289,53 @@ class AutoModel(object):
         # Returns
             A tf.data.Dataset containing both x and y.
         """
-        if isinstance(x, tf.data.Dataset) and y is None:
+        if isinstance(x, tf.data.Dataset):
             dataset = x
             x = dataset.map(lambda a, b: a)
             y = dataset.map(lambda a, b: b)
+            x = [x.map(lambda *a: nest.flatten(a)[index])
+                 for index in range(len(self.inputs))]
+            y = [y.map(lambda *a: nest.flatten(a)[index])
+                 for index in range(len(self.outputs))]
 
         x = self._adapt(x, fit, self.inputs, self._input_adapters)
         y = self._adapt(y, fit, self._heads, self._output_adapters)
 
         return tf.data.Dataset.zip((x, y))
+
+    def _check_data_format(self, x, y, validation=False):
+        """Check if the dataset has the same number of IOs with the model."""
+        if validation:
+            in_val = ' in validation_data'
+        else:
+            in_val = ''
+
+        if isinstance(x, tf.data.Dataset) and y is not None:
+            raise ValueError('Expect y is None when x is '
+                             'tf.data.Dataset{in_val}.'.format(in_val=in_val))
+
+        if isinstance(x, tf.data.Dataset):
+            x_shapes, y_shapes = data_utils.dataset_shape(x)
+            x_shapes = nest.flatten(x_shapes)
+            y_shapes = nest.flatten(y_shapes)
+        else:
+            x_shapes = [a.shape for a in nest.flatten(x)]
+            y_shapes = [a.shape for a in nest.flatten(y)]
+
+        if len(x_shapes) != len(self.inputs):
+            raise ValueError(
+                'Expect x{in_val} to have {input_num} sources, '
+                'but got {data_num}'.format(
+                    in_val=in_val,
+                    input_num=len(self.inputs),
+                    data_num=len(x_shapes)))
+        if len(y_shapes) != len(self.outputs):
+            raise ValueError(
+                'Expect y{in_val} to have {output_num} sources, '
+                'but got {data_num}'.format(
+                    in_val=in_val,
+                    output_num=len(self.outputs),
+                    data_num=len(y_shapes)))
 
     def _prepare_data(self, x, y, validation_data, validation_split):
         """Convert the data to tf.data.Dataset."""
@@ -306,11 +345,17 @@ class AutoModel(object):
                              'should be provided.')
         # TODO: Handle other types of input, zip dataset, tensor, dict.
         # Prepare the dataset.
+        self._check_data_format(x, y)
         dataset = self._process_xy(x, y, True)
         if validation_data:
             self._split_dataset = False
-            val_x, val_y = validation_data
-            validation_data = self._process_xy(val_x, val_y, False)
+            if isinstance(validation_data, tf.data.Dataset):
+                x_val = validation_data
+                y_val = None
+            else:
+                x_val, y_val = validation_data
+            self._check_data_format(x_val, y_val, validation=True)
+            validation_data = self._process_xy(x_val, y_val, False)
         # Split the data with validation_split.
         if validation_data is None and validation_split:
             self._split_dataset = True
