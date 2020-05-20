@@ -1,8 +1,11 @@
 from unittest import mock
 
 import numpy as np
+import pytest
+import tensorflow as tf
 
 import autokeras as ak
+from tests import utils
 
 
 @mock.patch('autokeras.auto_model.get_tuner_class')
@@ -102,3 +105,83 @@ def test_export_model(tuner_fn, tmp_path):
     auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
     auto_model.export_model()
     assert tuner.get_best_model.called
+
+
+@mock.patch('autokeras.auto_model.get_tuner_class')
+def test_multi_io_with_tf_dataset(tuner_fn, tmp_path):
+    auto_model = ak.AutoModel([ak.ImageInput(), ak.ImageInput()],
+                              [ak.RegressionHead(), ak.RegressionHead()],
+                              directory=tmp_path,
+                              max_trials=2,
+                              overwrite=False)
+    x1 = utils.generate_data()
+    y1 = utils.generate_data(shape=(1,))
+    dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1, y1)))
+    auto_model.fit(dataset, epochs=2)
+
+    for adapter in auto_model._input_adapters + auto_model._output_adapters:
+        assert adapter.shape is not None
+
+
+@mock.patch('autokeras.auto_model.get_tuner_class')
+def test_single_nested_dataset(tuner_fn, tmp_path):
+    auto_model = ak.AutoModel(ak.ImageInput(),
+                              ak.RegressionHead(),
+                              directory=tmp_path,
+                              max_trials=2,
+                              overwrite=False)
+    x1 = utils.generate_data()
+    y1 = utils.generate_data(shape=(1,))
+    dataset = tf.data.Dataset.from_tensor_slices(((x1,), y1))
+    auto_model.fit(dataset, epochs=2)
+
+    for adapter in auto_model._input_adapters + auto_model._output_adapters:
+        assert adapter.shape is not None
+
+
+def dataset_error(x, y, validation_data, message, tmp_path):
+    auto_model = ak.AutoModel([ak.ImageInput(), ak.ImageInput()],
+                              [ak.RegressionHead(), ak.RegressionHead()],
+                              directory=tmp_path,
+                              max_trials=2,
+                              overwrite=False)
+    with pytest.raises(ValueError) as info:
+        auto_model.fit(x, y, epochs=2, validation_data=validation_data)
+    assert message in str(info.value)
+
+
+@mock.patch('autokeras.auto_model.get_tuner_class')
+def test_data_io_consistency_input(tuner_fn, tmp_path):
+    x1 = utils.generate_data()
+    y1 = utils.generate_data(shape=(1,))
+    dataset = tf.data.Dataset.from_tensor_slices(((x1,), (y1, y1)))
+    dataset_error(dataset, None, dataset, 'Expect x to have', tmp_path)
+
+
+@mock.patch('autokeras.auto_model.get_tuner_class')
+def test_data_io_consistency_output(tuner_fn, tmp_path):
+    x1 = utils.generate_data()
+    y1 = utils.generate_data(shape=(1,))
+    dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1,)))
+    dataset_error(dataset, None, dataset, 'Expect y to have', tmp_path)
+
+
+@mock.patch('autokeras.auto_model.get_tuner_class')
+def test_data_io_consistency_validation(tuner_fn, tmp_path):
+    x1 = utils.generate_data()
+    y1 = utils.generate_data(shape=(1,))
+    dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1, y1)))
+    val_dataset = tf.data.Dataset.from_tensor_slices(((x1,), (y1, y1)))
+    dataset_error(dataset, None, val_dataset,
+                  'Expect x in validation_data to have', tmp_path)
+
+
+@mock.patch('autokeras.auto_model.get_tuner_class')
+def test_dataset_and_y(tuner_fn, tmp_path):
+    x1 = utils.generate_data()
+    y1 = utils.generate_data(shape=(1,))
+    x = tf.data.Dataset.from_tensor_slices((x1, x1))
+    y = tf.data.Dataset.from_tensor_slices((y1, y1))
+    val_dataset = tf.data.Dataset.from_tensor_slices(((x1,), (y1, y1)))
+    dataset_error(x, y, val_dataset,
+                  'Expect y is None', tmp_path)
