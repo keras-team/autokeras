@@ -2,8 +2,9 @@ import copy
 import os
 
 import kerastuner
-from kerastuner.engine import tuner_utils
+import tensorflow as tf
 from tensorflow.keras import callbacks as tf_callbacks
+from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
 from autokeras import graph as graph_module
@@ -47,46 +48,31 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         model.load_weights(self.best_model_path)
         return model
 
-    def _super_run_trial(self, trial, x=None, *fit_args, **fit_kwargs):
-        # TODO: Remove this function after TF can adapt in fit.
-        # Handle any callbacks passed to `fit`.
-        copied_fit_kwargs = copy.copy(fit_kwargs)
-        callbacks = fit_kwargs.pop('callbacks', [])
-        callbacks = self._deepcopy_callbacks(callbacks)
-        self._configure_tensorboard_dir(callbacks, trial.trial_id)
-        # `TunerCallback` calls:
-        # - `Tuner.on_epoch_begin`
-        # - `Tuner.on_batch_begin`
-        # - `Tuner.on_batch_end`
-        # - `Tuner.on_epoch_end`
-        # These methods report results to the `Oracle` and save the trained Model. If
-        # you are subclassing `Tuner` to write a custom training loop, you should
-        # make calls to these methods within `run_trial`.
-        callbacks.append(tuner_utils.TunerCallback(self, trial))
-        copied_fit_kwargs['callbacks'] = callbacks
+    def _on_train_end(self, model, hp, x, *args, **kwargs):
+        self.adapt(model, x)
 
-        model = self.hypermodel.build(trial.hyperparameters)
-        utils.adapt_model(model, x)
-        model.fit(x, *fit_args, **copied_fit_kwargs)
+    @staticmethod
+    def adapt(model, dataset):
+        """Adapt the preprocessing layers in the model."""
+        x = dataset.map(lambda x, y: x)
 
-    def run_trial(self,
-                  trial,
-                  x=None,
-                  validation_data=None,
-                  *fit_args,
-                  **fit_kwargs):
-        x, validation_data = self.build_preprocessors(
-            trial.hyperparameters, x, validation_data)
-        self._super_run_trial(
-            trial=trial,
-            x=x,
-            validation_data=validation_data,
-            *fit_args,
-            **fit_kwargs)
+        def get_output_layer(tensor):
+            tensor = nest.flatten(tensor)[0]
+            for layer in model.layers:
+                if isinstance(layer, tf.keras.layers.InputLayer):
+                    continue
+                input_node = nest.flatten(layer.input)[0]
+                if input_node is tensor:
+                    return layer
+            return None
 
-    def build_preprocessors(self, hp, x=None, validation_data=None):
-        # TODO: Split x and build the preprocessor for each input node.
-        return x, validation_data
+        for index, input_node in enumerate(nest.flatten(model.input)):
+            temp_x = x.map(lambda *args: nest.flatten(args)[index])
+            layer = get_output_layer(input_node)
+            while isinstance(layer, preprocessing.PreprocessingLayer):
+                layer.adapt(temp_x)
+                layer = get_output_layer(layer.output)
+        return model
 
     def search(self,
                epochs=None,
@@ -156,7 +142,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         best_trial = self.oracle.get_best_trials(1)[0]
         best_hp = best_trial.hyperparameters
         model = self.hypermodel.build(best_hp)
-        utils.adapt_model(model, x)
+        self.adapt(model, x)
         model.fit(x, **fit_kwargs)
         return model
 
