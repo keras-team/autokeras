@@ -56,5 +56,5 @@ nav:
     - AutoModel: auto_model.md
     - Base Class: base.md
     - Node: node.md
-    - Block: network.md
+    - Block: block.md
   - About: about.md
