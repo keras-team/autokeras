@@ -97,7 +97,7 @@ class TextToNgramVector(block_module.Block):
         if self.ngrams is not None:
             ngrams = self.ngrams
         else:
-            ngrams = hp.Int('ngrams', min_value=1, max_value=3)
+            ngrams = hp.Int('ngrams', min_value=1, max_value=2, default=2)
         return preprocessing.TextVectorization(
             max_tokens=self.max_tokens,
             ngrams=ngrams,
