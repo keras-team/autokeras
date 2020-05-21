@@ -49,11 +49,16 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         return model
 
     def _on_train_end(self, model, hp, x, *args, **kwargs):
+        """Adapt the preprocessing layers and tune the fit arguments."""
         self.adapt(model, x)
 
     @staticmethod
     def adapt(model, dataset):
         """Adapt the preprocessing layers in the model."""
+        # Currently, only support using the original dataset to adapt all the
+        # preprocessing layers before the first non-preprocessing layer.
+        # TODO: Use PreprocessingStage for preprocessing layers adapt.
+        # TODO: Use Keras Tuner for preprocessing layers adapt.
         x = dataset.map(lambda x, y: x)
 
         def get_output_layer(tensor):
