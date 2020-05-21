@@ -324,14 +324,14 @@ class AutoModel(object):
 
         if len(x_shapes) != len(self.inputs):
             raise ValueError(
-                'Expect x{in_val} to have {input_num} sources, '
+                'Expect x{in_val} to have {input_num} arrays, '
                 'but got {data_num}'.format(
                     in_val=in_val,
                     input_num=len(self.inputs),
                     data_num=len(x_shapes)))
         if len(y_shapes) != len(self.outputs):
             raise ValueError(
-                'Expect y{in_val} to have {output_num} sources, '
+                'Expect y{in_val} to have {output_num} arrays, '
                 'but got {data_num}'.format(
                     in_val=in_val,
                     output_num=len(self.outputs),
