@@ -209,11 +209,11 @@ class GeneralBlock(block_module.Block):
 
 
 class SegmentationBlock(block_module.Block):
-    """Block for image semantic segmentation from the paper
-                        https://arxiv.org/pdf/1606.00915.pdf.
+    """Block for image semantic segmentation.
 
     The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
-    which is controlled by a hyperparameter, 'block_type'.
+    which is controlled by a hyperparameter, 'block_type' from the paper
+    https://arxiv.org/pdf/1606.00915.pdf.
 
     # Arguments
         block_type: String. 'resnet', 'xception', 'vanilla'. The type of Block
@@ -221,8 +221,10 @@ class SegmentationBlock(block_module.Block):
         classes: Int. Number of desired classes. If classes != 21,
                 last layer is initialized randomly.
         backbone: String. Backbone to use. one of {'xception','mobilenetv2'}
-        OS: Int. determines input_shape/feature_extractor_output ratio.
-                One of {8,16}. Used only for xception backbone.
+        OS: Int. Determines input_shape/feature_extractor_output ratio.
+                One of {8,16}. Used only for xception backbone which means
+                that the output size is the the encoder is 1/OS of the
+                original image size.
         alpha: Float. Controls the width of the MobileNetV2 network.
                 This is known as the width multiplier in the MobileNetV2 paper.
                     - If `alpha` < 1.0, proportionally decreases the number
