@@ -270,40 +270,51 @@ class AutoModel(object):
         for source, hm, adapter in zip(sources, hms, adapters):
             if fit:
                 source = adapter.fit_transform(source)
+                hm.config_from_adapter(adapter)
             else:
                 source = adapter.transform(source)
             adapted.append(source)
-            hm.config_from_adapter(adapter)
         if len(adapted) == 1:
             return adapted[0]
         return tf.data.Dataset.zip(tuple(adapted))
 
-    def _process_xy(self, x, y, fit):
+    def _process_xy(self, x, y, fit=False, validation=False, predict=False):
         """Convert x, y to tf.data.Dataset.
 
         # Arguments
             x: Any type allowed by the corresponding input node.
             y: Any type allowed by the corresponding head.
             fit: Boolean. Whether to fit the type converter with the provided data.
+            validation: Boolean. Whether it is validation data or not.
+            predict: Boolean. True means the data doesn't contain y.
 
         # Returns
             A tf.data.Dataset containing both x and y.
         """
+        self._check_data_format(x, y, validation=validation, predict=predict)
         if isinstance(x, tf.data.Dataset):
             dataset = x
-            x = dataset.map(lambda a, b: a)
-            y = dataset.map(lambda a, b: b)
+            if not predict:
+                y = dataset.map(lambda a, b: b)
+                y = [y.map(lambda *a: nest.flatten(a)[index])
+                     for index in range(len(self.outputs))]
+                x = dataset.map(lambda a, b: a)
             x = [x.map(lambda *a: nest.flatten(a)[index])
                  for index in range(len(self.inputs))]
-            y = [y.map(lambda *a: nest.flatten(a)[index])
-                 for index in range(len(self.outputs))]
 
         x = self._adapt(x, fit, self.inputs, self._input_adapters)
-        y = self._adapt(y, fit, self._heads, self._output_adapters)
+        if not predict:
+            y = self._adapt(y, fit, self._heads, self._output_adapters)
 
-        return tf.data.Dataset.zip((x, y))
+        if not predict:
+            return tf.data.Dataset.zip((x, y))
 
-    def _check_data_format(self, x, y, validation=False):
+        if len(self.inputs) == 1:
+            return x
+
+        return x.map(lambda *x: (x, ))
+
+    def _check_data_format(self, x, y, validation=False, predict=False):
         """Check if the dataset has the same number of IOs with the model."""
         if validation:
             in_val = ' in validation_data'
@@ -315,12 +326,16 @@ class AutoModel(object):
                              'tf.data.Dataset{in_val}.'.format(in_val=in_val))
 
         if isinstance(x, tf.data.Dataset):
-            x_shapes, y_shapes = data_utils.dataset_shape(x)
-            x_shapes = nest.flatten(x_shapes)
-            y_shapes = nest.flatten(y_shapes)
+            if not predict:
+                x_shapes, y_shapes = data_utils.dataset_shape(x)
+                x_shapes = nest.flatten(x_shapes)
+                y_shapes = nest.flatten(y_shapes)
+            else:
+                x_shapes = nest.flatten(data_utils.dataset_shape(x))
         else:
             x_shapes = [a.shape for a in nest.flatten(x)]
-            y_shapes = [a.shape for a in nest.flatten(y)]
+            if not predict:
+                y_shapes = [a.shape for a in nest.flatten(y)]
 
         if len(x_shapes) != len(self.inputs):
             raise ValueError(
@@ -329,7 +344,7 @@ class AutoModel(object):
                     in_val=in_val,
                     input_num=len(self.inputs),
                     data_num=len(x_shapes)))
-        if len(y_shapes) != len(self.outputs):
+        if not predict and len(y_shapes) != len(self.outputs):
             raise ValueError(
                 'Expect y{in_val} to have {output_num} arrays, '
                 'but got {data_num}'.format(
@@ -346,7 +361,7 @@ class AutoModel(object):
         # TODO: Handle other types of input, zip dataset, tensor, dict.
         # Prepare the dataset.
         self._check_data_format(x, y)
-        dataset = self._process_xy(x, y, True)
+        dataset = self._process_xy(x, y, fit=True)
         if validation_data:
             self._split_dataset = False
             if isinstance(validation_data, tf.data.Dataset):
@@ -354,8 +369,7 @@ class AutoModel(object):
                 y_val = None
             else:
                 x_val, y_val = validation_data
-            self._check_data_format(x_val, y_val, validation=True)
-            validation_data = self._process_xy(x_val, y_val, False)
+            validation_data = self._process_xy(x_val, y_val, validation=True)
         # Split the data with validation_split.
         if validation_data is None and validation_split:
             self._split_dataset = True
@@ -363,6 +377,23 @@ class AutoModel(object):
                 dataset,
                 validation_split)
         return dataset, validation_data
+
+    def _get_x(self, dataset):
+        """Remove y from the tf.data.Dataset if exists."""
+        shapes = data_utils.dataset_shape(dataset)
+        # Only one or less element in the first level.
+        if len(shapes) <= 1:
+            return dataset.map(lambda *x: x[0])
+        # The first level has more than 1 element.
+        # The nest has 2 levels.
+        for shape in shapes:
+            if isinstance(shape, tuple):
+                return dataset.map(lambda x, y: x)
+        # The nest has one level.
+        # It matches the single IO case.
+        if len(shapes) == 2 and len(self.inputs) == 1 and len(self.outputs) == 1:
+            return dataset.map(lambda x, y: x)
+        return dataset
 
     def predict(self, x, batch_size=32, **kwargs):
         """Predict the output for a given testing data.
@@ -377,7 +408,8 @@ class AutoModel(object):
             The predicted results.
         """
         if isinstance(x, tf.data.Dataset):
-            dataset = self._process_xy(x, None, False)
+            x = self._get_x(x)
+            dataset = self._process_xy(x, None, predict=True)
         else:
             dataset = self._adapt(x, False, self.inputs, self._input_adapters)
         dataset = dataset.batch(batch_size)
