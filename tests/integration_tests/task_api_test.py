@@ -47,14 +47,14 @@ def test_text_regressor(tmp_path):
 def test_structured_data_from_numpy_regressor(tmp_path):
     num_data = 500
     num_train = 400
-    data = utils.generate_data(num_data, shape=(10,))
+    data = utils.generate_structured_data(num_data)
     x_train, x_test = data[:num_train], data[num_train:]
     y = utils.generate_data(num_instances=num_data, shape=(1,))
     y_train, y_test = y[:num_train], y[num_train:]
     clf = ak.StructuredDataRegressor(directory=tmp_path,
                                      max_trials=2,
                                      seed=utils.SEED)
-    clf.fit(x_train, y_train, epochs=20, validation_data=(x_train, y_train))
+    clf.fit(x_train, y_train, epochs=11, validation_data=(x_train, y_train))
     clf.export_model()
     assert clf.predict(x_test).shape == (len(y_test), 1)
 

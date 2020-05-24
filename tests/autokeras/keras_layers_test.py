@@ -5,8 +5,8 @@ from autokeras import keras_layers as layer_module
 
 
 def test_feature_encoder_layer(tmp_path):
-    data = np.array([['a', 'ab', 2.1], ['b', 'bc', 1.0], ['a', 'bc', 3.5]])
-    data2 = np.array([['a', 'ab', 2.1], ['x', 'bc', 1.0], ['a', 'bc', 3.5]])
+    data = np.array([['a', 'ab', 2.1], ['b', 'bc', 1.0], ['a', 'bc', 'nan']])
+    data2 = np.array([['a', 'ab', 2.1], ['x', 'bc', 1.0], ['a', 'bc', 'nan']])
 
     input_node = tf.keras.Input(shape=(3,), dtype=tf.string)
     layer = layer_module.MultiColumnCategoricalEncoding([
@@ -35,4 +35,5 @@ def test_feature_encoder_layer(tmp_path):
     assert result[0][0] != result[1][0]
     assert result[0][1] != result[1][1]
     assert result[0][1] != result[2][1]
+    assert result[2][2] == 0
     assert output.dtype == np.dtype('float32')
