@@ -88,6 +88,8 @@ class RNNBlock(block_module.Block):
             be tuned automatically.
         layer_type: String. 'gru' or 'lstm'. If left unspecified, it will be tuned
             automatically.
+        attention: Boolean. Apply Recurrent attention. If left unspecified, it will
+            be tuned automatically. Does not go together with Bidirectional.
     """
 
     def __init__(self,
@@ -95,12 +97,24 @@ class RNNBlock(block_module.Block):
                  bidirectional: Optional[bool] = None,
                  num_layers: Optional[int] = None,
                  layer_type: Optional[int] = None,
+                 attention: Optional[bool] =True,
                  **kwargs):
         super().__init__(**kwargs)
         self.return_sequences = return_sequences
         self.bidirectional = bidirectional
         self.num_layers = num_layers
         self.layer_type = layer_type
+        self.attention = attention
+
+    @staticmethod
+    def attention_over_time(inputs):
+        time_steps = int(inputs.shape[1])
+        context_vector = layers.Permute((2, 1))(inputs)
+        context_vector = layers.Dense(time_steps, activation='softmax')(
+            context_vector)
+        context_vector = layers.Permute((2, 1))(context_vector)
+        mul_attention_out = layers.Multiply()([inputs, context_vector])
+        return mul_attention_out
 
     def get_config(self):
         config = super().get_config()
@@ -108,7 +122,8 @@ class RNNBlock(block_module.Block):
             'return_sequences': self.return_sequences,
             'bidirectional': self.bidirectional,
             'num_layers': self.num_layers,
-            'layer_type': self.layer_type})
+            'layer_type': self.layer_type,
+            'attention': self.attention})
         return config
 
     def build(self, hp, inputs=None):
@@ -134,6 +149,7 @@ class RNNBlock(block_module.Block):
         num_layers = self.num_layers or hp.Choice('num_layers',
                                                   [1, 2, 3],
                                                   default=2)
+        attention = self.attention if self.attention is not None else hp.Choice('attention', [True, False],default=True)
         rnn_layers = {
             'gru': layers.GRU,
             'lstm': layers.LSTM
@@ -147,6 +163,12 @@ class RNNBlock(block_module.Block):
                 output_node = layers.Bidirectional(
                     in_layer(feature_size,
                              return_sequences=return_sequences))(output_node)
+            elif attention:
+                output_node = in_layer(
+                    feature_size,
+                    return_sequences=return_sequences)(output_node)
+                output_node = self.attention_over_time(
+                    output_node) if return_sequences else output_node
             else:
                 output_node = in_layer(
                     feature_size,
