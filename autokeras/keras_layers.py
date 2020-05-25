@@ -76,4 +76,5 @@ class MultiColumnCategoricalEncoding(preprocessing.PreprocessingLayer):
 
 CUSTOM_OBJECTS = {
     'MultiColumnCategoricalEncoding': MultiColumnCategoricalEncoding,
+    'IndexLookup': index_lookup.IndexLookup,
 }
