@@ -13,6 +13,7 @@ HELP_MESSAGE = (
 EXCEPTION_LIST = [
     autokeras.Head,
     autokeras.Node,
+    autokeras.Attention,
     autokeras.CategoricalToNumerical,
     autokeras.Flatten,
     autokeras.ImageAugmentation,

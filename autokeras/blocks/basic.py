@@ -154,6 +154,56 @@ class RNNBlock(block_module.Block):
         return output_node
 
 
+class Attention(block_module.Block):
+    """Apply Attention or AdditiveAttention layer in Keras.
+
+    Please refer to the documentationof the two layers for more details.
+    https://keras.io/api/layers/attention_layers/
+
+    # Arguments
+        attention_type: String. 'multiplicative' or 'additive'.
+            If left unspecified, it will be tuned automatically.
+    """
+
+    def __init__(self,
+                 attention_type: Optional[int] = None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.attention_type = attention_type
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'attention_type': self.attention_type})
+        return config
+
+    def build(self, hp, inputs=None):
+        """
+        # Arguments
+            hp: HyperParameters. The hyperparameters for building the model.
+            inputs: List of the following tensors:
+              * query: Query `Tensor` of shape `[batch_size, Tq, dim]`.
+              * value: Value `Tensor` of shape `[batch_size, Tv, dim]`.
+              * key: Optional key `Tensor` of shape `[batch_size, Tv, dim]`. If not
+                given, will use `value` for both `key` and `value`, which is the
+                most common case.
+
+        # Returns
+            Attention outputs of shape `[batch_size, Tq, dim]`.
+        """
+        inputs = nest.flatten(inputs)
+        attention_type = self.attention_type or hp.Choice('attention_type',
+                                                          ['multiplicative',
+                                                           'additive'],
+                                                          default='additive')
+        attention_layers = {
+            'multiplicative': layers.Attention,
+            'additive': layers.AdditiveAttention
+        }
+        output_node = attention_layers[attention_type](inputs)
+        return output_node
+
+
 class ConvBlock(block_module.Block):
     """Block for vanilla ConvNets.
 

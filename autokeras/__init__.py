@@ -1,4 +1,5 @@
 from autokeras.auto_model import AutoModel
+from autokeras.blocks import Attention
 from autokeras.blocks import CategoricalToNumerical
 from autokeras.blocks import ClassificationHead
 from autokeras.blocks import ConvBlock
