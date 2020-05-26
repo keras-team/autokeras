@@ -181,7 +181,7 @@ class RNNAttentionBlock(block_module.Block):
     def get_config(self):
         config = super().get_config()
         config.update({
-            'return_sequences': self.return_sequences,})
+            'return_sequences': self.return_sequences, })
         return config
 
     def build(self, hp, inputs=None):
