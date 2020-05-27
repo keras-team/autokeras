@@ -48,7 +48,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         model.load_weights(self.best_model_path)
         return model
 
-    def _on_train_end(self, model, hp, x, *args, **kwargs):
+    def _on_train_begin(self, model, hp, x, *args, **kwargs):
         """Adapt the preprocessing layers and tune the fit arguments."""
         self.adapt(model, x)
 
