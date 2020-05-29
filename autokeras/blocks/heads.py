@@ -6,8 +6,8 @@ from tensorflow.keras import losses
 from tensorflow.python.util import nest
 
 from autokeras import adapters
+from autokeras.blocks import reduction
 from autokeras.engine import head as head_module
-from autokeras.hypermodels import reduction
 from autokeras.utils import types
 from autokeras.utils import utils
 

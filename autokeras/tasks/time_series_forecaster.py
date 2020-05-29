@@ -1,7 +1,7 @@
 import pandas as pd
 
 from autokeras import auto_model
-from autokeras import hypermodels
+from autokeras import blocks
 from autokeras import nodes as input_module
 from autokeras.tasks.structured_data_mixin import StructuredDataMixin
 from autokeras.tuners import greedy
@@ -160,9 +160,9 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
                  overwrite=True,
                  seed=None,
                  **kwargs):
-        super().__init__(outputs=hypermodels.RegressionHead(output_dim=output_dim,
-                                                            loss=loss,
-                                                            metrics=metrics),
+        super().__init__(outputs=blocks.RegressionHead(output_dim=output_dim,
+                                                       loss=loss,
+                                                       metrics=metrics),
                          column_names=column_names,
                          column_types=column_types,
                          lookback=lookback,

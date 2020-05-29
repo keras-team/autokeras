@@ -8,8 +8,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras import blocks
 from autokeras import graph as graph_module
-from autokeras import hypermodels
 from autokeras import nodes as input_module
 from autokeras import tuners
 from autokeras.engine import head as head_module
@@ -174,17 +174,17 @@ class AutoModel(object):
         middle_nodes = []
         for input_node in inputs:
             if isinstance(input_node, input_module.TextInput):
-                middle_nodes.append(hypermodels.TextBlock()(input_node))
+                middle_nodes.append(blocks.TextBlock()(input_node))
             if isinstance(input_node, input_module.ImageInput):
-                middle_nodes.append(hypermodels.ImageBlock()(input_node))
+                middle_nodes.append(blocks.ImageBlock()(input_node))
             if isinstance(input_node, input_module.StructuredDataInput):
-                middle_nodes.append(hypermodels.StructuredDataBlock()(input_node))
+                middle_nodes.append(blocks.StructuredDataBlock()(input_node))
             if isinstance(input_node, input_module.TimeseriesInput):
-                middle_nodes.append(hypermodels.TimeseriesBlock()(input_node))
+                middle_nodes.append(blocks.TimeseriesBlock()(input_node))
 
         # Merge the middle nodes.
         if len(middle_nodes) > 1:
-            output_node = hypermodels.Merge()(middle_nodes)
+            output_node = blocks.Merge()(middle_nodes)
         else:
             output_node = middle_nodes[0]
 

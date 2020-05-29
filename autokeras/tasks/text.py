@@ -3,7 +3,7 @@ from typing import Optional
 from typing import Union
 
 from autokeras import auto_model
-from autokeras import hypermodels
+from autokeras import blocks
 from autokeras import nodes as input_module
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
@@ -57,10 +57,10 @@ class TextClassifier(SupervisedTextPipeline):
                  seed: Optional[int] = None,
                  **kwargs):
         super().__init__(
-            outputs=hypermodels.ClassificationHead(num_classes=num_classes,
-                                                   multi_label=multi_label,
-                                                   loss=loss,
-                                                   metrics=metrics),
+            outputs=blocks.ClassificationHead(num_classes=num_classes,
+                                              multi_label=multi_label,
+                                              loss=loss,
+                                              metrics=metrics),
             max_trials=max_trials,
             directory=directory,
             project_name=project_name,
@@ -163,9 +163,9 @@ class TextRegressor(SupervisedTextPipeline):
                  seed=None,
                  **kwargs):
         super().__init__(
-            outputs=hypermodels.RegressionHead(output_dim=output_dim,
-                                               loss=loss,
-                                               metrics=metrics),
+            outputs=blocks.RegressionHead(output_dim=output_dim,
+                                          loss=loss,
+                                          metrics=metrics),
             max_trials=max_trials,
             directory=directory,
             project_name=project_name,

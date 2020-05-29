@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from autokeras.hypermodels import reduction
-from tests.autokeras.hypermodels import utils
+from autokeras.blocks import reduction
+from tests.autokeras.blocks import utils
 
 
 def test_merge():

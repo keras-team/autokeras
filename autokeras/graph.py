@@ -2,7 +2,7 @@ import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras import hypermodels
+from autokeras import blocks as blocks_module
 from autokeras import nodes as nodes_module
 from autokeras.engine import head as head_module
 from autokeras.engine import serializable
@@ -23,8 +23,8 @@ def feature_encoding_input(block):
 
 # Compile the graph.
 COMPILE_FUNCTIONS = {
-    hypermodels.StructuredDataBlock: [feature_encoding_input],
-    hypermodels.CategoricalToNumerical: [feature_encoding_input],
+    blocks_module.StructuredDataBlock: [feature_encoding_input],
+    blocks_module.CategoricalToNumerical: [feature_encoding_input],
 }
 
 
@@ -175,7 +175,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         raise ValueError('Cannot find block named {name}.'.format(name=name))
 
     def get_config(self):
-        blocks = [hypermodels.serialize(block) for block in self.blocks]
+        blocks = [blocks_module.serialize(block) for block in self.blocks]
         nodes = {str(self._node_to_id[node]): nodes_module.serialize(node)
                  for node in self.inputs}
         override_hps = [kerastuner.engine.hyperparameters.serialize(hp)
@@ -202,7 +202,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
 
     @classmethod
     def from_config(cls, config):
-        blocks = [hypermodels.deserialize(block) for block in config['blocks']]
+        blocks = [blocks_module.deserialize(block) for block in config['blocks']]
         nodes = {int(node_id): nodes_module.deserialize(node)
                  for node_id, node in config['nodes'].items()}
         override_hps = [kerastuner.engine.hyperparameters.deserialize(config)
