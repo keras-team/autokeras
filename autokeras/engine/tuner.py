@@ -7,7 +7,6 @@ from tensorflow.keras import callbacks as tf_callbacks
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
-from autokeras import graph as graph_module
 from autokeras.utils import utils
 
 
@@ -36,8 +35,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         self.preprocessors = nest.flatten(preprocessors)
         self._finished = False
         # Save or load the HyperModel.
-        utils.save_json(os.path.join(self.project_dir, 'graph'),
-                        graph_module.serialize(self.hypermodel.hypermodel))
+        self.hypermodel.hypermodel.save(os.path.join(self.project_dir, 'graph'))
 
     # Override the function to prevent building the model during initialization.
     def _populate_initial_space(self):

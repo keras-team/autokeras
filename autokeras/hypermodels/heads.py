@@ -2,6 +2,7 @@ from typing import Optional
 
 from tensorflow.keras import activations
 from tensorflow.keras import layers
+from tensorflow.keras import losses
 from tensorflow.python.util import nest
 
 from autokeras import adapters
@@ -43,24 +44,23 @@ class ClassificationHead(head_module.Head):
                  metrics: Optional[types.MetricsType] = None,
                  dropout_rate: Optional[float] = None,
                  **kwargs):
+        self.num_classes = num_classes
+        self.multi_label = multi_label
+        self.dropout_rate = dropout_rate
+        if metrics is None:
+            metrics = ['accuracy']
+        if loss is None:
+            loss = self.infer_loss()
         super().__init__(loss=loss,
                          metrics=metrics,
                          **kwargs)
-        self.num_classes = num_classes
-        self.multi_label = multi_label
-        if not self.metrics:
-            self.metrics = ['accuracy']
-        self.dropout_rate = dropout_rate
-        self.set_loss()
 
-    def set_loss(self):
+    def infer_loss(self):
         if not self.num_classes:
-            return
-        if not self.loss:
-            if self.num_classes == 2 or self.multi_label:
-                self.loss = 'binary_crossentropy'
-            elif self.num_classes > 2:
-                self.loss = 'categorical_crossentropy'
+            return None
+        if self.num_classes == 2 or self.multi_label:
+            return losses.BinaryCrossentropy()
+        return losses.CategoricalCrossentropy()
 
     def get_config(self):
         config = super().get_config()
@@ -108,7 +108,7 @@ class ClassificationHead(head_module.Head):
     def config_from_adapter(self, adapter):
         super().config_from_adapter(adapter)
         self.num_classes = adapter.num_classes
-        self.set_loss()
+        self.loss = self.infer_loss()
 
 
 class RegressionHead(head_module.Head):
@@ -134,13 +134,12 @@ class RegressionHead(head_module.Head):
                  metrics: Optional[types.MetricsType] = None,
                  dropout_rate: Optional[float] = None,
                  **kwargs):
+        if metrics is None:
+            metrics = ['mean_squared_error']
         super().__init__(loss=loss,
                          metrics=metrics,
                          **kwargs)
         self.output_dim = output_dim
-        if not self.metrics:
-            self.metrics = ['mean_squared_error']
-        self.loss = loss
         self.dropout_rate = dropout_rate
 
     def get_config(self):

@@ -1,3 +1,5 @@
+import tensorflow as tf
+
 from autokeras.hypermodels.basic import ConvBlock
 from autokeras.hypermodels.basic import DenseBlock
 from autokeras.hypermodels.basic import Embedding
@@ -20,3 +22,15 @@ from autokeras.hypermodels.wrapper import ImageBlock
 from autokeras.hypermodels.wrapper import StructuredDataBlock
 from autokeras.hypermodels.wrapper import TextBlock
 from autokeras.hypermodels.wrapper import TimeseriesBlock
+
+
+def serialize(obj):
+    return tf.keras.utils.serialize_keras_object(obj)
+
+
+def deserialize(config, custom_objects=None):
+    return tf.keras.utils.deserialize_keras_object(
+        config,
+        module_objects=globals(),
+        custom_objects=custom_objects,
+        printable_module_name='hypermodels')
