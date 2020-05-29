@@ -2,7 +2,7 @@ import kerastuner
 import numpy as np
 
 import autokeras as ak
-from autokeras import graph as graph_module
+from autokeras import hypermodels
 from autokeras import nodes as input_module
 from autokeras.hypermodels import heads as head_module
 
@@ -15,7 +15,7 @@ def test_two_classes():
     head.config_from_adapter(adapter)
     head.output_shape = (1,)
     head.build(kerastuner.HyperParameters(), input_module.Input(shape=(32,)).build())
-    assert head.loss == 'binary_crossentropy'
+    assert head.loss.name == 'binary_crossentropy'
 
 
 def test_three_classes():
@@ -24,7 +24,7 @@ def test_three_classes():
     adapter = head.get_adapter()
     adapter.fit_transform(y)
     head.config_from_adapter(adapter)
-    assert head.loss == 'categorical_crossentropy'
+    assert head.loss.name == 'categorical_crossentropy'
 
 
 def test_segmentation():
@@ -35,5 +35,5 @@ def test_segmentation():
     head.config_from_adapter(adapter)
     input_shape = (64, 64, 21)
     hp = kerastuner.HyperParameters()
-    head = graph_module.deserialize(graph_module.serialize(head))
+    head = hypermodels.deserialize(hypermodels.serialize(head))
     head.build(hp, ak.Input(shape=input_shape).build())

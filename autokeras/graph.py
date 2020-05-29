@@ -3,9 +3,10 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import hypermodels
-from autokeras import nodes
+from autokeras import nodes as nodes_module
 from autokeras.engine import head as head_module
 from autokeras.engine import serializable
+from autokeras.utils import utils
 
 
 def feature_encoding_input(block):
@@ -13,7 +14,7 @@ def feature_encoding_input(block):
 
     The values are fetched for FeatureEncoding from StructuredDataInput.
     """
-    if not isinstance(block.inputs[0], nodes.StructuredDataInput):
+    if not isinstance(block.inputs[0], nodes_module.StructuredDataInput):
         raise TypeError('FeatureEncoding block can only be used '
                         'with StructuredDataInput.')
     block.column_types = block.inputs[0].column_types
@@ -26,22 +27,12 @@ COMPILE_FUNCTIONS = {
     hypermodels.CategoricalToNumerical: [feature_encoding_input],
 }
 
-ALL_CLASSES = {
-    **vars(nodes),
-    **vars(hypermodels),
-}
 
-
-def serialize(obj):
-    return tf.keras.utils.serialize_keras_object(obj)
-
-
-def deserialize(config, custom_objects=None):
-    return tf.keras.utils.deserialize_keras_object(
-        config,
-        module_objects={**ALL_CLASSES},
-        custom_objects=custom_objects,
-        printable_module_name='graph')
+def load_graph(filepath, custom_objects=None):
+    if custom_objects is None:
+        custom_objects = {}
+    with tf.keras.utils.custom_object_scope(custom_objects):
+        return Graph.from_config(utils.load_json(filepath))
 
 
 class Graph(kerastuner.HyperModel, serializable.Serializable):
@@ -184,10 +175,10 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         raise ValueError('Cannot find block named {name}.'.format(name=name))
 
     def get_config(self):
-        blocks = [serialize(block) for block in self.blocks]
-        nodes = {str(self._node_to_id[node]): serialize(node)
+        blocks = [hypermodels.serialize(block) for block in self.blocks]
+        nodes = {str(self._node_to_id[node]): nodes_module.serialize(node)
                  for node in self.inputs}
-        override_hps = [tf.keras.utils.serialize_keras_object(hp)
+        override_hps = [kerastuner.engine.hyperparameters.serialize(hp)
                         for hp in self.override_hps]
         block_inputs = {
             str(block_id): [self._node_to_id[node]
@@ -211,8 +202,8 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
 
     @classmethod
     def from_config(cls, config):
-        blocks = [deserialize(block) for block in config['blocks']]
-        nodes = {int(node_id): deserialize(node)
+        blocks = [hypermodels.deserialize(block) for block in config['blocks']]
+        nodes = {int(node_id): nodes_module.deserialize(node)
                  for node_id, node in config['nodes'].items()}
         override_hps = [kerastuner.engine.hyperparameters.deserialize(config)
                         for config in config['override_hps']]
@@ -280,3 +271,6 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
                       loss=self._get_loss())
 
         return model
+
+    def save(self, filepath):
+        utils.save_json(filepath, self.get_config())
