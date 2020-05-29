@@ -1,9 +1,9 @@
 from tensorflow.python.util import nest
 
+from autokeras.blocks import basic
+from autokeras.blocks import preprocessing
+from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
-from autokeras.hypermodels import basic
-from autokeras.hypermodels import preprocessing
-from autokeras.hypermodels import reduction
 
 
 class ImageBlock(block_module.Block):

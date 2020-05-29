@@ -5,8 +5,8 @@ from kerastuner.applications import xception
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
+from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
-from autokeras.hypermodels import reduction
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
 

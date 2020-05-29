@@ -3,8 +3,8 @@ from unittest import mock
 import pytest
 import tensorflow as tf
 
-from autokeras.hypermodels import basic
-from tests.autokeras.hypermodels import utils
+from autokeras.blocks import basic
+from tests.autokeras.blocks import utils
 
 
 def test_type_error_for_call():
@@ -14,8 +14,8 @@ def test_type_error_for_call():
     assert 'Expect the inputs to layer' in str(info.value)
 
 
-@mock.patch('autokeras.hypermodels.basic.resnet.HyperResNet.__init__')
-@mock.patch('autokeras.hypermodels.basic.resnet.HyperResNet.build')
+@mock.patch('autokeras.blocks.basic.resnet.HyperResNet.__init__')
+@mock.patch('autokeras.blocks.basic.resnet.HyperResNet.build')
 def test_resnet_block(init, build):
     utils.block_basic_exam(
         basic.ResNetBlock(),
@@ -26,8 +26,8 @@ def test_resnet_block(init, build):
     assert build.called
 
 
-@mock.patch('autokeras.hypermodels.basic.xception.HyperXception.__init__')
-@mock.patch('autokeras.hypermodels.basic.xception.HyperXception.build')
+@mock.patch('autokeras.blocks.basic.xception.HyperXception.__init__')
+@mock.patch('autokeras.blocks.basic.xception.HyperXception.build')
 def test_xception_block(init, build):
     utils.block_basic_exam(
         basic.XceptionBlock(),

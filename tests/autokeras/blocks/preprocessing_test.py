@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from autokeras.hypermodels import preprocessing
-from tests.autokeras.hypermodels import utils
+from autokeras.blocks import preprocessing
+from tests.autokeras.blocks import utils
 
 
 def test_image_augmentation():

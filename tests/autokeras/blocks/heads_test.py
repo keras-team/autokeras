@@ -2,9 +2,9 @@ import kerastuner
 import numpy as np
 
 import autokeras as ak
-from autokeras import hypermodels
+from autokeras import blocks
 from autokeras import nodes as input_module
-from autokeras.hypermodels import heads as head_module
+from autokeras.blocks import heads as head_module
 
 
 def test_two_classes():
@@ -35,5 +35,5 @@ def test_segmentation():
     head.config_from_adapter(adapter)
     input_shape = (64, 64, 21)
     hp = kerastuner.HyperParameters()
-    head = hypermodels.deserialize(hypermodels.serialize(head))
+    head = blocks.deserialize(blocks.serialize(head))
     head.build(hp, ak.Input(shape=input_shape).build())

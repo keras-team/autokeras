@@ -1,6 +1,6 @@
 import kerastuner
 
-from autokeras import hypermodels
+from autokeras import blocks
 
 
 def name_in_hps(hp_name, hp):
@@ -9,7 +9,7 @@ def name_in_hps(hp_name, hp):
 
 def block_basic_exam(block, inputs, hp_names):
     hp = kerastuner.HyperParameters()
-    block = hypermodels.deserialize(hypermodels.serialize(block))
+    block = blocks.deserialize(blocks.serialize(block))
     outputs = block.build(hp, inputs)
 
     for hp_name in hp_names:

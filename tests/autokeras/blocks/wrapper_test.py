@@ -2,8 +2,8 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import adapters
-from autokeras.hypermodels import wrapper
-from tests.autokeras.hypermodels import utils
+from autokeras.blocks import wrapper
+from tests.autokeras.blocks import utils
 
 
 def test_image_block():
