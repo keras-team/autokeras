@@ -154,7 +154,7 @@ class RNNBlock(block_module.Block):
         return output_node
 
 
-class RNNAttentionBlock(block_module.Block):
+class AttentionBlock(block_module.Block):
     """An RNN Attention Block.
 
     # Arguments
