@@ -1,5 +1,6 @@
 import kerastuner
 import numpy as np
+import tensorflow as tf
 
 import autokeras as ak
 from autokeras import blocks
@@ -25,6 +26,16 @@ def test_three_classes():
     adapter.fit_transform(y)
     head.config_from_adapter(adapter)
     assert head.loss.name == 'categorical_crossentropy'
+
+
+def test_multi_label_loss():
+    head = head_module.ClassificationHead(name='a', multi_label=True, num_classes=8)
+    head.output_shape = (8,)
+    input_node = tf.keras.Input(shape=(5,))
+    output_node = head.build(kerastuner.HyperParameters(), input_node)
+    model = tf.keras.Model(input_node, output_node)
+    assert model.layers[-1].activation.__name__ == 'sigmoid'
+    assert head.loss.name == 'binary_crossentropy'
 
 
 def test_segmentation():

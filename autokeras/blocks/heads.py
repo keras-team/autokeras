@@ -1,5 +1,6 @@
 from typing import Optional
 
+import tensorflow as tf
 from tensorflow.keras import activations
 from tensorflow.keras import layers
 from tensorflow.keras import losses
@@ -95,7 +96,7 @@ class ClassificationHead(head_module.Head):
         if dropout_rate > 0:
             output_node = layers.Dropout(dropout_rate)(output_node)
         output_node = layers.Dense(self.output_shape[-1])(output_node)
-        if self.loss == 'binary_crossentropy':
+        if isinstance(self.loss, tf.keras.losses.BinaryCrossentropy):
             output_node = layers.Activation(activations.sigmoid,
                                             name=self.name)(output_node)
         else:
@@ -103,7 +104,8 @@ class ClassificationHead(head_module.Head):
         return output_node
 
     def get_adapter(self):
-        return adapters.ClassificationHeadAdapter(name=self.name)
+        return adapters.ClassificationHeadAdapter(
+            name=self.name, multi_label=self.multi_label)
 
     def config_from_adapter(self, adapter):
         super().config_from_adapter(adapter)
