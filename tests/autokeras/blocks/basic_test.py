@@ -64,7 +64,7 @@ def test_rnn_block():
         ])
 
 
-def test_rnn_attention_block():
+def test_attention_block():
     utils.block_basic_exam(
         basic.AttentionBlock(),
         tf.keras.Input(shape=(32, 10), dtype=tf.float32),

@@ -155,7 +155,7 @@ class RNNBlock(block_module.Block):
 
 
 class AttentionBlock(block_module.Block):
-    """An RNN Attention Block.
+    """A Attention Block.
 
     # Arguments
         return_sequences: Boolean. Whether to return the last output in the
