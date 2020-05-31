@@ -44,7 +44,10 @@ class HeadAdapter(adapter_module.Adapter):
 
 class ClassificationHeadAdapter(HeadAdapter):
 
-    def __init__(self, num_classes=None, **kwargs):
+    def __init__(self, 
+                 num_classes=None, 
+                 multi_label=False,
+                 **kwargs):
         super().__init__(**kwargs)
         self.num_classes = num_classes
         self.label_encoder = None
