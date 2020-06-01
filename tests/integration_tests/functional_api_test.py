@@ -6,7 +6,7 @@ from tests import utils
 
 def test_functional_api(tmp_path):
     # Prepare the data.
-    num_instances = 20
+    num_instances = 80
     (image_x, train_y), (test_x, test_y) = mnist.load_data()
     (text_x, train_y), (test_x, test_y) = utils.imdb_raw()
     (structured_data_x, train_y), (test_x, test_y) = utils.dataframe_numpy()

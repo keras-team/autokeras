@@ -188,7 +188,7 @@ def generate_one_hot_labels(num_instances=100, num_classes=10, dtype='np'):
     if dtype == 'np':
         return data
     if dtype == 'dataset':
-        return tf.data.Dataset.from_tensor_slices(data)
+        return tf.data.Dataset.from_tensor_slices(data).batch(32)
 
 
 def fit_predict_with_graph(inputs, outputs, x, y):

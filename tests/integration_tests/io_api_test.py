@@ -5,10 +5,11 @@ from tests import utils
 
 
 def test_io_api(tmp_path):
+    num_instances = 100
     (image_x, train_y), (test_x, test_y) = mnist.load_data()
-    (text_x, train_y), (test_x, test_y) = utils.imdb_raw()
+    (text_x, train_y), (test_x, test_y) = utils.imdb_raw(
+        num_instances=num_instances)
 
-    num_instances = 20
     image_x = image_x[:num_instances]
     text_x = text_x[:num_instances]
     structured_data_x = utils.generate_structured_data(num_instances=num_instances)

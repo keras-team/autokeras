@@ -74,15 +74,16 @@ class ImageClassifier(SupervisedImagePipeline):
             seed=seed,
             **kwargs)
 
-    def fit(
-            self,
+    def fit(self,
             x: Optional[types.DatasetType] = None,
             y: Optional[types.DatasetType] = None,
             epochs: Optional[int] = None,
             callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
             validation_split: Optional[float] = 0.2,
-            validation_data: Union[types.DatasetType,
-                                   Tuple[types.DatasetType], None] = None,
+            validation_data: Union[
+                tf.data.Dataset,
+                Tuple[types.DatasetType, types.DatasetType],
+                None] = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
