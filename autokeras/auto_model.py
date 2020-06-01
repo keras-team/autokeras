@@ -248,14 +248,14 @@ class AutoModel(object):
                 validation data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
+        for adapter in self._input_adapters + self._output_adapters:
+            adapter.batch_size = batch_size
         dataset, validation_data = self._prepare_data(
             x=x,
             y=y,
             validation_data=validation_data,
             validation_split=validation_split)
 
-        dataset = dataset.batch(batch_size)
-        validation_data = validation_data.batch(batch_size)
         self.tuner.search(x=dataset,
                           epochs=epochs,
                           callbacks=callbacks,
@@ -395,12 +395,11 @@ class AutoModel(object):
             return dataset.map(lambda x, y: x)
         return dataset
 
-    def predict(self, x, batch_size=32, **kwargs):
+    def predict(self, x, **kwargs):
         """Predict the output for a given testing data.
 
         # Arguments
             x: Any allowed types according to the input node. Testing data.
-            batch_size: Int. Number of samples per gradient update. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
 
         # Returns
@@ -412,7 +411,6 @@ class AutoModel(object):
             dataset = self._process_xy(x, None, predict=True)
         else:
             dataset = self._adapt(x, False, self.inputs, self._input_adapters)
-        dataset = dataset.batch(batch_size)
         model = self.tuner.get_best_model()
         y = model.predict(dataset, **kwargs)
         y = self._postprocess(y)
@@ -428,14 +426,13 @@ class AutoModel(object):
             new_y.append(temp_y)
         return new_y
 
-    def evaluate(self, x, y=None, batch_size=32, **kwargs):
+    def evaluate(self, x, y=None, **kwargs):
         """Evaluate the best model for the given data.
 
         # Arguments
             x: Any allowed types according to the input node. Testing data.
             y: Any allowed types according to the head. Testing targets.
                 Defaults to None.
-            batch_size: Int. Number of samples per gradient update. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
         # Returns
@@ -445,7 +442,6 @@ class AutoModel(object):
             the scalar outputs.
         """
         dataset = self._process_xy(x, y, False)
-        dataset = dataset.batch(batch_size)
         return self.tuner.get_best_model().evaluate(x=dataset, **kwargs)
 
     def export_model(self):
