@@ -194,6 +194,8 @@ class ConvBlock(block_module.Block):
         config.update({
             'kernel_size': self.kernel_size,
             'num_blocks': self.num_blocks,
+            'num_layers': self.num_layers,
+            'max_pooling': self.max_pooling,
             'separable': self.separable,
             'dropout_rate': self.dropout_rate})
         return config
@@ -258,7 +260,7 @@ class ConvBlock(block_module.Block):
         return 'same'
 
 
-class ResNetBlock(block_module.Block, resnet.HyperResNet):
+class ResNetBlock(resnet.HyperResNet, block_module.Block):
     """Block for ResNet.
 
     # Arguments
@@ -272,6 +274,12 @@ class ResNetBlock(block_module.Block, resnet.HyperResNet):
                  version: Optional[str] = None,
                  pooling: Optional[str] = None,
                  **kwargs):
+        if 'include_top' in kwargs:
+            raise ValueError(
+                'Argument "include_top" is not supported in ResNetBlock.')
+        if 'input_shape' in kwargs:
+            raise ValueError(
+                'Argument "input_shape" is not supported in ResNetBlock.')
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
         self.version = version
         self.pooling = pooling
@@ -279,6 +287,7 @@ class ResNetBlock(block_module.Block, resnet.HyperResNet):
     def get_config(self):
         config = super().get_config()
         config.update({
+            'classes': self.classes,
             'version': self.version,
             'pooling': self.pooling})
         return config
@@ -297,7 +306,7 @@ class ResNetBlock(block_module.Block, resnet.HyperResNet):
         return model.outputs
 
 
-class XceptionBlock(block_module.Block, xception.HyperXception):
+class XceptionBlock(xception.HyperXception, block_module.Block):
     """XceptionBlock.
 
     An Xception structure, used for specifying your model with specific datasets.
@@ -327,6 +336,12 @@ class XceptionBlock(block_module.Block, xception.HyperXception):
                  num_residual_blocks: Optional[int] = None,
                  pooling: Optional[str] = None,
                  **kwargs):
+        if 'include_top' in kwargs:
+            raise ValueError(
+                'Argument "include_top" is not supported in XceptionBlock.')
+        if 'input_shape' in kwargs:
+            raise ValueError(
+                'Argument "input_shape" is not supported in XceptionBlock.')
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
         self.activation = activation
         self.initial_strides = initial_strides
@@ -336,6 +351,7 @@ class XceptionBlock(block_module.Block, xception.HyperXception):
     def get_config(self):
         config = super().get_config()
         config.update({
+            'classes': self.classes,
             'activation': self.activation,
             'initial_strides': self.initial_strides,
             'num_residual_blocks': self.num_residual_blocks,

@@ -1,5 +1,3 @@
-from unittest import mock
-
 import pytest
 import tensorflow as tf
 
@@ -14,21 +12,27 @@ def test_type_error_for_call():
     assert 'Expect the inputs to layer' in str(info.value)
 
 
-@mock.patch('autokeras.blocks.basic.resnet.HyperResNet.__init__')
-@mock.patch('autokeras.blocks.basic.resnet.HyperResNet.build')
-def test_resnet_block(init, build):
+def test_resnet_block():
     utils.block_basic_exam(
         basic.ResNetBlock(),
         tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
         ['version', 'pooling'],
     )
-    assert init.called
-    assert build.called
 
 
-@mock.patch('autokeras.blocks.basic.xception.HyperXception.__init__')
-@mock.patch('autokeras.blocks.basic.xception.HyperXception.build')
-def test_xception_block(init, build):
+def test_resnet_invalid_kwargs():
+    with pytest.raises(ValueError) as info:
+        basic.ResNetBlock(include_top=True)
+    assert 'Argument "include_top" is not' in str(info.value)
+
+
+def test_resnet_invalid_kwargs2():
+    with pytest.raises(ValueError) as info:
+        basic.ResNetBlock(input_shape=(10,))
+    assert 'Argument "input_shape" is not' in str(info.value)
+
+
+def test_xception_block():
     utils.block_basic_exam(
         basic.XceptionBlock(),
         tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
@@ -38,8 +42,18 @@ def test_xception_block(init, build):
             'num_residual_blocks',
             'pooling',
         ])
-    assert init.called
-    assert build.called
+
+
+def test_xception_invalid_kwargs():
+    with pytest.raises(ValueError) as info:
+        basic.XceptionBlock(include_top=True)
+    assert 'Argument "include_top" is not' in str(info.value)
+
+
+def test_xception_invalid_kwargs2():
+    with pytest.raises(ValueError) as info:
+        basic.XceptionBlock(input_shape=(10,))
+    assert 'Argument "input_shape" is not' in str(info.value)
 
 
 def test_conv_block():

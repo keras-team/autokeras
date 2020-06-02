@@ -152,7 +152,6 @@ class ImageAugmentation(block_module.Block):
         self.rotation_factor = rotation_factor
         self.zoom_factor = zoom_factor
         self.contrast_factor = contrast_factor
-        self.shape = None
 
     @staticmethod
     def _get_fraction_value(value):
@@ -205,6 +204,18 @@ class ImageAugmentation(block_module.Block):
 
         return output_node
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'translation_factor': self.translation_factor,
+            'horizontal_flip': self.horizontal_flip,
+            'vertical_flip': self.vertical_flip,
+            'rotation_factor': self.rotation_factor,
+            'zoom_factor': self.zoom_factor,
+            'contrast_factor': self.contrast_factor,
+        })
+        return config
+
 
 class CategoricalToNumerical(block_module.Block):
     """Encode the categorical features to numerical features."""
@@ -225,3 +236,18 @@ class CategoricalToNumerical(block_module.Block):
             else:
                 encoding.append(keras_layers.NONE)
         return keras_layers.MultiColumnCategoricalEncoding(encoding)(input_node)
+
+    @classmethod
+    def from_config(cls, config):
+        column_types = config.pop('column_types')
+        column_names = config.pop('column_names')
+        instance = cls(**config)
+        instance.column_types = column_types
+        instance.column_names = column_names
+        return instance
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'column_types': self.column_types,
+                       'column_names': self.column_names})
+        return config
