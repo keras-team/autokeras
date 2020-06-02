@@ -189,7 +189,7 @@ class AttentionBlock(block_module.Block):
             output_node = layers.Attention(inputs)
         else:
             raise ValueError(
-                'Expect the input to have either [query, value] or [query, value, key]'
+                'Expect the input to be [query, value] or [query, value, key]'
                 'for the Attention Layer, '
                 'but got {shape}'.format(shape=inputs.shape))
 
