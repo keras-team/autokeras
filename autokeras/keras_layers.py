@@ -57,6 +57,8 @@ class MultiColumnCategoricalEncoding(preprocessing.PreprocessingLayer):
                 output_nodes.append(imputed)
             else:
                 output_nodes.append(tf.cast(encoding_layer(input_node), tf.float32))
+        if len(output_nodes) == 1:
+            return output_nodes[0]
         return tf.keras.layers.Concatenate()(output_nodes)
 
     def adapt(self, data):

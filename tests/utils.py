@@ -243,3 +243,14 @@ def build_graph():
     return ak.graph.Graph(
         inputs=image_input,
         outputs=classification_outputs)
+
+
+def config_tests(obj, excluded_keys=None):
+    if excluded_keys is None:
+        excluded_keys = []
+    config_keys = obj.get_config().keys()
+    for key in config_keys:
+        assert key in obj.__dict__
+    for key in obj.__dict__:
+        if key not in excluded_keys:
+            assert key in config_keys
