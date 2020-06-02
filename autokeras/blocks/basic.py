@@ -2,7 +2,6 @@ from typing import Optional
 
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
-from tensorflow.keras import backend
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
