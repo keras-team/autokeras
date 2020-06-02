@@ -68,3 +68,11 @@ def test_multi_label_two_classes():
     adapter = output_adapter.ClassificationHeadAdapter(name='a', multi_label=True)
     adapter.fit_transform(y)
     assert adapter.label_encoder is None
+
+
+def test_multi_label_postprocessing():
+    y = np.random.rand(10, 3)
+    adapter = output_adapter.ClassificationHeadAdapter(name='a', multi_label=True)
+    adapter.fit_transform(y)
+    adapter.postprocess(y)
+    assert set(y.flatten().tolist()) == set([1, 0])

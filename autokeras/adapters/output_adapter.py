@@ -78,6 +78,7 @@ class ClassificationHeadAdapter(HeadAdapter):
             dataset = dataset.values.reshape(-1, 1)
 
         # If encoded.
+        # TODO: support raw string labels for multi-label.
         if len(dataset.flatten()) != len(dataset):
             if self.num_classes:
                 self._check_data_shape(dataset.shape[1:])
@@ -126,6 +127,9 @@ class ClassificationHeadAdapter(HeadAdapter):
                                      actual=shape))
 
     def postprocess(self, y):
+        if self.multi_label:
+            y[y < 0.5] = 0
+            y[y > 0.5] = 1
         if self.label_encoder:
             y = self.label_encoder.decode(y)
         return y
