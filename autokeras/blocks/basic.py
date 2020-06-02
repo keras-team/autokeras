@@ -2,6 +2,7 @@ from typing import Optional
 
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
+from tensorflow.keras import backend
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
@@ -155,49 +156,43 @@ class RNNBlock(block_module.Block):
 
 
 class AttentionBlock(block_module.Block):
-    """A Attention Block.
+    """The Attention Block. Luong's Multiplicative Style Attention.
 
-    # Arguments
-        return_sequences: Boolean. Whether to return the last output in the
-            output sequence, or the full sequence. Defaults to False.
+    inputs: List of the following tensors:
+      * query: Query `Tensor` of shape `[batch_size, Tq, dim]`.
+      * value: Value `Tensor` of shape `[batch_size, Tv, dim]`.
+      * key: Optional key `Tensor` of shape `[batch_size, Tv, dim]`. If not
+        given, will use `value` for both `key` and `value`, which is the
+        most common case.
+
+    Output shape:
+    Attention outputs of shape `[batch_size, Tq, dim]`.
     """
 
     def __init__(self,
-                 return_sequences: bool = False,
                  **kwargs):
         super().__init__(**kwargs)
-        self.return_sequences = return_sequences
-
-    @staticmethod
-    def attention_over_time(inputs):
-        time_steps = int(inputs.shape[1])
-        context_vector = layers.Permute((2, 1))(inputs)
-        context_vector = layers.Dense(time_steps, activation='softmax')(
-            context_vector)
-        context_vector = layers.Permute((2, 1))(context_vector)
-        mul_attention_out = layers.Multiply()([inputs, context_vector])
-        return mul_attention_out
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'return_sequences': self.return_sequences, })
         return config
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
-        utils.validate_num_inputs(inputs, 1)
-        input_node = inputs[0]
-        shape = input_node.shape.as_list()
-        if len(shape) != 3:
+        if len(inputs) == 2 or len(inputs) == 3:
+            # Either [query, value] or [query, value, key] provided
+            for in_vec in inputs:
+                if len(in_vec.shape) != 3:
+                    raise ValueError(
+                        'Expect 3 dimensions for each of query, value, (or key) '
+                        'but got {shape}'.format(shape=in_vec.shape)
+                    )
+            output_node = layers.Attention(inputs)
+        else:
             raise ValueError(
-                'Expect the input tensor to have '
-                'at least 3 dimensions for rnn models, '
-                'but got {shape}'.format(shape=input_node.shape))
-
-        output_node = input_node
-        output_node = self.attention_over_time(
-            output_node) if self.return_sequences else output_node
+                'Expect the input to have either [query, value] or [query, value, key]'
+                'for the Attention Layer, '
+                'but got {shape}'.format(shape=inputs.shape))
 
         return output_node
 

@@ -65,9 +65,11 @@ def test_rnn_block():
 
 
 def test_attention_block():
+    query = tf.keras.Input(shape=(32, 10), dtype=tf.float32)
+    values = tf.keras.Input(shape=(32, 10), dtype=tf.float32)
     utils.block_basic_exam(
         basic.AttentionBlock(),
-        tf.keras.Input(shape=(32, 10), dtype=tf.float32),
+        [query, values],
         []
     )
 
