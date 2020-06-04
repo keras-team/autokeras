@@ -110,6 +110,11 @@ def py_to_nb_md(dest_dir):
         file_name = file_path
         py_path = os.path.join(dir_path, file_path)
         file_name_no_ext = os.path.splitext(file_name)[0]
+        ext = os.path.splitext(file_name)[1]
+
+        if ext != '.py':
+            continue
+
         nb_path = os.path.join('ipynb',  file_name_no_ext + '.ipynb')
         md_path = os.path.join(dest_dir, 'tutorial', file_name_no_ext + '.md')
 
@@ -130,7 +135,7 @@ def py_to_nb_md(dest_dir):
                 + file_name_no_ext + ".py)",
                 "\n",
             ]
-            md_content = ''.join(button_lines) + md_file.read()
+            md_content = ''.join(button_lines) + '\n' +  md_file.read()
 
         with open(md_path, 'w') as md_file:
             md_file.write(md_content)
