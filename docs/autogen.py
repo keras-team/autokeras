@@ -3,6 +3,7 @@ import pathlib
 import shutil
 
 import keras_autodoc
+import tutobooks
 
 PAGES = {
     'image_classifier.md': [
@@ -103,11 +104,36 @@ ROOT = 'http://autokeras.com/'
 autokeras_dir = pathlib.Path(__file__).resolve().parents[1]
 
 
-def convert_jupyter(dest_dir):
-    for filename in dest_dir.glob('**/*.ipynb'):
-        print(filename)
-        os.system('jupyter nbconvert --to markdown ' + str(filename))
-        os.remove(filename)
+def py_to_nb_md(dest_dir):
+    for file_path in os.listdir('py/'):
+        dir_path = 'py'
+        file_name = file_path
+        py_path = os.path.join(dir_path, file_path)
+        file_name_no_ext = os.path.splitext(file_name)[0]
+        nb_path = os.path.join('ipynb',  file_name_no_ext + '.ipynb')
+        md_path = os.path.join(dest_dir, 'tutorial', file_name_no_ext + '.md')
+
+        tutobooks.py_to_md(py_path, nb_path, md_path, 'templates/img')
+
+        github_repo_dir = 'keras-team/autokeras/tree/master/docs'
+        with open(md_path, 'r') as md_file:
+            button_lines = [
+                ':material-link: '
+                "[**View in Colab**](https://colab.research.google.com/github/"
+                + github_repo_dir
+                + "ipynb/"
+                + file_name_no_ext + ".ipynb"
+                + ")   &nbsp; &nbsp;"
+                # + '<span class="k-dot">•</span>'
+                + ':octicons-octoface: '
+                "[**GitHub source**](https://github.com/" + github_repo_dir + "py/"
+                + file_name_no_ext + ".py)",
+                "\n",
+            ]
+            md_content = ''.join(button_lines) + md_file.read()
+
+        with open(md_path, 'w') as md_file:
+            md_file.write(md_content)
 
 
 def generate(dest_dir):
@@ -127,7 +153,7 @@ def generate(dest_dir):
     shutil.copyfile(autokeras_dir / '.github' / 'CONTRIBUTING.md',
                     dest_dir / 'contributing.md')
 
-    convert_jupyter(dest_dir)
+    py_to_nb_md(dest_dir)
 
 
 if __name__ == '__main__':
