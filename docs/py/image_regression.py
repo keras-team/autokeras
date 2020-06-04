@@ -1,19 +1,4 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
-"""
-"""
-[![Open In
-Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/keras-team/autokeras/blob/master/docs/templates/tutorial/image_regression.ipynb)
-Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/keras-team/autokeras/blob/master/docs/templates/tutorial/image_regression.ipynb)
-"""
-
-"""
-# Celebrity Ages Example
-
 Regression tasks estimate a numeric variable, such as the price of a house or voter
 turnout.
 
