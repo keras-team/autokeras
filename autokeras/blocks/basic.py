@@ -158,8 +158,8 @@ class AttentionBlock(block_module.Block):
     """The Attention Block. Luong's Multiplicative Style Attention.
 
     # Arguments
-        attention_type: String. 'multiplicative' or 'additive'. If left unspecified, it will be tuned
-            automatically.
+        attention_type: String. 'multiplicative' or 'additive'.
+        If left unspecified, it will be tuned automatically.
 
     """
 
@@ -191,7 +191,8 @@ class AttentionBlock(block_module.Block):
         '''
         inputs = nest.flatten(inputs)
         attention_type = self.attention_type or hp.Choice('attention_type',
-                                                          ['multiplicative', 'additive'],
+                                                          ['multiplicative',
+                                                           'additive'],
                                                           default='additive')
         attention_layers = {
             'multiplicative': layers.Attention,
