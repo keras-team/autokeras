@@ -70,7 +70,9 @@ def test_attention_block():
     utils.block_basic_exam(
         basic.AttentionBlock(),
         [query, values],
-        []
+        [
+            'attention_type',
+        ]
     )
 
 

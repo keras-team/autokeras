@@ -157,27 +157,46 @@ class RNNBlock(block_module.Block):
 class AttentionBlock(block_module.Block):
     """The Attention Block. Luong's Multiplicative Style Attention.
 
-    inputs: List of the following tensors:
-      * query: Query `Tensor` of shape `[batch_size, Tq, dim]`.
-      * value: Value `Tensor` of shape `[batch_size, Tv, dim]`.
-      * key: Optional key `Tensor` of shape `[batch_size, Tv, dim]`. If not
-        given, will use `value` for both `key` and `value`, which is the
-        most common case.
+    # Arguments
+        attention_type: String. 'multiplicative' or 'additive'. If left unspecified, it will be tuned
+            automatically.
 
-    Output shape:
-    Attention outputs of shape `[batch_size, Tq, dim]`.
     """
 
     def __init__(self,
+                 attention_type: Optional[int] = None,
                  **kwargs):
+        self.attention_type = attention_type
         super().__init__(**kwargs)
 
     def get_config(self):
         config = super().get_config()
+        config.update({
+            'attention_type': self.attention_type})
         return config
 
     def build(self, hp, inputs=None):
+        '''
+
+        inputs: List of the following tensors:
+          * query: Query `Tensor` of shape `[batch_size, Tq, dim]`.
+          * value: Value `Tensor` of shape `[batch_size, Tv, dim]`.
+          * key: Optional key `Tensor` of shape `[batch_size, Tv, dim]`. If not
+            given, will use `value` for both `key` and `value`, which is the
+            most common case.
+
+        Output shape:
+        Attention outputs of shape `[batch_size, Tq, dim]`.
+
+        '''
         inputs = nest.flatten(inputs)
+        attention_type = self.attention_type or hp.Choice('attention_type',
+                                                          ['multiplicative', 'additive'],
+                                                          default='additive')
+        attention_layers = {
+            'multiplicative': layers.Attention,
+            'additive': layers.AdditiveAttention
+        }
         if len(inputs) == 2 or len(inputs) == 3:
             # Either [query, value] or [query, value, key] provided
             for in_vec in inputs:
@@ -186,7 +205,7 @@ class AttentionBlock(block_module.Block):
                         'Expect 3 dimensions for each of query, value, (or key) '
                         'but got {shape}'.format(shape=in_vec.shape)
                     )
-            output_node = layers.Attention(inputs)
+            output_node = attention_layers[attention_type](inputs)
         else:
             raise ValueError(
                 'Expect the input to be [query, value] or [query, value, key]'
