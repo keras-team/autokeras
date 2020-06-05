@@ -226,6 +226,7 @@ class SegmentationBlock(block_module.Block):
     The image block is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
     which is controlled by a hyperparameter, 'block_type' from the paper
     https://arxiv.org/pdf/1606.00915.pdf.
+    
     This image block is the task of semantic segmentation by applying g the
     ‘atrous convolution’ with upsampled filters for dense feature extraction.
     Then further extend it to atrous spatial pyramid pooling, which encodes
@@ -233,6 +234,7 @@ class SegmentationBlock(block_module.Block):
     To produce semantically accurate predictions and detailed segmentation maps
     along object boundaries, we also combine ideas from deep
     convolutional neural networks and fully-connected conditional random fields.
+
     # Arguments
         block_type: String. 'resnet', 'xception', 'vanilla'. The type of Block
             to use. If unspecified, it will be tuned automatically.
