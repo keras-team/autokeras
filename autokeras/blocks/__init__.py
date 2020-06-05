@@ -22,3 +22,14 @@ from autokeras.blocks.wrapper import ImageBlock
 from autokeras.blocks.wrapper import StructuredDataBlock
 from autokeras.blocks.wrapper import TextBlock
 from autokeras.blocks.wrapper import TimeseriesBlock
+
+def serialize(obj):
+    return tf.keras.utils.serialize_keras_object(obj)
+
+
+def deserialize(config, custom_objects=None):
+    return tf.keras.utils.deserialize_keras_object(
+        config,
+        module_objects=globals(),
+        custom_objects=custom_objects,
+        printable_module_name='hypermodels')
