@@ -20,24 +20,18 @@ class Block(kerastuner.HyperModel, serializable.Serializable):
     """
 
     def __init__(self, name: str = None, **kwargs):
-        super().__init__(**kwargs)
         if not name:
             prefix = self.__class__.__name__
             name = prefix + '_' + str(tf.keras.backend.get_uid(prefix))
             name = utils.to_snake_case(name)
-        self.name = name
+        super().__init__(name=name, **kwargs)
         self.inputs = None
         self.outputs = None
         self._num_output_node = 1
 
     def _build_wrapper(self, hp, *args, **kwargs):
-        if not self.tunable:
-            # Copy `HyperParameters` object so that new entries are not added
-            # to the search space.
-            hp = hp.copy()
-
         with hp.name_scope(self.name):
-            return self._build(hp, *args, **kwargs)
+            return super()._build_wrapper(hp, *args, **kwargs)
 
     def __call__(self, inputs):
         """Functional API.
@@ -80,4 +74,4 @@ class Block(kerastuner.HyperModel, serializable.Serializable):
         # Returns
             A dictionary of configurations of the preprocessor.
         """
-        return {'name': self.name}
+        return {'name': self.name, 'tunable': self.tunable}

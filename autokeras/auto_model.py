@@ -8,13 +8,14 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras import blocks
 from autokeras import graph as graph_module
-from autokeras import hypermodels
 from autokeras import nodes as input_module
 from autokeras import tuners
 from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
-from autokeras.engine.tuner import AutoTuner
+from autokeras.engine import preprocessor
+from autokeras.engine import tuner
 from autokeras.nodes import Input
 from autokeras.utils import data_utils
 
@@ -77,6 +78,9 @@ class AutoModel(object):
             The input node(s) of the AutoModel.
         outputs: A list of Node or Head instances.
             The output node(s) or head(s) of the AutoModel.
+        preprocessors: An instance or list of `Preprocessor` objects corresponding to
+            each AutoModel input, to preprocess a `tf.data.Dataset` before passing it
+            to the model. Defaults to None (no external preprocessing).
         project_name: String. The name of the AutoModel. Defaults to 'auto_model'.
         max_trials: Int. The maximum number of different Keras Models to try.
             The search may finish before reaching the max_trials. Defaults to 100.
@@ -98,11 +102,14 @@ class AutoModel(object):
     def __init__(self,
                  inputs: Union[Input, List[Input]],
                  outputs: Union[head_module.Head, node_module.Node, list],
+                 preprocessors: Optional[
+                     Union[preprocessor.Preprocessor,
+                           List[preprocessor.Preprocessor]]] = None,
                  project_name: str = 'auto_model',
                  max_trials: int = 100,
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
-                 tuner: Union[str, Type[AutoTuner]] = 'greedy',
+                 tuner: Union[str, Type[tuner.AutoTuner]] = 'greedy',
                  overwrite: bool = False,
                  seed: Optional[int] = None,
                  **kwargs):
@@ -119,6 +126,7 @@ class AutoModel(object):
             tuner = get_tuner_class(tuner)
         self.tuner = tuner(
             hypermodel=graph,
+            preprocessors=preprocessors,
             overwrite=overwrite,
             objective=objective,
             max_trials=max_trials,
@@ -126,6 +134,7 @@ class AutoModel(object):
             seed=self.seed,
             project_name=project_name,
             **kwargs)
+        # Used by tuner to decide whether to use validation set for final fit.
         self._split_dataset = False
         self._heads = [output_node.in_blocks[0] for output_node in self.outputs]
         self._input_adapters = [input_node.get_adapter()
@@ -153,6 +162,10 @@ class AutoModel(object):
     def project_name(self):
         return self.tuner.project_name
 
+    @property
+    def preprocessors(self):
+        return self.tuner.preprocessors
+
     def _assemble(self):
         """Assemble the Blocks based on the input output nodes."""
         inputs = nest.flatten(self.inputs)
@@ -161,17 +174,17 @@ class AutoModel(object):
         middle_nodes = []
         for input_node in inputs:
             if isinstance(input_node, input_module.TextInput):
-                middle_nodes.append(hypermodels.TextBlock()(input_node))
+                middle_nodes.append(blocks.TextBlock()(input_node))
             if isinstance(input_node, input_module.ImageInput):
-                middle_nodes.append(hypermodels.ImageBlock()(input_node))
+                middle_nodes.append(blocks.ImageBlock()(input_node))
             if isinstance(input_node, input_module.StructuredDataInput):
-                middle_nodes.append(hypermodels.StructuredDataBlock()(input_node))
+                middle_nodes.append(blocks.StructuredDataBlock()(input_node))
             if isinstance(input_node, input_module.TimeseriesInput):
-                middle_nodes.append(hypermodels.TimeseriesBlock()(input_node))
+                middle_nodes.append(blocks.TimeseriesBlock()(input_node))
 
         # Merge the middle nodes.
         if len(middle_nodes) > 1:
-            output_node = hypermodels.Merge()(middle_nodes)
+            output_node = blocks.Merge()(middle_nodes)
         else:
             output_node = middle_nodes[0]
 
@@ -235,14 +248,14 @@ class AutoModel(object):
                 validation data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
+        for adapter in self._input_adapters + self._output_adapters:
+            adapter.batch_size = batch_size
         dataset, validation_data = self._prepare_data(
             x=x,
             y=y,
             validation_data=validation_data,
             validation_split=validation_split)
 
-        dataset = dataset.batch(batch_size)
-        validation_data = validation_data.batch(batch_size)
         self.tuner.search(x=dataset,
                           epochs=epochs,
                           callbacks=callbacks,
@@ -257,34 +270,87 @@ class AutoModel(object):
         for source, hm, adapter in zip(sources, hms, adapters):
             if fit:
                 source = adapter.fit_transform(source)
+                hm.config_from_adapter(adapter)
             else:
                 source = adapter.transform(source)
             adapted.append(source)
-            hm.config_from_adapter(adapter)
         if len(adapted) == 1:
             return adapted[0]
         return tf.data.Dataset.zip(tuple(adapted))
 
-    def _process_xy(self, x, y, fit):
+    def _process_xy(self, x, y, fit=False, validation=False, predict=False):
         """Convert x, y to tf.data.Dataset.
 
         # Arguments
             x: Any type allowed by the corresponding input node.
             y: Any type allowed by the corresponding head.
             fit: Boolean. Whether to fit the type converter with the provided data.
+            validation: Boolean. Whether it is validation data or not.
+            predict: Boolean. True means the data doesn't contain y.
 
         # Returns
             A tf.data.Dataset containing both x and y.
         """
-        if isinstance(x, tf.data.Dataset) and y is None:
+        self._check_data_format(x, y, validation=validation, predict=predict)
+        if isinstance(x, tf.data.Dataset):
             dataset = x
-            x = dataset.map(lambda a, b: a)
-            y = dataset.map(lambda a, b: b)
+            if not predict:
+                y = dataset.map(lambda a, b: b)
+                y = [y.map(lambda *a: nest.flatten(a)[index])
+                     for index in range(len(self.outputs))]
+                x = dataset.map(lambda a, b: a)
+            x = [x.map(lambda *a: nest.flatten(a)[index])
+                 for index in range(len(self.inputs))]
 
         x = self._adapt(x, fit, self.inputs, self._input_adapters)
-        y = self._adapt(y, fit, self._heads, self._output_adapters)
+        if not predict:
+            y = self._adapt(y, fit, self._heads, self._output_adapters)
 
-        return tf.data.Dataset.zip((x, y))
+        if not predict:
+            return tf.data.Dataset.zip((x, y))
+
+        if len(self.inputs) == 1:
+            return x
+
+        return x.map(lambda *x: (x, ))
+
+    def _check_data_format(self, x, y, validation=False, predict=False):
+        """Check if the dataset has the same number of IOs with the model."""
+        if validation:
+            in_val = ' in validation_data'
+        else:
+            in_val = ''
+
+        if isinstance(x, tf.data.Dataset) and y is not None:
+            raise ValueError('Expect y is None when x is '
+                             'tf.data.Dataset{in_val}.'.format(in_val=in_val))
+
+        if isinstance(x, tf.data.Dataset):
+            if not predict:
+                x_shapes, y_shapes = data_utils.dataset_shape(x)
+                x_shapes = nest.flatten(x_shapes)
+                y_shapes = nest.flatten(y_shapes)
+            else:
+                x_shapes = nest.flatten(data_utils.dataset_shape(x))
+        else:
+            x_shapes = [a.shape for a in nest.flatten(x)]
+            if not predict:
+                y_shapes = [a.shape for a in nest.flatten(y)]
+
+        if len(x_shapes) != len(self.inputs):
+            raise ValueError(
+                'Expect x{in_val} to have {input_num} arrays, '
+                'but got {data_num}'.format(
+                    in_val=in_val,
+                    input_num=len(self.inputs),
+                    data_num=len(x_shapes)))
+        if not predict and len(y_shapes) != len(self.outputs):
+            raise ValueError(
+                'Expect y{in_val} to have {output_num} arrays, '
+                'but got {data_num}'.format(
+                    in_val=in_val,
+                    output_num=len(self.outputs),
+                    data_num=len(y_shapes)))
 
     def _prepare_data(self, x, y, validation_data, validation_split):
         """Convert the data to tf.data.Dataset."""
@@ -294,11 +360,16 @@ class AutoModel(object):
                              'should be provided.')
         # TODO: Handle other types of input, zip dataset, tensor, dict.
         # Prepare the dataset.
-        dataset = self._process_xy(x, y, True)
+        self._check_data_format(x, y)
+        dataset = self._process_xy(x, y, fit=True)
         if validation_data:
             self._split_dataset = False
-            val_x, val_y = validation_data
-            validation_data = self._process_xy(val_x, val_y, False)
+            if isinstance(validation_data, tf.data.Dataset):
+                x_val = validation_data
+                y_val = None
+            else:
+                x_val, y_val = validation_data
+            validation_data = self._process_xy(x_val, y_val, validation=True)
         # Split the data with validation_split.
         if validation_data is None and validation_split:
             self._split_dataset = True
@@ -307,12 +378,28 @@ class AutoModel(object):
                 validation_split)
         return dataset, validation_data
 
-    def predict(self, x, batch_size=32, **kwargs):
+    def _get_x(self, dataset):
+        """Remove y from the tf.data.Dataset if exists."""
+        shapes = data_utils.dataset_shape(dataset)
+        # Only one or less element in the first level.
+        if len(shapes) <= 1:
+            return dataset.map(lambda *x: x[0])
+        # The first level has more than 1 element.
+        # The nest has 2 levels.
+        for shape in shapes:
+            if isinstance(shape, tuple):
+                return dataset.map(lambda x, y: x)
+        # The nest has one level.
+        # It matches the single IO case.
+        if len(shapes) == 2 and len(self.inputs) == 1 and len(self.outputs) == 1:
+            return dataset.map(lambda x, y: x)
+        return dataset
+
+    def predict(self, x, **kwargs):
         """Predict the output for a given testing data.
 
         # Arguments
             x: Any allowed types according to the input node. Testing data.
-            batch_size: Int. Number of samples per gradient update. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
 
         # Returns
@@ -320,10 +407,10 @@ class AutoModel(object):
             The predicted results.
         """
         if isinstance(x, tf.data.Dataset):
-            dataset = self._process_xy(x, None, False)
+            x = self._get_x(x)
+            dataset = self._process_xy(x, None, predict=True)
         else:
             dataset = self._adapt(x, False, self.inputs, self._input_adapters)
-        dataset = dataset.batch(batch_size)
         model = self.tuner.get_best_model()
         y = model.predict(dataset, **kwargs)
         y = self._postprocess(y)
@@ -339,14 +426,13 @@ class AutoModel(object):
             new_y.append(temp_y)
         return new_y
 
-    def evaluate(self, x, y=None, batch_size=32, **kwargs):
+    def evaluate(self, x, y=None, **kwargs):
         """Evaluate the best model for the given data.
 
         # Arguments
             x: Any allowed types according to the input node. Testing data.
             y: Any allowed types according to the head. Testing targets.
                 Defaults to None.
-            batch_size: Int. Number of samples per gradient update. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
         # Returns
@@ -356,7 +442,6 @@ class AutoModel(object):
             the scalar outputs.
         """
         dataset = self._process_xy(x, y, False)
-        dataset = dataset.batch(batch_size)
         return self.tuner.get_best_model().evaluate(x=dataset, **kwargs)
 
     def export_model(self):

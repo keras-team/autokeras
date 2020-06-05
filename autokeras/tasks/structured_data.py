@@ -7,7 +7,7 @@ from typing import Union
 import pandas as pd
 
 from autokeras import auto_model
-from autokeras import hypermodels
+from autokeras import blocks
 from autokeras import nodes as input_module
 from autokeras.tasks.structured_data_mixin import StructuredDataMixin
 from autokeras.tuners import greedy
@@ -187,10 +187,10 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                  seed=None,
                  **kwargs):
         super().__init__(
-            outputs=hypermodels.ClassificationHead(num_classes=num_classes,
-                                                   multi_label=multi_label,
-                                                   loss=loss,
-                                                   metrics=metrics),
+            outputs=blocks.ClassificationHead(num_classes=num_classes,
+                                              multi_label=multi_label,
+                                              loss=loss,
+                                              metrics=metrics),
             column_names=column_names,
             column_types=column_types,
             max_trials=max_trials,
@@ -296,9 +296,9 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
                  seed: Optional[int] = None,
                  **kwargs):
         super().__init__(
-            outputs=hypermodels.RegressionHead(output_dim=output_dim,
-                                               loss=loss,
-                                               metrics=metrics),
+            outputs=blocks.RegressionHead(output_dim=output_dim,
+                                          loss=loss,
+                                          metrics=metrics),
             column_names=column_names,
             column_types=column_types,
             max_trials=max_trials,

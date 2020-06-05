@@ -15,10 +15,12 @@ class Adapter(serializable.Serializable):
 
     # Arguments
         shape: Tuple of int. The input or output shape of the hypermodel.
+        batch_size: Int. Number of samples per gradient update. Defaults to 32.
     """
 
-    def __init__(self, shape=None):
+    def __init__(self, shape=None, batch_size=32):
         self.shape = shape
+        self.batch_size = batch_size
 
     def check(self, dataset):
         """Check if the dataset is valid for the input node.
@@ -42,10 +44,10 @@ class Adapter(serializable.Serializable):
         # Returns
             tf.data.Dataset. The converted dataset.
         """
-        if isinstance(dataset, tf.data.Dataset):
-            return dataset
         if isinstance(dataset, np.ndarray):
-            return tf.data.Dataset.from_tensor_slices(dataset.astype(np.float32))
+            dataset = tf.data.Dataset.from_tensor_slices(
+                dataset.astype(np.float32))
+        return data_utils.batch_dataset(dataset, self.batch_size)
 
     def fit(self, dataset):
         """Analyze the dataset and record useful information.
@@ -53,7 +55,7 @@ class Adapter(serializable.Serializable):
         # Arguments
             dataset: tf.data.Dataset.
         """
-        self.record_dataset_shape(dataset)
+        self._record_dataset_shape(dataset)
 
     def fit_before_convert(self, dataset):
         """Analyze the dataset before converting to tf.data.Dataset.
@@ -70,8 +72,8 @@ class Adapter(serializable.Serializable):
         self.fit(dataset)
         return dataset
 
-    def record_dataset_shape(self, dataset):
-        self.shape = data_utils.dataset_shape(dataset)
+    def _record_dataset_shape(self, dataset):
+        self.shape = data_utils.dataset_shape(dataset)[1:]
 
     def transform(self, dataset):
         """Transform the input dataset to tf.data.Dataset.

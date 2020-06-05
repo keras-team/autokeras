@@ -219,7 +219,7 @@ class GeneralBlock(block_module.Block):
     def build(self, hp, inputs=None):
         raise NotImplementedError
 
-
+        
 class SegmentationBlock(block_module.Block):
     """Block for image semantic segmentation.
 

@@ -1,5 +1,13 @@
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.util import nest
+
+
+def batch_dataset(dataset, batch_size):
+    shape = nest.flatten(dataset_shape(dataset))[0]
+    if shape[0] is not None:
+        return dataset.batch(batch_size)
+    return dataset
 
 
 def split_dataset(dataset, validation_split):
@@ -18,7 +26,7 @@ def split_dataset(dataset, validation_split):
     num_instances = dataset.reduce(np.int64(0), lambda x, _: x + 1).numpy()
     if num_instances < 2:
         raise ValueError('The dataset should at least contain 2 '
-                         'instances to be split.')
+                         'batches to be split.')
     validation_set_size = min(
         max(int(num_instances * validation_split), 1),
         num_instances - 1)

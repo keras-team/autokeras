@@ -188,7 +188,7 @@ def generate_one_hot_labels(num_instances=100, num_classes=10, dtype='np'):
     if dtype == 'np':
         return data
     if dtype == 'dataset':
-        return tf.data.Dataset.from_tensor_slices(data)
+        return tf.data.Dataset.from_tensor_slices(data).batch(32)
 
 
 def fit_predict_with_graph(inputs, outputs, x, y):
@@ -233,10 +233,6 @@ def imdb_raw(num_instances=100):
     return (x_train, y_train), (x_test, y_test)
 
 
-def name_in_hps(hp_name, hp):
-    return any([hp_name in name for name in hp.values])
-
-
 def build_graph():
     tf.keras.backend.clear_session()
     image_input = ak.ImageInput(shape=(32, 32, 3))
@@ -247,3 +243,14 @@ def build_graph():
     return ak.graph.Graph(
         inputs=image_input,
         outputs=classification_outputs)
+
+
+def config_tests(obj, excluded_keys=None):
+    if excluded_keys is None:
+        excluded_keys = []
+    config_keys = obj.get_config().keys()
+    for key in config_keys:
+        assert key in obj.__dict__
+    for key in obj.__dict__:
+        if key not in excluded_keys:
+            assert key in config_keys

@@ -5,6 +5,18 @@ from autokeras.engine import io_hypermodel
 from autokeras.engine import node as node_module
 
 
+def serialize(obj):
+    return tf.keras.utils.serialize_keras_object(obj)
+
+
+def deserialize(config, custom_objects=None):
+    return tf.keras.utils.deserialize_keras_object(
+        config,
+        module_objects=globals(),
+        custom_objects=custom_objects,
+        printable_module_name='nodes')
+
+
 class Input(node_module.Node, io_hypermodel.IOHyperModel):
     """Input node for tensor data.
 
