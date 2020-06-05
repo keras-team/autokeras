@@ -135,7 +135,7 @@ def py_to_nb_md(dest_dir):
                 + file_name_no_ext + ".py)",
                 "\n",
             ]
-            md_content = ''.join(button_lines) + '\n' +  md_file.read()
+            md_content = ''.join(button_lines) + '\n' + md_file.read()
 
         with open(md_path, 'w') as md_file:
             md_file.write(md_content)
