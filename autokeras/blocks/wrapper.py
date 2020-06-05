@@ -1,15 +1,16 @@
-import numpy as np
-from tensorflow.keras import backend as K
-from tensorflow.keras import layers
-from tensorflow.keras.activations import relu
-from tensorflow.keras.models import Model
-from tensorflow.keras.utils import get_source_inputs
 from tensorflow.python.util import nest
 
 from autokeras.blocks import basic
 from autokeras.blocks import preprocessing
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
+import numpy as np
+from tensorflow.keras import backend as K
+from tensorflow.keras import layers
+from tensorflow.keras.activations import relu
+from tensorflow.keras.models import Model
+from tensorflow.keras.utils import get_source_inputs
+
 
 
 class ImageBlock(block_module.Block):
