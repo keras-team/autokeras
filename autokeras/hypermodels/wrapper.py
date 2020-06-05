@@ -211,10 +211,16 @@ class GeneralBlock(block_module.Block):
 class SegmentationBlock(block_module.Block):
     """Block for image semantic segmentation.
 
-    The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
+    The image block is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
     which is controlled by a hyperparameter, 'block_type' from the paper
     https://arxiv.org/pdf/1606.00915.pdf.
-
+    This image block is the task of semantic segmentation by applying g the
+    ‘atrous convolution’ with upsampled filters for dense feature extraction.
+    Then further extend it to atrous spatial pyramid pooling, which encodes
+    objects as well as image context at multiple scales.
+    To produce semantically accurate predictions and detailed segmentation maps
+    along object boundaries, we also combine ideas from deep
+    convolutional neural networks and fully-connected conditional random fields.
     # Arguments
         block_type: String. 'resnet', 'xception', 'vanilla'. The type of Block
             to use. If unspecified, it will be tuned automatically.
@@ -303,7 +309,7 @@ class SegmentationBlock(block_module.Block):
 
         return x
 
-    def _conv2d_same(self, x, filters, prefix, stride=1, kernel_size=3, rate=1):
+    def _conv2d_same(self, hp, x, filters, prefix, stride=1, kernel_size=3, rate=1):
         """Implements right 'same' padding for even kernel sizes
             Without this there is a 1 pixel drift when stride = 2
         # Arguments
@@ -315,25 +321,20 @@ class SegmentationBlock(block_module.Block):
             rate: Int. Atrous rate for depthwise convolution.
         """
         if stride == 1:
-            return layers.Conv2D(filters,
-                                 (kernel_size, kernel_size),
-                                 strides=(stride, stride),
-                                 padding='same', use_bias=False,
-                                 dilation_rate=(rate, rate),
-                                 name=prefix)(x)
+            return basic.ConvBlock(filters, kernel_size, stride,
+                                   padding='same', use_bias=False,
+                                   dilation_rate=(rate, rate),
+                                   name=prefix).build(hp, inputs=x)
         else:
             kernel_size_effective = kernel_size + (kernel_size - 1) * (rate - 1)
             pad_total = kernel_size_effective - 1
             pad_beg = pad_total // 2
             pad_end = pad_total - pad_beg
             x = layers.ZeroPadding2D((pad_beg, pad_end))(x)
-            return layers.Conv2D(filters,
-                                 (kernel_size, kernel_size),
-                                 strides=(stride, stride),
-                                 padding='valid',
-                                 use_bias=False,
-                                 dilation_rate=(rate, rate),
-                                 name=prefix)(x)
+            return basic.ConvBlock(filters, kernel_size, stride,
+                                   padding='valid', use_bias=False,
+                                   dilation_rate=(rate, rate),
+                                   name=prefix).build(hp, inputs=x)
 
     def _xception_block(self, inputs, depth_list, prefix, skip_connection_type,
                         stride, rate=1, depth_activation=False, return_skip=False):
@@ -387,7 +388,7 @@ class SegmentationBlock(block_module.Block):
             new_v += divisor
         return new_v
 
-    def _inverted_res_block(self, inputs, expansion, stride, alpha, filters,
+    def _inverted_res_block(self, hp, inputs, expansion, stride, alpha, filters,
                             block_id, skip_connection, rate=1):
         in_channels = inputs._keras_shape[-1]
         pointwise_conv_filters = int(filters * alpha)
@@ -395,16 +396,14 @@ class SegmentationBlock(block_module.Block):
         x = inputs
         prefix = 'expanded_conv_{}_'.format(block_id)
         if block_id:
-            # Expand
-            x = layers.Conv2D(expansion * in_channels, kernel_size=1, padding='same',
-                              use_bias=False, activation=None,
-                              name=prefix + 'expand')(x)
+            x = basic.ConvBlock(expansion * in_channels,
+                                kernel_size=1, padding='same',
+                                use_bias=False, activation=None,
+                                name=prefix).build(hp, inputs=x)
             x = layers.BatchNormalization(epsilon=1e-3, momentum=0.999,
                                           name=prefix + 'expand_BN')(x)
-            # x = Lambda(lambda x: relu(x, max_value=6.))(x)
             x = layers.Lambda(lambda x: relu(x, max_value=6.),
                               name=prefix + 'expand_relu')(x)
-            # x = Activation(relu(x, max_value=6.), name=prefix + 'expand_relu')(x)
         else:
             prefix = 'expanded_conv_'
         # Depthwise
@@ -417,11 +416,9 @@ class SegmentationBlock(block_module.Block):
         # x = Activation(relu(x, max_value=6.), name=prefix + 'depthwise_relu')(x)
         x = layers.Lambda(lambda x: relu(x, max_value=6.),
                           name=prefix + 'depthwise_relu')(x)
-
-        x = layers.Conv2D(pointwise_filters,
-                          kernel_size=1, padding='same',
-                          use_bias=False, activation=None,
-                          name=prefix + 'project')(x)
+        x = basic.ConvBlock(pointwise_filters, kernel_size=1, padding='same',
+                            use_bias=False, activation=None,
+                            name=prefix).build(hp, inputs=x)
         x = layers.BatchNormalization(epsilon=1e-3, momentum=0.999,
                                       name=prefix + 'project_BN')(x)
 
@@ -482,17 +479,16 @@ class SegmentationBlock(block_module.Block):
                 middle_block_rate = 1
                 exit_block_rates = (1, 2)
                 atrous_rates = (6, 12, 18)
-            x = layers.Conv2D(32, (3, 3), strides=(2, 2),
-                              name='entry_flow_conv1_1',
-                              use_bias=False, padding='same')(batches_input)
+            x = basic.ConvBlock(32, kernel_size=3, padding='same',
+                                use_bias=False, stride=2,
+                                name='entry_flow_conv1_1')\
+                .build(hp, inputs=batches_input)
 
             x = layers.BatchNormalization(name='entry_flow_conv1_1_BN')(x)
             x = layers.Activation('relu')(x)
 
             x = self._conv2d_same(x, 64, 'entry_flow_conv1_2',
                                   kernel_size=3, stride=1)
-            # x = basic.ConvBlock(kernel_size=3, num_blocks=64,
-            #                     name='entry_flow_conv1_2').build(hp, inputs=x)
             x = layers.BatchNormalization(name='entry_flow_conv1_2_BN')(x)
             x = layers.Activation('relu')(x)
 
@@ -528,10 +524,10 @@ class SegmentationBlock(block_module.Block):
         else:
             self.OS = 8
             first_block_filters = self._make_divisible(32 * self.alpha, 8)
-            x = layers.Conv2D(first_block_filters,
-                              kernel_size=3,
-                              strides=(2, 2), padding='same',
-                              use_bias=False, name='Conv')(batches_input)
+            x = basic.ConvBlock(first_block_filters, kernel_size=3,
+                                padding='same',
+                                use_bias=False, stride=2,
+                                name='Conv').build(hp, inputs=batches_input)
             x = layers.BatchNormalization(
                 epsilon=1e-3, momentum=0.999, name='Conv_BN')(x)
 
@@ -616,9 +612,9 @@ class SegmentationBlock(block_module.Block):
         b4 = layers.AveragePooling2D(pool_size=(
             int(np.ceil((512, 512, 3)[0] / self.OS)),
             int(np.ceil((512, 512, 3)[1] / self.OS))))(x)
-
-        b4 = layers.Conv2D(256, (1, 1), padding='same',
-                           use_bias=False, name='image_pooling')(b4)
+        x = basic.ConvBlock(256, kernel_size=1, padding='same',
+                            use_bias=False,
+                            name='image_pooling').build(hp, inputs=b4)
         b4 = layers.BatchNormalization(name='image_pooling_BN', epsilon=1e-5)(b4)
         b4 = layers.Activation('relu')(b4)
 
@@ -627,8 +623,9 @@ class SegmentationBlock(block_module.Block):
             int(np.ceil(input_shape[1] / self.OS)))))(b4)
 
         # simple 1x1
-        b0 = layers.Conv2D(256, (1, 1), padding='same',
-                           use_bias=False, name='aspp0')(x)
+        b0 = basic.ConvBlock(256, kernel_size=1, padding='same',
+                             use_bias=False,
+                             name='aspp0').build(hp, inputs=x)
         b0 = layers.BatchNormalization(name='aspp0_BN', epsilon=1e-5)(b0)
         b0 = layers.Activation('relu', name='aspp0_activation')(b0)
 
@@ -652,8 +649,9 @@ class SegmentationBlock(block_module.Block):
         else:
             x = layers.Concatenate()([b4, b0])
 
-        x = layers.Conv2D(256, (1, 1), padding='same',
-                          use_bias=False, name='concat_projection')(x)
+        x = basic.ConvBlock(256, kernel_size=1, padding='same',
+                            use_bias=False,
+                            name='concat_projection').build(hp, inputs=x)
         x = layers.BatchNormalization(name='concat_projection_BN', epsilon=1e-5)(x)
         x = layers.Activation('relu')(x)
         x = layers.Dropout(0.1)(x)
@@ -668,9 +666,10 @@ class SegmentationBlock(block_module.Block):
                 int(np.ceil(input_shape[0] / 4)),
                 int(np.ceil(input_shape[1] / 4)))))(x)
 
-            dec_skip1 = layers.Conv2D(48, (1, 1), padding='same',
-                                      use_bias=False,
-                                      name='feature_projection0')(skip1)
+            dec_skip1 = basic.ConvBlock(48, kernel_size=1, padding='same',
+                                        use_bias=False,
+                                        name='feature_projection0')\
+                .build(hp, inputs=skip1)
             dec_skip1 = layers.BatchNormalization(
                 name='feature_projection0_BN', epsilon=1e-5)(dec_skip1)
             dec_skip1 = layers.Activation('relu')(dec_skip1)
@@ -686,8 +685,8 @@ class SegmentationBlock(block_module.Block):
         else:
             last_layer_name = 'custom_logits_semantic'
 
-        x = layers.Conv2D(self.classes, (1, 1), padding='same',
-                          name=last_layer_name)(x)
+        x = basic.ConvBlock(self.classes, kernel_size=1, padding='same',
+                            name=last_layer_name).build(hp, inputs=x)
         x = layers.Lambda(lambda x: K.tf.image.resize_bilinear(
             x, size=(input_shape[0], input_shape[1])))(x)
 
