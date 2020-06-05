@@ -23,6 +23,7 @@ from autokeras.blocks.wrapper import StructuredDataBlock
 from autokeras.blocks.wrapper import TextBlock
 from autokeras.blocks.wrapper import TimeseriesBlock
 
+
 def serialize(obj):
     return tf.keras.utils.serialize_keras_object(obj)
 
