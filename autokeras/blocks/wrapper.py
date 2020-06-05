@@ -14,8 +14,10 @@ from autokeras.engine import block as block_module
 
 class ImageBlock(block_module.Block):
     """Block for image data.
+
     The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
     which is controlled by a hyperparameter, 'block_type'.
+
     # Arguments
         block_type: String. 'resnet', 'xception', 'vanilla'. The type of Block
             to use. If unspecified, it will be tuned automatically.
@@ -71,6 +73,7 @@ class ImageBlock(block_module.Block):
 
 class TextBlock(block_module.Block):
     """Block for text data.
+
     # Arguments
         max_tokens: Int. The maximum size of the vocabulary.
             If left unspecified, it will be tuned automatically.
@@ -127,6 +130,7 @@ class TextBlock(block_module.Block):
 
 class StructuredDataBlock(block_module.Block):
     """Block for structured data.
+
     # Arguments
         categorical_encoding: Boolean. Whether to use the CategoricalToNumerical to
             encode the categorical features to numerical features. Defaults to True.
@@ -203,8 +207,10 @@ class TimeseriesBlock(block_module.Block):
 
 class GeneralBlock(block_module.Block):
     """A general neural network block when the input type is unknown.
+
     When the input type is unknown. The GeneralBlock would search in a large space
     for a good model.
+
     # Arguments
         name: String.
     """

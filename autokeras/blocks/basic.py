@@ -18,6 +18,7 @@ def set_hp_value(hp, name, value):
 
 class DenseBlock(block_module.Block):
     """Block for Dense layers.
+
     # Arguments
         num_layers: Int. The number of Dense layers in the block.
             If left unspecified, it will be tuned automatically.
@@ -77,6 +78,7 @@ class DenseBlock(block_module.Block):
 
 class RNNBlock(block_module.Block):
     """An RNN Block.
+
     # Arguments
         return_sequences: Boolean. Whether to return the last output in the
             output sequence, or the full sequence. Defaults to False.
@@ -154,6 +156,7 @@ class RNNBlock(block_module.Block):
 
 class ConvBlock(block_module.Block):
     """Block for vanilla ConvNets.
+
     # Arguments
         kernel_size: Int. If left unspecified, it will be tuned automatically.
         num_blocks: Int. The number of conv blocks, each of which may contain
@@ -259,6 +262,7 @@ class ConvBlock(block_module.Block):
 
 class ResNetBlock(resnet.HyperResNet, block_module.Block):
     """Block for ResNet.
+
     # Arguments
         version: String. 'v1', 'v2' or 'next'. The type of ResNet to use.
             If left unspecified, it will be tuned automatically.
@@ -304,14 +308,18 @@ class ResNetBlock(resnet.HyperResNet, block_module.Block):
 
 class XceptionBlock(xception.HyperXception, block_module.Block):
     """XceptionBlock.
+
     An Xception structure, used for specifying your model with specific datasets.
+
     The original Xception architecture is from https://arxiv.org/abs/1610.02357.
     The data first goes through the entry flow, then through the middle flow which
     is repeated eight times, and finally through the exit flow.
+
     This XceptionBlock returns a similar architecture as Xception except without
     the last (optional) fully connected layer(s) and logistic regression.
     The size of this architecture could be decided by `HyperParameters`, to get an
     architecture with a half, an identical, or a double size of the original one.
+
     # Arguments
         activation: String. 'selu' or 'relu'. If left unspecified, it will be tuned
             automatically.
@@ -370,8 +378,10 @@ class XceptionBlock(xception.HyperXception, block_module.Block):
 
 class Embedding(block_module.Block):
     """Word embedding block for sequences.
+
     The input should be tokenized sequences with the same length, where each element
     of a sequence should be the index of the word.
+
     # Arguments
         max_features: Int. Size of the vocabulary. Must be set if not using
             TextToIntSequence before this block. Defaults to 20001.

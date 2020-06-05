@@ -15,14 +15,18 @@ from autokeras.utils import utils
 
 class ClassificationHead(head_module.Head):
     """Classification Dense layers.
+
     Use sigmoid and binary crossentropy for binary classification and multi-label
     classification. Use softmax and categorical crossentropy for multi-class
     (more than 2) classification. Use Accuracy as metrics by default.
+
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
     pd.DataFrame or pd.Series. It can be raw labels, one-hot encoded if more than two
     classes, or binary encoded for binary classification.
+
     The raw labels will be encoded to one column if two classes were found,
     or one-hot encoded if more than two classes were found.
+
     # Arguments
         num_classes: Int. Defaults to None. If None, it will be inferred from the
             data.
@@ -104,9 +108,11 @@ class ClassificationHead(head_module.Head):
 
 class RegressionHead(head_module.Head):
     """Regression Dense layers.
+
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
     pd.DataFrame or pd.Series. It can be single-column or multi-column. The
     values should all be numerical.
+
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
             If None, it will be inferred from the data.
@@ -166,15 +172,19 @@ class RegressionHead(head_module.Head):
 
 class SegmentationHead(ClassificationHead):
     """Segmentation layers.
+
     Use sigmoid and binary crossentropy for binary element segmentation.
     Use softmax and categorical crossentropy for multi-class
     (more than 2) segmentation. Use Accuracy as metrics by default.
+
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
     pd.DataFrame or pd.Series. It can be raw labels, one-hot encoded if more than two
     classes, or binary encoded for binary element segmentation.
+
     The raw labels will be encoded to 0s and 1s if two classes were found, or
     one-hot encoded if more than two classes were found.
     One pixel only corresponds to one label.
+
     # Arguments
         num_classes: Int. Defaults to None. If None, it will be inferred from the
             data.

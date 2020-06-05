@@ -12,6 +12,7 @@ from autokeras.engine import block as block_module
 
 class Normalization(block_module.Block):
     """ Perform basic image transformation and augmentation.
+
     # Arguments
         axis: Integer or tuple of integers, the axis or axes that should be
             normalized (typically the features axis). We will normalize each element
@@ -35,6 +36,7 @@ class Normalization(block_module.Block):
 
 class TextToIntSequence(block_module.Block):
     """Convert raw texts to sequences of word indices.
+
     # Arguments
         output_sequence_length: Int. The maximum length of a sentence. If
             unspecified, it would be tuned automatically.
@@ -73,6 +75,7 @@ class TextToIntSequence(block_module.Block):
 
 class TextToNgramVector(block_module.Block):
     """Convert raw texts to n-gram vectors.
+
     # Arguments
         max_tokens: Int. The maximum size of the vocabulary. Defaults to 20000.
         ngrams: Int or tuple of ints. Passing an integer will create ngrams up to
@@ -111,6 +114,7 @@ class TextToNgramVector(block_module.Block):
 
 class ImageAugmentation(block_module.Block):
     """Collection of various image augmentation methods.
+
     # Arguments
         translation_factor: A positive float represented as fraction value, or a
             tuple of 2 representing fraction for translation vertically and
