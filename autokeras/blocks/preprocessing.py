@@ -1,4 +1,6 @@
 from typing import Optional
+from typing import Tuple
+from typing import Union
 
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
@@ -10,7 +12,6 @@ from autokeras.engine import block as block_module
 
 class Normalization(block_module.Block):
     """ Perform basic image transformation and augmentation.
-
     # Arguments
         axis: Integer or tuple of integers, the axis or axes that should be
             normalized (typically the features axis). We will normalize each element
@@ -34,7 +35,6 @@ class Normalization(block_module.Block):
 
 class TextToIntSequence(block_module.Block):
     """Convert raw texts to sequences of word indices.
-
     # Arguments
         output_sequence_length: Int. The maximum length of a sentence. If
             unspecified, it would be tuned automatically.
@@ -73,32 +73,44 @@ class TextToIntSequence(block_module.Block):
 
 class TextToNgramVector(block_module.Block):
     """Convert raw texts to n-gram vectors.
-
     # Arguments
         max_tokens: Int. The maximum size of the vocabulary. Defaults to 20000.
+        ngrams: Int or tuple of ints. Passing an integer will create ngrams up to
+            that integer, and passing a tuple of integers will create ngrams for the
+            specified values in the tuple. If left unspecified, it will be tuned
+            automatically.
     """
 
     def __init__(self,
                  max_tokens: int = 20000,
+                 ngrams: Union[int, Tuple[int], None] = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.max_tokens = max_tokens
+        self.ngrams = ngrams
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
+        if self.ngrams is not None:
+            ngrams = self.ngrams
+        else:
+            ngrams = hp.Int('ngrams', min_value=1, max_value=2, default=2)
         return preprocessing.TextVectorization(
             max_tokens=self.max_tokens,
+            ngrams=ngrams,
             output_mode='tf-idf')(input_node)
 
     def get_config(self):
         config = super().get_config()
-        config.update({'max_tokens': self.max_tokens})
+        config.update({
+            'max_tokens': self.max_tokens,
+            'ngrams': self.ngrams,
+        })
         return config
 
 
 class ImageAugmentation(block_module.Block):
     """Collection of various image augmentation methods.
-
     # Arguments
         translation_factor: A positive float represented as fraction value, or a
             tuple of 2 representing fraction for translation vertically and
@@ -136,7 +148,6 @@ class ImageAugmentation(block_module.Block):
         self.rotation_factor = rotation_factor
         self.zoom_factor = zoom_factor
         self.contrast_factor = contrast_factor
-        self.shape = None
 
     @staticmethod
     def _get_fraction_value(value):
@@ -179,14 +190,27 @@ class ImageAugmentation(block_module.Block):
         if self.zoom_factor != 0 and self.zoom_factor != (0, 0):
             height_factor, width_factor = self._get_fraction_value(
                 self.zoom_factor)
-            output_node = preprocessing.RandomZoom(
-                height_factor, width_factor)(output_node)
+            # TODO: Add back RandomZoom when it is ready.
+            # output_node = preprocessing.RandomZoom(
+            # height_factor, width_factor)(output_node)
 
         if self.contrast_factor != 0 and self.contrast_factor != (0, 0):
             output_node = preprocessing.RandomContrast(
                 self.contrast_factor)(output_node)
 
         return output_node
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'translation_factor': self.translation_factor,
+            'horizontal_flip': self.horizontal_flip,
+            'vertical_flip': self.vertical_flip,
+            'rotation_factor': self.rotation_factor,
+            'zoom_factor': self.zoom_factor,
+            'contrast_factor': self.contrast_factor,
+        })
+        return config
 
 
 class CategoricalToNumerical(block_module.Block):
@@ -208,3 +232,18 @@ class CategoricalToNumerical(block_module.Block):
             else:
                 encoding.append(keras_layers.NONE)
         return keras_layers.MultiColumnCategoricalEncoding(encoding)(input_node)
+
+    @classmethod
+    def from_config(cls, config):
+        column_types = config.pop('column_types')
+        column_names = config.pop('column_names')
+        instance = cls(**config)
+        instance.column_types = column_types
+        instance.column_names = column_names
+        return instance
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'column_types': self.column_types,
+                       'column_names': self.column_names})
+        return config

@@ -1,30 +1,28 @@
 from typing import Optional
 
+import tensorflow as tf
 from tensorflow.keras import activations
 from tensorflow.keras import layers
+from tensorflow.keras import losses
 from tensorflow.python.util import nest
 
 from autokeras import adapters
+from autokeras.blocks import reduction
 from autokeras.engine import head as head_module
-from autokeras.hypermodels import reduction
 from autokeras.utils import types
 from autokeras.utils import utils
 
 
 class ClassificationHead(head_module.Head):
     """Classification Dense layers.
-
     Use sigmoid and binary crossentropy for binary classification and multi-label
     classification. Use softmax and categorical crossentropy for multi-class
     (more than 2) classification. Use Accuracy as metrics by default.
-
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
     pd.DataFrame or pd.Series. It can be raw labels, one-hot encoded if more than two
     classes, or binary encoded for binary classification.
-
     The raw labels will be encoded to one column if two classes were found,
     or one-hot encoded if more than two classes were found.
-
     # Arguments
         num_classes: Int. Defaults to None. If None, it will be inferred from the
             data.
@@ -43,24 +41,23 @@ class ClassificationHead(head_module.Head):
                  metrics: Optional[types.MetricsType] = None,
                  dropout_rate: Optional[float] = None,
                  **kwargs):
+        self.num_classes = num_classes
+        self.multi_label = multi_label
+        self.dropout_rate = dropout_rate
+        if metrics is None:
+            metrics = ['accuracy']
+        if loss is None:
+            loss = self.infer_loss()
         super().__init__(loss=loss,
                          metrics=metrics,
                          **kwargs)
-        self.num_classes = num_classes
-        self.multi_label = multi_label
-        if not self.metrics:
-            self.metrics = ['accuracy']
-        self.dropout_rate = dropout_rate
-        self.set_loss()
 
-    def set_loss(self):
+    def infer_loss(self):
         if not self.num_classes:
-            return
-        if not self.loss:
-            if self.num_classes == 2 or self.multi_label:
-                self.loss = 'binary_crossentropy'
-            elif self.num_classes > 2:
-                self.loss = 'categorical_crossentropy'
+            return None
+        if self.num_classes == 2 or self.multi_label:
+            return losses.BinaryCrossentropy()
+        return losses.CategoricalCrossentropy()
 
     def get_config(self):
         config = super().get_config()
@@ -71,13 +68,6 @@ class ClassificationHead(head_module.Head):
         return config
 
     def build(self, hp, inputs=None):
-        if self.num_classes:
-            expected = self.num_classes if self.num_classes > 2 else 1
-            if self.output_shape[-1] != expected:
-                raise ValueError(
-                    'The data doesn\'t match the expected shape. '
-                    'Expecting {} but got {}'.format(expected,
-                                                     self.output_shape[-1]))
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
@@ -95,7 +85,7 @@ class ClassificationHead(head_module.Head):
         if dropout_rate > 0:
             output_node = layers.Dropout(dropout_rate)(output_node)
         output_node = layers.Dense(self.output_shape[-1])(output_node)
-        if self.loss == 'binary_crossentropy':
+        if isinstance(self.loss, tf.keras.losses.BinaryCrossentropy):
             output_node = layers.Activation(activations.sigmoid,
                                             name=self.name)(output_node)
         else:
@@ -103,21 +93,20 @@ class ClassificationHead(head_module.Head):
         return output_node
 
     def get_adapter(self):
-        return adapters.ClassificationHeadAdapter(name=self.name)
+        return adapters.ClassificationHeadAdapter(
+            name=self.name, multi_label=self.multi_label)
 
     def config_from_adapter(self, adapter):
         super().config_from_adapter(adapter)
         self.num_classes = adapter.num_classes
-        self.set_loss()
+        self.loss = self.infer_loss()
 
 
 class RegressionHead(head_module.Head):
     """Regression Dense layers.
-
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
     pd.DataFrame or pd.Series. It can be single-column or multi-column. The
     values should all be numerical.
-
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
             If None, it will be inferred from the data.
@@ -134,13 +123,12 @@ class RegressionHead(head_module.Head):
                  metrics: Optional[types.MetricsType] = None,
                  dropout_rate: Optional[float] = None,
                  **kwargs):
+        if metrics is None:
+            metrics = ['mean_squared_error']
         super().__init__(loss=loss,
                          metrics=metrics,
                          **kwargs)
         self.output_dim = output_dim
-        if not self.metrics:
-            self.metrics = ['mean_squared_error']
-        self.loss = loss
         self.dropout_rate = dropout_rate
 
     def get_config(self):
@@ -178,19 +166,15 @@ class RegressionHead(head_module.Head):
 
 class SegmentationHead(ClassificationHead):
     """Segmentation layers.
-
     Use sigmoid and binary crossentropy for binary element segmentation.
     Use softmax and categorical crossentropy for multi-class
     (more than 2) segmentation. Use Accuracy as metrics by default.
-
     The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
     pd.DataFrame or pd.Series. It can be raw labels, one-hot encoded if more than two
     classes, or binary encoded for binary element segmentation.
-
     The raw labels will be encoded to 0s and 1s if two classes were found, or
     one-hot encoded if more than two classes were found.
     One pixel only corresponds to one label.
-
     # Arguments
         num_classes: Int. Defaults to None. If None, it will be inferred from the
             data.

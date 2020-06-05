@@ -5,8 +5,8 @@ from kerastuner.applications import xception
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
+from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
-from autokeras.hypermodels import reduction
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
 
@@ -18,7 +18,6 @@ def set_hp_value(hp, name, value):
 
 class DenseBlock(block_module.Block):
     """Block for Dense layers.
-
     # Arguments
         num_layers: Int. The number of Dense layers in the block.
             If left unspecified, it will be tuned automatically.
@@ -78,7 +77,6 @@ class DenseBlock(block_module.Block):
 
 class RNNBlock(block_module.Block):
     """An RNN Block.
-
     # Arguments
         return_sequences: Boolean. Whether to return the last output in the
             output sequence, or the full sequence. Defaults to False.
@@ -156,7 +154,6 @@ class RNNBlock(block_module.Block):
 
 class ConvBlock(block_module.Block):
     """Block for vanilla ConvNets.
-
     # Arguments
         kernel_size: Int. If left unspecified, it will be tuned automatically.
         num_blocks: Int. The number of conv blocks, each of which may contain
@@ -194,6 +191,8 @@ class ConvBlock(block_module.Block):
         config.update({
             'kernel_size': self.kernel_size,
             'num_blocks': self.num_blocks,
+            'num_layers': self.num_layers,
+            'max_pooling': self.max_pooling,
             'separable': self.separable,
             'dropout_rate': self.dropout_rate})
         return config
@@ -258,9 +257,8 @@ class ConvBlock(block_module.Block):
         return 'same'
 
 
-class ResNetBlock(block_module.Block, resnet.HyperResNet):
+class ResNetBlock(resnet.HyperResNet, block_module.Block):
     """Block for ResNet.
-
     # Arguments
         version: String. 'v1', 'v2' or 'next'. The type of ResNet to use.
             If left unspecified, it will be tuned automatically.
@@ -272,6 +270,12 @@ class ResNetBlock(block_module.Block, resnet.HyperResNet):
                  version: Optional[str] = None,
                  pooling: Optional[str] = None,
                  **kwargs):
+        if 'include_top' in kwargs:
+            raise ValueError(
+                'Argument "include_top" is not supported in ResNetBlock.')
+        if 'input_shape' in kwargs:
+            raise ValueError(
+                'Argument "input_shape" is not supported in ResNetBlock.')
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
         self.version = version
         self.pooling = pooling
@@ -279,6 +283,7 @@ class ResNetBlock(block_module.Block, resnet.HyperResNet):
     def get_config(self):
         config = super().get_config()
         config.update({
+            'classes': self.classes,
             'version': self.version,
             'pooling': self.pooling})
         return config
@@ -297,20 +302,16 @@ class ResNetBlock(block_module.Block, resnet.HyperResNet):
         return model.outputs
 
 
-class XceptionBlock(block_module.Block, xception.HyperXception):
+class XceptionBlock(xception.HyperXception, block_module.Block):
     """XceptionBlock.
-
     An Xception structure, used for specifying your model with specific datasets.
-
     The original Xception architecture is from https://arxiv.org/abs/1610.02357.
     The data first goes through the entry flow, then through the middle flow which
     is repeated eight times, and finally through the exit flow.
-
     This XceptionBlock returns a similar architecture as Xception except without
     the last (optional) fully connected layer(s) and logistic regression.
     The size of this architecture could be decided by `HyperParameters`, to get an
     architecture with a half, an identical, or a double size of the original one.
-
     # Arguments
         activation: String. 'selu' or 'relu'. If left unspecified, it will be tuned
             automatically.
@@ -327,6 +328,12 @@ class XceptionBlock(block_module.Block, xception.HyperXception):
                  num_residual_blocks: Optional[int] = None,
                  pooling: Optional[str] = None,
                  **kwargs):
+        if 'include_top' in kwargs:
+            raise ValueError(
+                'Argument "include_top" is not supported in XceptionBlock.')
+        if 'input_shape' in kwargs:
+            raise ValueError(
+                'Argument "input_shape" is not supported in XceptionBlock.')
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
         self.activation = activation
         self.initial_strides = initial_strides
@@ -336,6 +343,7 @@ class XceptionBlock(block_module.Block, xception.HyperXception):
     def get_config(self):
         config = super().get_config()
         config.update({
+            'classes': self.classes,
             'activation': self.activation,
             'initial_strides': self.initial_strides,
             'num_residual_blocks': self.num_residual_blocks,
@@ -362,13 +370,11 @@ class XceptionBlock(block_module.Block, xception.HyperXception):
 
 class Embedding(block_module.Block):
     """Word embedding block for sequences.
-
     The input should be tokenized sequences with the same length, where each element
     of a sequence should be the index of the word.
-
     # Arguments
         max_features: Int. Size of the vocabulary. Must be set if not using
-            TextToIntSequence before this block. Defaults to 20000.
+            TextToIntSequence before this block. Defaults to 20001.
         pretraining: String. 'random' (use random weights instead any pretrained
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
