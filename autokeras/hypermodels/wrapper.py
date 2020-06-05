@@ -624,8 +624,8 @@ class SegmentationBlock(block_module.Block):
 
         # simple 1x1
         b0 = basic.ConvBlock(256, kernel_size=1, padding='same',
-                             use_bias=False,
-                             name='aspp0').build(hp, inputs=x)
+                             use_bias=False, name='aspp0')\
+            .build(hp, inputs=x)
         b0 = layers.BatchNormalization(name='aspp0_BN', epsilon=1e-5)(b0)
         b0 = layers.Activation('relu', name='aspp0_activation')(b0)
 
