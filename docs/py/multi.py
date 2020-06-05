@@ -1,3 +1,8 @@
+"""shell
+pip install autokeras
+"""
+
+"""
 In this tutorial we are making use of the 
 [AutoModel](/auto_model/#automodel-class)
  API to show how to handle multi-modal data and multi-task.
@@ -25,29 +30,29 @@ It has two inputs the images and the structured data. Each image is associated w
 ## Data Preparation
 
 To illustrate our idea, we generate some random image and structured data as the multi-modal data.
+"""
 
-```python
 num_instances = 100
 # Generate image data.
 image_data = np.random.rand(num_instances, 32, 32, 3).astype(np.float32)
 # Generate structured data.
 structured_data = np.random.rand(num_instances, 20).astype(np.float32)
-```
 
+"""
 We also generate some multi-task targets for classification and regression.
+"""
 
-```python
 # Generate regression targets.
 regression_target = np.random.rand(num_instances, 1).astype(np.float32)
 # Generate classification labels of five classes.
 classification_target = np.random.randint(5, size=num_instances)
-```
 
+"""
 ## Build and Train the Model
 Then we initialize the multi-modal and multi-task model with 
 [AutoModel](/auto_model/#automodel-class).
+"""
 
-```python
 import autokeras as ak
 # Initialize the multi with multiple inputs and outputs.
 model = ak.AutoModel(
@@ -62,24 +67,24 @@ model.fit(
     [image_data, structured_data],
     [regression_target, classification_target],
     epochs=10)
-```
 
+"""
 ## Validation Data
 By default, AutoKeras use the last 20% of training data as validation data.
 As shown in the example below, you can use `validation_split` to specify the percentage.
+"""
 
-```python
 model.fit(
     [image_data, structured_data],
     [regression_target, classification_target],
     # Split the training data and use the last 15% as validation data.
     validation_split=0.15)
-```
 
+"""
 You can also use your own validation set
 instead of splitting it from the training data with `validation_data`.
+"""
 
-```python
 split = 20
 
 image_val = image_data[split:]
@@ -96,8 +101,8 @@ model.fit(x_train,
           y_train,
           # Use your own validation set.
           validation_data=(x_val, y_val))
-```
 
+"""
 ## Customized Search Space
 You can customize your search space.
 The following figure shows the search space we want to define.
@@ -117,8 +122,8 @@ graph LR
     id10 --> id11(Classification Head)
     id10 --> id12(Regression Head)
 </div>
+"""
 
-```python
 import autokeras as ak
 
 input_node1 = ak.ImageInput()
@@ -140,8 +145,8 @@ auto_model = ak.AutoModel(
     inputs=[input_node1, input_node2], 
     outputs=[]output_node1, output_node2],
     max_trials=10)
-```
 
+"""
 ## Data Format
 You can refer to the documentation of
 [ImageInput](/node/#imageinput-class),
@@ -164,3 +169,4 @@ You can also refer to the Data Format section of the tutorials of
 [RegressionHead](/head/#regressionhead-class),
 [ClassificationHead](/head/#classificationhead-class),
 [CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class).
+"""

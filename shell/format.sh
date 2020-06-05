@@ -1,3 +1,3 @@
 isort -sl -rc
-autopep8 -i -r .
+autopep8 --exclude="./docs/py/*.py" -r -i .
 

@@ -2,10 +2,6 @@
 pip install autokeras
 """
 
-"""shell
-pip install tensorflow
-"""
-
 """
 ## A Simple Example
 """
