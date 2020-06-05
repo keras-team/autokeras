@@ -65,7 +65,7 @@ class TextInputAdapter(adapter_module.Adapter):
             x = x.reshape(-1, 1)
         if isinstance(x, np.ndarray):
             x = tf.data.Dataset.from_tensor_slices(x)
-        return x
+        return super().convert_to_dataset(x)
 
 
 class StructuredDataInputAdapter(adapter_module.Adapter):
@@ -138,8 +138,8 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
             x = x.values.astype(np.unicode)
         if isinstance(x, np.ndarray):
             x = x.astype(np.unicode)
-        dataset = tf.data.Dataset.from_tensor_slices(x)
-        return dataset
+        x = tf.data.Dataset.from_tensor_slices(x)
+        return super().convert_to_dataset(x)
 
     def fit(self, dataset):
         super().fit(dataset)
@@ -150,6 +150,10 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
     def update(self, x):
         # Calculate the statistics.
         x = nest.flatten(x)[0].numpy()
+        for instance in x:
+            self._update_instance(instance)
+
+    def _update_instance(self, x):
         if self.num_col is None:
             self.num_col = len(x)
             self.count_nan = np.zeros(self.num_col)
@@ -265,4 +269,4 @@ class TimeseriesInputAdapter(adapter_module.Adapter):
         for window in x:
             final_data.append([elems.numpy() for elems in window])
         final_data = tf.data.Dataset.from_tensor_slices(final_data)
-        return final_data
+        return super().convert_to_dataset(final_data)

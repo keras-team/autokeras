@@ -4,7 +4,7 @@ import random
 import kerastuner
 import numpy as np
 
-from autokeras import hypermodels
+from autokeras import blocks
 from autokeras.engine import tuner as tuner_module
 
 
@@ -70,34 +70,34 @@ class GreedyOracle(kerastuner.Oracle):
                 hp_type = None
                 if any([hp.name.startswith(block.name)
                         for block in self.hypermodel.blocks if isinstance(block, (
-                            hypermodels.ImageBlock,
-                            hypermodels.TextBlock,
-                            hypermodels.StructuredDataBlock,
+                            blocks.ImageBlock,
+                            blocks.TextBlock,
+                            blocks.StructuredDataBlock,
                         ))]):
                     hp_type = GreedyOracle.HYPER
                 elif any([hp.name.startswith(block.name)
                           for block in self.hypermodel.blocks if isinstance(block, (
-                              hypermodels.TextToIntSequence,
-                              hypermodels.TextToNgramVector,
-                              hypermodels.Normalization,
-                              hypermodels.ImageAugmentation,
-                              hypermodels.CategoricalToNumerical
+                              blocks.TextToIntSequence,
+                              blocks.TextToNgramVector,
+                              blocks.Normalization,
+                              blocks.ImageAugmentation,
+                              blocks.CategoricalToNumerical
                           ))]):
                     hp_type = GreedyOracle.PREPROCESS
                 elif any([hp.name.startswith(block.name)
                           for block in self.hypermodel.blocks if isinstance(block, (
-                              hypermodels.Embedding,
-                              hypermodels.ConvBlock,
-                              hypermodels.RNNBlock,
-                              hypermodels.DenseBlock,
-                              hypermodels.ResNetBlock,
-                              hypermodels.XceptionBlock,
-                              hypermodels.Merge,
-                              hypermodels.Flatten,
-                              hypermodels.SpatialReduction,
-                              hypermodels.TemporalReduction,
-                              hypermodels.ClassificationHead,
-                              hypermodels.RegressionHead,
+                              blocks.Embedding,
+                              blocks.ConvBlock,
+                              blocks.RNNBlock,
+                              blocks.DenseBlock,
+                              blocks.ResNetBlock,
+                              blocks.XceptionBlock,
+                              blocks.Merge,
+                              blocks.Flatten,
+                              blocks.SpatialReduction,
+                              blocks.TemporalReduction,
+                              blocks.ClassificationHead,
+                              blocks.RegressionHead,
                           ))]):
                     hp_type = GreedyOracle.ARCH
                 else:

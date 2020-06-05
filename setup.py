@@ -16,11 +16,11 @@ setup(
     author='Data Analytics at Texas A&M (DATA) Lab, Keras Team',
     author_email='jhfjhfj1@gmail.com',
     url='http://autokeras.com',
-    download_url='https://github.com/keras-team/autokeras/archive/1.0.2.tar.gz',
+    download_url='https://github.com/keras-team/autokeras/archive/1.0.3.tar.gz',
     keywords=['AutoML', 'Keras'],
     install_requires=[
         'packaging',
-        # 'keras-tuner>=1.0.1',
+        'keras-tuner>=1.0.1',
         'scikit-learn',
         'numpy',
         'pandas',

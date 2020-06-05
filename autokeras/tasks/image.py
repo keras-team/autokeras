@@ -7,7 +7,7 @@ from typing import Union
 import tensorflow as tf
 
 from autokeras import auto_model
-from autokeras import hypermodels
+from autokeras import blocks
 from autokeras import nodes as input_module
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
@@ -61,10 +61,10 @@ class ImageClassifier(SupervisedImagePipeline):
                  seed: Optional[int] = None,
                  **kwargs):
         super().__init__(
-            outputs=hypermodels.ClassificationHead(num_classes=num_classes,
-                                                   multi_label=multi_label,
-                                                   loss=loss,
-                                                   metrics=metrics),
+            outputs=blocks.ClassificationHead(num_classes=num_classes,
+                                              multi_label=multi_label,
+                                              loss=loss,
+                                              metrics=metrics),
             max_trials=max_trials,
             directory=directory,
             project_name=project_name,
@@ -74,15 +74,16 @@ class ImageClassifier(SupervisedImagePipeline):
             seed=seed,
             **kwargs)
 
-    def fit(
-            self,
+    def fit(self,
             x: Optional[types.DatasetType] = None,
             y: Optional[types.DatasetType] = None,
             epochs: Optional[int] = None,
             callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
             validation_split: Optional[float] = 0.2,
-            validation_data: Union[types.DatasetType,
-                                   Tuple[types.DatasetType], None] = None,
+            validation_data: Union[
+                tf.data.Dataset,
+                Tuple[types.DatasetType, types.DatasetType],
+                None] = None,
             **kwargs):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -168,9 +169,9 @@ class ImageRegressor(SupervisedImagePipeline):
                  seed: Optional[int] = None,
                  **kwargs):
         super().__init__(
-            outputs=hypermodels.RegressionHead(output_dim=output_dim,
-                                               loss=loss,
-                                               metrics=metrics),
+            outputs=blocks.RegressionHead(output_dim=output_dim,
+                                          loss=loss,
+                                          metrics=metrics),
             max_trials=max_trials,
             directory=directory,
             project_name=project_name,
@@ -276,9 +277,9 @@ class ImageSegmenter(SupervisedImagePipeline):
                  seed: Optional[int] = None,
                  **kwargs):
         super().__init__(
-            outputs=hypermodels.SegmentationHead(num_classes=num_classes,
-                                                 loss=loss,
-                                                 metrics=metrics),
+            outputs=blocks.SegmentationHead(num_classes=num_classes,
+                                            loss=loss,
+                                            metrics=metrics),
             max_trials=max_trials,
             directory=directory,
             project_name=project_name,

@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 import autokeras as ak
-from autokeras import graph as graph_module
+from autokeras import nodes
 
 
 def test_time_series_input_node():
@@ -10,6 +10,6 @@ def test_time_series_input_node():
     output = node.build()
     assert isinstance(output, tf.Tensor)
 
-    node = graph_module.deserialize(graph_module.serialize(node))
+    node = nodes.deserialize(nodes.serialize(node))
     output = node.build()
     assert isinstance(output, tf.Tensor)

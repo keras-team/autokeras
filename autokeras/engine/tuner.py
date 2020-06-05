@@ -2,10 +2,11 @@ import copy
 import os
 
 import kerastuner
-from kerastuner.engine import tuner_utils
+import tensorflow as tf
 from tensorflow.keras import callbacks as tf_callbacks
+from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.python.util import nest
 
-from autokeras import graph as graph_module
 from autokeras.utils import utils
 
 
@@ -23,15 +24,18 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
     The fully trained model is the best model to be used by AutoModel.
 
     # Arguments
+        preprocessors: An instance or list of `Preprocessor` objects corresponding to
+            each AutoModel input, to preprocess a `tf.data.Dataset` before passing it
+            to the model. Defaults to None (no external preprocessing).
         **kwargs: The args supported by KerasTuner.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, preprocessors=None, **kwargs):
         super().__init__(**kwargs)
+        self.preprocessors = nest.flatten(preprocessors)
         self._finished = False
         # Save or load the HyperModel.
-        utils.save_json(os.path.join(self.project_dir, 'graph'),
-                        graph_module.serialize(self.hypermodel.hypermodel))
+        self.hypermodel.hypermodel.save(os.path.join(self.project_dir, 'graph'))
 
     # Override the function to prevent building the model during initialization.
     def _populate_initial_space(self):
@@ -42,27 +46,36 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         model.load_weights(self.best_model_path)
         return model
 
-    def run_trial(self, trial, x=None, *fit_args, **fit_kwargs):
-        # TODO: Remove this function after TF has fit-to-adapt feature.
-        # Handle any callbacks passed to `fit`.
-        copied_fit_kwargs = copy.copy(fit_kwargs)
-        callbacks = fit_kwargs.pop('callbacks', [])
-        callbacks = self._deepcopy_callbacks(callbacks)
-        self._configure_tensorboard_dir(callbacks, trial.trial_id)
-        # `TunerCallback` calls:
-        # - `Tuner.on_epoch_begin`
-        # - `Tuner.on_batch_begin`
-        # - `Tuner.on_batch_end`
-        # - `Tuner.on_epoch_end`
-        # These methods report results to the `Oracle` and save the trained Model. If
-        # you are subclassing `Tuner` to write a custom training loop, you should
-        # make calls to these methods within `run_trial`.
-        callbacks.append(tuner_utils.TunerCallback(self, trial))
-        copied_fit_kwargs['callbacks'] = callbacks
+    def _on_train_begin(self, model, hp, x, *args, **kwargs):
+        """Adapt the preprocessing layers and tune the fit arguments."""
+        self.adapt(model, x)
 
-        model = self.hypermodel.build(trial.hyperparameters)
-        utils.adapt_model(model, x)
-        model.fit(x, *fit_args, **copied_fit_kwargs)
+    @staticmethod
+    def adapt(model, dataset):
+        """Adapt the preprocessing layers in the model."""
+        # Currently, only support using the original dataset to adapt all the
+        # preprocessing layers before the first non-preprocessing layer.
+        # TODO: Use PreprocessingStage for preprocessing layers adapt.
+        # TODO: Use Keras Tuner for preprocessing layers adapt.
+        x = dataset.map(lambda x, y: x)
+
+        def get_output_layer(tensor):
+            tensor = nest.flatten(tensor)[0]
+            for layer in model.layers:
+                if isinstance(layer, tf.keras.layers.InputLayer):
+                    continue
+                input_node = nest.flatten(layer.input)[0]
+                if input_node is tensor:
+                    return layer
+            return None
+
+        for index, input_node in enumerate(nest.flatten(model.input)):
+            temp_x = x.map(lambda *args: nest.flatten(args)[index])
+            layer = get_output_layer(input_node)
+            while isinstance(layer, preprocessing.PreprocessingLayer):
+                layer.adapt(temp_x)
+                layer = get_output_layer(layer.output)
+        return model
 
     def search(self,
                epochs=None,
@@ -132,7 +145,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         best_trial = self.oracle.get_best_trials(1)[0]
         best_hp = best_trial.hyperparameters
         model = self.hypermodel.build(best_hp)
-        utils.adapt_model(model, x)
+        self.adapt(model, x)
         model.fit(x, **fit_kwargs)
         return model
 

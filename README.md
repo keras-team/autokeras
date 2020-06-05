@@ -39,12 +39,21 @@ Please follow the [installation guide](https://autokeras.com/install) for more d
 **Note:** Currently, AutoKeras is only compatible with **Python >= 3.5** and **TensorFlow >= 2.1.0**.
 
 ## Community
-<a href="https://keras-slack-autojoin.herokuapp.com/"><img src="https://github.com/keras-team/autokeras/blob/master/docs/templates/img/slack.png?raw=true" alt="drawing" width="150"/></a>
+<p float="left">
+<a href="https://keras-slack-autojoin.herokuapp.com/"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/slack.svg" width="40px" hspace="10"></a>
+<a href="https://twitter.com/autokeras"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/twitter.svg" width="40px" hspace="10"></a>
+<a href="https://groups.google.com/forum/#!forum/autokeras-announce/join"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/gmail.svg" width="40px" hspace="10"></a>
+</p>
 
+**Slack**:
 [Request an invitation](https://keras-slack-autojoin.herokuapp.com/).
 Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel for communication.
 
+**Twitter**:
 You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
+
+**Newsletter**:
+Subscribe our [email list](https://groups.google.com/forum/#!forum/autokeras-announce/join) to receive newsletter and announcements.
 
 ## Contributing
 
@@ -55,7 +64,7 @@ We will help you get started!
 
 Thank all the contributors!
 
-<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://opencollective.com/autokeras/contributors.svg?avatarHeight=36&width=890&button=false" /></a>
+<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://opencollective.com/autokeras/contributors.svg?avatarHeight=24&width=890&button=false" /></a>
 
 
 ## Backers
@@ -64,10 +73,10 @@ We accept financial support on [Open Collective](https://opencollective.com/auto
 Thank every backer for supporting us!
 
 Organizations:
-<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/sponsor.svg?avatarHeight=36&width=890&button=false"></a>
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/sponsor.svg?avatarHeight=24&width=890&button=false"></a>
 
 Individuals:
-<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=36&width=890&button=false"></a>
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=24&width=890&button=false"></a>
 
 ## Cite this work
 

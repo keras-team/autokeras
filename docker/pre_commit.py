@@ -16,7 +16,7 @@ def _run_format_and_flake8():
         files_changed = True
 
     try:
-        check_bash_call("autopep8 --exit-code -i -r .")
+        check_bash_call("autopep8 --exclude=\"./docs/py/*.py\" -r -i .")
     except CalledProcessError as error:
         if error.returncode == 2:
             files_changed = True

@@ -1,3 +1,8 @@
+"""shell
+pip install autokeras
+"""
+
+"""
 In this tutorial, we show how to customize your search space with
 [AutoModel](/auto_model/#automodel-class) and how to implement your own block as search space.
 This API is mainly for advanced users who already know what their model should look like.
@@ -18,8 +23,8 @@ graph LR
 
 We can make use of the [AutoModel](/auto_model/#automodel-class) API in AutoKeras to implemented as follows.
 The usage is the same as the [Keras functional API](https://www.tensorflow.org/guide/keras/functional).
+"""
 
-```python
 import autokeras as ak
 
 input_node = ak.ImageInput()
@@ -34,8 +39,8 @@ auto_model = ak.AutoModel(
     inputs=input_node, 
     outputs=output_node,
     max_trials=10)
-```
 
+"""
 Whild building the model, the blocks used need to follow this topology:
 `Preprocessor` -> `Block` -> `Head`. `Normalization` and `ImageAugmentation` are `Preprocessor`s.
 `ClassificationHead` is `Head`. The rest are `Block`s.
@@ -46,8 +51,8 @@ For most of the arguments, if not specified, they would be tuned automatically.
 Please refer to the documentation links at the bottom of the page for more details.
 
 Then, we prepare some data to run the model.
+"""
 
-```python
 from tensorflow.keras.datasets import mnist
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -61,8 +66,8 @@ auto_model.fit(x_train, y_train)
 predicted_y = auto_model.predict(x_test)
 # Evaluate the best model with testing data.
 print(auto_model.evaluate(x_test, y_test))
-```
 
+"""
 For multiple input nodes and multiple heads search space, you can refer to [this section](/tutorial/multi/#customized-search-space).
 
 ## Validation Data
@@ -95,8 +100,8 @@ class to implement your own building blocks and use it with
 The first step is to learn how to write a build function for [KerasTuner](https://keras-team.github.io/keras-tuner/#usage-the-basics).
 You need to override the [build function](/base/#build-method) of the block.
 The following example shows how to implement a single Dense layer block whose number of neurons is tunable.
+"""
 
-```python
 import autokeras as ak
 import tensorflow as tf
 
@@ -109,12 +114,12 @@ class SingleDenseLayerBlock(ak.Block):
             hp.Int('num_units', min_value=32, max_value=512, step=32))
         output_node = layer(input_node)
         return output_node
-```
 
+"""
 You can connect it with other blocks and build it into an
 [AutoModel](/auto_model/#automodel-class).
+"""
 
-```python
 # Build the AutoModel
 input_node = ak.Input()
 output_node = SingleDenseLayerBlock()(input_node)
@@ -129,8 +134,8 @@ y_test = np.random.rand(num_instances, 1).astype(np.float32)
 # Train the model
 auto_model.fit(x_train, y_train)
 print(auto_model.evaluate(x_test, y_test))
-```
 
+"""
 ## Reference
 
 [AutoModel](/auto_model/#automodel-class)
@@ -162,4 +167,4 @@ print(auto_model.evaluate(x_test, y_test))
 [ImageBlock](/block/#imageblock-class),
 [StructuredDataBlock](/block/#structureddatablock-class),
 [TextBlock](/block/#textblock-class).
-
+"""

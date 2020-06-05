@@ -20,6 +20,9 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_div_format
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
 
 extra_javascript:
   - https://unpkg.com/mermaid@8.4.4/dist/mermaid.min.js
@@ -47,18 +50,14 @@ nav:
   - Docker: docker.md
   - Contributing Guide: contributing.md
   - Documentation:
-    - Task APIs:
-      - ImageClassifier: image_classifier.md
-      - ImageRegressor: image_regressor.md
-      - TextClassifier: text_classifier.md
-      - TextRegressor: text_regressor.md
-      - StructuredDataClassifier: structured_data_classifier.md
-      - StructuredDataRegressor: structured_data_regressor.md
+    - ImageClassifier: image_classifier.md
+    - ImageRegressor: image_regressor.md
+    - TextClassifier: text_classifier.md
+    - TextRegressor: text_regressor.md
+    - StructuredDataClassifier: structured_data_classifier.md
+    - StructuredDataRegressor: structured_data_regressor.md
     - AutoModel: auto_model.md
-    - Building Blocks:
-      - Base Classes: base.md
-      - Node: node.md
-      - Preprocessor: preprocessor.md
-      - Block: block.md
-      - Head: head.md
+    - Base Class: base.md
+    - Node: node.md
+    - Block: block.md
   - About: about.md
