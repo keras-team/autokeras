@@ -159,7 +159,7 @@ class AttentionBlock(block_module.Block):
 
     # Arguments
         attention_type: String. 'multiplicative' or 'additive'.
-        If left unspecified, it will be tuned automatically.
+            If left unspecified, it will be tuned automatically.
 
     """
 
@@ -176,19 +176,20 @@ class AttentionBlock(block_module.Block):
         return config
 
     def build(self, hp, inputs=None):
-        '''
+        """
+        # Arguments
+            hp: HyperParameters. The hyperparameters for building the model.
+            inputs: List of the following tensors:
+              * query: Query `Tensor` of shape `[batch_size, Tq, dim]`.
+              * value: Value `Tensor` of shape `[batch_size, Tv, dim]`.
+              * key: Optional key `Tensor` of shape `[batch_size, Tv, dim]`. If not
+                given, will use `value` for both `key` and `value`, which is the
+                most common case.
 
-        inputs: List of the following tensors:
-          * query: Query `Tensor` of shape `[batch_size, Tq, dim]`.
-          * value: Value `Tensor` of shape `[batch_size, Tv, dim]`.
-          * key: Optional key `Tensor` of shape `[batch_size, Tv, dim]`. If not
-            given, will use `value` for both `key` and `value`, which is the
-            most common case.
+        # Returns:
+            Attention outputs of shape `[batch_size, Tq, dim]`.
 
-        Output shape:
-        Attention outputs of shape `[batch_size, Tq, dim]`.
-
-        '''
+        """
         inputs = nest.flatten(inputs)
         attention_type = self.attention_type or hp.Choice('attention_type',
                                                           ['multiplicative',
