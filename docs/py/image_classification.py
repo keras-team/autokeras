@@ -4,14 +4,8 @@ pip install autokeras
 
 """
 ## A Simple Example
-"""
-
-"""
 The first step is to prepare your data. Here we use the MNIST dataset as an example
 """
-
-# One-hot encode the labels.
-
 
 import numpy as np
 import tensorflow as tf
@@ -25,13 +19,14 @@ print(y_train[:3])  # array([7, 2, 1], dtype=uint8)
 
 """
 The second step is to run the ImageClassifier.
+It is recommended have more trials for more complicated datasets.
+This is just a quick demo of MNIST, so we set max_trials to 1.
 """
 
-
 # Initialize the image classifier.
-clf = ak.ImageClassifier(max_trials=10)  # It tries 10 different models.
+clf = ak.ImageClassifier(max_trials=1)
 # Feed the image classifier with training data.
-clf.fit(x_train, y_train, epochs=3)
+clf.fit(x_train, y_train, epochs=10)
 
 
 # Predict with the best model.
@@ -44,9 +39,6 @@ print(clf.evaluate(x_test, y_test))
 
 """
 ## Validation Data
-"""
-
-"""
 By default, AutoKeras use the last 20% of training data as validation data. As shown in
 the example below, you can use validation_split to specify the percentage.
 """
@@ -56,7 +48,7 @@ clf.fit(
     y_train,
     # Split the training data and use the last 15% as validation data.
     validation_split=0.15,
-    epochs=3,
+    epochs=10,
 )
 
 """
@@ -74,14 +66,11 @@ clf.fit(
     y_train,
     # Use your own validation set.
     validation_data=(x_val, y_val),
-    epochs=3,
+    epochs=10,
 )
 
 """
 ## Customized Search Space
-"""
-
-"""
 For advanced users, you may customize your search space by using AutoModel instead of
 ImageClassifier. You can configure the ImageBlock for some high-level configurations,
 e.g., block_type for the type of neural network to search, normalize for whether to do
@@ -89,7 +78,6 @@ data normalization, augment for whether to do data augmentation. You can also do
 specify these arguments, which would leave the different choices to be tuned
 automatically. See the following example for detail.
 """
-
 
 input_node = ak.ImageInput()
 output_node = ak.ImageBlock(
@@ -101,8 +89,8 @@ output_node = ak.ImageBlock(
     augment=False,
 )(input_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
-clf.fit(x_train, y_train, epochs=3)
+clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+clf.fit(x_train, y_train, epochs=10)
 
 """
 The usage of AutoModel is similar to the functional API of Keras. Basically, you are
@@ -114,20 +102,16 @@ You can even also use more fine grained blocks to customize the search space eve
 further. See the following example.
 """
 
-
 input_node = ak.ImageInput()
 output_node = ak.Normalization()(input_node)
-output_node = ak.ImageAugmentation(percentage=0.3)(output_node)
+output_node = ak.ImageAugmentation(horizontal_flip=False)(output_node)
 output_node = ak.ResNetBlock(version="v2")(output_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
-clf.fit(x_train, y_train, epochs=3)
+clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+clf.fit(x_train, y_train, epochs=10)
 
 """
 ## Data Format
-"""
-
-"""
 The AutoKeras ImageClassifier is quite flexible for the data format.
 
 For the image, it accepts data formats both with and without the channel dimension. The
@@ -141,14 +125,13 @@ integers, and one-hot encoded encoded labels, i.e. vectors of 0s and 1s.
 So if you prepare your data in the following way, the ImageClassifier should still work.
 """
 
-
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
 # Reshape the images to have the channel dimension.
 x_train = x_train.reshape(x_train.shape + (1,))
 x_test = x_test.reshape(x_test.shape + (1,))
 
-
+# One-hot encode the labels.
 eye = np.eye(10)
 y_train = eye[y_train]
 y_test = eye[y_test]
@@ -166,13 +149,12 @@ images would have to be 3-dimentional. The labels have to be one-hot encoded for
 multi-class classification to be wrapped into tensorflow Dataset.
 """
 
-
 train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,)))
 test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,)))
 
-clf = ak.ImageClassifier(max_trials=10)
+clf = ak.ImageClassifier(max_trials=1)
 # Feed the tensorflow Dataset to the classifier.
-clf.fit(train_set)
+clf.fit(train_set, epochs=10)
 # Predict with the best model.
 predicted_y = clf.predict(test_set)
 # Evaluate the best model with testing data.
