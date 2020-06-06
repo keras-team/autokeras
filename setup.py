@@ -32,7 +32,7 @@ setup(
                   'pytest-xdist',
                   'pytest-cov',
                   'coverage',
-                  'typeguard>=2,<3',
+                  'typeguard>=2,<2.9.0',
                   'typedapi>=0.2,<0.3'
                   ],
     },
