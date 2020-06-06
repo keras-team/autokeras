@@ -21,6 +21,7 @@ setup(
     install_requires=[
         'packaging',
         'keras-tuner>=1.0.1',
+        'tensorflow>=2.2.0',
         'scikit-learn',
         'numpy',
         'pandas',
