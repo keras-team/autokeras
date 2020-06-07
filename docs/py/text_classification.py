@@ -9,7 +9,6 @@ dataset](https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification)
 an example.
 """
 
-
 import numpy as np
 from tensorflow.keras.datasets import imdb
 
@@ -44,9 +43,9 @@ The second step is to run the [TextClassifier](/text_classifier).
 import autokeras as ak
 
 # Initialize the text classifier.
-clf = ak.TextClassifier(max_trials=10) # It tries 10 different models.
+clf = ak.TextClassifier(max_trials=1) # It tries 10 different models.
 # Feed the text classifier with training data.
-clf.fit(x_train, y_train)
+clf.fit(x_train, y_train, epochs=2)
 # Predict with the best model.
 predicted_y = clf.predict(x_test)
 # Evaluate the best model with testing data.
@@ -76,6 +75,7 @@ x_train = x_train[:split]
 y_train = y_train[:split]
 clf.fit(x_train,
         y_train,
+        epochs=2,
         # Use your own validation set.
         validation_data=(x_val, y_val))
 
@@ -99,8 +99,8 @@ import autokeras as ak
 input_node = ak.TextInput()
 output_node = ak.TextBlock(vectorizer='ngram')(input_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
-clf.fit(x_train, y_train)
+clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+clf.fit(x_train, y_train, epochs=2)
 
 """
 The usage of [AutoModel](/auto_model/#automodel-class) is similar to the
@@ -121,8 +121,8 @@ output_node = ak.Embedding()(output_node)
 # Use separable Conv layers in Keras.
 output_node = ak.ConvBlock(separable=True)(output_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
-clf.fit(x_train, y_train)
+clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+clf.fit(x_train, y_train, epochs=2)
 
 """
 ## Data Format
@@ -141,12 +141,12 @@ Since the IMDB dataset is binary classification, it should not be one-hot encode
 """
 
 import tensorflow as tf
-train_set = tf.data.Dataset.from_tensor_slices(((x_train, ), (y_train, )))
-test_set = tf.data.Dataset.from_tensor_slices(((x_test, ), (y_test, )))
+train_set = tf.data.Dataset.from_tensor_slices(((x_train, ), (y_train, ))).batch(32)
+test_set = tf.data.Dataset.from_tensor_slices(((x_test, ), (y_test, ))).batch(32)
 
-clf = ak.TextClassifier(max_trials=10)
+clf = ak.TextClassifier(max_trials=3)
 # Feed the tensorflow Dataset to the classifier.
-clf.fit(train_set)
+clf.fit(train_set, epochs=2)
 # Predict with the best model.
 predicted_y = clf.predict(test_set)
 # Evaluate the best model with testing data.
