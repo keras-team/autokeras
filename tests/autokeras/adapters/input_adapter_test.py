@@ -5,6 +5,7 @@ import pytest
 import tensorflow as tf
 
 from autokeras.adapters import input_adapter
+from autokeras.utils import data_utils
 from tests import utils
 
 
@@ -122,6 +123,39 @@ def test_input_numerical():
         adapter.check(x)
         x = adapter.transform(x)
     assert 'Expect the data to Input to be numerical' in str(info.value)
+
+
+def test_text_dataset():
+    x = tf.data.Dataset.from_tensor_slices(np.array([
+        'a b c',
+        'b b c',
+    ]))
+    adapter = input_adapter.TextInputAdapter()
+    x = adapter.transform(x)
+    assert data_utils.dataset_shape(x).as_list() == [None, 1]
+    assert isinstance(x, tf.data.Dataset)
+
+
+def test_text_dataset_batch():
+    x = tf.data.Dataset.from_tensor_slices(np.array([
+        'a b c',
+        'b b c',
+    ])).batch(32)
+    adapter = input_adapter.TextInputAdapter()
+    x = adapter.transform(x)
+    assert data_utils.dataset_shape(x).as_list() == [None, 1]
+    assert isinstance(x, tf.data.Dataset)
+
+
+def test_text_np():
+    x = np.array([
+        'a b c',
+        'b b c',
+    ])
+    adapter = input_adapter.TextInputAdapter()
+    x = adapter.transform(x)
+    assert data_utils.dataset_shape(x).as_list() == [None, 1]
+    assert isinstance(x, tf.data.Dataset)
 
 
 def test_text_input_type_error():
