@@ -155,12 +155,11 @@ class RNNBlock(block_module.Block):
 
 
 class AttentionBlock(block_module.Block):
-    """The Attention Block. Luong's Multiplicative Style Attention.
+    """Using Attention or AdditiveAttention layer in Keras.
 
     # Arguments
         attention_type: String. 'multiplicative' or 'additive'.
             If left unspecified, it will be tuned automatically.
-
     """
 
     def __init__(self,
@@ -188,7 +187,6 @@ class AttentionBlock(block_module.Block):
 
         # Returns:
             Attention outputs of shape `[batch_size, Tq, dim]`.
-
         """
         inputs = nest.flatten(inputs)
         attention_type = self.attention_type or hp.Choice('attention_type',
@@ -199,21 +197,7 @@ class AttentionBlock(block_module.Block):
             'multiplicative': layers.Attention,
             'additive': layers.AdditiveAttention
         }
-        if len(inputs) == 2 or len(inputs) == 3:
-            # Either [query, value] or [query, value, key] provided
-            for in_vec in inputs:
-                if len(in_vec.shape) != 3:
-                    raise ValueError(
-                        'Expect 3 dimensions for each of query, value, (or key) '
-                        'but got {shape}'.format(shape=in_vec.shape)
-                    )
-            output_node = attention_layers[attention_type](inputs)
-        else:
-            raise ValueError(
-                'Expect the input to be [query, value] or [query, value, key]'
-                'for the Attention Layer, '
-                'but got {shape}'.format(shape=inputs.shape))
-
+        output_node = attention_layers[attention_type](inputs)
         return output_node
 
 
