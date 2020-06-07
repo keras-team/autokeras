@@ -45,8 +45,7 @@ class Adapter(serializable.Serializable):
             tf.data.Dataset. The converted dataset.
         """
         if isinstance(dataset, np.ndarray):
-            dataset = tf.data.Dataset.from_tensor_slices(
-                dataset.astype(np.float32))
+            dataset = tf.data.Dataset.from_tensor_slices(dataset)
         return data_utils.batch_dataset(dataset, self.batch_size)
 
     def fit(self, dataset):

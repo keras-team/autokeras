@@ -3,11 +3,15 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 
-def batch_dataset(dataset, batch_size):
+def batched(dataset):
     shape = nest.flatten(dataset_shape(dataset))[0]
-    if shape[0] is not None:
-        return dataset.batch(batch_size)
-    return dataset
+    return len(shape) > 0 and shape[0] is None
+
+
+def batch_dataset(dataset, batch_size):
+    if batched(dataset):
+        return dataset
+    return dataset.batch(batch_size)
 
 
 def split_dataset(dataset, validation_split):

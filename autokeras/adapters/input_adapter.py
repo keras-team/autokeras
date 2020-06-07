@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras.engine import adapter as adapter_module
+from autokeras.utils import data_utils
 
 CATEGORICAL = 'categorical'
 NUMERICAL = 'numerical'
@@ -38,8 +39,10 @@ class ImageInputAdapter(adapter_module.Adapter):
 
     def convert_to_dataset(self, x):
         if isinstance(x, np.ndarray):
+            # TODO: expand the dims after converting to Dataset.
             if x.ndim == 3:
                 x = np.expand_dims(x, axis=3)
+            x = x.astype(np.float32)
         return super().convert_to_dataset(x)
 
 
@@ -61,11 +64,11 @@ class TextInputAdapter(adapter_module.Adapter):
                             '{type}.'.format(type=x.dtype))
 
     def convert_to_dataset(self, x):
-        if len(x.shape) == 1:
-            x = x.reshape(-1, 1)
-        if isinstance(x, np.ndarray):
-            x = tf.data.Dataset.from_tensor_slices(x)
-        return super().convert_to_dataset(x)
+        x = super().convert_to_dataset(x)
+        shape = data_utils.dataset_shape(x)
+        if len(shape) == 1:
+            x = x.map(lambda a: tf.reshape(a, [-1, 1]))
+        return x
 
 
 class StructuredDataInputAdapter(adapter_module.Adapter):
