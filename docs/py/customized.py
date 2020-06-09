@@ -23,13 +23,13 @@ graph LR
 
 We can make use of the [AutoModel](/auto_model/#automodel-class) API in AutoKeras to implemented as follows.
 The usage is the same as the [Keras functional API](https://www.tensorflow.org/guide/keras/functional).
+Since this is just a demo, we use small amount of `max_trials` and `epochs`.
 """
 
 import autokeras as ak
 
 input_node = ak.ImageInput()
 output_node = ak.Normalization()(input_node)
-output_node = ak.ImageAugmentation()(output_node)
 output_node1 = ak.ConvBlock()(output_node)
 output_node2 = ak.ResNetBlock(version='v2')(output_node)
 output_node = ak.Merge()([output_node1, output_node2])
@@ -38,7 +38,7 @@ output_node = ak.ClassificationHead()(output_node)
 auto_model = ak.AutoModel(
     inputs=input_node, 
     outputs=output_node,
-    max_trials=10)
+    max_trials=1)
 
 """
 Whild building the model, the blocks used need to follow this topology:
@@ -61,7 +61,7 @@ print(y_train.shape) # (60000,)
 print(y_train[:3]) # array([7, 2, 1], dtype=uint8)
 
 # Feed the AutoModel with training data.
-auto_model.fit(x_train, y_train)
+auto_model.fit(x_train[:100], y_train[:100], epochs=1)
 # Predict with the best model.
 predicted_y = auto_model.predict(x_test)
 # Evaluate the best model with testing data.
@@ -124,7 +124,7 @@ You can connect it with other blocks and build it into an
 input_node = ak.Input()
 output_node = SingleDenseLayerBlock()(input_node)
 output_node = ak.RegressionHead()(output_node)
-auto_model = ak.AutoModel(input_node, output_node, max_trials=10)
+auto_model = ak.AutoModel(input_node, output_node, max_trials=1)
 # Prepare Data
 num_instances = 100
 x_train = np.random.rand(num_instances, 20).astype(np.float32)
@@ -132,7 +132,7 @@ y_train = np.random.rand(num_instances, 1).astype(np.float32)
 x_test = np.random.rand(num_instances, 20).astype(np.float32)
 y_test = np.random.rand(num_instances, 1).astype(np.float32)
 # Train the model
-auto_model.fit(x_train, y_train)
+auto_model.fit(x_train, y_train, epochs=1)
 print(auto_model.evaluate(x_test, y_test))
 
 """
