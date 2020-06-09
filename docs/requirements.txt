@@ -4,3 +4,4 @@ mkdocs-material
 pygments
 jupyter
 pymdown-extensions
+Sphinx<3.1.0
