@@ -32,6 +32,8 @@ It has two inputs the images and the structured data. Each image is associated w
 To illustrate our idea, we generate some random image and structured data as the multi-modal data.
 """
 
+import numpy as np
+
 num_instances = 100
 # Generate image data.
 image_data = np.random.rand(num_instances, 32, 32, 3).astype(np.float32)
@@ -51,6 +53,7 @@ classification_target = np.random.randint(5, size=num_instances)
 ## Build and Train the Model
 Then we initialize the multi-modal and multi-task model with 
 [AutoModel](/auto_model/#automodel-class).
+Since this is just a demo, we use small amount of `max_trials` and `epochs`.
 """
 
 import autokeras as ak
@@ -61,12 +64,12 @@ model = ak.AutoModel(
         ak.RegressionHead(metrics=['mae']),
         ak.ClassificationHead(loss='categorical_crossentropy', metrics=['accuracy'])
     ],
-    max_trials=10)
+    max_trials=2)
 # Fit the model with prepared data.
 model.fit(
     [image_data, structured_data],
     [regression_target, classification_target],
-    epochs=10)
+    epochs=3)
 
 """
 ## Validation Data
@@ -78,7 +81,8 @@ model.fit(
     [image_data, structured_data],
     [regression_target, classification_target],
     # Split the training data and use the last 15% as validation data.
-    validation_split=0.15)
+    validation_split=0.15,
+    epochs=2)
 
 """
 You can also use your own validation set
@@ -97,10 +101,14 @@ structured_data = structured_data[:split]
 regression_target = regression_target[:split]
 classification_target = classification_target[:split]
 
-model.fit(x_train,
-          y_train,
-          # Use your own validation set.
-          validation_data=(x_val, y_val))
+model.fit(
+    [image_data, structured_data],
+    [regression_target, classification_target],
+    # Use your own validation set.
+    validation_data=(
+        [image_val, structured_val],
+        [regression_val, classification_val]),
+    epochs=2)
 
 """
 ## Customized Search Space
@@ -143,8 +151,19 @@ output_node2 = ak.RegressionHead()(output_node)
 
 auto_model = ak.AutoModel(
     inputs=[input_node1, input_node2], 
-    outputs=[]output_node1, output_node2],
-    max_trials=10)
+    outputs=[output_node1, output_node2],
+    max_trials=2)
+
+image_data = np.random.rand(num_instances, 32, 32, 3).astype(np.float32)
+structured_data = np.random.rand(num_instances, 20).astype(np.float32)
+regression_target = np.random.rand(num_instances, 1).astype(np.float32)
+classification_target = np.random.randint(5, size=num_instances)
+
+auto_model.fit(
+    [image_data, structured_data],
+    [classification_target, regression_target],
+    batch_size=32,
+    epochs=3)
 
 """
 ## Data Format
