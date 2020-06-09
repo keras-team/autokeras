@@ -24,7 +24,7 @@ def test_structured_data_input_less_col_name():
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.StructuredDataInputAdapter(
             column_names=utils.LESS_COLUMN_NAMES_FROM_CSV)
-        adapter.transform(x)
+        adapter.fit_transform(x)
     assert 'Expect column_names to have length' in str(info.value)
 
 
@@ -55,6 +55,14 @@ def test_structured_data_input_transform():
     adapter.fit_transform(x)
     assert adapter.column_names[0] == 'sex'
     assert adapter.column_types == utils.COLUMN_TYPES_FROM_CSV
+
+
+def test_structured_data_input_dataset():
+    (x, _), _1 = utils.dataframe_dataframe()
+    x = tf.data.Dataset.from_tensor_slices(x.to_numpy().astype(np.unicode))
+    adapter = input_adapter.StructuredDataInputAdapter()
+    x = adapter.fit_transform(x)
+    assert isinstance(x, tf.data.Dataset)
 
 
 def test_partial_column_types():
