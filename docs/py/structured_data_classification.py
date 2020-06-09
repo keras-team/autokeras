@@ -13,20 +13,28 @@ The second step is to run the
 Replace all the `/path/to` with the path to the csv files.
 """
 
+import tensorflow as tf
 import autokeras as ak
 
+TRAIN_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
+TEST_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
+
+train_file_path = tf.keras.utils.get_file("train.csv", TRAIN_DATA_URL)
+test_file_path = tf.keras.utils.get_file("eval.csv", TEST_DATA_URL)
+
 # Initialize the structured data classifier.
-clf = ak.StructuredDataClassifier(max_trials=10) # It tries 10 different models.
+clf = ak.StructuredDataClassifier(max_trials=3) # It tries 10 different models.
 # Feed the structured data classifier with training data.
 clf.fit(
     # The path to the train.csv file.
-    '/path/to/train.csv',
+    train_file_path,
     # The name of the label column.
-    'survived')
+    'survived',
+    epochs=10)
 # Predict with the best model.
-predicted_y = clf.predict('/path/to/eval.csv')
+predicted_y = clf.predict(test_file_path)
 # Evaluate the best model with testing data.
-print(clf.evaluate('/path/to/eval.csv', 'survived'))
+print(clf.evaluate(test_file_path, 'survived'))
 
 """
 ## Data Format
@@ -47,8 +55,9 @@ pandas.DataFrame, and tensorflow.data.Dataset.
 """
 
 import pandas as pd
+import numpy as np
 # x_train as pandas.DataFrame, y_train as pandas.Series
-x_train = pd.read_csv('train.csv')
+x_train = pd.read_csv(train_file_path)
 print(type(x_train)) # pandas.DataFrame
 y_train = x_train.pop('survived')
 print(type(y_train)) # pandas.Series
@@ -58,19 +67,19 @@ y_train = pd.DataFrame(y_train)
 print(type(y_train)) # pandas.DataFrame
 
 # You can also use numpy.ndarray for x_train and y_train.
-x_train = x_train.to_numpy()
+x_train = x_train.to_numpy().astype(np.unicode)
 y_train = y_train.to_numpy()
 print(type(x_train)) # numpy.ndarray
 print(type(y_train)) # numpy.ndarray
 
 # Preparing testing data.
-x_test = pd.read_csv('eval.csv')
+x_test = pd.read_csv(test_file_path)
 y_test = x_test.pop('survived')
 
 # It tries 10 different models.
-clf = ak.StructuredDataClassifier(max_trials=10)
+clf = ak.StructuredDataClassifier(max_trials=3)
 # Feed the structured data classifier with training data.
-clf.fit(x_train, y_train)
+clf.fit(x_train, y_train, epochs=10)
 # Predict with the best model.
 predicted_y = clf.predict(x_test)
 # Evaluate the best model with testing data.
@@ -84,13 +93,12 @@ Since the Titanic dataset is binary
 classification, it should not be one-hot encoded.
 """
 
-import tensorflow as tf
-train_set = tf.data.Dataset.from_tensor_slices(((x_train, ), (y_train, )))
-test_set = tf.data.Dataset.from_tensor_slices(((x_test, ), (y_test, )))
+train_set = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_set = tf.data.Dataset.from_tensor_slices((x_test.to_numpy().astype(np.unicode), y_test))
 
-clf = ak.StructuredDataClassifier(max_trials=10)
+clf = ak.StructuredDataClassifier(max_trials=3)
 # Feed the tensorflow Dataset to the classifier.
-clf.fit(train_set)
+clf.fit(train_set, epochs=10)
 # Predict with the best model.
 predicted_y = clf.predict(test_set)
 # Evaluate the best model with testing data.
@@ -129,7 +137,8 @@ As shown in the example below, you can use `validation_split` to specify the per
 clf.fit(x_train,
         y_train,
         # Split the training data and use the last 15% as validation data.
-        validation_split=0.15)
+        validation_split=0.15,
+        epochs=10)
 
 """
 You can also use your own validation set
@@ -144,7 +153,8 @@ y_train = y_train[:split]
 clf.fit(x_train,
         y_train,
         # Use your own validation set.
-        validation_data=(x_val, y_val))
+        validation_data=(x_val, y_val),
+        epochs=10)
 
 """
 ## Customized Search Space
@@ -161,12 +171,10 @@ the following example for detail.
 import autokeras as ak
 
 input_node = ak.StructuredDataInput()
-output_node = ak.StructuredDataBlock(
-    categorical_encoding=True,
-    block_type='dense')(input_node)
+output_node = ak.StructuredDataBlock(categorical_encoding=True)(input_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
-clf.fit(x_train, y_train)
+clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
+clf.fit(x_train, y_train, epochs=10)
 
 """
 The usage of [AutoModel](/auto_model/#automodel-class) is similar to the
@@ -185,8 +193,8 @@ input_node = ak.StructuredDataInput()
 output_node = ak.CategoricalToNumerical()(input_node)
 output_node = ak.DenseBlock()(output_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
-clf.fit(x_train, y_train)
+clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
+clf.fit(x_train, y_train, epochs=10)
 
 
 """
