@@ -62,6 +62,7 @@ def test_functional_api(tmp_path):
             classification_outputs
         ],
         max_trials=2,
+        tuner=ak.Hyperband,
         seed=utils.SEED)
 
     automodel.fit(

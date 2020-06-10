@@ -30,8 +30,12 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         **kwargs: The args supported by KerasTuner.
     """
 
-    def __init__(self, preprocessors=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self,
+                 oracle,
+                 hypermodel,
+                 preprocessors=None,
+                 **kwargs):
+        super().__init__(oracle, hypermodel, **kwargs)
         self.preprocessors = nest.flatten(preprocessors)
         self._finished = False
         # Save or load the HyperModel.
@@ -111,6 +115,11 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
             acceleration = True
             new_callbacks.append(tf_callbacks.EarlyStopping(patience=10))
+
+        # Populate initial search space.
+        hp = self.oracle.get_space()
+        self.hypermodel.build(hp)
+        self.oracle.update_space(hp)
 
         super().search(epochs=epochs, callbacks=new_callbacks, **fit_kwargs)
 

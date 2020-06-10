@@ -35,6 +35,10 @@ from autokeras.tasks import StructuredDataRegressor
 from autokeras.tasks import TextClassifier
 from autokeras.tasks import TextRegressor
 from autokeras.tasks import TimeseriesForecaster
+from autokeras.tuners import BayesianOptimization
+from autokeras.tuners import Greedy
+from autokeras.tuners import Hyperband
+from autokeras.tuners import RandomSearch
 from autokeras.utils.utils import check_tf_version
 
 __version__ = '1.0.3'

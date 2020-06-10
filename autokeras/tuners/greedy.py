@@ -201,6 +201,6 @@ class Greedy(tuner_module.AutoTuner):
             tune_new_entries=tune_new_entries,
             allow_new_entries=allow_new_entries)
         super().__init__(
-            hypermodel=hypermodel,
             oracle=oracle,
+            hypermodel=hypermodel,
             **kwargs)

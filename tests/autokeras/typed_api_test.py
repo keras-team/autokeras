@@ -30,6 +30,10 @@ EXCEPTION_LIST = [
     autokeras.StructuredDataClassifier,
     autokeras.TextRegressor,
     autokeras.TimeseriesForecaster,
+    autokeras.BayesianOptimization,
+    autokeras.Greedy,
+    autokeras.Hyperband,
+    autokeras.RandomSearch,
 ]
 
 
