@@ -1,8 +1,12 @@
+from typing import Type
+from typing import Union
+
 import pandas as pd
 
 from autokeras import auto_model
 from autokeras import blocks
 from autokeras import nodes as input_module
+from autokeras.engine import tuner
 from autokeras.tasks.structured_data_mixin import StructuredDataMixin
 from autokeras.tuners import greedy
 
@@ -137,6 +141,11 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
+        tuner: String or subclass of AutoTuner. If string, it should be one of
+            'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a subclass
+            of AutoTuner. If left unspecified, it uses a task specific tuner, which
+            first evaluates the most commonly used models for the task before
+            exploring other models.
         overwrite: Boolean. Defaults to `True`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
@@ -157,9 +166,12 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
+                 tuner: Union[str, Type[tuner.AutoTuner]] = None,
                  overwrite=True,
                  seed=None,
                  **kwargs):
+        if tuner is None:
+            tuner = greedy.Greedy
         super().__init__(outputs=blocks.RegressionHead(output_dim=output_dim,
                                                        loss=loss,
                                                        metrics=metrics),
@@ -172,7 +184,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
                          max_trials=max_trials,
                          directory=directory,
                          objective=objective,
-                         tuner=greedy.Greedy,
+                         tuner=tuner,
                          overwrite=overwrite,
                          seed=seed,
                          **kwargs)
