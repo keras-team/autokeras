@@ -89,7 +89,7 @@ class AutoModel(object):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        tuner: String or subclass of AutoTuner. If use string, it should be one of
+        tuner: String or subclass of AutoTuner. If string, it should be one of
             'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a subclass
             of AutoTuner. Defaults to 'greedy'.
         overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
