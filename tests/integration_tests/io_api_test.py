@@ -29,6 +29,7 @@ def test_io_api(tmp_path):
                                        metrics=['accuracy'])],
         directory=tmp_path,
         max_trials=2,
+        tuner=ak.RandomSearch,
         seed=utils.SEED)
     automodel.fit([
         image_x,
