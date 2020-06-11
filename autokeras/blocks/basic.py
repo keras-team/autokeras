@@ -1,5 +1,6 @@
 from typing import Optional
 
+import tensorflow as tf
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
 from tensorflow.keras import layers
@@ -30,7 +31,7 @@ class DenseBlock(block_module.Block):
 
     def __init__(self,
                  num_layers: Optional[int] = None,
-                 use_batchnorm: Optional[bool] = None,
+                 use_batchnorm: Optional[bool] = None,  q
                  dropout_rate: Optional[float] = None,
                  **kwargs):
         super().__init__(**kwargs)
@@ -258,6 +259,140 @@ class ConvBlock(block_module.Block):
                 for length in output_node.shape[1:-1]]):
             return 'valid'
         return 'same'
+
+
+class MultiHeadSelfAttentionBlock(block_module.Block):
+    def __init__(self,
+                 embed_dim: Optional[int] = None,
+                 num_heads: Optional[int] = 8,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'embed_dim': self.embed_dim,
+            'num_heads': self.num_heads})
+        return config
+
+    def build(self, hp, inputs=None):
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        shape = inputs.shape.as_list()
+        if len(shape) != 3:
+            raise ValueError(
+                'Expect the input tensor to have '
+                '3 dimensions for multi-head self-attention, '
+                'but got {shape}'.format(shape=inputs.shape))
+        # input.shape = [batch_size, seq_len, embedding_dim]
+        embed_dim = self.embed_dim or hp.Choice(
+            'embed_dim',
+            [32, 64, 128, 256, 512],
+            default=128)
+        num_heads = self.num_heads
+        if num_heads is None:
+            num_heads = 8
+
+        if embed_dim % num_heads != 0:  # how to evaluate this condition
+            raise ValueError(
+                f"embedding dimension = {embed_dim} should be "
+                f"divisible by number of heads = {num_heads}"
+            )
+        projection_dim = embed_dim // num_heads
+        query_dense = layers.Dense(embed_dim)
+        key_dense = layers.Dense(embed_dim)
+        value_dense = layers.Dense(embed_dim)
+        combine_heads = layers.Dense(embed_dim)
+
+        batch_size = tf.shape(inputs)[0]
+        query = query_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        key = key_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        value = value_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        query, key, value = [self.separate_heads(
+            var, batch_size, projection_dim
+        ) for var in [query, key, value]]
+        attention, weights = self.attention(query, key, value)
+        attention = tf.transpose(
+            attention, perm=[0, 2, 1, 3]
+        )  # (batch_size, seq_len, num_heads, projection_dim)
+        concat_attention = tf.reshape(
+            attention, (batch_size, -1, self.embed_dim)
+        )  # (batch_size, seq_len, embed_dim)
+        output = combine_heads(
+            concat_attention
+        )  # (batch_size, seq_len, embed_dim)
+        return output
+
+    @staticmethod
+    def attention(query, key, value):
+        score = tf.matmul(query, key, transpose_b=True)
+        dim_key = tf.cast(tf.shape(key)[-1], tf.float32)
+        scaled_score = score / tf.math.sqrt(dim_key)
+        weights = tf.nn.softmax(scaled_score, axis=-1)
+        output = tf.matmul(weights, value)
+        return output, weights
+
+    @staticmethod
+    def separate_heads(self, x, batch_size, projection_dim):
+        x = tf.reshape(x, (batch_size, -1, self.num_heads, projection_dim))
+        return tf.transpose(x, perm=[0, 2, 1, 3])
+
+
+class TransformerBlock(block_module.Block):
+    def __init__(self,
+                 embed_dim: Optional[int] = None,
+                 num_heads: Optional[int] = None,
+                 ff_dim: Optional[int] = None,
+                 dropout_rate: Optional[int] = None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self. ff_dim = ff_dim
+        self.dropout_rate = dropout_rate
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'embed_dim': self.embed_dim,
+            'num_heads': self.num_heads,
+            'ff_dim': self.ff_dim,
+            'dropout_rate': self.dropout_rate})
+        return config
+
+    def build(self, hp, inputs=None):
+        embed_dim = self.embed_dim or hp.Choice(
+            'embed_dim',
+            [32, 64, 128, 256, 512],
+            default=128)
+        num_heads = self.num_heads
+        if num_heads is None:
+            num_heads = 8
+        ff_dim = self.ff_dim or hp.Choice('ff_dim',
+                                          [128, 256, 512, 1024, 2048],
+                                          default=2048)
+        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
+                                                      [0.0, 0.25, 0.5],
+                                                      default=0)
+
+        att = MultiHeadSelfAttentionBlock(embed_dim, num_heads)
+        ffn = layers.Sequential(
+            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim), ]
+        )
+        layernorm1 = layers.LayerNormalization(epsilon=1e-6)
+        layernorm2 = layers.LayerNormalization(epsilon=1e-6)
+        dropout1 = layers.Dropout(dropout_rate)
+        dropout2 = layers.Dropout(dropout_rate)
+
+        attn_output = att(inputs)
+        attn_output = dropout1(attn_output)
+        out1 = layernorm1(inputs + attn_output)
+        ffn_output = ffn(out1)
+        ffn_output = dropout2(ffn_output)
+        output = layernorm2(out1 + ffn_output)
+        return output
 
 
 class ResNetBlock(resnet.HyperResNet, block_module.Block):
