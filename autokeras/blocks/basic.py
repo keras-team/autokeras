@@ -31,7 +31,7 @@ class DenseBlock(block_module.Block):
 
     def __init__(self,
                  num_layers: Optional[int] = None,
-                 use_batchnorm: Optional[bool] = None,  q
+                 use_batchnorm: Optional[bool] = None,
                  dropout_rate: Optional[float] = None,
                  **kwargs):
         super().__init__(**kwargs)
