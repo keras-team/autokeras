@@ -1,5 +1,6 @@
 from typing import Optional
 
+import tensorflow as tf
 from kerastuner.applications import resnet
 from kerastuner.applications import xception
 from tensorflow.keras import layers
@@ -258,6 +259,243 @@ class ConvBlock(block_module.Block):
                 for length in output_node.shape[1:-1]]):
             return 'valid'
         return 'same'
+
+
+class MultiHeadSelfAttention(block_module.Block):
+    """Block for Multi-Head Self-Attention.
+
+    # Arguments
+        head_size: Int. Dimensionality of the `query`, `key` and `value` tensors
+            after the linear transformation. If left unspecified, it will be
+            tuned automatically.
+        num_heads: Int. The number of attention heads. If left unspecified,
+            it will be tuned automatically.
+    """
+
+    def __init__(self,
+                 head_size: Optional[int] = None,
+                 num_heads: Optional[int] = 8,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.head_size = head_size
+        self.num_heads = num_heads
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'head_size': self.head_size,
+            'num_heads': self.num_heads})
+        return config
+
+    def build(self, hp, inputs=None):
+        """
+        # Arguments
+             hp: HyperParameters. The hyperparameters for building the model.
+             inputs: Tensor of Shape [batch_size, seq_len, embedding_dim]
+
+        # Returns
+            Self-Attention outputs of shape `[batch_size, seq_len, embedding_dim]`.
+        """
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        input_node = inputs[0]
+        shape = input_node.shape.as_list()
+        if len(shape) != 3:
+            raise ValueError(
+                'Expect the input tensor to have '
+                '3 dimensions for multi-head self-attention, '
+                'but got {shape}'.format(shape=input_node.shape))
+        # input.shape = [batch_size, seq_len, embedding_dim]
+        head_size = self.head_size or hp.Choice(
+            'head_size',
+            [32, 64, 128, 256, 512],
+            default=128)
+        num_heads = self.num_heads
+        if num_heads is None:
+            num_heads = 8
+
+        if head_size % num_heads != 0:  # how to evaluate this condition
+            raise ValueError(
+                f"embedding dimension = {head_size} should be "
+                f"divisible by number of heads = {num_heads}"
+            )
+        projection_dim = head_size // num_heads
+        query_dense = layers.Dense(head_size)
+        key_dense = layers.Dense(head_size)
+        value_dense = layers.Dense(head_size)
+        combine_heads = layers.Dense(head_size)
+        batch_size = tf.shape(input_node)[0]
+        query = query_dense(input_node)  # (batch_size, seq_len, head_size)
+        key = key_dense(input_node)  # (batch_size, seq_len, head_size)
+        value = value_dense(input_node)  # (batch_size, seq_len, head_size)
+        query, key, value = [self.separate_heads(
+            var, batch_size, num_heads,  projection_dim
+        ) for var in [query, key, value]]
+        attention, weights = self.attention(query, key, value)
+        attention = tf.transpose(
+            attention, perm=[0, 2, 1, 3]
+        )  # (batch_size, seq_len, num_heads, projection_dim)
+        concat_attention = tf.reshape(
+            attention, (batch_size, tf.shape(attention)[1], self.head_size)
+        )  # (batch_size, seq_len, head_size)
+        output = combine_heads(
+            concat_attention
+        )  # (batch_size, seq_len, head_size)
+        return output
+
+    @staticmethod
+    def attention(query, key, value):
+        score = tf.matmul(query, key, transpose_b=True)
+        dim_key = tf.cast(tf.shape(key)[-1], tf.float32)
+        scaled_score = score / tf.math.sqrt(dim_key)
+        weights = tf.nn.softmax(scaled_score, axis=-1)
+        output = tf.matmul(weights, value)
+        return output, weights
+
+    @staticmethod
+    def separate_heads(x, batch_size, num_heads, projection_dim):
+        x = tf.reshape(x, (batch_size, -1, num_heads, projection_dim))
+        return tf.transpose(x, perm=[0, 2, 1, 3])
+
+
+class Transformer(block_module.Block):
+    """Block for Transformer.
+    The input should be tokenized sequences with the same length, where each element
+    of a sequence should be the index of the word.
+
+    # Example
+    ```python
+        # Using the Transformer Block with AutoModel.
+        import autokeras as ak
+        from tensorflow.keras import losses
+        text_input = ak.TextInput()
+        output_node = ak.TextToIntSequence(output_sequence_length=200)(text_input)
+        output_node = ak.Transformer(embedding_dim=32,
+                             pretraining='none',
+                             num_heads=2,
+                             dense_dim=32,
+                             dropout_rate = 0.25)(output_node)
+        output_node = ak.SpatialReduction(reduction_type='global_avg')(output_node)
+        output_node = ak.DenseBlock(num_layers=1, use_batchnorm = False)(output_node)
+        output_node = ak.ClassificationHead(
+            loss=losses.SparseCategoricalCrossentropy(),
+            dropout_rate = 0.25)(output_node)
+        clf = ak.AutoModel(inputs=text_input, outputs=output_node, max_trials=2)
+    ```
+    # Arguments
+        max_features: Int. Size of the vocabulary. Must be set if not using
+            TextToIntSequence before this block. Defaults to 20001.
+        pretraining: String. 'random' (use random weights instead any pretrained
+            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
+            If left unspecified, it will be tuned automatically.
+        embedding_dim: Int. Output dimension of the Attention block.
+            If left unspecified, it will be tuned automatically.
+        num_heads: Int. The number of attention heads. If left unspecified,
+            it will be tuned automatically.
+        dense_dim: Int. The output dimension of the Feed-Forward Network. If left
+            unspecified, it will be tuned automatically.
+        dropout_rate: Float. Between 0 and 1. If left unspecified, it will be
+            tuned automatically.
+    """
+
+    def __init__(self,
+                 max_features: int = 20001,
+                 pretraining: Optional[str] = None,
+                 embedding_dim: Optional[int] = None,
+                 num_heads: Optional[int] = None,
+                 dense_dim: Optional[int] = None,
+                 dropout_rate: Optional[int] = None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.max_features = max_features
+        self.pretraining = pretraining
+        self.embedding_dim = embedding_dim
+        self.num_heads = num_heads
+        self. dense_dim = dense_dim
+        self.dropout_rate = dropout_rate
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'max_features': self.max_features,
+            'pretraining': self.pretraining,
+            'embedding_dim': self.embedding_dim,
+            'num_heads': self.num_heads,
+            'dense_dim': self.dense_dim,
+            'dropout_rate': self.dropout_rate})
+        return config
+
+    def build(self, hp, inputs=None):
+        """
+        # Arguments
+             hp: HyperParameters. The hyperparameters for building the model.
+             inputs: Tensor of Shape [batch_size, seq_len]
+
+        # Returns
+            Output Tensor of shape `[batch_size, seq_len, embedding_dim]`.
+        """
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        pretraining = self.pretraining or hp.Choice(
+            'pretraining',
+            ['random', 'glove', 'fasttext', 'word2vec', 'none'],
+            default='none')
+        embedding_dim = self.embedding_dim or hp.Choice(
+            'embedding_dim',
+            [32, 64, 128, 256, 512],
+            default=128)
+        num_heads = self.num_heads or hp.Choice('num_heads', [8, 16, 32], default=8)
+
+        dense_dim = self.dense_dim or hp.Choice('dense_dim',
+                                                [128, 256, 512, 1024, 2048],
+                                                default=2048)
+        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
+                                                      [0.0, 0.25, 0.5],
+                                                      default=0)
+
+        ffn = tf.keras.Sequential(
+            [layers.Dense(dense_dim, activation="relu"),
+             layers.Dense(embedding_dim), ]
+        )
+
+        layernorm1 = layers.LayerNormalization(epsilon=1e-6)
+        layernorm2 = layers.LayerNormalization(epsilon=1e-6)
+        dropout1 = layers.Dropout(dropout_rate)
+        dropout2 = layers.Dropout(dropout_rate)
+        # Token and Position Embeddings
+        input_node = nest.flatten(inputs)[0]
+        token_embedding = Embedding(max_features=self.max_features,
+                                    pretraining=pretraining,
+                                    embedding_dim=embedding_dim,
+                                    dropout_rate=dropout_rate).build(hp, input_node)
+        maxlen = input_node.shape[-1]
+        batch_size = tf.shape(input_node)[0]
+        positions = self.pos_array_funct(maxlen, batch_size)
+        position_embedding = Embedding(max_features=maxlen,
+                                       pretraining=pretraining,
+                                       embedding_dim=embedding_dim,
+                                       dropout_rate=dropout_rate).build(hp,
+                                                                        positions)
+        output_node = tf.keras.layers.Add()([token_embedding,
+                                             position_embedding])
+        attn_output = MultiHeadSelfAttention(
+            embedding_dim, num_heads).build(hp, output_node)
+        attn_output = dropout1(attn_output)
+        add_inputs_1 = tf.keras.layers.Add()([output_node, attn_output])
+        out1 = layernorm1(add_inputs_1)
+        ffn_output = ffn(out1)
+        ffn_output = dropout2(ffn_output)
+        add_inputs_2 = tf.keras.layers.Add()([out1, ffn_output])
+        output = layernorm2(add_inputs_2)
+        return output
+
+    @staticmethod
+    def pos_array_funct(maxlen, batch_size):
+        pos_ones = tf.ones((batch_size, 1), dtype=tf.int32)
+        positions = tf.range(start=0, limit=maxlen, delta=1)
+        positions = tf.expand_dims(positions, 0)
+        positions = tf.matmul(pos_ones, positions)
+        return positions
 
 
 class ResNetBlock(resnet.HyperResNet, block_module.Block):

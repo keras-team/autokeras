@@ -202,3 +202,31 @@ def test_embed_get_config_has_all_attributes():
 
     assert utils.get_func_args(
         blocks.Embedding.__init__).issubset(config.keys())
+
+
+def test_transformer_build_return_tensor():
+    block = blocks.Transformer()
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(64,), dtype=tf.float32))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_transformer_deserialize_to_transformer():
+    serialized_block = blocks.serialize(blocks.Transformer())
+
+    block = blocks.deserialize(serialized_block)
+
+    assert isinstance(block, blocks.Transformer)
+
+
+def test_transformer_get_config_has_all_attributes():
+    block = blocks.Transformer()
+
+    config = block.get_config()
+
+    assert utils.get_func_args(
+        blocks.Transformer.__init__).issubset(config.keys())

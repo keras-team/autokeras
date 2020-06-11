@@ -50,6 +50,17 @@ def test_text_classifier_tuner0():
     check_initial_hp(task_specific.TEXT_CLASSIFIER[0], graph)
 
 
+def test_text_classifier_tuner1():
+    tf.keras.backend.clear_session()
+    input_node = ak.TextInput(shape=(1,))
+    output_node = ak.TextBlock()(input_node)
+    output_node = ak.ClassificationHead(
+        loss='categorical_crossentropy',
+        output_shape=(10,))(output_node)
+    graph = graph_module.Graph(input_node, output_node)
+    check_initial_hp(task_specific.TEXT_CLASSIFIER[1], graph)
+
+
 def test_image_classifier_oracle():
     tf.keras.backend.clear_session()
     input_node = ak.ImageInput(shape=(32, 32, 3))
