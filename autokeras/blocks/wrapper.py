@@ -1,4 +1,5 @@
 import numpy as np
+from kerastuner.applications import xception
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers
 from tensorflow.keras.activations import relu
@@ -218,7 +219,7 @@ class GeneralBlock(block_module.Block):
     def build(self, hp, inputs=None):
         raise NotImplementedError
 
-        
+
 class SegmentationBlock(block_module.Block):
     """Block for image semantic segmentation.
 
@@ -275,80 +276,6 @@ class SegmentationBlock(block_module.Block):
                        'classes': self.classes})
         return config
 
-    def SepConv_BN(self, x, filters, prefix, stride=1, kernel_size=3, rate=1,
-                   depth_activation=False, epsilon=1e-3):
-        """ SepConv with BN between depthwise & pointwise. Optionally
-            add activation after BN Implements right "same" padding for
-            even kernel sizes.
-        # Arguments
-            x: Numpy.ndarray or tensorflow.Dataset. Input tensor.
-            filters: Int. Num of filters in pointwise convolution.
-            prefix: String. Prefix before name.
-            stride: Int. Stride at depthwise convolution.
-            kernel_size: Int. Kernel size for depthwise convolution.
-            rate: Int. Atrous rate for depthwise convolution.
-            depth_activation: Boolean. Flag to use activation between depthwise &
-                        pointwise convs epsilon: epsilon to use in BN layer.
-        """
-
-        if stride == 1:
-            depth_padding = 'same'
-        else:
-            kernel_size_effective = kernel_size + (kernel_size - 1) * (rate - 1)
-            pad_total = kernel_size_effective - 1
-            pad_beg = pad_total // 2
-            pad_end = pad_total - pad_beg
-            x = layers.ZeroPadding2D((pad_beg, pad_end))(x)
-            depth_padding = 'valid'
-
-        if not depth_activation:
-            x = layers.Activation('relu')(x)
-        x = layers.DepthwiseConv2D((kernel_size, kernel_size),
-                                   strides=(stride, stride),
-                                   dilation_rate=(rate, rate),
-                                   padding=depth_padding,
-                                   use_bias=False,
-                                   name=prefix + '_depthwise')(x)
-        x = layers.BatchNormalization(
-            name=prefix + '_depthwise_BN', epsilon=epsilon)(x)
-        if depth_activation:
-            x = layers.Activation('relu')(x)
-        x = layers.Conv2D(filters, (1, 1), padding='same',
-                          use_bias=False, name=prefix + '_pointwise')(x)
-        x = layers.BatchNormalization(
-            name=prefix + '_pointwise_BN', epsilon=epsilon)(x)
-        if depth_activation:
-            x = layers.Activation('relu')(x)
-
-        return x
-
-    def _conv2d_same(self, hp, x, filters, prefix, stride=1, kernel_size=3, rate=1):
-        """Implements right 'same' padding for even kernel sizes
-            Without this there is a 1 pixel drift when stride = 2
-        # Arguments
-            x: Numpy.ndarray or tensorflow.Dataset. Input tensor.
-            filters: Int. Num of filters in pointwise convolution.
-            prefix: String. Prefix before name.
-            stride: Int. Stride at depthwise convolution.
-            kernel_size: Int. Kernel size for depthwise convolution.
-            rate: Int. Atrous rate for depthwise convolution.
-        """
-        if stride == 1:
-            return basic.ConvBlock(filters, kernel_size, stride,
-                                   padding='same', use_bias=False,
-                                   dilation_rate=(rate, rate),
-                                   name=prefix).build(hp, inputs=x)
-        else:
-            kernel_size_effective = kernel_size + (kernel_size - 1) * (rate - 1)
-            pad_total = kernel_size_effective - 1
-            pad_beg = pad_total // 2
-            pad_end = pad_total - pad_beg
-            x = layers.ZeroPadding2D((pad_beg, pad_end))(x)
-            return basic.ConvBlock(filters, kernel_size, stride,
-                                   padding='valid', use_bias=False,
-                                   dilation_rate=(rate, rate),
-                                   name=prefix).build(hp, inputs=x)
-
     def _xception_block(self, inputs, depth_list, prefix, skip_connection_type,
                         stride, rate=1, depth_activation=False, return_skip=False):
         """ Basic building block of modified Xception network
@@ -360,26 +287,21 @@ class SegmentationBlock(block_module.Block):
             skip_connection_type: String. One of {'conv','sum','none'}
             stride: Int. Stride at depthwise convolution.
             rate: Int. Atrous rate for depthwise convolution.
-            depth_activation: Boolean. Flag to use activation between depthwise &
-                        pointwise convs epsilon: epsilon to use in BN layer.
+            depth_activation: String. Activation function. One of {'relu', 'selu'}
             return_skip: Boolean. Flag to return additional tensor after
                              2 SepConvs for decoder
                 """
         residual = inputs
         for i in range(3):
-            residual = self.SepConv_BN(residual,
-                                       depth_list[i],
-                                       prefix + '_separable_conv{}'.format(i + 1),
-                                       stride=stride if i == 2 else 1,
-                                       rate=rate,
-                                       depth_activation=depth_activation)
+            residual = xception.sep_conv(residual, depth_list[i],
+                                         kernel_size=3,
+                                         activation=depth_activation)
             if i == 1:
                 skip = residual
         if skip_connection_type == 'conv':
-            shortcut = self._conv2d_same(inputs, depth_list[-1],
-                                         prefix + '_shortcut',
-                                         kernel_size=1,
-                                         stride=stride)
+            shortcut = xception.conv(inputs, depth_list[-1],
+                                     kernel_size=1, activation='relu',
+                                     strides=stride)
             shortcut = layers.BatchNormalization(
                 name=prefix + '_shortcut_BN')(shortcut)
             outputs = self.layers.add([residual, shortcut])
@@ -486,12 +408,10 @@ class SegmentationBlock(block_module.Block):
                 entry_block3_stride = 1
                 middle_block_rate = 2  # ! Not mentioned in paper, but required
                 exit_block_rates = (2, 4)
-                atrous_rates = (12, 24, 36)
             else:
                 entry_block3_stride = 2
                 middle_block_rate = 1
                 exit_block_rates = (1, 2)
-                atrous_rates = (6, 12, 18)
             x = basic.ConvBlock(32, kernel_size=3, padding='same',
                                 use_bias=False, stride=2,
                                 name='entry_flow_conv1_1')\
@@ -500,8 +420,9 @@ class SegmentationBlock(block_module.Block):
             x = layers.BatchNormalization(name='entry_flow_conv1_1_BN')(x)
             x = layers.Activation('relu')(x)
 
-            x = self._conv2d_same(x, 64, 'entry_flow_conv1_2',
-                                  kernel_size=3, stride=1)
+            x = xception.conv(x, 64, kernel_size=3, activation='relu',
+                              strides=1)
+
             x = layers.BatchNormalization(name='entry_flow_conv1_2_BN')(x)
             x = layers.Activation('relu')(x)
 
@@ -645,17 +566,17 @@ class SegmentationBlock(block_module.Block):
         # there are only 2 branches in mobilenetV2. not sure why
         if block_type == 'xception':
             # rate = 6 (12)
-            b1 = self.SepConv_BN(x, 256, 'aspp1',
-                                 rate=atrous_rates[0],
-                                 depth_activation=True, epsilon=1e-5)
+            b1 = xception.sep_conv(x, 256,
+                                   kernel_size=3,
+                                   activation='relu')
             # rate = 12 (24)
-            b2 = self.SepConv_BN(x, 256, 'aspp2',
-                                 rate=atrous_rates[1],
-                                 depth_activation=True, epsilon=1e-5)
+            b2 = xception.sep_conv(x, 256,
+                                   kernel_size=3,
+                                   activation='relu')
             # rate = 18 (36)
-            b3 = self.SepConv_BN(x, 256, 'aspp3',
-                                 rate=atrous_rates[2],
-                                 depth_activation=True, epsilon=1e-5)
+            b3 = xception.sep_conv(x, 256,
+                                   kernel_size=3,
+                                   activation='relu')
 
             # concatenate ASPP branches & project
             x = layers.Concatenate()([b4, b0, b1, b2, b3])
@@ -687,10 +608,12 @@ class SegmentationBlock(block_module.Block):
                 name='feature_projection0_BN', epsilon=1e-5)(dec_skip1)
             dec_skip1 = layers.Activation('relu')(dec_skip1)
             x = layers.Concatenate()([x, dec_skip1])
-            x = self.SepConv_BN(x, 256, 'decoder_conv0',
-                                depth_activation=True, epsilon=1e-5)
-            x = self.SepConv_BN(x, 256, 'decoder_conv1',
-                                depth_activation=True, epsilon=1e-5)
+            x = xception.sep_conv(x, 256,
+                                  kernel_size=3,
+                                  activation='relu')
+            x = xception.sep_conv(x, 256,
+                                  kernel_size=3,
+                                  activation='relu')
 
         # you can use it with arbitary number of classes
         if self.classes == 21:
