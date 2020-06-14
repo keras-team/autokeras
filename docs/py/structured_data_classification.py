@@ -5,12 +5,7 @@ pip install autokeras
 """
 ## A Simple Example
 The first step is to prepare your data. Here we use the [Titanic
-dataset](https://www.kaggle.com/c/titanic) as an example. You can download the CSV
-files [here](https://github.com/keras-team/autokeras/tree/master/tests/fixtures/titanic).
-
-The second step is to run the
-[StructuredDataClassifier](/structured_data_classifier).
-Replace all the `/path/to` with the path to the csv files.
+dataset](https://www.kaggle.com/c/titanic) as an example.
 """
 
 import tensorflow as tf
@@ -22,8 +17,13 @@ TEST_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
 train_file_path = tf.keras.utils.get_file("train.csv", TRAIN_DATA_URL)
 test_file_path = tf.keras.utils.get_file("eval.csv", TEST_DATA_URL)
 
+"""
+The second step is to run the
+[StructuredDataClassifier](/structured_data_classifier).
+"""
+
 # Initialize the structured data classifier.
-clf = ak.StructuredDataClassifier(max_trials=3) # It tries 10 different models.
+clf = ak.StructuredDataClassifier(max_trials=3) # It tries 3 different models.
 # Feed the structured data classifier with training data.
 clf.fit(
     # The path to the train.csv file.

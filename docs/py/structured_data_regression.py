@@ -3,53 +3,204 @@ pip install autokeras
 """
 
 """
-## A Simple Example with Auto MPG Data Set
-
-Download [Auto MPG Data Set](https://archive.ics.uci.edu/ml/datasets/auto+mpg):
+## A Simple Example
+The first step is to prepare your data. Here we use the [California housing
+dataset](https://scikit-learn.org/stable/datasets/index.html#california-housing-dataset) as an example.
 """
 
-import tensorflow as tf
+from sklearn.datasets import fetch_california_housing
+import numpy as np
 import pandas as pd
-column_names = ['MPG','Cylinders','Displacement','Horsepower','Weight',
-                'Acceleration', 'Model Year', 'Origin']
-dataset_path = "http://archive.ics.uci.edu/ml/machine-learning-databases/auto-mpg/auto-mpg.data"
-raw_dataset = pd.read_csv(dataset_path, names=column_names,
-                      na_values = "?", comment='\t',
-                      sep=" ", skipinitialspace=True)
+import tensorflow as tf
+import autokeras as ak
 
-dataset = raw_dataset.copy()
-dataset = dataset.dropna()
-dataset.tail()
+house_dataset = fetch_california_housing()
+df = pd.DataFrame(
+    np.concatenate((
+        house_dataset.data, 
+        house_dataset.target.reshape(-1,1)),
+        axis=1),
+    columns=house_dataset.feature_names + ['Price'])
+train_size = int(df.shape[0] * 0.9)
+df[:train_size].to_csv('train.csv', index=False)
+df[train_size:].to_csv('eval.csv', index=False)
+train_file_path = 'train.csv'
+test_file_path = 'eval.csv'
 
 """
-Make all but the last feature ('Origin') numerical.
+The second step is to run the
+[StructuredDataRegressor](/structured_data_regressor).
 """
 
-column_names.remove('MPG')
-data_cols =column_names 
-data_type = (len(data_cols)-1) * ['numerical'] + ['categorical']
-data_type = dict(zip(data_cols, data_type))
+# Initialize the structured data regressor.
+rgr = ak.StructuredDataRegressor(max_trials=3) # It tries 10 different models.
+# Feed the structured data regressor with training data.
+rgr.fit(
+    # The path to the train.csv file.
+    train_file_path,
+    # The name of the label column.
+    'Price',
+    epochs=10)
+# Predict with the best model.
+predicted_y = rgr.predict(test_file_path)
+# Evaluate the best model with testing data.
+print(rgr.evaluate(test_file_path, 'Price'))
 
-train_dataset = dataset.sample(frac=0.8,random_state=0)
-test_dataset = dataset.drop(train_dataset.index)
-train_dataset.describe()
+"""
+## Data Format
+The AutoKeras StructuredDataRegressor is quite flexible for the data format.
+
+The example above shows how to use the CSV files directly. Besides CSV files, it also
+supports numpy.ndarray, pandas.DataFrame or [tf.data.Dataset](
+https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable). The data should be
+two-dimensional with numerical or categorical values.
+
+For the regression targets, it should be a vector of numerical values.
+AutoKeras accepts numpy.ndarray, pandas.DataFrame, or pandas.Series.
+
+The following examples show how the data can be prepared with numpy.ndarray,
+pandas.DataFrame, and tensorflow.data.Dataset.
+"""
+
+import pandas as pd
+import numpy as np
+# x_train as pandas.DataFrame, y_train as pandas.Series
+x_train = pd.read_csv(train_file_path)
+print(type(x_train)) # pandas.DataFrame
+y_train = x_train.pop('Price')
+print(type(y_train)) # pandas.Series
+
+# You can also use pandas.DataFrame for y_train.
+y_train = pd.DataFrame(y_train)
+print(type(y_train)) # pandas.DataFrame
+
+# You can also use numpy.ndarray for x_train and y_train.
+x_train = x_train.to_numpy().astype(np.unicode)
+y_train = y_train.to_numpy()
+print(type(x_train)) # numpy.ndarray
+print(type(y_train)) # numpy.ndarray
+
+# Preparing testing data.
+x_test = pd.read_csv(test_file_path)
+y_test = x_test.pop('Price')
+
+# It tries 10 different models.
+rgr = ak.StructuredDataRegressor(max_trials=3)
+# Feed the structured data regressor with training data.
+rgr.fit(x_train, y_train, epochs=10)
+# Predict with the best model.
+predicted_y = rgr.predict(x_test)
+# Evaluate the best model with testing data.
+print(rgr.evaluate(x_test, y_test))
+
+"""
+The following code shows how to convert numpy.ndarray to tf.data.Dataset.
+"""
+
+train_set = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_set = tf.data.Dataset.from_tensor_slices((x_test.to_numpy().astype(np.unicode), y_test))
+
+rgr = ak.StructuredDataRegressor(max_trials=3)
+# Feed the tensorflow Dataset to the regressor.
+rgr.fit(train_set, epochs=10)
+# Predict with the best model.
+predicted_y = rgr.predict(test_set)
+# Evaluate the best model with testing data.
+print(rgr.evaluate(test_set))
+
+"""
+You can also specify the column names and types for the data as follows.
+The `column_names` is optional if the training data already have the column names, e.g.
+pandas.DataFrame, CSV file.
+Any column, whose type is not specified will be inferred from the training data.
+"""
+
+# Initialize the structured data regressor.
+rgr = ak.StructuredDataRegressor(
+    column_names=[
+        'MedInc', 'HouseAge', 'AveRooms', 
+        'AveBedrms', 'Population', 'AveOccup', 'Latitude', 'Longitude'],
+    column_types={'MedInc': 'numerical', 'Latitude': 'numerical'},
+    max_trials=10, # It tries 10 different models.
+)
+
+
+"""
+## Validation Data
+By default, AutoKeras use the last 20% of training data as validation data.
+As shown in the example below, you can use `validation_split` to specify the percentage.
+"""
+
+rgr.fit(x_train,
+        y_train,
+        # Split the training data and use the last 15% as validation data.
+        validation_split=0.15,
+        epochs=10)
+
+"""
+You can also use your own validation set
+instead of splitting it from the training data with `validation_data`.
+"""
+
+split = 500
+x_val = x_train[split:]
+y_val = y_train[split:]
+x_train = x_train[:split]
+y_train = y_train[:split]
+rgr.fit(x_train,
+        y_train,
+        # Use your own validation set.
+        validation_data=(x_val, y_val),
+        epochs=10)
+
+"""
+## Customized Search Space
+For advanced users, you may customize your search space by using
+[AutoModel](/auto_model/#automodel-class) instead of
+[StructuredDataRegressor](/structured_data_regressor). You can configure the
+[StructuredDataBlock](/block/#structureddatablock-class) for some high-level
+configurations, e.g., `categorical_encoding` for whether to use the
+[CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class). You can also do not specify these
+arguments, which would leave the different choices to be tuned automatically. See
+the following example for detail.
+"""
 
 import autokeras as ak
 
-regressor = ak.StructuredDataRegressor(max_trials=100, column_names=data_cols, column_types=data_type)
-regressor.fit(x=train_dataset.drop(columns=['MPG']), y=train_dataset['MPG'])
-# Evaluate the accuracy of the found model.
-print('Accuracy: {accuracy}'.format(
-    accuracy=regressor.evaluate(x=test_dataset.drop(columns=['MPG']), y=test_dataset['MPG'])))
+input_node = ak.StructuredDataInput()
+output_node = ak.StructuredDataBlock(categorical_encoding=True)(input_node)
+output_node = ak.RegressionHead()(output_node)
+rgr = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
+rgr.fit(x_train, y_train, epochs=10)
 
 """
-Accuracy: [9.906872749328613, 9.715665]
+The usage of [AutoModel](/auto_model/#automodel-class) is similar to the
+[functional API](https://www.tensorflow.org/guide/keras/functional) of Keras.
+Basically, you are building a graph, whose edges are blocks and the nodes are intermediate outputs of blocks.
+To add an edge from `input_node` to `output_node` with
+`output_node = ak.[some_block]([block_args])(input_node)`.
+
+You can even also use more fine grained blocks to customize the search space even
+further. See the following example.
 """
 
-model = regressor.export_model()
-tf.keras.utils.plot_model(model, show_shapes=True, expand_nested=True)
+import autokeras as ak
+
+input_node = ak.StructuredDataInput()
+output_node = ak.CategoricalToNumerical()(input_node)
+output_node = ak.DenseBlock()(output_node)
+output_node = ak.RegressionHead()(output_node)
+rgr = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
+rgr.fit(x_train, y_train, epochs=10)
+
 
 """
-![Network Topology found by autokeras](Reg_Network.png)
+## Reference
+[StructuredDataRegressor](/structured_data_regressor),
+[AutoModel](/auto_model/#automodel-class),
+[StructuredDataBlock](/block/#structureddatablock-class),
+[DenseBlock](/block/#denseblock-class),
+[StructuredDataInput](/node/#structureddatainput-class),
+[RegressionHead](/head/#regressionhead-class),
+[CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class).
 """
-
