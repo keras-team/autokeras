@@ -6,8 +6,13 @@
 
 Official Website: [autokeras.com](https://autokeras.com)
 
-##
+# Let's Chat!
+To make AutoKeras better, I would like to hear your thoughts.
+I am happy to answer any questions you have about our project.
+[Join our Slack](#community) and send me (Haifeng Jin) a message.
+I will schedule a meeting with you.
 
+##
 AutoKeras: An AutoML system based on Keras.
 It is developed by <a href="http://faculty.cs.tamu.edu/xiahu/index.html" target="_blank" rel="nofollow">DATA Lab</a> at Texas A&M University.
 The goal of AutoKeras is to make machine learning accessible for everyone.
