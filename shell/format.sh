@@ -1,3 +1,3 @@
-isort -sl -rc
-autopep8 --exclude="./docs/py/*.py" -r -i .
+isort -sl -rc autokeras tests
+autopep8 -r -i autokeras tests
 
