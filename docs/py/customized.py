@@ -83,8 +83,8 @@ You can refer to the documentation of
 [ImageInput](/node/#imageinput-class),
 [StructuredDataInput](/node/#structureddatainput-class),
 [TextInput](/node/#textinput-class),
-[RegressionHead](/head/#regressionhead-class),
-[ClassificationHead](/head/#classificationhead-class),
+[RegressionHead](/block/#regressionhead-class),
+[ClassificationHead](/block/#classificationhead-class),
 for the format of different types of data.
 You can also refer to the Data Format section of the tutorials of
 [Image Classification](/tutorial/image_classification/#data-format),
@@ -147,12 +147,12 @@ print(auto_model.evaluate(x_test, y_test))
 [TextInput](/node/#textinput-class).
 
 **Preprocessors**:
-[FeatureEngineering](/preprocessor/#featureengineering-class),
-[ImageAugmentation](/preprocessor/#imageaugmentation-class),
-[LightGBM](/preprocessor/#lightgbm-class),
-[Normalization](/preprocessor/#normalization-class),
-[TextToIntSequence](/preprocessor/#texttointsequence-class),
-[TextToNgramVector](/preprocessor/#texttongramvector-class).
+[FeatureEngineering](/block/#featureengineering-class),
+[ImageAugmentation](/block/#imageaugmentation-class),
+[LightGBM](/block/#lightgbm-class),
+[Normalization](/block/#normalization-class),
+[TextToIntSequence](/block/#texttointsequence-class),
+[TextToNgramVector](/block/#texttongramvector-class).
 
 **Blocks**:
 [ConvBlock](/block/#convblock-class),

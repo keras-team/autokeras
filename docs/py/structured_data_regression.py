@@ -160,7 +160,7 @@ For advanced users, you may customize your search space by using
 [StructuredDataRegressor](/structured_data_regressor). You can configure the
 [StructuredDataBlock](/block/#structureddatablock-class) for some high-level
 configurations, e.g., `categorical_encoding` for whether to use the
-[CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class). You can also do not specify these
+[CategoricalToNumerical](/block/#categoricaltonumerical-class). You can also do not specify these
 arguments, which would leave the different choices to be tuned automatically. See
 the following example for detail.
 """
@@ -201,6 +201,6 @@ reg.fit(x_train, y_train, epochs=10)
 [StructuredDataBlock](/block/#structureddatablock-class),
 [DenseBlock](/block/#denseblock-class),
 [StructuredDataInput](/node/#structureddatainput-class),
-[RegressionHead](/head/#regressionhead-class),
-[CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class).
+[RegressionHead](/block/#regressionhead-class),
+[CategoricalToNumerical](/block/#categoricaltonumerical-class).
 """
