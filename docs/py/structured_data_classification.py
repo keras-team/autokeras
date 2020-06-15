@@ -163,7 +163,7 @@ For advanced users, you may customize your search space by using
 [StructuredDataClassifier](/structured_data_classifier). You can configure the
 [StructuredDataBlock](/block/#structureddatablock-class) for some high-level
 configurations, e.g., `categorical_encoding` for whether to use the
-[CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class). You can also do not specify these
+[CategoricalToNumerical](/block/#categoricaltonumerical-class). You can also do not specify these
 arguments, which would leave the different choices to be tuned automatically. See
 the following example for detail.
 """
@@ -205,6 +205,6 @@ clf.fit(x_train, y_train, epochs=10)
 [StructuredDataBlock](/block/#structureddatablock-class),
 [DenseBlock](/block/#denseblock-class),
 [StructuredDataInput](/node/#structureddatainput-class),
-[ClassificationHead](/head/#classificationhead-class),
-[CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class).
+[ClassificationHead](/block/#classificationhead-class),
+[CategoricalToNumerical](/block/#categoricaltonumerical-class).
 """

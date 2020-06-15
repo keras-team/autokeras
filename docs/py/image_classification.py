@@ -165,9 +165,9 @@ print(clf.evaluate(test_set))
 [ImageClassifier](/image_classifier),
 [AutoModel](/auto_model/#automodel-class),
 [ImageBlock](/block/#imageblock-class),
-[Normalization](/preprocessor/#normalization-class),
-[ImageAugmentation](/preprocessor/#image-augmentation-class),
+[Normalization](/block/#normalization-class),
+[ImageAugmentation](/block/#image-augmentation-class),
 [ResNetBlock](/block/#resnetblock-class),
 [ImageInput](/node/#imageinput-class),
-[ClassificationHead](/head/#classificationhead-class).
+[ClassificationHead](/block/#classificationhead-class).
 """

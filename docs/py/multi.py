@@ -171,8 +171,8 @@ You can refer to the documentation of
 [ImageInput](/node/#imageinput-class),
 [StructuredDataInput](/node/#structureddatainput-class),
 [TextInput](/node/#textinput-class),
-[RegressionHead](/head/#regressionhead-class),
-[ClassificationHead](/head/#classificationhead-class),
+[RegressionHead](/block/#regressionhead-class),
+[ClassificationHead](/block/#classificationhead-class),
 for the format of different types of data.
 You can also refer to the Data Format section of the tutorials of
 [Image Classification](/tutorial/image_classification/#data-format),
@@ -185,7 +185,7 @@ You can also refer to the Data Format section of the tutorials of
 [ImageInput](/node/#imageinput-class),
 [StructuredDataInput](/node/#structureddatainput-class),
 [DenseBlock](/block/#denseblock-class),
-[RegressionHead](/head/#regressionhead-class),
-[ClassificationHead](/head/#classificationhead-class),
-[CategoricalToNumerical](/preprocessor/#categoricaltonumerical-class).
+[RegressionHead](/block/#regressionhead-class),
+[ClassificationHead](/block/#classificationhead-class),
+[CategoricalToNumerical](/block/#categoricaltonumerical-class).
 """

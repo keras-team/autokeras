@@ -90,10 +90,10 @@ For advanced users, you may customize your search space by using
 [TextRegressor](/text_regressor). You can configure the
 [TextBlock](/block/#textblock-class) for some high-level configurations, e.g., `vectorizer`
 for the type of text vectorization method to use.  You can use 'sequence', which uses
-[TextToInteSequence](/preprocessor/#texttointsequence-class) to convert the words to
+[TextToInteSequence](/block/#texttointsequence-class) to convert the words to
 integers and use [Embedding](/block/#embedding-class) for embedding the
 integer sequences, or you can use 'ngram', which uses
-[TextToNgramVector](/preprocessor/#texttongramvector-class) to vectorize the
+[TextToNgramVector](/block/#texttongramvector-class) to vectorize the
 sentences.  You can also do not specify these arguments, which would leave the
 different choices to be tuned automatically.  See the following example for detail.
 """
@@ -158,10 +158,10 @@ print(reg.evaluate(test_set))
 [TextRegressor](/text_regressor),
 [AutoModel](/auto_model/#automodel-class),
 [TextBlock](/block/#textblock-class),
-[TextToInteSequence](/preprocessor/#texttointsequence-class),
+[TextToInteSequence](/block/#texttointsequence-class),
 [Embedding](/block/#embedding-class),
-[TextToNgramVector](/preprocessor/#texttongramvector-class),
+[TextToNgramVector](/block/#texttongramvector-class),
 [ConvBlock](/block/#convblock-class),
 [TextInput](/node/#textinput-class),
-[RegressionHead](/head/#regressionhead-class).
+[RegressionHead](/block/#regressionhead-class).
 """

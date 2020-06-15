@@ -160,9 +160,9 @@ print(reg.evaluate(test_set))
 [ImageRegressor](/image_regressor),
 [AutoModel](/auto_model/#automodel-class),
 [ImageBlock](/block/#imageblock-class),
-[Normalization](/preprocessor/#normalization-class),
-[ImageAugmentation](/preprocessor/#image-augmentation-class),
+[Normalization](/block/#normalization-class),
+[ImageAugmentation](/block/#image-augmentation-class),
 [ResNetBlock](/block/#resnetblock-class),
 [ImageInput](/node/#imageinput-class),
-[RegressionHead](/head/#regressionhead-class).
+[RegressionHead](/block/#regressionhead-class).
 """
