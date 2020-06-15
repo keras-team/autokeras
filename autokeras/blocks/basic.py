@@ -262,6 +262,16 @@ class ConvBlock(block_module.Block):
 
 
 class MultiHeadSelfAttentionBlock(block_module.Block):
+    """
+    Block for Multi-Head Self-Attention.
+
+    # Arguments
+        embed_dim: Int. Output dimension of the Attention block.
+            If left unspecified, it will be tuned automatically.
+        num_heads: Int. The number of attention heads. If left unspecified,
+            it will be tuned automatically.
+    """
+
     def __init__(self,
                  embed_dim: Optional[int] = None,
                  num_heads: Optional[int] = 8,
@@ -278,6 +288,14 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
         return config
 
     def build(self, hp, inputs=None):
+        """
+        # Arguments
+             hp: HyperParameters. The hyperparameters for building the model.
+             inputs: Tensor of Shape [batch_size, seq_len, embedding_dim]
+
+        # Returns
+            Self-Attention outputs of shape `[batch_size, seq_len, embedding_dim]`.
+        """
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         shape = inputs.shape.as_list()
@@ -341,6 +359,21 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
 
 
 class TransformerBlock(block_module.Block):
+    """
+        Block for Transformer.
+
+        # Arguments
+        embed_dim: Int. Output dimension of the Attention block.
+            If left unspecified, it will be tuned automatically.
+        num_heads: Int. The number of attention heads. If left unspecified,
+            it will be tuned automatically.
+        ff_dim: Int. The output dimension of the FFN. If left
+            unspecified, it will be tuned automatically.
+        dropout_rate: Float. Between 0 and 1. If left unspecified, it will be
+            tuned automatically.
+
+    """
+
     def __init__(self,
                  embed_dim: Optional[int] = None,
                  num_heads: Optional[int] = None,
@@ -363,6 +396,14 @@ class TransformerBlock(block_module.Block):
         return config
 
     def build(self, hp, inputs=None):
+        """
+        # Arguments
+             hp: HyperParameters. The hyperparameters for building the model.
+             inputs: Tensor of Shape [batch_size, seq_len, embedding_dim]
+
+        # Returns
+            Output Tensor of shape `[batch_size, seq_len, embedding_dim]`.
+        """
         embed_dim = self.embed_dim or hp.Choice(
             'embed_dim',
             [32, 64, 128, 256, 512],
@@ -508,6 +549,86 @@ class XceptionBlock(xception.HyperXception, block_module.Block):
 
         model = super().build(hp)
         return model.outputs
+
+
+class TokenAndPositionEmbedding(block_module.Block):
+    """
+    Token and Position Embedding block for Transformer.
+
+    The input should be tokenized sequences with the same length, where each element
+    of a sequence should be the index of the word.
+
+    # Arguments
+        max_features: Int. Size of the vocabulary. Must be set if not using
+            TextToIntSequence before this block. Defaults to 20001.
+        pretraining: String. 'random' (use random weights instead any pretrained
+            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
+            If left unspecified, it will be tuned automatically.
+        embedding_dim: Int. If left unspecified, it will be tuned automatically.
+        dropout_rate: Float. The dropout rate for after the Embedding layer.
+            If left unspecified, it will be tuned automatically.
+    """
+
+    def __init__(self,
+                 max_features: int = 20001,
+                 pretraining: Optional[str] = None,
+                 embedding_dim: Optional[int] = None,
+                 dropout_rate: Optional[float] = None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.max_features = max_features
+        self.pretraining = pretraining
+        self.embedding_dim = embedding_dim
+        self.dropout_rate = dropout_rate
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'max_features': self.max_features,
+            'pretraining': self.pretraining,
+            'embedding_dim': self.embedding_dim,
+            'dropout_rate': self.dropout_rate})
+        return config
+
+    def build(self, hp, inputs=None):
+        """
+        # Arguments
+             hp: HyperParameters. The hyperparameters for building the model.
+             inputs: Tensor of Shape [batch_size, seq_len, embedding_dim]
+
+        # Returns
+            Output Tensor of shape `[batch_size, seq_len, embedding_dim]`.
+        """
+        input_node = nest.flatten(inputs)[0]
+        # TODO: support more pretrained embedding layers.
+        # glove, fasttext, and word2vec
+        pretraining = self.pretraining or hp.Choice(
+            'pretraining',
+            ['random', 'glove', 'fasttext', 'word2vec', 'none'],
+            default='none')
+        embedding_dim = self.embedding_dim or hp.Choice(
+            'embedding_dim',
+            [32, 64, 128, 256, 512],
+            default=128)
+
+        if self.dropout_rate is not None:
+            dropout_rate = self.dropout_rate
+        else:
+            dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0.25)
+
+        TokenEmbedding = Embedding(max_features=self.max_features,
+                                   pretraining=pretraining,
+                                   embedding_dim=embedding_dim,
+                                   dropout_rate=dropout_rate)
+        PositionEmbedding = Embedding(max_features=self.max_features,
+                                      pretraining=pretraining,
+                                      embedding_dim=embedding_dim,
+                                      dropout_rate=dropout_rate)
+        maxlen = tf.shape(input_node)[-1]
+        positions = tf.range(start=0, limit=maxlen, delta=1)
+        output_node = TokenEmbedding(input_node) + PositionEmbedding(positions)
+
+        return output_node
 
 
 class Embedding(block_module.Block):
