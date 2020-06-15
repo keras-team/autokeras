@@ -33,18 +33,18 @@ The second step is to run the
 """
 
 # Initialize the structured data regressor.
-rgr = ak.StructuredDataRegressor(max_trials=3) # It tries 10 different models.
+reg = ak.StructuredDataRegressor(max_trials=3) # It tries 10 different models.
 # Feed the structured data regressor with training data.
-rgr.fit(
+reg.fit(
     # The path to the train.csv file.
     train_file_path,
     # The name of the label column.
     'Price',
     epochs=10)
 # Predict with the best model.
-predicted_y = rgr.predict(test_file_path)
+predicted_y = reg.predict(test_file_path)
 # Evaluate the best model with testing data.
-print(rgr.evaluate(test_file_path, 'Price'))
+print(reg.evaluate(test_file_path, 'Price'))
 
 """
 ## Data Format
@@ -85,13 +85,13 @@ x_test = pd.read_csv(test_file_path)
 y_test = x_test.pop('Price')
 
 # It tries 10 different models.
-rgr = ak.StructuredDataRegressor(max_trials=3)
+reg = ak.StructuredDataRegressor(max_trials=3)
 # Feed the structured data regressor with training data.
-rgr.fit(x_train, y_train, epochs=10)
+reg.fit(x_train, y_train, epochs=10)
 # Predict with the best model.
-predicted_y = rgr.predict(x_test)
+predicted_y = reg.predict(x_test)
 # Evaluate the best model with testing data.
-print(rgr.evaluate(x_test, y_test))
+print(reg.evaluate(x_test, y_test))
 
 """
 The following code shows how to convert numpy.ndarray to tf.data.Dataset.
@@ -100,13 +100,13 @@ The following code shows how to convert numpy.ndarray to tf.data.Dataset.
 train_set = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_set = tf.data.Dataset.from_tensor_slices((x_test.to_numpy().astype(np.unicode), y_test))
 
-rgr = ak.StructuredDataRegressor(max_trials=3)
+reg = ak.StructuredDataRegressor(max_trials=3)
 # Feed the tensorflow Dataset to the regressor.
-rgr.fit(train_set, epochs=10)
+reg.fit(train_set, epochs=10)
 # Predict with the best model.
-predicted_y = rgr.predict(test_set)
+predicted_y = reg.predict(test_set)
 # Evaluate the best model with testing data.
-print(rgr.evaluate(test_set))
+print(reg.evaluate(test_set))
 
 """
 You can also specify the column names and types for the data as follows.
@@ -116,7 +116,7 @@ Any column, whose type is not specified will be inferred from the training data.
 """
 
 # Initialize the structured data regressor.
-rgr = ak.StructuredDataRegressor(
+reg = ak.StructuredDataRegressor(
     column_names=[
         'MedInc', 'HouseAge', 'AveRooms', 
         'AveBedrms', 'Population', 'AveOccup', 'Latitude', 'Longitude'],
@@ -131,7 +131,7 @@ By default, AutoKeras use the last 20% of training data as validation data.
 As shown in the example below, you can use `validation_split` to specify the percentage.
 """
 
-rgr.fit(x_train,
+reg.fit(x_train,
         y_train,
         # Split the training data and use the last 15% as validation data.
         validation_split=0.15,
@@ -147,7 +147,7 @@ x_val = x_train[split:]
 y_val = y_train[split:]
 x_train = x_train[:split]
 y_train = y_train[:split]
-rgr.fit(x_train,
+reg.fit(x_train,
         y_train,
         # Use your own validation set.
         validation_data=(x_val, y_val),
@@ -170,8 +170,8 @@ import autokeras as ak
 input_node = ak.StructuredDataInput()
 output_node = ak.StructuredDataBlock(categorical_encoding=True)(input_node)
 output_node = ak.RegressionHead()(output_node)
-rgr = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
-rgr.fit(x_train, y_train, epochs=10)
+reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
+reg.fit(x_train, y_train, epochs=10)
 
 """
 The usage of [AutoModel](/auto_model/#automodel-class) is similar to the
@@ -190,8 +190,8 @@ input_node = ak.StructuredDataInput()
 output_node = ak.CategoricalToNumerical()(input_node)
 output_node = ak.DenseBlock()(output_node)
 output_node = ak.RegressionHead()(output_node)
-rgr = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
-rgr.fit(x_train, y_train, epochs=10)
+reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
+reg.fit(x_train, y_train, epochs=10)
 
 
 """
