@@ -50,7 +50,27 @@ TEXT_CLASSIFIER = [{
     'text_block_1/dense_block_1/use_batchnorm': False,
     'text_block_1/dense_block_1/dropout_rate': 0.5,
     'text_block_1/dense_block_1/units_0': 256,
-}]
+},
+    {
+        'text_block_1/vectorizer': 'transformer',
+        'classification_head_1/dropout_rate': 0,
+        'optimizer': 'adam',
+        'text_block_1/max_tokens': 5000,
+        'text_block_1/text_to_int_sequence_1/output_sequence_length': 512,
+        'text_block_1/embedding_1/pretraining': 'none',
+        'text_block_1/embedding_1/embedding_dim': 64,
+        'text_block_1/embedding_1/dropout_rate': 0.25,
+        'text_block_1/transformer_block_1/embed_dim': 128,
+        'text_block_1/transformer_block_1/num_heads': 8,
+        'text_block_1/transformer_block_1/ff_dim': 256,
+        'text_block_1/transformer_block_1/dropout_rate': 0.25,
+        'text_block_1/spatial_reduction_1/reduction_type': 'global_max',
+        'text_block_1/dense_block_1/num_layers': 1,
+        'text_block_1/dense_block_1/use_batchnorm': False,
+        'text_block_1/dense_block_1/dropout_rate': 0.5,
+        'text_block_1/dense_block_1/units_0': 256,
+}
+]
 
 
 class ImageClassifierTuner(greedy.Greedy):
