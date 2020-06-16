@@ -45,7 +45,7 @@ class Block(kerastuner.HyperModel, serializable.Serializable):
         self.inputs = nest.flatten(inputs)
         for input_node in self.inputs:
             if not isinstance(input_node, node_module.Node):
-                raise TypeError('Expect the inputs to layer {name} to be '
+                raise TypeError('Expect the inputs to block {name} to be '
                                 'a Node, but got {type}.'.format(
                                     name=self.name,
                                     type=type(input_node)))

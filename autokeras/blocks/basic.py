@@ -287,7 +287,6 @@ class ResNetBlock(resnet.HyperResNet, block_module.Block):
     def get_config(self):
         config = super().get_config()
         config.update({
-            'classes': self.classes,
             'version': self.version,
             'pooling': self.pooling})
         return config
