@@ -204,13 +204,29 @@ def test_embed_get_config_has_all_attributes():
         blocks.Embedding.__init__).issubset(config.keys())
 
 
-def test_transformer_block():
-    utils.block_basic_exam(
-        basic.TransformerBlock(),
-        tf.keras.Input(shape=(64, 128), dtype=tf.float32),
-        [
-            'embed_dim',
-            'num_heads',
-            'ff_dim',
-            'dropout_rate',
-        ])
+def test_transformer_build_return_tensor():
+    block = blocks.TransformerBlock()
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(64, 128), dtype=tf.float32))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_transformer_deserialize_to_transformer():
+    serialized_block = blocks.serialize(blocks.TransformerBlock())
+
+    block = blocks.deserialize(serialized_block)
+
+    assert isinstance(block, blocks.TransformerBlock)
+
+
+def test_transformer_get_config_has_all_attributes():
+    block = blocks.TransformerBlock()
+
+    config = block.get_config()
+
+    assert utils.get_func_args(
+        blocks.TransformerBlock.__init__).issubset(config.keys())
