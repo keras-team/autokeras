@@ -298,12 +298,13 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
         """
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
-        shape = inputs.shape.as_list()
+        input_node = inputs[0]
+        shape = input_node.shape.as_list()
         if len(shape) != 3:
             raise ValueError(
                 'Expect the input tensor to have '
                 '3 dimensions for multi-head self-attention, '
-                'but got {shape}'.format(shape=inputs.shape))
+                'but got {shape}'.format(shape=input_node.shape))
         # input.shape = [batch_size, seq_len, embedding_dim]
         embed_dim = self.embed_dim or hp.Choice(
             'embed_dim',
@@ -324,12 +325,12 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
         value_dense = layers.Dense(embed_dim)
         combine_heads = layers.Dense(embed_dim)
 
-        batch_size = tf.shape(inputs)[0]
-        query = query_dense(inputs)  # (batch_size, seq_len, embed_dim)
-        key = key_dense(inputs)  # (batch_size, seq_len, embed_dim)
-        value = value_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        batch_size = tf.shape(input_node)[0]
+        query = query_dense(input_node)  # (batch_size, seq_len, embed_dim)
+        key = key_dense(input_node)  # (batch_size, seq_len, embed_dim)
+        value = value_dense(input_node)  # (batch_size, seq_len, embed_dim)
         query, key, value = [self.separate_heads(
-            var, batch_size, projection_dim
+            var, batch_size, num_heads,  projection_dim
         ) for var in [query, key, value]]
         attention, weights = self.attention(query, key, value)
         attention = tf.transpose(
@@ -353,8 +354,8 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
         return output, weights
 
     @staticmethod
-    def separate_heads(self, x, batch_size, projection_dim):
-        x = tf.reshape(x, (batch_size, -1, self.num_heads, projection_dim))
+    def separate_heads(x, batch_size, num_heads, projection_dim):
+        x = tf.reshape(x, (batch_size, -1, num_heads, projection_dim))
         return tf.transpose(x, perm=[0, 2, 1, 3])
 
 
@@ -404,13 +405,14 @@ class TransformerBlock(block_module.Block):
         # Returns
             Output Tensor of shape `[batch_size, seq_len, embedding_dim]`.
         """
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
         embed_dim = self.embed_dim or hp.Choice(
             'embed_dim',
             [32, 64, 128, 256, 512],
             default=128)
-        num_heads = self.num_heads
-        if num_heads is None:
-            num_heads = 8
+        num_heads = self.num_heads or hp.Choice('num_heads', [8, 16, 32], default=8)
+
         ff_dim = self.ff_dim or hp.Choice('ff_dim',
                                           [128, 256, 512, 1024, 2048],
                                           default=2048)
@@ -418,8 +420,7 @@ class TransformerBlock(block_module.Block):
                                                       [0.0, 0.25, 0.5],
                                                       default=0)
 
-        att = MultiHeadSelfAttentionBlock(embed_dim, num_heads)
-        ffn = layers.Sequential(
+        ffn = tf.keras.Sequential(
             [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim), ]
         )
         layernorm1 = layers.LayerNormalization(epsilon=1e-6)
@@ -427,7 +428,8 @@ class TransformerBlock(block_module.Block):
         dropout1 = layers.Dropout(dropout_rate)
         dropout2 = layers.Dropout(dropout_rate)
 
-        attn_output = att(inputs)
+        attn_output = MultiHeadSelfAttentionBlock(
+            embed_dim, num_heads).build(hp, inputs)
         attn_output = dropout1(attn_output)
         out1 = layernorm1(inputs + attn_output)
         ffn_output = ffn(out1)

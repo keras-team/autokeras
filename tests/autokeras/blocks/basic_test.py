@@ -202,3 +202,15 @@ def test_embed_get_config_has_all_attributes():
 
     assert utils.get_func_args(
         blocks.Embedding.__init__).issubset(config.keys())
+
+
+def test_transformer_block():
+    utils.block_basic_exam(
+        basic.TransformerBlock(),
+        tf.keras.Input(shape=(64, 128), dtype=tf.float32),
+        [
+            'embed_dim',
+            'num_heads',
+            'ff_dim',
+            'dropout_rate',
+        ])
