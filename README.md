@@ -48,6 +48,7 @@ Please follow the [installation guide](https://autokeras.com/install) for more d
 <a href="https://keras-slack-autojoin.herokuapp.com/"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/slack.svg" width="40px" hspace="10"></a>
 <a href="https://twitter.com/autokeras"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/twitter.svg" width="40px" hspace="10"></a>
 <a href="https://groups.google.com/forum/#!forum/autokeras-announce/join"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/gmail.svg" width="40px" hspace="10"></a>
+<a href="https://groups.google.com/forum/#!forum/autokeras/join"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/calendar.svg" width="40px" hspace="10"></a>
 </p>
 
 **Slack**:
@@ -57,8 +58,11 @@ Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel f
 **Twitter**:
 You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
 
-**Newsletter**:
-Subscribe our [email list](https://groups.google.com/forum/#!forum/autokeras-announce/join) to receive newsletter and announcements.
+**Emails**:
+Subscribe our [email list](https://groups.google.com/forum/#!forum/autokeras-announce/join) to receive announcements.
+
+**Online Meetings**:
+Join the [Google group](https://groups.google.com/forum/#!forum/autokeras/join) and our online meetings will appear on your Google Calendar.
 
 ## Contributing
 
