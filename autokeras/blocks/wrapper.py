@@ -239,57 +239,58 @@ class SegmentationBlock(block_module.Block):
         block_type: String. 'resnet', 'xception', 'vanilla'. The type of Block
             to use. If unspecified, it will be tuned automatically.
         classes: Int. Number of desired classes. If classes != 21,
-                last layer is initialized randomly.
+            last layer is initialized randomly.
         backbone: String. Backbone to use. one of {'xception','mobilenetv2'}
-        OS: Int. Determines input_shape/feature_extractor_output ratio.
-                One of {8,16}. Used only for xception backbone which means
-                that the output size is the the encoder is 1/OS of the
-                original image size.
+        os: Int. Determines input_shape/feature_extractor_output ratio.
+            One of {8,16}. Used only for xception backbone which means
+            that the output size is the the encoder is 1/os of the
+            original image size.
         alpha: Float. Controls the width of the MobileNetV2 network.
-                This is known as the width multiplier in the MobileNetV2 paper.
-                    - If `alpha` < 1.0, proportionally decreases the number
+            This is known as the width multiplier in the MobileNetV2 paper.
+                - If `alpha` < 1.0, proportionally decreases the number
                         of filters in each layer.
-                    - If `alpha` > 1.0, proportionally increases the number
+                - If `alpha` > 1.0, proportionally increases the number
                         of filters in each layer.
-                    - If `alpha` = 1, default number of filters from the paper
+                - If `alpha` = 1, default number of filters from the paper
                         are used at each layer.
-                Used only for mobilenetv2 backbone
+            Used only for mobilenetv2 backbone
     """
 
     def __init__(self,
                  block_type=None,
-                 OS=None,
+                 os=None,
                  alpha=None,
                  classes=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.block_type = block_type
-        self.OS = OS
+        self.os = os
         self.alpha = alpha
         self.classes = classes
 
     def get_config(self):
         config = super().get_config()
         config.update({'block_type': self.block_type,
-                       'OS': self.OS,
+                       'os': self.os,
                        'alpha': self.alpha,
                        'classes': self.classes})
         return config
 
     def _xception_block(self, inputs, depth_list, prefix, skip_connection_type,
                         stride, rate=1, depth_activation=False, return_skip=False):
-        """ Basic building block of modified Xception network
+        """Basic building block of modified Xception network.
+
         # Arguments
             x: Numpy.ndarray or tensorflow.Dataset. Input tensor.
             depth_list: Int. Number of filters in each SepConv layer.
-                            len(depth_list) == 3.
+                len(depth_list) == 3.
             prefix: String. Prefix before name.
             skip_connection_type: String. One of {'conv','sum','none'}
             stride: Int. Stride at depthwise convolution.
             rate: Int. Atrous rate for depthwise convolution.
             depth_activation: String. Activation function. One of {'relu', 'selu'}
             return_skip: Boolean. Flag to return additional tensor after
-                             2 SepConvs for decoder
+                2 SepConvs for decoder
                 """
         residual = inputs
         for i in range(3):
@@ -404,7 +405,7 @@ class SegmentationBlock(block_module.Block):
         batches_input = layers.Lambda(lambda x: x / 127.5 - 1)(img_input)
         input_shape = inputs.shape.as_list()[:3]
         if block_type == 'xception':
-            if self.OS == 8:
+            if self.os == 8:
                 entry_block3_stride = 1
                 middle_block_rate = 2  # ! Not mentioned in paper, but required
                 exit_block_rates = (2, 4)
@@ -456,7 +457,7 @@ class SegmentationBlock(block_module.Block):
                                      depth_activation=True)
 
         else:
-            self.OS = 8
+            self.os = 8
             first_block_filters = self._make_divisible(32 * self.alpha, 8)
             x = basic.ConvBlock(first_block_filters, kernel_size=3,
                                 padding='same',
@@ -544,8 +545,8 @@ class SegmentationBlock(block_module.Block):
         # Image Feature branch
         # out_shape = int(np.ceil(input_shape[0] / OS))
         b4 = layers.AveragePooling2D(pool_size=(
-            int(np.ceil((512, 512, 3)[0] / self.OS)),
-            int(np.ceil((512, 512, 3)[1] / self.OS))))(x)
+            int(np.ceil((512, 512, 3)[0] / self.os)),
+            int(np.ceil((512, 512, 3)[1] / self.os))))(x)
         x = basic.ConvBlock(256, kernel_size=1, padding='same',
                             use_bias=False,
                             name='image_pooling').build(hp, inputs=b4)
@@ -553,8 +554,8 @@ class SegmentationBlock(block_module.Block):
         b4 = layers.Activation('relu')(b4)
 
         b4 = layers.Lambda(lambda x: K.tf.image.resize_bilinear(x, size=(
-            int(np.ceil(input_shape[0] / self.OS)),
-            int(np.ceil(input_shape[1] / self.OS)))))(b4)
+            int(np.ceil(input_shape[0] / self.os)),
+            int(np.ceil(input_shape[1] / self.os)))))(b4)
 
         # simple 1x1
         b0 = basic.ConvBlock(256, kernel_size=1, padding='same',
