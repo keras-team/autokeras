@@ -69,6 +69,8 @@ class TextBlock(block_module.Block):
     """Block for text data.
 
     # Arguments
+        block_type: String. 'vanilla', 'transformer'. The type of Block
+            to use. If unspecified, it will be tuned automatically.
         max_tokens: Int. The maximum size of the vocabulary.
             If left unspecified, it will be tuned automatically.
         vectorizer: String. 'sequence' or 'ngram'. If it is 'sequence',
@@ -80,11 +82,13 @@ class TextBlock(block_module.Block):
     """
 
     def __init__(self,
+                 block_type=None,
                  max_tokens=None,
                  vectorizer=None,
                  pretraining=None,
                  **kwargs):
         super().__init__(**kwargs)
+        self.block_type = block_type
         self.max_tokens = max_tokens
         self.vectorizer = vectorizer
         self.pretraining = pretraining
@@ -92,6 +96,7 @@ class TextBlock(block_module.Block):
     def get_config(self):
         config = super().get_config()
         config.update({
+            'block_type': self.block_type,
             'max_tokens': self.max_tokens,
             'vectorizer': self.vectorizer,
             'pretraining': self.pretraining})
@@ -100,6 +105,9 @@ class TextBlock(block_module.Block):
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
+        block_type = self.block_type or hp.Choice('block_type',
+                                                  ['vanilla', 'transformer'],
+                                                  default='vanilla')
         vectorizer = self.vectorizer or hp.Choice('vectorizer',
                                                   ['sequence', 'ngram'],
                                                   default='sequence')
@@ -113,10 +121,18 @@ class TextBlock(block_module.Block):
         else:
             output_node = preprocessing.TextToIntSequence(
                 max_tokens=max_tokens).build(hp, output_node)
-            output_node = basic.Embedding(
-                max_features=max_tokens + 1,
-                pretraining=self.pretraining).build(hp, output_node)
-            output_node = basic.ConvBlock().build(hp, output_node)
+            if block_type == 'transformer':
+                output_node = basic.TokenAndPositionEmbedding(
+                    max_features=max_tokens + 1,
+                    pretraining=self.pretraining).build(hp, output_node)
+            else:
+                output_node = basic.Embedding(
+                    max_features=max_tokens + 1,
+                    pretraining=self.pretraining).build(hp, output_node)
+            if block_type == 'transformer':
+                output_node = basic.TransformerBlock().build(hp, output_node)
+            elif block_type == 'vanilla':
+                output_node = basic.ConvBlock().build(hp, output_node)
             output_node = reduction.SpatialReduction().build(hp, output_node)
             output_node = basic.DenseBlock().build(hp, output_node)
         return output_node

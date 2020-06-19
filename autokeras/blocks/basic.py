@@ -262,8 +262,7 @@ class ConvBlock(block_module.Block):
 
 
 class MultiHeadSelfAttentionBlock(block_module.Block):
-    """
-    Block for Multi-Head Self-Attention.
+    """Block for Multi-Head Self-Attention.
 
     # Arguments
         embed_dim: Int. Output dimension of the Attention block.
@@ -360,19 +359,17 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
 
 
 class TransformerBlock(block_module.Block):
-    """
-        Block for Transformer.
+    """Block for Transformer.
 
-        # Arguments
-        embed_dim: Int. Output dimension of the Attention block.
-            If left unspecified, it will be tuned automatically.
-        num_heads: Int. The number of attention heads. If left unspecified,
-            it will be tuned automatically.
-        ff_dim: Int. The output dimension of the FFN. If left
-            unspecified, it will be tuned automatically.
-        dropout_rate: Float. Between 0 and 1. If left unspecified, it will be
-            tuned automatically.
-
+    # Arguments
+    embed_dim: Int. Output dimension of the Attention block.
+        If left unspecified, it will be tuned automatically.
+    num_heads: Int. The number of attention heads. If left unspecified,
+        it will be tuned automatically.
+    ff_dim: Int. The output dimension of the FFN. If left
+        unspecified, it will be tuned automatically.
+    dropout_rate: Float. Between 0 and 1. If left unspecified, it will be
+        tuned automatically.
     """
 
     def __init__(self,
@@ -554,8 +551,7 @@ class XceptionBlock(xception.HyperXception, block_module.Block):
 
 
 class TokenAndPositionEmbedding(block_module.Block):
-    """
-    Token and Position Embedding block for Transformer.
+    """Token and Position Embedding block for Transformer.
 
     The input should be tokenized sequences with the same length, where each element
     of a sequence should be the index of the word.
@@ -602,8 +598,6 @@ class TokenAndPositionEmbedding(block_module.Block):
             Output Tensor of shape `[batch_size, seq_len, embedding_dim]`.
         """
         input_node = nest.flatten(inputs)[0]
-        # TODO: support more pretrained embedding layers.
-        # glove, fasttext, and word2vec
         pretraining = self.pretraining or hp.Choice(
             'pretraining',
             ['random', 'glove', 'fasttext', 'word2vec', 'none'],
@@ -618,17 +612,17 @@ class TokenAndPositionEmbedding(block_module.Block):
         else:
             dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0.25)
 
-        TokenEmbedding = Embedding(max_features=self.max_features,
-                                   pretraining=pretraining,
-                                   embedding_dim=embedding_dim,
-                                   dropout_rate=dropout_rate)
-        PositionEmbedding = Embedding(max_features=self.max_features,
-                                      pretraining=pretraining,
-                                      embedding_dim=embedding_dim,
-                                      dropout_rate=dropout_rate)
+        token_embedding = Embedding(max_features=self.max_features,
+                                    pretraining=pretraining,
+                                    embedding_dim=embedding_dim,
+                                    dropout_rate=dropout_rate)
+        position_embedding = Embedding(max_features=self.max_features,
+                                       pretraining=pretraining,
+                                       embedding_dim=embedding_dim,
+                                       dropout_rate=dropout_rate)
         maxlen = tf.shape(input_node)[-1]
         positions = tf.range(start=0, limit=maxlen, delta=1)
-        output_node = TokenEmbedding(input_node) + PositionEmbedding(positions)
+        output_node = token_embedding(input_node) + position_embedding(positions)
 
         return output_node
 

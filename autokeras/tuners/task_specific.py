@@ -30,6 +30,7 @@ IMAGE_CLASSIFIER = [{
 }]
 
 TEXT_CLASSIFIER = [{
+    'text_block_1/block_type': 'vanilla',
     'text_block_1/vectorizer': 'sequence',
     'classification_head_1/dropout_rate': 0,
     'optimizer': 'adam',
@@ -51,6 +52,7 @@ TEXT_CLASSIFIER = [{
     'text_block_1/dense_block_1/dropout_rate': 0.5,
     'text_block_1/dense_block_1/units_0': 256,
 }, {
+    'text_block_1/block_type': 'transformer',
     'text_block_1/vectorizer': 'sequence',
     'classification_head_1/dropout_rate': 0,
     'optimizer': 'adam',
