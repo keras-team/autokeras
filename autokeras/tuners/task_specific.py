@@ -59,8 +59,6 @@ TEXT_CLASSIFIER = [{
     'text_block_1/max_tokens': 5000,
     'text_block_1/text_to_int_sequence_1/output_sequence_length': 512,
     'text_block_1/token_and_position_embedding_1/pretraining': 'none',
-    'text_block_1/token_and_position_embedding_1/embedding_dim': 64,
-    'text_block_1/token_and_position_embedding_1/dropout_rate': 0.25,
     'text_block_1/transformer_block_1/embed_dim': 128,
     'text_block_1/transformer_block_1/num_heads': 8,
     'text_block_1/transformer_block_1/ff_dim': 256,
