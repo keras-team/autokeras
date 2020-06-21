@@ -1,22 +1,38 @@
 from unittest import mock
 
-from autokeras.tasks import image
+import autokeras as ak
 from tests import utils
 
 
-@mock.patch('autokeras.auto_model.AutoModel.__init__')
-def test_image_classifier(auto_model, tmp_path):
-    image.ImageClassifier(directory=tmp_path, max_trials=2, seed=utils.SEED)
-    assert auto_model.called
+@mock.patch('autokeras.AutoModel.fit')
+def test_img_clf_fit_call_auto_model_fit(fit, tmp_path):
+    auto_model = ak.ImageClassifier(directory=tmp_path, seed=utils.SEED)
+
+    auto_model.fit(
+        x=utils.generate_data(num_instances=100, shape=(32, 32, 3)),
+        y=utils.generate_one_hot_labels(num_instances=100, num_classes=10))
+
+    assert fit.is_called
 
 
-@mock.patch('autokeras.auto_model.AutoModel.__init__')
-def test_image_regressor(auto_model, tmp_path):
-    image.ImageRegressor(directory=tmp_path, max_trials=2, seed=utils.SEED)
-    assert auto_model.called
+@mock.patch('autokeras.AutoModel.fit')
+def test_img_reg_fit_call_auto_model_fit(fit, tmp_path):
+    auto_model = ak.ImageRegressor(directory=tmp_path, seed=utils.SEED)
+
+    auto_model.fit(
+        x=utils.generate_data(num_instances=100, shape=(32, 32, 3)),
+        y=utils.generate_data(num_instances=100, shape=(1,)))
+
+    assert fit.is_called
 
 
-@mock.patch('autokeras.auto_model.AutoModel.__init__')
-def test_image_segmenter(auto_model, tmp_path):
-    image.ImageSegmenter(directory=tmp_path, max_trials=2, seed=utils.SEED)
-    assert auto_model.called
+@mock.patch('autokeras.AutoModel.fit')
+def test_img_seg_fit_call_auto_model_fit(fit, tmp_path):
+    auto_model = ak.tasks.image.ImageSegmenter(
+        directory=tmp_path, seed=utils.SEED)
+
+    auto_model.fit(
+        x=utils.generate_data(num_instances=100, shape=(32, 32, 3)),
+        y=utils.generate_data(num_instances=100, shape=(32, 32)))
+
+    assert fit.is_called

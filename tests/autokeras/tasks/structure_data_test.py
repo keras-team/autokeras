@@ -4,79 +4,51 @@ import numpy as np
 import pandas
 import pytest
 
-from autokeras.tasks import structured_data
+import autokeras as ak
 from tests import utils
 
 
-def test_structured_data_unknown_str_in_col_type(tmp_path):
+def test_raise_error_unknown_str_in_col_type(tmp_path):
     with pytest.raises(ValueError) as info:
-        structured_data.StructuredDataClassifier(
-            column_types=utils.FALSE_COLUMN_TYPES_FROM_CSV,
+        ak.StructuredDataClassifier(
+            column_types={'age': 'num', 'parch': 'categorical'},
             directory=tmp_path,
-            max_trials=1,
             seed=utils.SEED)
+
     assert 'Column_types should be either "categorical"' in str(info.value)
 
 
-def test_structured_data_col_name_type_mismatch(tmp_path):
-    with pytest.raises(ValueError) as info:
-        structured_data.StructuredDataClassifier(
-            column_names=utils.COLUMN_NAMES_FROM_NUMPY,
-            column_types=utils.COLUMN_TYPES_FROM_CSV,
-            directory=tmp_path,
-            max_trials=1,
-            seed=utils.SEED)
-    assert 'Column_names and column_types are mismatched.' in str(info.value)
+@mock.patch('autokeras.AutoModel.fit')
+def test_structured_clf_fit_call_auto_model_fit(fit, tmp_path):
+    auto_model = ak.StructuredDataClassifier(directory=tmp_path, seed=utils.SEED)
+
+    auto_model.fit(
+        x=utils.generate_structured_data(num_instances=100),
+        y=utils.generate_one_hot_labels(num_instances=100, num_classes=3))
+
+    assert fit.is_called
 
 
-@mock.patch('autokeras.auto_model.AutoModel.fit')
-@mock.patch('autokeras.auto_model.AutoModel.__init__')
-def test_structured_classifier(init, fit, tmp_path):
-    num_data = 500
-    train_x = utils.generate_structured_data(num_data)
-    train_y = utils.generate_one_hot_labels(num_instances=num_data, num_classes=3)
+@mock.patch('autokeras.AutoModel.fit')
+def test_structured_reg_fit_call_auto_model_fit(fit, tmp_path):
+    auto_model = ak.StructuredDataRegressor(directory=tmp_path, seed=utils.SEED)
 
-    clf = structured_data.StructuredDataClassifier(
-        column_names=utils.COLUMN_NAMES_FROM_NUMPY,
-        directory=tmp_path,
-        max_trials=1,
-        seed=utils.SEED)
-    clf.fit(train_x, train_y, epochs=2, validation_data=(train_x, train_y))
+    auto_model.fit(
+        x=utils.generate_structured_data(num_instances=100),
+        y=utils.generate_data(num_instances=100, shape=(1,)))
 
-    assert init.called
-    assert fit.called
+    assert fit.is_called
 
 
-@mock.patch('autokeras.auto_model.AutoModel.fit')
-@mock.patch('autokeras.auto_model.AutoModel.__init__')
-def test_structured_regressor(init, fit, tmp_path):
-    num_data = 500
-    train_x = utils.generate_structured_data(num_data)
-    train_y = utils.generate_data(num_instances=100, shape=(1,))
+@mock.patch('autokeras.AutoModel.fit')
+def test_structured_data_clf_convert_csv_to_df_and_np(fit, tmp_path):
+    auto_model = ak.StructuredDataClassifier(directory=tmp_path, seed=utils.SEED)
 
-    clf = structured_data.StructuredDataRegressor(
-        column_names=utils.COLUMN_NAMES_FROM_NUMPY,
-        directory=tmp_path,
-        max_trials=1,
-        seed=utils.SEED)
-    clf.fit(train_x, train_y, epochs=2, validation_data=(train_x, train_y))
+    auto_model.fit(x=utils.TRAIN_FILE_PATH,
+                   y='survived',
+                   epochs=2,
+                   validation_data=(utils.TEST_FILE_PATH, 'survived'))
 
-    assert init.called
-    assert fit.called
-
-
-@mock.patch('autokeras.auto_model.AutoModel.fit')
-@mock.patch('autokeras.auto_model.AutoModel.__init__')
-def test_structured_data_classifier_from_csv(init, fit, tmp_path):
-    clf = structured_data.StructuredDataClassifier(
-        directory=tmp_path,
-        max_trials=1,
-        seed=utils.SEED)
-
-    clf.fit(x=utils.TRAIN_FILE_PATH, y='survived', epochs=2,
-            validation_data=(utils.TEST_FILE_PATH, 'survived'))
-
-    assert init.called
     _, kwargs = fit.call_args_list[0]
     assert isinstance(kwargs['x'], pandas.DataFrame)
     assert isinstance(kwargs['y'], np.ndarray)
