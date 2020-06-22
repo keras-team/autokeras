@@ -20,9 +20,7 @@ jobs:
         pip install -e .[tests] --progress-bar off
         pip install twine
     - name: Lint
-      run: |
-        flake8
-        isort -sl -rc -c
+      run: bash shell/pre-commit.sh
     - name: Test with pytest
       run: |
         pip install pytest
