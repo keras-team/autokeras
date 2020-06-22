@@ -24,7 +24,9 @@ setup(
         'scikit-learn',
         'numpy',
         'pandas',
-        'keras-tuner @ git+https://github.com/keras-team/keras-tuner.git@1.0.2rc0#egg=keras-tuner-1.0.2rc0',
+    ],
+    dependency_links=[
+        'https://github.com/keras-team/keras-tuner.git@1.0.2rc0#egg=keras-tuner-1.0.2rc0',
     ],
     extras_require={
         'tests': ['pytest>=4.4.0',
