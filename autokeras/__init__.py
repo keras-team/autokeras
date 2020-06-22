@@ -41,5 +41,5 @@ from autokeras.tuners import Hyperband
 from autokeras.tuners import RandomSearch
 from autokeras.utils.utils import check_tf_version
 
-__version__ = '1.0.3'
+__version__ = '1.0.3rc0'
 check_tf_version()
