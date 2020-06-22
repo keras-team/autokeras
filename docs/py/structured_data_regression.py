@@ -85,7 +85,7 @@ x_test = pd.read_csv(test_file_path)
 y_test = x_test.pop('Price')
 
 # It tries 10 different models.
-reg = ak.StructuredDataRegressor(max_trials=3)
+reg = ak.StructuredDataRegressor(max_trials=3, overwrite=True)
 # Feed the structured data regressor with training data.
 reg.fit(x_train, y_train, epochs=10)
 # Predict with the best model.
@@ -100,7 +100,7 @@ The following code shows how to convert numpy.ndarray to tf.data.Dataset.
 train_set = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_set = tf.data.Dataset.from_tensor_slices((x_test.to_numpy().astype(np.unicode), y_test))
 
-reg = ak.StructuredDataRegressor(max_trials=3)
+reg = ak.StructuredDataRegressor(max_trials=3, overwrite=True)
 # Feed the tensorflow Dataset to the regressor.
 reg.fit(train_set, epochs=10)
 # Predict with the best model.
@@ -122,6 +122,7 @@ reg = ak.StructuredDataRegressor(
         'AveBedrms', 'Population', 'AveOccup', 'Latitude', 'Longitude'],
     column_types={'MedInc': 'numerical', 'Latitude': 'numerical'},
     max_trials=10, # It tries 10 different models.
+    overwrite=True,
 )
 
 
@@ -190,8 +191,17 @@ input_node = ak.StructuredDataInput()
 output_node = ak.CategoricalToNumerical()(input_node)
 output_node = ak.DenseBlock()(output_node)
 output_node = ak.RegressionHead()(output_node)
-reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
+reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3,
+                   overwrite=True)
 reg.fit(x_train, y_train, epochs=10)
+
+"""
+You can also export the best model found by AutoKeras as a Keras Model.
+"""
+
+model = reg.export_model()
+model.summary()
+model.predict(x_train)
 
 
 """
