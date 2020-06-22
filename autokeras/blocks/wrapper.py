@@ -124,7 +124,8 @@ class TextBlock(block_module.Block):
             if block_type == 'transformer':
                 output_node = basic.TokenAndPositionEmbedding(
                     max_features=max_tokens + 1,
-                    pretraining=self.pretraining).build(hp, output_node)
+                    # pretraining=self.pretraining
+                ).build(hp, output_node)
             else:
                 output_node = basic.Embedding(
                     max_features=max_tokens + 1,
