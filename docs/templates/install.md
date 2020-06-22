@@ -4,7 +4,7 @@
 
 **Pip**: Follow the TensorFlow install steps to install Pip.
 
-**Tensorflow >= 2.1.0**: AutoKeras is based on TensorFlow.
+**Tensorflow >= 2.2.0**: AutoKeras is based on TensorFlow.
 Please follow
 [this tutorial](https://www.tensorflow.org/install/pip) to install TensorFlow for python3.
 
@@ -17,12 +17,14 @@ AutoKeras only support **Python 3**.
 If you followed previous steps to use virtualenv to install tensorflow,
 you can just activate the virtualenv and use the following command to install AutoKeras. 
 ```
-pip install autokeras
+pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc0
+pip install autokeras==1.0.3
 ```
 
 If you did not use virtualenv, and you use `python3` command to execute your python program,
 please use the following command to install AutoKeras.
 ```
-python3 -m pip install autokeras
+python3 -m pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc0
+python3 -m pip install autokeras==1.0.3
 ```
 

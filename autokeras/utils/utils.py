@@ -1,6 +1,7 @@
 import json
 import re
 
+import kerastuner
 import tensorflow as tf
 from packaging.version import parse
 from tensorflow.python.util import nest
@@ -42,16 +43,28 @@ def to_type_key(dictionary, convert_func):
 
 
 def check_tf_version() -> None:
-    if parse(tf.__version__) < parse('2.1.0'):
+    if parse(tf.__version__) < parse('2.2.0'):
         raise ImportError(
-            'The Tensorflow package version needs to be at least v2.1.0 \n'
+            'The Tensorflow package version needs to be at least 2.2.0 \n'
             'for AutoKeras to run. Currently, your TensorFlow version is \n'
-            'v{version}. Please upgrade with \n'
-            '`$ pip install --upgrade tensorflow` -> GPU version \n'
-            'or \n'
-            '`$ pip install --upgrade tensorflow-cpu` -> CPU version. \n'
+            '{version}. Please upgrade with \n'
+            '`$ pip install --upgrade tensorflow`. \n'
             'You can use `pip freeze` to check afterwards that everything is '
             'ok.'.format(version=tf.__version__)
+        )
+
+
+def check_kt_version() -> None:
+    if parse(kerastuner.__version__) < parse('1.0.2rc0'):
+        raise ImportError(
+            'The Keras Tuner package version needs to be at least 1.0.2rc0 \n'
+            'for AutoKeras to run. Currently, your Keras Tuner version is \n'
+            '{version}. Please upgrade with \n'
+            '`$ pip install '
+            'git+https://github.com/keras-team/keras-tuner.git@1.0.2rc0'
+            '#egg=keras-tuner-1.0.2rc0`. \n'
+            'You can use `pip freeze` to check afterwards that everything is '
+            'ok.'.format(version=kerastuner.__version__)
         )
 
 
