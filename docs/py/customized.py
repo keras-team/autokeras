@@ -39,6 +39,7 @@ output_node = ak.ClassificationHead()(output_node)
 auto_model = ak.AutoModel(
     inputs=input_node, 
     outputs=output_node,
+    overwrite=True,
     max_trials=1)
 
 """
@@ -125,7 +126,11 @@ You can connect it with other blocks and build it into an
 input_node = ak.Input()
 output_node = SingleDenseLayerBlock()(input_node)
 output_node = ak.RegressionHead()(output_node)
-auto_model = ak.AutoModel(input_node, output_node, max_trials=1)
+auto_model = ak.AutoModel(
+    input_node, 
+    output_node, 
+    overwrite=True,
+    max_trials=1)
 # Prepare Data
 num_instances = 100
 x_train = np.random.rand(num_instances, 20).astype(np.float32)

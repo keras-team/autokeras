@@ -65,6 +65,7 @@ model = ak.AutoModel(
         ak.RegressionHead(metrics=['mae']),
         ak.ClassificationHead(loss='categorical_crossentropy', metrics=['accuracy'])
     ],
+    overwrite=True,
     max_trials=2)
 # Fit the model with prepared data.
 model.fit(
@@ -153,6 +154,7 @@ output_node2 = ak.RegressionHead()(output_node)
 auto_model = ak.AutoModel(
     inputs=[input_node1, input_node2], 
     outputs=[output_node1, output_node2],
+    overwrite=True,
     max_trials=2)
 
 image_data = np.random.rand(num_instances, 32, 32, 3).astype(np.float32)

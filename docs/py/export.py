@@ -23,7 +23,9 @@ import autokeras as ak
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
 # Initialize the image classifier.
-clf = ak.ImageClassifier(max_trials=1)  # Try only 1 model.(Increase accordingly)
+clf = ak.ImageClassifier(
+    overwrite=True,
+    max_trials=1)  # Try only 1 model.(Increase accordingly)
 # Feed the image classifier with training data.
 clf.fit(x_train, y_train, epochs=1)  # Change no of epochs to improve the model
 # Export as a Keras Model.

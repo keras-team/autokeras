@@ -32,7 +32,9 @@ This is just a quick demo of MNIST, so we set max_trials to 1.
 """
 
 # Initialize the image regressor.
-reg = ak.ImageRegressor(max_trials=1)
+reg = ak.ImageRegressor(
+    overwrite=True,
+    max_trials=1)
 # Feed the image regressor with training data.
 reg.fit(x_train, y_train, epochs=2)
 
@@ -97,7 +99,11 @@ output_node = ak.ImageBlock(
     augment=False,
 )(input_node)
 output_node = ak.RegressionHead()(output_node)
-reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+reg = ak.AutoModel(
+    inputs=input_node,
+    outputs=output_node,
+    overwrite=True,
+    max_trials=1)
 reg.fit(x_train, y_train, epochs=2)
 
 """
@@ -115,7 +121,11 @@ output_node = ak.Normalization()(input_node)
 output_node = ak.ImageAugmentation(horizontal_flip=False)(output_node)
 output_node = ak.ResNetBlock(version="v2")(output_node)
 output_node = ak.RegressionHead()(output_node)
-reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+reg = ak.AutoModel(
+    inputs=input_node,
+    outputs=output_node,
+    overwrite=True,
+    max_trials=1)
 reg.fit(x_train, y_train, epochs=2)
 
 """
@@ -148,7 +158,9 @@ print(y_train.shape)  # (60000, 10)
 train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,)))
 test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,)))
 
-reg = ak.ImageRegressor(max_trials=1)
+reg = ak.ImageRegressor(
+    overwrite=True,
+    max_trials=1)
 # Feed the tensorflow Dataset to the regressor.
 reg.fit(train_set, epochs=2)
 # Predict with the best model.

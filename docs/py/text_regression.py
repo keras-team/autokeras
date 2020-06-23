@@ -48,7 +48,9 @@ The second step is to run the [TextRegressor](/text_regressor).
 import autokeras as ak
 
 # Initialize the text regressor.
-reg = ak.TextRegressor(max_trials=1) # It tries 10 different models.
+reg = ak.TextRegressor(
+    overwrite=True,
+    max_trials=1) # It tries 10 different models.
 # Feed the text regressor with training data.
 reg.fit(x_train, y_train, epochs=2)
 # Predict with the best model.
@@ -104,7 +106,11 @@ import autokeras as ak
 input_node = ak.TextInput()
 output_node = ak.TextBlock(vectorizer='ngram')(input_node)
 output_node = ak.RegressionHead()(output_node)
-reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+reg = ak.AutoModel(
+    inputs=input_node,
+    outputs=output_node,
+    overwrite=True,
+    max_trials=1)
 reg.fit(x_train, y_train, epochs=2)
 
 """
@@ -126,7 +132,11 @@ output_node = ak.Embedding()(output_node)
 # Use separable Conv layers in Keras.
 output_node = ak.ConvBlock(separable=True)(output_node)
 output_node = ak.RegressionHead()(output_node)
-reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+reg = ak.AutoModel(
+    inputs=input_node,
+    outputs=output_node,
+    overwrite=True,
+    max_trials=1)
 reg.fit(x_train, y_train, epochs=2)
 
 """
@@ -146,7 +156,9 @@ import tensorflow as tf
 train_set = tf.data.Dataset.from_tensor_slices(((x_train, ), (y_train, ))).batch(32)
 test_set = tf.data.Dataset.from_tensor_slices(((x_test, ), (y_test, ))).batch(32)
 
-reg = ak.TextRegressor(max_trials=3)
+reg = ak.TextRegressor(
+    overwrite=True,
+    max_trials=3)
 # Feed the tensorflow Dataset to the regressor.
 reg.fit(train_set, epochs=2)
 # Predict with the best model.
