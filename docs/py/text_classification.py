@@ -44,7 +44,9 @@ The second step is to run the [TextClassifier](/text_classifier).
 import autokeras as ak
 
 # Initialize the text classifier.
-clf = ak.TextClassifier(max_trials=1) # It tries 10 different models.
+clf = ak.TextClassifier(
+    overwrite=True,
+    max_trials=1) # It tries 10 different models.
 # Feed the text classifier with training data.
 clf.fit(x_train, y_train, epochs=2)
 # Predict with the best model.
@@ -100,7 +102,11 @@ import autokeras as ak
 input_node = ak.TextInput()
 output_node = ak.TextBlock(vectorizer='ngram')(input_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+clf = ak.AutoModel(
+    inputs=input_node,
+    outputs=output_node,
+    overwrite=True,
+    max_trials=1)
 clf.fit(x_train, y_train, epochs=2)
 
 """
@@ -122,7 +128,11 @@ output_node = ak.Embedding()(output_node)
 # Use separable Conv layers in Keras.
 output_node = ak.ConvBlock(separable=True)(output_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+clf = ak.AutoModel(
+    inputs=input_node,
+    outputs=output_node,
+    overwrite=True,
+    max_trials=1)
 clf.fit(x_train, y_train, epochs=2)
 
 """
@@ -145,7 +155,9 @@ import tensorflow as tf
 train_set = tf.data.Dataset.from_tensor_slices(((x_train, ), (y_train, ))).batch(32)
 test_set = tf.data.Dataset.from_tensor_slices(((x_test, ), (y_test, ))).batch(32)
 
-clf = ak.TextClassifier(max_trials=3)
+clf = ak.TextClassifier(
+    overwrite=True,
+    max_trials=3)
 # Feed the tensorflow Dataset to the classifier.
 clf.fit(train_set, epochs=2)
 # Predict with the best model.

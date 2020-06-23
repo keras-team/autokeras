@@ -25,7 +25,9 @@ This is just a quick demo of MNIST, so we set max_trials to 1.
 """
 
 # Initialize the image classifier.
-clf = ak.ImageClassifier(max_trials=1)
+clf = ak.ImageClassifier(
+    overwrite=True,
+    max_trials=1)
 # Feed the image classifier with training data.
 clf.fit(x_train, y_train, epochs=10)
 
@@ -90,7 +92,11 @@ output_node = ak.ImageBlock(
     augment=False,
 )(input_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+clf = ak.AutoModel(
+    inputs=input_node,
+    outputs=output_node,
+    overwrite=True,
+    max_trials=1)
 clf.fit(x_train, y_train, epochs=10)
 
 """
@@ -108,7 +114,11 @@ output_node = ak.Normalization()(input_node)
 output_node = ak.ImageAugmentation(horizontal_flip=False)(output_node)
 output_node = ak.ResNetBlock(version="v2")(output_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=1)
+clf = ak.AutoModel(
+    inputs=input_node,
+    outputs=output_node,
+    overwrite=True,
+    max_trials=1)
 clf.fit(x_train, y_train, epochs=10)
 
 """
@@ -153,7 +163,9 @@ multi-class classification to be wrapped into tensorflow Dataset.
 train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,)))
 test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,)))
 
-clf = ak.ImageClassifier(max_trials=1)
+clf = ak.ImageClassifier(
+    overwrite=True,
+    max_trials=1)
 # Feed the tensorflow Dataset to the classifier.
 clf.fit(train_set, epochs=10)
 # Predict with the best model.

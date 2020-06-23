@@ -24,7 +24,9 @@ The second step is to run the
 """
 
 # Initialize the structured data classifier.
-clf = ak.StructuredDataClassifier(max_trials=3) # It tries 3 different models.
+clf = ak.StructuredDataClassifier(
+    overwrite=True,
+    max_trials=3) # It tries 3 different models.
 # Feed the structured data classifier with training data.
 clf.fit(
     # The path to the train.csv file.
@@ -78,7 +80,9 @@ x_test = pd.read_csv(test_file_path)
 y_test = x_test.pop('survived')
 
 # It tries 10 different models.
-clf = ak.StructuredDataClassifier(max_trials=3)
+clf = ak.StructuredDataClassifier(
+    overwrite=True,
+    max_trials=3)
 # Feed the structured data classifier with training data.
 clf.fit(x_train, y_train, epochs=10)
 # Predict with the best model.
@@ -97,7 +101,9 @@ classification, it should not be one-hot encoded.
 train_set = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_set = tf.data.Dataset.from_tensor_slices((x_test.to_numpy().astype(np.unicode), y_test))
 
-clf = ak.StructuredDataClassifier(max_trials=3)
+clf = ak.StructuredDataClassifier(
+    overwrite=True,
+    max_trials=3)
 # Feed the tensorflow Dataset to the classifier.
 clf.fit(train_set, epochs=10)
 # Predict with the best model.
@@ -126,6 +132,7 @@ clf = ak.StructuredDataClassifier(
         'alone'],
     column_types={'sex': 'categorical', 'fare': 'numerical'},
     max_trials=10, # It tries 10 different models.
+    overwrite=True,
 )
 
 
@@ -174,7 +181,11 @@ import autokeras as ak
 input_node = ak.StructuredDataInput()
 output_node = ak.StructuredDataBlock(categorical_encoding=True)(input_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
+clf = ak.AutoModel(
+    inputs=input_node, 
+    outputs=output_node, 
+    overwrite=True,
+    max_trials=3)
 clf.fit(x_train, y_train, epochs=10)
 
 """
@@ -194,7 +205,11 @@ input_node = ak.StructuredDataInput()
 output_node = ak.CategoricalToNumerical()(input_node)
 output_node = ak.DenseBlock()(output_node)
 output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
+clf = ak.AutoModel(
+    inputs=input_node, 
+    outputs=output_node, 
+    overwrite=True,
+    max_trials=3)
 clf.fit(x_train, y_train, epochs=10)
 
 
@@ -202,7 +217,6 @@ clf.fit(x_train, y_train, epochs=10)
 ## Reference
 [StructuredDataClassifier](/structured_data_classifier),
 [AutoModel](/auto_model/#automodel-class),
-[StructuredDataClassifier](/structured_data_classifier),
 [StructuredDataBlock](/block/#structureddatablock-class),
 [DenseBlock](/block/#denseblock-class),
 [StructuredDataInput](/node/#structureddatainput-class),

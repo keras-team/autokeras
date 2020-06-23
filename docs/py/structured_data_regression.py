@@ -34,7 +34,9 @@ The second step is to run the
 """
 
 # Initialize the structured data regressor.
-reg = ak.StructuredDataRegressor(max_trials=3) # It tries 10 different models.
+reg = ak.StructuredDataRegressor(
+    overwrite=True,
+    max_trials=3) # It tries 10 different models.
 # Feed the structured data regressor with training data.
 reg.fit(
     # The path to the train.csv file.
@@ -172,7 +174,11 @@ import autokeras as ak
 input_node = ak.StructuredDataInput()
 output_node = ak.StructuredDataBlock(categorical_encoding=True)(input_node)
 output_node = ak.RegressionHead()(output_node)
-reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=3)
+reg = ak.AutoModel(
+    inputs=input_node, 
+    outputs=output_node, 
+    overwrite=True,
+    max_trials=3)
 reg.fit(x_train, y_train, epochs=10)
 
 """
