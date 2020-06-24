@@ -323,7 +323,7 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
         key_dense = layers.Dense(embed_dim)
         value_dense = layers.Dense(embed_dim)
         combine_heads = layers.Dense(embed_dim)
-
+        print("MultiHeadSelfAttentionBlock: ",input_node.shape)
         batch_size = tf.shape(input_node)[0]
         query = query_dense(input_node)  # (batch_size, seq_len, embed_dim)
         key = key_dense(input_node)  # (batch_size, seq_len, embed_dim)
@@ -424,7 +424,7 @@ class TransformerBlock(block_module.Block):
         layernorm2 = layers.LayerNormalization(epsilon=1e-6)
         dropout1 = layers.Dropout(dropout_rate)
         dropout2 = layers.Dropout(dropout_rate)
-
+        print("TransformerBlock ", inputs.shape)
         attn_output = MultiHeadSelfAttentionBlock(
             embed_dim, num_heads).build(hp, inputs)
         attn_output = dropout1(attn_output)
@@ -620,10 +620,11 @@ class TokenAndPositionEmbedding(block_module.Block):
                                        pretraining=pretraining,
                                        embedding_dim=embedding_dim,
                                        dropout_rate=dropout_rate)
+        print("TokenAndPositionEmbedding ", input_node.shape)
         maxlen = tf.shape(input_node)[-1]
         positions = tf.range(start=0, limit=maxlen, delta=1)
-        output_node = token_embedding.build(
-            hp, input_node) + position_embedding.build(hp, positions)
+        output_node = token_embedding.build(hp, input_node) \
+                      + position_embedding.build(hp, positions)
 
         return output_node
 
