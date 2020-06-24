@@ -624,7 +624,7 @@ class TokenAndPositionEmbedding(block_module.Block):
         maxlen = tf.shape(input_node)[-1]
         positions = tf.range(start=0, limit=maxlen, delta=1)
         output_node = token_embedding.build(hp, input_node) \
-                      + position_embedding.build(hp, positions)
+            + position_embedding.build(hp, positions)
 
         return output_node
 
