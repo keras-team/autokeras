@@ -132,10 +132,13 @@ class TextBlock(block_module.Block):
                     pretraining=self.pretraining).build(hp, output_node)
             if block_type == 'transformer':
                 output_node = basic.TransformerBlock().build(hp, output_node)
+                output_node = reduction.SpatialReduction().build(hp, output_node)
+                output_node = basic.DenseBlock().build(hp, output_node)
+                # output_node = basic.DenseBlock().build(hp, output_node)
             elif block_type == 'vanilla':
                 output_node = basic.ConvBlock().build(hp, output_node)
-            output_node = reduction.SpatialReduction().build(hp, output_node)
-            output_node = basic.DenseBlock().build(hp, output_node)
+                output_node = reduction.SpatialReduction().build(hp, output_node)
+                output_node = basic.DenseBlock().build(hp, output_node)
         return output_node
 
 
