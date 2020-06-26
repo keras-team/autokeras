@@ -20,7 +20,6 @@ setup(
     keywords=['AutoML', 'Keras'],
     install_requires=[
         'packaging',
-        'tensorflow>=2.2.0',
         'scikit-learn',
         'numpy',
         'pandas',
@@ -35,6 +34,8 @@ setup(
                   'typeguard>=2,<2.10.0',
                   'typedapi>=0.2,<0.3'
                   ],
+        'tf': ['tensorflow>=2.2.0'],
+        'tf_gpu': ['tensorflow-gpu>=2.2.0'],
     },
     classifiers=[
         "Intended Audience :: Developers",
