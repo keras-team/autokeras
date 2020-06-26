@@ -1,4 +1,4 @@
-keras-autodoc==0.5.0
+keras-autodoc==0.5.1
 mkdocs
 mkdocs-material
 pygments
