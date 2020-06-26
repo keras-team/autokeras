@@ -315,57 +315,6 @@ class SegmentationBlock(block_module.Block):
         else:
             return outputs
 
-    def _make_divisible(self, v, divisor, min_value=None):
-        if min_value is None:
-            min_value = divisor
-        new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
-        # Make sure that round down does not go down by more than 10%.
-        if new_v < 0.9 * v:
-            new_v += divisor
-        return new_v
-
-    def _inverted_res_block(self, hp, inputs, expansion, stride, alpha, filters,
-                            block_id, skip_connection, rate=1):
-        in_channels = inputs._keras_shape[-1]
-        pointwise_conv_filters = int(filters * alpha)
-        pointwise_filters = self._make_divisible(pointwise_conv_filters, 8)
-        x = inputs
-        prefix = 'expanded_conv_{}_'.format(block_id)
-        if block_id:
-            x = basic.ConvBlock(expansion * in_channels,
-                                kernel_size=1, padding='same',
-                                use_bias=False, activation=None,
-                                name=prefix).build(hp, inputs=x)
-            x = layers.BatchNormalization(epsilon=1e-3, momentum=0.999,
-                                          name=prefix + 'expand_BN')(x)
-            x = layers.Lambda(lambda x: relu(x, max_value=6.),
-                              name=prefix + 'expand_relu')(x)
-        else:
-            prefix = 'expanded_conv_'
-        # Depthwise
-        x = layers.DepthwiseConv2D(kernel_size=3, strides=stride, activation=None,
-                                   use_bias=False, padding='same',
-                                   dilation_rate=(rate, rate),
-                                   name=prefix + 'depthwise')(x)
-        x = layers.BatchNormalization(epsilon=1e-3, momentum=0.999,
-                                      name=prefix + 'depthwise_BN')(x)
-        # x = Activation(relu(x, max_value=6.), name=prefix + 'depthwise_relu')(x)
-        x = layers.Lambda(lambda x: relu(x, max_value=6.),
-                          name=prefix + 'depthwise_relu')(x)
-        x = basic.ConvBlock(pointwise_filters, kernel_size=1, padding='same',
-                            use_bias=False, activation=None,
-                            name=prefix).build(hp, inputs=x)
-        x = layers.BatchNormalization(epsilon=1e-3, momentum=0.999,
-                                      name=prefix + 'project_BN')(x)
-
-        if skip_connection:
-            return layers.Add(name=prefix + 'add')([inputs, x])
-
-        if in_channels == pointwise_filters and stride == 1:
-            return layers.Add(name='res_connect_' + str(block_id))([inputs, x])
-
-        return x
-
     def bulid(self, hp, inputs=None):
         """
         # Arguments
@@ -458,7 +407,10 @@ class SegmentationBlock(block_module.Block):
 
         else:
             self.os = 8
-            first_block_filters = self._make_divisible(32 * self.alpha, 8)
+            first_block_filters = max(8, int(32 * self.alpha + 8 / 2) // 8 * 8)
+            # Make sure that round down does not go down by more than 10%.
+            if first_block_filters < 0.9 * 32 * self.alpha:
+                first_block_filters += 8
             x = basic.ConvBlock(first_block_filters, kernel_size=3,
                                 padding='same',
                                 use_bias=False, stride=2,
@@ -468,75 +420,81 @@ class SegmentationBlock(block_module.Block):
 
             x = layers.Lambda(lambda x: relu(x, max_value=6.))(x)
 
-            x = self._inverted_res_block(x, filters=16, alpha=self.alpha, stride=1,
-                                         expansion=1, block_id=0,
-                                         skip_connection=False)
+            x = xception._inverted_res_block(x, filters=16, alpha=self.alpha,
+                                             stride=1,
+                                             expansion=1, block_id=0,
+                                             skip_connection=False)
 
-            x = self._inverted_res_block(x, filters=24, alpha=self.alpha, stride=2,
-                                         expansion=6, block_id=1,
-                                         skip_connection=False)
-            x = self._inverted_res_block(x, filters=24, alpha=self.alpha, stride=1,
-                                         expansion=6, block_id=2,
-                                         skip_connection=True)
+            x = xception._inverted_res_block(x, filters=24, alpha=self.alpha,
+                                             stride=2,
+                                             expansion=6, block_id=1,
+                                             skip_connection=False)
+            x = xception._inverted_res_block(x, filters=24, alpha=self.alpha,
+                                             stride=1,
+                                             expansion=6, block_id=2,
+                                             skip_connection=True)
 
-            x = self._inverted_res_block(x, filters=32, alpha=self.alpha, stride=2,
-                                         expansion=6, block_id=3,
-                                         skip_connection=False)
-            x = self._inverted_res_block(x, filters=32, alpha=self.alpha, stride=1,
-                                         expansion=6, block_id=4,
-                                         skip_connection=True)
-            x = self._inverted_res_block(x, filters=32, alpha=self.alpha, stride=1,
-                                         expansion=6, block_id=5,
-                                         skip_connection=True)
+            x = xception._inverted_res_block(x, filters=32, alpha=self.alpha,
+                                             stride=2,
+                                             expansion=6, block_id=3,
+                                             skip_connection=False)
+            x = xception._inverted_res_block(x, filters=32, alpha=self.alpha,
+                                             stride=1,
+                                             expansion=6, block_id=4,
+                                             skip_connection=True)
+            x = xception._inverted_res_block(x, filters=32, alpha=self.alpha,
+                                             stride=1,
+                                             expansion=6, block_id=5,
+                                             skip_connection=True)
 
             # stride in block 6 changed from 2 -> 1, so we need to use rate = 2
-            x = self._inverted_res_block(x, filters=64,
-                                         alpha=self.alpha, stride=1,  # 1!
-                                         expansion=6, block_id=6,
-                                         skip_connection=False)
-            x = self._inverted_res_block(x, filters=64, alpha=self.alpha,
-                                         stride=1, rate=2,
-                                         expansion=6, block_id=7,
-                                         skip_connection=True)
-            x = self._inverted_res_block(x, filters=64, alpha=self.alpha,
-                                         stride=1, rate=2,
-                                         expansion=6, block_id=8,
-                                         skip_connection=True)
-            x = self._inverted_res_block(x, filters=64, alpha=self.alpha,
-                                         stride=1, rate=2,
-                                         expansion=6, block_id=9,
-                                         skip_connection=True)
+            x = xception._inverted_res_block(x, filters=64,
+                                             alpha=self.alpha, stride=1,  # 1!
+                                             expansion=6, block_id=6,
+                                             skip_connection=False)
+            x = xception._inverted_res_block(x, filters=64, alpha=self.alpha,
+                                             stride=1, rate=2,
+                                             expansion=6, block_id=7,
+                                             skip_connection=True)
+            x = xception._inverted_res_block(x, filters=64, alpha=self.alpha,
+                                             stride=1, rate=2,
+                                             expansion=6, block_id=8,
+                                             skip_connection=True)
+            x = xception._inverted_res_block(x, filters=64, alpha=self.alpha,
+                                             stride=1, rate=2,
+                                             expansion=6, block_id=9,
+                                             skip_connection=True)
 
-            x = self._inverted_res_block(x, filters=96, alpha=self.alpha,
-                                         stride=1, rate=2,
-                                         expansion=6, block_id=10,
-                                         skip_connection=False)
-            x = self._inverted_res_block(x, filters=96, alpha=self.alpha,
-                                         stride=1, rate=2,
-                                         expansion=6, block_id=11,
-                                         skip_connection=True)
-            x = self._inverted_res_block(x, filters=96, alpha=self.alpha,
-                                         stride=1, rate=2,
-                                         expansion=6, block_id=12,
-                                         skip_connection=True)
+            x = xception._inverted_res_block(x, filters=96, alpha=self.alpha,
+                                             stride=1, rate=2,
+                                             expansion=6, block_id=10,
+                                             skip_connection=False)
+            x = xception._inverted_res_block(x, filters=96, alpha=self.alpha,
+                                             stride=1, rate=2,
+                                             expansion=6, block_id=11,
+                                             skip_connection=True)
+            x = xception._inverted_res_block(x, filters=96, alpha=self.alpha,
+                                             stride=1, rate=2,
+                                             expansion=6, block_id=12,
+                                             skip_connection=True)
 
-            x = self._inverted_res_block(x, filters=160, alpha=self.alpha,
-                                         stride=1, rate=2,
-                                         expansion=6, block_id=13,
-                                         skip_connection=False)
-            x = self._inverted_res_block(x, filters=160, alpha=self.alpha,
-                                         stride=1, rate=4,
-                                         expansion=6, block_id=14,
-                                         skip_connection=True)
-            x = self._inverted_res_block(x, filters=160, alpha=self.alpha,
-                                         stride=1, rate=4,
-                                         expansion=6, block_id=15,
-                                         skip_connection=True)
+            x = xception._inverted_res_block(x, filters=160, alpha=self.alpha,
+                                             stride=1, rate=2,
+                                             expansion=6, block_id=13,
+                                             skip_connection=False)
+            x = xception._inverted_res_block(x, filters=160, alpha=self.alpha,
+                                             stride=1, rate=4,
+                                             expansion=6, block_id=14,
+                                             skip_connection=True)
+            x = xception._inverted_res_block(x, filters=160, alpha=self.alpha,
+                                             stride=1, rate=4,
+                                             expansion=6, block_id=15,
+                                             skip_connection=True)
 
-            x = self._inverted_res_block(x, filters=320, alpha=self.alpha,
-                                         stride=1, rate=4,
-                                         expansion=6, block_id=16,
-                                         skip_connection=False)
+            x = xception._inverted_res_block(x, filters=320, alpha=self.alpha,
+                                             stride=1, rate=4,
+                                             expansion=6, block_id=16,
+                                             skip_connection=False)
 
         # end of feature extractor
 
