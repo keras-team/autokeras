@@ -43,7 +43,7 @@ TEXT_CLASSIFIER = [{
     'text_block_1/transformer_block_1/num_heads': 2,
     'text_block_1/transformer_block_1/ff_dim': 32,
     'text_block_1/transformer_block_1/dropout_rate': 0.25,
-    'text_block_1/spatial_reduction_1/reduction_type': 'global_max',
+    'text_block_1/spatial_reduction_1/reduction_type': 'global_avg',
     'text_block_1/dense_block_1/num_layers': 1,
     'text_block_1/dense_block_1/use_batchnorm': False,
     'text_block_1/dense_block_1/dropout_rate': 0.5,
