@@ -592,7 +592,7 @@ class TokenAndPositionEmbedding(block_module.Block):
         """
         # Arguments
              hp: HyperParameters. The hyperparameters for building the model.
-             inputs: Tensor of Shape [batch_size, seq_len, embedding_dim]
+             inputs: Tensor of Shape [batch_size, seq_len]
 
         # Returns
             Output Tensor of shape `[batch_size, seq_len, embedding_dim]`.
@@ -619,13 +619,35 @@ class TokenAndPositionEmbedding(block_module.Block):
         print("TokenAndPositionEmbedding ", input_node.shape)
         maxlen = tf.shape(input_node)[-1]
         positions = tf.range(start=0, limit=maxlen, delta=1)
-        position_embedding = Embedding(max_features=self.max_features,
+        position_embedding = Embedding(max_features=maxlen,
                                        pretraining=pretraining,
                                        embedding_dim=embedding_dim,
                                        dropout_rate=dropout_rate).build(hp, positions)
 
         output_node = tf.keras.layers.Add()([token_embedding,
                                              position_embedding])
+
+        # if pretraining != 'none':
+        #     # TODO: load from pretrained weights
+        #     poition_layer = layers.Embedding(
+        #         input_dim=self.max_features,
+        #         output_dim=embedding_dim,
+        #         input_length=input_node.shape[1])
+        #     # trainable=False,
+        #     # weights=[embedding_matrix])
+        # else:
+        #     layer = layers.Embedding(
+        #         input_dim=self.max_features,
+        #         output_dim=embedding_dim)
+        #     # input_length=input_node.shape[1],
+        #     # trainable=True)
+        # output_node = layer(input_node)
+        # if self.dropout_rate is not None:
+        #     dropout_rate = self.dropout_rate
+        # else:
+        #     dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0.25)
+        # if dropout_rate > 0:
+        #     output_node = layers.Dropout(dropout_rate)(output_node)
 
         return output_node
 
