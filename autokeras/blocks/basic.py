@@ -621,10 +621,12 @@ class TokenAndPositionEmbedding(block_module.Block):
         maxlen = input_node.shape[-1]
         print("maxlen", maxlen)
         positions = tf.range(start=0, limit=maxlen, delta=1)
-        position_embedding = Embedding(max_features=maxlen,
-                                       pretraining=pretraining,
-                                       embedding_dim=embedding_dim,
-                                       dropout_rate=dropout_rate).build(hp, positions)
+        # position_embedding = Embedding(max_features=maxlen,
+        #                                pretraining=pretraining,
+        #                                embedding_dim=embedding_dim,
+        #                                dropout_rate=dropout_rate).build(hp, positions)
+        position_embedding = layers.Embedding(input_dim=maxlen,
+                                              output_dim=embedding_dim)(positions)
         print("token_embedding: {}, position_embedding: {}".format(token_embedding.shape,
                                                                    position_embedding.shape))
         output_node = tf.keras.layers.Add()([token_embedding,
