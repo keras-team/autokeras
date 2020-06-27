@@ -11,6 +11,7 @@ HELP_MESSAGE = (
 # TODO: add types and remove all elements from
 # the exception list.
 EXCEPTION_LIST = [
+    autokeras.MultiColumnCategoricalEncoding,
     autokeras.Head,
     autokeras.Node,
     autokeras.CategoricalToNumerical,

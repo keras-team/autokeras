@@ -62,8 +62,7 @@ def test_model_save(tmp_path):
     model.fit(x_train, y_train, epochs=1, verbose=False)
 
     model.save(os.path.join(tmp_path, 'model'))
-    model2 = tf.keras.models.load_model(os.path.join(tmp_path, 'model'),
-                                        custom_objects=layer_module.CUSTOM_OBJECTS)
+    model2 = tf.keras.models.load_model(os.path.join(tmp_path, 'model'))
 
     assert np.array_equal(model.predict(x_train), model2.predict(x_train))
 

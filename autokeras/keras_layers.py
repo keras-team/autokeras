@@ -1,18 +1,13 @@
-import inspect
-
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
-from tensorflow.python.keras.layers.preprocessing import index_lookup
 from tensorflow.python.util import nest
-
-CombinerPreprocessingLayer = inspect.getmro(preprocessing.Normalization)[1]
-Combiner = inspect.getmro(preprocessing.Normalization()._combiner.__class__)[1]
 
 INT = 'int'
 NONE = 'none'
 ONE_HOT = 'one-hot'
 
 
+@tf.keras.utils.register_keras_serializable()
 class MultiColumnCategoricalEncoding(preprocessing.PreprocessingLayer):
     """Encode the categorical features to numerical features.
 
@@ -34,7 +29,7 @@ class MultiColumnCategoricalEncoding(preprocessing.PreprocessingLayer):
             if encoding == NONE:
                 self.encoding_layers.append(None)
             elif encoding == INT:
-                self.encoding_layers.append(index_lookup.IndexLookup())
+                self.encoding_layers.append(preprocessing.StringLookup())
             elif encoding == ONE_HOT:
                 self.encoding_layers.append(None)
 
@@ -74,9 +69,3 @@ class MultiColumnCategoricalEncoding(preprocessing.PreprocessingLayer):
         }
         base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
-
-
-CUSTOM_OBJECTS = {
-    'MultiColumnCategoricalEncoding': MultiColumnCategoricalEncoding,
-    'IndexLookup': index_lookup.IndexLookup,
-}
