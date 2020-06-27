@@ -619,13 +619,9 @@ class TokenAndPositionEmbedding(block_module.Block):
         print("TokenAndPositionEmbedding Input Shape: ", input_node.shape)
         # maxlen = tf.shape(input_node).numpy()[-1]
         maxlen = input_node.shape[-1]
-        batch_size = input_node.shape[0]
+        batch_size = tf.shape(input_node)[0]
         print("maxlen", maxlen)
-        pos_ones = tf.ones((batch_size, 1), dtype=tf.float32)
-        positions = tf.range(start=0, limit=maxlen, delta=1)
-        positions = tf.expand_dims(positions, 0)
-        positions = tf.matmul(pos_ones, positions)
-        print(pos_ones.shape, positions.shape)
+        positions = self.pos_array_funct(maxlen, batch_size)
         # position_embedding = Embedding(max_features=maxlen,
         #                                pretraining=pretraining,
         #                                embedding_dim=embedding_dim,
@@ -661,6 +657,14 @@ class TokenAndPositionEmbedding(block_module.Block):
 
         return output_node
 
+    @staticmethod
+    def pos_array_funct(maxlen, batch_size):
+        pos_ones = tf.ones((batch_size, 1), dtype=tf.float32)
+        positions = tf.range(start=0, limit=maxlen, delta=1)
+        positions = tf.expand_dims(positions, 0)
+        positions = tf.matmul(pos_ones, positions)
+        print(pos_ones.shape, positions.shape)
+        return positions
 
 class Embedding(block_module.Block):
     """Word embedding block for sequences.
