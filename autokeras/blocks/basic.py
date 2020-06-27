@@ -617,7 +617,8 @@ class TokenAndPositionEmbedding(block_module.Block):
                                     embedding_dim=embedding_dim,
                                     dropout_rate=dropout_rate).build(hp, input_node)
         print("TokenAndPositionEmbedding ", input_node.shape)
-        maxlen = tf.shape(input_node).numpy()[-1]
+        # maxlen = tf.shape(input_node).numpy()[-1]
+        maxlen = input_node.shape[-1]
         print("maxlen", maxlen)
         positions = tf.range(start=0, limit=maxlen, delta=1)
         position_embedding = Embedding(max_features=maxlen,
