@@ -323,7 +323,7 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
         key_dense = layers.Dense(embed_dim)
         value_dense = layers.Dense(embed_dim)
         combine_heads = layers.Dense(embed_dim)
-        print("MultiHeadSelfAttentionBlock: ", shape)
+        print("MultiHeadSelfAttentionBlock Input Shape: ", shape)
         batch_size = tf.shape(input_node)[0]
         query = query_dense(input_node)  # (batch_size, seq_len, embed_dim)
         key = key_dense(input_node)  # (batch_size, seq_len, embed_dim)
@@ -616,7 +616,7 @@ class TokenAndPositionEmbedding(block_module.Block):
                                     pretraining=pretraining,
                                     embedding_dim=embedding_dim,
                                     dropout_rate=dropout_rate).build(hp, input_node)
-        print("TokenAndPositionEmbedding ", input_node.shape)
+        print("TokenAndPositionEmbedding Input Shape: ", input_node.shape)
         # maxlen = tf.shape(input_node).numpy()[-1]
         maxlen = input_node.shape[-1]
         print("maxlen", maxlen)
@@ -625,7 +625,8 @@ class TokenAndPositionEmbedding(block_module.Block):
                                        pretraining=pretraining,
                                        embedding_dim=embedding_dim,
                                        dropout_rate=dropout_rate).build(hp, positions)
-
+        print("token_embedding: {}, position_embedding: {}".format(token_embedding.shape,
+                                                                   position_embedding.shape))
         output_node = tf.keras.layers.Add()([token_embedding,
                                              position_embedding])
 
