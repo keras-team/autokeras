@@ -659,7 +659,7 @@ class TokenAndPositionEmbedding(block_module.Block):
 
     @staticmethod
     def pos_array_funct(maxlen, batch_size):
-        pos_ones = tf.ones((batch_size, 1), dtype=tf.float32)
+        pos_ones = tf.ones((batch_size, 1), dtype=tf.int32)
         positions = tf.range(start=0, limit=maxlen, delta=1)
         positions = tf.expand_dims(positions, 0)
         positions = tf.matmul(pos_ones, positions)
