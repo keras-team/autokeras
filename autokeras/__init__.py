@@ -23,7 +23,7 @@ from autokeras.blocks import XceptionBlock
 from autokeras.engine.block import Block
 from autokeras.engine.head import Head
 from autokeras.engine.node import Node
-from autokeras.keras_layers import CUSTOM_OBJECTS
+from autokeras.keras_layers import MultiColumnCategoricalEncoding
 from autokeras.nodes import ImageInput
 from autokeras.nodes import Input
 from autokeras.nodes import StructuredDataInput
@@ -47,3 +47,7 @@ __version__ = '1.0.5dev'
 
 check_tf_version()
 check_kt_version()
+
+CUSTOM_OBJECTS = {
+    'MultiColumnCategoricalEncoding': MultiColumnCategoricalEncoding,
+}
