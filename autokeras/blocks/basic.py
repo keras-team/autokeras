@@ -336,7 +336,7 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
             attention, perm=[0, 2, 1, 3]
         )  # (batch_size, seq_len, num_heads, projection_dim)
         concat_attention = tf.reshape(
-            attention, (batch_size, -1, self.embed_dim)
+            attention, (batch_size, tf.shape(attention)[1], self.embed_dim)
         )  # (batch_size, seq_len, embed_dim)
         output = combine_heads(
             concat_attention
