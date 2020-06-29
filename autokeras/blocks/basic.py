@@ -424,14 +424,17 @@ class TransformerBlock(block_module.Block):
         layernorm2 = layers.LayerNormalization(epsilon=1e-6)
         dropout1 = layers.Dropout(dropout_rate)
         dropout2 = layers.Dropout(dropout_rate)
-        # print("TransformerBlock ", inputs.shape)
+
         attn_output = MultiHeadSelfAttentionBlock(
             embed_dim, num_heads).build(hp, inputs)
         attn_output = dropout1(attn_output)
-        out1 = layernorm1(inputs + attn_output)
+        print("TransformerBlock Input: {}, Attention Output: {}".format(inputs[0].shape, attn_output.shape))
+        add_inputs_1 = tf.keras.layers.Add()([inputs, attn_output])
+        out1 = layernorm1(add_inputs_1)
         ffn_output = ffn(out1)
         ffn_output = dropout2(ffn_output)
-        output = layernorm2(out1 + ffn_output)
+        add_inputs_2 = tf.keras.layers.Add()([out1, ffn_output])
+        output = layernorm2(add_inputs_2)
         return output
 
 
