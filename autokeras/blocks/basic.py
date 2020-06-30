@@ -429,7 +429,7 @@ class TransformerBlock(block_module.Block):
             embed_dim, num_heads).build(hp, inputs)
         attn_output = dropout1(attn_output)
         print("TransformerBlock Input: {}, Attention Output: {}".format(inputs[0].shape, attn_output.shape))
-        add_inputs_1 = tf.keras.layers.Add()([inputs, attn_output])
+        add_inputs_1 = tf.keras.layers.Add()([inputs[0], attn_output])
         out1 = layernorm1(add_inputs_1)
         ffn_output = ffn(out1)
         ffn_output = dropout2(ffn_output)
