@@ -323,7 +323,6 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
         key_dense = layers.Dense(embed_dim)
         value_dense = layers.Dense(embed_dim)
         combine_heads = layers.Dense(embed_dim)
-        print("MultiHeadSelfAttentionBlock Input Shape: ", shape)
         batch_size = tf.shape(input_node)[0]
         query = query_dense(input_node)  # (batch_size, seq_len, embed_dim)
         key = key_dense(input_node)  # (batch_size, seq_len, embed_dim)
@@ -428,7 +427,6 @@ class TransformerBlock(block_module.Block):
         attn_output = MultiHeadSelfAttentionBlock(
             embed_dim, num_heads).build(hp, inputs)
         attn_output = dropout1(attn_output)
-        print("TransformerBlock Input: {}, Attention Output: {}".format(inputs[0].shape, attn_output.shape))
         add_inputs_1 = tf.keras.layers.Add()([inputs[0], attn_output])
         out1 = layernorm1(add_inputs_1)
         ffn_output = ffn(out1)
@@ -619,45 +617,15 @@ class TokenAndPositionEmbedding(block_module.Block):
                                     pretraining=pretraining,
                                     embedding_dim=embedding_dim,
                                     dropout_rate=dropout_rate).build(hp, input_node)
-        print("TokenAndPositionEmbedding Input Shape: ", input_node.shape)
-        # maxlen = tf.shape(input_node).numpy()[-1]
         maxlen = input_node.shape[-1]
         batch_size = tf.shape(input_node)[0]
-        print("maxlen", maxlen)
         positions = self.pos_array_funct(maxlen, batch_size)
-        # position_embedding = Embedding(max_features=maxlen,
-        #                                pretraining=pretraining,
-        #                                embedding_dim=embedding_dim,
-        #                                dropout_rate=dropout_rate).build(hp, positions)
-        position_embedding = layers.Embedding(input_dim=maxlen,
-                                              output_dim=embedding_dim)(positions)
-        print("token_embedding: {}, position_embedding: {}".format(token_embedding.shape,
-                                                                   position_embedding.shape))
+        position_embedding = Embedding(max_features=maxlen,
+                                       pretraining=pretraining,
+                                       embedding_dim=embedding_dim,
+                                       dropout_rate=dropout_rate).build(hp, positions)
         output_node = tf.keras.layers.Add()([token_embedding,
                                              position_embedding])
-
-        # if pretraining != 'none':
-        #     # TODO: load from pretrained weights
-        #     poition_layer = layers.Embedding(
-        #         input_dim=self.max_features,
-        #         output_dim=embedding_dim,
-        #         input_length=input_node.shape[1])
-        #     # trainable=False,
-        #     # weights=[embedding_matrix])
-        # else:
-        #     layer = layers.Embedding(
-        #         input_dim=self.max_features,
-        #         output_dim=embedding_dim)
-        #     # input_length=input_node.shape[1],
-        #     # trainable=True)
-        # output_node = layer(input_node)
-        # if self.dropout_rate is not None:
-        #     dropout_rate = self.dropout_rate
-        # else:
-        #     dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0.25)
-        # if dropout_rate > 0:
-        #     output_node = layers.Dropout(dropout_rate)(output_node)
-
         return output_node
 
     @staticmethod
@@ -666,8 +634,8 @@ class TokenAndPositionEmbedding(block_module.Block):
         positions = tf.range(start=0, limit=maxlen, delta=1)
         positions = tf.expand_dims(positions, 0)
         positions = tf.matmul(pos_ones, positions)
-        print(pos_ones.shape, positions.shape)
         return positions
+
 
 class Embedding(block_module.Block):
     """Word embedding block for sequences.
