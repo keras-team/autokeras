@@ -623,7 +623,8 @@ class TokenAndPositionEmbedding(block_module.Block):
         position_embedding = Embedding(max_features=maxlen,
                                        pretraining=pretraining,
                                        embedding_dim=embedding_dim,
-                                       dropout_rate=dropout_rate).build(hp, positions)
+                                       dropout_rate=dropout_rate).build(hp,
+                                                                        positions)
         output_node = tf.keras.layers.Add()([token_embedding,
                                              position_embedding])
         return output_node
