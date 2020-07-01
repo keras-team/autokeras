@@ -48,10 +48,6 @@ TEXT_CLASSIFIER = [{
     'text_block_1/dense_block_1/use_batchnorm': False,
     'text_block_1/dense_block_1/dropout_rate': 0.5,
     'text_block_1/dense_block_1/units_0': 20,
-    # 'text_block_1/dense_block_2/num_layers': 1,
-    # 'text_block_1/dense_block_2/use_batchnorm': False,
-    # 'text_block_1/dense_block_2/dropout_rate': 0.5,
-    # 'text_block_1/dense_block_2/units_0': 2,
 }, {
     'text_block_1/block_type': 'vanilla',
     'text_block_1/vectorizer': 'sequence',
