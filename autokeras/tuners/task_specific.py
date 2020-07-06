@@ -31,7 +31,6 @@ IMAGE_CLASSIFIER = [{
 
 TEXT_CLASSIFIER = [{
     'text_block_1/block_type': 'transformer',
-    'text_block_1/vectorizer': 'sequence',
     'classification_head_1/dropout_rate': 0,
     'optimizer': 'adam',
     'text_block_1/max_tokens': 20000,
@@ -50,7 +49,6 @@ TEXT_CLASSIFIER = [{
     'text_block_1/dense_block_1/units_0': 20,
 }, {
     'text_block_1/block_type': 'vanilla',
-    'text_block_1/vectorizer': 'sequence',
     'classification_head_1/dropout_rate': 0,
     'optimizer': 'adam',
     'text_block_1/max_tokens': 5000,

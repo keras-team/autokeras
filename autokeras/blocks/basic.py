@@ -361,14 +361,14 @@ class TransformerBlock(block_module.Block):
     """Block for Transformer.
 
     # Arguments
-    embed_dim: Int. Output dimension of the Attention block.
-        If left unspecified, it will be tuned automatically.
-    num_heads: Int. The number of attention heads. If left unspecified,
-        it will be tuned automatically.
-    ff_dim: Int. The output dimension of the FFN. If left
-        unspecified, it will be tuned automatically.
-    dropout_rate: Float. Between 0 and 1. If left unspecified, it will be
-        tuned automatically.
+        embed_dim: Int. Output dimension of the Attention block.
+            If left unspecified, it will be tuned automatically.
+        num_heads: Int. The number of attention heads. If left unspecified,
+            it will be tuned automatically.
+        ff_dim: Int. The output dimension of the FFN. If left
+            unspecified, it will be tuned automatically.
+        dropout_rate: Float. Between 0 and 1. If left unspecified, it will be
+            tuned automatically.
     """
 
     def __init__(self,

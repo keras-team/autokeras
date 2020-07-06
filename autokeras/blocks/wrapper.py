@@ -69,13 +69,12 @@ class TextBlock(block_module.Block):
     """Block for text data.
 
     # Arguments
-        block_type: String. 'vanilla', 'transformer'. The type of Block
-            to use. If unspecified, it will be tuned automatically.
+        block_type: String. 'vanilla', 'transformer', and 'ngram'. The type of Block
+            to use. 'vanilla' and 'transformer' use a TextToIntSequence vectorizer,
+            whereas 'ngram' uses TextToNgramVector. If unspecified, it will be tuned
+            automatically.
         max_tokens: Int. The maximum size of the vocabulary.
             If left unspecified, it will be tuned automatically.
-        vectorizer: String. 'sequence' or 'ngram'. If it is 'sequence',
-            TextToIntSequence will be used. If it is 'ngram', TextToNgramVector will
-            be used. If unspecified, it will be tuned automatically.
         pretraining: String. 'random' (use random weights instead any pretrained
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
@@ -90,7 +89,6 @@ class TextBlock(block_module.Block):
         super().__init__(**kwargs)
         self.block_type = block_type
         self.max_tokens = max_tokens
-        self.vectorizer = vectorizer
         self.pretraining = pretraining
 
     def get_config(self):
@@ -98,7 +96,6 @@ class TextBlock(block_module.Block):
         config.update({
             'block_type': self.block_type,
             'max_tokens': self.max_tokens,
-            'vectorizer': self.vectorizer,
             'pretraining': self.pretraining})
         return config
 
@@ -106,15 +103,12 @@ class TextBlock(block_module.Block):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         block_type = self.block_type or hp.Choice('block_type',
-                                                  ['vanilla', 'transformer'],
+                                                  ['vanilla', 'transformer', 'ngram'],
                                                   default='vanilla')
-        vectorizer = self.vectorizer or hp.Choice('vectorizer',
-                                                  ['sequence', 'ngram'],
-                                                  default='sequence')
         max_tokens = self.max_tokens or hp.Choice('max_tokens',
                                                   [500, 5000, 20000],
                                                   default=5000)
-        if vectorizer == 'ngram':
+        if block_type == 'ngram':
             output_node = preprocessing.TextToNgramVector(
                 max_tokens=max_tokens).build(hp, output_node)
             output_node = basic.DenseBlock().build(hp, output_node)
