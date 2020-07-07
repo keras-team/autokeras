@@ -1,9 +1,14 @@
 from pathlib import Path
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Type
+from typing import Union
 
 import pandas as pd
 
-from autokeras import auto_model, blocks
+from autokeras import auto_model
+from autokeras import blocks
 from autokeras import nodes as input_module
 from autokeras.engine import tuner
 from autokeras.tasks.structured_data_mixin import StructuredDataMixin
