@@ -209,7 +209,7 @@ def test_transformer_build_return_tensor():
 
     outputs = block.build(
         kerastuner.HyperParameters(),
-        tf.keras.Input(shape=(64, 128), dtype=tf.float32))
+        tf.keras.Input(shape=(64,), dtype=tf.float32))
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
