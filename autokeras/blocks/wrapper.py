@@ -83,7 +83,6 @@ class TextBlock(block_module.Block):
     def __init__(self,
                  block_type=None,
                  max_tokens=None,
-                 vectorizer=None,
                  pretraining=None,
                  **kwargs):
         super().__init__(**kwargs)

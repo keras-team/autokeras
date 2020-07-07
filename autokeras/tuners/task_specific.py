@@ -36,7 +36,7 @@ TEXT_CLASSIFIER = [{
     'text_block_1/max_tokens': 20000,
     'text_block_1/text_to_int_sequence_1/output_sequence_length': 200,
     'text_block_1/transformer_block_1/pretraining': 'none',
-    'text_block_1/transformer_block_1/embed_dim': 32,
+    'text_block_1/transformer_block_1/embedding_dim': 32,
     'text_block_1/transformer_block_1/num_heads': 2,
     'text_block_1/transformer_block_1/ff_dim': 32,
     'text_block_1/transformer_block_1/dropout_rate': 0.25,
