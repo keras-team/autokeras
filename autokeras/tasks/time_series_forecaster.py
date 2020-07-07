@@ -1,3 +1,7 @@
+from pathlib import Path
+from typing import List
+from typing import Optional
+from typing import Dict
 from typing import Type
 from typing import Union
 
@@ -9,6 +13,7 @@ from autokeras import nodes as input_module
 from autokeras.engine import tuner
 from autokeras.tasks.structured_data_mixin import StructuredDataMixin
 from autokeras.tuners import greedy
+from autokeras.utils import types
 
 
 class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel):
@@ -155,20 +160,20 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
 
     def __init__(self,
                  output_dim=None,
-                 column_names=None,
-                 column_types=None,
-                 lookback=None,
-                 predict_from=1,
-                 predict_until=None,
-                 loss='mean_squared_error',
-                 metrics=None,
-                 project_name='time_series_forecaster',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_loss',
+                 column_names: Optional[List[str]] = None,
+                 column_types: Optional[Dict[str, str]] = None,
+                 lookback: Optional[int] = None,
+                 predict_from: int = 1,
+                 predict_until: Optional[int] = None,
+                 loss: types.LossType = 'mean_squared_error',
+                 metrics: Optional[types.MetricsType] = None,
+                 project_name: str = 'time_series_forecaster',
+                 max_trials: int = 100,
+                 directory: Union[str, Path, None] = None,
+                 objective: str = 'val_loss',
                  tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite=True,
-                 seed=None,
+                 overwrite: bool = True,
+                 seed: Optional[int] = None,
                  **kwargs):
         if tuner is None:
             tuner = greedy.Greedy
