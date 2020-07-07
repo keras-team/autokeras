@@ -103,7 +103,9 @@ class TextBlock(block_module.Block):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         block_type = self.block_type or hp.Choice('block_type',
-                                                  ['vanilla', 'transformer', 'ngram'],
+                                                  ['vanilla',
+                                                   'transformer',
+                                                   'ngram'],
                                                   default='vanilla')
         max_tokens = self.max_tokens or hp.Choice('max_tokens',
                                                   [500, 5000, 20000],
@@ -116,17 +118,20 @@ class TextBlock(block_module.Block):
             output_node = preprocessing.TextToIntSequence(
                 max_tokens=max_tokens).build(hp, output_node)
             if block_type == 'transformer':
-                output_node = basic.TokenAndPositionEmbedding(
-                    max_features=max_tokens + 1,
-                    pretraining=self.pretraining
-                ).build(hp, output_node)
+                # output_node = basic.TokenAndPositionEmbedding(
+                #     max_features=max_tokens + 1,
+                #     pretraining=self.pretraining
+                # ).build(hp, output_node)
+                output_node = basic.TransformerBlock(max_features=max_tokens + 1,
+                                                     pretraining=self.pretraining
+                                                     ).build(hp, output_node)
             else:
                 output_node = basic.Embedding(
                     max_features=max_tokens + 1,
                     pretraining=self.pretraining).build(hp, output_node)
-            if block_type == 'transformer':
-                output_node = basic.TransformerBlock().build(hp, output_node)
-            elif block_type == 'vanilla':
+            # if block_type == 'transformer':
+            #     output_node = basic.TransformerBlock().build(hp, output_node)
+            # elif block_type == 'vanilla':
                 output_node = basic.ConvBlock().build(hp, output_node)
             output_node = reduction.SpatialReduction().build(hp, output_node)
             output_node = basic.DenseBlock().build(hp, output_node)

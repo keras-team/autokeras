@@ -359,9 +359,15 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
 
 class TransformerBlock(block_module.Block):
     """Block for Transformer.
-
+    The input should be tokenized sequences with the same length, where each element
+    of a sequence should be the index of the word.
     # Arguments
-        embed_dim: Int. Output dimension of the Attention block.
+        max_features: Int. Size of the vocabulary. Must be set if not using
+            TextToIntSequence before this block. Defaults to 20001.
+        pretraining: String. 'random' (use random weights instead any pretrained
+            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
+            If left unspecified, it will be tuned automatically.
+        embedding_dim: Int. Output dimension of the Attention block.
             If left unspecified, it will be tuned automatically.
         num_heads: Int. The number of attention heads. If left unspecified,
             it will be tuned automatically.
@@ -372,13 +378,17 @@ class TransformerBlock(block_module.Block):
     """
 
     def __init__(self,
-                 embed_dim: Optional[int] = None,
+                 max_features: int = 20001,
+                 pretraining: Optional[str] = None,
+                 embedding_dim: Optional[int] = None,
                  num_heads: Optional[int] = None,
                  ff_dim: Optional[int] = None,
                  dropout_rate: Optional[int] = None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.embed_dim = embed_dim
+        self.max_features = max_features
+        self.pretraining = pretraining
+        self.embedding_dim = embedding_dim
         self.num_heads = num_heads
         self. ff_dim = ff_dim
         self.dropout_rate = dropout_rate
@@ -386,7 +396,9 @@ class TransformerBlock(block_module.Block):
     def get_config(self):
         config = super().get_config()
         config.update({
-            'embed_dim': self.embed_dim,
+            'max_features': self.max_features,
+            'pretraining': self.pretraining,
+            'embedding_dim': self.embedding_dim,
             'num_heads': self.num_heads,
             'ff_dim': self.ff_dim,
             'dropout_rate': self.dropout_rate})
@@ -396,15 +408,19 @@ class TransformerBlock(block_module.Block):
         """
         # Arguments
              hp: HyperParameters. The hyperparameters for building the model.
-             inputs: Tensor of Shape [batch_size, seq_len, embedding_dim]
+             inputs: Tensor of Shape [batch_size, seq_len]
 
         # Returns
             Output Tensor of shape `[batch_size, seq_len, embedding_dim]`.
         """
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
-        embed_dim = self.embed_dim or hp.Choice(
-            'embed_dim',
+        pretraining = self.pretraining or hp.Choice(
+            'pretraining',
+            ['random', 'glove', 'fasttext', 'word2vec', 'none'],
+            default='none')
+        embedding_dim = self.embedding_dim or hp.Choice(
+            'embedding_dim',
             [32, 64, 128, 256, 512],
             default=128)
         num_heads = self.num_heads or hp.Choice('num_heads', [8, 16, 32], default=8)
@@ -417,23 +433,47 @@ class TransformerBlock(block_module.Block):
                                                       default=0)
 
         ffn = tf.keras.Sequential(
-            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim), ]
+            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embedding_dim), ]
         )
+
         layernorm1 = layers.LayerNormalization(epsilon=1e-6)
         layernorm2 = layers.LayerNormalization(epsilon=1e-6)
         dropout1 = layers.Dropout(dropout_rate)
         dropout2 = layers.Dropout(dropout_rate)
-
+        # Token and Position Embeddings
+        input_node = nest.flatten(inputs)[0]
+        token_embedding = Embedding(max_features=self.max_features,
+                                    pretraining=pretraining,
+                                    embedding_dim=embedding_dim,
+                                    dropout_rate=dropout_rate).build(hp, input_node)
+        maxlen = input_node.shape[-1]
+        batch_size = tf.shape(input_node)[0]
+        positions = self.pos_array_funct(maxlen, batch_size)
+        position_embedding = Embedding(max_features=maxlen,
+                                       pretraining=pretraining,
+                                       embedding_dim=embedding_dim,
+                                       dropout_rate=dropout_rate).build(hp,
+                                                                        positions)
+        output_node = tf.keras.layers.Add()([token_embedding,
+                                             position_embedding])
         attn_output = MultiHeadSelfAttentionBlock(
-            embed_dim, num_heads).build(hp, inputs)
+            embedding_dim, num_heads).build(hp, output_node)
         attn_output = dropout1(attn_output)
-        add_inputs_1 = tf.keras.layers.Add()([inputs[0], attn_output])
+        add_inputs_1 = tf.keras.layers.Add()([output_node, attn_output])
         out1 = layernorm1(add_inputs_1)
         ffn_output = ffn(out1)
         ffn_output = dropout2(ffn_output)
         add_inputs_2 = tf.keras.layers.Add()([out1, ffn_output])
         output = layernorm2(add_inputs_2)
         return output
+
+    @staticmethod
+    def pos_array_funct(maxlen, batch_size):
+        pos_ones = tf.ones((batch_size, 1), dtype=tf.int32)
+        positions = tf.range(start=0, limit=maxlen, delta=1)
+        positions = tf.expand_dims(positions, 0)
+        positions = tf.matmul(pos_ones, positions)
+        return positions
 
 
 class ResNetBlock(resnet.HyperResNet, block_module.Block):

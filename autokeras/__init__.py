@@ -18,6 +18,7 @@ from autokeras.blocks import TemporalReduction
 from autokeras.blocks import TextBlock
 from autokeras.blocks import TextToIntSequence
 from autokeras.blocks import TextToNgramVector
+from autokeras.blocks import TransformerBlock
 from autokeras.blocks import XceptionBlock
 from autokeras.engine.block import Block
 from autokeras.engine.head import Head
