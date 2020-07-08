@@ -261,7 +261,7 @@ class ConvBlock(block_module.Block):
         return 'same'
 
 
-class MultiHeadSelfAttentionBlock(block_module.Block):
+class MultiHeadSelfAttention(block_module.Block):
     """Block for Multi-Head Self-Attention.
 
     # Arguments
@@ -357,7 +357,8 @@ class MultiHeadSelfAttentionBlock(block_module.Block):
         return tf.transpose(x, perm=[0, 2, 1, 3])
 
 
-class TransformerBlock(block_module.Block):
+
+class Transformer(block_module.Block):
     """Block for Transformer.
     The input should be tokenized sequences with the same length, where each element
     of a sequence should be the index of the word.
@@ -456,7 +457,7 @@ class TransformerBlock(block_module.Block):
                                                                         positions)
         output_node = tf.keras.layers.Add()([token_embedding,
                                              position_embedding])
-        attn_output = MultiHeadSelfAttentionBlock(
+        attn_output = MultiHeadSelfAttention(
             embedding_dim, num_heads).build(hp, output_node)
         attn_output = dropout1(attn_output)
         add_inputs_1 = tf.keras.layers.Add()([output_node, attn_output])

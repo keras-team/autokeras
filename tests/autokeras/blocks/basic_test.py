@@ -205,7 +205,7 @@ def test_embed_get_config_has_all_attributes():
 
 
 def test_transformer_build_return_tensor():
-    block = blocks.TransformerBlock()
+    block = blocks.Transformer()
 
     outputs = block.build(
         kerastuner.HyperParameters(),
@@ -216,17 +216,17 @@ def test_transformer_build_return_tensor():
 
 
 def test_transformer_deserialize_to_transformer():
-    serialized_block = blocks.serialize(blocks.TransformerBlock())
+    serialized_block = blocks.serialize(blocks.Transformer())
 
     block = blocks.deserialize(serialized_block)
 
-    assert isinstance(block, blocks.TransformerBlock)
+    assert isinstance(block, blocks.Transformer)
 
 
 def test_transformer_get_config_has_all_attributes():
-    block = blocks.TransformerBlock()
+    block = blocks.Transformer()
 
     config = block.get_config()
 
     assert utils.get_func_args(
-        blocks.TransformerBlock.__init__).issubset(config.keys())
+        blocks.Transformer.__init__).issubset(config.keys())
