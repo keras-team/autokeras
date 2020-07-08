@@ -357,11 +357,29 @@ class MultiHeadSelfAttention(block_module.Block):
         return tf.transpose(x, perm=[0, 2, 1, 3])
 
 
-
 class Transformer(block_module.Block):
     """Block for Transformer.
     The input should be tokenized sequences with the same length, where each element
     of a sequence should be the index of the word.
+
+    # Example
+    ```python
+        # The user specifies the high-level architecture.
+        import autokeras as ak
+        from tensorflow.keras import losses
+        text_input = ak.TextInput()
+        output_node = ak.TextToIntSequence(output_sequence_length=200)(text_input)
+        output_node = ak.Transformer(embedding_dim=32,
+                             pretraining='none',
+                             num_heads=2,
+                             ff_dim=32,
+                             dropout_rate = 0.25)(output_node)
+        output_node = ak.SpatialReduction(reduction_type='global_avg')(output_node)
+        output_node = ak.DenseBlock(num_layers=1, use_batchnorm = False)(output_node)
+        output_node = ak.ClassificationHead(loss=losses.SparseCategoricalCrossentropy(),
+                                    dropout_rate = 0.25)(output_node)
+        clf = ak.AutoModel(inputs=text_input, outputs=output_node, max_trials=2)
+    ```
     # Arguments
         max_features: Int. Size of the vocabulary. Must be set if not using
             TextToIntSequence before this block. Defaults to 20001.
