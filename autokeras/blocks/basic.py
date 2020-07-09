@@ -364,7 +364,7 @@ class Transformer(block_module.Block):
 
     # Example
     ```python
-        # The user specifies the high-level architecture.
+        # Using the Transformer Block with AutoModel.
         import autokeras as ak
         from tensorflow.keras import losses
         text_input = ak.TextInput()
@@ -376,8 +376,9 @@ class Transformer(block_module.Block):
                              dropout_rate = 0.25)(output_node)
         output_node = ak.SpatialReduction(reduction_type='global_avg')(output_node)
         output_node = ak.DenseBlock(num_layers=1, use_batchnorm = False)(output_node)
-        output_node = ak.ClassificationHead(loss=losses.SparseCategoricalCrossentropy(),
-                                    dropout_rate = 0.25)(output_node)
+        output_node = ak.ClassificationHead(
+            loss=losses.SparseCategoricalCrossentropy(),
+            dropout_rate = 0.25)(output_node)
         clf = ak.AutoModel(inputs=text_input, outputs=output_node, max_trials=2)
     ```
     # Arguments
