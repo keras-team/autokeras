@@ -262,9 +262,19 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
 
     def _compile_keras_model(self, hp, model):
         # Specify hyperparameters from compile(...)
-        optimizer = hp.Choice('optimizer',
-                              ['adam', 'adadelta', 'sgd'],
-                              default='adam')
+        optimizer_name = hp.Choice('optimizer',
+                                   ['adam', 'adadelta', 'sgd'],
+                                   default='adam')
+        learning_rate = hp.Choice('learning_rate',
+                                  [1e-1, 1e-2, 1e-3, 1e-4, 1e-5],
+                                  default=1e-3)
+
+        if optimizer_name == 'adam':
+            optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
+        elif optimizer_name == 'adadelta':
+            optimizer = tf.keras.optimizers.Adadelta(lr=learning_rate)
+        elif optimizer_name == 'sgd':
+            optimizer = tf.keras.optimizers.SGD(lr=learning_rate)
 
         model.compile(optimizer=optimizer,
                       metrics=self._get_metrics(),

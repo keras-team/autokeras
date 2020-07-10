@@ -119,31 +119,34 @@ class ImageAugmentation(block_module.Block):
         translation_factor: A positive float represented as fraction value, or a
             tuple of 2 representing fraction for translation vertically and
             horizontally.  For instance, `translation_factor=0.2` result in a random
-            translation factor within 20% of the width and height. Defaults to 0.5.
+            translation factor within 20% of the width and height.
+            If left unspecified, it will be tuned automatically.
         vertical_flip: Boolean. Whether to flip the image vertically.
             If left unspecified, it will be tuned automatically.
         horizontal_flip: Boolean. Whether to flip the image horizontally.
             If left unspecified, it will be tuned automatically.
         rotation_factor: Float. A positive float represented as fraction of 2pi
             upper bound for rotating clockwise and counter-clockwise. When
-            represented as a single float, lower = upper.  Defaults to 0.5.
+            represented as a single float, lower = upper.
+            If left unspecified, it will be tuned automatically.
         zoom_factor: A positive float represented as fraction value, or a tuple of 2
             representing fraction for zooming vertically and horizontally. For
             instance, `zoom_factor=0.2` result in a random zoom factor from 80% to
-            120%. Defaults to 0.5.
+            120%. If left unspecified, it will be tuned automatically.
         contrast_factor: A positive float represented as fraction of value, or a
             tuple of size 2 representing lower and upper bound. When represented as a
             single float, lower = upper. The contrast factor will be randomly picked
-            between [1.0 - lower, 1.0 + upper]. Defaults to 0.5.
+            between [1.0 - lower, 1.0 + upper]. If left unspecified, it will be tuned
+            automatically.
     """
 
     def __init__(self,
-                 translation_factor=0.5,
+                 translation_factor=None,
                  vertical_flip=None,
                  horizontal_flip=None,
-                 rotation_factor=0.5,
-                 zoom_factor=0.5,
-                 contrast_factor=0.5,
+                 rotation_factor=None,
+                 zoom_factor=None,
+                 contrast_factor=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.translation_factor = translation_factor
@@ -163,12 +166,17 @@ class ImageAugmentation(block_module.Block):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
 
-        if self.translation_factor != 0 and self.translation_factor != (0, 0):
+        # Translate
+        translation_factor = self.translation_factor
+        if translation_factor is None:
+            translation_factor = hp.Choice('translation_factor', [0.0, 0.1])
+        if translation_factor != 0 and translation_factor != (0, 0):
             height_factor, width_factor = self._get_fraction_value(
-                self.translation_factor)
+                translation_factor)
             output_node = preprocessing.RandomTranslation(
                 height_factor, width_factor)(output_node)
 
+        # Flip
         horizontal_flip = self.horizontal_flip
         if horizontal_flip is None:
             horizontal_flip = hp.Boolean('horizontal_flip', default=True)
@@ -187,20 +195,32 @@ class ImageAugmentation(block_module.Block):
             output_node = preprocessing.RandomFlip(
                 mode=flip_mode)(output_node)
 
-        if self.rotation_factor != 0:
+        # Rotate
+        rotation_factor = self.rotation_factor
+        if rotation_factor is None:
+            rotation_factor = hp.Choice('rotation_factor', [0.0, 0.1])
+        if rotation_factor != 0:
             output_node = preprocessing.RandomRotation(
-                self.rotation_factor)(output_node)
+                rotation_factor)(output_node)
 
-        if self.zoom_factor != 0 and self.zoom_factor != (0, 0):
+        # Zoom
+        zoom_factor = self.zoom_factor
+        if zoom_factor is None:
+            zoom_factor = hp.Choice('zoom_factor', [0.0, 0.1])
+        if zoom_factor != 0 and zoom_factor != (0, 0):
             height_factor, width_factor = self._get_fraction_value(
-                self.zoom_factor)
+                zoom_factor)
             # TODO: Add back RandomZoom when it is ready.
             # output_node = preprocessing.RandomZoom(
             # height_factor, width_factor)(output_node)
 
-        if self.contrast_factor != 0 and self.contrast_factor != (0, 0):
+        # Contrast
+        contrast_factor = self.contrast_factor
+        if contrast_factor is None:
+            contrast_factor = hp.Choice('contrast_factor', [0.0, 0.1])
+        if contrast_factor != 0 and contrast_factor != (0, 0):
             output_node = preprocessing.RandomContrast(
-                self.contrast_factor)(output_node)
+                contrast_factor)(output_node)
 
         return output_node
 

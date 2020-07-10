@@ -1,87 +1,79 @@
 import copy
 
 import kerastuner
+import pytest
 import tensorflow as tf
 
 import autokeras as ak
-from autokeras import graph as graph_module
-from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
 
 
-def check_initial_hp(initial_hp, graph):
+@pytest.fixture
+def clear_session():
+    yield
+    tf.keras.backend.clear_session()
+
+
+def test_img_clf_init_hp0_equals_hp_of_a_model(clear_session, tmp_path):
+    clf = ak.ImageClassifier(directory=tmp_path)
+    clf.inputs[0].shape = (32, 32, 3)
+    clf.outputs[0].in_blocks[0].output_shape = (10,)
+    init_hp = task_specific.IMAGE_CLASSIFIER[0]
     hp = kerastuner.HyperParameters()
-    for i in range(3):
-        hp.values = copy.copy(initial_hp)
-        graph.build(hp)
-    assert len(set(initial_hp.keys()) - set(hp._hps.keys())) == 0
+    hp.values = copy.copy(init_hp)
+
+    clf.tuner.hypermodel.build(hp)
+
+    assert set(init_hp.keys()) == set(hp._hps.keys())
 
 
-def test_image_classifier_tuner0():
-    tf.keras.backend.clear_session()
-    input_node = ak.ImageInput(shape=(32, 32, 3))
-    output_node = ak.ImageBlock()(input_node)
-    output_node = ak.ClassificationHead(
-        loss='categorical_crossentropy',
-        output_shape=(10,))(output_node)
-    graph = graph_module.Graph(input_node, output_node)
-    check_initial_hp(task_specific.IMAGE_CLASSIFIER[0], graph)
+def test_img_clf_init_hp1_equals_hp_of_a_model(clear_session, tmp_path):
+    clf = ak.ImageClassifier(directory=tmp_path)
+    clf.inputs[0].shape = (32, 32, 3)
+    clf.outputs[0].in_blocks[0].output_shape = (10,)
+    init_hp = task_specific.IMAGE_CLASSIFIER[1]
+    hp = kerastuner.HyperParameters()
+    hp.values = copy.copy(init_hp)
+
+    clf.tuner.hypermodel.build(hp)
+
+    assert set(init_hp.keys()) == set(hp._hps.keys())
 
 
-def test_image_classifier_tuner1():
-    tf.keras.backend.clear_session()
-    input_node = ak.ImageInput(shape=(32, 32, 3))
-    output_node = ak.ImageBlock()(input_node)
-    output_node = ak.ClassificationHead(
-        loss='categorical_crossentropy',
-        output_shape=(10,))(output_node)
-    graph = graph_module.Graph(input_node, output_node)
-    check_initial_hp(task_specific.IMAGE_CLASSIFIER[1], graph)
+def test_img_clf_init_hp2_equals_hp_of_a_model(clear_session, tmp_path):
+    clf = ak.ImageClassifier(directory=tmp_path)
+    clf.inputs[0].shape = (32, 32, 3)
+    clf.outputs[0].in_blocks[0].output_shape = (10,)
+    init_hp = task_specific.IMAGE_CLASSIFIER[2]
+    hp = kerastuner.HyperParameters()
+    hp.values = copy.copy(init_hp)
+
+    clf.tuner.hypermodel.build(hp)
+
+    assert set(init_hp.keys()) == set(hp._hps.keys())
 
 
-def test_text_classifier_tuner0():
-    tf.keras.backend.clear_session()
-    input_node = ak.TextInput(shape=(1,))
-    output_node = ak.TextBlock()(input_node)
-    output_node = ak.ClassificationHead(
-        loss='categorical_crossentropy',
-        output_shape=(10,))(output_node)
-    graph = graph_module.Graph(input_node, output_node)
-    check_initial_hp(task_specific.TEXT_CLASSIFIER[0], graph)
+def test_txt_clf_init_hp0_equals_hp_of_a_model(clear_session, tmp_path):
+    clf = ak.TextClassifier(directory=tmp_path)
+    clf.inputs[0].shape = (1,)
+    clf.outputs[0].in_blocks[0].output_shape = (10,)
+    init_hp = task_specific.TEXT_CLASSIFIER[0]
+    hp = kerastuner.HyperParameters()
+    hp.values = copy.copy(init_hp)
+
+    clf.tuner.hypermodel.build(hp)
+
+    assert set(init_hp.keys()) == set(hp._hps.keys())
 
 
-def test_text_classifier_tuner1():
-    tf.keras.backend.clear_session()
-    input_node = ak.TextInput(shape=(1,))
-    output_node = ak.TextBlock()(input_node)
-    output_node = ak.ClassificationHead(
-        loss='categorical_crossentropy',
-        output_shape=(10,))(output_node)
-    graph = graph_module.Graph(input_node, output_node)
-    check_initial_hp(task_specific.TEXT_CLASSIFIER[1], graph)
+def test_txt_clf_init_hp1_equals_hp_of_a_model(clear_session, tmp_path):
+    clf = ak.TextClassifier(directory=tmp_path)
+    clf.inputs[0].shape = (1,)
+    clf.outputs[0].in_blocks[0].output_shape = (10,)
+    init_hp = task_specific.TEXT_CLASSIFIER[1]
+    hp = kerastuner.HyperParameters()
+    hp.values = copy.copy(init_hp)
 
+    clf.tuner.hypermodel.build(hp)
 
-def test_image_classifier_oracle():
-    tf.keras.backend.clear_session()
-    input_node = ak.ImageInput(shape=(32, 32, 3))
-    output_node = ak.ImageBlock()(input_node)
-    output_node = ak.ClassificationHead(
-        loss='categorical_crossentropy',
-        output_shape=(10,))(output_node)
-    graph = graph_module.Graph(input_node, output_node)
-    oracle = greedy.GreedyOracle(
-        hypermodel=graph,
-        initial_hps=task_specific.IMAGE_CLASSIFIER,
-        objective='val_loss')
-    oracle._populate_space('0')
-    hp = oracle.get_space()
-    hp.values = task_specific.IMAGE_CLASSIFIER[0]
-    assert len(set(
-        task_specific.IMAGE_CLASSIFIER[0].keys()
-    ) - set(
-        oracle.get_space().values.keys())) == 0
-    oracle._populate_space('1')
-    assert len(set(
-        task_specific.IMAGE_CLASSIFIER[1].keys()
-    ) - set(
-        oracle.get_space().values.keys())) == 0
+    assert set(init_hp.keys()) == set(hp._hps.keys())

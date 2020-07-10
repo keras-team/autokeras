@@ -19,6 +19,38 @@ def test_resnet_build_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_resnet_pretrained_build_return_tensor():
+    block = blocks.ResNetBlock(pretrained=True)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_resnet_pretrained_with_one_channel_input():
+    block = blocks.ResNetBlock(pretrained=True)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(224, 224, 1), dtype=tf.float32))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_resnet_pretrained_error_with_two_channels():
+    block = blocks.ResNetBlock(pretrained=True)
+
+    with pytest.raises(ValueError) as info:
+        block.build(kerastuner.HyperParameters(),
+                    tf.keras.Input(shape=(224, 224, 2), dtype=tf.float32))
+
+    assert 'When pretrained is set to True' in str(info.value)
+
+
 def test_resnet_deserialize_to_resnet():
     serialized_block = blocks.serialize(blocks.ResNetBlock())
 

@@ -1,8 +1,8 @@
 from typing import Optional
 
 import tensorflow as tf
-from kerastuner.applications import resnet
-from kerastuner.applications import xception
+from kerastuner import applications as kt_app
+from tensorflow.keras import applications as keras_app
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
@@ -11,10 +11,14 @@ from autokeras.engine import block as block_module
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
 
-
-def set_hp_value(hp, name, value):
-    full_name = hp._get_name(name)
-    hp.values[full_name] = value or hp.values[full_name]
+RESNET_PRETRAINED = {
+    'resnet50': keras_app.ResNet50,
+    'resnet50_v2': keras_app.ResNet50V2,
+    'resnet101': keras_app.ResNet101,
+    'resnet101_v2': keras_app.ResNet101V2,
+    'resnet152': keras_app.ResNet152,
+    'resnet152_v2': keras_app.ResNet152V2,
+}
 
 
 class DenseBlock(block_module.Block):
@@ -498,19 +502,16 @@ class Transformer(block_module.Block):
         return positions
 
 
-class ResNetBlock(resnet.HyperResNet, block_module.Block):
+class ResNetBlock(kt_app.HyperResNet, block_module.Block):
     """Block for ResNet.
 
     # Arguments
-        version: String. 'v1', 'v2' or 'next'. The type of ResNet to use.
-            If left unspecified, it will be tuned automatically.
-        pooling: String. 'avg', 'max'. The type of pooling layer to use.
+        pretrained: Boolean. Whether to use ImageNet pretrained weights.
             If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self,
-                 version: Optional[str] = None,
-                 pooling: Optional[str] = None,
+                 pretrained: Optional[bool] = None,
                  **kwargs):
         if 'include_top' in kwargs:
             raise ValueError(
@@ -519,31 +520,52 @@ class ResNetBlock(resnet.HyperResNet, block_module.Block):
             raise ValueError(
                 'Argument "input_shape" is not supported in ResNetBlock.')
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
-        self.version = version
-        self.pooling = pooling
+        self.pretrained = pretrained
 
     def get_config(self):
         config = super().get_config()
         config.update({
-            'version': self.version,
-            'pooling': self.pooling})
+            'pretrained': self.pretrained})
         return config
 
     def build(self, hp, inputs=None):
-        self.input_tensor = nest.flatten(inputs)[0]
-        self.input_shape = None
+        input_node = nest.flatten(inputs)[0]
+        pretrained = self.pretrained
+        if input_node.shape[3] not in [1, 3]:
+            if self.pretrained:
+                raise ValueError(
+                    'When pretrained is set to True, expect input to '
+                    'have 1 or 3 channels, bug got '
+                    '{channels}.'.format(channels=input_node.shape[3]))
+            pretrained = False
+        if pretrained is None:
+            pretrained = hp.Boolean('pretrained', default=False)
 
-        hp.Choice('version', ['v1', 'v2', 'next'], default='v2')
-        hp.Choice('pooling', ['avg', 'max'], default='avg')
+        if not pretrained:
+            self.input_tensor = input_node
+            self.input_shape = None
+            model = super().build(hp)
+            return model.outputs
 
-        set_hp_value(hp, 'version', self.version)
-        set_hp_value(hp, 'pooling', self.pooling)
+        # Use pretrained weights.
+        # Do not use 'version' as hp name, which is used in super class.
+        version = hp.Choice('pretrained_version',
+                            list(RESNET_PRETRAINED.keys()))
 
-        model = super().build(hp)
-        return model.outputs
+        pretrained_model = RESNET_PRETRAINED[version](weights='imagenet',
+                                                      include_top=False)
+        if input_node.shape[1] != 224 or input_node.shape[2] != 224:
+            input_node = layers.experimental.preprocessing.Resizing(
+                224, 224)(input_node)
+        if input_node.shape[3] == 1:
+            input_node = layers.Concatenate()([input_node,
+                                               input_node,
+                                               input_node])
+        pretrained_model.trainable = hp.Boolean('trainable', default=False)
+        return pretrained_model(input_node)
 
 
-class XceptionBlock(xception.HyperXception, block_module.Block):
+class XceptionBlock(kt_app.HyperXception, block_module.Block):
     """XceptionBlock.
 
     An Xception structure, used for specifying your model with specific datasets.
@@ -556,22 +578,9 @@ class XceptionBlock(xception.HyperXception, block_module.Block):
     the last (optional) fully connected layer(s) and logistic regression.
     The size of this architecture could be decided by `HyperParameters`, to get an
     architecture with a half, an identical, or a double size of the original one.
-
-    # Arguments
-        activation: String. 'selu' or 'relu'. If left unspecified, it will be tuned
-            automatically.
-        initial_strides: Int. If left unspecified, it will be tuned automatically.
-        num_residual_blocks: Int. If left unspecified, it will be tuned
-            automatically.
-        pooling: String. 'ave', 'flatten', or 'max'. If left unspecified, it will be
-            tuned automatically.
     """
 
     def __init__(self,
-                 activation: Optional[str] = None,
-                 initial_strides: Optional[int] = None,
-                 num_residual_blocks: Optional[int] = None,
-                 pooling: Optional[str] = None,
                  **kwargs):
         if 'include_top' in kwargs:
             raise ValueError(
@@ -580,34 +589,10 @@ class XceptionBlock(xception.HyperXception, block_module.Block):
             raise ValueError(
                 'Argument "input_shape" is not supported in XceptionBlock.')
         super().__init__(include_top=False, input_shape=(10,), **kwargs)
-        self.activation = activation
-        self.initial_strides = initial_strides
-        self.num_residual_blocks = num_residual_blocks
-        self.pooling = pooling
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            'classes': self.classes,
-            'activation': self.activation,
-            'initial_strides': self.initial_strides,
-            'num_residual_blocks': self.num_residual_blocks,
-            'pooling': self.pooling})
-        return config
 
     def build(self, hp, inputs=None):
         self.input_tensor = nest.flatten(inputs)[0]
         self.input_shape = None
-
-        hp.Choice('activation', ['relu', 'selu'])
-        hp.Choice('initial_strides', [2])
-        hp.Int('num_residual_blocks', 2, 8, default=4)
-        hp.Choice('pooling', ['avg', 'flatten', 'max'])
-
-        set_hp_value(hp, 'activation', self.activation)
-        set_hp_value(hp, 'initial_strides', self.initial_strides)
-        set_hp_value(hp, 'num_residual_blocks', self.num_residual_blocks)
-        set_hp_value(hp, 'pooling', self.pooling)
 
         model = super().build(hp)
         return model.outputs
