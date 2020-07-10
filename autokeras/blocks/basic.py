@@ -265,24 +265,25 @@ class MultiHeadSelfAttention(block_module.Block):
     """Block for Multi-Head Self-Attention.
 
     # Arguments
-        embed_dim: Int. Output dimension of the Attention block.
-            If left unspecified, it will be tuned automatically.
+        head_size: Int. Dimensionality of the `query`, `key` and `value` tensors
+            after the linear transformation. If left unspecified, it will be
+            tuned automatically.
         num_heads: Int. The number of attention heads. If left unspecified,
             it will be tuned automatically.
     """
 
     def __init__(self,
-                 embed_dim: Optional[int] = None,
+                 head_size: Optional[int] = None,
                  num_heads: Optional[int] = 8,
                  **kwargs):
         super().__init__(**kwargs)
-        self.embed_dim = embed_dim
+        self.head_size = head_size
         self.num_heads = num_heads
 
     def get_config(self):
         config = super().get_config()
         config.update({
-            'embed_dim': self.embed_dim,
+            'head_size': self.head_size,
             'num_heads': self.num_heads})
         return config
 
@@ -305,28 +306,28 @@ class MultiHeadSelfAttention(block_module.Block):
                 '3 dimensions for multi-head self-attention, '
                 'but got {shape}'.format(shape=input_node.shape))
         # input.shape = [batch_size, seq_len, embedding_dim]
-        embed_dim = self.embed_dim or hp.Choice(
-            'embed_dim',
+        head_size = self.head_size or hp.Choice(
+            'head_size',
             [32, 64, 128, 256, 512],
             default=128)
         num_heads = self.num_heads
         if num_heads is None:
             num_heads = 8
 
-        if embed_dim % num_heads != 0:  # how to evaluate this condition
+        if head_size % num_heads != 0:  # how to evaluate this condition
             raise ValueError(
-                f"embedding dimension = {embed_dim} should be "
+                f"embedding dimension = {head_size} should be "
                 f"divisible by number of heads = {num_heads}"
             )
-        projection_dim = embed_dim // num_heads
-        query_dense = layers.Dense(embed_dim)
-        key_dense = layers.Dense(embed_dim)
-        value_dense = layers.Dense(embed_dim)
-        combine_heads = layers.Dense(embed_dim)
+        projection_dim = head_size // num_heads
+        query_dense = layers.Dense(head_size)
+        key_dense = layers.Dense(head_size)
+        value_dense = layers.Dense(head_size)
+        combine_heads = layers.Dense(head_size)
         batch_size = tf.shape(input_node)[0]
-        query = query_dense(input_node)  # (batch_size, seq_len, embed_dim)
-        key = key_dense(input_node)  # (batch_size, seq_len, embed_dim)
-        value = value_dense(input_node)  # (batch_size, seq_len, embed_dim)
+        query = query_dense(input_node)  # (batch_size, seq_len, head_size)
+        key = key_dense(input_node)  # (batch_size, seq_len, head_size)
+        value = value_dense(input_node)  # (batch_size, seq_len, head_size)
         query, key, value = [self.separate_heads(
             var, batch_size, num_heads,  projection_dim
         ) for var in [query, key, value]]
@@ -335,11 +336,11 @@ class MultiHeadSelfAttention(block_module.Block):
             attention, perm=[0, 2, 1, 3]
         )  # (batch_size, seq_len, num_heads, projection_dim)
         concat_attention = tf.reshape(
-            attention, (batch_size, tf.shape(attention)[1], self.embed_dim)
-        )  # (batch_size, seq_len, embed_dim)
+            attention, (batch_size, tf.shape(attention)[1], self.head_size)
+        )  # (batch_size, seq_len, head_size)
         output = combine_heads(
             concat_attention
-        )  # (batch_size, seq_len, embed_dim)
+        )  # (batch_size, seq_len, head_size)
         return output
 
     @staticmethod
@@ -372,7 +373,7 @@ class Transformer(block_module.Block):
         output_node = ak.Transformer(embedding_dim=32,
                              pretraining='none',
                              num_heads=2,
-                             ff_dim=32,
+                             dense_dim=32,
                              dropout_rate = 0.25)(output_node)
         output_node = ak.SpatialReduction(reduction_type='global_avg')(output_node)
         output_node = ak.DenseBlock(num_layers=1, use_batchnorm = False)(output_node)
@@ -391,7 +392,7 @@ class Transformer(block_module.Block):
             If left unspecified, it will be tuned automatically.
         num_heads: Int. The number of attention heads. If left unspecified,
             it will be tuned automatically.
-        ff_dim: Int. The output dimension of the FFN. If left
+        dense_dim: Int. The output dimension of the Feed-Forward Network. If left
             unspecified, it will be tuned automatically.
         dropout_rate: Float. Between 0 and 1. If left unspecified, it will be
             tuned automatically.
@@ -402,7 +403,7 @@ class Transformer(block_module.Block):
                  pretraining: Optional[str] = None,
                  embedding_dim: Optional[int] = None,
                  num_heads: Optional[int] = None,
-                 ff_dim: Optional[int] = None,
+                 dense_dim: Optional[int] = None,
                  dropout_rate: Optional[int] = None,
                  **kwargs):
         super().__init__(**kwargs)
@@ -410,7 +411,7 @@ class Transformer(block_module.Block):
         self.pretraining = pretraining
         self.embedding_dim = embedding_dim
         self.num_heads = num_heads
-        self. ff_dim = ff_dim
+        self. dense_dim = dense_dim
         self.dropout_rate = dropout_rate
 
     def get_config(self):
@@ -420,7 +421,7 @@ class Transformer(block_module.Block):
             'pretraining': self.pretraining,
             'embedding_dim': self.embedding_dim,
             'num_heads': self.num_heads,
-            'ff_dim': self.ff_dim,
+            'dense_dim': self.dense_dim,
             'dropout_rate': self.dropout_rate})
         return config
 
@@ -445,15 +446,16 @@ class Transformer(block_module.Block):
             default=128)
         num_heads = self.num_heads or hp.Choice('num_heads', [8, 16, 32], default=8)
 
-        ff_dim = self.ff_dim or hp.Choice('ff_dim',
-                                          [128, 256, 512, 1024, 2048],
-                                          default=2048)
+        dense_dim = self.dense_dim or hp.Choice('dense_dim',
+                                                [128, 256, 512, 1024, 2048],
+                                                default=2048)
         dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
                                                       [0.0, 0.25, 0.5],
                                                       default=0)
 
         ffn = tf.keras.Sequential(
-            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embedding_dim), ]
+            [layers.Dense(dense_dim, activation="relu"),
+             layers.Dense(embedding_dim), ]
         )
 
         layernorm1 = layers.LayerNormalization(epsilon=1e-6)
