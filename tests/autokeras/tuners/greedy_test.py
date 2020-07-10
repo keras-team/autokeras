@@ -6,7 +6,7 @@ from autokeras.tuners import greedy
 from tests import utils
 
 
-def test_random_oracle_state():
+def test_greedy_oracle_state():
     graph = utils.build_graph()
     oracle = greedy.GreedyOracle(
         hypermodel=graph,
@@ -18,7 +18,7 @@ def test_random_oracle_state():
 
 
 @mock.patch('autokeras.tuners.greedy.GreedyOracle.get_best_trials')
-def test_random_oracle(fn):
+def test_greedy_oracle(fn):
     graph = utils.build_graph()
     oracle = greedy.GreedyOracle(
         hypermodel=graph,

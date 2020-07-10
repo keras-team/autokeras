@@ -22,7 +22,7 @@ def test_functional_api(tmp_path):
     image_input = ak.ImageInput()
     output = ak.Normalization()(image_input)
     output = ak.ImageAugmentation()(output)
-    outputs1 = ak.ResNetBlock(version='next')(output)
+    outputs1 = ak.ResNetBlock(pretrained=False)(output)
     outputs2 = ak.XceptionBlock()(output)
     image_output = ak.Merge()((outputs1, outputs2))
 
