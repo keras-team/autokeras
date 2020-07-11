@@ -104,16 +104,18 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             callbacks = []
 
         # Insert early-stopping for adaptive number of epochs.
+        epochs_provided = True
         if epochs is None:
+            epochs_provided = False
             epochs = 1000
             if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
                 callbacks.append(tf_callbacks.EarlyStopping(patience=10))
 
         # Insert early-stopping for acceleration.
-        acceleration = False
+        early_stopping_inserted = False
         new_callbacks = self._deepcopy_callbacks(callbacks)
         if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
-            acceleration = True
+            early_stopping_inserted = True
             new_callbacks.append(tf_callbacks.EarlyStopping(patience=10))
 
         # Populate initial search space.
@@ -123,28 +125,38 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
         super().search(epochs=epochs, callbacks=new_callbacks, **fit_kwargs)
 
-        # Fully train the best model with original callbacks.
-        if acceleration or fit_on_val_data:
+        # Train the best model use validation data.
+        # Train the best model with enought number of epochs.
+        if fit_on_val_data or early_stopping_inserted:
             copied_fit_kwargs = copy.copy(fit_kwargs)
+
+            # Remove early-stopping since no validation data.
+            # Remove early-stopping since it is inserted.
+            copied_fit_kwargs['callbacks'] = self._remove_early_stopping(callbacks)
+
+            # Decide the number of epochs.
+            copied_fit_kwargs['epochs'] = epochs
+            if not epochs_provided:
+                copied_fit_kwargs['epochs'] = self._get_best_trial_epochs()
+
+            # Concatenate training and validation data.
             if fit_on_val_data:
-                # Concatenate training and validation data.
                 copied_fit_kwargs['x'] = copied_fit_kwargs['x'].concatenate(
                     fit_kwargs['validation_data'])
                 copied_fit_kwargs.pop('validation_data')
-                # Remove early-stopping since no validation data.
-                if utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
-                    copied_fit_kwargs['callbacks'] = [
-                        copy.deepcopy(callbacks)
-                        for callback in callbacks
-                        if not isinstance(callback, tf_callbacks.EarlyStopping)]
-                    # Use best trial number of epochs.
-                    copied_fit_kwargs['epochs'] = self._get_best_trial_epochs()
+
             model = self.final_fit(**copied_fit_kwargs)
         else:
             model = self.get_best_models()[0]
 
         model.save_weights(self.best_model_path)
         self._finished = True
+
+    @staticmethod
+    def _remove_early_stopping(callbacks):
+        return [copy.deepcopy(callbacks)
+                for callback in callbacks
+                if not isinstance(callback, tf_callbacks.EarlyStopping)]
 
     def _get_best_trial_epochs(self):
         best_trial = self.oracle.get_best_trials(1)[0]

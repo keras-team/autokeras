@@ -182,8 +182,8 @@ class Greedy(tuner_module.AutoTuner):
 
     def __init__(self,
                  hypermodel,
-                 objective,
-                 max_trials,
+                 objective='val_loss',
+                 max_trials=10,
                  initial_hps=None,
                  seed=None,
                  hyperparameters=None,
