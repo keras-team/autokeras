@@ -1,6 +1,7 @@
-ARG TF_VERSION=2.1.0
-FROM tensorflow/tensorflow:${TF_VERSION}-gpu-py3-jupyter
+FROM tensorflow/tensorflow:2.2.0
 
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y git
+RUN pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc0
 RUN pip install autokeras
-
-CMD jupyter notebook --port=8888 --ip=0.0.0.0
