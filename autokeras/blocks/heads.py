@@ -34,7 +34,7 @@ class ClassificationHead(head_module.Head):
         loss: A Keras loss function. Defaults to use `binary_crossentropy` or
             `categorical_crossentropy` based on the number of classes.
         metrics: A list of Keras metrics. Defaults to use 'accuracy'.
-        dropout_rate: Float. The dropout rate for the layers.
+        dropout: Float. The dropout rate for the layers.
             If left unspecified, it will be tuned automatically.
     """
 
@@ -43,11 +43,11 @@ class ClassificationHead(head_module.Head):
                  multi_label: bool = False,
                  loss: Optional[types.LossType] = None,
                  metrics: Optional[types.MetricsType] = None,
-                 dropout_rate: Optional[float] = None,
+                 dropout: Optional[float] = None,
                  **kwargs):
         self.num_classes = num_classes
         self.multi_label = multi_label
-        self.dropout_rate = dropout_rate
+        self.dropout = dropout
         if metrics is None:
             metrics = ['accuracy']
         if loss is None:
@@ -68,7 +68,7 @@ class ClassificationHead(head_module.Head):
         config.update({
             'num_classes': self.num_classes,
             'multi_label': self.multi_label,
-            'dropout_rate': self.dropout_rate})
+            'dropout': self.dropout})
         return config
 
     def build(self, hp, inputs=None):
@@ -81,13 +81,13 @@ class ClassificationHead(head_module.Head):
         if len(output_node.shape) > 2:
             output_node = reduction.SpatialReduction().build(hp, output_node)
 
-        if self.dropout_rate is not None:
-            dropout_rate = self.dropout_rate
+        if self.dropout is not None:
+            dropout = self.dropout
         else:
-            dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0)
+            dropout = hp.Choice('dropout', [0.0, 0.25, 0.5], default=0)
 
-        if dropout_rate > 0:
-            output_node = layers.Dropout(dropout_rate)(output_node)
+        if dropout > 0:
+            output_node = layers.Dropout(dropout)(output_node)
         output_node = layers.Dense(self.output_shape[-1])(output_node)
         if isinstance(self.loss, tf.keras.losses.BinaryCrossentropy):
             output_node = layers.Activation(activations.sigmoid,
@@ -119,7 +119,7 @@ class RegressionHead(head_module.Head):
         multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use `mean_squared_error`.
         metrics: A list of Keras metrics. Defaults to use `mean_squared_error`.
-        dropout_rate: Float. The dropout rate for the layers.
+        dropout: Float. The dropout rate for the layers.
             If left unspecified, it will be tuned automatically.
     """
 
@@ -127,7 +127,7 @@ class RegressionHead(head_module.Head):
                  output_dim: Optional[int] = None,
                  loss: types.LossType = 'mean_squared_error',
                  metrics: Optional[types.MetricsType] = None,
-                 dropout_rate: Optional[float] = None,
+                 dropout: Optional[float] = None,
                  **kwargs):
         if metrics is None:
             metrics = ['mean_squared_error']
@@ -135,13 +135,13 @@ class RegressionHead(head_module.Head):
                          metrics=metrics,
                          **kwargs)
         self.output_dim = output_dim
-        self.dropout_rate = dropout_rate
+        self.dropout = dropout
 
     def get_config(self):
         config = super().get_config()
         config.update({
             'output_dim': self.output_dim,
-            'dropout_rate': self.dropout_rate})
+            'dropout': self.dropout})
         return config
 
     def build(self, hp, inputs=None):
@@ -155,12 +155,12 @@ class RegressionHead(head_module.Head):
         input_node = inputs[0]
         output_node = input_node
 
-        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
-                                                      [0.0, 0.25, 0.5],
-                                                      default=0)
+        dropout = self.dropout or hp.Choice('dropout',
+                                            [0.0, 0.25, 0.5],
+                                            default=0)
 
-        if dropout_rate > 0:
-            output_node = layers.Dropout(dropout_rate)(output_node)
+        if dropout > 0:
+            output_node = layers.Dropout(dropout)(output_node)
         output_node = reduction.Flatten().build(hp, output_node)
         output_node = layers.Dense(self.output_shape[-1],
                                    name=self.name)(output_node)
@@ -191,7 +191,7 @@ class SegmentationHead(ClassificationHead):
         loss: A Keras loss function. Defaults to use `binary_crossentropy` or
             `categorical_crossentropy` based on the number of classes.
         metrics: A list of Keras metrics. Defaults to use 'accuracy'.
-        dropout_rate: Float. The dropout rate for the layers.
+        dropout: Float. The dropout rate for the layers.
             If left unspecified, it will be tuned automatically.
     """
 
@@ -199,12 +199,12 @@ class SegmentationHead(ClassificationHead):
                  num_classes: Optional[int] = None,
                  loss: Optional[types.LossType] = None,
                  metrics: Optional[types.MetricsType] = None,
-                 dropout_rate: Optional[float] = None,
+                 dropout: Optional[float] = None,
                  **kwargs):
         super().__init__(loss=loss,
                          metrics=metrics,
                          num_classes=num_classes,
-                         dropout_rate=dropout_rate,
+                         dropout=dropout,
                          **kwargs)
 
     def build(self, hp, inputs):

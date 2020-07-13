@@ -35,7 +35,7 @@ def test_random_oracle(fn):
         oracle._populate_space(str(i))
 
     assert 'optimizer' in oracle._hp_names[greedy.GreedyOracle.OPT]
-    assert 'classification_head_1/dropout_rate' in oracle._hp_names[
+    assert 'classification_head_1/dropout' in oracle._hp_names[
         greedy.GreedyOracle.ARCH]
     assert 'image_block_1/block_type' in oracle._hp_names[
         greedy.GreedyOracle.HYPER]
