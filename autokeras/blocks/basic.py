@@ -25,26 +25,26 @@ class DenseBlock(block_module.Block):
             If left unspecified, it will be tuned automatically.
         use_bn: Boolean. Whether to use BatchNormalization layers.
             If left unspecified, it will be tuned automatically.
-        dropout_rate: Float. The dropout rate for the layers.
+        dropout: Float. The dropout rate for the layers.
             If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self,
                  num_layers: Optional[int] = None,
                  use_batchnorm: Optional[bool] = None,
-                 dropout_rate: Optional[float] = None,
+                 dropout: Optional[float] = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.num_layers = num_layers
         self.use_batchnorm = use_batchnorm
-        self.dropout_rate = dropout_rate
+        self.dropout = dropout
 
     def get_config(self):
         config = super().get_config()
         config.update({
             'num_layers': self.num_layers,
             'use_batchnorm': self.use_batchnorm,
-            'dropout_rate': self.dropout_rate})
+            'dropout': self.dropout})
         return config
 
     def build(self, hp, inputs=None):
@@ -58,10 +58,10 @@ class DenseBlock(block_module.Block):
         use_batchnorm = self.use_batchnorm
         if use_batchnorm is None:
             use_batchnorm = hp.Boolean('use_batchnorm', default=False)
-        if self.dropout_rate is not None:
-            dropout_rate = self.dropout_rate
+        if self.dropout is not None:
+            dropout = self.dropout
         else:
-            dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0)
+            dropout = hp.Choice('dropout', [0.0, 0.25, 0.5], default=0)
 
         for i in range(num_layers):
             units = hp.Choice(
@@ -72,8 +72,8 @@ class DenseBlock(block_module.Block):
             if use_batchnorm:
                 output_node = layers.BatchNormalization()(output_node)
             output_node = layers.ReLU()(output_node)
-            if dropout_rate > 0:
-                output_node = layers.Dropout(dropout_rate)(output_node)
+            if dropout > 0:
+                output_node = layers.Dropout(dropout)(output_node)
         return output_node
 
 
@@ -169,7 +169,7 @@ class ConvBlock(block_module.Block):
             unspecified, it will be tuned automatically.
         separable: Boolean. Whether to use separable conv layers.
             If left unspecified, it will be tuned automatically.
-        dropout_rate: Float. Between 0 and 1. The dropout rate for after the
+        dropout: Float. Between 0 and 1. The dropout rate for after the
             convolutional layers. If left unspecified, it will be tuned
             automatically.
     """
@@ -180,7 +180,7 @@ class ConvBlock(block_module.Block):
                  num_layers: Optional[int] = None,
                  max_pooling: Optional[bool] = None,
                  separable: Optional[bool] = None,
-                 dropout_rate: Optional[float] = None,
+                 dropout: Optional[float] = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.kernel_size = kernel_size
@@ -188,7 +188,7 @@ class ConvBlock(block_module.Block):
         self.num_layers = num_layers
         self.max_pooling = max_pooling
         self.separable = separable
-        self.dropout_rate = dropout_rate
+        self.dropout = dropout
 
     def get_config(self):
         config = super().get_config()
@@ -198,7 +198,7 @@ class ConvBlock(block_module.Block):
             'num_layers': self.num_layers,
             'max_pooling': self.max_pooling,
             'separable': self.separable,
-            'dropout_rate': self.dropout_rate})
+            'dropout': self.dropout})
         return config
 
     def build(self, hp, inputs=None):
@@ -230,10 +230,10 @@ class ConvBlock(block_module.Block):
             max_pooling = hp.Boolean('max_pooling', default=True)
         pool = layer_utils.get_max_pooling(input_node.shape)
 
-        if self.dropout_rate is not None:
-            dropout_rate = self.dropout_rate
+        if self.dropout is not None:
+            dropout = self.dropout
         else:
-            dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0)
+            dropout = hp.Choice('dropout', [0.0, 0.25, 0.5], default=0)
 
         for i in range(num_blocks):
             for j in range(num_layers):
@@ -249,8 +249,8 @@ class ConvBlock(block_module.Block):
                     kernel_size - 1,
                     padding=self._get_padding(kernel_size - 1,
                                               output_node))(output_node)
-            if dropout_rate > 0:
-                output_node = layers.Dropout(dropout_rate)(output_node)
+            if dropout > 0:
+                output_node = layers.Dropout(dropout)(output_node)
         return output_node
 
     @staticmethod
@@ -374,12 +374,12 @@ class Transformer(block_module.Block):
                              pretraining='none',
                              num_heads=2,
                              dense_dim=32,
-                             dropout_rate = 0.25)(output_node)
+                             dropout = 0.25)(output_node)
         output_node = ak.SpatialReduction(reduction_type='global_avg')(output_node)
         output_node = ak.DenseBlock(num_layers=1, use_batchnorm = False)(output_node)
         output_node = ak.ClassificationHead(
             loss=losses.SparseCategoricalCrossentropy(),
-            dropout_rate = 0.25)(output_node)
+            dropout = 0.25)(output_node)
         clf = ak.AutoModel(inputs=text_input, outputs=output_node, max_trials=2)
     ```
     # Arguments
@@ -394,7 +394,7 @@ class Transformer(block_module.Block):
             it will be tuned automatically.
         dense_dim: Int. The output dimension of the Feed-Forward Network. If left
             unspecified, it will be tuned automatically.
-        dropout_rate: Float. Between 0 and 1. If left unspecified, it will be
+        dropout: Float. Between 0 and 1. If left unspecified, it will be
             tuned automatically.
     """
 
@@ -404,7 +404,7 @@ class Transformer(block_module.Block):
                  embedding_dim: Optional[int] = None,
                  num_heads: Optional[int] = None,
                  dense_dim: Optional[int] = None,
-                 dropout_rate: Optional[int] = None,
+                 dropout: Optional[int] = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.max_features = max_features
@@ -412,7 +412,7 @@ class Transformer(block_module.Block):
         self.embedding_dim = embedding_dim
         self.num_heads = num_heads
         self. dense_dim = dense_dim
-        self.dropout_rate = dropout_rate
+        self.dropout = dropout
 
     def get_config(self):
         config = super().get_config()
@@ -422,7 +422,7 @@ class Transformer(block_module.Block):
             'embedding_dim': self.embedding_dim,
             'num_heads': self.num_heads,
             'dense_dim': self.dense_dim,
-            'dropout_rate': self.dropout_rate})
+            'dropout': self.dropout})
         return config
 
     def build(self, hp, inputs=None):
@@ -449,9 +449,9 @@ class Transformer(block_module.Block):
         dense_dim = self.dense_dim or hp.Choice('dense_dim',
                                                 [128, 256, 512, 1024, 2048],
                                                 default=2048)
-        dropout_rate = self.dropout_rate or hp.Choice('dropout_rate',
-                                                      [0.0, 0.25, 0.5],
-                                                      default=0)
+        dropout = self.dropout or hp.Choice('dropout',
+                                            [0.0, 0.25, 0.5],
+                                            default=0)
 
         ffn = tf.keras.Sequential(
             [layers.Dense(dense_dim, activation="relu"),
@@ -460,22 +460,22 @@ class Transformer(block_module.Block):
 
         layernorm1 = layers.LayerNormalization(epsilon=1e-6)
         layernorm2 = layers.LayerNormalization(epsilon=1e-6)
-        dropout1 = layers.Dropout(dropout_rate)
-        dropout2 = layers.Dropout(dropout_rate)
+        dropout1 = layers.Dropout(dropout)
+        dropout2 = layers.Dropout(dropout)
         # Token and Position Embeddings
         input_node = nest.flatten(inputs)[0]
         token_embedding = Embedding(max_features=self.max_features,
                                     pretraining=pretraining,
                                     embedding_dim=embedding_dim,
-                                    dropout_rate=dropout_rate).build(hp, input_node)
+                                    dropout=dropout).build(hp, input_node)
         maxlen = input_node.shape[-1]
         batch_size = tf.shape(input_node)[0]
         positions = self.pos_array_funct(maxlen, batch_size)
         position_embedding = Embedding(max_features=maxlen,
                                        pretraining=pretraining,
                                        embedding_dim=embedding_dim,
-                                       dropout_rate=dropout_rate).build(hp,
-                                                                        positions)
+                                       dropout=dropout).build(hp,
+                                                              positions)
         output_node = tf.keras.layers.Add()([token_embedding,
                                              position_embedding])
         attn_output = MultiHeadSelfAttention(
@@ -626,7 +626,7 @@ class Embedding(block_module.Block):
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
         embedding_dim: Int. If left unspecified, it will be tuned automatically.
-        dropout_rate: Float. The dropout rate for after the Embedding layer.
+        dropout: Float. The dropout rate for after the Embedding layer.
             If left unspecified, it will be tuned automatically.
     """
 
@@ -634,13 +634,13 @@ class Embedding(block_module.Block):
                  max_features: int = 20001,
                  pretraining: Optional[str] = None,
                  embedding_dim: Optional[int] = None,
-                 dropout_rate: Optional[float] = None,
+                 dropout: Optional[float] = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.max_features = max_features
         self.pretraining = pretraining
         self.embedding_dim = embedding_dim
-        self.dropout_rate = dropout_rate
+        self.dropout = dropout
 
     def get_config(self):
         config = super().get_config()
@@ -648,7 +648,7 @@ class Embedding(block_module.Block):
             'max_features': self.max_features,
             'pretraining': self.pretraining,
             'embedding_dim': self.embedding_dim,
-            'dropout_rate': self.dropout_rate})
+            'dropout': self.dropout})
         return config
 
     def build(self, hp, inputs=None):
@@ -678,10 +678,10 @@ class Embedding(block_module.Block):
             # input_length=input_node.shape[1],
             # trainable=True)
         output_node = layer(input_node)
-        if self.dropout_rate is not None:
-            dropout_rate = self.dropout_rate
+        if self.dropout is not None:
+            dropout = self.dropout
         else:
-            dropout_rate = hp.Choice('dropout_rate', [0.0, 0.25, 0.5], default=0.25)
-        if dropout_rate > 0:
-            output_node = layers.Dropout(dropout_rate)(output_node)
+            dropout = hp.Choice('dropout', [0.0, 0.25, 0.5], default=0.25)
+        if dropout > 0:
+            output_node = layers.Dropout(dropout)(output_node)
         return output_node
