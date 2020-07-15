@@ -119,7 +119,7 @@ further. See the following example.
 input_node = ak.ImageInput()
 output_node = ak.Normalization()(input_node)
 output_node = ak.ImageAugmentation(horizontal_flip=False)(output_node)
-output_node = ak.ResNetBlock()(output_node)
+output_node = ak.ResNetBlock(version="v2")(output_node)
 output_node = ak.RegressionHead()(output_node)
 reg = ak.AutoModel(
     inputs=input_node,

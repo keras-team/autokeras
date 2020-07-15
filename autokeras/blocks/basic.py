@@ -1,8 +1,7 @@
 from typing import Optional
 
 import tensorflow as tf
-from kerastuner import applications as kt_app
-from tensorflow.keras import applications as keras_app
+from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
@@ -11,13 +10,16 @@ from autokeras.engine import block as block_module
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
 
-RESNET_PRETRAINED = {
-    'resnet50': keras_app.ResNet50,
-    'resnet50_v2': keras_app.ResNet50V2,
-    'resnet101': keras_app.ResNet101,
-    'resnet101_v2': keras_app.ResNet101V2,
-    'resnet152': keras_app.ResNet152,
-    'resnet152_v2': keras_app.ResNet152V2,
+RESNET_V1 = {
+    'resnet50': applications.ResNet50,
+    'resnet101': applications.ResNet101,
+    'resnet152': applications.ResNet152,
+}
+
+RESNET_V2 = {
+    'resnet50_v2': applications.ResNet50V2,
+    'resnet101_v2': applications.ResNet101V2,
+    'resnet152_v2': applications.ResNet152V2,
 }
 
 
@@ -502,34 +504,29 @@ class Transformer(block_module.Block):
         return positions
 
 
-class ResNetBlock(kt_app.HyperResNet, block_module.Block):
-    """Block for ResNet.
-
-    # Arguments
-        pretrained: Boolean. Whether to use ImageNet pretrained weights.
-            If left unspecified, it will be tuned automatically.
-    """
+class KerasApplicationBlock(block_module.Block):
+    """Blocks extending Keras applications."""
 
     def __init__(self,
-                 pretrained: Optional[bool] = None,
+                 pretrained,
+                 models,
+                 min_size,
                  **kwargs):
-        if 'include_top' in kwargs:
-            raise ValueError(
-                'Argument "include_top" is not supported in ResNetBlock.')
-        if 'input_shape' in kwargs:
-            raise ValueError(
-                'Argument "input_shape" is not supported in ResNetBlock.')
-        super().__init__(include_top=False, input_shape=(10,), **kwargs)
+        super().__init__(**kwargs)
         self.pretrained = pretrained
+        self.models = models
+        self.min_size = min_size
 
     def get_config(self):
         config = super().get_config()
         config.update({
-            'pretrained': self.pretrained})
+            'pretrained': self.pretrained,
+        })
         return config
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
+
         pretrained = self.pretrained
         if input_node.shape[3] not in [1, 3]:
             if self.pretrained:
@@ -541,32 +538,81 @@ class ResNetBlock(kt_app.HyperResNet, block_module.Block):
         if pretrained is None:
             pretrained = hp.Boolean('pretrained', default=False)
 
-        if not pretrained:
-            self.input_tensor = input_node
-            self.input_shape = None
-            model = super().build(hp)
-            return model.outputs
+        if len(self.models) > 1:
+            version = hp.Choice('version', list(self.models.keys()))
+        else:
+            version = list(self.models.keys())[0]
 
-        # Use pretrained weights.
-        # Do not use 'version' as hp name, which is used in super class.
-        version = hp.Choice('pretrained_version',
-                            list(RESNET_PRETRAINED.keys()))
-
-        pretrained_model = RESNET_PRETRAINED[version](weights='imagenet',
-                                                      include_top=False)
-        if input_node.shape[1] != 224 or input_node.shape[2] != 224:
+        min_size = self.min_size
+        if hp.Boolean('imagenet_size', default=False):
+            min_size = 224
+        if (input_node.shape[1] < min_size or
+                input_node.shape[2] < min_size):
             input_node = layers.experimental.preprocessing.Resizing(
-                224, 224)(input_node)
+                max(min_size, input_node.shape[1]),
+                max(min_size, input_node.shape[2])
+            )(input_node)
         if input_node.shape[3] == 1:
-            input_node = layers.Concatenate()([input_node,
-                                               input_node,
-                                               input_node])
-        pretrained_model.trainable = hp.Boolean('trainable', default=False)
-        return pretrained_model(input_node)
+            input_node = layers.Concatenate()([input_node] * 3)
+        if input_node.shape[3] != 3:
+            input_node = layers.Conv2D(filters=3,
+                                       kernel_size=1,
+                                       padding='same')(input_node)
+
+        if pretrained:
+            model = self.models[version](
+                weights='imagenet',
+                include_top=False)
+            model.trainable = hp.Boolean('trainable', default=False)
+        else:
+            model = self.models[version](
+                weights=None,
+                include_top=False,
+                input_shape=input_node.shape[1:])
+
+        return model(input_node)
 
 
-class XceptionBlock(kt_app.HyperXception, block_module.Block):
-    """XceptionBlock.
+class ResNetBlock(KerasApplicationBlock):
+    """Block for ResNet.
+
+    # Arguments
+        version: String. 'v1', 'v2'. The type of ResNet to use.
+            If left unspecified, it will be tuned automatically.
+        pretrained: Boolean. Whether to use ImageNet pretrained weights.
+            If left unspecified, it will be tuned automatically.
+    """
+
+    def __init__(self,
+                 version: Optional[str] = None,
+                 pretrained: Optional[bool] = None,
+                 **kwargs):
+        if version is None:
+            models = {**RESNET_V1, **RESNET_V2}
+        elif version == 'v1':
+            models = RESNET_V1
+        elif version == 'v2':
+            models = RESNET_V2
+        else:
+            raise ValueError(
+                'Expect version to be "v1", or "v2", but got '
+                '{version}.'.format(version=version))
+        super().__init__(pretrained=pretrained,
+                         models=models,
+                         min_size=32,
+                         **kwargs)
+        self.version = version
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'version': self.version,
+        })
+        return config
+
+
+class XceptionBlock(KerasApplicationBlock):
+    """Block for XceptionNet.
 
     An Xception structure, used for specifying your model with specific datasets.
 
@@ -578,24 +624,19 @@ class XceptionBlock(kt_app.HyperXception, block_module.Block):
     the last (optional) fully connected layer(s) and logistic regression.
     The size of this architecture could be decided by `HyperParameters`, to get an
     architecture with a half, an identical, or a double size of the original one.
+
+    # Arguments
+        pretrained: Boolean. Whether to use ImageNet pretrained weights.
+            If left unspecified, it will be tuned automatically.
     """
 
     def __init__(self,
+                 pretrained: Optional[bool] = None,
                  **kwargs):
-        if 'include_top' in kwargs:
-            raise ValueError(
-                'Argument "include_top" is not supported in XceptionBlock.')
-        if 'input_shape' in kwargs:
-            raise ValueError(
-                'Argument "input_shape" is not supported in XceptionBlock.')
-        super().__init__(include_top=False, input_shape=(10,), **kwargs)
-
-    def build(self, hp, inputs=None):
-        self.input_tensor = nest.flatten(inputs)[0]
-        self.input_shape = None
-
-        model = super().build(hp)
-        return model.outputs
+        super().__init__(pretrained=pretrained,
+                         models={'xception': applications.Xception},
+                         min_size=71,
+                         **kwargs)
 
 
 class Embedding(block_module.Block):

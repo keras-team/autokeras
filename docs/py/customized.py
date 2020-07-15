@@ -32,7 +32,7 @@ import autokeras as ak
 input_node = ak.ImageInput()
 output_node = ak.Normalization()(input_node)
 output_node1 = ak.ConvBlock()(output_node)
-output_node2 = ak.ResNetBlock(pretrained=True)(output_node)
+output_node2 = ak.ResNetBlock(version='v2')(output_node)
 output_node = ak.Merge()([output_node1, output_node2])
 output_node = ak.ClassificationHead()(output_node)
 
@@ -47,8 +47,7 @@ Whild building the model, the blocks used need to follow this topology:
 `Preprocessor` -> `Block` -> `Head`. `Normalization` and `ImageAugmentation` are `Preprocessor`s.
 `ClassificationHead` is `Head`. The rest are `Block`s.
 
-In the code above, we use `ak.ResNetBlock(pretrained=True)` to use the pretrained
-weights.
+In the code above, we use `ak.ResNetBlock(version='v2')` to specify the version of ResNet to use.
 There are many other arguments to specify for each building block.
 For most of the arguments, if not specified, they would be tuned automatically.
 Please refer to the documentation links at the bottom of the page for more details.
