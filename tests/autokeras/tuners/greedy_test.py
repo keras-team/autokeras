@@ -2,29 +2,26 @@ from unittest import mock
 
 import kerastuner
 
+from autokeras import graph as graph_module
 from autokeras.tuners import greedy
 from tests import utils
 
 
-def test_greedy_oracle_state():
-    graph = utils.build_graph()
+def test_greedy_oracle_state_hypermodel_is_graph():
     oracle = greedy.GreedyOracle(
-        hypermodel=graph,
+        hypermodel=utils.build_graph(),
         objective='val_loss',
     )
-    oracle.hypermodel = graph
     oracle.set_state(oracle.get_state())
-    assert oracle.hypermodel is graph
+    assert isinstance(oracle.hypermodel, graph_module.Graph)
 
 
 @mock.patch('autokeras.tuners.greedy.GreedyOracle.get_best_trials')
 def test_greedy_oracle(fn):
-    graph = utils.build_graph()
     oracle = greedy.GreedyOracle(
-        hypermodel=graph,
+        hypermodel=utils.build_graph(),
         objective='val_loss',
     )
-    oracle.hypermodel = graph
     trial = mock.Mock()
     hp = kerastuner.HyperParameters()
     trial.hyperparameters = hp
