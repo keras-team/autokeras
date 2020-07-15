@@ -270,11 +270,14 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
                                   default=1e-3)
 
         if optimizer_name == 'adam':
-            optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
+            optimizer = tf.keras.optimizers.Adam(
+                learning_rate=learning_rate)
         elif optimizer_name == 'adadelta':
-            optimizer = tf.keras.optimizers.Adadelta(lr=learning_rate)
+            optimizer = tf.keras.optimizers.Adadelta(
+                learning_rate=learning_rate)
         elif optimizer_name == 'sgd':
-            optimizer = tf.keras.optimizers.SGD(lr=learning_rate)
+            optimizer = tf.keras.optimizers.SGD(
+                learning_rate=learning_rate)
 
         model.compile(optimizer=optimizer,
                       metrics=self._get_metrics(),

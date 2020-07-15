@@ -4,7 +4,6 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import blocks
-from autokeras.blocks import basic
 from tests import utils
 
 
@@ -35,7 +34,7 @@ def test_resnet_pretrained_with_one_channel_input():
 
     outputs = block.build(
         kerastuner.HyperParameters(),
-        tf.keras.Input(shape=(224, 224, 1), dtype=tf.float32))
+        tf.keras.Input(shape=(28, 28, 1), dtype=tf.float32))
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
@@ -68,18 +67,11 @@ def test_resnet_get_config_has_all_attributes():
         blocks.ResNetBlock.__init__).issubset(config.keys())
 
 
-def test_resnet_init_error_with_include_top():
+def test_resnet_wrong_version_error():
     with pytest.raises(ValueError) as info:
-        blocks.ResNetBlock(include_top=True)
+        blocks.ResNetBlock(version='abc')
 
-    assert 'Argument "include_top" is not' in str(info.value)
-
-
-def test_resnet_init_error_with_input_shape():
-    with pytest.raises(ValueError) as info:
-        blocks.ResNetBlock(input_shape=(10,))
-
-    assert 'Argument "input_shape" is not' in str(info.value)
+    assert 'Expect version to be' in str(info.value)
 
 
 def test_xception_build_return_tensor():
@@ -87,10 +79,42 @@ def test_xception_build_return_tensor():
 
     outputs = block.build(
         kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32, 32, 2), dtype=tf.float32))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_xception_pretrained_build_return_tensor():
+    block = blocks.XceptionBlock(pretrained=True)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
         tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32))
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_xception_pretrained_with_one_channel_input():
+    block = blocks.XceptionBlock(pretrained=True)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(224, 224, 1), dtype=tf.float32))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_xception_pretrained_error_with_two_channels():
+    block = blocks.XceptionBlock(pretrained=True)
+
+    with pytest.raises(ValueError) as info:
+        block.build(kerastuner.HyperParameters(),
+                    tf.keras.Input(shape=(224, 224, 2), dtype=tf.float32))
+
+    assert 'When pretrained is set to True' in str(info.value)
 
 
 def test_xception_deserialize_to_xception():
@@ -108,20 +132,6 @@ def test_xception_get_config_has_all_attributes():
 
     assert utils.get_func_args(
         blocks.XceptionBlock.__init__).issubset(config.keys())
-
-
-def test_xception_init_error_with_include_top():
-    with pytest.raises(ValueError) as info:
-        basic.XceptionBlock(include_top=True)
-
-    assert 'Argument "include_top" is not' in str(info.value)
-
-
-def test_xception_init_error_with_input_shape():
-    with pytest.raises(ValueError) as info:
-        basic.XceptionBlock(input_shape=(10,))
-
-    assert 'Argument "input_shape" is not' in str(info.value)
 
 
 def test_conv_build_return_tensor():

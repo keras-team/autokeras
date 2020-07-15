@@ -4,28 +4,19 @@ import autokeras as ak
 from tests import utils
 
 
-def test_functional_api(tmp_path):
+def test_text_and_structured_data(tmp_path):
     # Prepare the data.
     num_instances = 80
-    (image_x, train_y), (test_x, test_y) = mnist.load_data()
-    (text_x, train_y), (test_x, test_y) = utils.imdb_raw()
-    (structured_data_x, train_y), (test_x, test_y) = utils.dataframe_numpy()
+    (x_text, y_train), (x_test, y_test) = utils.imdb_raw()
+    (x_structured_data, y_train), (x_test, y_test) = utils.dataframe_numpy()
 
-    image_x = image_x[:num_instances]
-    text_x = text_x[:num_instances]
-    structured_data_x = structured_data_x[:num_instances]
-    classification_y = utils.generate_one_hot_labels(num_instances=num_instances,
+    x_text = x_text[:num_instances]
+    x_structured_data = x_structured_data[:num_instances]
+    y_classification = utils.generate_one_hot_labels(num_instances=num_instances,
                                                      num_classes=3)
-    regression_y = utils.generate_data(num_instances=num_instances, shape=(1,))
+    y_regression = utils.generate_data(num_instances=num_instances, shape=(1,))
 
     # Build model and train.
-    image_input = ak.ImageInput()
-    output = ak.Normalization()(image_input)
-    output = ak.ImageAugmentation()(output)
-    outputs1 = ak.ResNetBlock(pretrained=False)(output)
-    outputs2 = ak.XceptionBlock()(output)
-    image_output = ak.Merge()((outputs1, outputs2))
-
     structured_data_input = ak.StructuredDataInput()
     structured_data_output = ak.CategoricalToNumerical()(structured_data_input)
     structured_data_output = ak.DenseBlock()(structured_data_output)
@@ -44,7 +35,6 @@ def test_functional_api(tmp_path):
 
     merged_outputs = ak.Merge()((
         structured_data_output,
-        image_output,
         text_output
     ))
 
@@ -52,7 +42,6 @@ def test_functional_api(tmp_path):
     classification_outputs = ak.ClassificationHead()(merged_outputs)
     automodel = ak.AutoModel(
         inputs=[
-            image_input,
             text_input,
             structured_data_input
         ],
@@ -67,13 +56,36 @@ def test_functional_api(tmp_path):
 
     automodel.fit(
         (
-            image_x,
-            text_x,
-            structured_data_x
+            x_text,
+            x_structured_data
         ),
         (
-            regression_y,
-            classification_y
+            y_regression,
+            y_classification
         ),
         validation_split=0.2,
         epochs=1)
+
+
+def test_image_blocks(tmp_path):
+    num_instances = 10
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    x_train = x_train[:num_instances]
+    y_regression = utils.generate_data(num_instances=num_instances, shape=(1,))
+
+    input_node = ak.ImageInput()
+    output = ak.Normalization()(input_node)
+    output = ak.ImageAugmentation()(output)
+    outputs1 = ak.ResNetBlock(version='v2')(output)
+    outputs2 = ak.XceptionBlock()(output)
+    output_node = ak.Merge()((outputs1, outputs2))
+    output_node = ak.ClassificationHead()(output_node)
+
+    automodel = ak.AutoModel(inputs=input_node,
+                             outputs=output_node,
+                             directory=tmp_path,
+                             max_trials=1,
+                             seed=utils.SEED)
+
+    automodel.fit(x_train, y_regression,
+                  validation_data=(x_train, y_regression), epochs=1)

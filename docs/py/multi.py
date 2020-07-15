@@ -140,7 +140,7 @@ input_node1 = ak.ImageInput()
 output_node = ak.Normalization()(input_node1)
 output_node = ak.ImageAugmentation()(output_node)
 output_node1 = ak.ConvBlock()(output_node)
-output_node2 = ak.ResNetBlock()(output_node)
+output_node2 = ak.ResNetBlock(version='v2')(output_node)
 output_node1 = ak.Merge()([output_node1, output_node2])
 
 input_node2 = ak.StructuredDataInput()
