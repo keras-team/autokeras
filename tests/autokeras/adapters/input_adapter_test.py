@@ -75,10 +75,18 @@ def test_partial_column_types():
     assert adapter.column_types['fare'] == 'categorical'
 
 
-def test_image_input():
+def test_image_input_adapter_transform_to_dataset():
     x = utils.generate_data()
     adapter = input_adapter.ImageInputAdapter()
     assert isinstance(adapter.transform(x), tf.data.Dataset)
+
+
+def test_image_input_adapter_shape_is_list():
+    x = utils.generate_data()
+    adapter = input_adapter.ImageInputAdapter()
+    adapter.fit_transform(x)
+    assert isinstance(adapter.shape, list)
+    assert all(map(lambda x: isinstance(x, int), adapter.shape))
 
 
 def test_image_input_with_three_dim():

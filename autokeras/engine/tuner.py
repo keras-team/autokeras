@@ -35,9 +35,10 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
                  hypermodel,
                  preprocessors=None,
                  **kwargs):
+        # Initialize before super() for reload to work.
+        self._finished = False
         super().__init__(oracle, hypermodel, **kwargs)
         self.preprocessors = nest.flatten(preprocessors)
-        self._finished = False
         # Save or load the HyperModel.
         self.hypermodel.hypermodel.save(os.path.join(self.project_dir, 'graph'))
 
@@ -151,6 +152,17 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
         model.save_weights(self.best_model_path)
         self._finished = True
+
+    def get_state(self):
+        state = super().get_state()
+        state.update({
+            'finished': self._finished,
+        })
+        return state
+
+    def set_state(self, state):
+        super().set_state(state)
+        self._finished = state.get('finished')
 
     @staticmethod
     def _remove_early_stopping(callbacks):

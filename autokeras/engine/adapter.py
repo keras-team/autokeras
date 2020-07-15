@@ -72,7 +72,7 @@ class Adapter(serializable.Serializable):
         return dataset
 
     def _record_dataset_shape(self, dataset):
-        self.shape = data_utils.dataset_shape(dataset)[1:]
+        self.shape = data_utils.dataset_shape(dataset)[1:].as_list()
 
     def transform(self, dataset):
         """Transform the input dataset to tf.data.Dataset.

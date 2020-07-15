@@ -101,7 +101,12 @@ def test_tuner_not_call_super_search_with_overwrite(
         directory=tmp_path)
 
     tuner.search(epochs=10)
+    tuner.save()
     super_search.reset_mock()
+
+    tuner = greedy.Greedy(
+        hypermodel=utils.build_graph(),
+        directory=tmp_path)
     tuner.search(epochs=10)
 
     super_search.assert_not_called()

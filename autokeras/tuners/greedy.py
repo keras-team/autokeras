@@ -5,6 +5,7 @@ import kerastuner
 import numpy as np
 
 from autokeras import blocks
+from autokeras import graph
 from autokeras.engine import tuner as tuner_module
 
 
@@ -58,6 +59,36 @@ class GreedyOracle(kerastuner.Oracle):
         self._seed_state = self.seed
         self._tried_so_far = set()
         self._max_collisions = 5
+
+    def get_state(self):
+        state = super().get_state()
+        new_hp_names = {}
+        for key, value in self._hp_names.items():
+            new_hp_names[key] = list(value)
+        state.update({
+            'initial_hps': self.initial_hps,
+            'tried_initial_hps': self._tried_initial_hps,
+            'hypermodel': self.hypermodel.get_config(),
+            'hp_names': new_hp_names,
+            'seed': self.seed,
+            'seed_state': self._seed_state,
+            'tried_so_far': list(self._tried_so_far),
+            'max_collisions': self._max_collisions,
+        })
+        return state
+
+    def set_state(self, state):
+        super().set_state(state)
+        self.initial_hps = state['initial_hps']
+        self._tried_initial_hps = state['tried_initial_hps']
+        self.hypermodel = graph.Graph.from_config(state['hypermodel'])
+        new_hp_names = state['hp_names']
+        for key, value in new_hp_names.items():
+            self._hp_names[key] = value
+        self.seed = state['seed']
+        self._seed_state = state['seed_state']
+        self._tried_so_far = set(state['tried_so_far'])
+        self._max_collisions = state['max_collisions']
 
     def update_space(self, hyperparameters):
         # Get the block names.
