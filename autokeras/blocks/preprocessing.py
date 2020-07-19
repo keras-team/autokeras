@@ -17,6 +17,7 @@ from typing import Tuple
 from typing import Union
 
 from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.python.keras.engine.base_preprocessing_layer import CombinerPreprocessingLayer
 from tensorflow.python.util import nest
 
 from autokeras import adapters
@@ -91,6 +92,51 @@ class TextToIntSequence(block_module.Block):
             output_sequence_length=output_sequence_length,
         )(input_node)
         return output_node
+
+
+class TextVectorizationWithTokenizer(CombinerPreprocessingLayer):
+    """
+    tokenizer = bert.tokenization.FullTokenizer(
+        vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
+        do_lower_case=True)
+    """
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
+
+    def call(self, inputs):
+
+        return self.bert_encode(inputs)
+
+    @staticmethod
+    def encode_sentence(self, s):
+        tokens = list(self.tokenizer.tokenize(s))
+        tokens.append('[SEP]') ##change these tokens
+        return self.tokenizer.convert_tokens_to_ids(tokens)
+
+    @staticmethod
+    def bert_encode(self, input):
+        num_examples = len(input)
+        print(num_examples, input.shape)
+        sentence1 = tf.ragged.constant([
+            self.encode_sentence(s)
+            for s in np.array(input)])
+
+        cls = [tokenizer.convert_tokens_to_ids(['[CLS]'])] * sentence1.shape[0] #change
+        input_word_ids = tf.concat([cls, sentence1], axis=-1)
+
+        input_mask = tf.ones_like(input_word_ids).to_tensor()
+
+        type_cls = tf.zeros_like(cls)
+        type_s1 = tf.zeros_like(sentence1)
+        input_type_ids = tf.concat(
+            [type_cls, type_s1], axis=-1).to_tensor()
+
+        inputs = {
+            'input_word_ids': input_word_ids.to_tensor(),
+            'input_mask': input_mask,
+            'input_type_ids': input_type_ids}
+
+        return inputs
 
 
 class TextToNgramVector(block_module.Block):
