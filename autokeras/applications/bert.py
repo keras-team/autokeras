@@ -211,13 +211,7 @@ class BERT(block_module.Block):
                  version: Optional[str] = None,
                  pooling: Optional[str] = None,
                  **kwargs):
-        if 'include_top' in kwargs:
-            raise ValueError(
-                'Argument "include_top" is not supported in ResNetBlock.')
-        if 'input_shape' in kwargs:
-            raise ValueError(
-                'Argument "input_shape" is not supported in ResNetBlock.')
-        super().__init__(include_top=False, input_shape=(10,), **kwargs)
+        super().__init__(**kwargs)
         self.version = version
         self.pooling = pooling
 
