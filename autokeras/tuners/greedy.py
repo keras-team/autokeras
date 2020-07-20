@@ -84,7 +84,7 @@ class GreedyOracle(kerastuner.Oracle):
         self.hypermodel = graph.Graph.from_config(state['hypermodel'])
         new_hp_names = state['hp_names']
         for key, value in new_hp_names.items():
-            self._hp_names[key] = value
+            self._hp_names[key] = set(value)
         self.seed = state['seed']
         self._seed_state = state['seed_state']
         self._tried_so_far = set(state['tried_so_far'])

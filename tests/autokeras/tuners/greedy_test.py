@@ -16,6 +16,17 @@ def test_greedy_oracle_state_hypermodel_is_graph():
     assert isinstance(oracle.hypermodel, graph_module.Graph)
 
 
+def test_greedy_oracle_get_state_update_space_can_run():
+    oracle = greedy.GreedyOracle(
+        hypermodel=utils.build_graph(),
+        objective='val_loss',
+    )
+    oracle.set_state(oracle.get_state())
+    hp = kerastuner.HyperParameters()
+    hp.Boolean('test')
+    oracle.update_space(hp)
+
+
 @mock.patch('autokeras.tuners.greedy.GreedyOracle.get_best_trials')
 def test_greedy_oracle(fn):
     oracle = greedy.GreedyOracle(
