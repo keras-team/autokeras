@@ -23,6 +23,8 @@ from tensorflow.python.util import nest
 from autokeras import adapters
 from autokeras import keras_layers
 from autokeras.engine import block as block_module
+import tensorflow as tf
+import numpy as np
 
 
 class Normalization(block_module.Block):
@@ -121,7 +123,7 @@ class TextVectorizationWithTokenizer(CombinerPreprocessingLayer):
             self.encode_sentence(s)
             for s in np.array(input)])
 
-        cls = [tokenizer.convert_tokens_to_ids(['[CLS]'])] * sentence1.shape[0] #change
+        cls = [self.tokenizer.convert_tokens_to_ids(['[CLS]'])] * sentence1.shape[0] #change
         input_word_ids = tf.concat([cls, sentence1], axis=-1)
 
         input_mask = tf.ones_like(input_word_ids).to_tensor()
