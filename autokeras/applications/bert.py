@@ -260,8 +260,7 @@ class BERT(block_module.Block):
             do_lower_case=True)
 
         output_node = preprocessing.TextVectorizationWithTokenizer(
-            tokenizer=tokenizer).build(
-            hp, input_tensor)
+            tokenizer=tokenizer).build(input_tensor)
 
         # hub_encoder = hub.KerasLayer(hub_url_bert, trainable=True)
 
