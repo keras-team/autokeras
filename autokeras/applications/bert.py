@@ -187,10 +187,10 @@ from autokeras.engine import block as block_module
 # from autokeras.utils import layer_utils
 # from autokeras.utils import utils
 # from autokeras.basic import set_hp_value
-# import json
+import json
 from autokeras.blocks import preprocessing
 import os
-import tensorflow_hub as hub
+# import tensorflow_hub as hub
 from official.nlp import bert
 
 gs_folder_bert = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
@@ -235,30 +235,31 @@ class BERT(block_module.Block):
         # model = super().build(hp)
 
         ## bert config file
-        # bert_config_file = os.path.join(gs_folder_bert, "bert_config.json")
-        # config_dict = json.loads(tf.io.gfile.GFile(bert_config_file).read())
-        #
-        # bert_config = bert.configs.BertConfig.from_dict(config_dict)
-        #
-        # bert_classifier, bert_encoder = bert.bert_models.classifier_model(
-        #     bert_config, num_labels=2)
+        bert_config_file = os.path.join(gs_folder_bert, "bert_config.json")
+        config_dict = json.loads(tf.io.gfile.GFile(bert_config_file).read())
+
+        bert_config = bert.configs.BertConfig.from_dict(config_dict)
+
+        bert_classifier, bert_encoder = bert.bert_models.classifier_model(
+            bert_config, num_labels=2)
 
         ## TOKENIZER
         tokenizer = bert.tokenization.FullTokenizer(
             vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
             do_lower_case=True)
 
-        output_node = preprocessing.TextVectorizationWithTokenizer(tokenizer=tokenizer).build(
+        output_node = preprocessing.TextVectorizationWithTokenizer(
+            tokenizer=tokenizer).build(
             hp, input_tensor)
 
-        hub_encoder = hub.KerasLayer(hub_url_bert, trainable=True)
+        # hub_encoder = hub.KerasLayer(hub_url_bert, trainable=True)
 
-        checkpoint = tf.train.Checkpoint(model=hub_encoder)
+        checkpoint = tf.train.Checkpoint(model=bert_encoder)
 
         checkpoint.restore(
             os.path.join(gs_folder_bert, 'bert_model.ckpt')).assert_consumed()
 
-        output_node = hub_encoder(
+        output_node = bert_encoder(
             inputs=output_node,
             training=True,
         )
