@@ -48,7 +48,7 @@ class ImageClassifier(SupervisedImagePipeline):
             of AutoTuner. If left unspecified, it uses a task specific tuner, which
             first evaluates the most commonly used models for the task before
             exploring other models.
-        overwrite: Boolean. Defaults to `True`. If `False`, reloads an existing
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
@@ -65,7 +65,7 @@ class ImageClassifier(SupervisedImagePipeline):
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite: bool = True,
+                 overwrite: bool = False,
                  seed: Optional[int] = None,
                  **kwargs):
         if tuner is None:
@@ -165,7 +165,7 @@ class ImageRegressor(SupervisedImagePipeline):
             of AutoTuner. If left unspecified, it uses a task specific tuner, which
             first evaluates the most commonly used models for the task before
             exploring other models.
-        overwrite: Boolean. Defaults to `True`. If `False`, reloads an existing
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
@@ -181,7 +181,7 @@ class ImageRegressor(SupervisedImagePipeline):
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite: bool = True,
+                 overwrite: bool = False,
                  seed: Optional[int] = None,
                  **kwargs):
         if tuner is None:
@@ -281,7 +281,7 @@ class ImageSegmenter(SupervisedImagePipeline):
             of AutoTuner. If left unspecified, it uses a task specific tuner, which
             first evaluates the most commonly used models for the task before
             exploring other models.
-        overwrite: Boolean. Defaults to `True`. If `False`, reloads an existing
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
@@ -297,7 +297,7 @@ class ImageSegmenter(SupervisedImagePipeline):
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite: bool = True,
+                 overwrite: bool = False,
                  seed: Optional[int] = None,
                  **kwargs):
         if tuner is None:
