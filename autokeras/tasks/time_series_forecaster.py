@@ -151,7 +151,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
             of AutoTuner. If left unspecified, it uses a task specific tuner, which
             first evaluates the most commonly used models for the task before
             exploring other models.
-        overwrite: Boolean. Defaults to `True`. If `False`, reloads an existing
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
@@ -172,7 +172,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
                  directory: Union[str, Path, None] = None,
                  objective: str = 'val_loss',
                  tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite: bool = True,
+                 overwrite: bool = False,
                  seed: Optional[int] = None,
                  **kwargs):
         if tuner is None:
@@ -343,7 +343,7 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
             AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
-        overwrite: Boolean. Defaults to `True`. If `False`, reloads an existing
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
@@ -363,7 +363,7 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
                  max_trials=100,
                  directory=None,
                  objective='val_loss',
-                 overwrite=True,
+                 overwrite=False,
                  seed=None,
                  **kwargs):
         raise NotImplementedError

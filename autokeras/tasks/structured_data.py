@@ -172,7 +172,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             of AutoTuner. If left unspecified, it uses a task specific tuner, which
             first evaluates the most commonly used models for the task before
             exploring other models.
-        overwrite: Boolean. Defaults to `True`. If `False`, reloads an existing
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
@@ -191,7 +191,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                  directory=None,
                  objective='val_accuracy',
                  tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite=True,
+                 overwrite=False,
                  seed=None,
                  **kwargs):
         if tuner is None:
@@ -290,7 +290,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             of AutoTuner. If left unspecified, it uses a task specific tuner, which
             first evaluates the most commonly used models for the task before
             exploring other models.
-        overwrite: Boolean. Defaults to `True`. If `False`, reloads an existing
+        overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
@@ -308,7 +308,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
                  directory: Union[str, pathlib.Path, None] = None,
                  objective: str = 'val_loss',
                  tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite: bool = True,
+                 overwrite: bool = False,
                  seed: Optional[int] = None,
                  **kwargs):
         if tuner is None:
