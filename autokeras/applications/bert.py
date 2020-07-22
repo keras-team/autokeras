@@ -261,9 +261,9 @@ class BERT(block_module.Block):
 
         output_node = preprocessing.TextVectorizationWithTokenizer(
             tokenizer=tokenizer).build(input_tensor)
+        print(output_node.shape)
 
         # hub_encoder = hub.KerasLayer(hub_url_bert, trainable=True)
-
         checkpoint = tf.train.Checkpoint(model=bert_encoder)
 
         checkpoint.restore(
