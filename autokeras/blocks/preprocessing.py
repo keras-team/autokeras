@@ -22,8 +22,6 @@ from tensorflow.python.util import nest
 from autokeras import adapters
 from autokeras import keras_layers
 from autokeras.engine import block as block_module
-import tensorflow as tf
-import numpy as np
 
 
 class Normalization(block_module.Block):
