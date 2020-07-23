@@ -101,6 +101,7 @@ class TextVectorizationWithTokenizer(CombinerPreprocessingLayer):
     """
 
     def __init__(self, tokenizer):
+        super().__init__()
         self.tokenizer = tokenizer
 
     def call(self, inputs):
