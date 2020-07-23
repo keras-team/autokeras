@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+# from tensorflow.python.keras.engine.base_preprocessing_layer import CombinerPreprocessingLayer
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
-# from tensorflow.python.keras.engine.base_preprocessing_layer import CombinerPreprocessingLayer
 
 INT = "int"
 NONE = "none"
@@ -98,6 +99,7 @@ class TextVectorizationWithTokenizer(CombinerPreprocessingLayer):
         vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
         do_lower_case=True)
     """
+
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
 
@@ -108,7 +110,7 @@ class TextVectorizationWithTokenizer(CombinerPreprocessingLayer):
     @staticmethod
     def encode_sentence(self, s):
         tokens = list(self.tokenizer.tokenize(s))
-        tokens.append('[SEP]') ##change these tokens
+        tokens.append('[SEP]')  # change these tokens
         return self.tokenizer.convert_tokens_to_ids(tokens)
 
     @staticmethod
@@ -119,7 +121,8 @@ class TextVectorizationWithTokenizer(CombinerPreprocessingLayer):
             self.encode_sentence(s)
             for s in np.array(input)])
 
-        cls = [self.tokenizer.convert_tokens_to_ids(['[CLS]'])] * sentence1.shape[0] #change
+        cls = [self.tokenizer.convert_tokens_to_ids(
+            ['[CLS]'])] * sentence1.shape[0]  # change
         input_word_ids = tf.concat([cls, sentence1], axis=-1)
 
         input_mask = tf.ones_like(input_word_ids).to_tensor()
