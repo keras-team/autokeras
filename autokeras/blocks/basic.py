@@ -13,6 +13,17 @@
 # limitations under the License.
 
 from typing import Optional
+from official.nlp import bert
+# # Load the required submodules
+import official.nlp.optimization
+import official.nlp.bert.bert_models
+import official.nlp.bert.configs
+import official.nlp.bert.run_classifier
+import official.nlp.bert.tokenization
+import official.nlp.data.classifier_data_lib
+import official.nlp.modeling.losses
+import official.nlp.modeling.models
+import official.nlp.modeling.networks
 
 import tensorflow as tf
 from tensorflow.keras import applications
