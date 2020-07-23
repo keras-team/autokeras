@@ -108,13 +108,11 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
 
         return self.bert_encode(inputs)
 
-    @staticmethod
     def encode_sentence(self, s):
         tokens = list(self.tokenizer.tokenize(s))
         tokens.append('[SEP]')  # change these tokens
         return self.tokenizer.convert_tokens_to_ids(tokens)
 
-    @staticmethod
     def bert_encode(self, input):
         num_examples = len(input)
         print(num_examples, input.shape)
