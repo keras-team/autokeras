@@ -93,7 +93,7 @@ CUSTOM_OBJECTS = {
 }
 
 
-class TextVectorizationWithTokenizer(CombinerPreprocessingLayer):
+class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
     """
     tokenizer = bert.tokenization.FullTokenizer(
         vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
