@@ -778,7 +778,7 @@ class BERTBlock(block_module.Block):
         # model = super().build(hp)
 
         # bert config file
-
+        gs_folder_bert = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
         # TOKENIZER
         tokenizer = bert.tokenization.FullTokenizer(
             vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
