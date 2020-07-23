@@ -19,8 +19,10 @@ from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
+from autokeras.applications import BERT
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
+from autokeras.keras_layers import TextVectorizationWithTokenizer
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
 
@@ -728,4 +730,64 @@ class Embedding(block_module.Block):
             dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0.25)
         if dropout > 0:
             output_node = layers.Dropout(dropout)(output_node)
+        return output_node
+
+
+class BERTBlock(block_module.Block):
+    """Block for Pretrained BERT.
+
+    # Arguments
+        version: String. 'v1', 'v2' or 'next'. The type of ResNet to use.
+            If left unspecified, it will be tuned automatically.
+        pooling: String. 'avg', 'max'. The type of pooling layer to use.
+            If left unspecified, it will be tuned automatically.
+    """
+
+    def __init__(self,
+                 # version: Optional[str] = None,
+                 # pooling: Optional[str] = None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        # self.version = version
+        # self.pooling = pooling
+
+    def get_config(self):
+        config = super().get_config()
+        # config.update({
+        #     'version': self.version,
+        #     'pooling': self.pooling})
+        return config
+
+    def build(self, hp, inputs=None):
+        input_tensor = nest.flatten(inputs)[0]
+        # input_shape = None
+
+        # hp.Choice('version', ['v1', 'v2', 'next'], default='v2')
+        # hp.Choice('pooling', ['avg', 'max'], default='avg')
+        #
+        # set_hp_value(hp, 'version', self.version)
+        # set_hp_value(hp, 'pooling', self.pooling)
+        #
+        # model = super().build(hp)
+
+        # bert config file
+
+        # TOKENIZER
+        tokenizer = bert.tokenization.FullTokenizer(
+            vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
+            do_lower_case=True)
+
+        output_node = TextVectorizationWithTokenizer(
+            tokenizer=tokenizer)(input_tensor)
+        print(output_node.shape)
+
+        # hub_encoder = hub.KerasLayer(hub_url_bert, trainable=True)
+
+        bert_encoder = BERT()
+
+        output_node = bert_encoder(
+            inputs=output_node,
+            training=True,
+        )
+
         return output_node

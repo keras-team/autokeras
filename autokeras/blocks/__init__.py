@@ -14,6 +14,7 @@
 
 import tensorflow as tf
 
+from autokeras.blocks.basic import BERTBlock
 from autokeras.blocks.basic import ConvBlock
 from autokeras.blocks.basic import DenseBlock
 from autokeras.blocks.basic import Embedding

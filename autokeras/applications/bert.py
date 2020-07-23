@@ -1,4 +1,4 @@
-#https://www.tensorflow.org/official_models/fine_tuning_bert
+# https://www.tensorflow.org/official_models/fine_tuning_bert
 # import os
 #
 # import numpy as np
@@ -174,27 +174,13 @@
 #     loss=loss,
 #     metrics=metrics)
 
-from typing import Optional
-
-import tensorflow as tf
-# from kerastuner.applications import resnet
-# from kerastuner.applications import xception
-# from tensorflow.keras import layers
-from tensorflow.python.util import nest
-
-# from autokeras.blocks import reduction
-from autokeras.engine import block as block_module
 # from autokeras.utils import layer_utils
 # from autokeras.utils import utils
 # from autokeras.basic import set_hp_value
 import json
-from autokeras.blocks import preprocessing
 import os
-# import tensorflow_hub as hub
-from official.nlp import bert
+from typing import Optional
 
-# Load the required submodules
-import official.nlp.optimization
 import official.nlp.bert.bert_models
 import official.nlp.bert.configs
 import official.nlp.bert.run_classifier
@@ -203,75 +189,38 @@ import official.nlp.data.classifier_data_lib
 import official.nlp.modeling.losses
 import official.nlp.modeling.models
 import official.nlp.modeling.networks
+# Load the required submodules
+import official.nlp.optimization
+import tensorflow as tf
+# import tensorflow_hub as hub
+from official.nlp import bert
+# from kerastuner.applications import resnet
+# from kerastuner.applications import xception
+# from tensorflow.keras import layers
+from tensorflow.python.util import nest
+
+from autokeras.blocks import preprocessing
+# from autokeras.blocks import reduction
+from autokeras.engine import block as block_module
+from autokeras.keras_layers import TextVectorizationWithTokenizer
 
 gs_folder_bert = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
 # tf.io.gfile.listdir(gs_folder_bert)
 hub_url_bert = "https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/2"
 
-class BERT(block_module.Block):
-    """Block for Pretrained BERT.
 
-    # Arguments
-        version: String. 'v1', 'v2' or 'next'. The type of ResNet to use.
-            If left unspecified, it will be tuned automatically.
-        pooling: String. 'avg', 'max'. The type of pooling layer to use.
-            If left unspecified, it will be tuned automatically.
-    """
+def BERT():
+    bert_config_file = os.path.join(gs_folder_bert, "bert_config.json")
+    config_dict = json.loads(tf.io.gfile.GFile(bert_config_file).read())
 
-    def __init__(self,
-                 version: Optional[str] = None,
-                 pooling: Optional[str] = None,
-                 **kwargs):
-        super().__init__(**kwargs)
-        self.version = version
-        self.pooling = pooling
+    bert_config = bert.configs.BertConfig.from_dict(config_dict)
 
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            'version': self.version,
-            'pooling': self.pooling})
-        return config
+    bert_classifier, bert_encoder = bert.bert_models.classifier_model(
+        bert_config, num_labels=2)
 
-    def build(self, hp, inputs=None):
-        input_tensor = nest.flatten(inputs)[0]
-        # input_shape = None
+    checkpoint = tf.train.Checkpoint(model=bert_encoder)
 
-        # hp.Choice('version', ['v1', 'v2', 'next'], default='v2')
-        # hp.Choice('pooling', ['avg', 'max'], default='avg')
-        #
-        # set_hp_value(hp, 'version', self.version)
-        # set_hp_value(hp, 'pooling', self.pooling)
-        #
-        # model = super().build(hp)
+    checkpoint.restore(
+        os.path.join(gs_folder_bert, 'bert_model.ckpt')).assert_consumed()
 
-        ## bert config file
-        bert_config_file = os.path.join(gs_folder_bert, "bert_config.json")
-        config_dict = json.loads(tf.io.gfile.GFile(bert_config_file).read())
-
-        bert_config = bert.configs.BertConfig.from_dict(config_dict)
-
-        bert_classifier, bert_encoder = bert.bert_models.classifier_model(
-            bert_config, num_labels=2)
-
-        ## TOKENIZER
-        tokenizer = bert.tokenization.FullTokenizer(
-            vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
-            do_lower_case=True)
-
-        output_node = preprocessing.TextVectorizationWithTokenizer(
-            tokenizer=tokenizer).build(input_tensor)
-        print(output_node.shape)
-
-        # hub_encoder = hub.KerasLayer(hub_url_bert, trainable=True)
-        checkpoint = tf.train.Checkpoint(model=bert_encoder)
-
-        checkpoint.restore(
-            os.path.join(gs_folder_bert, 'bert_model.ckpt')).assert_consumed()
-
-        output_node = bert_encoder(
-            inputs=output_node,
-            training=True,
-        )
-
-        return output_node
+    return bert_encoder
