@@ -1,21 +1,8 @@
-# Copyright 2020 The AutoKeras Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+import os
 from typing import Optional
-from official.nlp import bert
-# # Load the required submodules
-import official.nlp.optimization
+
+import matplotlib.pyplot as plt
+import numpy as np
 import official.nlp.bert.bert_models
 import official.nlp.bert.configs
 import official.nlp.bert.run_classifier
@@ -24,8 +11,14 @@ import official.nlp.data.classifier_data_lib
 import official.nlp.modeling.losses
 import official.nlp.modeling.models
 import official.nlp.modeling.networks
-
+# # Load the required submodules
+import official.nlp.optimization
 import tensorflow as tf
+import tensorflow_datasets as tfds
+import tensorflow_hub as hub
+from official import nlp
+from official.modeling import tf_utils
+from official.nlp import bert
 from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
@@ -36,6 +29,9 @@ from autokeras.engine import block as block_module
 from autokeras.keras_layers import TextVectorizationWithTokenizer
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
+
+tfds.disable_progress_bar()
+
 
 RESNET_V1 = {
     "resnet50": applications.ResNet50,
