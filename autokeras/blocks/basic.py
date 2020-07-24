@@ -785,7 +785,7 @@ class BERTBlock(block_module.Block):
             do_lower_case=True)
 
         tokenizer_layer = TextVectorizationWithTokenizer(
-            tokenizer=tokenizer).build()
+            tokenizer=tokenizer).build(input_shape=(10,10))
         output_node = tokenizer_layer(inputs)
         print(output_node.shape)
 
