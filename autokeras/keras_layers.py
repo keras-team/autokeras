@@ -119,21 +119,25 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         tokens.append('[SEP]')  # change these tokens
         return self.tokenizer.convert_tokens_to_ids(tokens)
 
-    def bert_encode(self, input):
-        num_examples = len(input)
-        print(num_examples, input.shape)
-        sentence1 = tf.ragged.constant([
+    def get_encoded_sentence(self, input_tensor):
+        sentence = tf.ragged.constant([
             self.encode_sentence(s)
-            for s in input])
+            for s in np.array(input_tensor)])
+        return sentence
+
+    def bert_encode(self, input_tensor):
+        num_examples = len(input_tensor)
+        print(num_examples, input_tensor.shape)
+        sentence = tf.py_function(func=self.get_encoded_sentence, inp=[input_tensor])
 
         cls = [self.tokenizer.convert_tokens_to_ids(
-            ['[CLS]'])] * sentence1.shape[0]  # change
-        input_word_ids = tf.concat([cls, sentence1], axis=-1)
+            ['[CLS]'])] * sentence.shape[0]  # change
+        input_word_ids = tf.concat([cls, sentence], axis=-1)
 
         input_mask = tf.ones_like(input_word_ids).to_tensor()
 
         type_cls = tf.zeros_like(cls)
-        type_s1 = tf.zeros_like(sentence1)
+        type_s1 = tf.zeros_like(sentence)
         input_type_ids = tf.concat(
             [type_cls, type_s1], axis=-1).to_tensor()
 
