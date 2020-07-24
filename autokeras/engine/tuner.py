@@ -47,7 +47,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         pass
 
     def get_best_model(self):
-        model = super().get_best_models()[0]
+        model = self._build_best_model()
         model.load_weights(self.best_model_path)
         return model
 
@@ -174,10 +174,13 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         best_trial = self.oracle.get_best_trials(1)[0]
         return len(best_trial.metrics.metrics['val_loss']._observations)
 
-    def final_fit(self, x=None, **fit_kwargs):
+    def _build_best_model(self):
         best_trial = self.oracle.get_best_trials(1)[0]
         best_hp = best_trial.hyperparameters
-        model = self.hypermodel.build(best_hp)
+        return self.hypermodel.build(best_hp)
+
+    def final_fit(self, x=None, **fit_kwargs):
+        model = self._build_best_model()
         self.adapt(model, x)
         model.fit(x, **fit_kwargs)
         return model
