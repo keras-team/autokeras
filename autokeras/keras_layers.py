@@ -112,7 +112,8 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
 
     def call(self, inputs):
 
-        return self.bert_encode(inputs)
+        # return self.bert_encode(inputs)
+        return tf.py_function(func=self.bert_encode, inp = [inputs], Tout=tf.int32)
 
     def encode_sentence(self, s):
         tokens = list(self.tokenizer.tokenize(s))
