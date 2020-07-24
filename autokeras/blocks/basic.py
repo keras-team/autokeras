@@ -784,8 +784,9 @@ class BERTBlock(block_module.Block):
             vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
             do_lower_case=True)
 
-        output_node = TextVectorizationWithTokenizer(
-            tokenizer=tokenizer)(input_tensor)
+        tokenizer_layer = TextVectorizationWithTokenizer(
+            tokenizer=tokenizer).build()
+        output_node = tokenizer_layer(inputs)
         print(output_node.shape)
 
         # hub_encoder = hub.KerasLayer(hub_url_bert, trainable=True)
