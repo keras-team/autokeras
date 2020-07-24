@@ -104,6 +104,12 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         super().__init__()
         self.tokenizer = tokenizer
 
+    def build(self, input_shape):
+        print(input_shape)
+        # for encoding_layer in self.encoding_layers:
+        #     if encoding_layer is not None:
+        #         encoding_layer.build(tf.TensorShape([1]))
+
     def call(self, inputs):
 
         return self.bert_encode(inputs)

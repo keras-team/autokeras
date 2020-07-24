@@ -785,8 +785,8 @@ class BERTBlock(block_module.Block):
             do_lower_case=True)
 
         tokenizer_layer = TextVectorizationWithTokenizer(
-            tokenizer=tokenizer).build(input_shape=(10,10))
-        output_node = tokenizer_layer(inputs)
+            tokenizer=tokenizer).build(input_tensor.shape)
+        output_node = tokenizer_layer(input_tensor)
         print(output_node.shape)
 
         # hub_encoder = hub.KerasLayer(hub_url_bert, trainable=True)
