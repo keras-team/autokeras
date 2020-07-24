@@ -105,7 +105,7 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         self.tokenizer = tokenizer
 
     def build(self, input_shape):
-        print(input_shape)
+        print("build function called: ",input_shape)
         # for encoding_layer in self.encoding_layers:
         #     if encoding_layer is not None:
         #         encoding_layer.build(tf.TensorShape([1]))
