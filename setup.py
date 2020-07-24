@@ -8,7 +8,7 @@ readme = this_file.parent / 'README.md'
 
 setup(
     name='autokeras',
-    version='1.0.4',
+    version='1.0.5dev',
     description='AutoML for deep learning',
     package_data={'': ['README.md']},
     long_description=readme.read_text(encoding='utf-8'),
