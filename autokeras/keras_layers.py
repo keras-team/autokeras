@@ -124,7 +124,7 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         print(num_examples, input.shape)
         sentence1 = tf.ragged.constant([
             self.encode_sentence(s)
-            for s in np.array(input)])
+            for s in input])
 
         cls = [self.tokenizer.convert_tokens_to_ids(
             ['[CLS]'])] * sentence1.shape[0]  # change
