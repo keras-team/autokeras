@@ -21,7 +21,7 @@ The goal of AutoKeras is to make machine learning accessible for everyone.
 
 Here is a short example of using the package.
 
-```
+```python
 import autokeras as ak
 
 clf = ak.ImageClassifier()
