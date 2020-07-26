@@ -130,7 +130,7 @@ def py_to_nb_md(dest_dir):
                 + file_name_no_ext + ".ipynb"
                 + ")   &nbsp; &nbsp;"
                 # + '<span class="k-dot">•</span>'
-                + ':octicons-octoface: '
+                + ':octicons-octoface-16: '
                 "[**GitHub source**](https://github.com/" + github_repo_dir + "py/"
                 + file_name_no_ext + ".py)",
                 "\n",

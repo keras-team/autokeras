@@ -42,12 +42,14 @@ nav:
     - Multi-Modal and Multi-Task: tutorial/multi.md
     - Customized Model: tutorial/customized.md
     - Export Model: tutorial/export.md
-    - TRAINS Integration: tutorial/trains.md
     - FAQ: tutorial/faq.md
   - Examples:
     - MNIST Hand-Written Digits: examples/mnist.md
     - IMDB Movie Reviews: examples/imdb.md
     - Titanic Survival Prediction: examples/titanic.md
+  - Extensions:
+    - TensorFlow Cloud: extensions/tf_cloud.md
+    - TRAINS: extensions/trains.md
   - Docker: docker.md
   - Contributing Guide: contributing.md
   - Documentation:
