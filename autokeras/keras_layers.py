@@ -111,9 +111,9 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         #         encoding_layer.build(tf.TensorShape([1]))
 
     def call(self, inputs):
-
+        print("Tokenizer call function: ", inputs.shape)
         # return self.bert_encode(inputs)
-        return tf.py_function(func=self.bert_encode, inp = [inputs], Tout=tf.int32)
+        return tf.py_function(func=self.bert_encode, inp=[inputs], Tout=tf.int32)
 
     def encode_sentence(self, s):
         tokens = list(self.tokenizer.tokenize(s))
