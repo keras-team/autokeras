@@ -16,7 +16,7 @@ def get_data():
 def test_multi_column_categorical_encoding(tmp_path):
     x_train, x_test, y_train = get_data()
     input_node = tf.keras.Input(shape=(3,), dtype=tf.string)
-    layer = layer_module.MultiColumnCategoricalEncoding([
+    layer = layer_module.MultiCategoryEncoding([
         layer_module.INT,
         layer_module.INT,
         layer_module.NONE,
@@ -47,7 +47,7 @@ def test_multi_column_categorical_encoding(tmp_path):
 
 def build_model():
     input_node = tf.keras.Input(shape=(3,), dtype=tf.string)
-    layer = layer_module.MultiColumnCategoricalEncoding(encoding=[
+    layer = layer_module.MultiCategoryEncoding(encoding=[
         layer_module.INT, layer_module.INT, layer_module.NONE])
     output_node = layer(input_node)
     output_node = tf.keras.layers.Dense(1)(output_node)
