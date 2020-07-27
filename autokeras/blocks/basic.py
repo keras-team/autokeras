@@ -787,11 +787,13 @@ class BERTBlock(block_module.Block):
         tokenizer_layer = TextVectorizationWithTokenizer(
             tokenizer=tokenizer)
         output_node = tokenizer_layer(input_tensor)
-        print(output_node.shape)
+        print("Tokenizer output shape: ", output_node.shape)
 
         # hub_encoder = hub.KerasLayer(hub_url_bert, trainable=True)
 
         bert_encoder = BERT()
+
+        tf.keras.utils.plot_model(bert_encoder, show_shapes=True, dpi=48)
 
         output_node = bert_encoder(
             inputs=output_node,
