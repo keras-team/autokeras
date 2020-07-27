@@ -8,7 +8,7 @@ ONE_HOT = 'one-hot'
 
 
 @tf.keras.utils.register_keras_serializable()
-class MultiColumnCategoricalEncoding(preprocessing.PreprocessingLayer):
+class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
     """Encode the categorical features to numerical features.
 
     # Arguments
