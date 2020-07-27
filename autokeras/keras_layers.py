@@ -145,9 +145,10 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         input_type_ids = tf.concat(
             [type_cls, type_s1], axis=-1).to_tensor()
 
-        inputs = {
-            'input_word_ids': input_word_ids.to_tensor(),
-            'input_mask': input_mask,
-            'input_type_ids': input_type_ids}
+        # inputs = {
+        #     'input_word_ids': input_word_ids.to_tensor(),
+        #     'input_mask': input_mask,
+        #     'input_type_ids': input_type_ids}
+        inputs = [input_word_ids.to_tensor(),input_mask, input_type_ids]
 
         return inputs
