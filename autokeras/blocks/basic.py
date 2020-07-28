@@ -765,7 +765,7 @@ class BERTBlock(block_module.Block):
         config.update({
         #     'version': self.version,
         #     'pooling': self.pooling,
-            'max_len': self.max_len
+            'max_seq_len': self.max_seq_len
             })
         return config
 
