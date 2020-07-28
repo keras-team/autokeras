@@ -130,7 +130,7 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         tokens = list(self.tokenizer.tokenize(s))
         tokens.append('[SEP]')
         if len(tokens) < self.max_seq_len:
-            tokens = tokens + ['UNK']*(self.max_seq_len - len(tokens))
+            tokens = tokens + ['[UNK]']*(self.max_seq_len - len(tokens))
         else:
             tokens = tokens[0:self.max_seq_len]
         encoded_sentence = self.tokenizer.convert_tokens_to_ids(tokens)
