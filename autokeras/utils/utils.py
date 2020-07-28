@@ -43,9 +43,9 @@ def to_type_key(dictionary, convert_func):
 
 
 def check_tf_version() -> None:
-    if parse(tf.__version__) < parse('2.2.0'):
+    if parse(tf.__version__) < parse('2.3.0'):
         raise ImportError(
-            'The Tensorflow package version needs to be at least 2.2.0 \n'
+            'The Tensorflow package version needs to be at least 2.3.0 \n'
             'for AutoKeras to run. Currently, your TensorFlow version is \n'
             '{version}. Please upgrade with \n'
             '`$ pip install --upgrade tensorflow`. \n'
