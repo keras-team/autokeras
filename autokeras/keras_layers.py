@@ -113,7 +113,7 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
     def call(self, inputs):
         print("Tokenizer call function: ", inputs.shape)
         # return self.bert_encode(inputs)
-        output = tf.py_function(func=self.bert_encode, inp=[inputs], Tout=tf.int32)
+        output = tf.py_function(func=self.bert_encode, inp=[inputs], Tout=tf.int32, eager=False)
         output.set_shape([None, None, None])
         return output
 
@@ -126,15 +126,15 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
 
     def get_encoded_sentence(self, input_tensor):
         sentence = tf.ragged.constant([
-            self.encode_sentence(input_tensor[i])
-            for i in range(len(input_tensor))])
+            self.encode_sentence(s)
+            for s in np.array(input_tensor)])
         print("get_encoded_sentence: ", sentence.shape)
         return sentence
 
     def bert_encode(self, input_tensor):
         num_examples = len(input_tensor)
         print("bert_encode num_examples: ", num_examples, "input_tensor shape:", input_tensor.shape)
-        sentence = tf.py_function(func=self.get_encoded_sentence, inp=[input_tensor], Tout=tf.int32)
+        sentence = tf.py_function(func=self.get_encoded_sentence, inp=[input_tensor], Tout=tf.int32, eager=False)
         sentence.set_shape([None])
         cls = [self.tokenizer.convert_tokens_to_ids(
             ['[CLS]'])] * sentence.shape[0]
