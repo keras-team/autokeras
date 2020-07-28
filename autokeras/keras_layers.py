@@ -126,8 +126,8 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
 
     def get_encoded_sentence(self, input_tensor):
         sentence = tf.ragged.constant([
-            self.encode_sentence(s)
-            for s in input_tensor])
+            self.encode_sentence(input_tensor[i])
+            for i in range(len(input_tensor))])
         print("get_encoded_sentence: ", sentence.shape)
         return sentence
 
