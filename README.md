@@ -37,12 +37,12 @@ To install the package, please use the `pip` installation as follows:
 
 ```shell
 pip3 install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc1
-pip3 install autokeras==1.0.4
+pip3 install autokeras==1.0.5
 ```
 
 Please follow the [installation guide](https://autokeras.com/install) for more details.
 
-**Note:** Currently, AutoKeras is only compatible with **Python >= 3.5** and **TensorFlow >= 2.2.0**.
+**Note:** Currently, AutoKeras is only compatible with **Python >= 3.5** and **TensorFlow >= 2.3.0**.
 
 ## Community
 <p float="left">
@@ -115,4 +115,4 @@ appreciated.
 
 ## Acknowledgements
 
-The authors gratefully acknowledge the D3M program of the Defense Advanced Research Projects Agency (DARPA) administered through AFRL contract FA8750-17-2-0116; the Texas A&M College of Engineering, and Texas A&M.
+The authors gratefully acknowledge the D3M program of the Defense Advanced Research Projects Agency (DARPA) administered through AFRL contract FA8750-17-2-0116; the Texas A&M College of Engineering, and Texas A&M University.
