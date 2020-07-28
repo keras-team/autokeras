@@ -19,6 +19,16 @@ from autokeras.blocks import preprocessing
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
 
+BLOCK_TYPE = 'block_type'
+RESNET = 'resnet'
+XCEPTION = 'xception'
+VANILLA = 'vanilla'
+NORMALIZE = 'normalize'
+AUGMENT = 'augment'
+TRANSFORMER = 'transformer'
+MAX_TOKENS = 'max_tokens'
+NGRAM = 'ngram'
+
 
 class ImageBlock(block_module.Block):
     """Block for image data.
@@ -47,35 +57,43 @@ class ImageBlock(block_module.Block):
 
     def get_config(self):
         config = super().get_config()
-        config.update({'block_type': self.block_type,
-                       'normalize': self.normalize,
-                       'augment': self.augment})
+        config.update({BLOCK_TYPE: self.block_type,
+                       NORMALIZE: self.normalize,
+                       AUGMENT: self.augment})
         return config
+
+    def _build_block(self, hp, output_node, block_type):
+        if block_type == RESNET:
+            return basic.ResNetBlock().build(hp, output_node)
+        elif block_type == XCEPTION:
+            return basic.XceptionBlock().build(hp, output_node)
+        elif block_type == VANILLA:
+            return basic.ConvBlock().build(hp, output_node)
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
 
-        block_type = self.block_type or hp.Choice('block_type',
-                                                  ['resnet', 'xception', 'vanilla'],
-                                                  default='vanilla')
-
-        normalize = self.normalize
-        if normalize is None:
-            normalize = hp.Boolean('normalize', default=False)
-        augment = self.augment
-        if augment is None:
-            augment = hp.Boolean('augment', default=False)
-        if normalize:
+        if self.normalize is None and hp.Boolean(NORMALIZE):
+            with hp.conditional_scope(NORMALIZE, [True]):
+                output_node = preprocessing.Normalization().build(hp, output_node)
+        elif self.normalize:
             output_node = preprocessing.Normalization().build(hp, output_node)
-        if augment:
+
+        if self.augment is None and hp.Boolean(AUGMENT):
+            with hp.conditional_scope(AUGMENT, [True]):
+                output_node = preprocessing.ImageAugmentation().build(
+                    hp, output_node)
+        elif self.augment:
             output_node = preprocessing.ImageAugmentation().build(hp, output_node)
-        if block_type == 'resnet':
-            output_node = basic.ResNetBlock().build(hp, output_node)
-        elif block_type == 'xception':
-            output_node = basic.XceptionBlock().build(hp, output_node)
-        elif block_type == 'vanilla':
-            output_node = basic.ConvBlock().build(hp, output_node)
+
+        if self.block_type is None:
+            block_type = hp.Choice(BLOCK_TYPE, [RESNET, XCEPTION, VANILLA])
+            with hp.conditional_scope(BLOCK_TYPE, [block_type]):
+                output_node = self._build_block(hp, output_node, block_type)
+        else:
+            output_node = self._build_block(hp, output_node, self.block_type)
+
         return output_node
 
 
@@ -107,40 +125,44 @@ class TextBlock(block_module.Block):
     def get_config(self):
         config = super().get_config()
         config.update({
-            'block_type': self.block_type,
-            'max_tokens': self.max_tokens,
+            BLOCK_TYPE: self.block_type,
+            MAX_TOKENS: self.max_tokens,
             'pretraining': self.pretraining})
         return config
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
-        block_type = self.block_type or hp.Choice('block_type',
-                                                  ['vanilla',
-                                                   'transformer',
-                                                   'ngram'],
-                                                  default='vanilla')
-        max_tokens = self.max_tokens or hp.Choice('max_tokens',
-                                                  [500, 5000, 20000],
-                                                  default=5000)
-        if block_type == 'ngram':
+        if self.block_type is None:
+            block_type = hp.Choice(BLOCK_TYPE, [VANILLA, TRANSFORMER, NGRAM])
+            with hp.conditional_scope(BLOCK_TYPE, [block_type]):
+                output_node = self._build_block(hp, output_node, block_type)
+        else:
+            output_node = self._build_block(hp, output_node, self.block_type)
+        return output_node
+
+    def _build_block(self, hp, output_node, block_type):
+        max_tokens = self.max_tokens or hp.Choice(
+            MAX_TOKENS, [500, 5000, 20000], default=5000)
+        if block_type == NGRAM:
             output_node = preprocessing.TextToNgramVector(
                 max_tokens=max_tokens).build(hp, output_node)
-            output_node = basic.DenseBlock().build(hp, output_node)
+            return basic.DenseBlock().build(hp, output_node)
+        output_node = preprocessing.TextToIntSequence(
+            max_tokens=max_tokens).build(hp, output_node)
+        if block_type == TRANSFORMER:
+            output_node = basic.Transformer(
+                max_features=max_tokens + 1,
+                pretraining=self.pretraining,
+            ).build(hp, output_node)
         else:
-            output_node = preprocessing.TextToIntSequence(
-                max_tokens=max_tokens).build(hp, output_node)
-            if block_type == 'transformer':
-                output_node = basic.Transformer(max_features=max_tokens + 1,
-                                                pretraining=self.pretraining
-                                                ).build(hp, output_node)
-            else:
-                output_node = basic.Embedding(
-                    max_features=max_tokens + 1,
-                    pretraining=self.pretraining).build(hp, output_node)
-                output_node = basic.ConvBlock().build(hp, output_node)
-            output_node = reduction.SpatialReduction().build(hp, output_node)
-            output_node = basic.DenseBlock().build(hp, output_node)
+            output_node = basic.Embedding(
+                max_features=max_tokens + 1,
+                pretraining=self.pretraining,
+            ).build(hp, output_node)
+            output_node = basic.ConvBlock().build(hp, output_node)
+        output_node = reduction.SpatialReduction().build(hp, output_node)
+        output_node = basic.DenseBlock().build(hp, output_node)
         return output_node
 
 
@@ -150,7 +172,6 @@ class StructuredDataBlock(block_module.Block):
     # Arguments
         categorical_encoding: Boolean. Whether to use the CategoricalToNumerical to
             encode the categorical features to numerical features. Defaults to True.
-            If specified as None, it will be tuned automatically.
         seed: Int. Random seed.
     """
 
@@ -181,28 +202,15 @@ class StructuredDataBlock(block_module.Block):
                        'column_names': self.column_names})
         return config
 
-    def build_categorical_encoding(self, hp, input_node):
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
         output_node = input_node
-        categorical_encoding = self.categorical_encoding
-        if categorical_encoding is None:
-            categorical_encoding = hp.Choice('categorical_encoding',
-                                             [True, False],
-                                             default=True)
-        if categorical_encoding:
+        if self.categorical_encoding:
             block = preprocessing.CategoricalToNumerical()
             block.column_types = self.column_types
             block.column_names = self.column_names
             output_node = block.build(hp, output_node)
-        return output_node
-
-    def build_body(self, hp, input_node):
-        output_node = basic.DenseBlock().build(hp, input_node)
-        return output_node
-
-    def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
-        output_node = self.build_categorical_encoding(hp, input_node)
-        output_node = self.build_body(hp, output_node)
+        output_node = basic.DenseBlock().build(hp, output_node)
         return output_node
 
 

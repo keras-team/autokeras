@@ -32,6 +32,30 @@ def test_merge_build_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_merge_single_input_return_tensor():
+    block = blocks.Merge()
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32,), dtype=tf.float32),
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_merge_inputs_with_same_shape_return_tensor():
+    block = blocks.Merge()
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        [tf.keras.Input(shape=(32,), dtype=tf.float32),
+         tf.keras.Input(shape=(32,), dtype=tf.float32)])
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
 def test_merge_deserialize_to_merge():
     serialized_block = blocks.serialize(blocks.Merge())
 
@@ -58,6 +82,41 @@ def test_temporal_build_return_tensor():
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_temporal_global_max_return_tensor():
+    block = blocks.TemporalReduction(reduction_type='global_max')
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32, 10), dtype=tf.float32))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_temporal_global_avg_return_tensor():
+    block = blocks.TemporalReduction(reduction_type='global_avg')
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32, 10), dtype=tf.float32))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_reduction_2d_tensor_return_input_node():
+    block = blocks.TemporalReduction()
+    input_node = tf.keras.Input(shape=(32,), dtype=tf.float32)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        input_node,
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert nest.flatten(outputs)[0] is input_node
 
 
 def test_temporal_deserialize_to_temporal():

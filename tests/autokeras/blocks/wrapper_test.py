@@ -32,6 +32,39 @@ def test_image_build_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_image_block_xception_return_tensor():
+    block = blocks.ImageBlock(block_type='xception')
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_image_block_normalize_return_tensor():
+    block = blocks.ImageBlock(normalize=True)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_image_block_augment_return_tensor():
+    block = blocks.ImageBlock(augment=True)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
 def test_image_deserialize_to_image():
     serialized_block = blocks.serialize(blocks.ImageBlock())
 
@@ -51,6 +84,28 @@ def test_image_get_config_has_all_attributes():
 
 def test_text_build_return_tensor():
     block = blocks.TextBlock()
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(1,), dtype=tf.string))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_text_block_ngram_return_tensor():
+    block = blocks.TextBlock(block_type='ngram')
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(1,), dtype=tf.string))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_text_block_transformer_return_tensor():
+    block = blocks.TextBlock(block_type='transformer')
 
     outputs = block.build(
         kerastuner.HyperParameters(),
