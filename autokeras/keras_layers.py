@@ -121,7 +121,7 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         tokens = list(self.tokenizer.tokenize(s))
         tokens.append('[SEP]')
         encoded_sentence = self.tokenizer.convert_tokens_to_ids(tokens)
-        print("encode_sentence called: ", len(encoded_sentence), encoded_sentence.shape)
+        print("encode_sentence called: ", len(encoded_sentence))
         return encoded_sentence
 
     def get_encoded_sentence(self, input_tensor):
