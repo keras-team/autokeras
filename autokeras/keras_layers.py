@@ -100,9 +100,10 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         do_lower_case=True)
     """
 
-    def __init__(self, tokenizer):
+    def __init__(self, tokenizer, max_len):
         super().__init__()
         self.tokenizer = tokenizer
+        self.max_seq_len = max_len
 
     def build(self, input_shape):
         print("Tokenizer build function called: ",input_shape)
@@ -118,8 +119,20 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         return output
 
     def encode_sentence(self, s):
+        """
+        [UNK]: 100
+        [CLS]: 101
+        [SEP]: 102
+        [MASK]: 103
+        :param s:
+        :return:
+        """
         tokens = list(self.tokenizer.tokenize(s))
         tokens.append('[SEP]')
+        if len(tokens) < self.max_len:
+            tokens = tokens + ['UNK']*(self.max_len - len(tokens))
+        else:
+            tokens = tokens[0:self.max_len]
         encoded_sentence = self.tokenizer.convert_tokens_to_ids(tokens)
         print("encode_sentence called: ", len(encoded_sentence))
         return encoded_sentence
@@ -127,7 +140,7 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
     def get_encoded_sentence(self, input_tensor):
         input_array = np.array(input_tensor, dtype=object)
         print("get_encoded_sentence: ", input_array.shape, input_array[0][0])
-        sentence = tf.ragged.constant([
+        sentence = tf.constant([
             self.encode_sentence(s[0])
             for s in input_array])
         print("get_encoded_sentence: ", sentence.shape)
