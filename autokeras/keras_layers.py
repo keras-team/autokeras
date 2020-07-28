@@ -100,10 +100,10 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         do_lower_case=True)
     """
 
-    def __init__(self, tokenizer, max_len):
+    def __init__(self, tokenizer, max_seq_len):
         super().__init__()
         self.tokenizer = tokenizer
-        self.max_seq_len = max_len
+        self.max_seq_len = max_seq_len
 
     def build(self, input_shape):
         print("Tokenizer build function called: ",input_shape)
@@ -129,10 +129,10 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         """
         tokens = list(self.tokenizer.tokenize(s))
         tokens.append('[SEP]')
-        if len(tokens) < self.max_len:
-            tokens = tokens + ['UNK']*(self.max_len - len(tokens))
+        if len(tokens) < self.max_seq_len:
+            tokens = tokens + ['UNK']*(self.max_seq_len - len(tokens))
         else:
-            tokens = tokens[0:self.max_len]
+            tokens = tokens[0:self.max_seq_len]
         encoded_sentence = self.tokenizer.convert_tokens_to_ids(tokens)
         print("encode_sentence called: ", len(encoded_sentence))
         return encoded_sentence

@@ -753,12 +753,12 @@ class BERTBlock(block_module.Block):
     def __init__(self,
                  # version: Optional[str] = None,
                  # pooling: Optional[str] = None,
-                 max_len: Optional[int] = None,
+                 max_seq_len: Optional[int] = None,
                  **kwargs):
         super().__init__(**kwargs)
         # self.version = version
         # self.pooling = pooling
-        self.max_len = max_len
+        self.max_seq_len = max_seq_len
 
     def get_config(self):
         config = super().get_config()
@@ -782,8 +782,8 @@ class BERTBlock(block_module.Block):
         # model = super().build(hp)
 
         # bert config file
-        max_len = self.max_len or hp.Choice(
-            'max_len',
+        max_seq_len = self.max_seq_len or hp.Choice(
+            'max_seq_len',
             [128, 256, 512],
             default=128)
         gs_folder_bert = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
@@ -794,7 +794,7 @@ class BERTBlock(block_module.Block):
 
         tokenizer_layer = TextVectorizationWithTokenizer(
             tokenizer=tokenizer,
-            max_len = max_len)
+            max_seq_len = max_seq_len)
         output_node = tokenizer_layer(input_tensor)
         print("Tokenizer output shape: ", output_node.shape)
 
