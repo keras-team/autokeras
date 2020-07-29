@@ -134,7 +134,7 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         else:
             tokens = tokens[0:self.max_seq_len]
         encoded_sentence = self.tokenizer.convert_tokens_to_ids(tokens)
-        print("encode_sentence called: ", len(encoded_sentence))
+        print("encode_sentence len: ", len(encoded_sentence), encoded_sentence)
         return encoded_sentence
 
     def get_encoded_sentence(self, input_tensor):
