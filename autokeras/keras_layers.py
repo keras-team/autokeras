@@ -154,14 +154,14 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         cls = [self.tokenizer.convert_tokens_to_ids(
             ['[CLS]'])] * sentence.shape[0]
         input_word_ids = tf.concat([cls, sentence], axis=-1)
-
-        input_mask = tf.ones_like(input_word_ids).to_tensor()
-
+        print("bert_encode input_word_ids: ", input_word_ids.shape)
+        input_mask = tf.ones_like(input_word_ids).numpy()
+        print("bert_encode input_mask: ", input_mask.shape)
         type_cls = tf.zeros_like(cls)
         type_s1 = tf.zeros_like(sentence)
         input_type_ids = tf.concat(
-            [type_cls, type_s1], axis=-1).to_tensor()
-
+            [type_cls, type_s1], axis=-1).numpy()
+        print("bert_encode input_type_ids: ", input_type_ids.shape)
         # inputs = {
         #     'input_word_ids': input_word_ids.to_tensor(),
         #     'input_mask': input_mask,
