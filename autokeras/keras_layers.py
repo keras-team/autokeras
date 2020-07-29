@@ -115,7 +115,8 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         print("Tokenizer call function: ", inputs.shape)
         # return self.bert_encode(inputs)
         output = tf.numpy_function(func=self.bert_encode, inp=[inputs], Tout=tf.int32)
-        output.set_shape([3])
+        print(output.shape)
+        output.set_shape([None, None, None])
         return output
 
     def encode_sentence(self, s):
@@ -168,4 +169,5 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         #     'input_type_ids': input_type_ids}
         inputs = [input_word_ids.numpy(),input_mask, input_type_ids]
 
-        return inputs
+        input_array = np.array(inputs, dtype=object)
+        return input_array
