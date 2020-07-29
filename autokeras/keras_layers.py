@@ -166,6 +166,6 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         #     'input_word_ids': input_word_ids.to_tensor(),
         #     'input_mask': input_mask,
         #     'input_type_ids': input_type_ids}
-        inputs = [input_word_ids.to_tensor(),input_mask, input_type_ids]
+        inputs = [input_word_ids.numpy(),input_mask, input_type_ids]
 
         return inputs

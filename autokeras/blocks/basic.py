@@ -796,12 +796,12 @@ class BERTBlock(block_module.Block):
             tokenizer=tokenizer,
             max_seq_len = max_seq_len)
         output_node = tokenizer_layer(input_tensor)
-        print("Tokenizer output shape: ", output_node.shape)
+        print("Tokenizer output shape: ", len(output_node))
 
         bert_input = {
-                'input_word_ids': output_node[:,0],
-                'input_mask': output_node[:,1],
-                'input_type_ids': output_node[:,2]}
+                'input_word_ids': output_node[0],
+                'input_mask': output_node[1],
+                'input_type_ids': output_node[2]}
 
         # hub_encoder = hub.KerasLayer(hub_url_bert, trainable=True)
 
