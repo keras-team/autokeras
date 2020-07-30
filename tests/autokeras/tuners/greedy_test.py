@@ -16,23 +16,12 @@ from unittest import mock
 
 import kerastuner
 
-from autokeras import graph as graph_module
 from autokeras.tuners import greedy
 from tests import utils
 
 
-def test_greedy_oracle_state_hypermodel_is_graph():
-    oracle = greedy.GreedyOracle(
-        hypermodel=utils.build_graph(),
-        objective='val_loss',
-    )
-    oracle.set_state(oracle.get_state())
-    assert isinstance(oracle.hypermodel, graph_module.Graph)
-
-
 def test_greedy_oracle_get_state_update_space_can_run():
     oracle = greedy.GreedyOracle(
-        hypermodel=utils.build_graph(),
         objective='val_loss',
     )
     oracle.set_state(oracle.get_state())
@@ -42,22 +31,63 @@ def test_greedy_oracle_get_state_update_space_can_run():
 
 
 @mock.patch('autokeras.tuners.greedy.GreedyOracle.get_best_trials')
-def test_greedy_oracle(fn):
+def test_greedy_oracle_populate_different_values(get_best_trials):
+    hp = kerastuner.HyperParameters()
+    utils.build_graph().build(hp)
+
     oracle = greedy.GreedyOracle(
-        hypermodel=utils.build_graph(),
         objective='val_loss',
+        seed=utils.SEED,
     )
     trial = mock.Mock()
-    hp = kerastuner.HyperParameters()
     trial.hyperparameters = hp
-    fn.return_value = [trial]
+    get_best_trials.return_value = [trial]
 
     oracle.update_space(hp)
-    for i in range(2000):
-        oracle._populate_space(str(i))
+    values_a = oracle._populate_space('a')['values']
+    values_b = oracle._populate_space('b')['values']
 
-    assert 'optimizer' in oracle._hp_names[greedy.GreedyOracle.OPT]
-    assert 'classification_head_1/dropout' in oracle._hp_names[
-        greedy.GreedyOracle.ARCH]
-    assert 'image_block_1/block_type' in oracle._hp_names[
-        greedy.GreedyOracle.HYPER]
+    assert set(values_a.keys()) == set(values_b.keys())
+    assert not all([values_a[key] == values_b[key] for key in values_a])
+
+
+@mock.patch('autokeras.tuners.greedy.GreedyOracle._compute_values_hash')
+@mock.patch('autokeras.tuners.greedy.GreedyOracle.get_best_trials')
+def test_greedy_oracle_stop_reach_max_collision(
+        get_best_trials,
+        compute_values_hash):
+
+    hp = kerastuner.HyperParameters()
+    utils.build_graph().build(hp)
+
+    oracle = greedy.GreedyOracle(
+        objective='val_loss',
+        seed=utils.SEED,
+    )
+    trial = mock.Mock()
+    trial.hyperparameters = hp
+    get_best_trials.return_value = [trial]
+    compute_values_hash.return_value = 1
+
+    oracle.update_space(hp)
+    oracle._populate_space('a')['values']
+    assert oracle._populate_space('b')[
+        'status'] == kerastuner.engine.trial.TrialStatus.STOPPED
+
+
+@mock.patch('autokeras.tuners.greedy.GreedyOracle.get_best_trials')
+def test_greedy_oracle_populate_space_with_no_hp(get_best_trials):
+    hp = kerastuner.HyperParameters()
+
+    oracle = greedy.GreedyOracle(
+        objective='val_loss',
+        seed=utils.SEED,
+    )
+    trial = mock.Mock()
+    trial.hyperparameters = hp
+    get_best_trials.return_value = [trial]
+
+    oracle.update_space(hp)
+    values_a = oracle._populate_space('a')['values']
+
+    assert len(values_a) == 0
