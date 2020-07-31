@@ -1,5 +1,5 @@
 isort --sl autokeras tests
-autopep8 -r -i autokeras tests
+black --line-length 85 autokeras tests
 
 for i in $(find autokeras tests -name '*.py') # or whatever other pattern...
 do
