@@ -28,6 +28,7 @@ setup(
     extras_require={
         'tests': ['pytest>=4.4.0',
                   'flake8',
+                  'black',
                   'isort',
                   'pytest-xdist',
                   'pytest-cov',
