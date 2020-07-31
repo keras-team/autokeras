@@ -22,7 +22,6 @@ from autokeras.utils import data_utils
 
 
 class HeadAdapter(adapter_module.Adapter):
-
     def __init__(self, name, **kwargs):
         super().__init__(**kwargs)
         self.name = name
@@ -30,9 +29,12 @@ class HeadAdapter(adapter_module.Adapter):
     def check(self, dataset):
         supported_types = (tf.data.Dataset, np.ndarray, pd.DataFrame, pd.Series)
         if not isinstance(dataset, supported_types):
-            raise TypeError('Expect the target data of {name} to be tf.data.Dataset,'
-                            ' np.ndarray, pd.DataFrame or pd.Series, but got {type}.'
-                            .format(name=self.name, type=type(dataset)))
+            raise TypeError(
+                "Expect the target data of {name} to be tf.data.Dataset,"
+                " np.ndarray, pd.DataFrame or pd.Series, but got {type}.".format(
+                    name=self.name, type=type(dataset)
+                )
+            )
 
     def convert_to_dataset(self, dataset):
         if isinstance(dataset, np.ndarray):
@@ -50,18 +52,12 @@ class HeadAdapter(adapter_module.Adapter):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'name': self.name,
-        })
+        config.update({"name": self.name})
         return config
 
 
 class ClassificationHeadAdapter(HeadAdapter):
-
-    def __init__(self,
-                 num_classes=None,
-                 multi_label=False,
-                 **kwargs):
+    def __init__(self, num_classes=None, multi_label=False, **kwargs):
         super().__init__(**kwargs)
         self.num_classes = num_classes
         self.label_encoder = None
@@ -69,15 +65,13 @@ class ClassificationHeadAdapter(HeadAdapter):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'encoder': encoders.serialize(self.label_encoder),
-        })
+        config.update({"encoder": encoders.serialize(self.label_encoder)})
         return config
 
     @classmethod
     def from_config(cls, config):
         obj = super().from_config(config)
-        obj.label_encoder = encoders.deserialize(config['encoder'])
+        obj.label_encoder = encoders.deserialize(config["encoder"])
 
     def fit_before_convert(self, dataset):
         """Fit the encoder."""
@@ -101,9 +95,12 @@ class ClassificationHeadAdapter(HeadAdapter):
         # Fit encoder.
         labels = set(dataset.flatten())
         if len(labels) < 2:
-            raise ValueError('Expect the target data for {name} to have '
-                             'at least 2 classes, but got {num_classes}.'
-                             .format(name=self.name, num_classes=self.num_classes))
+            raise ValueError(
+                "Expect the target data for {name} to have "
+                "at least 2 classes, but got {num_classes}.".format(
+                    name=self.name, num_classes=self.num_classes
+                )
+            )
         if len(labels) == 2 and not self.multi_label:
             self.label_encoder = encoders.LabelEncoder()
         else:
@@ -135,10 +132,12 @@ class ClassificationHeadAdapter(HeadAdapter):
 
         # Check shape equals expected shape.
         if shape != expected:
-            raise ValueError('Expect the target data for {name} to have '
-                             'shape {expected}, but got {actual}.'
-                             .format(name=self.name, expected=expected,
-                                     actual=shape))
+            raise ValueError(
+                "Expect the target data for {name} to have "
+                "shape {expected}, but got {actual}.".format(
+                    name=self.name, expected=expected, actual=shape
+                )
+            )
 
     def postprocess(self, y):
         if self.multi_label:

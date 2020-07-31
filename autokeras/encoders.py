@@ -33,13 +33,13 @@ class OneHotEncoder(encoder_module.Encoder):
 
     def get_config(self):
         config = super().get_config()
-        config.update({'label_to_vec': self._label_to_vec})
+        config.update({"label_to_vec": self._label_to_vec})
         return config
 
     @classmethod
     def from_config(cls, config):
         obj = super().from_config(config)
-        obj._label_to_vec = config['label_to_vec']
+        obj._label_to_vec = config["label_to_vec"]
 
     def fit(self, data):
         """Create mapping from label to vector, and vector to label.
@@ -52,7 +52,7 @@ class OneHotEncoder(encoder_module.Encoder):
         if not self.num_classes:
             self.num_classes = len(self._labels)
         if self.num_classes < len(self._labels):
-            raise ValueError('More classes in data than specified.')
+            raise ValueError("More classes in data than specified.")
         for index, label in enumerate(self._labels):
             vec = np.array([0] * self.num_classes)
             vec[index] = 1
@@ -82,8 +82,14 @@ class OneHotEncoder(encoder_module.Encoder):
         # Returns
             numpy.ndarray. The original labels.
         """
-        return np.array(list(map(lambda x: self._int_to_label[x],
-                                 np.argmax(np.array(data), axis=1)))).reshape(-1, 1)
+        return np.array(
+            list(
+                map(
+                    lambda x: self._int_to_label[x],
+                    np.argmax(np.array(data), axis=1),
+                )
+            )
+        ).reshape(-1, 1)
 
 
 class LabelEncoder(encoder_module.Encoder):
@@ -99,13 +105,13 @@ class LabelEncoder(encoder_module.Encoder):
 
     def get_config(self):
         config = super().get_config()
-        config.update({'label_to_int': self._label_to_int})
+        config.update({"label_to_int": self._label_to_int})
         return config
 
     @classmethod
     def from_config(cls, config):
         obj = super().from_config(config)
-        obj._label_to_int = config['label_to_int']
+        obj._label_to_int = config["label_to_int"]
 
     def fit(self, data):
         """Fit the encoder with all the labels.
@@ -118,7 +124,7 @@ class LabelEncoder(encoder_module.Encoder):
         if not self.num_classes:
             self.num_classes = len(self._labels)
         if self.num_classes < len(self._labels):
-            raise ValueError('More classes in data than specified.')
+            raise ValueError("More classes in data than specified.")
         for index, label in enumerate(self._labels):
             self._int_to_label[index] = label
             self._label_to_int[label] = index
@@ -138,8 +144,9 @@ class LabelEncoder(encoder_module.Encoder):
         data = np.array(data)
         if len(data.shape) > 1:
             data = data.flatten()
-        return np.array(list(map(lambda x: self._label_to_int[x],
-                                 data))).reshape(-1, 1)
+        return np.array(list(map(lambda x: self._label_to_int[x], data))).reshape(
+            -1, 1
+        )
 
     def decode(self, data):
         """Get label for every element in data.
@@ -150,8 +157,9 @@ class LabelEncoder(encoder_module.Encoder):
         # Returns
             numpy.ndarray. The original labels.
         """
-        return np.array(list(map(lambda x: self._int_to_label[int(round(x[0]))],
-                                 np.array(data)))).reshape(-1, 1)
+        return np.array(
+            list(map(lambda x: self._int_to_label[int(round(x[0]))], np.array(data)))
+        ).reshape(-1, 1)
 
 
 def serialize(encoder):
@@ -163,4 +171,5 @@ def deserialize(config, custom_objects=None):
         config,
         module_objects=globals(),
         custom_objects=custom_objects,
-        printable_module_name='encoder')
+        printable_module_name="encoder",
+    )

@@ -34,4 +34,4 @@ class Node(serializable.Serializable):
         raise NotImplementedError
 
     def get_config(self):
-        return {'shape': self.shape}
+        return {"shape": self.shape}

@@ -31,15 +31,12 @@ from autokeras.utils import types
 
 
 class SupervisedStructuredDataPipeline(StructuredDataMixin, auto_model.AutoModel):
-
     def __init__(self, outputs, column_names, column_types, **kwargs):
         inputs = input_module.StructuredDataInput()
         inputs.column_types = column_types
         inputs.column_names = column_names
         self.check(column_names, column_types)
-        super().__init__(inputs=inputs,
-                         outputs=outputs,
-                         **kwargs)
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
         self._target_col_name = None
 
     @staticmethod
@@ -48,14 +45,16 @@ class SupervisedStructuredDataPipeline(StructuredDataMixin, auto_model.AutoModel
         target = df.pop(y).to_numpy()
         return df, target
 
-    def fit(self,
-            x=None,
-            y=None,
-            epochs=None,
-            callbacks=None,
-            validation_split=0.2,
-            validation_data=None,
-            **kwargs):
+    def fit(
+        self,
+        x=None,
+        y=None,
+        epochs=None,
+        callbacks=None,
+        validation_split=0.2,
+        validation_data=None,
+        **kwargs
+    ):
         """Search for the best model and hyperparameters for the task.
 
         # Arguments
@@ -99,13 +98,15 @@ class SupervisedStructuredDataPipeline(StructuredDataMixin, auto_model.AutoModel
             if isinstance(x_val, str):
                 validation_data = self._read_from_csv(x_val, y_val)
 
-        super().fit(x=x,
-                    y=y,
-                    epochs=epochs,
-                    callbacks=callbacks,
-                    validation_split=validation_split,
-                    validation_data=validation_data,
-                    **kwargs)
+        super().fit(
+            x=x,
+            y=y,
+            epochs=epochs,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            validation_data=validation_data,
+            **kwargs
+        )
 
     def predict(self, x, batch_size=32, **kwargs):
         """Predict the output for a given testing data.
@@ -123,9 +124,7 @@ class SupervisedStructuredDataPipeline(StructuredDataMixin, auto_model.AutoModel
         """
         x = self.read_for_predict(x)
 
-        return super().predict(x=x,
-                               batch_size=batch_size,
-                               **kwargs)
+        return super().predict(x=x, batch_size=batch_size, **kwargs)
 
     def evaluate(self, x, y=None, batch_size=32, **kwargs):
         """Evaluate the best model for the given data.
@@ -148,10 +147,7 @@ class SupervisedStructuredDataPipeline(StructuredDataMixin, auto_model.AutoModel
         """
         if isinstance(x, str):
             x, y = self._read_from_csv(x, y)
-        return super().evaluate(x=x,
-                                y=y,
-                                batch_size=batch_size,
-                                **kwargs)
+        return super().evaluate(x=x, y=y, batch_size=batch_size, **kwargs)
 
 
 class StructuredDataClassifier(SupervisedStructuredDataPipeline):
@@ -193,28 +189,32 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
         **kwargs: Any arguments supported by AutoModel.
     """
 
-    def __init__(self,
-                 column_names=None,
-                 column_types=None,
-                 num_classes=None,
-                 multi_label=False,
-                 loss=None,
-                 metrics=None,
-                 project_name='structured_data_classifier',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_accuracy',
-                 tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite=False,
-                 seed=None,
-                 **kwargs):
+    def __init__(
+        self,
+        column_names=None,
+        column_types=None,
+        num_classes=None,
+        multi_label=False,
+        loss=None,
+        metrics=None,
+        project_name="structured_data_classifier",
+        max_trials=100,
+        directory=None,
+        objective="val_accuracy",
+        tuner: Union[str, Type[tuner.AutoTuner]] = None,
+        overwrite=False,
+        seed=None,
+        **kwargs
+    ):
         if tuner is None:
             tuner = greedy.Greedy
         super().__init__(
-            outputs=blocks.ClassificationHead(num_classes=num_classes,
-                                              multi_label=multi_label,
-                                              loss=loss,
-                                              metrics=metrics),
+            outputs=blocks.ClassificationHead(
+                num_classes=num_classes,
+                multi_label=multi_label,
+                loss=loss,
+                metrics=metrics,
+            ),
             column_names=column_names,
             column_types=column_types,
             max_trials=max_trials,
@@ -224,16 +224,19 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
-            **kwargs)
+            **kwargs
+        )
 
-    def fit(self,
-            x=None,
-            y=None,
-            epochs=None,
-            callbacks=None,
-            validation_split=0.2,
-            validation_data=None,
-            **kwargs):
+    def fit(
+        self,
+        x=None,
+        y=None,
+        epochs=None,
+        callbacks=None,
+        validation_split=0.2,
+        validation_data=None,
+        **kwargs
+    ):
         """Search for the best model and hyperparameters for the task.
 
         # Arguments
@@ -265,13 +268,15 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                 validation data should be the same as the training data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        super().fit(x=x,
-                    y=y,
-                    epochs=epochs,
-                    callbacks=callbacks,
-                    validation_split=validation_split,
-                    validation_data=validation_data,
-                    **kwargs)
+        super().fit(
+            x=x,
+            y=y,
+            epochs=epochs,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            validation_data=validation_data,
+            **kwargs
+        )
 
 
 class StructuredDataRegressor(SupervisedStructuredDataPipeline):
@@ -311,26 +316,28 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
         **kwargs: Any arguments supported by AutoModel.
     """
 
-    def __init__(self,
-                 column_names: Optional[List[str]] = None,
-                 column_types: Optional[Dict[str, str]] = None,
-                 output_dim: Optional[int] = None,
-                 loss: types.LossType = 'mean_squared_error',
-                 metrics: Optional[types.MetricsType] = None,
-                 project_name: str = 'structured_data_regressor',
-                 max_trials: int = 100,
-                 directory: Union[str, pathlib.Path, None] = None,
-                 objective: str = 'val_loss',
-                 tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite: bool = False,
-                 seed: Optional[int] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        column_names: Optional[List[str]] = None,
+        column_types: Optional[Dict[str, str]] = None,
+        output_dim: Optional[int] = None,
+        loss: types.LossType = "mean_squared_error",
+        metrics: Optional[types.MetricsType] = None,
+        project_name: str = "structured_data_regressor",
+        max_trials: int = 100,
+        directory: Union[str, pathlib.Path, None] = None,
+        objective: str = "val_loss",
+        tuner: Union[str, Type[tuner.AutoTuner]] = None,
+        overwrite: bool = False,
+        seed: Optional[int] = None,
+        **kwargs
+    ):
         if tuner is None:
             tuner = greedy.Greedy
         super().__init__(
-            outputs=blocks.RegressionHead(output_dim=output_dim,
-                                          loss=loss,
-                                          metrics=metrics),
+            outputs=blocks.RegressionHead(
+                output_dim=output_dim, loss=loss, metrics=metrics
+            ),
             column_names=column_names,
             column_types=column_types,
             max_trials=max_trials,
@@ -340,4 +347,5 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
-            **kwargs)
+            **kwargs
+        )

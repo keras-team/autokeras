@@ -25,7 +25,8 @@ def test_augment_build_return_tensor():
 
     outputs = block.build(
         kerastuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32))
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+    )
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
@@ -44,16 +45,17 @@ def test_augment_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(
-        blocks.ImageAugmentation.__init__).issubset(config.keys())
+    assert utils.get_func_args(blocks.ImageAugmentation.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_ngram_build_return_tensor():
     block = blocks.TextToNgramVector()
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
-        tf.keras.Input(shape=(1,), dtype=tf.string))
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+    )
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
@@ -72,16 +74,17 @@ def test_ngram_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(
-        blocks.TextToNgramVector.__init__).issubset(config.keys())
+    assert utils.get_func_args(blocks.TextToNgramVector.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_int_seq_build_return_tensor():
     block = blocks.TextToIntSequence()
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
-        tf.keras.Input(shape=(1,), dtype=tf.string))
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+    )
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
@@ -100,18 +103,19 @@ def test_int_seq_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(
-        blocks.TextToIntSequence.__init__).issubset(config.keys())
+    assert utils.get_func_args(blocks.TextToIntSequence.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_cat_to_num_build_return_tensor():
     block = blocks.CategoricalToNumerical()
-    block.column_names = ['a']
-    block.column_types = {'a': 'num'}
+    block.column_names = ["a"]
+    block.column_types = {"a": "num"}
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
-        tf.keras.Input(shape=(1,), dtype=tf.string))
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+    )
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
@@ -130,5 +134,6 @@ def test_cat_to_num_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(
-        blocks.CategoricalToNumerical.__init__).issubset(config.keys())
+    assert utils.get_func_args(blocks.CategoricalToNumerical.__init__).issubset(
+        config.keys()
+    )

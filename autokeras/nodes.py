@@ -28,7 +28,8 @@ def deserialize(config, custom_objects=None):
         config,
         module_objects=globals(),
         custom_objects=custom_objects,
-        printable_module_name='nodes')
+        printable_module_name="nodes",
+    )
 
 
 class Input(node_module.Node, io_hypermodel.IOHyperModel):
@@ -103,16 +104,14 @@ class StructuredDataInput(Input):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'column_names': self.column_names,
-            'column_types': self.column_types,
-        })
+        config.update(
+            {"column_names": self.column_names, "column_types": self.column_types}
+        )
         return config
 
     def get_adapter(self):
         return adapters.StructuredDataInputAdapter(
-            self.column_names,
-            self.column_types
+            self.column_names, self.column_types
         )
 
     def config_from_adapter(self, adapter):
@@ -141,11 +140,9 @@ class TimeseriesInput(Input):
             number of instances.
     """
 
-    def __init__(self,
-                 lookback=None,
-                 column_names=None,
-                 column_types=None,
-                 **kwargs):
+    def __init__(
+        self, lookback=None, column_names=None, column_types=None, **kwargs
+    ):
         super().__init__(**kwargs)
         self.lookback = lookback
         self.column_names = column_names
@@ -153,22 +150,29 @@ class TimeseriesInput(Input):
 
     def build(self):
         if len(self.shape) == 1:
-            self.shape = (self.lookback, self.shape[0],)
+            self.shape = (
+                self.lookback,
+                self.shape[0],
+            )
         return tf.keras.Input(shape=self.shape, dtype=tf.float32)
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'lookback': self.lookback,
-            'column_names': self.column_names,
-            'column_types': self.column_types
-        })
+        config.update(
+            {
+                "lookback": self.lookback,
+                "column_names": self.column_names,
+                "column_types": self.column_types,
+            }
+        )
         return config
 
     def get_adapter(self):
-        return adapters.TimeseriesInputAdapter(lookback=self.lookback,
-                                               column_names=self.column_names,
-                                               column_types=self.column_types)
+        return adapters.TimeseriesInputAdapter(
+            lookback=self.lookback,
+            column_names=self.column_names,
+            column_types=self.column_types,
+        )
 
     def config_from_adapter(self, adapter):
         super().config_from_adapter(adapter)

@@ -44,7 +44,7 @@ class Normalization(block_module.Block):
 
     def get_config(self):
         config = super().get_config()
-        config.update({'axis': self.axis})
+        config.update({"axis": self.axis})
         return config
 
 
@@ -57,20 +57,24 @@ class TextToIntSequence(block_module.Block):
         max_tokens: Int. The maximum size of the vocabulary. Defaults to 20000.
     """
 
-    def __init__(self,
-                 output_sequence_length: Optional[int] = None,
-                 max_tokens: int = 20000,
-                 **kwargs):
+    def __init__(
+        self,
+        output_sequence_length: Optional[int] = None,
+        max_tokens: int = 20000,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self.output_sequence_length = output_sequence_length
         self.max_tokens = max_tokens
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'output_sequence_length': self.output_sequence_length,
-            'max_tokens': self.max_tokens,
-        })
+        config.update(
+            {
+                "output_sequence_length": self.output_sequence_length,
+                "max_tokens": self.max_tokens,
+            }
+        )
         return config
 
     def build(self, hp, inputs=None):
@@ -78,12 +82,14 @@ class TextToIntSequence(block_module.Block):
         if self.output_sequence_length is not None:
             output_sequence_length = self.output_sequence_length
         else:
-            output_sequence_length = hp.Choice('output_sequence_length',
-                                               [64, 128, 256, 512], default=64)
+            output_sequence_length = hp.Choice(
+                "output_sequence_length", [64, 128, 256, 512], default=64
+            )
         output_node = preprocessing.TextVectorization(
             max_tokens=self.max_tokens,
-            output_mode='int',
-            output_sequence_length=output_sequence_length)(input_node)
+            output_mode="int",
+            output_sequence_length=output_sequence_length,
+        )(input_node)
         return output_node
 
 
@@ -98,10 +104,12 @@ class TextToNgramVector(block_module.Block):
             automatically.
     """
 
-    def __init__(self,
-                 max_tokens: int = 20000,
-                 ngrams: Union[int, Tuple[int], None] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        max_tokens: int = 20000,
+        ngrams: Union[int, Tuple[int], None] = None,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self.max_tokens = max_tokens
         self.ngrams = ngrams
@@ -111,18 +119,14 @@ class TextToNgramVector(block_module.Block):
         if self.ngrams is not None:
             ngrams = self.ngrams
         else:
-            ngrams = hp.Int('ngrams', min_value=1, max_value=2, default=2)
+            ngrams = hp.Int("ngrams", min_value=1, max_value=2, default=2)
         return preprocessing.TextVectorization(
-            max_tokens=self.max_tokens,
-            ngrams=ngrams,
-            output_mode='tf-idf')(input_node)
+            max_tokens=self.max_tokens, ngrams=ngrams, output_mode="tf-idf"
+        )(input_node)
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'max_tokens': self.max_tokens,
-            'ngrams': self.ngrams,
-        })
+        config.update({"max_tokens": self.max_tokens, "ngrams": self.ngrams})
         return config
 
 
@@ -154,14 +158,16 @@ class ImageAugmentation(block_module.Block):
             automatically.
     """
 
-    def __init__(self,
-                 translation_factor=None,
-                 vertical_flip=None,
-                 horizontal_flip=None,
-                 rotation_factor=None,
-                 zoom_factor=None,
-                 contrast_factor=None,
-                 **kwargs):
+    def __init__(
+        self,
+        translation_factor=None,
+        vertical_flip=None,
+        horizontal_flip=None,
+        rotation_factor=None,
+        zoom_factor=None,
+        contrast_factor=None,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self.translation_factor = translation_factor
         self.horizontal_flip = horizontal_flip
@@ -183,47 +189,46 @@ class ImageAugmentation(block_module.Block):
         # Translate
         translation_factor = self.translation_factor
         if translation_factor is None:
-            translation_factor = hp.Choice('translation_factor', [0.0, 0.1])
+            translation_factor = hp.Choice("translation_factor", [0.0, 0.1])
         if translation_factor != 0 and translation_factor != (0, 0):
             height_factor, width_factor = self._get_fraction_value(
-                translation_factor)
+                translation_factor
+            )
             output_node = preprocessing.RandomTranslation(
-                height_factor, width_factor)(output_node)
+                height_factor, width_factor
+            )(output_node)
 
         # Flip
         horizontal_flip = self.horizontal_flip
         if horizontal_flip is None:
-            horizontal_flip = hp.Boolean('horizontal_flip', default=True)
+            horizontal_flip = hp.Boolean("horizontal_flip", default=True)
         vertical_flip = self.vertical_flip
         if self.vertical_flip is None:
-            vertical_flip = hp.Boolean('vertical_flip', default=True)
+            vertical_flip = hp.Boolean("vertical_flip", default=True)
         if not horizontal_flip and not vertical_flip:
-            flip_mode = ''
+            flip_mode = ""
         elif horizontal_flip and vertical_flip:
-            flip_mode = 'horizontal_and_vertical'
+            flip_mode = "horizontal_and_vertical"
         elif horizontal_flip and not vertical_flip:
-            flip_mode = 'horizontal'
+            flip_mode = "horizontal"
         elif not horizontal_flip and vertical_flip:
-            flip_mode = 'vertical'
-        if flip_mode != '':
-            output_node = preprocessing.RandomFlip(
-                mode=flip_mode)(output_node)
+            flip_mode = "vertical"
+        if flip_mode != "":
+            output_node = preprocessing.RandomFlip(mode=flip_mode)(output_node)
 
         # Rotate
         rotation_factor = self.rotation_factor
         if rotation_factor is None:
-            rotation_factor = hp.Choice('rotation_factor', [0.0, 0.1])
+            rotation_factor = hp.Choice("rotation_factor", [0.0, 0.1])
         if rotation_factor != 0:
-            output_node = preprocessing.RandomRotation(
-                rotation_factor)(output_node)
+            output_node = preprocessing.RandomRotation(rotation_factor)(output_node)
 
         # Zoom
         zoom_factor = self.zoom_factor
         if zoom_factor is None:
-            zoom_factor = hp.Choice('zoom_factor', [0.0, 0.1])
+            zoom_factor = hp.Choice("zoom_factor", [0.0, 0.1])
         if zoom_factor != 0 and zoom_factor != (0, 0):
-            height_factor, width_factor = self._get_fraction_value(
-                zoom_factor)
+            height_factor, width_factor = self._get_fraction_value(zoom_factor)
             # TODO: Add back RandomZoom when it is ready.
             # output_node = preprocessing.RandomZoom(
             # height_factor, width_factor)(output_node)
@@ -231,23 +236,24 @@ class ImageAugmentation(block_module.Block):
         # Contrast
         contrast_factor = self.contrast_factor
         if contrast_factor is None:
-            contrast_factor = hp.Choice('contrast_factor', [0.0, 0.1])
+            contrast_factor = hp.Choice("contrast_factor", [0.0, 0.1])
         if contrast_factor != 0 and contrast_factor != (0, 0):
-            output_node = preprocessing.RandomContrast(
-                contrast_factor)(output_node)
+            output_node = preprocessing.RandomContrast(contrast_factor)(output_node)
 
         return output_node
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'translation_factor': self.translation_factor,
-            'horizontal_flip': self.horizontal_flip,
-            'vertical_flip': self.vertical_flip,
-            'rotation_factor': self.rotation_factor,
-            'zoom_factor': self.zoom_factor,
-            'contrast_factor': self.contrast_factor,
-        })
+        config.update(
+            {
+                "translation_factor": self.translation_factor,
+                "horizontal_flip": self.horizontal_flip,
+                "vertical_flip": self.vertical_flip,
+                "rotation_factor": self.rotation_factor,
+                "zoom_factor": self.zoom_factor,
+                "contrast_factor": self.contrast_factor,
+            }
+        )
         return config
 
 
@@ -273,8 +279,8 @@ class CategoricalToNumerical(block_module.Block):
 
     @classmethod
     def from_config(cls, config):
-        column_types = config.pop('column_types')
-        column_names = config.pop('column_names')
+        column_types = config.pop("column_types")
+        column_names = config.pop("column_names")
         instance = cls(**config)
         instance.column_types = column_types
         instance.column_names = column_names
@@ -282,6 +288,7 @@ class CategoricalToNumerical(block_module.Block):
 
     def get_config(self):
         config = super().get_config()
-        config.update({'column_types': self.column_types,
-                       'column_names': self.column_names})
+        config.update(
+            {"column_types": self.column_types, "column_names": self.column_names}
+        )
         return config

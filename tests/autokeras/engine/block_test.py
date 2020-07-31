@@ -23,4 +23,4 @@ def test_block_call_raise_inputs_type_error():
     with pytest.raises(TypeError) as info:
         block(None)
 
-    assert 'Expect the inputs to block' in str(info.value)
+    assert "Expect the inputs to block" in str(info.value)

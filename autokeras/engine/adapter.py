@@ -102,4 +102,4 @@ class Adapter(serializable.Serializable):
         return self.convert_to_dataset(dataset)
 
     def get_config(self):
-        return {'shape': self.shape}
+        return {"shape": self.shape}

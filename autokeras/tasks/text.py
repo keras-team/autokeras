@@ -27,11 +27,8 @@ from autokeras.utils import types
 
 
 class SupervisedTextPipeline(auto_model.AutoModel):
-
     def __init__(self, outputs, **kwargs):
-        super().__init__(inputs=input_module.TextInput(),
-                         outputs=outputs,
-                         **kwargs)
+        super().__init__(inputs=input_module.TextInput(), outputs=outputs, **kwargs)
 
 
 class TextClassifier(SupervisedTextPipeline):
@@ -65,26 +62,30 @@ class TextClassifier(SupervisedTextPipeline):
         **kwargs: Any arguments supported by AutoModel.
     """
 
-    def __init__(self,
-                 num_classes: Optional[int] = None,
-                 multi_label: bool = False,
-                 loss: types.LossType = None,
-                 metrics: Optional[types.MetricsType] = None,
-                 project_name: str = 'text_classifier',
-                 max_trials: int = 100,
-                 directory: Union[str, pathlib.Path, None] = None,
-                 objective: str = 'val_loss',
-                 tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite: bool = False,
-                 seed: Optional[int] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        num_classes: Optional[int] = None,
+        multi_label: bool = False,
+        loss: types.LossType = None,
+        metrics: Optional[types.MetricsType] = None,
+        project_name: str = "text_classifier",
+        max_trials: int = 100,
+        directory: Union[str, pathlib.Path, None] = None,
+        objective: str = "val_loss",
+        tuner: Union[str, Type[tuner.AutoTuner]] = None,
+        overwrite: bool = False,
+        seed: Optional[int] = None,
+        **kwargs
+    ):
         if tuner is None:
             tuner = task_specific.TextClassifierTuner
         super().__init__(
-            outputs=blocks.ClassificationHead(num_classes=num_classes,
-                                              multi_label=multi_label,
-                                              loss=loss,
-                                              metrics=metrics),
+            outputs=blocks.ClassificationHead(
+                num_classes=num_classes,
+                multi_label=multi_label,
+                loss=loss,
+                metrics=metrics,
+            ),
             max_trials=max_trials,
             directory=directory,
             project_name=project_name,
@@ -92,16 +93,19 @@ class TextClassifier(SupervisedTextPipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
-            **kwargs)
+            **kwargs
+        )
 
-    def fit(self,
-            x=None,
-            y=None,
-            epochs=None,
-            callbacks=None,
-            validation_split=0.2,
-            validation_data=None,
-            **kwargs):
+    def fit(
+        self,
+        x=None,
+        y=None,
+        epochs=None,
+        callbacks=None,
+        validation_split=0.2,
+        validation_data=None,
+        **kwargs
+    ):
         """Search for the best model and hyperparameters for the AutoModel.
 
         It will search for the best model based on the performances on
@@ -142,13 +146,15 @@ class TextClassifier(SupervisedTextPipeline):
                 validation data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        super().fit(x=x,
-                    y=y,
-                    epochs=epochs,
-                    callbacks=callbacks,
-                    validation_split=validation_split,
-                    validation_data=validation_data,
-                    **kwargs)
+        super().fit(
+            x=x,
+            y=y,
+            epochs=epochs,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            validation_data=validation_data,
+            **kwargs
+        )
 
 
 class TextRegressor(SupervisedTextPipeline):
@@ -180,24 +186,26 @@ class TextRegressor(SupervisedTextPipeline):
         **kwargs: Any arguments supported by AutoModel.
     """
 
-    def __init__(self,
-                 output_dim=None,
-                 loss='mean_squared_error',
-                 metrics=None,
-                 project_name='text_regressor',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_loss',
-                 tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite=False,
-                 seed=None,
-                 **kwargs):
+    def __init__(
+        self,
+        output_dim=None,
+        loss="mean_squared_error",
+        metrics=None,
+        project_name="text_regressor",
+        max_trials=100,
+        directory=None,
+        objective="val_loss",
+        tuner: Union[str, Type[tuner.AutoTuner]] = None,
+        overwrite=False,
+        seed=None,
+        **kwargs
+    ):
         if tuner is None:
             tuner = greedy.Greedy
         super().__init__(
-            outputs=blocks.RegressionHead(output_dim=output_dim,
-                                          loss=loss,
-                                          metrics=metrics),
+            outputs=blocks.RegressionHead(
+                output_dim=output_dim, loss=loss, metrics=metrics
+            ),
             max_trials=max_trials,
             directory=directory,
             project_name=project_name,
@@ -205,16 +213,19 @@ class TextRegressor(SupervisedTextPipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
-            **kwargs)
+            **kwargs
+        )
 
-    def fit(self,
-            x=None,
-            y=None,
-            epochs=None,
-            callbacks=None,
-            validation_split=0.2,
-            validation_data=None,
-            **kwargs):
+    def fit(
+        self,
+        x=None,
+        y=None,
+        epochs=None,
+        callbacks=None,
+        validation_split=0.2,
+        validation_data=None,
+        **kwargs
+    ):
         """Search for the best model and hyperparameters for the AutoModel.
 
         It will search for the best model based on the performances on
@@ -256,10 +267,12 @@ class TextRegressor(SupervisedTextPipeline):
                 validation data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        super().fit(x=x,
-                    y=y,
-                    epochs=epochs,
-                    callbacks=callbacks,
-                    validation_split=validation_split,
-                    validation_data=validation_data,
-                    **kwargs)
+        super().fit(
+            x=x,
+            y=y,
+            epochs=epochs,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            validation_data=validation_data,
+            **kwargs
+        )

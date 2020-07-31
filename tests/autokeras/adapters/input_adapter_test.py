@@ -28,46 +28,48 @@ def test_structured_data_input_col_type_without_name():
     train_x = utils.generate_structured_data(num_data)
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.StructuredDataInputAdapter(
-            column_types=utils.COLUMN_TYPES_FROM_NUMPY)
+            column_types=utils.COLUMN_TYPES_FROM_NUMPY
+        )
         adapter.transform(train_x)
-    assert str(info.value) == 'Column names must be specified.'
+    assert str(info.value) == "Column names must be specified."
 
 
 def test_structured_data_input_less_col_name():
     (x, _), _1 = utils.dataframe_numpy()
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.StructuredDataInputAdapter(
-            column_names=utils.LESS_COLUMN_NAMES_FROM_CSV)
+            column_names=utils.LESS_COLUMN_NAMES_FROM_CSV
+        )
         adapter.fit_transform(x)
-    assert 'Expect column_names to have length' in str(info.value)
+    assert "Expect column_names to have length" in str(info.value)
 
 
 def test_structured_data_input_name_type_mismatch():
     (x, _), _1 = utils.dataframe_dataframe()
     column_types = copy.copy(utils.COLUMN_TYPES_FROM_CSV)
-    column_types['age_'] = column_types.pop('age')
+    column_types["age_"] = column_types.pop("age")
     with pytest.raises(ValueError) as info:
-        adapter = input_adapter.StructuredDataInputAdapter(
-            column_types=column_types)
+        adapter = input_adapter.StructuredDataInputAdapter(column_types=column_types)
         adapter.transform(x)
-    assert 'Column_names and column_types are mismatched.' in str(info.value)
+    assert "Column_names and column_types are mismatched." in str(info.value)
 
 
 def test_structured_data_input_unsupported_type():
-    x = 'unknown'
+    x = "unknown"
     with pytest.raises(TypeError) as info:
         adapter = input_adapter.StructuredDataInputAdapter(
             column_names=utils.COLUMN_TYPES_FROM_NUMPY,
-            column_types=utils.COLUMN_TYPES_FROM_NUMPY)
+            column_types=utils.COLUMN_TYPES_FROM_NUMPY,
+        )
         adapter.transform(x)
-    assert 'Unsupported type' in str(info.value)
+    assert "Unsupported type" in str(info.value)
 
 
 def test_structured_data_input_transform():
     (x, _), _1 = utils.dataframe_dataframe()
     adapter = input_adapter.StructuredDataInputAdapter()
     adapter.fit_transform(x)
-    assert adapter.column_names[0] == 'sex'
+    assert adapter.column_names[0] == "sex"
     assert adapter.column_types == utils.COLUMN_TYPES_FROM_CSV
 
 
@@ -82,11 +84,12 @@ def test_structured_data_input_dataset():
 def test_partial_column_types():
     adapter = input_adapter.StructuredDataInputAdapter(
         column_names=utils.COLUMN_NAMES_FROM_CSV,
-        column_types=utils.PARTIAL_COLUMN_TYPES_FROM_CSV)
+        column_types=utils.PARTIAL_COLUMN_TYPES_FROM_CSV,
+    )
     (x, y), (val_x, val_y) = utils.dataframe_numpy()
     dataset = x.values.astype(np.unicode)
     adapter.transform(dataset)
-    assert adapter.column_types['fare'] == 'categorical'
+    assert adapter.column_types["fare"] == "categorical"
 
 
 def test_image_input_adapter_transform_to_dataset():
@@ -118,48 +121,45 @@ def test_image_input_with_illegal_dim():
     adapter = input_adapter.ImageInputAdapter()
     with pytest.raises(ValueError) as info:
         x = adapter.transform(x)
-    assert 'Expect the data to ImageInput to have 3' in str(info.value)
+    assert "Expect the data to ImageInput to have 3" in str(info.value)
 
 
 def test_image_input_unsupported_type():
-    x = 'unknown'
+    x = "unknown"
     adapter = input_adapter.ImageInputAdapter()
     with pytest.raises(TypeError) as info:
         x = adapter.transform(x)
-    assert 'Expect the data to ImageInput to be numpy' in str(info.value)
+    assert "Expect the data to ImageInput to be numpy" in str(info.value)
 
 
 def test_image_input_numerical():
-    x = np.array([[['unknown']]])
+    x = np.array([[["unknown"]]])
     adapter = input_adapter.ImageInputAdapter()
     with pytest.raises(TypeError) as info:
         x = adapter.transform(x)
-    assert 'Expect the data to ImageInput to be numerical' in str(info.value)
+    assert "Expect the data to ImageInput to be numerical" in str(info.value)
 
 
 def test_input_type_error():
-    x = 'unknown'
+    x = "unknown"
     adapter = input_adapter.InputAdapter()
     with pytest.raises(TypeError) as info:
         adapter.check(x)
         x = adapter.transform(x)
-    assert 'Expect the data to Input to be numpy' in str(info.value)
+    assert "Expect the data to Input to be numpy" in str(info.value)
 
 
 def test_input_numerical():
-    x = np.array([[['unknown']]])
+    x = np.array([[["unknown"]]])
     adapter = input_adapter.InputAdapter()
     with pytest.raises(TypeError) as info:
         adapter.check(x)
         x = adapter.transform(x)
-    assert 'Expect the data to Input to be numerical' in str(info.value)
+    assert "Expect the data to Input to be numerical" in str(info.value)
 
 
 def test_text_dataset():
-    x = tf.data.Dataset.from_tensor_slices(np.array([
-        'a b c',
-        'b b c',
-    ]))
+    x = tf.data.Dataset.from_tensor_slices(np.array(["a b c", "b b c"]))
     adapter = input_adapter.TextInputAdapter()
     x = adapter.transform(x)
     assert data_utils.dataset_shape(x).as_list() == [None, 1]
@@ -167,10 +167,7 @@ def test_text_dataset():
 
 
 def test_text_dataset_batch():
-    x = tf.data.Dataset.from_tensor_slices(np.array([
-        'a b c',
-        'b b c',
-    ])).batch(32)
+    x = tf.data.Dataset.from_tensor_slices(np.array(["a b c", "b b c"])).batch(32)
     adapter = input_adapter.TextInputAdapter()
     x = adapter.transform(x)
     assert data_utils.dataset_shape(x).as_list() == [None, 1]
@@ -178,10 +175,7 @@ def test_text_dataset_batch():
 
 
 def test_text_np():
-    x = np.array([
-        'a b c',
-        'b b c',
-    ])
+    x = np.array(["a b c", "b b c"])
     adapter = input_adapter.TextInputAdapter()
     x = adapter.transform(x)
     assert data_utils.dataset_shape(x).as_list() == [None, 1]
@@ -189,11 +183,11 @@ def test_text_np():
 
 
 def test_text_input_type_error():
-    x = 'unknown'
+    x = "unknown"
     adapter = input_adapter.TextInputAdapter()
     with pytest.raises(TypeError) as info:
         x = adapter.transform(x)
-    assert 'Expect the data to TextInput to be numpy' in str(info.value)
+    assert "Expect the data to TextInput to be numpy" in str(info.value)
 
 
 def test_text_input_with_illegal_dim():
@@ -201,7 +195,7 @@ def test_text_input_with_illegal_dim():
     adapter = input_adapter.TextInputAdapter()
     with pytest.raises(ValueError) as info:
         x = adapter.transform(x)
-    assert 'Expect the data to TextInput to have 1' in str(info.value)
+    assert "Expect the data to TextInput to have 1" in str(info.value)
 
 
 def test_text_string():
@@ -209,15 +203,15 @@ def test_text_string():
     adapter = input_adapter.TextInputAdapter()
     with pytest.raises(TypeError) as info:
         x = adapter.transform(x)
-    assert 'Expect the data to TextInput to be strings' in str(info.value)
+    assert "Expect the data to TextInput to be strings" in str(info.value)
 
 
 def test_time_series_input_type_error():
-    x = 'unknown'
+    x = "unknown"
     adapter = input_adapter.TimeseriesInputAdapter(2)
     with pytest.raises(TypeError) as info:
         x = adapter.transform(x)
-    assert 'Expect the data in TimeseriesInput to be numpy' in str(info.value)
+    assert "Expect the data in TimeseriesInput to be numpy" in str(info.value)
 
 
 def test_time_series_input_with_illegal_dim():
@@ -225,7 +219,7 @@ def test_time_series_input_with_illegal_dim():
     adapter = input_adapter.TimeseriesInputAdapter(2)
     with pytest.raises(ValueError) as info:
         x = adapter.transform(x)
-    assert 'Expect the data in TimeseriesInput to have 2' in str(info.value)
+    assert "Expect the data in TimeseriesInput to have 2" in str(info.value)
 
 
 def test_time_series_input_col_type_without_name():
@@ -233,32 +227,32 @@ def test_time_series_input_col_type_without_name():
     train_x = utils.generate_structured_data(num_data)
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.TimeseriesInputAdapter(
-            lookback=2,
-            column_types=utils.COLUMN_TYPES_FROM_NUMPY)
+            lookback=2, column_types=utils.COLUMN_TYPES_FROM_NUMPY
+        )
         adapter.transform(train_x)
-    assert str(info.value) == 'Column names must be specified.'
+    assert str(info.value) == "Column names must be specified."
 
 
 def test_time_series_input_less_col_name():
     (x, _), _1 = utils.dataframe_numpy()
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.TimeseriesInputAdapter(
-            lookback=2,
-            column_names=utils.LESS_COLUMN_NAMES_FROM_CSV)
+            lookback=2, column_names=utils.LESS_COLUMN_NAMES_FROM_CSV
+        )
         adapter.transform(x)
-    assert 'Expect column_names to have length' in str(info.value)
+    assert "Expect column_names to have length" in str(info.value)
 
 
 def test_time_series_input_name_type_mismatch():
     (x, _), _1 = utils.dataframe_dataframe()
     column_types = copy.copy(utils.COLUMN_TYPES_FROM_CSV)
-    column_types['age_'] = column_types.pop('age')
+    column_types["age_"] = column_types.pop("age")
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.TimeseriesInputAdapter(
-            lookback=2,
-            column_types=column_types)
+            lookback=2, column_types=column_types
+        )
         adapter.transform(x)
-    assert 'Column_names and column_types are mismatched.' in str(info.value)
+    assert "Column_names and column_types are mismatched." in str(info.value)
 
 
 def test_time_series_input_transform():

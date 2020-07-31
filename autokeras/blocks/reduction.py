@@ -22,10 +22,10 @@ from autokeras.engine import block as block_module
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
 
-REDUCTION_TYPE = 'reduction_type'
-FLATTEN = 'flatten'
-GLOBAL_MAX = 'global_max'
-GLOBAL_AVG = 'global_avg'
+REDUCTION_TYPE = "reduction_type"
+FLATTEN = "flatten"
+GLOBAL_MAX = "global_max"
+GLOBAL_AVG = "global_avg"
 
 
 def shape_compatible(shape1, shape2):
@@ -50,7 +50,7 @@ class Merge(block_module.Block):
 
     def get_config(self):
         config = super().get_config()
-        config.update({'merge_type': self.merge_type})
+        config.update({"merge_type": self.merge_type})
         return config
 
     def build(self, hp, inputs=None):
@@ -58,8 +58,12 @@ class Merge(block_module.Block):
         if len(inputs) == 1:
             return inputs
 
-        if not all([shape_compatible(input_node.shape, inputs[0].shape) for
-                    input_node in inputs]):
+        if not all(
+            [
+                shape_compatible(input_node.shape, inputs[0].shape)
+                for input_node in inputs
+            ]
+        ):
             new_inputs = []
             for input_node in inputs:
                 new_inputs.append(Flatten().build(hp, input_node))
@@ -70,8 +74,9 @@ class Merge(block_module.Block):
         #  shape
         if self._inputs_same_shape(inputs):
             merge_type = self.merge_type or hp.Choice(
-                'merge_type', ['add', 'concatenate'], default='add')
-            if merge_type == 'add':
+                "merge_type", ["add", "concatenate"], default="add"
+            )
+            if merge_type == "add":
                 return layers.Add()(inputs)
 
         return layers.Concatenate()(inputs)
@@ -96,7 +101,6 @@ class Flatten(block_module.Block):
 
 
 class Reduction(block_module.Block):
-
     def __init__(self, reduction_type: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         self.reduction_type = reduction_type
@@ -124,7 +128,8 @@ class Reduction(block_module.Block):
 
         if self.reduction_type is None:
             reduction_type = hp.Choice(
-                REDUCTION_TYPE, [FLATTEN, GLOBAL_MAX, GLOBAL_AVG])
+                REDUCTION_TYPE, [FLATTEN, GLOBAL_MAX, GLOBAL_AVG]
+            )
             with hp.conditional_scope(REDUCTION_TYPE, [reduction_type]):
                 return self._build_block(hp, output_node, reduction_type)
         else:
@@ -152,12 +157,10 @@ class SpatialReduction(Reduction):
         super().__init__(reduction_type, **kwargs)
 
     def global_max(self, input_node):
-        return layer_utils.get_global_max_pooling(
-            input_node.shape)()(input_node)
+        return layer_utils.get_global_max_pooling(input_node.shape)()(input_node)
 
     def global_avg(self, input_node):
-        return layer_utils.get_global_average_pooling(
-            input_node.shape)()(input_node)
+        return layer_utils.get_global_average_pooling(input_node.shape)()(input_node)
 
 
 class TemporalReduction(Reduction):

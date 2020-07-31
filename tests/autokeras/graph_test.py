@@ -33,12 +33,13 @@ def test_set_hp():
     graph = graph_module.Graph(
         inputs=input_node,
         outputs=output_node,
-        override_hps=[hp_module.Choice('dense_block_1/num_layers', [6], default=6)])
+        override_hps=[hp_module.Choice("dense_block_1/num_layers", [6], default=6)],
+    )
     hp = kerastuner.HyperParameters()
     graph.build(hp)
 
     for single_hp in hp.space:
-        if single_hp.name == 'dense_block_1/num_layers':
+        if single_hp.name == "dense_block_1/num_layers":
             assert len(single_hp.values) == 1
             assert single_hp.values[0] == 6
             return
@@ -57,7 +58,7 @@ def test_input_output_disconnect():
 
     with pytest.raises(ValueError) as info:
         graph_module.Graph(inputs=input_node1, outputs=output_node)
-    assert 'Inputs and outputs not connected.' in str(info.value)
+    assert "Inputs and outputs not connected." in str(info.value)
 
 
 def test_hyper_graph_cycle():
@@ -71,9 +72,8 @@ def test_hyper_graph_cycle():
     head.outputs = output_node1
 
     with pytest.raises(ValueError) as info:
-        graph_module.Graph(inputs=[input_node1, input_node2],
-                           outputs=output_node)
-    assert 'The network has a cycle.' in str(info.value)
+        graph_module.Graph(inputs=[input_node1, input_node2], outputs=output_node)
+    assert "The network has a cycle." in str(info.value)
 
 
 def test_input_missing():
@@ -85,9 +85,8 @@ def test_input_missing():
     output_node = ak.RegressionHead()(output_node)
 
     with pytest.raises(ValueError) as info:
-        graph_module.Graph(inputs=input_node1,
-                           outputs=output_node)
-    assert 'A required input is missing for HyperModel' in str(info.value)
+        graph_module.Graph(inputs=input_node1, outputs=output_node)
+    assert "A required input is missing for HyperModel" in str(info.value)
 
 
 def test_graph_basics():
@@ -96,9 +95,9 @@ def test_graph_basics():
     output_node = ak.DenseBlock()(output_node)
     output_node = ak.RegressionHead(output_shape=(1,))(output_node)
 
-    model = graph_module.Graph(
-        inputs=input_node,
-        outputs=output_node).build(kerastuner.HyperParameters())
+    model = graph_module.Graph(inputs=input_node, outputs=output_node).build(
+        kerastuner.HyperParameters()
+    )
     assert model.input_shape == (None, 30)
     assert model.output_shape == (None, 1)
 
@@ -115,7 +114,8 @@ def test_graph_save_load(tmp_path):
     graph = graph_module.Graph(
         inputs=[input1, input2],
         outputs=[output1, output2],
-        override_hps=[hp_module.Choice('dense_block_1/num_layers', [6], default=6)])
+        override_hps=[hp_module.Choice("dense_block_1/num_layers", [6], default=6)],
+    )
     config = graph.get_config()
     graph = graph_module.Graph.from_config(config)
 
@@ -135,8 +135,8 @@ def test_merge():
     output_node = ak.RegressionHead(output_shape=(1,))(output_node)
 
     model = graph_module.Graph(
-        inputs=[input_node1, input_node2],
-        outputs=output_node).build(kerastuner.HyperParameters())
+        inputs=[input_node1, input_node2], outputs=output_node
+    ).build(kerastuner.HyperParameters())
     assert model.input_shape == [(None, 30), (None, 40)]
     assert model.output_shape == (None, 1)
 
@@ -149,16 +149,16 @@ def test_save_custom_metrics_loss(tmp_path):
         return y_pred - y_true
 
     head = ak.ClassificationHead(
-        loss=custom_loss, metrics=['accuracy', custom_metric])
+        loss=custom_loss, metrics=["accuracy", custom_metric]
+    )
     input_node = ak.Input()
     output_node = head(input_node)
     graph = graph_module.Graph(input_node, output_node)
-    path = os.path.join(tmp_path, 'graph')
+    path = os.path.join(tmp_path, "graph")
     graph.save(path)
     new_graph = graph_module.load_graph(
-        path, custom_objects={
-            'custom_metric': custom_metric,
-            'custom_loss': custom_loss,
-        })
+        path,
+        custom_objects={"custom_metric": custom_metric, "custom_loss": custom_loss},
+    )
     assert new_graph.blocks[0].metrics[1](0, 0) == 1
     assert new_graph.blocks[0].loss(3, 2) == 1

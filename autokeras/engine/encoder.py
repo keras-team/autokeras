@@ -59,13 +59,13 @@ class Encoder(serializable.Serializable):
 
     def get_config(self):
         return {
-            'num_classes': self.num_classes,
-            'labels': self._labels,
-            'int_to_label': self._int_to_label,
+            "num_classes": self.num_classes,
+            "labels": self._labels,
+            "int_to_label": self._int_to_label,
         }
 
     @classmethod
     def from_config(cls, config):
         obj = super().from_config(config)
-        obj._labels = config['labels']
-        obj._int_to_label = config['int_to_label']
+        obj._labels = config["labels"]
+        obj._int_to_label = config["int_to_label"]

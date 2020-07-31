@@ -25,8 +25,11 @@ def test_merge_build_return_tensor():
 
     outputs = block.build(
         kerastuner.HyperParameters(),
-        [tf.keras.Input(shape=(32,), dtype=tf.float32),
-         tf.keras.Input(shape=(4, 8), dtype=tf.float32)])
+        [
+            tf.keras.Input(shape=(32,), dtype=tf.float32),
+            tf.keras.Input(shape=(4, 8), dtype=tf.float32),
+        ],
+    )
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
@@ -36,8 +39,7 @@ def test_merge_single_input_return_tensor():
     block = blocks.Merge()
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
-        tf.keras.Input(shape=(32,), dtype=tf.float32),
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(32,), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -49,8 +51,11 @@ def test_merge_inputs_with_same_shape_return_tensor():
 
     outputs = block.build(
         kerastuner.HyperParameters(),
-        [tf.keras.Input(shape=(32,), dtype=tf.float32),
-         tf.keras.Input(shape=(32,), dtype=tf.float32)])
+        [
+            tf.keras.Input(shape=(32,), dtype=tf.float32),
+            tf.keras.Input(shape=(32,), dtype=tf.float32),
+        ],
+    )
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
@@ -69,8 +74,7 @@ def test_merge_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(
-        blocks.Merge.__init__).issubset(config.keys())
+    assert utils.get_func_args(blocks.Merge.__init__).issubset(config.keys())
 
 
 def test_temporal_build_return_tensor():
@@ -78,29 +82,32 @@ def test_temporal_build_return_tensor():
 
     outputs = block.build(
         kerastuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 10), dtype=tf.float32))
+        tf.keras.Input(shape=(32, 10), dtype=tf.float32),
+    )
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_temporal_global_max_return_tensor():
-    block = blocks.TemporalReduction(reduction_type='global_max')
+    block = blocks.TemporalReduction(reduction_type="global_max")
 
     outputs = block.build(
         kerastuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 10), dtype=tf.float32))
+        tf.keras.Input(shape=(32, 10), dtype=tf.float32),
+    )
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_temporal_global_avg_return_tensor():
-    block = blocks.TemporalReduction(reduction_type='global_avg')
+    block = blocks.TemporalReduction(reduction_type="global_avg")
 
     outputs = block.build(
         kerastuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 10), dtype=tf.float32))
+        tf.keras.Input(shape=(32, 10), dtype=tf.float32),
+    )
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
@@ -110,10 +117,7 @@ def test_reduction_2d_tensor_return_input_node():
     block = blocks.TemporalReduction()
     input_node = tf.keras.Input(shape=(32,), dtype=tf.float32)
 
-    outputs = block.build(
-        kerastuner.HyperParameters(),
-        input_node,
-    )
+    outputs = block.build(kerastuner.HyperParameters(), input_node,)
 
     assert len(nest.flatten(outputs)) == 1
     assert nest.flatten(outputs)[0] is input_node
@@ -132,8 +136,9 @@ def test_temporal_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(
-        blocks.TemporalReduction.__init__).issubset(config.keys())
+    assert utils.get_func_args(blocks.TemporalReduction.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_spatial_build_return_tensor():
@@ -141,7 +146,8 @@ def test_spatial_build_return_tensor():
 
     outputs = block.build(
         kerastuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32))
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+    )
 
     assert len(nest.flatten(outputs)) == 1
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
@@ -160,5 +166,6 @@ def test_spatial_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(
-        blocks.SpatialReduction.__init__).issubset(config.keys())
+    assert utils.get_func_args(blocks.SpatialReduction.__init__).issubset(
+        config.keys()
+    )

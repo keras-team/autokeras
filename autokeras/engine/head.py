@@ -73,17 +73,19 @@ class Head(block_module.Block, io_hypermodel.IOHyperModel):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'loss': serialize_loss(self.loss),
-            'metrics': serialize_metrics(self.metrics),
-            'output_shape': self.output_shape
-        })
+        config.update(
+            {
+                "loss": serialize_loss(self.loss),
+                "metrics": serialize_metrics(self.metrics),
+                "output_shape": self.output_shape,
+            }
+        )
         return config
 
     @classmethod
     def from_config(cls, config):
-        config['loss'] = deserialize_loss(config['loss'])
-        config['metrics'] = deserialize_metrics(config['metrics'])
+        config["loss"] = deserialize_loss(config["loss"])
+        config["metrics"] = deserialize_metrics(config["metrics"])
         return super().from_config(config)
 
     def build(self, hp, inputs=None):
