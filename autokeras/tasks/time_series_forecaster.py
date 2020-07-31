@@ -31,22 +31,21 @@ from autokeras.utils import types
 
 
 class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel):
-
-    def __init__(self,
-                 outputs,
-                 column_names=None,
-                 column_types=None,
-                 lookback=None,
-                 predict_from=1,
-                 predict_until=None,
-                 **kwargs):
-        inputs = input_module.TimeseriesInput(lookback=lookback,
-                                              column_names=column_names,
-                                              column_types=column_types)
+    def __init__(
+        self,
+        outputs,
+        column_names=None,
+        column_types=None,
+        lookback=None,
+        predict_from=1,
+        predict_until=None,
+        **kwargs
+    ):
+        inputs = input_module.TimeseriesInput(
+            lookback=lookback, column_names=column_names, column_types=column_types
+        )
         self.check(column_names, column_types)
-        super().__init__(inputs=inputs,
-                         outputs=outputs,
-                         **kwargs)
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
         self.predict_from = predict_from
         self.predict_until = predict_until
         self._target_col_name = None
@@ -58,14 +57,16 @@ class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel
         target = df.pop(y).dropna().to_numpy()
         return df, target
 
-    def fit(self,
-            x=None,
-            y=None,
-            epochs=None,
-            callbacks=None,
-            validation_split=0.2,
-            validation_data=None,
-            **kwargs):
+    def fit(
+        self,
+        x=None,
+        y=None,
+        epochs=None,
+        callbacks=None,
+        validation_split=0.2,
+        validation_data=None,
+        **kwargs
+    ):
         # x is file path of training data
         if isinstance(x, str):
             self._target_col_name = y
@@ -77,19 +78,19 @@ class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel
 
         self.train_len = len(y)
 
-        super().fit(x=x[:self.train_len],
-                    y=y[self.lookback-1:],
-                    epochs=epochs,
-                    callbacks=callbacks,
-                    validation_split=validation_split,
-                    validation_data=validation_data,
-                    **kwargs)
+        super().fit(
+            x=x[: self.train_len],
+            y=y[self.lookback - 1 :],
+            epochs=epochs,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            validation_data=validation_data,
+            **kwargs
+        )
 
     def predict(self, x, batch_size=32, **kwargs):
         x = self.read_for_predict(x)
-        y_pred = super().predict(x=x,
-                                 batch_size=batch_size,
-                                 **kwargs)
+        y_pred = super().predict(x=x, batch_size=batch_size, **kwargs)
         lower_bound = self.train_len + self.predict_from
         if self.predict_until is None:
             self.predict_until = len(y_pred)
@@ -117,10 +118,9 @@ class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel
         """
         if isinstance(x, str):
             x, y = self._read_from_csv(x, y)
-        return super().evaluate(x=x[:len(y)],
-                                y=y[self.lookback-1:],
-                                batch_size=batch_size,
-                                **kwargs)
+        return super().evaluate(
+            x=x[: len(y)], y=y[self.lookback - 1 :], batch_size=batch_size, **kwargs
+        )
 
 
 class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
@@ -172,51 +172,52 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
         **kwargs: Any arguments supported by AutoModel.
     """
 
-    def __init__(self,
-                 output_dim=None,
-                 column_names: Optional[List[str]] = None,
-                 column_types: Optional[Dict[str, str]] = None,
-                 lookback: Optional[int] = None,
-                 predict_from: int = 1,
-                 predict_until: Optional[int] = None,
-                 loss: types.LossType = 'mean_squared_error',
-                 metrics: Optional[types.MetricsType] = None,
-                 project_name: str = 'time_series_forecaster',
-                 max_trials: int = 100,
-                 directory: Union[str, Path, None] = None,
-                 objective: str = 'val_loss',
-                 tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite: bool = False,
-                 seed: Optional[int] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        output_dim=None,
+        column_names: Optional[List[str]] = None,
+        column_types: Optional[Dict[str, str]] = None,
+        lookback: Optional[int] = None,
+        predict_from: int = 1,
+        predict_until: Optional[int] = None,
+        loss: types.LossType = "mean_squared_error",
+        metrics: Optional[types.MetricsType] = None,
+        project_name: str = "time_series_forecaster",
+        max_trials: int = 100,
+        directory: Union[str, Path, None] = None,
+        objective: str = "val_loss",
+        tuner: Union[str, Type[tuner.AutoTuner]] = None,
+        overwrite: bool = False,
+        seed: Optional[int] = None,
+        **kwargs
+    ):
         if tuner is None:
             tuner = greedy.Greedy
-        super().__init__(outputs=blocks.RegressionHead(output_dim=output_dim,
-                                                       loss=loss,
-                                                       metrics=metrics),
-                         column_names=column_names,
-                         column_types=column_types,
-                         lookback=lookback,
-                         predict_from=predict_from,
-                         predict_until=predict_until,
-                         project_name=project_name,
-                         max_trials=max_trials,
-                         directory=directory,
-                         objective=objective,
-                         tuner=tuner,
-                         overwrite=overwrite,
-                         seed=seed,
-                         **kwargs)
+        super().__init__(
+            outputs=blocks.RegressionHead(
+                output_dim=output_dim, loss=loss, metrics=metrics
+            ),
+            column_names=column_names,
+            column_types=column_types,
+            lookback=lookback,
+            predict_from=predict_from,
+            predict_until=predict_until,
+            project_name=project_name,
+            max_trials=max_trials,
+            directory=directory,
+            objective=objective,
+            tuner=tuner,
+            overwrite=overwrite,
+            seed=seed,
+            **kwargs
+        )
         self.lookback = lookback
         self.predict_from = predict_from
         self.predict_until = predict_until
 
-    def fit(self,
-            x=None,
-            y=None,
-            validation_split=0.2,
-            validation_data=None,
-            **kwargs):
+    def fit(
+        self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
+    ):
         """Search for the best model and hyperparameters for the task.
 
         # Arguments
@@ -249,11 +250,13 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
                 validation data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        super().fit(x=x,
-                    y=y,
-                    validation_split=validation_split,
-                    validation_data=validation_data,
-                    **kwargs)
+        super().fit(
+            x=x,
+            y=y,
+            validation_split=validation_split,
+            validation_data=validation_data,
+            **kwargs
+        )
 
     def predict(self, x=None, batch_size=32, **kwargs):
         """Predict the output for a given testing data.
@@ -271,13 +274,15 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
         """
         return super().predict(x=x, batch_size=batch_size, **kwargs)
 
-    def fit_and_predict(self,
-                        x=None,
-                        y=None,
-                        validation_split=0.2,
-                        validation_data=None,
-                        batch_size=32,
-                        **kwargs):
+    def fit_and_predict(
+        self,
+        x=None,
+        y=None,
+        validation_split=0.2,
+        validation_data=None,
+        batch_size=32,
+        **kwargs
+    ):
         """Search for the best model and then predict for remaining data points.
 
         # Arguments
@@ -311,11 +316,13 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
             batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        self.fit(x=x,
-                 y=y,
-                 validation_split=validation_split,
-                 validation_data=validation_data,
-                 **kwargs)
+        self.fit(
+            x=x,
+            y=y,
+            validation_split=validation_split,
+            validation_data=validation_data,
+            **kwargs
+        )
 
         return self.predict(x=x, batch_size=batch_size)
 
@@ -364,30 +371,29 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
         **kwargs: Any arguments supported by AutoModel.
     """
 
-    def __init__(self,
-                 output_dim=None,
-                 column_names=None,
-                 column_types=None,
-                 lookback=None,
-                 predict_from=1,
-                 predict_until=None,
-                 loss='mean_squared_error',
-                 metrics=None,
-                 project_name='time_series_classifier',
-                 max_trials=100,
-                 directory=None,
-                 objective='val_loss',
-                 overwrite=False,
-                 seed=None,
-                 **kwargs):
+    def __init__(
+        self,
+        output_dim=None,
+        column_names=None,
+        column_types=None,
+        lookback=None,
+        predict_from=1,
+        predict_until=None,
+        loss="mean_squared_error",
+        metrics=None,
+        project_name="time_series_classifier",
+        max_trials=100,
+        directory=None,
+        objective="val_loss",
+        overwrite=False,
+        seed=None,
+        **kwargs
+    ):
         raise NotImplementedError
 
-    def fit(self,
-            x=None,
-            y=None,
-            validation_split=0.2,
-            validation_data=None,
-            **kwargs):
+    def fit(
+        self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
+    ):
         """Search for the best model and hyperparameters for the task.
 
         # Arguments
@@ -440,13 +446,15 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
         """
         raise NotImplementedError
 
-    def fit_and_predict(self,
-                        x=None,
-                        y=None,
-                        validation_split=0.2,
-                        validation_data=None,
-                        batch_size=32,
-                        **kwargs):
+    def fit_and_predict(
+        self,
+        x=None,
+        y=None,
+        validation_split=0.2,
+        validation_data=None,
+        batch_size=32,
+        **kwargs
+    ):
         """Search for the best model and then predict for remaining data points.
 
         # Arguments

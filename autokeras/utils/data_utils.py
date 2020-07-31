@@ -43,11 +43,12 @@ def split_dataset(dataset, validation_split):
     """
     num_instances = dataset.reduce(np.int64(0), lambda x, _: x + 1).numpy()
     if num_instances < 2:
-        raise ValueError('The dataset should at least contain 2 '
-                         'batches to be split.')
+        raise ValueError(
+            "The dataset should at least contain 2 " "batches to be split."
+        )
     validation_set_size = min(
-        max(int(num_instances * validation_split), 1),
-        num_instances - 1)
+        max(int(num_instances * validation_split), 1), num_instances - 1
+    )
     train_set_size = num_instances - validation_set_size
     train_dataset = dataset.take(train_set_size)
     validation_dataset = dataset.skip(train_set_size)

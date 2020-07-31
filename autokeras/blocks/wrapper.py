@@ -19,15 +19,15 @@ from autokeras.blocks import preprocessing
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
 
-BLOCK_TYPE = 'block_type'
-RESNET = 'resnet'
-XCEPTION = 'xception'
-VANILLA = 'vanilla'
-NORMALIZE = 'normalize'
-AUGMENT = 'augment'
-TRANSFORMER = 'transformer'
-MAX_TOKENS = 'max_tokens'
-NGRAM = 'ngram'
+BLOCK_TYPE = "block_type"
+RESNET = "resnet"
+XCEPTION = "xception"
+VANILLA = "vanilla"
+NORMALIZE = "normalize"
+AUGMENT = "augment"
+TRANSFORMER = "transformer"
+MAX_TOKENS = "max_tokens"
+NGRAM = "ngram"
 
 
 class ImageBlock(block_module.Block):
@@ -45,11 +45,7 @@ class ImageBlock(block_module.Block):
             it will be tuned automatically.
     """
 
-    def __init__(self,
-                 block_type=None,
-                 normalize=None,
-                 augment=None,
-                 **kwargs):
+    def __init__(self, block_type=None, normalize=None, augment=None, **kwargs):
         super().__init__(**kwargs)
         self.block_type = block_type
         self.normalize = normalize
@@ -57,9 +53,13 @@ class ImageBlock(block_module.Block):
 
     def get_config(self):
         config = super().get_config()
-        config.update({BLOCK_TYPE: self.block_type,
-                       NORMALIZE: self.normalize,
-                       AUGMENT: self.augment})
+        config.update(
+            {
+                BLOCK_TYPE: self.block_type,
+                NORMALIZE: self.normalize,
+                AUGMENT: self.augment,
+            }
+        )
         return config
 
     def _build_block(self, hp, output_node, block_type):
@@ -83,7 +83,8 @@ class ImageBlock(block_module.Block):
         if self.augment is None and hp.Boolean(AUGMENT):
             with hp.conditional_scope(AUGMENT, [True]):
                 output_node = preprocessing.ImageAugmentation().build(
-                    hp, output_node)
+                    hp, output_node
+                )
         elif self.augment:
             output_node = preprocessing.ImageAugmentation().build(hp, output_node)
 
@@ -112,11 +113,7 @@ class TextBlock(block_module.Block):
             If left unspecified, it will be tuned automatically.
     """
 
-    def __init__(self,
-                 block_type=None,
-                 max_tokens=None,
-                 pretraining=None,
-                 **kwargs):
+    def __init__(self, block_type=None, max_tokens=None, pretraining=None, **kwargs):
         super().__init__(**kwargs)
         self.block_type = block_type
         self.max_tokens = max_tokens
@@ -124,10 +121,13 @@ class TextBlock(block_module.Block):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            BLOCK_TYPE: self.block_type,
-            MAX_TOKENS: self.max_tokens,
-            'pretraining': self.pretraining})
+        config.update(
+            {
+                BLOCK_TYPE: self.block_type,
+                MAX_TOKENS: self.max_tokens,
+                "pretraining": self.pretraining,
+            }
+        )
         return config
 
     def build(self, hp, inputs=None):
@@ -143,22 +143,23 @@ class TextBlock(block_module.Block):
 
     def _build_block(self, hp, output_node, block_type):
         max_tokens = self.max_tokens or hp.Choice(
-            MAX_TOKENS, [500, 5000, 20000], default=5000)
+            MAX_TOKENS, [500, 5000, 20000], default=5000
+        )
         if block_type == NGRAM:
             output_node = preprocessing.TextToNgramVector(
-                max_tokens=max_tokens).build(hp, output_node)
+                max_tokens=max_tokens
+            ).build(hp, output_node)
             return basic.DenseBlock().build(hp, output_node)
-        output_node = preprocessing.TextToIntSequence(
-            max_tokens=max_tokens).build(hp, output_node)
+        output_node = preprocessing.TextToIntSequence(max_tokens=max_tokens).build(
+            hp, output_node
+        )
         if block_type == TRANSFORMER:
             output_node = basic.Transformer(
-                max_features=max_tokens + 1,
-                pretraining=self.pretraining,
+                max_features=max_tokens + 1, pretraining=self.pretraining,
             ).build(hp, output_node)
         else:
             output_node = basic.Embedding(
-                max_features=max_tokens + 1,
-                pretraining=self.pretraining,
+                max_features=max_tokens + 1, pretraining=self.pretraining,
             ).build(hp, output_node)
             output_node = basic.ConvBlock().build(hp, output_node)
         output_node = reduction.SpatialReduction().build(hp, output_node)
@@ -175,10 +176,7 @@ class StructuredDataBlock(block_module.Block):
         seed: Int. Random seed.
     """
 
-    def __init__(self,
-                 categorical_encoding=True,
-                 seed=None,
-                 **kwargs):
+    def __init__(self, categorical_encoding=True, seed=None, **kwargs):
         super().__init__(**kwargs)
         self.categorical_encoding = categorical_encoding
         self.seed = seed
@@ -187,8 +185,8 @@ class StructuredDataBlock(block_module.Block):
 
     @classmethod
     def from_config(cls, config):
-        column_types = config.pop('column_types')
-        column_names = config.pop('column_names')
+        column_types = config.pop("column_types")
+        column_names = config.pop("column_names")
         instance = cls(**config)
         instance.column_types = column_types
         instance.column_names = column_names
@@ -196,10 +194,14 @@ class StructuredDataBlock(block_module.Block):
 
     def get_config(self):
         config = super().get_config()
-        config.update({'categorical_encoding': self.categorical_encoding,
-                       'seed': self.seed,
-                       'column_types': self.column_types,
-                       'column_names': self.column_names})
+        config.update(
+            {
+                "categorical_encoding": self.categorical_encoding,
+                "seed": self.seed,
+                "column_types": self.column_types,
+                "column_names": self.column_names,
+            }
+        )
         return config
 
     def build(self, hp, inputs=None):

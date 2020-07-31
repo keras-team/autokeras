@@ -52,23 +52,23 @@ class ClassificationHead(head_module.Head):
             If left unspecified, it will be tuned automatically.
     """
 
-    def __init__(self,
-                 num_classes: Optional[int] = None,
-                 multi_label: bool = False,
-                 loss: Optional[types.LossType] = None,
-                 metrics: Optional[types.MetricsType] = None,
-                 dropout: Optional[float] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        num_classes: Optional[int] = None,
+        multi_label: bool = False,
+        loss: Optional[types.LossType] = None,
+        metrics: Optional[types.MetricsType] = None,
+        dropout: Optional[float] = None,
+        **kwargs
+    ):
         self.num_classes = num_classes
         self.multi_label = multi_label
         self.dropout = dropout
         if metrics is None:
-            metrics = ['accuracy']
+            metrics = ["accuracy"]
         if loss is None:
             loss = self.infer_loss()
-        super().__init__(loss=loss,
-                         metrics=metrics,
-                         **kwargs)
+        super().__init__(loss=loss, metrics=metrics, **kwargs)
 
     def infer_loss(self):
         if not self.num_classes:
@@ -79,10 +79,13 @@ class ClassificationHead(head_module.Head):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'num_classes': self.num_classes,
-            'multi_label': self.multi_label,
-            'dropout': self.dropout})
+        config.update(
+            {
+                "num_classes": self.num_classes,
+                "multi_label": self.multi_label,
+                "dropout": self.dropout,
+            }
+        )
         return config
 
     def build(self, hp, inputs=None):
@@ -98,21 +101,23 @@ class ClassificationHead(head_module.Head):
         if self.dropout is not None:
             dropout = self.dropout
         else:
-            dropout = hp.Choice('dropout', [0.0, 0.25, 0.5], default=0)
+            dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
 
         if dropout > 0:
             output_node = layers.Dropout(dropout)(output_node)
         output_node = layers.Dense(self.output_shape[-1])(output_node)
         if isinstance(self.loss, tf.keras.losses.BinaryCrossentropy):
-            output_node = layers.Activation(activations.sigmoid,
-                                            name=self.name)(output_node)
+            output_node = layers.Activation(activations.sigmoid, name=self.name)(
+                output_node
+            )
         else:
             output_node = layers.Softmax(name=self.name)(output_node)
         return output_node
 
     def get_adapter(self):
         return adapters.ClassificationHeadAdapter(
-            name=self.name, multi_label=self.multi_label)
+            name=self.name, multi_label=self.multi_label
+        )
 
     def config_from_adapter(self, adapter):
         super().config_from_adapter(adapter)
@@ -137,47 +142,46 @@ class RegressionHead(head_module.Head):
             If left unspecified, it will be tuned automatically.
     """
 
-    def __init__(self,
-                 output_dim: Optional[int] = None,
-                 loss: types.LossType = 'mean_squared_error',
-                 metrics: Optional[types.MetricsType] = None,
-                 dropout: Optional[float] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        output_dim: Optional[int] = None,
+        loss: types.LossType = "mean_squared_error",
+        metrics: Optional[types.MetricsType] = None,
+        dropout: Optional[float] = None,
+        **kwargs
+    ):
         if metrics is None:
-            metrics = ['mean_squared_error']
-        super().__init__(loss=loss,
-                         metrics=metrics,
-                         **kwargs)
+            metrics = ["mean_squared_error"]
+        super().__init__(loss=loss, metrics=metrics, **kwargs)
         self.output_dim = output_dim
         self.dropout = dropout
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'output_dim': self.output_dim,
-            'dropout': self.dropout})
+        config.update({"output_dim": self.output_dim, "dropout": self.dropout})
         return config
 
     def build(self, hp, inputs=None):
         if self.output_dim and self.output_shape[-1] != self.output_dim:
             raise ValueError(
-                'The data doesn\'t match the output_dim. '
-                'Expecting {} but got {}'.format(self.output_dim,
-                                                 self.output_shape[-1]))
+                "The data doesn't match the output_dim. "
+                "Expecting {} but got {}".format(
+                    self.output_dim, self.output_shape[-1]
+                )
+            )
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
 
-        dropout = self.dropout or hp.Choice('dropout',
-                                            [0.0, 0.25, 0.5],
-                                            default=0)
+        dropout = self.dropout or hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
 
         if dropout > 0:
             output_node = layers.Dropout(dropout)(output_node)
         output_node = reduction.Flatten().build(hp, output_node)
-        output_node = layers.Dense(self.output_shape[-1],
-                                   name=self.name)(output_node)
+        output_node = layers.Dense(self.output_shape[-1], name=self.name)(
+            output_node
+        )
         return output_node
 
     def get_adapter(self):
@@ -209,17 +213,21 @@ class SegmentationHead(ClassificationHead):
             If left unspecified, it will be tuned automatically.
     """
 
-    def __init__(self,
-                 num_classes: Optional[int] = None,
-                 loss: Optional[types.LossType] = None,
-                 metrics: Optional[types.MetricsType] = None,
-                 dropout: Optional[float] = None,
-                 **kwargs):
-        super().__init__(loss=loss,
-                         metrics=metrics,
-                         num_classes=num_classes,
-                         dropout=dropout,
-                         **kwargs)
+    def __init__(
+        self,
+        num_classes: Optional[int] = None,
+        loss: Optional[types.LossType] = None,
+        metrics: Optional[types.MetricsType] = None,
+        dropout: Optional[float] = None,
+        **kwargs
+    ):
+        super().__init__(
+            loss=loss,
+            metrics=metrics,
+            num_classes=num_classes,
+            dropout=dropout,
+            **kwargs
+        )
 
     def build(self, hp, inputs):
         return inputs

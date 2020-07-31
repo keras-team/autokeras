@@ -20,36 +20,44 @@ from tensorflow.python.util import nest
 from autokeras.engine import adapter as adapter_module
 from autokeras.utils import data_utils
 
-CATEGORICAL = 'categorical'
-NUMERICAL = 'numerical'
+CATEGORICAL = "categorical"
+NUMERICAL = "numerical"
 
 
 class InputAdapter(adapter_module.Adapter):
-
     def check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (np.ndarray, tf.data.Dataset)):
-            raise TypeError('Expect the data to Input to be numpy.ndarray or '
-                            'tf.data.Dataset, but got {type}.'.format(type=type(x)))
+            raise TypeError(
+                "Expect the data to Input to be numpy.ndarray or "
+                "tf.data.Dataset, but got {type}.".format(type=type(x))
+            )
         if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.number):
-            raise TypeError('Expect the data to Input to be numerical, but got '
-                            '{type}.'.format(type=x.dtype))
+            raise TypeError(
+                "Expect the data to Input to be numerical, but got "
+                "{type}.".format(type=x.dtype)
+            )
 
 
 class ImageInputAdapter(adapter_module.Adapter):
-
     def check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (np.ndarray, tf.data.Dataset)):
-            raise TypeError('Expect the data to ImageInput to be numpy.ndarray or '
-                            'tf.data.Dataset, but got {type}.'.format(type=type(x)))
+            raise TypeError(
+                "Expect the data to ImageInput to be numpy.ndarray or "
+                "tf.data.Dataset, but got {type}.".format(type=type(x))
+            )
         if isinstance(x, np.ndarray) and x.ndim not in [3, 4]:
-            raise ValueError('Expect the data to ImageInput to have 3 or 4 '
-                             'dimensions, but got input shape {shape} with {ndim} '
-                             'dimensions'.format(shape=x.shape, ndim=x.ndim))
+            raise ValueError(
+                "Expect the data to ImageInput to have 3 or 4 "
+                "dimensions, but got input shape {shape} with {ndim} "
+                "dimensions".format(shape=x.shape, ndim=x.ndim)
+            )
         if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.number):
-            raise TypeError('Expect the data to ImageInput to be numerical, but got '
-                            '{type}.'.format(type=x.dtype))
+            raise TypeError(
+                "Expect the data to ImageInput to be numerical, but got "
+                "{type}.".format(type=x.dtype)
+            )
 
     def convert_to_dataset(self, x):
         if isinstance(x, np.ndarray):
@@ -61,21 +69,26 @@ class ImageInputAdapter(adapter_module.Adapter):
 
 
 class TextInputAdapter(adapter_module.Adapter):
-
     def check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (np.ndarray, tf.data.Dataset)):
-            raise TypeError('Expect the data to TextInput to be numpy.ndarray or '
-                            'tf.data.Dataset, but got {type}.'.format(type=type(x)))
+            raise TypeError(
+                "Expect the data to TextInput to be numpy.ndarray or "
+                "tf.data.Dataset, but got {type}.".format(type=type(x))
+            )
 
         if isinstance(x, np.ndarray) and x.ndim != 1:
-            raise ValueError('Expect the data to TextInput to have 1 dimension, but '
-                             'got input shape {shape} with {ndim} dimensions'.format(
-                                 shape=x.shape,
-                                 ndim=x.ndim))
+            raise ValueError(
+                "Expect the data to TextInput to have 1 dimension, but "
+                "got input shape {shape} with {ndim} dimensions".format(
+                    shape=x.shape, ndim=x.ndim
+                )
+            )
         if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.character):
-            raise TypeError('Expect the data to TextInput to be strings, but got '
-                            '{type}.'.format(type=x.dtype))
+            raise TypeError(
+                "Expect the data to TextInput to be strings, but got "
+                "{type}.".format(type=x.dtype)
+            )
 
     def convert_to_dataset(self, x):
         x = super().convert_to_dataset(x)
@@ -86,7 +99,6 @@ class TextInputAdapter(adapter_module.Adapter):
 
 
 class StructuredDataInputAdapter(adapter_module.Adapter):
-
     def __init__(self, column_names=None, column_types=None, **kwargs):
         super().__init__(**kwargs)
         self.column_names = column_names
@@ -100,29 +112,32 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'count_nan': self.count_nan,
-            'count_numerical': self.count_numerical,
-            'count_categorical': self.count_categorical,
-            'count_unique_numerical': self.count_unique_numerical,
-            'num_col': self.num_col
-        })
+        config.update(
+            {
+                "count_nan": self.count_nan,
+                "count_numerical": self.count_numerical,
+                "count_categorical": self.count_categorical,
+                "count_unique_numerical": self.count_unique_numerical,
+                "num_col": self.num_col,
+            }
+        )
         return config
 
     @classmethod
     def from_config(cls, config):
         obj = super().from_config(config)
-        obj.count_nan = config['count_nan']
-        obj.count_numerical = config['count_numerical']
-        obj.count_categorical = config['count_categorical']
-        obj.count_unique_numerical = config['count_unique_numerical']
-        obj.num_col = config['num_col']
+        obj.count_nan = config["count_nan"]
+        obj.count_numerical = config["count_numerical"]
+        obj.count_categorical = config["count_categorical"]
+        obj.count_unique_numerical = config["count_unique_numerical"]
+        obj.num_col = config["num_col"]
 
     def check(self, x):
         if not isinstance(x, (pd.DataFrame, np.ndarray, tf.data.Dataset)):
-            raise TypeError('Unsupported type {type} for '
-                            '{name}.'.format(type=type(x),
-                                             name=self.__class__.__name__))
+            raise TypeError(
+                "Unsupported type {type} for "
+                "{name}.".format(type=type(x), name=self.__class__.__name__)
+            )
 
         # Extract column_names from pd.DataFrame.
         if isinstance(x, pd.DataFrame) and self.column_names is None:
@@ -131,14 +146,15 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
             if self.column_types:
                 for column_name in self.column_types:
                     if column_name not in self.column_names:
-                        raise ValueError('Column_names and column_types are '
-                                         'mismatched. Cannot find column name '
-                                         '{name} in the data.'.format(
-                                             name=column_name))
+                        raise ValueError(
+                            "Column_names and column_types are "
+                            "mismatched. Cannot find column name "
+                            "{name} in the data.".format(name=column_name)
+                        )
 
         if self.column_names is None:
             if self.column_types:
-                raise ValueError('Column names must be specified.')
+                raise ValueError("Column names must be specified.")
 
     def convert_to_dataset(self, x):
         if isinstance(x, pd.DataFrame):
@@ -169,12 +185,12 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
             for i in range(len(x)):
                 self.count_unique_numerical.append({})
         for i in range(self.num_col):
-            x[i] = x[i].decode('utf-8')
-            if x[i] == 'nan':
+            x[i] = x[i].decode("utf-8")
+            if x[i] == "nan":
                 self.count_nan[i] += 1
-            elif x[i] == 'True':
+            elif x[i] == "True":
                 self.count_categorical[i] += 1
-            elif x[i] == 'False':
+            elif x[i] == "False":
                 self.count_categorical[i] += 1
             else:
                 try:
@@ -195,15 +211,19 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
             self.column_names = [index for index in range(self.num_col)]
         # Check if column_names has the correct length.
         elif len(self.column_names) != self.num_col:
-            raise ValueError('Expect column_names to have length {expect} '
-                             'but got {actual}.'.format(
-                                 expect=self.num_col,
-                                 actual=len(self.column_names)))
+            raise ValueError(
+                "Expect column_names to have length {expect} "
+                "but got {actual}.".format(
+                    expect=self.num_col, actual=len(self.column_names)
+                )
+            )
 
         for i in range(self.num_col):
             if self.count_categorical[i] > 0:
                 column_types[self.column_names[i]] = CATEGORICAL
-            elif len(self.count_unique_numerical[i])/self.count_numerical[i] < 0.05:
+            elif (
+                len(self.count_unique_numerical[i]) / self.count_numerical[i] < 0.05
+            ):
                 column_types[self.column_names[i]] = CATEGORICAL
             else:
                 column_types[self.column_names[i]] = NUMERICAL
@@ -216,12 +236,9 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
 
 
 class TimeseriesInputAdapter(adapter_module.Adapter):
-
-    def __init__(self,
-                 lookback=None,
-                 column_names=None,
-                 column_types=None,
-                 **kwargs):
+    def __init__(
+        self, lookback=None, column_names=None, column_types=None, **kwargs
+    ):
         super().__init__(**kwargs)
         self.lookback = lookback
         self.column_names = column_names
@@ -229,26 +246,31 @@ class TimeseriesInputAdapter(adapter_module.Adapter):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'lookback': self.lookback,
-            'column_names': self.column_names,
-            'column_types': self.column_types
-        })
+        config.update(
+            {
+                "lookback": self.lookback,
+                "column_names": self.column_names,
+                "column_types": self.column_types,
+            }
+        )
         return config
 
     def check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (pd.DataFrame, np.ndarray, tf.data.Dataset)):
-            raise TypeError('Expect the data in TimeseriesInput to be numpy.ndarray'
-                            ' or tf.data.Dataset or pd.DataFrame, but got {type}.'.
-                            format(type=type(x)))
+            raise TypeError(
+                "Expect the data in TimeseriesInput to be numpy.ndarray"
+                " or tf.data.Dataset or pd.DataFrame, but got {type}.".format(
+                    type=type(x)
+                )
+            )
 
         if isinstance(x, np.ndarray) and x.ndim != 2:
-            raise ValueError('Expect the data in TimeseriesInput to have 2 dimension'
-                             ', but got input shape {shape} with {ndim} '
-                             'dimensions'.format(
-                                 shape=x.shape,
-                                 ndim=x.ndim))
+            raise ValueError(
+                "Expect the data in TimeseriesInput to have 2 dimension"
+                ", but got input shape {shape} with {ndim} "
+                "dimensions".format(shape=x.shape, ndim=x.ndim)
+            )
 
         # Extract column_names from pd.DataFrame.
         if isinstance(x, pd.DataFrame) and self.column_names is None:
@@ -257,23 +279,26 @@ class TimeseriesInputAdapter(adapter_module.Adapter):
             if self.column_types:
                 for column_name in self.column_types:
                     if column_name not in self.column_names:
-                        raise ValueError('Column_names and column_types are '
-                                         'mismatched. Cannot find column name '
-                                         '{name} in the data.'.format(
-                                             name=column_name))
+                        raise ValueError(
+                            "Column_names and column_types are "
+                            "mismatched. Cannot find column name "
+                            "{name} in the data.".format(name=column_name)
+                        )
 
         # Generate column_names.
         if self.column_names is None:
             if self.column_types:
-                raise ValueError('Column names must be specified.')
+                raise ValueError("Column names must be specified.")
             self.column_names = [index for index in range(x.shape[1])]
 
         # Check if column_names has the correct length.
         if len(self.column_names) != x.shape[1]:
-            raise ValueError('Expect column_names to have length {expect} '
-                             'but got {actual}.'.format(
-                                 expect=x.shape[1],
-                                 actual=len(self.column_names)))
+            raise ValueError(
+                "Expect column_names to have length {expect} "
+                "but got {actual}.".format(
+                    expect=x.shape[1], actual=len(self.column_names)
+                )
+            )
 
     def convert_to_dataset(self, x):
         if isinstance(x, pd.DataFrame):

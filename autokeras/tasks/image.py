@@ -31,11 +31,8 @@ from autokeras.utils import types
 
 
 class SupervisedImagePipeline(auto_model.AutoModel):
-
     def __init__(self, outputs, **kwargs):
-        super().__init__(inputs=input_module.ImageInput(),
-                         outputs=outputs,
-                         **kwargs)
+        super().__init__(inputs=input_module.ImageInput(), outputs=outputs, **kwargs)
 
 
 class ImageClassifier(SupervisedImagePipeline):
@@ -69,26 +66,30 @@ class ImageClassifier(SupervisedImagePipeline):
         **kwargs: Any arguments supported by AutoModel.
     """
 
-    def __init__(self,
-                 num_classes: Optional[int] = None,
-                 multi_label: bool = False,
-                 loss: types.LossType = None,
-                 metrics: Optional[types.MetricsType] = None,
-                 project_name: str = 'image_classifier',
-                 max_trials: int = 100,
-                 directory: Union[str, Path, None] = None,
-                 objective: str = 'val_loss',
-                 tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite: bool = False,
-                 seed: Optional[int] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        num_classes: Optional[int] = None,
+        multi_label: bool = False,
+        loss: types.LossType = None,
+        metrics: Optional[types.MetricsType] = None,
+        project_name: str = "image_classifier",
+        max_trials: int = 100,
+        directory: Union[str, Path, None] = None,
+        objective: str = "val_loss",
+        tuner: Union[str, Type[tuner.AutoTuner]] = None,
+        overwrite: bool = False,
+        seed: Optional[int] = None,
+        **kwargs
+    ):
         if tuner is None:
             tuner = task_specific.ImageClassifierTuner
         super().__init__(
-            outputs=blocks.ClassificationHead(num_classes=num_classes,
-                                              multi_label=multi_label,
-                                              loss=loss,
-                                              metrics=metrics),
+            outputs=blocks.ClassificationHead(
+                num_classes=num_classes,
+                multi_label=multi_label,
+                loss=loss,
+                metrics=metrics,
+            ),
             max_trials=max_trials,
             directory=directory,
             project_name=project_name,
@@ -96,19 +97,21 @@ class ImageClassifier(SupervisedImagePipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
-            **kwargs)
+            **kwargs
+        )
 
-    def fit(self,
-            x: Optional[types.DatasetType] = None,
-            y: Optional[types.DatasetType] = None,
-            epochs: Optional[int] = None,
-            callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
-            validation_split: Optional[float] = 0.2,
-            validation_data: Union[
-                tf.data.Dataset,
-                Tuple[types.DatasetType, types.DatasetType],
-                None] = None,
-            **kwargs):
+    def fit(
+        self,
+        x: Optional[types.DatasetType] = None,
+        y: Optional[types.DatasetType] = None,
+        epochs: Optional[int] = None,
+        callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
+        validation_split: Optional[float] = 0.2,
+        validation_data: Union[
+            tf.data.Dataset, Tuple[types.DatasetType, types.DatasetType], None
+        ] = None,
+        **kwargs
+    ):
         """Search for the best model and hyperparameters for the AutoModel.
 
         It will search for the best model based on the performances on
@@ -148,13 +151,15 @@ class ImageClassifier(SupervisedImagePipeline):
                 validation data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        super().fit(x=x,
-                    y=y,
-                    epochs=epochs,
-                    callbacks=callbacks,
-                    validation_split=validation_split,
-                    validation_data=validation_data,
-                    **kwargs)
+        super().fit(
+            x=x,
+            y=y,
+            epochs=epochs,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            validation_data=validation_data,
+            **kwargs
+        )
 
 
 class ImageRegressor(SupervisedImagePipeline):
@@ -186,24 +191,26 @@ class ImageRegressor(SupervisedImagePipeline):
         **kwargs: Any arguments supported by AutoModel.
     """
 
-    def __init__(self,
-                 output_dim: Optional[int] = None,
-                 loss: types.LossType = 'mean_squared_error',
-                 metrics: Optional[types.MetricsType] = None,
-                 project_name: str = 'image_regressor',
-                 max_trials: int = 100,
-                 directory: Union[str, Path, None] = None,
-                 objective: str = 'val_loss',
-                 tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite: bool = False,
-                 seed: Optional[int] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        output_dim: Optional[int] = None,
+        loss: types.LossType = "mean_squared_error",
+        metrics: Optional[types.MetricsType] = None,
+        project_name: str = "image_regressor",
+        max_trials: int = 100,
+        directory: Union[str, Path, None] = None,
+        objective: str = "val_loss",
+        tuner: Union[str, Type[tuner.AutoTuner]] = None,
+        overwrite: bool = False,
+        seed: Optional[int] = None,
+        **kwargs
+    ):
         if tuner is None:
             tuner = greedy.Greedy
         super().__init__(
-            outputs=blocks.RegressionHead(output_dim=output_dim,
-                                          loss=loss,
-                                          metrics=metrics),
+            outputs=blocks.RegressionHead(
+                output_dim=output_dim, loss=loss, metrics=metrics
+            ),
             max_trials=max_trials,
             directory=directory,
             project_name=project_name,
@@ -211,18 +218,21 @@ class ImageRegressor(SupervisedImagePipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
-            **kwargs)
+            **kwargs
+        )
 
     def fit(
-            self,
-            x: Optional[types.DatasetType] = None,
-            y: Optional[types.DatasetType] = None,
-            epochs: Optional[int] = None,
-            callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
-            validation_split: Optional[float] = 0.2,
-            validation_data: Union[types.DatasetType,
-                                   Tuple[types.DatasetType], None] = None,
-            **kwargs):
+        self,
+        x: Optional[types.DatasetType] = None,
+        y: Optional[types.DatasetType] = None,
+        epochs: Optional[int] = None,
+        callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
+        validation_split: Optional[float] = 0.2,
+        validation_data: Union[
+            types.DatasetType, Tuple[types.DatasetType], None
+        ] = None,
+        **kwargs
+    ):
         """Search for the best model and hyperparameters for the AutoModel.
 
         It will search for the best model based on the performances on
@@ -263,13 +273,15 @@ class ImageRegressor(SupervisedImagePipeline):
                 validation data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        super().fit(x=x,
-                    y=y,
-                    epochs=epochs,
-                    callbacks=callbacks,
-                    validation_split=validation_split,
-                    validation_data=validation_data,
-                    **kwargs)
+        super().fit(
+            x=x,
+            y=y,
+            epochs=epochs,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            validation_data=validation_data,
+            **kwargs
+        )
 
 
 class ImageSegmenter(SupervisedImagePipeline):
@@ -302,24 +314,26 @@ class ImageSegmenter(SupervisedImagePipeline):
         **kwargs: Any arguments supported by AutoModel.
     """
 
-    def __init__(self,
-                 num_classes: Optional[int] = None,
-                 loss: types.LossType = None,
-                 metrics: Optional[types.MetricsType] = None,
-                 project_name: str = 'image_classifier',
-                 max_trials: int = 100,
-                 directory: Union[str, Path, None] = None,
-                 objective: str = 'val_loss',
-                 tuner: Union[str, Type[tuner.AutoTuner]] = None,
-                 overwrite: bool = False,
-                 seed: Optional[int] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        num_classes: Optional[int] = None,
+        loss: types.LossType = None,
+        metrics: Optional[types.MetricsType] = None,
+        project_name: str = "image_classifier",
+        max_trials: int = 100,
+        directory: Union[str, Path, None] = None,
+        objective: str = "val_loss",
+        tuner: Union[str, Type[tuner.AutoTuner]] = None,
+        overwrite: bool = False,
+        seed: Optional[int] = None,
+        **kwargs
+    ):
         if tuner is None:
             tuner = greedy.Greedy
         super().__init__(
-            outputs=blocks.SegmentationHead(num_classes=num_classes,
-                                            loss=loss,
-                                            metrics=metrics),
+            outputs=blocks.SegmentationHead(
+                num_classes=num_classes, loss=loss, metrics=metrics
+            ),
             max_trials=max_trials,
             directory=directory,
             project_name=project_name,
@@ -327,18 +341,21 @@ class ImageSegmenter(SupervisedImagePipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
-            **kwargs)
+            **kwargs
+        )
 
     def fit(
-            self,
-            x: Optional[types.DatasetType] = None,
-            y: Optional[types.DatasetType] = None,
-            epochs: Optional[int] = None,
-            callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
-            validation_split: Optional[float] = 0.2,
-            validation_data: Union[types.DatasetType,
-                                   Tuple[types.DatasetType], None] = None,
-            **kwargs):
+        self,
+        x: Optional[types.DatasetType] = None,
+        y: Optional[types.DatasetType] = None,
+        epochs: Optional[int] = None,
+        callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
+        validation_split: Optional[float] = 0.2,
+        validation_data: Union[
+            types.DatasetType, Tuple[types.DatasetType], None
+        ] = None,
+        **kwargs
+    ):
         """Search for the best model and hyperparameters for the AutoModel.
 
         It will search for the best model based on the performances on
@@ -379,10 +396,12 @@ class ImageSegmenter(SupervisedImagePipeline):
                 validation data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        super().fit(x=x,
-                    y=y,
-                    epochs=epochs,
-                    callbacks=callbacks,
-                    validation_split=validation_split,
-                    validation_data=validation_data,
-                    **kwargs)
+        super().fit(
+            x=x,
+            y=y,
+            epochs=epochs,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            validation_data=validation_data,
+            **kwargs
+        )

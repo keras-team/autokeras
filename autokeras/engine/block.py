@@ -36,7 +36,7 @@ class Block(kerastuner.HyperModel, serializable.Serializable):
     def __init__(self, name: str = None, **kwargs):
         if not name:
             prefix = self.__class__.__name__
-            name = prefix + '_' + str(tf.keras.backend.get_uid(prefix))
+            name = prefix + "_" + str(tf.keras.backend.get_uid(prefix))
             name = utils.to_snake_case(name)
         super().__init__(name=name, **kwargs)
         self.inputs = None
@@ -59,10 +59,12 @@ class Block(kerastuner.HyperModel, serializable.Serializable):
         self.inputs = nest.flatten(inputs)
         for input_node in self.inputs:
             if not isinstance(input_node, node_module.Node):
-                raise TypeError('Expect the inputs to block {name} to be '
-                                'a Node, but got {type}.'.format(
-                                    name=self.name,
-                                    type=type(input_node)))
+                raise TypeError(
+                    "Expect the inputs to block {name} to be "
+                    "a Node, but got {type}.".format(
+                        name=self.name, type=type(input_node)
+                    )
+                )
             input_node.add_out_block(self)
         self.outputs = []
         for _ in range(self._num_output_node):
@@ -88,4 +90,4 @@ class Block(kerastuner.HyperModel, serializable.Serializable):
         # Returns
             A dictionary of configurations of the preprocessor.
         """
-        return {'name': self.name, 'tunable': self.tunable}
+        return {"name": self.name, "tunable": self.tunable}

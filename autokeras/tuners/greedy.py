@@ -21,7 +21,6 @@ from autokeras.engine import tuner as tuner_module
 
 
 class TrieNode(object):
-
     def __init__(self):
         super().__init__()
         self.num_leaves = 0
@@ -33,7 +32,6 @@ class TrieNode(object):
 
 
 class Trie(object):
-
     def __init__(self):
         super().__init__()
         self.root = TrieNode()
@@ -41,7 +39,7 @@ class Trie(object):
     def insert(self, hp):
         name = hp.name
         long_name = name
-        names = long_name.split('/')
+        names = long_name.split("/")
 
         new_word = False
         current_node = self.root
@@ -94,26 +92,25 @@ class GreedyOracle(kerastuner.Oracle):
         seed: Int. Random seed.
     """
 
-    def __init__(self,
-                 initial_hps=None,
-                 seed=None,
-                 **kwargs):
+    def __init__(self, initial_hps=None, seed=None, **kwargs):
         super().__init__(seed=seed, **kwargs)
         self.initial_hps = initial_hps or []
         self._tried_initial_hps = [False] * len(self.initial_hps)
 
     def get_state(self):
         state = super().get_state()
-        state.update({
-            'initial_hps': self.initial_hps,
-            'tried_initial_hps': self._tried_initial_hps,
-        })
+        state.update(
+            {
+                "initial_hps": self.initial_hps,
+                "tried_initial_hps": self._tried_initial_hps,
+            }
+        )
         return state
 
     def set_state(self, state):
         super().set_state(state)
-        self.initial_hps = state['initial_hps']
-        self._tried_initial_hps = state['tried_initial_hps']
+        self.initial_hps = state["initial_hps"]
+        self._tried_initial_hps = state["tried_initial_hps"]
 
     def _select_hps(self):
         # TODO: consider condition_scopes.
@@ -125,8 +122,7 @@ class GreedyOracle(kerastuner.Oracle):
         if len(all_nodes) <= 1:
             return []
 
-        probabilities = np.array(
-            [1 / node.num_leaves for node in all_nodes])
+        probabilities = np.array([1 / node.num_leaves for node in all_nodes])
         sum_p = np.sum(probabilities)
         probabilities = probabilities / sum_p
         node = np.random.choice(all_nodes, p=probabilities)
@@ -142,8 +138,10 @@ class GreedyOracle(kerastuner.Oracle):
     def _populate_space(self, trial_id):
         if not all(self._tried_initial_hps):
             values = self._next_initial_hps()
-            return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
-                    'values': values}
+            return {
+                "status": kerastuner.engine.trial.TrialStatus.RUNNING,
+                "values": values,
+            }
 
         for i in range(self._max_collisions):
             hp_list = self._select_hps()
@@ -152,11 +150,15 @@ class GreedyOracle(kerastuner.Oracle):
             if values is None:
                 continue
             # Values found.
-            return {'status': kerastuner.engine.trial.TrialStatus.RUNNING,
-                    'values': values}
+            return {
+                "status": kerastuner.engine.trial.TrialStatus.RUNNING,
+                "values": values,
+            }
         # All stages reached max collisions.
-        return {'status': kerastuner.engine.trial.TrialStatus.STOPPED,
-                'values': None}
+        return {
+            "status": kerastuner.engine.trial.TrialStatus.STOPPED,
+            "values": None,
+        }
 
     def _generate_hp_values(self, hp_list):
         best_trials = self.get_best_trials()
@@ -188,17 +190,18 @@ class GreedyOracle(kerastuner.Oracle):
 
 
 class Greedy(tuner_module.AutoTuner):
-
-    def __init__(self,
-                 hypermodel,
-                 objective='val_loss',
-                 max_trials=10,
-                 initial_hps=None,
-                 seed=None,
-                 hyperparameters=None,
-                 tune_new_entries=True,
-                 allow_new_entries=True,
-                 **kwargs):
+    def __init__(
+        self,
+        hypermodel,
+        objective="val_loss",
+        max_trials=10,
+        initial_hps=None,
+        seed=None,
+        hyperparameters=None,
+        tune_new_entries=True,
+        allow_new_entries=True,
+        **kwargs
+    ):
         self.seed = seed
         oracle = GreedyOracle(
             objective=objective,
@@ -207,8 +210,6 @@ class Greedy(tuner_module.AutoTuner):
             seed=seed,
             hyperparameters=hyperparameters,
             tune_new_entries=tune_new_entries,
-            allow_new_entries=allow_new_entries)
-        super().__init__(
-            oracle=oracle,
-            hypermodel=hypermodel,
-            **kwargs)
+            allow_new_entries=allow_new_entries,
+        )
+        super().__init__(oracle=oracle, hypermodel=hypermodel, **kwargs)

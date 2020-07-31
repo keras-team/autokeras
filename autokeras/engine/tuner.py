@@ -44,17 +44,13 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         **kwargs: The args supported by KerasTuner.
     """
 
-    def __init__(self,
-                 oracle,
-                 hypermodel,
-                 preprocessors=None,
-                 **kwargs):
+    def __init__(self, oracle, hypermodel, preprocessors=None, **kwargs):
         # Initialize before super() for reload to work.
         self._finished = False
         super().__init__(oracle, hypermodel, **kwargs)
         self.preprocessors = nest.flatten(preprocessors)
         # Save or load the HyperModel.
-        self.hypermodel.hypermodel.save(os.path.join(self.project_dir, 'graph'))
+        self.hypermodel.hypermodel.save(os.path.join(self.project_dir, "graph"))
 
     # Override the function to prevent building the model during initialization.
     def _populate_initial_space(self):
@@ -96,11 +92,9 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
                 layer = get_output_layer(layer.output)
         return model
 
-    def search(self,
-               epochs=None,
-               callbacks=None,
-               fit_on_val_data=False,
-               **fit_kwargs):
+    def search(
+        self, epochs=None, callbacks=None, fit_on_val_data=False, **fit_kwargs
+    ):
         """Search for the best HyperParameters.
 
         If there is not early-stopping in the callbacks, the early-stopping callback
@@ -147,18 +141,19 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
             # Remove early-stopping since no validation data.
             # Remove early-stopping since it is inserted.
-            copied_fit_kwargs['callbacks'] = self._remove_early_stopping(callbacks)
+            copied_fit_kwargs["callbacks"] = self._remove_early_stopping(callbacks)
 
             # Decide the number of epochs.
-            copied_fit_kwargs['epochs'] = epochs
+            copied_fit_kwargs["epochs"] = epochs
             if not epochs_provided:
-                copied_fit_kwargs['epochs'] = self._get_best_trial_epochs()
+                copied_fit_kwargs["epochs"] = self._get_best_trial_epochs()
 
             # Concatenate training and validation data.
             if fit_on_val_data:
-                copied_fit_kwargs['x'] = copied_fit_kwargs['x'].concatenate(
-                    fit_kwargs['validation_data'])
-                copied_fit_kwargs.pop('validation_data')
+                copied_fit_kwargs["x"] = copied_fit_kwargs["x"].concatenate(
+                    fit_kwargs["validation_data"]
+                )
+                copied_fit_kwargs.pop("validation_data")
 
             model = self.final_fit(**copied_fit_kwargs)
         else:
@@ -169,24 +164,24 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
     def get_state(self):
         state = super().get_state()
-        state.update({
-            'finished': self._finished,
-        })
+        state.update({"finished": self._finished})
         return state
 
     def set_state(self, state):
         super().set_state(state)
-        self._finished = state.get('finished')
+        self._finished = state.get("finished")
 
     @staticmethod
     def _remove_early_stopping(callbacks):
-        return [copy.deepcopy(callbacks)
-                for callback in callbacks
-                if not isinstance(callback, tf_callbacks.EarlyStopping)]
+        return [
+            copy.deepcopy(callbacks)
+            for callback in callbacks
+            if not isinstance(callback, tf_callbacks.EarlyStopping)
+        ]
 
     def _get_best_trial_epochs(self):
         best_trial = self.oracle.get_best_trials(1)[0]
-        return len(best_trial.metrics.metrics['val_loss']._observations)
+        return len(best_trial.metrics.metrics["val_loss"]._observations)
 
     def _build_best_model(self):
         best_trial = self.oracle.get_best_trials(1)[0]
@@ -201,7 +196,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
     @property
     def best_model_path(self):
-        return os.path.join(self.project_dir, 'best_model')
+        return os.path.join(self.project_dir, "best_model")
 
     @property
     def objective(self):

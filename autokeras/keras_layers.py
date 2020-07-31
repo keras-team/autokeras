@@ -16,9 +16,9 @@ import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
-INT = 'int'
-NONE = 'none'
-ONE_HOT = 'one-hot'
+INT = "int"
+NONE = "none"
+ONE_HOT = "one-hot"
 
 
 @tf.keras.utils.register_keras_serializable()
@@ -60,9 +60,9 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
             if encoding_layer is None:
                 number = tf.strings.to_number(input_node, tf.float32)
                 # Replace NaN with 0.
-                imputed = tf.where(tf.math.is_nan(number),
-                                   tf.zeros_like(number),
-                                   number)
+                imputed = tf.where(
+                    tf.math.is_nan(number), tf.zeros_like(number), number
+                )
                 output_nodes.append(imputed)
             else:
                 output_nodes.append(tf.cast(encoding_layer(input_node), tf.float32))
@@ -79,7 +79,7 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
 
     def get_config(self):
         config = {
-            'encoding': self.encoding,
+            "encoding": self.encoding,
         }
         base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
