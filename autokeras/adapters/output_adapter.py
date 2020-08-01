@@ -70,8 +70,10 @@ class ClassificationHeadAdapter(HeadAdapter):
 
     @classmethod
     def from_config(cls, config):
+        encoder = config.pop("encoder")
         obj = super().from_config(config)
-        obj.label_encoder = encoders.deserialize(config["encoder"])
+        obj.label_encoder = encoders.deserialize(encoder)
+        return obj
 
     def fit_before_convert(self, dataset):
         """Fit the encoder."""

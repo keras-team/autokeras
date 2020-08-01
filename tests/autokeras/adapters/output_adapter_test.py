@@ -17,76 +17,102 @@ import pytest
 import tensorflow as tf
 
 from autokeras.adapters import output_adapter
+from autokeras.utils import data_utils
 from tests import utils
 
 
-def test_y_is_pd_series():
-    (x, y), (val_x, val_y) = utils.dataframe_series()
+def test_clf_from_config_fit_transform_to_dataset():
     adapter = output_adapter.ClassificationHeadAdapter(name="a")
-    adapter.fit_transform(y)
-    assert isinstance(adapter.transform(y), tf.data.Dataset)
+    adapter.fit_transform(np.array(["a", "b", "a"]))
+
+    adapter = output_adapter.ClassificationHeadAdapter.from_config(
+        adapter.get_config()
+    )
+
+    assert isinstance(adapter.transform(np.array(["a", "b", "a"])), tf.data.Dataset)
 
 
-def test_unsupported_types():
-    y = 1
+def test_transform_pd_series_to_dataset():
     adapter = output_adapter.ClassificationHeadAdapter(name="a")
+
+    y = adapter.fit_transform(utils.dataframe_series()[0][1])
+
+    assert isinstance(y, tf.data.Dataset)
+
+
+def test_unsupported_types_error():
+    adapter = output_adapter.ClassificationHeadAdapter(name="a")
+
     with pytest.raises(TypeError) as info:
-        adapter.check(y)
+        adapter.check(1)
+
     assert "Expect the target data" in str(info.value)
 
 
-def test_one_class():
-    y = np.array(["a", "a", "a"])
+def test_one_class_error():
     adapter = output_adapter.ClassificationHeadAdapter(name="a")
+
     with pytest.raises(ValueError) as info:
-        adapter.fit_before_convert(y)
+        adapter.fit_before_convert(np.array(["a", "a", "a"]))
     assert "Expect the target data" in str(info.value)
 
 
-def test_infer_num_classes():
-    y = utils.generate_one_hot_labels(dtype="dataset")
+def test_infer_ten_classes():
     adapter = output_adapter.ClassificationHeadAdapter(name="a")
-    y = adapter.fit(y)
+
+    adapter.fit(utils.generate_one_hot_labels(dtype="dataset", num_classes=10))
+
     assert adapter.num_classes == 10
 
 
-def test_infer_two_classes():
-    y = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 1)).batch(32)
+def test_infer_single_column_two_classes():
     adapter = output_adapter.ClassificationHeadAdapter(name="a")
-    y = adapter.fit(y)
+
+    adapter.fit(tf.data.Dataset.from_tensor_slices(np.random.rand(10, 1)).batch(32))
+
     assert adapter.num_classes == 2
 
 
-def test_check_data_shape():
-    y = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 5)).batch(32)
+def test_specify_five_classes():
     adapter = output_adapter.ClassificationHeadAdapter(name="a", num_classes=5)
-    adapter.fit(y)
+
+    adapter.fit(tf.data.Dataset.from_tensor_slices(np.random.rand(10, 5)).batch(32))
+
+    assert adapter.num_classes == 5
 
 
-def test_check_data_shape_two_classes():
-    y = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 1)).batch(32)
+def test_specify_two_classes_fit_single_column():
     adapter = output_adapter.ClassificationHeadAdapter(name="a", num_classes=2)
-    adapter.fit(y)
+
+    adapter.fit(tf.data.Dataset.from_tensor_slices(np.random.rand(10, 1)).batch(32))
+
+    assert adapter.num_classes == 2
 
 
-def test_check_data_shape_error():
-    y = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 3)).batch(32)
+def test_wrong_num_classes_error():
     adapter = output_adapter.ClassificationHeadAdapter(name="a", num_classes=5)
+
     with pytest.raises(ValueError) as info:
-        adapter.fit(y)
+        adapter.fit(
+            tf.data.Dataset.from_tensor_slices(np.random.rand(10, 3)).batch(32)
+        )
+
     assert "Expect the target data for a to have shape" in str(info.value)
 
 
-def test_multi_label_two_classes():
-    y = np.random.rand(10, 2)
+def test_multi_label_two_classes_has_two_columns():
     adapter = output_adapter.ClassificationHeadAdapter(name="a", multi_label=True)
-    adapter.fit_transform(y)
-    assert adapter.label_encoder is None
+
+    y = adapter.fit_transform(np.random.rand(10, 2))
+
+    assert data_utils.dataset_shape(y).as_list() == [None, 2]
 
 
-def test_multi_label_postprocessing():
+def test_multi_label_postprocess_to_one_hot_labels():
     y = np.random.rand(10, 3)
     adapter = output_adapter.ClassificationHeadAdapter(name="a", multi_label=True)
     adapter.fit_transform(y)
+
     y = adapter.postprocess(y)
+
     assert set(y.flatten().tolist()) == set([1, 0])

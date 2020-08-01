@@ -38,8 +38,10 @@ class OneHotEncoder(encoder_module.Encoder):
 
     @classmethod
     def from_config(cls, config):
+        label_to_vec = config.pop("label_to_vec")
         obj = super().from_config(config)
-        obj._label_to_vec = config["label_to_vec"]
+        obj._label_to_vec = label_to_vec
+        return obj
 
     def fit(self, data):
         """Create mapping from label to vector, and vector to label.
@@ -110,8 +112,10 @@ class LabelEncoder(encoder_module.Encoder):
 
     @classmethod
     def from_config(cls, config):
+        label_to_int = config.pop("label_to_int")
         obj = super().from_config(config)
-        obj._label_to_int = config["label_to_int"]
+        obj._label_to_int = label_to_int
+        return obj
 
     def fit(self, data):
         """Fit the encoder with all the labels.
