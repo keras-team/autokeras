@@ -66,6 +66,9 @@ class Encoder(serializable.Serializable):
 
     @classmethod
     def from_config(cls, config):
+        labels = config.pop("labels")
+        int_to_label = config.pop("int_to_label")
         obj = super().from_config(config)
-        obj._labels = config["labels"]
-        obj._int_to_label = config["int_to_label"]
+        obj._labels = labels
+        obj._int_to_label = int_to_label
+        return obj

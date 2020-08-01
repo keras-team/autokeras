@@ -11,3 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import numpy as np
+
+from autokeras import encoders
+
+
+def test_one_hot_encoder_deserialize_transforms_to_np():
+    encoder = encoders.OneHotEncoder()
+    encoder.fit(np.array(["a", "b", "a"]))
+
+    encoder = encoders.deserialize(encoders.serialize(encoder))
+    one_hot = encoder.encode(np.array(["a"]))
+
+    assert np.array_equal(one_hot, [[1, 0]]) or np.array_equal(one_hot, [[0, 1]])
