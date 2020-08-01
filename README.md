@@ -77,7 +77,7 @@ Thank all the contributors!
 <a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://opencollective.com/autokeras/contributors.svg?avatarHeight=24&width=890&button=false" /></a>
 
 
-## Backers
+## Donation
 
 We accept financial support on [Open Collective](https://opencollective.com/autokeras).
 Thank every backer for supporting us!
@@ -104,14 +104,6 @@ Biblatex entry:
   organization={ACM}
 }
 ```
-
-## DISCLAIMER
-
-Please note that this is a **pre-release** version of the AutoKeras which is still undergoing final testing before its official release. The website, its software and all content found on it are provided on an
-"as is" and "as available" basis. AutoKeras does **not** give any warranties, whether express or implied, as to the suitability or usability of the website, its software or any of its content. AutoKeras will **not** be liable for any loss, whether such loss is direct, indirect, special or consequential, suffered by any party as a result of their use of the libraries or content. Any usage of the libraries is done at the user's own risk and the user will be solely responsible for any damage to any computer system or loss of data that results from such activities. Should you encounter any bugs, glitches, lack of functionality or
-other problems on the website, please let us know immediately so we
-can rectify these accordingly. Your help in this regard is greatly
-appreciated.
 
 ## Acknowledgements
 
