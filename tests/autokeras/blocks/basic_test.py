@@ -33,6 +33,18 @@ def test_resnet_build_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_resnet_v1_return_tensor():
+    block = blocks.ResNetBlock(version="v1")
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
 def test_resnet_pretrained_build_return_tensor():
     block = blocks.ResNetBlock(pretrained=True)
 
@@ -168,6 +180,30 @@ def test_conv_build_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_conv_with_small_image_size_return_tensor():
+    block = blocks.ConvBlock()
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(10, 10, 3), dtype=tf.float32),
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_conv_build_with_dropout_return_tensor():
+    block = blocks.ConvBlock(dropout=0.5)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
 def test_conv_deserialize_to_conv():
     serialized_block = blocks.serialize(blocks.ConvBlock())
 
@@ -196,6 +232,18 @@ def test_rnn_build_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_rnn_input_shape_one_dim_error():
+    block = blocks.RNNBlock()
+
+    with pytest.raises(ValueError) as info:
+        block.build(
+            kerastuner.HyperParameters(),
+            tf.keras.Input(shape=(32,), dtype=tf.float32),
+        )
+
+    assert "Expect the input tensor of RNNBlock" in str(info.value)
+
+
 def test_rnn_deserialize_to_rnn():
     serialized_block = blocks.serialize(blocks.RNNBlock())
 
@@ -214,6 +262,17 @@ def test_rnn_get_config_has_all_attributes():
 
 def test_dense_build_return_tensor():
     block = blocks.DenseBlock()
+
+    outputs = block.build(
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(32,), dtype=tf.float32)
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_dense_build_with_dropout_return_tensor():
+    block = blocks.DenseBlock(dropout=0.5)
 
     outputs = block.build(
         kerastuner.HyperParameters(), tf.keras.Input(shape=(32,), dtype=tf.float32)
@@ -291,3 +350,11 @@ def test_transformer_get_config_has_all_attributes():
     config = block.get_config()
 
     assert utils.get_func_args(blocks.Transformer.__init__).issubset(config.keys())
+
+
+def test_multi_head_restore_head_size():
+    block = blocks.basic.MultiHeadSelfAttention(head_size=16)
+
+    block = blocks.basic.MultiHeadSelfAttention.from_config(block.get_config())
+
+    assert block.head_size == 16
