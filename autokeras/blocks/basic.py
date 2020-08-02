@@ -150,8 +150,8 @@ class RNNBlock(block_module.Block):
         shape = input_node.shape.as_list()
         if len(shape) != 3:
             raise ValueError(
-                "Expect the input tensor to have "
-                "at least 3 dimensions for rnn models, "
+                "Expect the input tensor of RNNBlock to have dimensions of "
+                "[batch_size, time_steps, vec_len], "
                 "but got {shape}".format(shape=input_node.shape)
             )
 
@@ -298,12 +298,11 @@ class MultiHeadSelfAttention(block_module.Block):
         head_size: Int. Dimensionality of the `query`, `key` and `value` tensors
             after the linear transformation. If left unspecified, it will be
             tuned automatically.
-        num_heads: Int. The number of attention heads. If left unspecified,
-            it will be tuned automatically.
+        num_heads: Int. The number of attention heads. Defaults to 8.
     """
 
     def __init__(
-        self, head_size: Optional[int] = None, num_heads: Optional[int] = 8, **kwargs
+        self, head_size: Optional[int] = None, num_heads: int = 8, **kwargs
     ):
         super().__init__(**kwargs)
         self.head_size = head_size
@@ -326,26 +325,13 @@ class MultiHeadSelfAttention(block_module.Block):
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
-        shape = input_node.shape.as_list()
-        if len(shape) != 3:
-            raise ValueError(
-                "Expect the input tensor to have "
-                "3 dimensions for multi-head self-attention, "
-                "but got {shape}".format(shape=input_node.shape)
-            )
-        # input.shape = [batch_size, seq_len, embedding_dim]
-        head_size = self.head_size or hp.Choice(
-            "head_size", [32, 64, 128, 256, 512], default=128
-        )
         num_heads = self.num_heads
-        if num_heads is None:
-            num_heads = 8
+        head_size = (
+            self.head_size
+            or hp.Choice("head_size_factor", [4, 8, 16, 32, 64], default=16)
+            * num_heads
+        )
 
-        if head_size % num_heads != 0:  # how to evaluate this condition
-            raise ValueError(
-                f"embedding dimension = {head_size} should be "
-                f"divisible by number of heads = {num_heads}"
-            )
         projection_dim = head_size // num_heads
         query_dense = layers.Dense(head_size)
         key_dense = layers.Dense(head_size)
@@ -387,7 +373,9 @@ class MultiHeadSelfAttention(block_module.Block):
 class Transformer(block_module.Block):
     """Block for Transformer.
     The input should be tokenized sequences with the same length, where each element
-    of a sequence should be the index of the word.
+    of a sequence should be the index of the word. The implementation is derived from
+    the this
+    [example](https://keras.io/examples/nlp/text_classification_with_transformer/).
 
     # Example
     ```python
