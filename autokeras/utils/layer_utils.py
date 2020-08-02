@@ -51,11 +51,3 @@ def get_sep_conv(shape):
         tf.keras.layers.SeparableConv2D,
         tf.keras.layers.Conv3D,
     ][len(shape) - 3]
-
-
-def get_dropout(shape):
-    return [
-        tf.keras.layers.SpatialDropout1D,
-        tf.keras.layers.SpatialDropout2D,
-        tf.keras.layers.SpatialDropout3D,
-    ][len(shape) - 3]

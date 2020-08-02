@@ -30,30 +30,10 @@ def validate_num_inputs(inputs, num):
         )
 
 
-def get_name_scope():
-    with tf.name_scope("a") as scope:
-        name_scope = scope[:-2]
-    return name_scope
-
-
 def to_snake_case(name):
     intermediate = re.sub("(.)([A-Z][a-z0-9]+)", r"\1_\2", name)
     insecure = re.sub("([a-z])([A-Z])", r"\1_\2", intermediate).lower()
-    # If the class is private the name starts with "_" which is not secure
-    # for creating scopes. We prefix the name with "private" in this case.
-    if insecure[0] != "_":
-        return insecure
-    return "private" + insecure
-
-
-def to_type_key(dictionary, convert_func):
-    """Convert the keys of a dictionary to a different type.
-
-    # Arguments
-        dictionary: Dictionary. The dictionary to be converted.
-        convert_func: Function. The function to convert a key.
-    """
-    return {convert_func(key): value for key, value in dictionary.items()}
+    return insecure
 
 
 def check_tf_version() -> None:

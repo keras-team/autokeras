@@ -57,15 +57,3 @@ def split_dataset(dataset, validation_split):
 
 def dataset_shape(dataset):
     return tf.compat.v1.data.get_output_shapes(dataset)
-
-
-def is_label(y):
-    """Check if the targets are one-hot encoded or plain labels.
-
-    # Arguments
-        y: numpy.ndarray. The targets.
-
-    # Returns
-        Boolean. Whether the targets are plain label, not encoded.
-    """
-    return len(y.flatten()) == len(y)
