@@ -193,12 +193,6 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         if input_node not in self._node_to_id:
             self._node_to_id[input_node] = len(self._node_to_id)
 
-    def _get_block(self, name):
-        for block in self.blocks:
-            if block.name == name:
-                return block
-        raise ValueError("Cannot find block named {name}.".format(name=name))
-
     def get_config(self):
         blocks = [blocks_module.serialize(block) for block in self.blocks]
         nodes = {
