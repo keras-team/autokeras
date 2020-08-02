@@ -77,6 +77,19 @@ def test_structured_data_infer_col_types():
     assert adapter.column_types == utils.COLUMN_TYPES
 
 
+def test_structured_data_restore_col_types_from_config():
+    adapter = input_adapter.StructuredDataInputAdapter()
+    x = pd.read_csv(utils.TRAIN_CSV_PATH)
+    x.pop("survived")
+
+    adapter.fit_transform(x)
+    adapter = input_adapter.StructuredDataInputAdapter.from_config(
+        adapter.get_config()
+    )
+
+    assert adapter.column_types == utils.COLUMN_TYPES
+
+
 def test_structured_data_get_col_names():
     adapter = input_adapter.StructuredDataInputAdapter()
     x = pd.read_csv(utils.TRAIN_CSV_PATH)
@@ -270,6 +283,22 @@ def test_time_series_input_name_type_mismatch():
         )
         adapter.transform(pd.read_csv(utils.TRAIN_CSV_PATH))
     assert "Column_names and column_types are mismatched." in str(info.value)
+
+
+def test_time_series_input_restore_look_back():
+    adapter = input_adapter.TimeseriesInputAdapter(2)
+
+    adapter = input_adapter.TimeseriesInputAdapter.from_config(adapter.get_config())
+
+    assert adapter.lookback == 2
+
+
+def test_time_series_input_transform_df_to_dataset():
+    adapter = input_adapter.TimeseriesInputAdapter(2)
+
+    x = adapter.fit_transform(pd.DataFrame(utils.generate_data(shape=(32,))))
+
+    assert isinstance(x, tf.data.Dataset)
 
 
 def test_time_series_input_transform():

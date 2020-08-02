@@ -9,3 +9,5 @@ do
     cat copyright.txt $i >$i.new && mv $i.new $i
   fi
 done
+
+flake8 autokeras tests
