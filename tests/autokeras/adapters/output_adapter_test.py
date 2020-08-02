@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+import pandas as pd
 import pytest
 import tensorflow as tf
 
@@ -35,7 +36,7 @@ def test_clf_from_config_fit_transform_to_dataset():
 def test_transform_pd_series_to_dataset():
     adapter = output_adapter.ClassificationHeadAdapter(name="a")
 
-    y = adapter.fit_transform(utils.dataframe_series()[0][1])
+    y = adapter.fit_transform(pd.read_csv(utils.TEST_CSV_PATH).pop("survived"))
 
     assert isinstance(y, tf.data.Dataset)
 

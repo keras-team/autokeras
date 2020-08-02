@@ -15,6 +15,7 @@
 import copy
 
 import numpy as np
+import pandas as pd
 import pytest
 import tensorflow as tf
 
@@ -23,73 +24,92 @@ from autokeras.utils import data_utils
 from tests import utils
 
 
-def test_structured_data_input_col_type_without_name():
-    num_data = 500
-    train_x = utils.generate_structured_data(num_data)
+def test_structured_data_col_type_no_name_error():
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.StructuredDataInputAdapter(
-            column_types=utils.COLUMN_TYPES_FROM_NUMPY
+            column_types=utils.COLUMN_TYPES
         )
-        adapter.transform(train_x)
+        adapter.transform(
+            pd.read_csv(utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)
+        )
+
     assert str(info.value) == "Column names must be specified."
 
 
-def test_structured_data_input_less_col_name():
-    (x, _), _1 = utils.dataframe_numpy()
+def test_structured_data_input_less_col_name_error():
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.StructuredDataInputAdapter(
-            column_names=utils.LESS_COLUMN_NAMES_FROM_CSV
+            column_names=utils.COLUMN_NAMES[:-2]
         )
-        adapter.fit_transform(x)
+        adapter.fit_transform(pd.read_csv(utils.TRAIN_CSV_PATH))
+
     assert "Expect column_names to have length" in str(info.value)
 
 
-def test_structured_data_input_name_type_mismatch():
-    (x, _), _1 = utils.dataframe_dataframe()
-    column_types = copy.copy(utils.COLUMN_TYPES_FROM_CSV)
+def test_structured_data_input_name_type_mismatch_error():
+    column_types = copy.copy(utils.COLUMN_TYPES)
     column_types["age_"] = column_types.pop("age")
+
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.StructuredDataInputAdapter(column_types=column_types)
-        adapter.transform(x)
+        adapter.transform(pd.read_csv(utils.TRAIN_CSV_PATH))
+
     assert "Column_names and column_types are mismatched." in str(info.value)
 
 
-def test_structured_data_input_unsupported_type():
-    x = "unknown"
+def test_structured_data_input_unsupported_type_error():
     with pytest.raises(TypeError) as info:
         adapter = input_adapter.StructuredDataInputAdapter(
-            column_names=utils.COLUMN_TYPES_FROM_NUMPY,
-            column_types=utils.COLUMN_TYPES_FROM_NUMPY,
+            column_names=utils.COLUMN_NAMES, column_types=utils.COLUMN_TYPES,
         )
-        adapter.transform(x)
+        adapter.transform("unknown")
+
     assert "Unsupported type" in str(info.value)
 
 
-def test_structured_data_input_transform():
-    (x, _), _1 = utils.dataframe_dataframe()
+def test_structured_data_infer_col_types():
     adapter = input_adapter.StructuredDataInputAdapter()
+    x = pd.read_csv(utils.TRAIN_CSV_PATH)
+    x.pop("survived")
+
     adapter.fit_transform(x)
-    assert adapter.column_names[0] == "sex"
-    assert adapter.column_types == utils.COLUMN_TYPES_FROM_CSV
+
+    assert adapter.column_types == utils.COLUMN_TYPES
 
 
-def test_structured_data_input_dataset():
-    (x, _), _1 = utils.dataframe_dataframe()
-    x = tf.data.Dataset.from_tensor_slices(x.to_numpy().astype(np.unicode))
+def test_structured_data_get_col_names():
     adapter = input_adapter.StructuredDataInputAdapter()
+    x = pd.read_csv(utils.TRAIN_CSV_PATH)
+    x.pop("survived")
+
+    adapter.fit_transform(x)
+
+    assert adapter.column_names[0] == "sex"
+
+
+def test_structured_data_input_transform_to_dataset():
+    x = tf.data.Dataset.from_tensor_slices(
+        pd.read_csv(utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)
+    )
+    adapter = input_adapter.StructuredDataInputAdapter()
+
     x = adapter.fit_transform(x)
+
     assert isinstance(x, tf.data.Dataset)
 
 
-def test_partial_column_types():
+def test_dont_infer_specified_column_types():
+    column_types = copy.copy(utils.COLUMN_TYPES)
+    column_types.pop("sex")
+    column_types["age"] = "categorical"
+
     adapter = input_adapter.StructuredDataInputAdapter(
-        column_names=utils.COLUMN_NAMES_FROM_CSV,
-        column_types=utils.PARTIAL_COLUMN_TYPES_FROM_CSV,
+        column_names=utils.COLUMN_NAMES, column_types=column_types,
     )
-    (x, y), (val_x, val_y) = utils.dataframe_numpy()
-    dataset = x.values.astype(np.unicode)
+    dataset = pd.read_csv(utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)
     adapter.transform(dataset)
-    assert adapter.column_types["fare"] == "categorical"
+
+    assert adapter.column_types["age"] == "categorical"
 
 
 def test_image_input_adapter_transform_to_dataset():
@@ -223,35 +243,32 @@ def test_time_series_input_with_illegal_dim():
 
 
 def test_time_series_input_col_type_without_name():
-    num_data = 500
-    train_x = utils.generate_structured_data(num_data)
+    train_x = pd.read_csv(utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.TimeseriesInputAdapter(
-            lookback=2, column_types=utils.COLUMN_TYPES_FROM_NUMPY
+            lookback=2, column_types=utils.COLUMN_TYPES
         )
         adapter.transform(train_x)
     assert str(info.value) == "Column names must be specified."
 
 
 def test_time_series_input_less_col_name():
-    (x, _), _1 = utils.dataframe_numpy()
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.TimeseriesInputAdapter(
-            lookback=2, column_names=utils.LESS_COLUMN_NAMES_FROM_CSV
+            lookback=2, column_names=utils.COLUMN_NAMES[:-2]
         )
-        adapter.transform(x)
+        adapter.transform(pd.read_csv(utils.TRAIN_CSV_PATH))
     assert "Expect column_names to have length" in str(info.value)
 
 
 def test_time_series_input_name_type_mismatch():
-    (x, _), _1 = utils.dataframe_dataframe()
-    column_types = copy.copy(utils.COLUMN_TYPES_FROM_CSV)
+    column_types = copy.copy(utils.COLUMN_TYPES)
     column_types["age_"] = column_types.pop("age")
     with pytest.raises(ValueError) as info:
         adapter = input_adapter.TimeseriesInputAdapter(
             lookback=2, column_types=column_types
         )
-        adapter.transform(x)
+        adapter.transform(pd.read_csv(utils.TRAIN_CSV_PATH))
     assert "Column_names and column_types are mismatched." in str(info.value)
 
 

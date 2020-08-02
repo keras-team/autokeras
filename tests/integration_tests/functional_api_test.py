@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 from tensorflow.python.keras.datasets import mnist
 
 import autokeras as ak
@@ -22,7 +23,7 @@ def test_text_and_structured_data(tmp_path):
     # Prepare the data.
     num_instances = 80
     (x_text, y_train), (x_test, y_test) = utils.imdb_raw()
-    (x_structured_data, y_train), (x_test, y_test) = utils.dataframe_numpy()
+    x_structured_data = pd.read_csv(utils.TRAIN_CSV_PATH)
 
     x_text = x_text[:num_instances]
     x_structured_data = x_structured_data[:num_instances]

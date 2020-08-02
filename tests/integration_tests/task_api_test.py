@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+import pandas as pd
 import tensorflow as tf
 
 import autokeras as ak
@@ -63,10 +65,10 @@ def test_text_regressor(tmp_path):
     assert clf.predict(test_x).shape == (len(test_x), 1)
 
 
-def test_structured_data_from_numpy_regressor(tmp_path):
+def test_structured_data_regressor(tmp_path):
     num_data = 500
     num_train = 400
-    data = utils.generate_structured_data(num_data)
+    data = pd.read_csv(utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)[:num_data]
     x_train, x_test = data[:num_train], data[num_train:]
     y = utils.generate_data(num_instances=num_data, shape=(1,))
     y_train, y_test = y[:num_train], y[num_train:]
@@ -78,10 +80,10 @@ def test_structured_data_from_numpy_regressor(tmp_path):
     assert clf.predict(x_test).shape == (len(y_test), 1)
 
 
-def test_structured_data_from_numpy_classifier(tmp_path):
+def test_structured_data_classifier(tmp_path):
     num_data = 500
     num_train = 400
-    data = utils.generate_structured_data(num_data)
+    data = pd.read_csv(utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)[:num_data]
     x_train, x_test = data[:num_train], data[num_train:]
     y = utils.generate_one_hot_labels(num_instances=num_data, num_classes=3)
     y_train, y_test = y[:num_train], y[num_train:]
