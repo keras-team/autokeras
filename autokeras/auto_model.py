@@ -153,6 +153,7 @@ class AutoModel(object):
             project_name=project_name,
             **kwargs
         )
+        self.overwrite = overwrite
         # Used by tuner to decide whether to use validation set for final fit.
         self._split_dataset = False
         self._heads = [output_node.in_blocks[0] for output_node in self.outputs]
@@ -160,10 +161,6 @@ class AutoModel(object):
             input_node.get_adapter() for input_node in self.inputs
         ]
         self._output_adapters = [head.get_adapter() for head in self._heads]
-
-    @property
-    def overwrite(self):
-        return self.tuner.overwrite
 
     @property
     def objective(self):

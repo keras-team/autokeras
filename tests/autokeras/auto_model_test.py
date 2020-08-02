@@ -14,12 +14,56 @@
 
 from unittest import mock
 
+import kerastuner
 import numpy as np
 import pytest
 import tensorflow as tf
 
 import autokeras as ak
 from tests import utils
+
+
+def test_auto_model_objective_is_kt_objective(tmp_path):
+    auto_model = ak.AutoModel(
+        ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
+    )
+
+    assert isinstance(auto_model.objective, kerastuner.Objective)
+
+
+def test_auto_model_max_trial_field_as_specified(tmp_path):
+    auto_model = ak.AutoModel(
+        ak.ImageInput(), ak.RegressionHead(), directory=tmp_path, max_trials=10
+    )
+
+    assert auto_model.max_trials == 10
+
+
+def test_auto_model_directory_field_as_specified(tmp_path):
+    auto_model = ak.AutoModel(
+        ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
+    )
+
+    assert auto_model.directory == tmp_path
+
+
+def test_auto_model_project_name_field_as_specified(tmp_path):
+    auto_model = ak.AutoModel(
+        ak.ImageInput(),
+        ak.RegressionHead(),
+        directory=tmp_path,
+        project_name="auto_model",
+    )
+
+    assert auto_model.project_name == "auto_model"
+
+
+def test_auto_model_preprocessors_is_list(tmp_path):
+    auto_model = ak.AutoModel(
+        ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
+    )
+
+    assert isinstance(auto_model.preprocessors, list)
 
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
