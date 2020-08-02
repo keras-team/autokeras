@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+import pandas as pd
 from tensorflow.python.keras.datasets import mnist
 
 import autokeras as ak
@@ -25,7 +27,11 @@ def test_io_api(tmp_path):
 
     image_x = image_x[:num_instances]
     text_x = text_x[:num_instances]
-    structured_data_x = utils.generate_structured_data(num_instances=num_instances)
+    structured_data_x = (
+        pd.read_csv(utils.TRAIN_CSV_PATH)
+        .to_numpy()
+        .astype(np.unicode)[:num_instances]
+    )
     classification_y = utils.generate_one_hot_labels(
         num_instances=num_instances, num_classes=3
     )

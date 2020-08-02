@@ -15,7 +15,7 @@
 from unittest import mock
 
 import numpy as np
-import pandas
+import pandas as pd
 import pytest
 
 import autokeras as ak
@@ -38,7 +38,7 @@ def test_structured_clf_fit_call_auto_model_fit(fit, tmp_path):
     auto_model = ak.StructuredDataClassifier(directory=tmp_path, seed=utils.SEED)
 
     auto_model.fit(
-        x=utils.generate_structured_data(num_instances=100),
+        x=pd.read_csv(utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)[:100],
         y=utils.generate_one_hot_labels(num_instances=100, num_classes=3),
     )
 
@@ -50,7 +50,7 @@ def test_structured_reg_fit_call_auto_model_fit(fit, tmp_path):
     auto_model = ak.StructuredDataRegressor(directory=tmp_path, seed=utils.SEED)
 
     auto_model.fit(
-        x=utils.generate_structured_data(num_instances=100),
+        x=pd.read_csv(utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)[:100],
         y=utils.generate_data(num_instances=100, shape=(1,)),
     )
 
@@ -62,12 +62,12 @@ def test_structured_data_clf_convert_csv_to_df_and_np(fit, tmp_path):
     auto_model = ak.StructuredDataClassifier(directory=tmp_path, seed=utils.SEED)
 
     auto_model.fit(
-        x=utils.TRAIN_FILE_PATH,
+        x=utils.TRAIN_CSV_PATH,
         y="survived",
         epochs=2,
-        validation_data=(utils.TEST_FILE_PATH, "survived"),
+        validation_data=(utils.TEST_CSV_PATH, "survived"),
     )
 
     _, kwargs = fit.call_args_list[0]
-    assert isinstance(kwargs["x"], pandas.DataFrame)
+    assert isinstance(kwargs["x"], pd.DataFrame)
     assert isinstance(kwargs["y"], np.ndarray)
