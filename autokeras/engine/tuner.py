@@ -200,7 +200,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
     @property
     def objective(self):
-        return self.tuner.objective
+        return self.oracle.objective
 
     @property
     def max_trials(self):
