@@ -104,7 +104,6 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
         self.column_names = column_names
         self.column_types = column_types
         # Variables for inferring column types.
-        self.count_nan = None
         self.count_numerical = None
         self.count_categorical = None
         self.count_unique_numerical = []
@@ -114,7 +113,8 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
         config = super().get_config()
         config.update(
             {
-                "count_nan": self.count_nan,
+                "column_names": self.column_names,
+                "column_types": self.column_types,
                 "count_numerical": self.count_numerical,
                 "count_categorical": self.count_categorical,
                 "count_unique_numerical": self.count_unique_numerical,
@@ -125,12 +125,16 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
 
     @classmethod
     def from_config(cls, config):
+        count_numerical = config.pop("count_numerical")
+        count_categorical = config.pop("count_categorical")
+        count_unique_numerical = config.pop("count_unique_numerical")
+        num_col = config.pop("num_col")
         obj = super().from_config(config)
-        obj.count_nan = config["count_nan"]
-        obj.count_numerical = config["count_numerical"]
-        obj.count_categorical = config["count_categorical"]
-        obj.count_unique_numerical = config["count_unique_numerical"]
-        obj.num_col = config["num_col"]
+        obj.count_numerical = count_numerical
+        obj.count_categorical = count_categorical
+        obj.count_unique_numerical = count_unique_numerical
+        obj.num_col = num_col
+        return obj
 
     def check(self, x):
         if not isinstance(x, (pd.DataFrame, np.ndarray, tf.data.Dataset)):
@@ -179,29 +183,21 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
     def _update_instance(self, x):
         if self.num_col is None:
             self.num_col = len(x)
-            self.count_nan = np.zeros(self.num_col)
             self.count_numerical = np.zeros(self.num_col)
             self.count_categorical = np.zeros(self.num_col)
             for i in range(len(x)):
                 self.count_unique_numerical.append({})
         for i in range(self.num_col):
             x[i] = x[i].decode("utf-8")
-            if x[i] == "nan":
-                self.count_nan[i] += 1
-            elif x[i] == "True":
+            try:
+                tmp_num = float(x[i])
+                self.count_numerical[i] += 1
+                if tmp_num not in self.count_unique_numerical[i]:
+                    self.count_unique_numerical[i][tmp_num] = 1
+                else:
+                    self.count_unique_numerical[i][tmp_num] += 1
+            except ValueError:
                 self.count_categorical[i] += 1
-            elif x[i] == "False":
-                self.count_categorical[i] += 1
-            else:
-                try:
-                    tmp_num = float(x[i])
-                    self.count_numerical[i] += 1
-                    if tmp_num not in self.count_unique_numerical[i]:
-                        self.count_unique_numerical[i][tmp_num] = 1
-                    else:
-                        self.count_unique_numerical[i][tmp_num] += 1
-                except ValueError:
-                    self.count_categorical[i] += 1
 
     def infer_column_types(self):
         column_types = {}
