@@ -15,6 +15,7 @@
 import kerastuner
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.util import nest
 
 import autokeras as ak
 from autokeras import blocks
@@ -50,6 +51,18 @@ def test_multi_label_loss():
     model = tf.keras.Model(input_node, output_node)
     assert model.layers[-1].activation.__name__ == "sigmoid"
     assert head.loss.name == "binary_crossentropy"
+
+
+def test_clf_head_build_with_zero_dropout_return_tensor():
+    block = head_module.ClassificationHead(dropout=0)
+    block.output_shape = (8,)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(5,), dtype=tf.float32),
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_segmentation():

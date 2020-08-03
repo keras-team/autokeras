@@ -75,6 +75,14 @@ class ClassificationHeadAdapter(HeadAdapter):
         obj.label_encoder = encoders.deserialize(encoder)
         return obj
 
+    def _check_data_shape(self, shape):
+        if len(shape) > 2 or shape[1] != self.num_classes:
+            raise ValueError(
+                "Expect one hot encoded labels to have shape "
+                "(num_instances, {num_classes}), "
+                "but got {shape}.".format(num_classes=self.num_classes, shape=shape)
+            )
+
     def fit_before_convert(self, dataset):
         """Fit the encoder."""
         # If in tf.data.Dataset, must be encoded already.
@@ -91,7 +99,7 @@ class ClassificationHeadAdapter(HeadAdapter):
         # TODO: support raw string labels for multi-label.
         if len(dataset.flatten()) != len(dataset):
             if self.num_classes:
-                self._check_data_shape(dataset.shape[1:])
+                self._check_data_shape(dataset.shape)
             return
 
         # Fit encoder.

@@ -162,13 +162,6 @@ class RegressionHead(head_module.Head):
         return config
 
     def build(self, hp, inputs=None):
-        if self.output_dim and self.output_shape[-1] != self.output_dim:
-            raise ValueError(
-                "The data doesn't match the output_dim. "
-                "Expecting {} but got {}".format(
-                    self.output_dim, self.output_shape[-1]
-                )
-            )
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
