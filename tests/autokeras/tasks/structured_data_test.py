@@ -33,6 +33,40 @@ def test_raise_error_unknown_str_in_col_type(tmp_path):
     assert 'Column_types should be either "categorical"' in str(info.value)
 
 
+def test_raise_error_unknown_name_in_col_type(tmp_path):
+    with pytest.raises(ValueError) as info:
+        ak.StructuredDataClassifier(
+            column_types={"age": "numerical", "parch": "categorical"},
+            column_names=["age", "fare"],
+            directory=tmp_path,
+            seed=utils.SEED,
+        )
+
+    assert "Column_names and column_types are mismatched" in str(info.value)
+
+
+@mock.patch("autokeras.AutoModel.fit")
+@mock.patch("autokeras.AutoModel.evaluate")
+def test_structured_clf_evaluate_call_automodel_evaluate(evaluate, fit, tmp_path):
+    auto_model = ak.StructuredDataClassifier(directory=tmp_path, seed=utils.SEED)
+
+    auto_model.fit(x=utils.TRAIN_CSV_PATH, y="survived")
+    auto_model.evaluate(x=utils.TRAIN_CSV_PATH, y="survived")
+
+    assert evaluate.is_called
+
+
+@mock.patch("autokeras.AutoModel.fit")
+@mock.patch("autokeras.AutoModel.predict")
+def test_structured_clf_predict_csv_call_automodel_predict(predict, fit, tmp_path):
+    auto_model = ak.StructuredDataClassifier(directory=tmp_path, seed=utils.SEED)
+
+    auto_model.fit(x=utils.TRAIN_CSV_PATH, y="survived")
+    auto_model.predict(x=utils.TEST_CSV_PATH)
+
+    assert predict.is_called
+
+
 @mock.patch("autokeras.AutoModel.fit")
 def test_structured_clf_fit_call_auto_model_fit(fit, tmp_path):
     auto_model = ak.StructuredDataClassifier(directory=tmp_path, seed=utils.SEED)

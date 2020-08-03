@@ -33,12 +33,33 @@ def test_clf_from_config_fit_transform_to_dataset():
     assert isinstance(adapter.transform(np.array(["a", "b", "a"])), tf.data.Dataset)
 
 
-def test_transform_pd_series_to_dataset():
+def test_clf_head_transform_pd_series_to_dataset():
     adapter = output_adapter.ClassificationHeadAdapter(name="a")
 
     y = adapter.fit_transform(pd.read_csv(utils.TEST_CSV_PATH).pop("survived"))
 
     assert isinstance(y, tf.data.Dataset)
+
+
+def test_clf_head_transform_df_to_dataset():
+    adapter = output_adapter.ClassificationHeadAdapter(name="a")
+
+    y = adapter.fit_transform(
+        pd.DataFrame(utils.generate_one_hot_labels(dtype="np", num_classes=10))
+    )
+
+    assert isinstance(y, tf.data.Dataset)
+
+
+def test_clf_head_one_hot_shape_error():
+    adapter = output_adapter.ClassificationHeadAdapter(name="a", num_classes=9)
+
+    with pytest.raises(ValueError) as info:
+        adapter.fit_transform(
+            utils.generate_one_hot_labels(dtype="np", num_classes=10)
+        )
+
+    assert "Expect one hot encoded labels to have shape" in str(info.value)
 
 
 def test_unsupported_types_error():
@@ -61,7 +82,9 @@ def test_one_class_error():
 def test_infer_ten_classes():
     adapter = output_adapter.ClassificationHeadAdapter(name="a")
 
-    adapter.fit(utils.generate_one_hot_labels(dtype="dataset", num_classes=10))
+    adapter.fit_transform(
+        utils.generate_one_hot_labels(dtype="dataset", num_classes=10)
+    )
 
     assert adapter.num_classes == 10
 
@@ -117,3 +140,19 @@ def test_multi_label_postprocess_to_one_hot_labels():
     y = adapter.postprocess(y)
 
     assert set(y.flatten().tolist()) == set([1, 0])
+
+
+def test_reg_head_transform_pd_series():
+    adapter = output_adapter.RegressionHeadAdapter(name="a")
+
+    y = adapter.fit_transform(pd.read_csv(utils.TEST_CSV_PATH).pop("survived"))
+
+    assert isinstance(y, tf.data.Dataset)
+
+
+def test_reg_head_transform_1d_np():
+    adapter = output_adapter.RegressionHeadAdapter(name="a")
+
+    y = adapter.fit_transform(np.random.rand(10))
+
+    assert isinstance(y, tf.data.Dataset)
