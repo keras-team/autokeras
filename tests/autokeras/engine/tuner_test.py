@@ -14,6 +14,7 @@
 
 from unittest import mock
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 
@@ -137,3 +138,17 @@ def test_preprocessing_adapt():
     tuner_module.AutoTuner.adapt(model, dataset)
 
     assert layer1.is_called
+
+
+def test_adapt_with_model_with_preprocessing_layer_only():
+    input_node = tf.keras.Input(shape=(10,))
+    output_node = tf.keras.layers.experimental.preprocessing.Normalization()(
+        input_node
+    )
+    model = tf.keras.Model(input_node, output_node)
+    greedy.Greedy.adapt(
+        model,
+        tf.data.Dataset.from_tensor_slices(
+            (np.random.rand(100, 10), np.random.rand(100, 10))
+        ).batch(32),
+    )

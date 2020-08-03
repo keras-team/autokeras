@@ -72,3 +72,12 @@ class Encoder(serializable.Serializable):
         obj._labels = labels
         obj._int_to_label = int_to_label
         return obj
+
+    def _check_num_classes(self):
+        if self.num_classes != len(self._labels):
+            raise ValueError(
+                "Expect {num_classes} classes in the training targets, "
+                "but got {len_labels} classes.".format(
+                    num_classes=self.num_classes, len_labels=len(self._labels)
+                )
+            )

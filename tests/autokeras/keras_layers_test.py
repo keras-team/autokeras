@@ -94,3 +94,16 @@ def test_weight_save(tmp_path):
     model2.load_weights(os.path.join(tmp_path, "checkpoint"))
 
     assert np.array_equal(model.predict(x_train), model2.predict(x_train))
+
+
+def test_init_multi_one_hot_encode():
+    layer_module.MultiCategoryEncoding(
+        encoding=[layer_module.ONE_HOT, layer_module.INT, layer_module.NONE]
+    )
+    # TODO: add more content when it is implemented
+
+
+def test_call_multi_with_single_column():
+    layer = layer_module.MultiCategoryEncoding(encoding=[layer_module.INT])
+
+    assert layer(np.array([["a"], ["b"], ["a"]])).shape == (3, 1)
