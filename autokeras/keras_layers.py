@@ -168,4 +168,4 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         #     'input_type_ids': input_type_ids}
         inputs = [input_word_ids.numpy(),input_mask, input_type_ids]
 
-        return inputs
+        return np.array(inputs)
