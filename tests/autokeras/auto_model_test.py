@@ -20,6 +20,7 @@ import pytest
 import tensorflow as tf
 
 import autokeras as ak
+from autokeras.utils import data_utils
 from tests import utils
 
 
@@ -271,3 +272,47 @@ def test_single_input_predict(tuner_fn, tmp_path):
 
     dataset2 = tf.data.Dataset.from_tensor_slices((x1, y1))
     auto_model.predict(dataset2)
+
+
+def test_invalid_tuner_name_error(tmp_path):
+    with pytest.raises(ValueError) as info:
+        ak.AutoModel(
+            ak.ImageInput(), ak.RegressionHead(), directory=tmp_path, tuner="unknown"
+        )
+
+    assert "Expect the tuner argument to be one of" in str(info.value)
+
+
+def test_no_validation_data_nor_split_error(tmp_path):
+    auto_model = ak.AutoModel(
+        ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
+    )
+    with pytest.raises(ValueError) as info:
+        auto_model.fit(
+            x=np.random.rand(100, 32, 32, 3),
+            y=np.random.rand(100, 1),
+            validation_split=0,
+        )
+
+    assert "Either validation_data or a non-zero" in str(info.value)
+
+
+@mock.patch("autokeras.auto_model.get_tuner_class")
+def test_predict_tuple_x_and_tuple_y_call_model_predict_with_x(tuner_fn, tmp_path):
+    model = mock.Mock()
+    tuner = mock.Mock()
+    tuner.get_best_model.return_value = model
+    tuner_fn.return_value.return_value = tuner
+
+    auto_model = ak.AutoModel(
+        ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
+    )
+    dataset = tf.data.Dataset.from_tensor_slices(
+        ((np.random.rand(100, 32, 32, 3),), (np.random.rand(100, 1),))
+    )
+    auto_model.fit(dataset)
+    auto_model.predict(dataset)
+
+    assert data_utils.dataset_shape(
+        model.predict.call_args_list[0][0][0]
+    ).as_list() == [None, 32, 32, 3]

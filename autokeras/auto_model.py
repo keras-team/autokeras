@@ -46,9 +46,9 @@ def get_tuner_class(tuner):
         return TUNER_CLASSES.get(tuner)
     else:
         raise ValueError(
-            "The value {tuner} passed for argument tuner is invalid, "
-            'expected one of "greedy", "random", "hyperband", '
-            '"bayesian".'.format(tuner=tuner)
+            'Expect the tuner argument to be one of "greedy", '
+            '"random", "hyperband", or "bayesian", '
+            "but got {tuner}".format(tuner=tuner)
         )
 
 
@@ -387,7 +387,8 @@ class AutoModel(object):
         # Check validation information.
         if not validation_data and not validation_split:
             raise ValueError(
-                "Either validation_data or validation_split " "should be provided."
+                "Either validation_data or a non-zero validation_split "
+                "should be provided."
             )
         # TODO: Handle other types of input, zip dataset, tensor, dict.
         # Prepare the dataset.

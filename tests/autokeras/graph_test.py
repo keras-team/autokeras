@@ -116,8 +116,9 @@ def test_graph_save_load(tmp_path):
         outputs=[output1, output2],
         override_hps=[hp_module.Choice("dense_block_1/num_layers", [6], default=6)],
     )
-    config = graph.get_config()
-    graph = graph_module.Graph.from_config(config)
+    path = os.path.join(tmp_path, "graph")
+    graph.save(path)
+    graph = graph_module.load_graph(path)
 
     assert len(graph.inputs) == 2
     assert len(graph.outputs) == 2
@@ -162,3 +163,22 @@ def test_save_custom_metrics_loss(tmp_path):
     )
     assert new_graph.blocks[0].metrics[1](0, 0) == 1
     assert new_graph.blocks[0].loss(3, 2) == 1
+
+
+def test_cat_to_num_with_img_input_error():
+    input_node = ak.ImageInput()
+    output_node = ak.CategoricalToNumerical()(input_node)
+
+    with pytest.raises(TypeError) as info:
+        graph_module.Graph(input_node, outputs=output_node).compile()
+
+    assert "CategoricalToNumerical can only be used" in str(info.value)
+
+
+def test_graph_can_init_with_one_missing_output():
+    input_node = ak.ImageInput()
+    output_node = ak.ConvBlock()(input_node)
+    output_node = ak.RegressionHead()(output_node)
+    ak.ClassificationHead()(output_node)
+
+    graph_module.Graph(input_node, output_node)

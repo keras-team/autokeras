@@ -30,7 +30,7 @@ def feature_encoding_input(block):
     """
     if not isinstance(block.inputs[0], nodes_module.StructuredDataInput):
         raise TypeError(
-            "FeatureEncoding block can only be used " "with StructuredDataInput."
+            "CategoricalToNumerical can only be used with StructuredDataInput."
         )
     block.column_types = block.inputs[0].column_types
     block.column_names = block.inputs[0].column_names
@@ -154,8 +154,6 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
 
                 # Decrease the in degree of the output nodes.
                 for output_node in block.outputs:
-                    if output_node not in self._node_to_id:
-                        continue
                     output_node_id = self._node_to_id[output_node]
                     in_degree[output_node_id] -= 1
 

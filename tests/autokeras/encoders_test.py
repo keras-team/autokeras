@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+import pytest
 
 from autokeras import encoders
 
@@ -25,3 +26,19 @@ def test_one_hot_encoder_deserialize_transforms_to_np():
     one_hot = encoder.encode(np.array(["a"]))
 
     assert np.array_equal(one_hot, [[1, 0]]) or np.array_equal(one_hot, [[0, 1]])
+
+
+def test_one_hot_encoder_decode_to_same_string():
+    encoder = encoders.OneHotEncoder()
+    encoder.fit(np.array(["a", "b", "a"]))
+
+    assert encoder.decode(encoder.encode(np.array(["a"])))[0] == "a"
+
+
+def test_wrong_num_classes_error():
+    encoder = encoders.OneHotEncoder(num_classes=3)
+
+    with pytest.raises(ValueError) as info:
+        encoder.fit(np.array(["a", "b", "a"]))
+
+    assert "Expect 3 classes in the training targets" in str(info.value)

@@ -11,3 +11,34 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import pytest
+
+from autokeras.utils import utils
+
+
+def test_validate_num_inputs_error():
+    with pytest.raises(ValueError) as info:
+        utils.validate_num_inputs([1, 2, 3], 2)
+
+    assert "Expected 2 elements in the inputs list" in str(info.value)
+
+
+def test_check_tf_version_error():
+    utils.tf.__version__ = "2.1.0"
+
+    with pytest.raises(ImportError) as info:
+        utils.check_tf_version()
+
+    assert "Tensorflow package version needs to be at least 2.3.0" in str(info.value)
+
+
+def test_check_kt_version_error():
+    utils.kerastuner.__version__ = "1.0.0"
+
+    with pytest.raises(ImportError) as info:
+        utils.check_kt_version()
+
+    assert "Keras Tuner package version needs to be at least 1.0.2rc0" in str(
+        info.value
+    )

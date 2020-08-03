@@ -82,7 +82,7 @@ class Block(kerastuner.HyperModel, serializable.Serializable):
             hp: HyperParameters. The hyperparameters for building the model.
             inputs: A list of input node(s).
         """
-        return super().build(hp)
+        raise NotImplementedError
 
     def get_config(self):
         """Get the configuration of the preprocessor.

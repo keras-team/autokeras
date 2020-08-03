@@ -53,8 +53,7 @@ class OneHotEncoder(encoder_module.Encoder):
         self._labels = set(data)
         if not self.num_classes:
             self.num_classes = len(self._labels)
-        if self.num_classes < len(self._labels):
-            raise ValueError("More classes in data than specified.")
+        self._check_num_classes()
         for index, label in enumerate(self._labels):
             vec = np.array([0] * self.num_classes)
             vec[index] = 1
@@ -127,14 +126,10 @@ class LabelEncoder(encoder_module.Encoder):
         self._labels = set(data)
         if not self.num_classes:
             self.num_classes = len(self._labels)
-        if self.num_classes < len(self._labels):
-            raise ValueError("More classes in data than specified.")
+        self._check_num_classes()
         for index, label in enumerate(self._labels):
             self._int_to_label[index] = label
             self._label_to_int[label] = index
-
-    def transform(self, x):
-        return self._label_to_int[x]
 
     def encode(self, data):
         """Encode the original labels.
