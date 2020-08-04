@@ -144,11 +144,11 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         return sentence
 
     def bert_encode(self, input_tensor):
-        return input_tensor
         num_examples = len(input_tensor)
         print("bert_encode num_examples: ", num_examples, "input_tensor shape:", input_tensor.shape)
-        sentence = tf.numpy_function(func=self.get_encoded_sentence, inp=[input_tensor], Tout=tf.int32)
-        sentence.set_shape([None, None])
+        # sentence = tf.numpy_function(func=self.get_encoded_sentence, inp=[input_tensor], Tout=tf.int32)
+        sentence = self.get_encoded_sentence(input_tensor.numpy())
+        # sentence.set_shape([None, None])
         cls = [self.tokenizer.convert_tokens_to_ids(
             ['[CLS]'])] * sentence.shape[0]
         input_word_ids = tf.concat([cls, sentence], axis=-1)
