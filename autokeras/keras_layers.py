@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import numpy as np
-# from tensorflow.python.keras.engine.base_preprocessing_layer import CombinerPreprocessingLayer
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
@@ -85,12 +84,6 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
         }
         base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
-
-
-CUSTOM_OBJECTS = {
-    'MultiColumnCategoricalEncoding': MultiColumnCategoricalEncoding,
-    'IndexLookup': index_lookup.IndexLookup,
-}
 
 
 class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
