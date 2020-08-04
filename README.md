@@ -74,7 +74,7 @@ We will help you get started!
 
 Thank all the contributors!
 
-<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://opencollective.com/autokeras/contributors.svg?avatarHeight=24&width=890&button=false" /></a>
+<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://opencollective.com/autokeras/contributors.svg?avatarHeight=36&width=890&button=false" /></a>
 
 
 ## Donation
@@ -82,11 +82,8 @@ Thank all the contributors!
 We accept financial support on [Open Collective](https://opencollective.com/autokeras).
 Thank every backer for supporting us!
 
-Organizations:
-<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/sponsor.svg?avatarHeight=24&width=890&button=false"></a>
-
-Individuals:
-<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=24&width=890&button=false"></a>
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/sponsor.svg?avatarHeight=36&width=890&button=false"></a>
+<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=36&width=890&button=false"></a>
 
 ## Cite this work
 
