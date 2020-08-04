@@ -143,6 +143,7 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         return sentence
 
     def bert_encode(self, input_tensor):
+        return input_tensor
         num_examples = len(input_tensor)
         print("bert_encode num_examples: ", num_examples, "input_tensor shape:", input_tensor.shape)
         sentence = tf.numpy_function(func=self.get_encoded_sentence, inp=[input_tensor], Tout=tf.int32)
