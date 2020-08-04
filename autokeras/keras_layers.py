@@ -129,6 +129,9 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         """
         tokens = list(self.tokenizer.tokenize(s))
         tokens.append('[SEP]')
+        print("LEN of TOKENS: ", len(tokens))
+        if len(tokens) is None:
+            return []
         if len(tokens) < self.max_seq_len:
             tokens = tokens + ['[UNK]']*(self.max_seq_len - len(tokens))
         else:
