@@ -65,6 +65,9 @@ Subscribe our [email list](https://groups.google.com/forum/#!forum/autokeras-ann
 **Online Meetings**:
 Join the [Google group](https://groups.google.com/forum/#!forum/autokeras/join) and our online meetings will appear on your Google Calendar.
 
+**QQ Group**:
+Join our QQ group 1150366085. Password: akqqgroup
+
 ## Contributing
 
 You can follow the [Contributing Guide](https://autokeras.com/contributing/) to become a contributor.
