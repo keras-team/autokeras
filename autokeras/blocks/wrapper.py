@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
+
 from tensorflow.python.util import nest
 
 from autokeras.blocks import basic
@@ -45,7 +47,13 @@ class ImageBlock(block_module.Block):
             it will be tuned automatically.
     """
 
-    def __init__(self, block_type=None, normalize=None, augment=None, **kwargs):
+    def __init__(
+            self,
+            block_type: Optional[str] = None,
+            normalize: Optional[bool] = None,
+            augment: Optional[bool] = None,
+            **kwargs
+    ):
         super().__init__(**kwargs)
         self.block_type = block_type
         self.normalize = normalize
@@ -176,7 +184,12 @@ class StructuredDataBlock(block_module.Block):
         seed: Int. Random seed.
     """
 
-    def __init__(self, categorical_encoding=True, seed=None, **kwargs):
+    def __init__(
+            self,
+            categorical_encoding: Optional[bool] = True,
+            seed: Optional[int] = None,
+            **kwargs
+    ):
         super().__init__(**kwargs)
         self.categorical_encoding = categorical_encoding
         self.seed = seed
