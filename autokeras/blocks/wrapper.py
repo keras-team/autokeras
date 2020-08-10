@@ -186,7 +186,7 @@ class StructuredDataBlock(block_module.Block):
 
     def __init__(
             self,
-            categorical_encoding: Optional[bool] = True,
+            categorical_encoding: bool = True,
             seed: Optional[int] = None,
             **kwargs
     ):
