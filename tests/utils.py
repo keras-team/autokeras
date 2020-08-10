@@ -73,10 +73,11 @@ def imdb_raw(num_instances=100):
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.imdb.load_data(
         num_words=1000, index_from=index_offset
     )
-    x_train = x_train[:num_instances]
-    y_train = y_train[:num_instances].reshape(-1, 1)
-    x_test = x_test[:num_instances]
-    y_test = y_test[:num_instances].reshape(-1, 1)
+    if num_instances is not None:
+        x_train = x_train[:num_instances]
+        y_train = y_train[:num_instances].reshape(-1, 1)
+        x_test = x_test[:num_instances]
+        y_test = y_test[:num_instances].reshape(-1, 1)
 
     word_to_id = tf.keras.datasets.imdb.get_word_index()
     word_to_id = {k: (v + index_offset) for k, v in word_to_id.items()}
