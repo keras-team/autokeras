@@ -22,6 +22,7 @@ setup(
         'packaging',
         'tensorflow>=2.3.0',
         'scikit-learn',
+        'pandas',
     ],
     extras_require={
         'tests': ['pytest>=4.4.0',
