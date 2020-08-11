@@ -1,1 +1,1 @@
-pytest tests/performance.py 2> /dev/null | tee perf_output.txt
+pytest tests/performance.py | tee perf_output.txt
