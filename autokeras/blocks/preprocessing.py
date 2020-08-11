@@ -160,12 +160,15 @@ class ImageAugmentation(block_module.Block):
 
     def __init__(
         self,
-        translation_factor=None,
-        vertical_flip=None,
-        horizontal_flip=None,
-        rotation_factor=None,
-        zoom_factor=None,
-        contrast_factor=None,
+        translation_factor: Optional[
+            Union[float, Tuple[float, float]]] = None,
+        vertical_flip: Optional[bool] = None,
+        horizontal_flip: Optional[bool] = None,
+        rotation_factor: Optional[float] = None,
+        zoom_factor: Optional[
+            Union[float, Tuple[float, float]]] = None,
+        contrast_factor: Optional[
+            Union[float, Tuple[float, float]]] = None,
         **kwargs
     ):
         super().__init__(**kwargs)

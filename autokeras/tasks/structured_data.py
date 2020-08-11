@@ -191,19 +191,19 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
 
     def __init__(
         self,
-        column_names=None,
-        column_types=None,
-        num_classes=None,
-        multi_label=False,
-        loss=None,
-        metrics=None,
-        project_name="structured_data_classifier",
-        max_trials=100,
-        directory=None,
-        objective="val_accuracy",
+        column_names: Optional[List[str]] = None,
+        column_types: Optional[Dict] = None,
+        num_classes: Optional[int] = None,
+        multi_label: bool = False,
+        loss: Optional[types.LossType] = None,
+        metrics: Optional[types.MetricsType] = None,
+        project_name: str = "structured_data_classifier",
+        max_trials: int = 100,
+        directory: Optional[Union[str, pathlib.Path]] = None,
+        objective: str = "val_accuracy",
         tuner: Union[str, Type[tuner.AutoTuner]] = None,
-        overwrite=False,
-        seed=None,
+        overwrite: bool = False,
+        seed: Optional[int] = None,
         **kwargs
     ):
         if tuner is None:
