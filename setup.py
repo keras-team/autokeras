@@ -22,8 +22,6 @@ setup(
         'packaging',
         'tensorflow>=2.3.0',
         'scikit-learn',
-        'numpy',
-        'pandas',
     ],
     extras_require={
         'tests': ['pytest>=4.4.0',
