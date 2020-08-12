@@ -42,7 +42,6 @@ def test_greedy_oracle_populate_different_values(get_best_trials):
     values_a = oracle._populate_space("a")["values"]
     values_b = oracle._populate_space("b")["values"]
 
-    assert set(values_a.keys()) == set(values_b.keys())
     assert not all([values_a[key] == values_b[key] for key in values_a])
 
 
