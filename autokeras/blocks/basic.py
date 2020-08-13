@@ -792,7 +792,7 @@ class BERTBlock(block_module.Block):
         output_node = tokenizer_layer(input_tensor)
         # print("Tokenizer output length: ", len(output_node))
 
-        print("BERT Block input shape: ", output_node.shape)
+        # print("BERT Block input shape: ", output_node.shape)
 
         bert_input = {
                 'input_word_ids': output_node[0],
