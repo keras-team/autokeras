@@ -751,20 +751,14 @@ class BERTBlock(block_module.Block):
     """
 
     def __init__(self,
-                 # version: Optional[str] = None,
-                 # pooling: Optional[str] = None,
                  max_seq_len: Optional[int] = None,
                  **kwargs):
         super().__init__(**kwargs)
-        # self.version = version
-        # self.pooling = pooling
         self.max_seq_len = max_seq_len
 
     def get_config(self):
         config = super().get_config()
         config.update({
-        #     'version': self.version,
-        #     'pooling': self.pooling,
             'max_seq_len': self.max_seq_len
             })
         return config
@@ -799,22 +793,18 @@ class BERTBlock(block_module.Block):
         # # print("Tokenizer output length: ", len(output_node))
 
         output_node = input_tensor
-        print("Tokenizer output shape: ", output_node.shape)
+        print("BERT Block input shape: ", output_node.shape)
 
         bert_input = {
                 'input_word_ids': output_node[0],
                 'input_mask': output_node[1],
                 'input_type_ids': output_node[2]}
 
-        # hub_encoder = hub.KerasLayer(hub_url_bert, trainable=True)
-
         bert_encoder = BERT()
-
-        tf.keras.utils.plot_model(bert_encoder, show_shapes=True, dpi=48)
 
         output_node = bert_encoder(
             bert_input,
             training=True,
         )
 
-        return output_node
+        return output_node[1]

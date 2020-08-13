@@ -99,17 +99,16 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         self.max_seq_len = max_seq_len
 
     def build(self, input_shape):
-        print("Tokenizer build function called: ",input_shape)
-        # for encoding_layer in self.encoding_layers:
-        #     if encoding_layer is not None:
-        #         encoding_layer.build(tf.TensorShape([1]))
+        self.batch_size = input_shape
+        print("Tokenizer build function batch_size: ",self.batch_size)
 
     def call(self, inputs):
         # return inputs
         print("Tokenizer call function: ", inputs.shape)
+        print("input: ", inputs)
         # return self.bert_encode(inputs)
         output = tf.numpy_function(func=self.bert_encode, inp=[inputs], Tout=tf.int32)
-        # output.set_shape([None, None, None])
+        output.set_shape((None, None, None))
         return output
 
     def encode_sentence(self, s):
@@ -136,18 +135,19 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
 
     def get_encoded_sentence(self, input_tensor):
         input_array = np.array(input_tensor, dtype=object)
-        print("get_encoded_sentence: ", input_array.shape, input_array[0][0])
+        print("get_encoded_sentence: ", input_array.shape, input_array[0])
         sentence = tf.constant([
+            # self.encode_sentence(s)
             self.encode_sentence(s[0])
             for s in input_array])
         print("get_encoded_sentence: ", sentence.shape)
         return sentence
 
     def bert_encode(self, input_tensor):
-        num_examples = len(input_tensor)
-        print("bert_encode num_examples: ", num_examples, "input_tensor shape:", input_tensor.shape)
+        print("bert_encode input_tensor shape:", input_tensor.shape)
+        # return tf.stack([input_tensor, input_tensor, input_tensor]) ### CHECK THIS LINE
         # sentence = tf.numpy_function(func=self.get_encoded_sentence, inp=[input_tensor], Tout=tf.int32)
-        sentence = self.get_encoded_sentence(input_tensor.numpy())
+        sentence = self.get_encoded_sentence(input_tensor)
         # sentence.set_shape([None, None])
         cls = [self.tokenizer.convert_tokens_to_ids(
             ['[CLS]'])] * sentence.shape[0]
@@ -164,7 +164,6 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         #     'input_word_ids': input_word_ids.to_tensor(),
         #     'input_mask': input_mask,
         #     'input_type_ids': input_type_ids}
-        inputs = [input_word_ids.numpy(),input_mask, input_type_ids]
-        print('bert_encode output len: ', len(inputs))
-        print('bert_encode input_word_ids shape: ', input_word_ids.shape)
+        inputs = tf.stack([input_word_ids.numpy(),input_mask, input_type_ids])
+        print('bert_encode output shape: ', inputs.shape)
         return inputs
