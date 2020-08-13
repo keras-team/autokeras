@@ -776,23 +776,22 @@ class BERTBlock(block_module.Block):
         # model = super().build(hp)
 
         # bert config file
-        # max_seq_len = self.max_seq_len or hp.Choice(
-        #     'max_seq_len',
-        #     [128, 256, 512],
-        #     default=128)
-        # gs_folder_bert = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
-        # # TOKENIZER
-        # tokenizer = bert.tokenization.FullTokenizer(
-        #     vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
-        #     do_lower_case=True)
-        #
-        # tokenizer_layer = TextVectorizationWithTokenizer(
-        #     tokenizer=tokenizer,
-        #     max_seq_len = max_seq_len)
-        # output_node = tokenizer_layer(input_tensor)
-        # # print("Tokenizer output length: ", len(output_node))
+        max_seq_len = self.max_seq_len or hp.Choice(
+            'max_seq_len',
+            [128, 256, 512],
+            default=128)
+        gs_folder_bert = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
+        # TOKENIZER
+        tokenizer = bert.tokenization.FullTokenizer(
+            vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
+            do_lower_case=True)
 
-        output_node = input_tensor
+        tokenizer_layer = TextVectorizationWithTokenizer(
+            tokenizer=tokenizer,
+            max_seq_len = max_seq_len)
+        output_node = tokenizer_layer(input_tensor)
+        # print("Tokenizer output length: ", len(output_node))
+
         print("BERT Block input shape: ", output_node.shape)
 
         bert_input = {
