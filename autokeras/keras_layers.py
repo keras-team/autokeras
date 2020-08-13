@@ -100,12 +100,12 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
 
     def build(self, input_shape):
         self.batch_size = input_shape
-        print("Tokenizer build function batch_size: ",self.batch_size)
+        # print("Tokenizer build function batch_size: ",self.batch_size)
 
     def call(self, inputs):
         # return inputs
-        print("Tokenizer call function: ", inputs.shape)
-        print("input: ", inputs)
+        # print("Tokenizer call function: ", inputs.shape)
+        # print("input: ", inputs)
         # return self.bert_encode(inputs)
         output = tf.numpy_function(func=self.bert_encode, inp=[inputs], Tout=tf.int32)
         output.set_shape((None, None, None))
@@ -122,7 +122,7 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         """
         tokens = list(self.tokenizer.tokenize(s))
         tokens.append('[SEP]')
-        print("LEN of TOKENS: ", len(tokens))
+        # print("LEN of TOKENS: ", len(tokens))
         if len(tokens) is None:
             return []
         if len(tokens) < self.max_seq_len:
@@ -130,21 +130,21 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         else:
             tokens = tokens[0:self.max_seq_len]
         encoded_sentence = self.tokenizer.convert_tokens_to_ids(tokens)
-        print("encode_sentence len: ", len(encoded_sentence), encoded_sentence)
+        # print("encode_sentence len: ", len(encoded_sentence), encoded_sentence)
         return encoded_sentence
 
     def get_encoded_sentence(self, input_tensor):
         input_array = np.array(input_tensor, dtype=object)
-        print("get_encoded_sentence: ", input_array.shape, input_array[0])
+        # print("get_encoded_sentence: ", input_array.shape, input_array[0])
         sentence = tf.constant([
             # self.encode_sentence(s)
             self.encode_sentence(s[0])
             for s in input_array])
-        print("get_encoded_sentence: ", sentence.shape)
+        # print("get_encoded_sentence: ", sentence.shape)
         return sentence
 
     def bert_encode(self, input_tensor):
-        print("bert_encode input_tensor shape:", input_tensor.shape)
+        # print("bert_encode input_tensor shape:", input_tensor.shape)
         # return tf.stack([input_tensor, input_tensor, input_tensor]) ### CHECK THIS LINE
         # sentence = tf.numpy_function(func=self.get_encoded_sentence, inp=[input_tensor], Tout=tf.int32)
         sentence = self.get_encoded_sentence(input_tensor)
@@ -152,18 +152,18 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         cls = [self.tokenizer.convert_tokens_to_ids(
             ['[CLS]'])] * sentence.shape[0]
         input_word_ids = tf.concat([cls, sentence], axis=-1)
-        print("bert_encode input_word_ids: ", input_word_ids.shape)
+        # print("bert_encode input_word_ids: ", input_word_ids.shape)
         input_mask = tf.ones_like(input_word_ids).numpy()
-        print("bert_encode input_mask: ", input_mask.shape)
+        # print("bert_encode input_mask: ", input_mask.shape)
         type_cls = tf.zeros_like(cls)
         type_s1 = tf.zeros_like(sentence)
         input_type_ids = tf.concat(
             [type_cls, type_s1], axis=-1).numpy()
-        print("bert_encode input_type_ids: ", input_type_ids.shape)
+        # print("bert_encode input_type_ids: ", input_type_ids.shape)
         # inputs = {
         #     'input_word_ids': input_word_ids.to_tensor(),
         #     'input_mask': input_mask,
         #     'input_type_ids': input_type_ids}
         inputs = tf.stack([input_word_ids.numpy(),input_mask, input_type_ids])
-        print('bert_encode output shape: ', inputs.shape)
+        # print('bert_encode output shape: ', inputs.shape)
         return inputs
