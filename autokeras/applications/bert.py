@@ -17,6 +17,8 @@ import os
 
 import tensorflow as tf
 from official.nlp import bert
+import official.nlp.bert.configs
+import official.nlp.bert.bert_models
 
 
 gs_folder_bert = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
