@@ -19,6 +19,7 @@ from typing import Optional
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from official.nlp import bert
+from official.nlp.bert import tokenization
 from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
