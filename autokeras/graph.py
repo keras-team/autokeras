@@ -21,7 +21,9 @@ from autokeras import nodes as nodes_module
 from autokeras.engine import head as head_module
 from autokeras.engine import serializable
 from autokeras.utils import utils
-
+from official import nlp
+# Load the required submodules
+import official.nlp.optimization
 
 def feature_encoding_input(block):
     """Fetch the column_types and column_names.
@@ -305,6 +307,20 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             optimizer = tf.keras.optimizers.Adadelta(learning_rate=learning_rate)
         elif optimizer_name == "sgd":
             optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
+        elif optimizer_name == "adam_weight_decay":
+            # Set up epochs and steps
+            epochs = 3
+            batch_size = 16
+            eval_batch_size = 32
+
+            train_data_size = 1024  # len(x_train)
+            steps_per_epoch = int(train_data_size / batch_size)
+            num_train_steps = steps_per_epoch * epochs
+            warmup_steps = int(epochs * train_data_size * 0.1 / batch_size)
+
+            # creates an optimizer with learning rate schedule
+            optimizer = nlp.optimization.create_optimizer(
+                2e-5, num_train_steps=num_train_steps, num_warmup_steps=warmup_steps)
 
         model.compile(
             optimizer=optimizer, metrics=self._get_metrics(), loss=self._get_loss()
