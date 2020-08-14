@@ -160,13 +160,11 @@ class TextBlock(block_module.Block):
             ).build(hp, output_node)
             return basic.DenseBlock().build(hp, output_node)
         if block_type == BERT:
-            output_node = basic.BERTBlock().build(
-                hp, output_node
-            )
+            output_node = basic.BERTBlock().build(hp, output_node)
         else:
-            output_node = preprocessing.TextToIntSequence(max_tokens=max_tokens).build(
-                hp, output_node
-            )
+            output_node = preprocessing.TextToIntSequence(
+                max_tokens=max_tokens
+            ).build(hp, output_node)
             if block_type == TRANSFORMER:
                 output_node = basic.Transformer(
                     max_features=max_tokens + 1, pretraining=self.pretraining,
