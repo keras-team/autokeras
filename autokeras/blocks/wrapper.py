@@ -30,6 +30,7 @@ AUGMENT = "augment"
 TRANSFORMER = "transformer"
 MAX_TOKENS = "max_tokens"
 NGRAM = "ngram"
+BERT = "bert"
 
 
 class ImageBlock(block_module.Block):
@@ -158,18 +159,23 @@ class TextBlock(block_module.Block):
                 max_tokens=max_tokens
             ).build(hp, output_node)
             return basic.DenseBlock().build(hp, output_node)
-        output_node = preprocessing.TextToIntSequence(max_tokens=max_tokens).build(
-            hp, output_node
-        )
-        if block_type == TRANSFORMER:
-            output_node = basic.Transformer(
-                max_features=max_tokens + 1, pretraining=self.pretraining,
-            ).build(hp, output_node)
+        if block_type == BERT:
+            output_node = basic.BERTBlock().build(
+                hp, output_node
+            )
         else:
-            output_node = basic.Embedding(
-                max_features=max_tokens + 1, pretraining=self.pretraining,
-            ).build(hp, output_node)
-            output_node = basic.ConvBlock().build(hp, output_node)
+            output_node = preprocessing.TextToIntSequence(max_tokens=max_tokens).build(
+                hp, output_node
+            )
+            if block_type == TRANSFORMER:
+                output_node = basic.Transformer(
+                    max_features=max_tokens + 1, pretraining=self.pretraining,
+                ).build(hp, output_node)
+            else:
+                output_node = basic.Embedding(
+                    max_features=max_tokens + 1, pretraining=self.pretraining,
+                ).build(hp, output_node)
+                output_node = basic.ConvBlock().build(hp, output_node)
         output_node = reduction.SpatialReduction().build(hp, output_node)
         output_node = basic.DenseBlock().build(hp, output_node)
         return output_node
