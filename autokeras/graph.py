@@ -22,8 +22,7 @@ from autokeras.engine import head as head_module
 from autokeras.engine import serializable
 from autokeras.utils import utils
 from official import nlp
-# Load the required submodules
-import official.nlp.optimization
+
 
 def feature_encoding_input(block):
     """Fetch the column_types and column_names.
@@ -311,7 +310,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             # Set up epochs and steps
             epochs = 3
             batch_size = 16
-            eval_batch_size = 32
+            # eval_batch_size = 32
 
             train_data_size = 1024  # len(x_train)
             steps_per_epoch = int(train_data_size / batch_size)
@@ -320,7 +319,8 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
 
             # creates an optimizer with learning rate schedule
             optimizer = nlp.optimization.create_optimizer(
-                2e-5, num_train_steps=num_train_steps, num_warmup_steps=warmup_steps)
+                2e-5, num_train_steps=num_train_steps, num_warmup_steps=warmup_steps
+            )
 
         model.compile(
             optimizer=optimizer, metrics=self._get_metrics(), loss=self._get_loss()

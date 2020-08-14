@@ -1,23 +1,23 @@
+# Copyright 2020 The AutoKeras Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 from typing import Optional
 
-import matplotlib.pyplot as plt
-import numpy as np
-import official.nlp.bert.bert_models
-import official.nlp.bert.configs
-import official.nlp.bert.run_classifier
-import official.nlp.bert.tokenization
-import official.nlp.data.classifier_data_lib
-import official.nlp.modeling.losses
-import official.nlp.modeling.models
-import official.nlp.modeling.networks
 # # Load the required submodules
-import official.nlp.optimization
 import tensorflow as tf
 import tensorflow_datasets as tfds
-import tensorflow_hub as hub
-from official import nlp
-from official.modeling import tf_utils
 from official.nlp import bert
 from tensorflow.keras import applications
 from tensorflow.keras import layers
@@ -741,69 +741,53 @@ class Embedding(block_module.Block):
 
 
 class BERTBlock(block_module.Block):
-    """Block for Pretrained BERT.
+    """Block for Pre-trained BERT.
 
     # Arguments
-        version: String. 'v1', 'v2' or 'next'. The type of ResNet to use.
-            If left unspecified, it will be tuned automatically.
-        pooling: String. 'avg', 'max'. The type of pooling layer to use.
-            If left unspecified, it will be tuned automatically.
+        max_seq_len: int. The maximum length of a sequence in
+            used to train the model.
     """
 
-    def __init__(self,
-                 max_seq_len: Optional[int] = None,
-                 **kwargs):
+    def __init__(self, max_seq_len: Optional[int] = None, **kwargs):
         super().__init__(**kwargs)
         self.max_seq_len = max_seq_len
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            'max_seq_len': self.max_seq_len
-            })
+        config.update({"max_seq_len": self.max_seq_len})
         return config
 
     def build(self, hp, inputs=None):
         input_tensor = nest.flatten(inputs)[0]
-        # input_shape = None
 
-        # hp.Choice('version', ['v1', 'v2', 'next'], default='v2')
-        # hp.Choice('pooling', ['avg', 'max'], default='avg')
-        #
-        # set_hp_value(hp, 'version', self.version)
-        # set_hp_value(hp, 'pooling', self.pooling)
-        #
-        # model = super().build(hp)
-
-        # bert config file
         max_seq_len = self.max_seq_len or hp.Choice(
-            'max_seq_len',
-            [128, 256, 512],
-            default=128)
-        gs_folder_bert = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
+            "max_seq_len", [128, 256, 512], default=128
+        )
+        # bert config file
+        gs_folder_bert = (
+            "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
+        )
         # TOKENIZER
         tokenizer = bert.tokenization.FullTokenizer(
-            vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
-            do_lower_case=True)
+            vocab_file=os.path.join(gs_folder_bert, "vocab.txt"), do_lower_case=True
+        )
 
         tokenizer_layer = TextVectorizationWithTokenizer(
-            tokenizer=tokenizer,
-            max_seq_len = max_seq_len)
+            tokenizer=tokenizer, max_seq_len=max_seq_len
+        )
         output_node = tokenizer_layer(input_tensor)
         # print("Tokenizer output length: ", len(output_node))
 
         # print("BERT Block input shape: ", output_node.shape)
 
         bert_input = {
-                'input_word_ids': output_node[0],
-                'input_mask': output_node[1],
-                'input_type_ids': output_node[2]}
+            "input_word_ids": output_node[0],
+            "input_mask": output_node[1],
+            "input_type_ids": output_node[2],
+        }
 
         bert_encoder = BERT()
 
-        output_node = bert_encoder(
-            bert_input,
-            training=True,
-        )
+        output_node = bert_encoder(bert_input, training=True,)
 
         return output_node[1]
