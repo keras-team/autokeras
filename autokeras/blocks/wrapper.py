@@ -48,11 +48,11 @@ class ImageBlock(block_module.Block):
     """
 
     def __init__(
-            self,
-            block_type: Optional[str] = None,
-            normalize: Optional[bool] = None,
-            augment: Optional[bool] = None,
-            **kwargs
+        self,
+        block_type: Optional[str] = None,
+        normalize: Optional[bool] = None,
+        augment: Optional[bool] = None,
+        **kwargs
     ):
         super().__init__(**kwargs)
         self.block_type = block_type
@@ -185,10 +185,7 @@ class StructuredDataBlock(block_module.Block):
     """
 
     def __init__(
-            self,
-            categorical_encoding: bool = True,
-            seed: Optional[int] = None,
-            **kwargs
+        self, categorical_encoding: bool = True, seed: Optional[int] = None, **kwargs
     ):
         super().__init__(**kwargs)
         self.categorical_encoding = categorical_encoding
