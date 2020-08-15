@@ -35,7 +35,7 @@ def BERT():
         bert_config, num_labels=2
     )
 
-    checkpoint = tf.train.Checkpoint(model=bert_encoder)
+    checkpoint = tf.train.Checkpoint(model=bert_encoder).expect_partial()
 
     checkpoint.restore(
         os.path.join(gs_folder_bert, "bert_model.ckpt")
