@@ -17,7 +17,6 @@ from typing import Optional
 
 # # Load the required submodules
 import tensorflow as tf
-import tensorflow_datasets as tfds
 from official.nlp import bert
 from official.nlp.bert import tokenization
 from tensorflow.keras import applications
@@ -30,8 +29,6 @@ from autokeras.engine import block as block_module
 from autokeras.keras_layers import TextVectorizationWithTokenizer
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
-
-tfds.disable_progress_bar()
 
 
 RESNET_V1 = {
