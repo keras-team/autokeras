@@ -3,11 +3,8 @@ name: Tests
 on: [push, pull_request]
 jobs:
   build:
-
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+    name: Run tests
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.6
@@ -34,7 +31,6 @@ jobs:
       run: |
         pytest --cov=autokeras --cov-report xml:coverage.xml
     - name: Codecov
-      if: matrix.os == 'ubuntu-latest'
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }} #required
