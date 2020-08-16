@@ -17,8 +17,9 @@ from typing import Optional
 
 # # Load the required submodules
 import tensorflow as tf
-from official.nlp import bert
-from official.nlp.bert import tokenization
+
+# from official.nlp import bert
+import official.nlp.bert.tokenization
 from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
@@ -766,7 +767,7 @@ class BERTBlock(block_module.Block):
             "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
         )
         # TOKENIZER
-        tokenizer = bert.tokenization.FullTokenizer(
+        tokenizer = official.nlp.bert.tokenization.FullTokenizer(
             vocab_file=os.path.join(gs_folder_bert, "vocab.txt"), do_lower_case=True
         )
 

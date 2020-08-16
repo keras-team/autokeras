@@ -21,7 +21,8 @@ from autokeras import nodes as nodes_module
 from autokeras.engine import head as head_module
 from autokeras.engine import serializable
 from autokeras.utils import utils
-from official import nlp
+
+# from official import nlp
 import official.nlp.optimization
 
 
@@ -319,7 +320,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             warmup_steps = int(epochs * train_data_size * 0.1 / batch_size)
 
             # creates an optimizer with learning rate schedule
-            optimizer = nlp.optimization.create_optimizer(
+            optimizer = official.nlp.optimization.create_optimizer(
                 2e-5, num_train_steps=num_train_steps, num_warmup_steps=warmup_steps
             )
 
