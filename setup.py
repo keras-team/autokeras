@@ -21,6 +21,7 @@ setup(
     install_requires=[
         'packaging',
         'tensorflow>=2.3.0',
+        'tf-models-nightly',
         'scikit-learn',
         'pandas',
     ],
