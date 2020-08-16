@@ -16,6 +16,10 @@ import os
 
 import numpy as np
 import tensorflow as tf
+from official.nlp import bert
+import official.nlp.bert.tokenization
+from tensorflow.keras import losses
+from autokeras.applications import BERT
 
 from autokeras import keras_layers as layer_module
 
@@ -107,3 +111,67 @@ def test_call_multi_with_single_column():
     layer = layer_module.MultiCategoryEncoding(encoding=[layer_module.INT])
 
     assert layer(np.array([["a"], ["b"], ["a"]])).shape == (3, 1)
+
+
+def get_text_data():
+    train = np.array(["This is a test example",
+                      "This is another text example",
+                      "Is this another example?"])
+    test = np.array(["This is a test example",
+                     "This is another text example",
+                     "Is this another example?"])
+    y = np.random.rand(3, 1)
+    return train, test, y
+
+
+class bert_layer(tf.keras.layers.Layer):
+  def __init__(self,):
+    super(bert_layer, self).__init__()
+    self.bert_encoder = BERT()
+
+  def call(self, inputs):
+    bert_input = {
+              'input_word_ids': inputs[0],
+              'input_mask': inputs[1],
+              'input_type_ids': inputs[2]}
+    output = self.bert_encoder(
+        bert_input,
+        training=True,
+    )
+    return output[1]
+
+
+def test_text_vectorization_with_tokenizer(tmp_path):
+    x_train, x_test, y_train = get_data()
+    gs_folder_bert = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
+    tokenizer = bert.tokenization.FullTokenizer(
+        vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
+        do_lower_case=True)
+    input_node = tf.keras.Input(shape=(1,), dtype=tf.string)
+    token_layer = layer_module.TextVectorizationWithTokenizer(
+        tokenizer=tokenizer, max_seq_len=16
+    )
+    hidden_node = token_layer(input_node)
+    bert_output = bert_layer()(hidden_node)
+    output_node = tf.keras.layers.Dense(2)(bert_output)
+    model = tf.keras.Model(input_node, output_node)
+    model.compile(loss=losses.SparseCategoricalCrossentropy(from_logits=True), optimizer="adam")
+    tf.data.Dataset.zip(
+        (
+            (tf.data.Dataset.from_tensor_slices(x_train).batch(32),),
+            (tf.data.Dataset.from_tensor_slices(np.random.rand(3, 1)).batch(32),),
+        )
+    )
+    model.fit(x_train, y_train, epochs=1)
+
+    model2 = tf.keras.Model(input_node, hidden_node)
+    result = model2.predict(x_train)
+    print("SHAPE of RESULT: ", result.shape, result)
+    # assert result[0][0] == result[2][0]
+    # assert result[0][0] != result[1][0]
+    # assert result[0][1] != result[1][1]
+    # assert result[0][1] != result[2][1]
+    # assert result[2][2] == 0
+
+    output = model2.predict(x_test)
+    assert output.dtype == np.dtype("int32")
