@@ -358,3 +358,30 @@ def test_multi_head_restore_head_size():
     block = blocks.basic.MultiHeadSelfAttention.from_config(block.get_config())
 
     assert block.head_size == 16
+
+
+def test_bert_build_return_tensor():
+    block = blocks.BERTBlock()
+
+    outputs = block.build(
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.float32)
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_bert_deserialize_to_transformer():
+    serialized_block = blocks.serialize(blocks.BERTBlock())
+
+    block = blocks.deserialize(serialized_block)
+
+    assert isinstance(block, blocks.BERTBlock)
+
+
+def test_bert_get_config_has_all_attributes():
+    block = blocks.BERTBlock()
+
+    config = block.get_config()
+
+    assert utils.get_func_args(blocks.BERTBlock.__init__).issubset(config.keys())
