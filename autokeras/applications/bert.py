@@ -16,7 +16,8 @@ import json
 import os
 
 import tensorflow as tf
-from official.nlp import bert
+
+# from official.nlp import bert
 import official.nlp.bert.configs
 import official.nlp.bert.bert_models
 
@@ -29,9 +30,9 @@ def BERT():
     bert_config_file = os.path.join(gs_folder_bert, "bert_config.json")
     config_dict = json.loads(tf.io.gfile.GFile(bert_config_file).read())
 
-    bert_config = bert.configs.BertConfig.from_dict(config_dict)
+    bert_config = official.nlp.bert.configs.BertConfig.from_dict(config_dict)
 
-    bert_classifier, bert_encoder = bert.bert_models.classifier_model(
+    bert_classifier, bert_encoder = official.nlp.bert.bert_models.classifier_model(
         bert_config, num_labels=2
     )
 
