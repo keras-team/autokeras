@@ -364,7 +364,7 @@ def test_bert_build_return_tensor():
     block = blocks.BERTBlock()
 
     outputs = block.build(
-        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.float32)
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
     )
 
     assert len(nest.flatten(outputs)) == 1
