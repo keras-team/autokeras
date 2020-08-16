@@ -127,10 +127,10 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         # print("LEN of TOKENS: ", len(tokens))
         if len(tokens) is None:
             return []
-        if len(tokens) < self.max_seq_len:
-            tokens = tokens + ["[UNK]"] * (self.max_seq_len - len(tokens))
+        if len(tokens) < self.max_seq_len-1:
+            tokens = tokens + ["[UNK]"] * (self.max_seq_len - len(tokens)-1)
         else:
-            tokens = tokens[0 : self.max_seq_len]
+            tokens = tokens[0:self.max_seq_len-1]
         encoded_sentence = self.tokenizer.convert_tokens_to_ids(tokens)
         # print("encode_sentence len: ", len(encoded_sentence), encoded_sentence)
         return encoded_sentence
