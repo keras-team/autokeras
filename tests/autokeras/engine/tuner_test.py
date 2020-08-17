@@ -120,6 +120,15 @@ def test_tuner_not_call_super_search_with_overwrite(
     super_search.assert_not_called()
 
 
+def test_tuner_does_not_crash_with_distribution_strategy(tmp_path):
+    tuner = greedy.Greedy(
+        hypermodel=utils.build_graph(),
+        directory=tmp_path,
+        distribution_strategy=tf.distribute.MirroredStrategy(),
+    )
+    tuner.hypermodel.build(tuner.oracle.hyperparameters)
+
+
 def test_preprocessing_adapt():
     class MockLayer(preprocessing.TextVectorization):
         def adapt(self, *args, **kwargs):
