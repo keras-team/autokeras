@@ -24,6 +24,7 @@ from autokeras.tuners import task_specific
 
 @pytest.fixture
 def clear_session():
+    tf.keras.backend.clear_session()
     yield
     tf.keras.backend.clear_session()
 

@@ -249,7 +249,6 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
 
     def build(self, hp):
         """Build the HyperModel into a Keras Model."""
-        tf.keras.backend.clear_session()
         self._register_hps(hp)
         self.compile()
         real_nodes = {}
