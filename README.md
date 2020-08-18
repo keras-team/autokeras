@@ -6,12 +6,6 @@
 
 Official Website: [autokeras.com](https://autokeras.com)
 
-# Let's Chat!
-To make AutoKeras better, I would like to hear your thoughts.
-I am happy to answer any questions you have about our project.
-[Join our Slack](#community) and send me (Haifeng Jin) a message.
-I will schedule a meeting with you.
-
 ##
 AutoKeras: An AutoML system based on Keras.
 It is developed by <a href="http://faculty.cs.tamu.edu/xiahu/index.html" target="_blank" rel="nofollow">DATA Lab</a> at Texas A&M University.
@@ -46,15 +40,13 @@ Please follow the [installation guide](https://autokeras.com/install) for more d
 
 ## Community
 <p float="left">
-<a href="https://keras-slack-autojoin.herokuapp.com/"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/slack.svg" width="40px" hspace="10"></a>
 <a href="https://twitter.com/autokeras"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/twitter.svg" width="40px" hspace="10"></a>
 <a href="https://groups.google.com/forum/#!forum/autokeras-announce/join"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/gmail.svg" width="40px" hspace="10"></a>
+<a href="https://keras-slack-autojoin.herokuapp.com/"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/slack.svg" width="40px" hspace="10"></a>
 <a href="https://groups.google.com/forum/#!forum/autokeras/join"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/calendar.svg" width="40px" hspace="10"></a>
 </p>
 
-**Slack**:
-[Request an invitation](https://keras-slack-autojoin.herokuapp.com/).
-Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel for communication.
+### Stay Up-to-Date
 
 **Twitter**:
 You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
@@ -62,18 +54,39 @@ You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) fo
 **Emails**:
 Subscribe our [email list](https://groups.google.com/forum/#!forum/autokeras-announce/join) to receive announcements.
 
-**Online Meetings**:
-Join the [Google group](https://groups.google.com/forum/#!forum/autokeras/join) and our online meetings will appear on your Google Calendar.
+### Questions and Discussions
+
+**Slack**:
+[Request an invitation](https://keras-slack-autojoin.herokuapp.com/).
+Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel for communication.
 
 **QQ Group**:
 Join our QQ group 1150366085. Password: akqqgroup
 
-## Contributing
+**Online Meetings**:
+Join the [Google group](https://groups.google.com/forum/#!forum/autokeras/join) and our online meetings will appear on your Google Calendar.
 
-You can follow the [Contributing Guide](https://autokeras.com/contributing/) to become a contributor.
 
-If you don't know where to start, please join our community on [Slack](https://autokeras.com/#community) and ask us.
+## Contributing Code
+
+We engage in keeping everything about AutoKeras open to the public.
+Everyone can easily join as a developer.
+Here is how we manage our project.
+
+* **Triage the issues**: 
+We pick the important issues to work on from [GitHub issues](https://github.com/keras-team/autokeras/issues).
+They will be added to this [Project](https://github.com/keras-team/autokeras/projects/3).
+Some of the issues will then be added to the [milestones](https://github.com/keras-team/autokeras/milestones),
+which are used to plan for the releases.
+* **Assign the tasks**: We assign the tasks to people during the online meetings.
+* **Discuss**: We can have discussions in multiple places. The code reviews are on GitHub.
+Questions can be asked in Slack or during the meetings.
+
+Please join our [Slack](https://autokeras.com/#community) and send Haifeng Jin a message.
+Or drop by our [online meetings](https://autokeras.com/#community) and talk to us.
 We will help you get started!
+
+Refer to our [Contributing Guide](https://autokeras.com/contributing/) to learn the best practices.
 
 Thank all the contributors!
 

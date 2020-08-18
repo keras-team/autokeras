@@ -1,11 +1,12 @@
 # Contributing Guide
 
 Contributions are welcome, and greatly appreciated!
+This page is only a guide of the best practices of contributing code to AutoKeras.
+The best way to contribute is to join our community by reading [this](https://autokeras.com/#contributing-code).
+We will get you started right away.
+
 Follow the tag of [good first issue](https://github.com/keras-team/autokeras/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 for the issues for beginner.
-
-If you don't know where to start, please join our community on [Slack](https://autokeras.com/#community) and ask us.
-We will help you get started!
 
 ## Pull Request Guide
 
@@ -37,13 +38,7 @@ workon ak
 pip install -e ".[tests]"
 pip uninstall autokeras
 add2virtualenv .
-
-pip install mkdocs
-pip install mkdocs-material
-pip install autopep8
-pip install git+https://github.com/gabrieldemarmiesse/typed_api.git@0.1.1
 ``` 
-
 
 ## Run Tests
 
