@@ -10,7 +10,7 @@ In this tutorial we are making use of the
 
 ## What is multi-modal?
 
-Multi-model data means each data instance has multiple forms of information. For example, a photo can be saved as a image. Besides the image, it may also have when and where it was taken as its attributes, which can be represented as structured data. 
+Multi-modal data means each data instance has multiple forms of information. For example, a photo can be saved as a image. Besides the image, it may also have when and where it was taken as its attributes, which can be represented as structured data. 
 
 ## What is multi-task?
 
