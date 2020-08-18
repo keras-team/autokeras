@@ -20,8 +20,8 @@ setup(
     keywords=['AutoML', 'Keras'],
     install_requires=[
         'packaging',
+        'tf-models-official',
         'tensorflow>=2.3.0',
-        'tf-models-nightly',
         'scikit-learn',
         'pandas',
     ],
