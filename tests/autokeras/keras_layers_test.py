@@ -15,14 +15,14 @@
 import os
 
 import numpy as np
-import tensorflow as tf
 
 # from official.nlp import bert
 import official.nlp.bert.tokenization
+import tensorflow as tf
 from tensorflow.keras import losses
-from autokeras.applications import BERT
 
 from autokeras import keras_layers as layer_module
+from autokeras.applications import BERT
 
 
 def get_data():

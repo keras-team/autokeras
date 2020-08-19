@@ -15,12 +15,11 @@
 import json
 import os
 
-import tensorflow as tf
+import official.nlp.bert.bert_models
 
 # from official.nlp import bert
 import official.nlp.bert.configs
-import official.nlp.bert.bert_models
-
+import tensorflow as tf
 
 gs_folder_bert = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
 hub_url_bert = "https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/2"
