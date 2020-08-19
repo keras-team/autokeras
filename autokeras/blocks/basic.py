@@ -15,11 +15,11 @@
 import os
 from typing import Optional
 
-# # Load the required submodules
-import tensorflow as tf
-
 # from official.nlp import bert
 import official.nlp.bert.tokenization
+
+# # Load the required submodules
+import tensorflow as tf
 from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
@@ -30,7 +30,6 @@ from autokeras.engine import block as block_module
 from autokeras.keras_layers import TextVectorizationWithTokenizer
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
-
 
 RESNET_V1 = {
     "resnet50": applications.ResNet50,
