@@ -39,13 +39,6 @@ Please follow the [installation guide](https://autokeras.com/install) for more d
 **Note:** Currently, AutoKeras is only compatible with **Python >= 3.5** and **TensorFlow >= 2.3.0**.
 
 ## Community
-<p float="left">
-<a href="https://twitter.com/autokeras"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/twitter.svg" width="40px" hspace="10"></a>
-<a href="https://groups.google.com/forum/#!forum/autokeras-announce/join"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/gmail.svg" width="40px" hspace="10"></a>
-<a href="https://keras-slack-autojoin.herokuapp.com/"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/slack.svg" width="40px" hspace="10"></a>
-<a href="https://groups.google.com/forum/#!forum/autokeras/join"><img src="https://raw.githubusercontent.com/keras-team/autokeras/master/docs/templates/img/calendar.svg" width="40px" hspace="10"></a>
-</p>
-
 ### Stay Up-to-Date
 
 **Twitter**:
@@ -56,6 +49,12 @@ Subscribe our [email list](https://groups.google.com/forum/#!forum/autokeras-ann
 
 ### Questions and Discussions
 
+**GitHub Discussions**:
+Ask your questions on our [GitHub Discussions](https://github.com/keras-team/autokeras/discussions).
+It is a forum hosted on GitHub. We will monitor and answer the questions there.
+
+### Instant Communications
+
 **Slack**:
 [Request an invitation](https://keras-slack-autojoin.herokuapp.com/).
 Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel for communication.
@@ -64,7 +63,8 @@ Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel f
 Join our QQ group 1150366085. Password: akqqgroup
 
 **Online Meetings**:
-Join the [Google group](https://groups.google.com/forum/#!forum/autokeras/join) and our online meetings will appear on your Google Calendar.
+Join the [online meeting Google group](https://groups.google.com/forum/#!forum/autokeras/join).
+The calendar event will appear on your Google Calendar.
 
 
 ## Contributing Code
