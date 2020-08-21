@@ -17,6 +17,7 @@ import os
 
 import kerastuner
 import tensorflow as tf
+from kerastuner.engine import hypermodel as hm_module
 from tensorflow.keras import callbacks as tf_callbacks
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
@@ -58,7 +59,8 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
     def get_best_model(self):
         model = self._build_best_model()
-        model.load_weights(self.best_model_path)
+        with hm_module.maybe_distribute(self.distribution_strategy):
+            model.load_weights(self.best_model_path)
         return model
 
     def _on_train_begin(self, model, hp, x, *args, **kwargs):

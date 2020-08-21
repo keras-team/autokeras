@@ -23,7 +23,12 @@ from tests import utils
 def test_image_classifier(tmp_path):
     train_x = utils.generate_data(num_instances=320, shape=(32, 32, 3))
     train_y = utils.generate_one_hot_labels(num_instances=320, num_classes=10)
-    clf = ak.ImageClassifier(directory=tmp_path, max_trials=2, seed=utils.SEED)
+    clf = ak.ImageClassifier(
+        directory=tmp_path,
+        max_trials=2,
+        seed=utils.SEED,
+        distribution_strategy=tf.distribute.MirroredStrategy(),
+    )
     clf.fit(train_x, train_y, epochs=1, validation_split=0.2)
     keras_model = clf.export_model()
     clf.evaluate(train_x, train_y)
