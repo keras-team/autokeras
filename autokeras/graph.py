@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import kerastuner
-
-# from official import nlp
 import official.nlp.optimization
 import tensorflow as tf
 from tensorflow.python.util import nest
@@ -24,6 +22,8 @@ from autokeras import nodes as nodes_module
 from autokeras.engine import head as head_module
 from autokeras.engine import serializable
 from autokeras.utils import utils
+
+# from official import nlp
 
 
 def feature_encoding_input(block):
