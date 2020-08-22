@@ -17,7 +17,6 @@ from typing import Optional
 
 # from official.nlp import bert
 import official.nlp.bert.tokenization
-
 # # Load the required submodules
 import tensorflow as tf
 from tensorflow.keras import applications
