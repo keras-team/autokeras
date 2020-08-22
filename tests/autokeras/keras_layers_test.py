@@ -15,6 +15,7 @@
 import os
 
 import numpy as np
+
 # from official.nlp import bert
 import official.nlp.bert.tokenization
 import tensorflow as tf

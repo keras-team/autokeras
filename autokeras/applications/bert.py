@@ -16,6 +16,7 @@ import json
 import os
 
 import official.nlp.bert.bert_models
+
 # from official.nlp import bert
 import official.nlp.bert.configs
 import tensorflow as tf
