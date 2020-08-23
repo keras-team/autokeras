@@ -349,7 +349,7 @@ class AutoModel(object):
 
         if isinstance(x, tf.data.Dataset) and y is not None:
             raise ValueError(
-                "Expect y is None when x is "
+                "Expected y to be None when x is "
                 "tf.data.Dataset{in_val}.".format(in_val=in_val)
             )
 
@@ -367,14 +367,14 @@ class AutoModel(object):
 
         if len(x_shapes) != len(self.inputs):
             raise ValueError(
-                "Expect x{in_val} to have {input_num} arrays, "
+                "Expected x{in_val} to have {input_num} arrays, "
                 "but got {data_num}".format(
                     in_val=in_val, input_num=len(self.inputs), data_num=len(x_shapes)
                 )
             )
         if not predict and len(y_shapes) != len(self.outputs):
             raise ValueError(
-                "Expect y{in_val} to have {output_num} arrays, "
+                "Expected y{in_val} to have {output_num} arrays, "
                 "but got {data_num}".format(
                     in_val=in_val,
                     output_num=len(self.outputs),
