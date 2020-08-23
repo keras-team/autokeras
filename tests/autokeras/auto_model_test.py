@@ -280,7 +280,7 @@ def test_invalid_tuner_name_error(tmp_path):
             ak.ImageInput(), ak.RegressionHead(), directory=tmp_path, tuner="unknown"
         )
 
-    assert "Expect the tuner argument to be one of" in str(info.value)
+    assert "Expected the tuner argument to be one of" in str(info.value)
 
 
 def test_no_validation_data_nor_split_error(tmp_path):
