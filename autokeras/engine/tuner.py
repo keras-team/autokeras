@@ -183,7 +183,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
     def _get_best_trial_epochs(self):
         best_trial = self.oracle.get_best_trials(1)[0]
-        return len(best_trial.metrics.metrics["val_loss"]._observations)
+        return self.oracle.get_trial(best_trial.trial_id).best_step
 
     def _build_best_model(self):
         best_trial = self.oracle.get_best_trials(1)[0]
