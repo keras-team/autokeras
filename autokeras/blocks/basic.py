@@ -36,6 +36,8 @@ RESNET_V2 = {
     "resnet152_v2": applications.ResNet152V2,
 }
 
+PRETRAINED = "pretrained"
+
 
 class DenseBlock(block_module.Block):
     """Block for Dense layers.
@@ -547,7 +549,12 @@ class KerasApplicationBlock(block_module.Block):
                 )
             pretrained = False
         if pretrained is None:
-            pretrained = hp.Boolean("pretrained", default=False)
+            pretrained = hp.Boolean(PRETRAINED, default=False)
+            if pretrained:
+                with hp.conditional_scope(PRETRAINED, [True]):
+                    trainable = hp.Boolean("trainable", default=False)
+        elif pretrained:
+            trainable = hp.Boolean("trainable", default=False)
 
         if len(self.models) > 1:
             version = hp.Choice("version", list(self.models.keys()))
@@ -571,7 +578,7 @@ class KerasApplicationBlock(block_module.Block):
 
         if pretrained:
             model = self.models[version](weights="imagenet", include_top=False)
-            model.trainable = hp.Boolean("trainable", default=False)
+            model.trainable = trainable
         else:
             model = self.models[version](
                 weights=None, include_top=False, input_shape=input_node.shape[1:]

@@ -160,9 +160,9 @@ class GreedyOracle(kerastuner.Oracle):
     def _get_best_hps(self):
         best_trials = self.get_best_trials()
         if best_trials:
-            return best_trials[0].hyperparameters
+            return best_trials[0].hyperparameters.copy()
         else:
-            return self.hyperparameters
+            return self.hyperparameters.copy()
 
     def _generate_hp_values(self, hp_names):
         best_hps = self._get_best_hps()
@@ -171,13 +171,14 @@ class GreedyOracle(kerastuner.Oracle):
         while True:
             hps = kerastuner.HyperParameters()
             # Generate a set of random values.
-            for hp in best_hps.space:
+            for hp in self.hyperparameters.space:
                 hps.merge([hp])
                 # if not active, do nothing.
                 # if active, check if selected to be changed.
                 if hps.is_active(hp):
                     # if was active and not selected, do nothing.
                     if best_hps.is_active(hp.name) and hp.name not in hp_names:
+                        hps.values[hp.name] = best_hps.values[hp.name]
                         continue
                     # if was not active or selected, sample.
                     hps.values[hp.name] = hp.random_sample(self._seed_state)
