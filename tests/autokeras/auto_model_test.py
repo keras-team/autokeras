@@ -206,7 +206,7 @@ def test_data_io_consistency_input(tuner_fn, tmp_path):
     x1 = utils.generate_data()
     y1 = utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices(((x1,), (y1, y1)))
-    dataset_error(dataset, None, dataset, "Expect x to have", tmp_path)
+    dataset_error(dataset, None, dataset, "Expected x to have", tmp_path)
 
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
@@ -214,7 +214,7 @@ def test_data_io_consistency_output(tuner_fn, tmp_path):
     x1 = utils.generate_data()
     y1 = utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1,)))
-    dataset_error(dataset, None, dataset, "Expect y to have", tmp_path)
+    dataset_error(dataset, None, dataset, "Expected y to have", tmp_path)
 
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
@@ -224,7 +224,7 @@ def test_data_io_consistency_validation(tuner_fn, tmp_path):
     dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1, y1)))
     val_dataset = tf.data.Dataset.from_tensor_slices(((x1,), (y1, y1)))
     dataset_error(
-        dataset, None, val_dataset, "Expect x in validation_data to have", tmp_path
+        dataset, None, val_dataset, "Expected x in validation_data to have", tmp_path
     )
 
 
@@ -235,7 +235,7 @@ def test_dataset_and_y(tuner_fn, tmp_path):
     x = tf.data.Dataset.from_tensor_slices((x1, x1))
     y = tf.data.Dataset.from_tensor_slices((y1, y1))
     val_dataset = tf.data.Dataset.from_tensor_slices(((x1,), (y1, y1)))
-    dataset_error(x, y, val_dataset, "Expect y is None", tmp_path)
+    dataset_error(x, y, val_dataset, "Expected y to be None", tmp_path)
 
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
