@@ -46,7 +46,7 @@ def get_tuner_class(tuner):
         return TUNER_CLASSES.get(tuner)
     else:
         raise ValueError(
-            'Expect the tuner argument to be one of "greedy", '
+            'Expected the tuner argument to be one of "greedy", '
             '"random", "hyperband", or "bayesian", '
             "but got {tuner}".format(tuner=tuner)
         )
