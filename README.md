@@ -31,7 +31,7 @@ To install the package, please use the `pip` installation as follows:
 
 ```shell
 pip3 install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc1
-pip3 install autokeras==1.0.5
+pip3 install autokeras
 ```
 
 Please follow the [installation guide](https://autokeras.com/install) for more details.
