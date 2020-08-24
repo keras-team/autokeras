@@ -147,6 +147,32 @@ def test_structured_build_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_structured_block_normalize_return_tensor():
+    block = blocks.StructuredDataBlock(normalize=True)
+    block.column_names = ["0", "1"]
+    block.column_types = {"0": adapters.NUMERICAL, "1": adapters.NUMERICAL}
+
+    outputs = block.build(
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(2,), dtype=tf.string)
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_structured_block_search_normalize_return_tensor():
+    block = blocks.StructuredDataBlock(name="a")
+    block.column_names = ["0", "1"]
+    block.column_types = {"0": adapters.NUMERICAL, "1": adapters.NUMERICAL}
+    hp = kerastuner.HyperParameters()
+    hp.values["a/" + blocks.wrapper.NORMALIZE] = True
+
+    outputs = block.build(hp, tf.keras.Input(shape=(2,), dtype=tf.string))
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
 def test_structured_deserialize_to_structured():
     serialized_block = blocks.serialize(blocks.StructuredDataBlock())
 
