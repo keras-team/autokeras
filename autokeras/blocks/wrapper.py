@@ -143,7 +143,7 @@ class TextBlock(block_module.Block):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         if self.block_type is None:
-            block_type = hp.Choice(BLOCK_TYPE, [VANILLA, TRANSFORMER, NGRAM])
+            block_type = hp.Choice(BLOCK_TYPE, [VANILLA, TRANSFORMER, NGRAM, BERT])
             with hp.conditional_scope(BLOCK_TYPE, [block_type]):
                 output_node = self._build_block(hp, output_node, block_type)
         else:
