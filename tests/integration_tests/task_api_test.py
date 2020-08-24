@@ -57,7 +57,7 @@ def test_text_classifier(tmp_path):
     clf.fit(train_x, train_y, epochs=2, validation_data=(test_x, test_y))
     clf.export_model()
     assert clf.predict(test_x).shape == (len(test_x), 1)
-    assert clf.tuner._get_best_trial_epochs() == 2
+    assert clf.tuner._get_best_trial_epochs() <= 2
 
 
 def test_text_regressor(tmp_path):
