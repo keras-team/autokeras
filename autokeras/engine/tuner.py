@@ -91,6 +91,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             layer = get_output_layer(input_node)
             while isinstance(layer, preprocessing.PreprocessingLayer):
                 layer.adapt(temp_x)
+                temp_x = temp_x.map(layer)
                 layer = get_output_layer(layer.output)
         return model
 

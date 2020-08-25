@@ -18,6 +18,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 
+from autokeras import keras_layers
 from autokeras.engine import tuner as tuner_module
 from autokeras.tuners import greedy
 from tests import utils
@@ -129,7 +130,19 @@ def test_tuner_does_not_crash_with_distribution_strategy(tmp_path):
     tuner.hypermodel.build(tuner.oracle.hyperparameters)
 
 
-def test_preprocessing_adapt():
+def test_preprocessing_adapt_with_cat_to_int_and_norm():
+    x = np.array([["a", 5], ["b", 6]]).astype(np.unicode)
+    y = np.array([[1, 2], [3, 4]]).astype(np.unicode)
+    dataset = tf.data.Dataset.from_tensor_slices((x, y)).batch(32)
+    model = tf.keras.models.Sequential()
+    model.add(tf.keras.Input(shape=(2,), dtype=tf.string))
+    model.add(keras_layers.MultiCategoryEncoding(["int", "none"]))
+    model.add(preprocessing.Normalization(axis=-1))
+
+    tuner_module.AutoTuner.adapt(model, dataset)
+
+
+def test_preprocessing_adapt_with_text_vec():
     class MockLayer(preprocessing.TextVectorization):
         def adapt(self, *args, **kwargs):
             super().adapt(*args, **kwargs)
