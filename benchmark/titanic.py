@@ -11,7 +11,7 @@ TEST_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
 def main():
     train_file_path = tf.keras.utils.get_file("train.csv", TRAIN_DATA_URL)
     test_file_path = tf.keras.utils.get_file("eval.csv", TEST_DATA_URL)
-    clf = ak.StructuredDataClassifier(max_trials=10, directory='tmp_dir', overwrite=True)
+    clf = ak.StructuredDataClassifier(max_trials=100, directory='tmp_dir', overwrite=True)
 
     start_time = timeit.default_timer()
     clf.fit(train_file_path, 'survived')
