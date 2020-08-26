@@ -27,6 +27,7 @@ from autokeras import nodes as input_module
 from autokeras.engine import tuner
 from autokeras.tasks.structured_data_mixin import StructuredDataMixin
 from autokeras.tuners import greedy
+from autokeras.tuners import task_specific
 from autokeras.utils import types
 
 
@@ -207,7 +208,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
         **kwargs
     ):
         if tuner is None:
-            tuner = greedy.Greedy
+            tuner = task_specific.StructuredDataClassifierTuner
         super().__init__(
             outputs=blocks.ClassificationHead(
                 num_classes=num_classes,
