@@ -50,5 +50,8 @@ EXCEPTION_LIST = [
 
 def test_api_surface_is_typed():
     ensure_api_is_typed(
-        [autokeras], EXCEPTION_LIST, init_only=True, additional_message=HELP_MESSAGE,
+        [autokeras],
+        EXCEPTION_LIST,
+        init_only=True,
+        additional_message=HELP_MESSAGE,
     )

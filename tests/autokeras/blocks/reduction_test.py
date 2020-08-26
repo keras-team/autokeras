@@ -39,7 +39,8 @@ def test_merge_single_input_return_tensor():
     block = blocks.Merge()
 
     outputs = block.build(
-        kerastuner.HyperParameters(), tf.keras.Input(shape=(32,), dtype=tf.float32),
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32,), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -117,7 +118,10 @@ def test_reduction_2d_tensor_return_input_node():
     block = blocks.TemporalReduction()
     input_node = tf.keras.Input(shape=(32,), dtype=tf.float32)
 
-    outputs = block.build(kerastuner.HyperParameters(), input_node,)
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        input_node,
+    )
 
     assert len(nest.flatten(outputs)) == 1
     assert nest.flatten(outputs)[0] is input_node

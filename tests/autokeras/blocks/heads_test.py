@@ -58,7 +58,8 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
     block.output_shape = (8,)
 
     outputs = block.build(
-        kerastuner.HyperParameters(), tf.keras.Input(shape=(5,), dtype=tf.float32),
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(5,), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1

@@ -60,7 +60,8 @@ def test_structured_data_input_name_type_mismatch_error():
 def test_structured_data_input_unsupported_type_error():
     with pytest.raises(TypeError) as info:
         adapter = input_adapter.StructuredDataInputAdapter(
-            column_names=utils.COLUMN_NAMES, column_types=utils.COLUMN_TYPES,
+            column_names=utils.COLUMN_NAMES,
+            column_types=utils.COLUMN_TYPES,
         )
         adapter.transform("unknown")
 
@@ -117,7 +118,8 @@ def test_dont_infer_specified_column_types():
     column_types["age"] = "categorical"
 
     adapter = input_adapter.StructuredDataInputAdapter(
-        column_names=utils.COLUMN_NAMES, column_types=column_types,
+        column_names=utils.COLUMN_NAMES,
+        column_types=column_types,
     )
     dataset = pd.read_csv(utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)
     adapter.transform(dataset)

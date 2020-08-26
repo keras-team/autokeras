@@ -328,7 +328,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
 
 
 class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
-    """"AutoKeras time series data classification class.
+    """ "AutoKeras time series data classification class.
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
