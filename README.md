@@ -90,7 +90,7 @@ Refer to our [Contributing Guide](https://autokeras.com/contributing/) to learn 
 
 Thank all the contributors!
 
-<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://opencollective.com/autokeras/contributors.svg?avatarHeight=36&width=890&button=false" /></a>
+<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://autokeras.com/img/contributors.svg" /></a>
 
 
 ## Donation
