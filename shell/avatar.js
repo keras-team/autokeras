@@ -1,7 +1,7 @@
 const { Octokit } = require("@octokit/rest");
 const octokit = new Octokit({});
 
-var width = 890;
+var width = 861;
 var height = 198;
 var size = 36;
 var gap = 3;
@@ -33,7 +33,11 @@ function buildHTML(contributors) {
         yi = Math.floor(i / elem_per_line);
         x = xi * (size + gap) + gap;
         y = yi * (size + gap) + gap;
-        temp = `<a xlink:href="${contributors[i].html_url} "><image transform="translate(${x},${y})" xlink:href="${contributors[i].avatar_url}" alt="${contributors[i].login}" clip-path="url(#clip)" width="36" height="36"/></a>`;
+        avatar_url = contributors[i].avatar_url
+        if (avatar_url === undefined) {
+            avatar_url = 'https://github.com/keras-team/autokeras/raw/master/docs/templates/img/anon.png';
+        }
+        temp = `<a xlink:href="${contributors[i].html_url} "><image transform="translate(${x},${y})" xlink:href="${avatar_url}" alt="${contributors[i].login}" clip-path="url(#clip)" width="36" height="36"/></a>`;
         html += temp;
     }
 
