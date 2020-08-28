@@ -5,7 +5,7 @@ DATA?="${HOME}/Data"
 GPUS?=all
 DOCKER_FILE?=Dockerfile
 DOCKER=docker
-TF_VERSION=2.1.0
+TF_VERSION=2.3.0
 TEST=tests/
 SRC?=$(shell dirname `pwd`)
 
