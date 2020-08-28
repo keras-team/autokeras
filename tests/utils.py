@@ -43,7 +43,6 @@ COLUMN_TYPES = {
     "embark_town": "categorical",
     "alone": "categorical",
 }
-
 TRAIN_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
 TEST_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
 
