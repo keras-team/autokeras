@@ -160,7 +160,7 @@ def test_text_vectorization_with_tokenizer(tmp_path):
         tokenizer=tokenizer, max_seq_len=8
     )
     output = token_layer(x_train)
-    print(output.shape)
+    # print(output.shape)
     assert output.dtype == np.dtype("int32")
 
 
