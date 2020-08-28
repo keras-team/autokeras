@@ -57,7 +57,7 @@ from autokeras.tuners import RandomSearch
 from autokeras.utils.utils import check_kt_version
 from autokeras.utils.utils import check_tf_version
 
-__version__ = "1.0.8"
+__version__ = "1.0.9"
 
 check_tf_version()
 check_kt_version()
