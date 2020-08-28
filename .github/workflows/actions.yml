@@ -1,6 +1,10 @@
 name: Tests
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  release:
+    types: [created]
 jobs:
   build:
     name: Run tests
@@ -35,7 +39,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }} #required
         file: ./coverage.xml #optional
-  formatting:
+  format:
     name: Check the code format
     runs-on: ubuntu-latest
     steps:
@@ -62,3 +66,25 @@ jobs:
           cd docs
           python autogen.py
           mkdocs build
+  deploy:
+    needs: [build, format, build-docs]
+    if: ${{ github.event_name == 'release' && github.event.action == 'created' }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools
+        pip install twine
+    - name: Build and publish
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        python setup.py sdist bdist_wheel
+        twine upload dist/*
+
