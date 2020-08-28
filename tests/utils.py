@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import inspect
+import os
 
 import numpy as np
 import tensorflow as tf
@@ -42,8 +43,15 @@ COLUMN_TYPES = {
     "embark_town": "categorical",
     "alone": "categorical",
 }
-TRAIN_CSV_PATH = r"tests/fixtures/titanic/train.csv"
-TEST_CSV_PATH = r"tests/fixtures/titanic/eval.csv"
+TRAIN_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
+TEST_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
+
+TRAIN_CSV_PATH = tf.keras.utils.get_file(
+    fname=os.path.basename(TRAIN_DATA_URL), origin=TRAIN_DATA_URL
+)
+TEST_CSV_PATH = tf.keras.utils.get_file(
+    fname=os.path.basename(TEST_DATA_URL), origin=TEST_DATA_URL
+)
 
 
 def generate_data(num_instances=100, shape=(32, 32, 3), dtype="np"):
