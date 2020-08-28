@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import inspect
 
 import numpy as np
@@ -46,8 +47,8 @@ COLUMN_TYPES = {
 TRAIN_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
 TEST_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
 
-TRAIN_CSV_PATH = tf.keras.utils.get_file("train.csv", TRAIN_DATA_URL)
-TEST_CSV_PATH = tf.keras.utils.get_file("test.csv", TEST_DATA_URL)
+TRAIN_CSV_PATH = tf.keras.utils.get_file(fname=os.path.basename(TRAIN_DATA_URL), origin=TRAIN_DATA_URL)
+TEST_CSV_PATH = tf.keras.utils.get_file(fname=os.path.basename(TEST_DATA_URL), origin=TEST_DATA_URL)
 
 
 def generate_data(num_instances=100, shape=(32, 32, 3), dtype="np"):
