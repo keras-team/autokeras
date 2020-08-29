@@ -26,7 +26,6 @@ from autokeras import blocks
 from autokeras import nodes as input_module
 from autokeras.engine import tuner
 from autokeras.tasks.structured_data_mixin import StructuredDataMixin
-from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
 from autokeras.utils import types
 
@@ -334,7 +333,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
         **kwargs
     ):
         if tuner is None:
-            tuner = greedy.Greedy
+            tuner = task_specific.StructuredDataRegressorTuner
         super().__init__(
             outputs=blocks.RegressionHead(
                 output_dim=output_dim, loss=loss, metrics=metrics
