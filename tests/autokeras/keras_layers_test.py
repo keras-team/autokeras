@@ -72,19 +72,21 @@ def test_call_multi_with_single_column_return_right_shape():
 def get_text_data():
     train = np.array(
         [
-            "This is a test example",
-            "This is another text example",
-            "Is this another example?",
-            "",
-            "Is this a long long long long long long example?"
-        ]
+            ["This is a test example"],
+            ["This is another text example"],
+            ["Is this another example?"],
+            [""],
+            ["Is this a long long long long long long example?"]
+        ],
+        dtype=np.str
     )
     test = np.array(
         [
-            "This is a test example",
-            "This is another text example",
-            "Is this another example?",
-        ]
+            ["This is a test example"],
+            ["This is another text example"],
+            ["Is this another example?"],
+        ],
+        dtype=np.str
     )
     y = np.random.rand(3, 1)
     return train, test, y
@@ -111,12 +113,18 @@ def test_text_vectorization_with_tokenizer(tmp_path):
         vocab_file=os.path.join(bert.GS_FOLDER_BERT, "vocab.txt"),
         do_lower_case=True
     )
+    max_seq_len = 8
     token_layer = layer_module.TextVectorizationWithTokenizer(
-        tokenizer=tokenizer, max_seq_len=8
+        tokenizer=tokenizer, max_seq_len=max_seq_len
     )
-    output = token_layer(x_train)
+    dataset = tf.data.Dataset.from_tensor_slices(x_train).batch(32)
+
+    for data in dataset.map(token_layer):
+        output = data
+    # output = token_layer(x_train)
     print(output.shape)
-    assert output.dtype == np.dtype("int32")
+    # # assert output.dtype == np.dtype("int32")
+    assert output.shape == (3, x_train.shape[0], max_seq_len)
 
 
 # def test_text_vectorization_with_tokenizer(tmp_path):

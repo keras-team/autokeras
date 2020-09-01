@@ -122,6 +122,7 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         :param s:
         :return:
         """
+        # print("sentence: ", s)
         tokens = list(self.tokenizer.tokenize(s))
         tokens.append("[SEP]")
         # print("LEN of TOKENS: ", len(tokens))
