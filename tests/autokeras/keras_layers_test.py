@@ -20,7 +20,7 @@ import tensorflow as tf
 from tensorflow.keras import losses
 
 from autokeras import keras_layers as layer_module
-from autokeras.applications import BERT
+from autokeras.applications import bert
 
 
 def test_multi_cat_encode_strings_correctly(tmp_path):
@@ -93,7 +93,7 @@ def get_text_data():
 class bert_layer(tf.keras.layers.Layer):
     def __init__(self,):
         super(bert_layer, self).__init__()
-        self.bert_encoder = BERT()
+        self.bert_encoder = bert.BERT()
 
     def call(self, inputs):
         bert_input = {
@@ -106,12 +106,10 @@ class bert_layer(tf.keras.layers.Layer):
 
 
 def test_text_vectorization_with_tokenizer(tmp_path):
-    x_train, x_test, y_train = get_data()
-    gs_folder_bert = (
-        "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
-    )
+    x_train, x_test, y_train = get_text_data()
     tokenizer = official.nlp.bert.tokenization.FullTokenizer(
-        vocab_file=os.path.join(gs_folder_bert, "vocab.txt"), do_lower_case=True
+        vocab_file=os.path.join(bert.GS_FOLDER_BERT, "vocab.txt"),
+        do_lower_case=True
     )
     token_layer = layer_module.TextVectorizationWithTokenizer(
         tokenizer=tokenizer, max_seq_len=8

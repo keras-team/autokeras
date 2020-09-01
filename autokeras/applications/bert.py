@@ -19,12 +19,12 @@ import official.nlp.bert.bert_models
 import official.nlp.bert.configs
 import tensorflow as tf
 
-gs_folder_bert = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
-hub_url_bert = "https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/2"
+GS_FOLDER_BERT = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
+HUB_URL_BERT = "https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/2"
 
 
 def BERT():
-    bert_config_file = os.path.join(gs_folder_bert, "bert_config.json")
+    bert_config_file = os.path.join(GS_FOLDER_BERT, "bert_config.json")
     config_dict = json.loads(tf.io.gfile.GFile(bert_config_file).read())
 
     bert_config = official.nlp.bert.configs.BertConfig.from_dict(config_dict)
@@ -36,7 +36,7 @@ def BERT():
     checkpoint = tf.train.Checkpoint(model=bert_encoder)
 
     checkpoint.restore(
-        os.path.join(gs_folder_bert, "bert_model.ckpt")
+        os.path.join(GS_FOLDER_BERT, "bert_model.ckpt")
     ).assert_consumed()
 
     return bert_encoder
