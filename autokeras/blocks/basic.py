@@ -21,7 +21,7 @@ from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
-from autokeras.applications import BERT
+from autokeras.applications import bert
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
 from autokeras.keras_layers import TextVectorizationWithTokenizer
@@ -758,13 +758,9 @@ class BERTBlock(block_module.Block):
         max_seq_len = self.max_seq_len or hp.Choice(
             "max_seq_len", [128, 256, 512], default=128
         )
-        # bert config file
-        gs_folder_bert = (
-            "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
-        )
         # TOKENIZER
         tokenizer = official.nlp.bert.tokenization.FullTokenizer(
-            vocab_file=os.path.join(gs_folder_bert, "vocab.txt"), do_lower_case=True
+            vocab_file=os.path.join(bert.GS_FOLDER_BERT, "vocab.txt"), do_lower_case=True
         )
 
         tokenizer_layer = TextVectorizationWithTokenizer(
@@ -781,7 +777,7 @@ class BERTBlock(block_module.Block):
             "input_type_ids": output_node[2],
         }
 
-        bert_encoder = BERT()
+        bert_encoder = bert.BERT()
 
         output_node = bert_encoder(bert_input, training=True,)
 
