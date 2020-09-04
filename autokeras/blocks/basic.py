@@ -760,7 +760,8 @@ class BERTBlock(block_module.Block):
         )
         # TOKENIZER
         tokenizer = official.nlp.bert.tokenization.FullTokenizer(
-            vocab_file=os.path.join(bert.GS_FOLDER_BERT, "vocab.txt"), do_lower_case=True
+            vocab_file=os.path.join(bert.GS_FOLDER_BERT, "vocab.txt"),
+            do_lower_case=True,
         )
 
         tokenizer_layer = TextVectorizationWithTokenizer(
@@ -779,6 +780,9 @@ class BERTBlock(block_module.Block):
 
         bert_encoder = bert.BERT()
 
-        output_node = bert_encoder(bert_input, training=True,)
+        output_node = bert_encoder(
+            bert_input,
+            training=True,
+        )
 
         return output_node[1]

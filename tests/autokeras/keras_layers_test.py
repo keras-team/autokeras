@@ -17,7 +17,6 @@ import os
 import numpy as np
 import official.nlp.bert.tokenization
 import tensorflow as tf
-from tensorflow.keras import losses
 
 from autokeras import keras_layers as layer_module
 from autokeras.applications import bert
@@ -76,9 +75,9 @@ def get_text_data():
             ["This is another text example"],
             ["Is this another example?"],
             [""],
-            ["Is this a long long long long long long example?"]
+            ["Is this a long long long long long long example?"],
         ],
-        dtype=np.str
+        dtype=np.str,
     )
     test = np.array(
         [
@@ -86,14 +85,16 @@ def get_text_data():
             ["This is another text example"],
             ["Is this another example?"],
         ],
-        dtype=np.str
+        dtype=np.str,
     )
     y = np.random.rand(3, 1)
     return train, test, y
 
 
 class bert_layer(tf.keras.layers.Layer):
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         super(bert_layer, self).__init__()
         self.bert_encoder = bert.BERT()
 
@@ -103,25 +104,27 @@ class bert_layer(tf.keras.layers.Layer):
             "input_mask": inputs[1],
             "input_type_ids": inputs[2],
         }
-        output = self.bert_encoder(bert_input, training=True,)
+        output = self.bert_encoder(
+            bert_input,
+            training=True,
+        )
         return output[1]
 
 
 def test_text_vectorization_with_tokenizer(tmp_path):
     x_train, x_test, y_train = get_text_data()
     tokenizer = official.nlp.bert.tokenization.FullTokenizer(
-        vocab_file=os.path.join(bert.GS_FOLDER_BERT, "vocab.txt"),
-        do_lower_case=True
+        vocab_file=os.path.join(bert.GS_FOLDER_BERT, "vocab.txt"), do_lower_case=True
     )
     max_seq_len = 8
     token_layer = layer_module.TextVectorizationWithTokenizer(
         tokenizer=tokenizer, max_seq_len=max_seq_len
     )
-    dataset = tf.data.Dataset.from_tensor_slices(x_train).batch(32)
+    # dataset = tf.data.Dataset.from_tensor_slices(x_train).batch(32)
 
-    for data in dataset.map(token_layer):
-        output = data
-    # output = token_layer(x_train)
+    # for data in dataset.map(token_layer):
+    #     output = data
+    output = token_layer(x_train)
     print(output.shape)
     # # assert output.dtype == np.dtype("int32")
     assert output.shape == (3, x_train.shape[0], max_seq_len)
@@ -144,7 +147,8 @@ def test_text_vectorization_with_tokenizer(tmp_path):
 #     output_node = tf.keras.layers.Dense(2)(bert_output)
 #     model = tf.keras.Model(input_node, output_node)
 #     model.compile(
-#         loss=losses.SparseCategoricalCrossentropy(from_logits=True), optimizer="adam"
+#         loss=losses.SparseCategoricalCrossentropy(from_logits=True),
+#         optimizer="adam"
 #     )
 #     tf.data.Dataset.zip(
 #         (
