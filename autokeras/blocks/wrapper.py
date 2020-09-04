@@ -167,11 +167,13 @@ class TextBlock(block_module.Block):
             ).build(hp, output_node)
             if block_type == TRANSFORMER:
                 output_node = basic.Transformer(
-                    max_features=max_tokens + 1, pretraining=self.pretraining,
+                    max_features=max_tokens + 1,
+                    pretraining=self.pretraining,
                 ).build(hp, output_node)
             else:
                 output_node = basic.Embedding(
-                    max_features=max_tokens + 1, pretraining=self.pretraining,
+                    max_features=max_tokens + 1,
+                    pretraining=self.pretraining,
                 ).build(hp, output_node)
                 output_node = basic.ConvBlock().build(hp, output_node)
         output_node = reduction.SpatialReduction().build(hp, output_node)
