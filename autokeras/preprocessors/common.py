@@ -12,16 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.engine import serializable
+import tensorflow as tf
+
+from autokeras.engine import preprocessor
 
 
-class Preprocessor(serializable.Serializable):
-    """A preprocessor for tf.data.Dataset."""
+class LambdaPreprocessor(preprocessor.Preprocessor):
+    """Build Preprocessor with a map function."""
 
-    def fit(self, dataset):
-        """Fit the preprocessor with the dataset."""
-        raise NotImplementedError
+    def __init__(self, func, **kwargs):
+        super().__init__(**kwargs)
+        self.func = func
 
     def transform(self, dataset):
-        """Transform the dataset wth the preprocessor."""
-        raise NotImplementedError
+        return dataset.map(self.func)
+
+
+class AddOneDimension(LambdaPreprocessor):
+    def __init__(self, **kwargs):
+        super().__init__(lambda x: tf.expand_dims(x, axis=-1), **kwargs)

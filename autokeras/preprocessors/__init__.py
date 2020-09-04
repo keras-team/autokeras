@@ -11,17 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import tensorflow as tf
 
-from autokeras.engine import serializable
+from autokeras.preprocessors.common import AddOneDimension
+from autokeras.preprocessors.common import LambdaPreprocessor
+from autokeras.preprocessors.encoders import LabelEncoder
+from autokeras.preprocessors.encoders import OneHotEncoder
 
 
-class Preprocessor(serializable.Serializable):
-    """A preprocessor for tf.data.Dataset."""
+def serialize(encoder):
+    return tf.keras.utils.serialize_keras_object(encoder)
 
-    def fit(self, dataset):
-        """Fit the preprocessor with the dataset."""
-        raise NotImplementedError
 
-    def transform(self, dataset):
-        """Transform the dataset wth the preprocessor."""
-        raise NotImplementedError
+def deserialize(config, custom_objects=None):
+    return tf.keras.utils.deserialize_keras_object(
+        config,
+        module_objects=globals(),
+        custom_objects=custom_objects,
+        printable_module_name="preprocessors",
+    )

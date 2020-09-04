@@ -90,6 +90,3 @@ class Head(block_module.Block, io_hypermodel.IOHyperModel):
 
     def build(self, hp, inputs=None):
         raise NotImplementedError
-
-    def config_from_adapter(self, adapter):
-        self.output_shape = adapter.shape

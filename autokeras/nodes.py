@@ -15,6 +15,9 @@
 import tensorflow as tf
 
 from autokeras import adapters
+from autokeras import analyzers
+from autokeras import hyper_preprocessors as hpps_module
+from autokeras import preprocessors
 from autokeras.engine import io_hypermodel
 from autokeras.engine import node as node_module
 
@@ -44,8 +47,14 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
     def get_adapter(self):
         return adapters.InputAdapter()
 
-    def config_from_adapter(self, adapter):
-        self.shape = adapter.shape
+    def get_analyzer(self):
+        return analyzers.InputAnalyzer()
+
+    def config_from_analyzer(self, analyzer):
+        pass
+
+    def get_hyper_preprocessors(self):
+        return []
 
 
 class ImageInput(Input):
@@ -56,8 +65,26 @@ class ImageInput(Input):
     (samples, width, height, channels).
     """
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.has_channel_dim = False
+
     def get_adapter(self):
-        return adapters.ImageInputAdapter()
+        return adapters.ImageAdapter()
+
+    def get_analyzer(self):
+        return analyzers.ImageAnalyzer()
+
+    def config_from_analyzer(self, analyzer):
+        self.has_channel_dim = analyzer.has_channel_dim
+
+    def get_hyper_preprocessors(self):
+        hyper_preprocessors = []
+        if not self.has_channel_dim:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
+            )
+        return hyper_preprocessors
 
 
 class TextInput(Input):

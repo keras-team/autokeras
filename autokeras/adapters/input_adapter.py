@@ -39,7 +39,7 @@ class InputAdapter(adapter_module.Adapter):
             )
 
 
-class ImageInputAdapter(adapter_module.Adapter):
+class ImageAdapter(adapter_module.Adapter):
     def check(self, x):
         """Record any information needed by transform."""
         if not isinstance(x, (np.ndarray, tf.data.Dataset)):
@@ -47,25 +47,11 @@ class ImageInputAdapter(adapter_module.Adapter):
                 "Expect the data to ImageInput to be numpy.ndarray or "
                 "tf.data.Dataset, but got {type}.".format(type=type(x))
             )
-        if isinstance(x, np.ndarray) and x.ndim not in [3, 4]:
-            raise ValueError(
-                "Expect the data to ImageInput to have 3 or 4 "
-                "dimensions, but got input shape {shape} with {ndim} "
-                "dimensions".format(shape=x.shape, ndim=x.ndim)
-            )
         if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.number):
             raise TypeError(
                 "Expect the data to ImageInput to be numerical, but got "
                 "{type}.".format(type=x.dtype)
             )
-
-    def convert_to_dataset(self, x):
-        if isinstance(x, np.ndarray):
-            # TODO: expand the dims after converting to Dataset.
-            if x.ndim == 3:
-                x = np.expand_dims(x, axis=3)
-            x = x.astype(np.float32)
-        return super().convert_to_dataset(x)
 
 
 class TextInputAdapter(adapter_module.Adapter):

@@ -21,6 +21,9 @@ from tensorflow.keras import losses
 from tensorflow.python.util import nest
 
 from autokeras import adapters
+from autokeras import analyzers
+from autokeras import hyper_preprocessors as hpps_module
+from autokeras import preprocessors
 from autokeras.blocks import reduction
 from autokeras.engine import head as head_module
 from autokeras.utils import types
@@ -69,6 +72,9 @@ class ClassificationHead(head_module.Head):
         if loss is None:
             loss = self.infer_loss()
         super().__init__(loss=loss, metrics=metrics, **kwargs)
+        # Infered from analyzer.
+        self._encoded = None
+        self._add_one_dimension = False
 
     def infer_loss(self):
         if not self.num_classes:
@@ -115,14 +121,39 @@ class ClassificationHead(head_module.Head):
         return output_node
 
     def get_adapter(self):
-        return adapters.ClassificationHeadAdapter(
+        return adapters.ClassificationAdapter(name=self.name)
+
+    def get_analyzer(self):
+        return analyzers.ClassificationAnalyzer(
             name=self.name, multi_label=self.multi_label
         )
 
-    def config_from_adapter(self, adapter):
-        super().config_from_adapter(adapter)
-        self.num_classes = adapter.num_classes
+    def config_from_analyzer(self, analyzer):
+        self.num_classes = analyzer.num_classes
         self.loss = self.infer_loss()
+        self._encoded = analyzer.encoded
+        self._add_one_dimension = len(analyzer.shape) == 1
+
+    def get_hyper_preprocessors(self):
+        hyper_preprocessors = []
+        if self._add_one_dimension:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
+            )
+        if not self._encoded:
+            if self.num_classes == 2 and not self.multi_label:
+                hyper_preprocessors.append(
+                    hpps_module.DefaultHyperPreprocessor(
+                        preprocessors.LabelEncoder(self.labels)
+                    )
+                )
+            else:
+                hyper_preprocessors.append(
+                    hpps_module.DefaultHyperPreprocessor(
+                        preprocessors.OneHotEncoder(self.labels)
+                    )
+                )
+        return hyper_preprocessors
 
 
 class RegressionHead(head_module.Head):
@@ -177,8 +208,19 @@ class RegressionHead(head_module.Head):
         )
         return output_node
 
+    def config_from_analyzer(self, analyzer):
+        pass
+
     def get_adapter(self):
-        return adapters.RegressionHeadAdapter(name=self.name)
+        return adapters.RegressionAdapter(name=self.name)
+
+    def get_analyzer(self):
+        return analyzers.RegressionAnalyzer(
+            name=self.name, output_dim=self.output_dim
+        )
+
+    def get_hyper_preprocessors(self):
+        return []
 
 
 class SegmentationHead(ClassificationHead):

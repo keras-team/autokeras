@@ -21,6 +21,9 @@ class IOHyperModel(object):
     input nodes and heads.
     """
 
+    def get_analyzer(self):
+        raise NotImplementedError
+
     def get_adapter(self):
         """Get the corresponding adapter.
 
@@ -29,10 +32,13 @@ class IOHyperModel(object):
         """
         raise NotImplementedError
 
-    def config_from_adapter(self, adapter):
+    def config_from_analyzer(self, analyzer):
         """Load the learned information on dataset from the adapter.
 
         # Arguments
             adapter: An instance of a subclass of autokeras.engine.Adapter.
         """
+        raise NotImplementedError
+
+    def get_hyper_preprocessors(self):
         raise NotImplementedError

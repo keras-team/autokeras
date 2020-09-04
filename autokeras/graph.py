@@ -314,3 +314,9 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
 
     def save(self, filepath):
         utils.save_json(filepath, self.get_config())
+
+    def set_io_shapes(self, shapes):
+        for node, shape in zip(self.inputs, nest.flatten(shapes[0])):
+            node.shape = tuple(shape[1:])
+        for node, shape in zip(self.outputs, nest.flatten(shapes[1])):
+            node.in_blocks[0].output_shape = tuple(shape[1:])

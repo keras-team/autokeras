@@ -12,16 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.engine import serializable
-
-
-class Preprocessor(serializable.Serializable):
-    """A preprocessor for tf.data.Dataset."""
-
-    def fit(self, dataset):
-        """Fit the preprocessor with the dataset."""
-        raise NotImplementedError
-
-    def transform(self, dataset):
-        """Transform the dataset wth the preprocessor."""
-        raise NotImplementedError
+from autokeras.analyzers.input import ImageAnalyzer
+from autokeras.analyzers.input import InputAnalyzer
+from autokeras.analyzers.output import ClassificationAnalyzer
+from autokeras.analyzers.output import RegressionAnalyzer

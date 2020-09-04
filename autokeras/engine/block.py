@@ -12,33 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kerastuner
-import tensorflow as tf
 from tensorflow.python.util import nest
 
+from autokeras.engine import named_hypermodel
 from autokeras.engine import node as node_module
-from autokeras.engine import serializable
-from autokeras.utils import utils
 
 
-class Block(kerastuner.HyperModel, serializable.Serializable):
+class Block(named_hypermodel.NamedHyperModel):
     """The base class for different Block.
 
     The Block can be connected together to build the search space
     for an AutoModel. Notably, many args in the __init__ function are defaults to
     be a tunable variable when not specified by the user.
 
-    # Arguments
-        name: String. The name of the block. If unspecified, it will be set
-            automatically with the class name.
     """
 
-    def __init__(self, name: str = None, **kwargs):
-        if not name:
-            prefix = self.__class__.__name__
-            name = prefix + "_" + str(tf.keras.backend.get_uid(prefix))
-            name = utils.to_snake_case(name)
-        super().__init__(name=name, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.inputs = None
         self.outputs = None
         self._num_output_node = 1
@@ -83,11 +73,3 @@ class Block(kerastuner.HyperModel, serializable.Serializable):
             inputs: A list of input node(s).
         """
         raise NotImplementedError
-
-    def get_config(self):
-        """Get the configuration of the preprocessor.
-
-        # Returns
-            A dictionary of configurations of the preprocessor.
-        """
-        return {"name": self.name, "tunable": self.tunable}

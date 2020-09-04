@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.engine import serializable
 
+class Analyzer(object):
+    """Analyze the dataset. set the result back to the io hypermodels."""
 
-class Preprocessor(serializable.Serializable):
-    """A preprocessor for tf.data.Dataset."""
+    def __init__(self, **kwargs):
+        pass
 
-    def fit(self, dataset):
-        """Fit the preprocessor with the dataset."""
-        raise NotImplementedError
+    def update(self, dataset):
+        pass
 
-    def transform(self, dataset):
-        """Transform the dataset wth the preprocessor."""
-        raise NotImplementedError
+    def finalize(self):
+        pass

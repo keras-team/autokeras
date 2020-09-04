@@ -12,16 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.engine import serializable
+from autokeras.engine import named_hypermodel
 
 
-class Preprocessor(serializable.Serializable):
-    """A preprocessor for tf.data.Dataset."""
+class HyperPreprocessor(named_hypermodel.NamedHyperModel):
+    """Input data preprocessor search space.
 
-    def fit(self, dataset):
-        """Fit the preprocessor with the dataset."""
-        raise NotImplementedError
+    This class defines the search space for input data preprocessor. A
+    preprocessor transforms the dataset using `tf.data` operations.
+    """
 
-    def transform(self, dataset):
-        """Transform the dataset wth the preprocessor."""
+    def build(self, hp, dataset):
+        """Build the `tf.data` input preprocessor.
+
+        # Arguments
+            hp: `HyperParameters` instance. The hyperparameters for building the
+                model.
+            dataset: tf.data.Dataset.
+
+        # Returns
+            an instance of Preprocessor.
+        """
         raise NotImplementedError
