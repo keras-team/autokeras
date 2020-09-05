@@ -143,7 +143,8 @@ class Pipeline(pps_module.Preprocessor):
         outputs = []
         for data, preprocessors in zip(nest.flatten(y), self.outputs):
             for preprocessor in preprocessors[::-1]:
-                data = preprocessor.postprocess(data)
+                if isinstance(preprocessor, pps_module.TargetPreprocessor):
+                    data = preprocessor.postprocess(data)
             outputs.append(data)
         if len(outputs) == 0:
             return outputs[0]

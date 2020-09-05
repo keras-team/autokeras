@@ -18,7 +18,7 @@ import tensorflow as tf
 from autokeras.engine import preprocessor
 
 
-class Encoder(preprocessor.Preprocessor):
+class Encoder(preprocessor.TargetPreprocessor):
     """OneHotEncoder to encode and decode the labels.
 
     This class provides ways to transform data's classification label into vector.
@@ -38,7 +38,7 @@ class Encoder(preprocessor.Preprocessor):
 
 
 class OneHotEncoder(Encoder):
-    def transfom(self, dataset):
+    def transform(self, dataset):
         keys_tensor = tf.constant(self.labels)
         vals_tensor = tf.eye(len(self.labels))
         table = tf.lookup.StaticHashTable(
@@ -46,7 +46,7 @@ class OneHotEncoder(Encoder):
         )
         return dataset.map(table)
 
-    def decode(self, data):
+    def postprocess(self, data):
         """Get label for every element in data.
 
         # Arguments
@@ -66,7 +66,7 @@ class OneHotEncoder(Encoder):
 
 
 class LabelEncoder(Encoder):
-    def transfom(self, dataset):
+    def transform(self, dataset):
         keys_tensor = tf.constant(self.labels)
         vals_tensor = tf.constant(list(range(len(self.labels))))
         table = tf.lookup.StaticHashTable(
@@ -74,7 +74,7 @@ class LabelEncoder(Encoder):
         )
         return dataset.map(table)
 
-    def decode(self, data):
+    def postprocess(self, data):
         """Get label for every element in data.
 
         # Arguments
@@ -86,3 +86,13 @@ class LabelEncoder(Encoder):
         return np.array(
             list(map(lambda x: self.labels[int(round(x[0]))], np.array(data)))
         ).reshape(-1, 1)
+
+
+class MultiLabelEncoder(Encoder):
+    def transform(self, dataset):
+        return dataset
+
+    def postprocess(self, data):
+        data[data < 0.5] = 0
+        data[data > 0.5] = 1
+        return data

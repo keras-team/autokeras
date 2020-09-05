@@ -108,13 +108,6 @@ class ClassificationAnalyzer(TargetAnalyzer):
             return False
         return sorted(self.labels) == [0, 1]
 
-    def postprocess(self, y):
-        if self.multi_label:
-            y[y < 0.5] = 0
-            y[y > 0.5] = 1
-        if self.label_encoder:
-            y = self.label_encoder.decode(y)
-        return y
 
 
 class RegressionAnalyzer(TargetAnalyzer):

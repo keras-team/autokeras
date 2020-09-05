@@ -140,6 +140,10 @@ class ClassificationHead(head_module.Head):
             hyper_preprocessors.append(
                 hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
             )
+        if self.multi_label:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(preprocessors.MultiLabelEncoder())
+            )
         if not self._encoded:
             if self.num_classes == 2 and not self.multi_label:
                 hyper_preprocessors.append(
