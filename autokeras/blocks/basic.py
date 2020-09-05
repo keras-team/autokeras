@@ -196,7 +196,7 @@ class ConvBlock(block_module.Block):
     """Block for vanilla ConvNets.
 
     # Arguments
-        kernel_size: Int. If left unspecified, it will be tuned automatically.
+        kernel_size: List. If left unspecified, it will be tuned automatically.
         num_blocks: Int. The number of conv blocks, each of which may contain
             convolutional, max pooling, dropout, and activation. If left unspecified,
             it will be tuned automatically.
@@ -213,7 +213,7 @@ class ConvBlock(block_module.Block):
 
     def __init__(
         self,
-        kernel_size: Optional[int] = None,
+        kernel_size: Optional[list] = None,
         num_blocks: Optional[int] = None,
         num_layers: Optional[int] = None,
         max_pooling: Optional[bool] = None,
@@ -249,9 +249,13 @@ class ConvBlock(block_module.Block):
         input_node = inputs[0]
         output_node = input_node
 
-        kernel_size = self.kernel_size or hp.Choice(
-            "kernel_size", [3, 5, 7], default=3
-        )
+        if self.kernel_size is not None:
+            kernel_size = hp.Choice("kernel_size",
+                                    self.kernel_size,
+                                    default=self.kernel_size[0])
+        else:
+            kernel_size = hp.Choice("kernel_size", [3, 5, 7], default=3)
+
         num_blocks = self.num_blocks or hp.Choice("num_blocks", [1, 2, 3], default=2)
         num_layers = self.num_layers or hp.Choice("num_layers", [1, 2], default=2)
         separable = self.separable
