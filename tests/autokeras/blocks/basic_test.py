@@ -204,6 +204,18 @@ def test_conv_build_with_dropout_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_conv_build_with_kernel_size_return_tensor():
+    block = blocks.ConvBlock(kernel_size=[3, 5, 7])
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
 def test_conv_deserialize_to_conv():
     serialized_block = blocks.serialize(blocks.ConvBlock())
 
@@ -273,6 +285,17 @@ def test_dense_build_return_tensor():
 
 def test_dense_build_with_dropout_return_tensor():
     block = blocks.DenseBlock(dropout=0.5)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(32,), dtype=tf.float32)
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_dense_build_with_units_return_tensor():
+    block = blocks.DenseBlock(num_units=[16, 32, 64, 128, 256, 512])
 
     outputs = block.build(
         kerastuner.HyperParameters(), tf.keras.Input(shape=(32,), dtype=tf.float32)

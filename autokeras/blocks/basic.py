@@ -96,13 +96,17 @@ class DenseBlock(block_module.Block):
 
         for i in range(num_layers):
             if self.num_units is not None:
-                units = hp.Choice("units_{i}".format(i=i),
-                                  self.num_units,
-                                  default=self.num_units[0])
+                units = hp.Choice(
+                    "units_{i}".format(i=i),
+                    self.num_units,
+                    default=self.num_units[0],
+                )
             else:
-                units = hp.Choice("units_{i}".format(i=i),
-                                  [16, 32, 64, 128, 256, 512, 1024],
-                                  default=32)
+                units = hp.Choice(
+                    "units_{i}".format(i=i),
+                    [16, 32, 64, 128, 256, 512, 1024],
+                    default=32,
+                )
 
             output_node = layers.Dense(units)(output_node)
             if use_batchnorm:
@@ -202,6 +206,7 @@ class ConvBlock(block_module.Block):
             it will be tuned automatically.
         num_layers: Int. The number of convolutional layers in each block. If left
             unspecified, it will be tuned automatically.
+        filter_size: List. If left unspecified, it will be tuned automatically.
         max_pooling: Boolean. Whether to use max pooling layer in each block. If left
             unspecified, it will be tuned automatically.
         separable: Boolean. Whether to use separable conv layers.
@@ -216,6 +221,7 @@ class ConvBlock(block_module.Block):
         kernel_size: Optional[list] = None,
         num_blocks: Optional[int] = None,
         num_layers: Optional[int] = None,
+        filter_size: Optional[list] = None,
         max_pooling: Optional[bool] = None,
         separable: Optional[bool] = None,
         dropout: Optional[float] = None,
@@ -225,6 +231,7 @@ class ConvBlock(block_module.Block):
         self.kernel_size = kernel_size
         self.num_blocks = num_blocks
         self.num_layers = num_layers
+        self.filter_size = filter_size
         self.max_pooling = max_pooling
         self.separable = separable
         self.dropout = dropout
@@ -236,6 +243,7 @@ class ConvBlock(block_module.Block):
                 "kernel_size": self.kernel_size,
                 "num_blocks": self.num_blocks,
                 "num_layers": self.num_layers,
+                "filter_size": self.filter_size,
                 "max_pooling": self.max_pooling,
                 "separable": self.separable,
                 "dropout": self.dropout,
@@ -250,9 +258,9 @@ class ConvBlock(block_module.Block):
         output_node = input_node
 
         if self.kernel_size is not None:
-            kernel_size = hp.Choice("kernel_size",
-                                    self.kernel_size,
-                                    default=self.kernel_size[0])
+            kernel_size = hp.Choice(
+                "kernel_size", self.kernel_size, default=self.kernel_size[0]
+            )
         else:
             kernel_size = hp.Choice("kernel_size", [3, 5, 7], default=3)
 
@@ -279,11 +287,12 @@ class ConvBlock(block_module.Block):
 
         for i in range(num_blocks):
             for j in range(num_layers):
+                filter_size = self.filter_size or [16, 32, 64, 128, 256, 512]
                 output_node = conv(
                     hp.Choice(
                         "filters_{i}_{j}".format(i=i, j=j),
-                        [16, 32, 64, 128, 256, 512],
-                        default=32,
+                        filter_size,
+                        default=filter_size[0],
                     ),
                     kernel_size,
                     padding=self._get_padding(kernel_size, output_node),
