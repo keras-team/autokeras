@@ -77,14 +77,10 @@ class DenseBlock(block_module.Block):
     ):
         super().__init__(**kwargs)
         self.num_layers = num_layers
-        if num_units is None:
-            num_units = hyperparameters.Choice(
-                [16, 32, 64, 128, 256, 512, 1024],
-                default=32,
-            )
-        elif isinstance(num_units, int):
-            num_units = hyperparameters.Fixed(num_units)
-        self.num_units = num_units
+        self.num_units = utils.get_hyperparameter(
+            hyperparameters.Choice([16, 32, 64, 128, 256, 512, 1024], default=32),
+            int,
+        )
         self.use_batchnorm = use_batchnorm
         self.dropout = dropout
 
@@ -210,7 +206,8 @@ class ConvBlock(block_module.Block):
     """Block for vanilla ConvNets.
 
     # Arguments
-        kernel_size: Int. If left unspecified, it will be tuned automatically.
+        kernel_size: Int or ak.Choice. The size of the kernel.
+            If left unspecified, it will be tuned automatically.
         num_blocks: Int. The number of conv blocks, each of which may contain
             convolutional, max pooling, dropout, and activation. If left unspecified,
             it will be tuned automatically.
@@ -227,7 +224,7 @@ class ConvBlock(block_module.Block):
 
     def __init__(
         self,
-        kernel_size: Optional[int] = None,
+        kernel_size: Optional[Union[int, hyperparameters.Choice]] = None,
         num_blocks: Optional[int] = None,
         num_layers: Optional[int] = None,
         max_pooling: Optional[bool] = None,
@@ -236,7 +233,9 @@ class ConvBlock(block_module.Block):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.kernel_size = kernel_size
+        self.kernel_size = utils.get_hyperparameter(
+            hyperparameters.Choice([3, 5, 7], default=3), int
+        )
         self.num_blocks = num_blocks
         self.num_layers = num_layers
         self.max_pooling = max_pooling
@@ -263,9 +262,7 @@ class ConvBlock(block_module.Block):
         input_node = inputs[0]
         output_node = input_node
 
-        kernel_size = self.kernel_size or hp.Choice(
-            "kernel_size", [3, 5, 7], default=3
-        )
+        kernel_size = self.kernel_size.add_to_hp(hp, "kernel_size")
         num_blocks = self.num_blocks or hp.Choice("num_blocks", [1, 2, 3], default=2)
         num_layers = self.num_layers or hp.Choice("num_layers", [1, 2], default=2)
         separable = self.separable

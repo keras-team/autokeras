@@ -24,4 +24,4 @@ class HyperParameter(kerastuner.engine.hyperparameters.HyperParameter):
         kwargs["name"] = name
         class_name = self.__class__.__name__
         func = getattr(hp, class_name)
-        func(**kwargs)
+        return func(**kwargs)
