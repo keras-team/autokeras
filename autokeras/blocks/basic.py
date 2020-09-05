@@ -13,12 +13,14 @@
 # limitations under the License.
 
 from typing import Optional
+from typing import Union
 
 import tensorflow as tf
 from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
+from autokeras import hyperparameters
 from autokeras import keras_layers
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
@@ -57,6 +59,8 @@ class DenseBlock(block_module.Block):
     # Arguments
         num_layers: Int. The number of Dense layers in the block.
             If left unspecified, it will be tuned automatically.
+        num_units: Int or ak.Choice. The number of units in each dense layer.
+            If left unspecified, it will be tuned automatically.
         use_bn: Boolean. Whether to use BatchNormalization layers.
             If left unspecified, it will be tuned automatically.
         dropout: Float. The dropout rate for the layers.
@@ -66,12 +70,21 @@ class DenseBlock(block_module.Block):
     def __init__(
         self,
         num_layers: Optional[int] = None,
+        num_units: Optional[Union[int, hyperparameters.Choice]] = None,
         use_batchnorm: Optional[bool] = None,
         dropout: Optional[float] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.num_layers = num_layers
+        if num_units is None:
+            num_units = hyperparameters.Choice(
+                [16, 32, 64, 128, 256, 512, 1024],
+                default=32,
+            )
+        elif isinstance(num_units, int):
+            num_units = hyperparameters.Fixed(num_units)
+        self.num_units = num_units
         self.use_batchnorm = use_batchnorm
         self.dropout = dropout
 
@@ -80,6 +93,7 @@ class DenseBlock(block_module.Block):
         config.update(
             {
                 "num_layers": self.num_layers,
+                "num_units": self.num_units,
                 "use_batchnorm": self.use_batchnorm,
                 "dropout": self.dropout,
             }
@@ -103,11 +117,7 @@ class DenseBlock(block_module.Block):
             dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
 
         for i in range(num_layers):
-            units = hp.Choice(
-                "units_{i}".format(i=i),
-                [16, 32, 64, 128, 256, 512, 1024],
-                default=32,
-            )
+            units = self.num_units.add_to_hp(hp, "units_{i}".format(i=i))
             output_node = layers.Dense(units)(output_node)
             if use_batchnorm:
                 output_node = layers.BatchNormalization()(output_node)
