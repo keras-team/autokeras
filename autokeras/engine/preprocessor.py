@@ -26,7 +26,7 @@ class Preprocessor(serializable.Serializable):
         """Transform the dataset wth the preprocessor."""
         raise NotImplementedError
 
-class TargetPreprocessor(Preprocessor):
 
+class TargetPreprocessor(Preprocessor):
     def postprocess(self, dataset):
         raise NotImplementedError

@@ -137,14 +137,15 @@ class StructuredDataInput(Input):
         return config
 
     def get_adapter(self):
-        return adapters.StructuredDataInputAdapter(
-            self.column_names, self.column_types
-        )
+        return adapters.StructuredDataInputAdapter()
 
-    def config_from_adapter(self, adapter):
-        super().config_from_adapter(adapter)
-        self.column_names = adapter.column_names
-        self.column_types = adapter.column_types
+    def config_from_analyser(self, analyser):
+        super().config_from_analyser(analyser)
+        # Analyser keeps the specified ones and infer the missing ones.
+        self.column_types = analyser.column_types
+
+    def get_hyper_preprocessors(self):
+        return []
 
 
 class TimeseriesInput(Input):

@@ -253,12 +253,26 @@ class AutoModel(object):
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         self.batch_size = batch_size
-        dataset, validation_data = self._prepare_data(
-            x=x,
-            y=y,
-            validation_data=validation_data,
-            validation_split=validation_split,
+
+        # Check validation information.
+        if not validation_data and not validation_split:
+            raise ValueError(
+                "Either validation_data or a non-zero validation_split "
+                "should be provided."
+            )
+
+        dataset, validation_data = self._convert_to_dataset(
+            x=x, y=y, validation_data=validation_data
         )
+        self._analyze_data(dataset)
+        self._build_hyper_pipeline(dataset)
+
+        # Split the data with validation_split.
+        if validation_data is None and validation_split:
+            self._split_dataset = True
+            dataset, validation_data = data_utils.split_dataset(
+                dataset, validation_split
+            )
 
         self.tuner.search(
             x=dataset,
@@ -326,7 +340,7 @@ class AutoModel(object):
                 )
             )
 
-    def _build_hyper_pipeline(self, dataset):
+    def _analyze_data(self, dataset):
         input_analysers = [node.get_analyser() for node in self.inputs]
         output_analysers = [head.get_analyser() for head in self._heads]
         analysers = input_analysers + output_analysers
@@ -342,19 +356,14 @@ class AutoModel(object):
         for hm, analyser in zip(self.inputs + self._heads, analysers):
             hm.config_from_analyser(analyser)
 
+    def _build_hyper_pipeline(self, dataset):
         self.tuner.hyper_pipeline = pipeline.HyperPipeline(
             inputs=[node.get_hyper_preprocessors() for node in self.inputs],
             outputs=[head.get_hyper_preprocessors() for head in self._heads],
         )
 
-    def _prepare_data(self, x, y, validation_data, validation_split):
+    def _convert_to_dataset(self, x, y, validation_data):
         """Convert the data to tf.data.Dataset."""
-        # Check validation information.
-        if not validation_data and not validation_split:
-            raise ValueError(
-                "Either validation_data or a non-zero validation_split "
-                "should be provided."
-            )
         # TODO: Handle other types of input, zip dataset, tensor, dict.
 
         # Convert training data.
@@ -366,8 +375,6 @@ class AutoModel(object):
             y = self._adapt(y, self._heads)
             dataset = tf.data.Dataset.zip((x, y))
 
-        self._build_hyper_pipeline(dataset)
-
         # Convert validation data
         if validation_data:
             self._split_dataset = False
@@ -378,12 +385,6 @@ class AutoModel(object):
                 y = self._adapt(y, self._heads)
                 validation_data = tf.data.Dataset.zip((x, y))
 
-        # Split the data with validation_split.
-        if validation_data is None and validation_split:
-            self._split_dataset = True
-            dataset, validation_data = data_utils.split_dataset(
-                dataset, validation_split
-            )
         return dataset, validation_data
 
     def _has_y(self, dataset):
@@ -427,14 +428,6 @@ class AutoModel(object):
         if isinstance(y, list) and len(y) == 1:
             y = y[0]
         return y
-
-    def _postprocess(self, y):
-        y = nest.flatten(y)
-        new_y = []
-        for temp_y, adapter in zip(y, self._output_adapters):
-            temp_y = adapter.postprocess(temp_y)
-            new_y.append(temp_y)
-        return new_y
 
     def evaluate(self, x, y=None, **kwargs):
         """Evaluate the best model for the given data.

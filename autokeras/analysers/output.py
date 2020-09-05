@@ -109,7 +109,6 @@ class ClassificationAnalyser(TargetAnalyser):
         return sorted(self.labels) == [0, 1]
 
 
-
 class RegressionAnalyser(TargetAnalyser):
     def __init__(self, output_dim=None, **kwargs):
         super().__init__(**kwargs)

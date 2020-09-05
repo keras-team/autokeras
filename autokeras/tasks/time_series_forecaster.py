@@ -21,16 +21,17 @@ from typing import Union
 
 import pandas as pd
 
-from autokeras import auto_model
 from autokeras import blocks
 from autokeras import nodes as input_module
 from autokeras.engine import tuner
-from autokeras.tasks.structured_data_mixin import StructuredDataMixin
+from autokeras.tasks import structured_data
 from autokeras.tuners import greedy
 from autokeras.utils import types
 
 
-class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel):
+class SupervisedTimeseriesDataPipeline(
+    structured_data.SupervisedStructuredDataPipeline
+):
     def __init__(
         self,
         outputs,
@@ -71,10 +72,13 @@ class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel
         if isinstance(x, str):
             self._target_col_name = y
             x, y = self._read_from_csv(x, y)
+
         if validation_data:
             x_val, y_val = validation_data
             if isinstance(x_val, str):
                 validation_data = self._read_from_csv(x_val, y_val)
+
+        self.check_in_fit(x)
 
         self.train_len = len(y)
 

@@ -15,13 +15,9 @@
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tensorflow.python.util import nest
 
 from autokeras.engine import adapter as adapter_module
 from autokeras.utils import data_utils
-
-CATEGORICAL = "categorical"
-NUMERICAL = "numerical"
 
 
 class InputAdapter(adapter_module.Adapter):
@@ -85,66 +81,12 @@ class TextInputAdapter(adapter_module.Adapter):
 
 
 class StructuredDataInputAdapter(adapter_module.Adapter):
-    def __init__(self, column_names=None, column_types=None, **kwargs):
-        super().__init__(**kwargs)
-        self.column_names = column_names
-        self.column_types = column_types
-        # Variables for inferring column types.
-        self.count_numerical = None
-        self.count_categorical = None
-        self.count_unique_numerical = []
-        self.num_col = None
-
-    def get_config(self):
-        config = super().get_config()
-        config.update(
-            {
-                "column_names": self.column_names,
-                "column_types": self.column_types,
-                "count_numerical": self.count_numerical,
-                "count_categorical": self.count_categorical,
-                "count_unique_numerical": self.count_unique_numerical,
-                "num_col": self.num_col,
-            }
-        )
-        return config
-
-    @classmethod
-    def from_config(cls, config):
-        count_numerical = config.pop("count_numerical")
-        count_categorical = config.pop("count_categorical")
-        count_unique_numerical = config.pop("count_unique_numerical")
-        num_col = config.pop("num_col")
-        obj = super().from_config(config)
-        obj.count_numerical = count_numerical
-        obj.count_categorical = count_categorical
-        obj.count_unique_numerical = count_unique_numerical
-        obj.num_col = num_col
-        return obj
-
     def check(self, x):
         if not isinstance(x, (pd.DataFrame, np.ndarray, tf.data.Dataset)):
             raise TypeError(
                 "Unsupported type {type} for "
                 "{name}.".format(type=type(x), name=self.__class__.__name__)
             )
-
-        # Extract column_names from pd.DataFrame.
-        if isinstance(x, pd.DataFrame) and self.column_names is None:
-            self.column_names = list(x.columns)
-            # column_types is provided by user
-            if self.column_types:
-                for column_name in self.column_types:
-                    if column_name not in self.column_names:
-                        raise ValueError(
-                            "Column_names and column_types are "
-                            "mismatched. Cannot find column name "
-                            "{name} in the data.".format(name=column_name)
-                        )
-
-        if self.column_names is None:
-            if self.column_types:
-                raise ValueError("Column names must be specified.")
 
     def convert_to_dataset(self, x):
         if isinstance(x, pd.DataFrame):
@@ -153,68 +95,6 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
         if isinstance(x, np.ndarray):
             x = x.astype(np.unicode)
         return super().convert_to_dataset(x)
-
-    def fit(self, dataset):
-        super().fit(dataset)
-        for x in dataset:
-            self.update(x)
-        self.infer_column_types()
-
-    def update(self, x):
-        # Calculate the statistics.
-        x = nest.flatten(x)[0].numpy()
-        for instance in x:
-            self._update_instance(instance)
-
-    def _update_instance(self, x):
-        if self.num_col is None:
-            self.num_col = len(x)
-            self.count_numerical = np.zeros(self.num_col)
-            self.count_categorical = np.zeros(self.num_col)
-            for i in range(len(x)):
-                self.count_unique_numerical.append({})
-        for i in range(self.num_col):
-            x[i] = x[i].decode("utf-8")
-            try:
-                tmp_num = float(x[i])
-                self.count_numerical[i] += 1
-                if tmp_num not in self.count_unique_numerical[i]:
-                    self.count_unique_numerical[i][tmp_num] = 1
-                else:
-                    self.count_unique_numerical[i][tmp_num] += 1
-            except ValueError:
-                self.count_categorical[i] += 1
-
-    def infer_column_types(self):
-        column_types = {}
-
-        if self.column_names is None:
-            # Generate column names.
-            self.column_names = [index for index in range(self.num_col)]
-        # Check if column_names has the correct length.
-        elif len(self.column_names) != self.num_col:
-            raise ValueError(
-                "Expect column_names to have length {expect} "
-                "but got {actual}.".format(
-                    expect=self.num_col, actual=len(self.column_names)
-                )
-            )
-
-        for i in range(self.num_col):
-            if self.count_categorical[i] > 0:
-                column_types[self.column_names[i]] = CATEGORICAL
-            elif (
-                len(self.count_unique_numerical[i]) / self.count_numerical[i] < 0.05
-            ):
-                column_types[self.column_names[i]] = CATEGORICAL
-            else:
-                column_types[self.column_names[i]] = NUMERICAL
-        # Partial column_types is provided.
-        if self.column_types is None:
-            self.column_types = {}
-        for key, value in column_types.items():
-            if key not in self.column_types:
-                self.column_types[key] = value
 
 
 class TimeseriesInputAdapter(adapter_module.Adapter):
@@ -252,34 +132,6 @@ class TimeseriesInputAdapter(adapter_module.Adapter):
                 "Expect the data in TimeseriesInput to have 2 dimension"
                 ", but got input shape {shape} with {ndim} "
                 "dimensions".format(shape=x.shape, ndim=x.ndim)
-            )
-
-        # Extract column_names from pd.DataFrame.
-        if isinstance(x, pd.DataFrame) and self.column_names is None:
-            self.column_names = list(x.columns)
-            # column_types is provided by user
-            if self.column_types:
-                for column_name in self.column_types:
-                    if column_name not in self.column_names:
-                        raise ValueError(
-                            "Column_names and column_types are "
-                            "mismatched. Cannot find column name "
-                            "{name} in the data.".format(name=column_name)
-                        )
-
-        # Generate column_names.
-        if self.column_names is None:
-            if self.column_types:
-                raise ValueError("Column names must be specified.")
-            self.column_names = [index for index in range(x.shape[1])]
-
-        # Check if column_names has the correct length.
-        if len(self.column_names) != x.shape[1]:
-            raise ValueError(
-                "Expect column_names to have length {expect} "
-                "but got {actual}.".format(
-                    expect=x.shape[1], actual=len(self.column_names)
-                )
             )
 
     def convert_to_dataset(self, x):
