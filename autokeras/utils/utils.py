@@ -19,6 +19,8 @@ import tensorflow as tf
 from packaging.version import parse
 from tensorflow.python.util import nest
 
+from autokeras import hyperparameters
+
 
 def validate_num_inputs(inputs, num):
     inputs = nest.flatten(inputs)
@@ -109,3 +111,11 @@ def run_with_adaptive_batch_size(batch_size, func, **fit_kwargs):
             if validation_data is not None:
                 validation_data = validation_data.unbatch().batch(batch_size)
     return history
+
+
+def get_hyperparameter(hp, dtype):
+    if hp is None:
+        return hp
+    elif isinstance(hp, dtype):
+        return hyperparameters.Fixed(hp)
+    return hp
