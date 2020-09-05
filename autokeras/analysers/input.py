@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.engine import analyzer
+from autokeras.engine import analyser
 
 
-class InputAnalyzer(analyzer.Analyzer):
+class InputAnalyser(analyser.Analyser):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.shape = None
@@ -24,7 +24,7 @@ class InputAnalyzer(analyzer.Analyzer):
         self.shape = data.shape.as_list()
 
 
-class ImageAnalyzer(InputAnalyzer):
+class ImageAnalyser(InputAnalyser):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.has_channel_dim = False

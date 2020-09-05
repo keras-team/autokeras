@@ -21,7 +21,7 @@ class IOHyperModel(object):
     input nodes and heads.
     """
 
-    def get_analyzer(self):
+    def get_analyser(self):
         raise NotImplementedError
 
     def get_adapter(self):
@@ -32,7 +32,7 @@ class IOHyperModel(object):
         """
         raise NotImplementedError
 
-    def config_from_analyzer(self, analyzer):
+    def config_from_analyser(self, analyser):
         """Load the learned information on dataset from the adapter.
 
         # Arguments

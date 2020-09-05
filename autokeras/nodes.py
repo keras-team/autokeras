@@ -15,7 +15,7 @@
 import tensorflow as tf
 
 from autokeras import adapters
-from autokeras import analyzers
+from autokeras import analysers
 from autokeras import hyper_preprocessors as hpps_module
 from autokeras import preprocessors
 from autokeras.engine import io_hypermodel
@@ -47,10 +47,10 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
     def get_adapter(self):
         return adapters.InputAdapter()
 
-    def get_analyzer(self):
-        return analyzers.InputAnalyzer()
+    def get_analyser(self):
+        return analysers.InputAnalyser()
 
-    def config_from_analyzer(self, analyzer):
+    def config_from_analyser(self, analyser):
         pass
 
     def get_hyper_preprocessors(self):
@@ -72,11 +72,11 @@ class ImageInput(Input):
     def get_adapter(self):
         return adapters.ImageAdapter()
 
-    def get_analyzer(self):
-        return analyzers.ImageAnalyzer()
+    def get_analyser(self):
+        return analysers.ImageAnalyser()
 
-    def config_from_analyzer(self, analyzer):
-        self.has_channel_dim = analyzer.has_channel_dim
+    def config_from_analyser(self, analyser):
+        self.has_channel_dim = analyser.has_channel_dim
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []

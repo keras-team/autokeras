@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-class Analyzer(object):
+class Analyser(object):
     """Analyze the dataset. set the result back to the io hypermodels."""
 
     def __init__(self, **kwargs):

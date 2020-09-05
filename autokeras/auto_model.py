@@ -327,20 +327,20 @@ class AutoModel(object):
             )
 
     def _build_hyper_pipeline(self, dataset):
-        input_analyzers = [node.get_analyzer() for node in self.inputs]
-        output_analyzers = [head.get_analyzer() for head in self._heads]
-        analyzers = input_analyzers + output_analyzers
+        input_analysers = [node.get_analyser() for node in self.inputs]
+        output_analysers = [head.get_analyser() for head in self._heads]
+        analysers = input_analysers + output_analysers
         for x, y in dataset:
             x = nest.flatten(x)
             y = nest.flatten(y)
-            for item, analyzer in zip(x + y, analyzers):
-                analyzer.update(item)
+            for item, analyser in zip(x + y, analysers):
+                analyser.update(item)
 
-        for analyzer in analyzers:
-            analyzer.finalize()
+        for analyser in analysers:
+            analyser.finalize()
 
-        for hm, analyzer in zip(self.inputs + self._heads, analyzers):
-            hm.config_from_analyzer(analyzer)
+        for hm, analyser in zip(self.inputs + self._heads, analysers):
+            hm.config_from_analyser(analyser)
 
         self.tuner.hyper_pipeline = pipeline.HyperPipeline(
             inputs=[node.get_hyper_preprocessors() for node in self.inputs],

@@ -21,7 +21,7 @@ from tensorflow.keras import losses
 from tensorflow.python.util import nest
 
 from autokeras import adapters
-from autokeras import analyzers
+from autokeras import analysers
 from autokeras import hyper_preprocessors as hpps_module
 from autokeras import preprocessors
 from autokeras.blocks import reduction
@@ -72,7 +72,7 @@ class ClassificationHead(head_module.Head):
         if loss is None:
             loss = self.infer_loss()
         super().__init__(loss=loss, metrics=metrics, **kwargs)
-        # Infered from analyzer.
+        # Infered from analyser.
         self._encoded = None
         self._add_one_dimension = False
 
@@ -123,16 +123,16 @@ class ClassificationHead(head_module.Head):
     def get_adapter(self):
         return adapters.ClassificationAdapter(name=self.name)
 
-    def get_analyzer(self):
-        return analyzers.ClassificationAnalyzer(
+    def get_analyser(self):
+        return analysers.ClassificationAnalyser(
             name=self.name, multi_label=self.multi_label
         )
 
-    def config_from_analyzer(self, analyzer):
-        self.num_classes = analyzer.num_classes
+    def config_from_analyser(self, analyser):
+        self.num_classes = analyser.num_classes
         self.loss = self.infer_loss()
-        self._encoded = analyzer.encoded
-        self._add_one_dimension = len(analyzer.shape) == 1
+        self._encoded = analyser.encoded
+        self._add_one_dimension = len(analyser.shape) == 1
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []
@@ -212,14 +212,14 @@ class RegressionHead(head_module.Head):
         )
         return output_node
 
-    def config_from_analyzer(self, analyzer):
+    def config_from_analyser(self, analyser):
         pass
 
     def get_adapter(self):
         return adapters.RegressionAdapter(name=self.name)
 
-    def get_analyzer(self):
-        return analyzers.RegressionAnalyzer(
+    def get_analyser(self):
+        return analysers.RegressionAnalyser(
             name=self.name, output_dim=self.output_dim
         )
 

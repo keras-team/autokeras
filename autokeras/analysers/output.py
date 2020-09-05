@@ -13,10 +13,10 @@
 # limitations under the License.
 import numpy as np
 
-from autokeras.engine import analyzer
+from autokeras.engine import analyser
 
 
-class TargetAnalyzer(analyzer.Analyzer):
+class TargetAnalyser(analyser.Analyser):
     def __init__(self, name=None, **kwargs):
         super().__init__(**kwargs)
         self.name = name
@@ -26,7 +26,7 @@ class TargetAnalyzer(analyzer.Analyzer):
         self.shape = tuple(data.shape.as_list())
 
 
-class ClassificationAnalyzer(TargetAnalyzer):
+class ClassificationAnalyser(TargetAnalyser):
     def __init__(self, num_classes=None, multi_label=False, **kwargs):
         super().__init__(**kwargs)
         self.num_classes = num_classes
@@ -110,7 +110,7 @@ class ClassificationAnalyzer(TargetAnalyzer):
 
 
 
-class RegressionAnalyzer(TargetAnalyzer):
+class RegressionAnalyser(TargetAnalyser):
     def __init__(self, output_dim=None, **kwargs):
         super().__init__(**kwargs)
         self.output_dim = output_dim
