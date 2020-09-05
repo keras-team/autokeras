@@ -19,7 +19,7 @@ from typing import Union
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
-from autokeras import adapters
+from autokeras import analysers
 from autokeras import keras_layers
 from autokeras.engine import block as block_module
 
@@ -270,7 +270,7 @@ class CategoricalToNumerical(block_module.Block):
         encoding = []
         for column_name in self.column_names:
             column_type = self.column_types[column_name]
-            if column_type == adapters.CATEGORICAL:
+            if column_type == analysers.CATEGORICAL:
                 # TODO: Search to use one-hot or int.
                 encoding.append(keras_layers.INT)
             else:

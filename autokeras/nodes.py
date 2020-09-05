@@ -125,6 +125,7 @@ class StructuredDataInput(Input):
         super().__init__(**kwargs)
         self.column_names = column_names
         self.column_types = column_types
+        self.dtype = None
 
     def build(self):
         return tf.keras.Input(shape=self.shape, dtype=tf.string)
@@ -139,13 +140,23 @@ class StructuredDataInput(Input):
     def get_adapter(self):
         return adapters.StructuredDataInputAdapter()
 
+    def get_analyser(self):
+        return analysers.StructuredDataAnalyser(self.column_names, self.column_types)
+
     def config_from_analyser(self, analyser):
         super().config_from_analyser(analyser)
         # Analyser keeps the specified ones and infer the missing ones.
         self.column_types = analyser.column_types
+        self.dtype = analyser.dtype
+
 
     def get_hyper_preprocessors(self):
-        return []
+        hyper_preprocessors = []
+        if self.dtype != tf.string:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(preprocessors.CastToString())
+            )
+        return hyper_preprocessors
 
 
 class TimeseriesInput(Input):

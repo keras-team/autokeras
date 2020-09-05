@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
+import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras.engine import analyser
@@ -54,11 +55,15 @@ class StructuredDataAnalyser(InputAnalyser):
         self.count_categorical = None
         self.count_unique_numerical = []
         self.num_col = None
+        self.dtype = None
 
     def update(self, data):
         super().update(data)
+        self.dtype = data.dtype
+        if data.dtype != tf.string:
+            data = tf.strings.as_string(data)
+        data = data.numpy()
         # Calculate the statistics.
-        data = nest.flatten(data)[0].numpy()
         for instance in data:
             self._update_instance(instance)
 

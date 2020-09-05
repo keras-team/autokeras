@@ -20,6 +20,7 @@ from typing import Type
 from typing import Union
 
 import pandas as pd
+from tensorflow.python.util import nest
 
 from autokeras import auto_model
 from autokeras import blocks
@@ -52,36 +53,38 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                         'Column_types should be either "categorical" '
                         'or "numerical", but got {name}'.format(name=column_type)
                     )
-        if column_names and column_types:
-            for column_name in column_types:
-                if column_name not in column_names:
-                    raise ValueError(
-                        "Column_names and column_types are "
-                        "mismatched. Cannot find column name "
-                        "{name} in the data.".format(name=column_name)
-                    )
 
     def check_in_fit(self, x):
+        input_node = nest.flatten(self.inputs)[0]
         # Extract column_names from pd.DataFrame.
-        if isinstance(x, pd.DataFrame) and self.column_names is None:
-            self.column_names = list(x.columns)
+        if isinstance(x, pd.DataFrame) and input_node.column_names is None:
+            input_node.column_names = list(x.columns)
             # column_types is provided by user
-            if self.column_types:
-                for column_name in self.column_types:
-                    if column_name not in self.column_names:
+            if input_node.column_types:
+                for column_name in input_node.column_types:
+                    if column_name not in input_node.column_names:
                         raise ValueError(
                             "Column_names and column_types are "
                             "mismatched. Cannot find column name "
                             "{name} in the data.".format(name=column_name)
                         )
 
-        if self.column_names is None:
-            if self.column_types:
+        if input_node.column_names and input_node.column_types:
+            for column_name in input_node.column_types:
+                if column_name not in input_node.column_names:
+                    raise ValueError(
+                        "Column_names and column_types are "
+                        "mismatched. Cannot find column name "
+                        "{name} in the data.".format(name=column_name)
+                    )
+
+        if input_node.column_names is None:
+            if input_node.column_types:
                 raise ValueError(
                     "column_names must be specified, if "
                     "column_types is specified."
                 )
-            self.column_names = [index for index in range(x.shape[1])]
+            input_node.column_names = [index for index in range(x.shape[1])]
 
     def read_for_predict(self, x):
         if isinstance(x, str):

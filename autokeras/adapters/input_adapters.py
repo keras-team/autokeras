@@ -88,13 +88,12 @@ class StructuredDataInputAdapter(adapter_module.Adapter):
                 "{name}.".format(type=type(x), name=self.__class__.__name__)
             )
 
-    def convert_to_dataset(self, x):
-        if isinstance(x, pd.DataFrame):
-            # Convert x, y, validation_data to tf.Dataset.
-            x = x.values.astype(np.unicode)
-        if isinstance(x, np.ndarray):
-            x = x.astype(np.unicode)
-        return super().convert_to_dataset(x)
+    def convert_to_dataset(self, dataset, batch_size):
+        if isinstance(dataset, pd.DataFrame):
+            dataset = dataset.values
+        if isinstance(dataset, np.ndarray) and dataset.dtype == np.object:
+            dataset = dataset.astype(np.unicode)
+        return super().convert_to_dataset(dataset, batch_size)
 
 
 class TimeseriesInputAdapter(adapter_module.Adapter):

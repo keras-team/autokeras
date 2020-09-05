@@ -18,6 +18,7 @@ from autokeras.preprocessors.common import LambdaPreprocessor
 from autokeras.preprocessors.encoders import LabelEncoder
 from autokeras.preprocessors.encoders import MultiLabelEncoder
 from autokeras.preprocessors.encoders import OneHotEncoder
+from autokeras.preprocessors.common import CastToString
 
 
 def serialize(encoder):

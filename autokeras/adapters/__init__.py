@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.adapters.input_adapter import CATEGORICAL
-from autokeras.adapters.input_adapter import NUMERICAL
-from autokeras.adapters.input_adapter import ImageAdapter
-from autokeras.adapters.input_adapter import InputAdapter
-from autokeras.adapters.input_adapter import StructuredDataInputAdapter
-from autokeras.adapters.input_adapter import TextInputAdapter
-from autokeras.adapters.input_adapter import TimeseriesInputAdapter
-from autokeras.adapters.output_adapter import ClassificationAdapter
-from autokeras.adapters.output_adapter import RegressionAdapter
-from autokeras.adapters.output_adapter import SegmentationHeadAdapter
+from autokeras.adapters.input_adapters import ImageAdapter
+from autokeras.adapters.input_adapters import InputAdapter
+from autokeras.adapters.input_adapters import StructuredDataInputAdapter
+from autokeras.adapters.input_adapters import TextInputAdapter
+from autokeras.adapters.input_adapters import TimeseriesInputAdapter
+from autokeras.adapters.output_adapters import ClassificationAdapter
+from autokeras.adapters.output_adapters import RegressionAdapter
+from autokeras.adapters.output_adapters import SegmentationHeadAdapter

@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.analysers.input import ImageAnalyser
-from autokeras.analysers.input import InputAnalyser
-from autokeras.analysers.output import ClassificationAnalyser
-from autokeras.analysers.output import RegressionAnalyser
+from autokeras.analysers.input_analysers import ImageAnalyser
+from autokeras.analysers.input_analysers import InputAnalyser
+from autokeras.analysers.input_analysers import StructuredDataAnalyser
+from autokeras.analysers.output_analysers import ClassificationAnalyser
+from autokeras.analysers.output_analysers import RegressionAnalyser
+from autokeras.analysers.input_analysers import CATEGORICAL
+from autokeras.analysers.input_analysers import NUMERICAL
