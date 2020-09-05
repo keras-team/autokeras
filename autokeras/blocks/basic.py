@@ -45,6 +45,7 @@ class DenseBlock(block_module.Block):
     # Arguments
         num_layers: Int. The number of Dense layers in the block.
             If left unspecified, it will be tuned automatically.
+        num_units: List. If left unspecified, it will be tuned automatically.
         use_bn: Boolean. Whether to use BatchNormalization layers.
             If left unspecified, it will be tuned automatically.
         dropout: Float. The dropout rate for the layers.
@@ -54,12 +55,14 @@ class DenseBlock(block_module.Block):
     def __init__(
         self,
         num_layers: Optional[int] = None,
+        num_units: Optional[list] = None,
         use_batchnorm: Optional[bool] = None,
         dropout: Optional[float] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.num_layers = num_layers
+        self.num_units = num_units
         self.use_batchnorm = use_batchnorm
         self.dropout = dropout
 
@@ -68,6 +71,7 @@ class DenseBlock(block_module.Block):
         config.update(
             {
                 "num_layers": self.num_layers,
+                "num_units": self.num_units,
                 "use_batchnorm": self.use_batchnorm,
                 "dropout": self.dropout,
             }
@@ -91,11 +95,15 @@ class DenseBlock(block_module.Block):
             dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
 
         for i in range(num_layers):
-            units = hp.Choice(
-                "units_{i}".format(i=i),
-                [16, 32, 64, 128, 256, 512, 1024],
-                default=32,
-            )
+            if self.num_units is not None:
+                units = hp.Choice("units_{i}".format(i=i),
+                                  self.num_units,
+                                  default=self.num_units[0])
+            else:
+                units = hp.Choice("units_{i}".format(i=i),
+                                  [16, 32, 64, 128, 256, 512, 1024],
+                                  default=32)
+
             output_node = layers.Dense(units)(output_node)
             if use_batchnorm:
                 output_node = layers.BatchNormalization()(output_node)
