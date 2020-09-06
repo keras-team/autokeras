@@ -176,6 +176,7 @@ class StructuredDataInput(Input):
 
     def config_from_analyser(self, analyser):
         super().config_from_analyser(analyser)
+        self.column_names = analyser.column_names
         # Analyser keeps the specified ones and infer the missing ones.
         self.column_types = analyser.column_types
         self.dtype = analyser.dtype

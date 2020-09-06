@@ -182,8 +182,8 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             pipeline, model = self.final_fit(**copied_fit_kwargs)
         else:
             model = self.get_best_models()[0]
-            pipeline = self._pipeline_path(
-                self.oracle.get_best_trials(1)[0].trial_id
+            pipeline = pipeline_module.load_pipeline(
+                self._pipeline_path(self.oracle.get_best_trials(1)[0].trial_id)
             )
 
         model.save(self.best_model_path)

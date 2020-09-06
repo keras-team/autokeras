@@ -36,20 +36,24 @@ def called_with_early_stopping(func):
 
 @mock.patch("kerastuner.engine.base_tuner.BaseTuner.search")
 @mock.patch("autokeras.engine.tuner.AutoTuner.final_fit")
-def test_final_fit_with_specified_epochs(final_fit, super_search, tmp_path):
+@mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
+def test_final_fit_with_specified_epochs(_, final_fit, super_search, tmp_path):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    final_fit.return_value = mock.Mock(), mock.Mock()
 
-    tuner.search(x=None, epochs=10)
+    tuner.search(x=None, epochs=10, validation_data=None)
 
     assert final_fit.call_args_list[0][1]["epochs"] == 10
 
 
 @mock.patch("kerastuner.engine.base_tuner.BaseTuner.search")
 @mock.patch("autokeras.engine.tuner.AutoTuner.final_fit")
-def test_tuner_call_super_with_early_stopping(final_fit, super_search, tmp_path):
+@mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
+def test_tuner_call_super_with_early_stopping(_, final_fit, super_search, tmp_path):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    final_fit.return_value = mock.Mock(), mock.Mock()
 
-    tuner.search(x=None, epochs=10)
+    tuner.search(x=None, epochs=10, validation_data=None)
 
     assert called_with_early_stopping(super_search)
 
@@ -59,12 +63,15 @@ def test_tuner_call_super_with_early_stopping(final_fit, super_search, tmp_path)
 @mock.patch(
     "autokeras.engine.tuner.AutoTuner.get_best_models", return_value=[mock.Mock()]
 )
+@mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
+@mock.patch("autokeras.pipeline.load_pipeline")
+@mock.patch("kerastuner.Oracle.get_best_trials", return_value=[mock.Mock()])
 def test_no_final_fit_without_epochs_and_fov(
-    get_best_models, final_fit, super_search, tmp_path
+    _, _1, _2, get_best_models, final_fit, super_search, tmp_path
 ):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
 
-    tuner.search(x=None, epochs=None, fit_on_val_data=False)
+    tuner.search(x=None, epochs=None, fit_on_val_data=False, validation_data=None)
 
     final_fit.assert_not_called()
 
@@ -74,10 +81,12 @@ def test_no_final_fit_without_epochs_and_fov(
 @mock.patch(
     "autokeras.engine.tuner.AutoTuner._get_best_trial_epochs", return_value=2
 )
+@mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
 def test_final_fit_best_epochs_if_epoch_unspecified(
-    best_epochs, final_fit, super_search, tmp_path
+    _, best_epochs, final_fit, super_search, tmp_path
 ):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    final_fit.return_value = mock.Mock(), mock.Mock()
 
     tuner.search(
         x=mock.Mock(), epochs=None, fit_on_val_data=True, validation_data=mock.Mock()
@@ -91,10 +100,12 @@ def test_final_fit_best_epochs_if_epoch_unspecified(
 @mock.patch(
     "autokeras.engine.tuner.AutoTuner._get_best_trial_epochs", return_value=2
 )
+@mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
 def test_super_with_1k_epochs_if_epoch_unspecified(
-    best_epochs, final_fit, super_search, tmp_path
+    _, best_epochs, final_fit, super_search, tmp_path
 ):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    final_fit.return_value = mock.Mock(), mock.Mock()
 
     tuner.search(
         x=mock.Mock(), epochs=None, fit_on_val_data=True, validation_data=mock.Mock()
@@ -106,17 +117,19 @@ def test_super_with_1k_epochs_if_epoch_unspecified(
 
 @mock.patch("kerastuner.engine.base_tuner.BaseTuner.search")
 @mock.patch("autokeras.engine.tuner.AutoTuner.final_fit")
+@mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
 def test_tuner_not_call_super_search_with_overwrite(
-    final_fit, super_search, tmp_path
+    _, final_fit, super_search, tmp_path
 ):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    final_fit.return_value = mock.Mock(), mock.Mock()
 
-    tuner.search(epochs=10)
+    tuner.search(x=None, epochs=10, validation_data=None)
     tuner.save()
     super_search.reset_mock()
 
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
-    tuner.search(epochs=10)
+    tuner.search(x=None, epochs=10, validation_data=None)
 
     super_search.assert_not_called()
 

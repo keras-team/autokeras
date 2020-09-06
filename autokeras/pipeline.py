@@ -28,10 +28,11 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
         self.inputs = inputs
         self.outputs = outputs
 
-    def _build_preprocessors(self, hp, hpps_lists, dataset):
+    @staticmethod
+    def _build_preprocessors(hp, hpps_lists, dataset):
         sources = [
             dataset.map(lambda *a: nest.flatten(a)[index])
-            for index in range(len(self.inputs))
+            for index in range(len(hpps_lists))
         ]
         sources = nest.flatten(sources)
         preprocessors_list = []
@@ -87,7 +88,7 @@ class Pipeline(pps_module.Preprocessor):
     def _transform_data(self, dataset, pps_lists):
         sources = [
             dataset.map(lambda *a: nest.flatten(a)[index])
-            for index in range(len(self.inputs))
+            for index in range(len(pps_lists))
         ]
         sources = nest.flatten(sources)
         transformed = []
@@ -97,7 +98,7 @@ class Pipeline(pps_module.Preprocessor):
             transformed.append(data)
         if len(transformed) == 1:
             return transformed[0]
-        return transformed
+        return tuple(transformed)
 
     def save(self, filepath):
         utils.save_json(filepath, self.get_config())

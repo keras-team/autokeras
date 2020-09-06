@@ -24,7 +24,6 @@ from tensorflow.python.util import nest
 
 from autokeras import blocks
 from autokeras import graph as graph_module
-from autokeras import nodes as input_module
 from autokeras import pipeline
 from autokeras import tuners
 from autokeras.engine import head as head_module

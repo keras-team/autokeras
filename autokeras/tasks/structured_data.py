@@ -56,15 +56,6 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
         # Extract column_names from pd.DataFrame.
         if isinstance(x, pd.DataFrame) and input_node.column_names is None:
             input_node.column_names = list(x.columns)
-            # column_types is provided by user
-            if input_node.column_types:
-                for column_name in input_node.column_types:
-                    if column_name not in input_node.column_names:
-                        raise ValueError(
-                            "column_names and column_types are "
-                            "mismatched. Cannot find column name "
-                            "{name} in the data.".format(name=column_name)
-                        )
 
         if input_node.column_names and input_node.column_types:
             for column_name in input_node.column_types:
@@ -74,14 +65,6 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
                         "mismatched. Cannot find column name "
                         "{name} in the data.".format(name=column_name)
                     )
-
-        if input_node.column_names is None:
-            if input_node.column_types:
-                raise ValueError(
-                    "column_names must be specified, if "
-                    "column_types is specified."
-                )
-            input_node.column_names = [index for index in range(x.shape[1])]
 
     def read_for_predict(self, x):
         if isinstance(x, str):

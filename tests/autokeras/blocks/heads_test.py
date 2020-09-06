@@ -18,28 +18,37 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 import autokeras as ak
-from autokeras import blocks
 from autokeras import nodes as input_module
 from autokeras.blocks import heads as head_module
 
 
-def test_two_classes():
-    y = np.array(["a", "a", "a", "b"])
+def test_two_classes_infer_binary_crossentropy():
+    dataset = np.array(["a", "a", "a", "b"])
     head = head_module.ClassificationHead(name="a")
     adapter = head.get_adapter()
-    adapter.fit_transform(y)
-    head.config_from_adapter(adapter)
+    dataset = adapter.adapt(dataset, batch_size=32)
+    analyser = head.get_analyser()
+    for data in dataset:
+        analyser.update(data)
+    analyser.finalize()
+    head.config_from_analyser(analyser)
     head.output_shape = (1,)
     head.build(kerastuner.HyperParameters(), input_module.Input(shape=(32,)).build())
     assert head.loss.name == "binary_crossentropy"
 
 
-def test_three_classes():
-    y = np.array(["a", "a", "c", "b"])
+def test_three_classes_infer_categorical_crossentropy():
+    dataset = np.array(["a", "a", "c", "b"])
     head = head_module.ClassificationHead(name="a")
     adapter = head.get_adapter()
-    adapter.fit_transform(y)
-    head.config_from_adapter(adapter)
+    dataset = adapter.adapt(dataset, batch_size=32)
+    analyser = head.get_analyser()
+    for data in dataset:
+        analyser.update(data)
+    analyser.finalize()
+    head.config_from_analyser(analyser)
+    head.output_shape = (1,)
+    head.build(kerastuner.HyperParameters(), input_module.Input(shape=(32,)).build())
     assert head.loss.name == "categorical_crossentropy"
 
 
@@ -67,12 +76,14 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
 
 
 def test_segmentation():
-    y = np.array(["a", "a", "c", "b"])
+    dataset = np.array(["a", "a", "c", "b"])
     head = head_module.SegmentationHead(name="a")
     adapter = head.get_adapter()
-    adapter.fit_transform(y)
-    head.config_from_adapter(adapter)
-    input_shape = (64, 64, 21)
-    hp = kerastuner.HyperParameters()
-    head = blocks.deserialize(blocks.serialize(head))
-    head.build(hp, ak.Input(shape=input_shape).build())
+    dataset = adapter.adapt(dataset, batch_size=32)
+    analyser = head.get_analyser()
+    for data in dataset:
+        analyser.update(data)
+    analyser.finalize()
+    head.config_from_analyser(analyser)
+    head.output_shape = (1,)
+    head.build(kerastuner.HyperParameters(), ak.Input(shape=(32,)).build())

@@ -75,6 +75,7 @@ class ClassificationHead(head_module.Head):
         # Infered from analyser.
         self._encoded = None
         self._add_one_dimension = False
+        self._labels = None
 
     def infer_loss(self):
         if not self.num_classes:
@@ -133,6 +134,7 @@ class ClassificationHead(head_module.Head):
         self.loss = self.infer_loss()
         self._encoded = analyser.encoded
         self._add_one_dimension = len(analyser.shape) == 1
+        self._labels = analyser.labels
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []
@@ -150,13 +152,13 @@ class ClassificationHead(head_module.Head):
             if self.num_classes == 2 and not self.multi_label:
                 hyper_preprocessors.append(
                     hpps_module.DefaultHyperPreprocessor(
-                        preprocessors.LabelEncoder(self.labels)
+                        preprocessors.LabelEncoder(self._labels)
                     )
                 )
             else:
                 hyper_preprocessors.append(
                     hpps_module.DefaultHyperPreprocessor(
-                        preprocessors.OneHotEncoder(self.labels)
+                        preprocessors.OneHotEncoder(self._labels)
                     )
                 )
         return hyper_preprocessors

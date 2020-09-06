@@ -31,19 +31,7 @@ def test_raise_error_unknown_str_in_col_type(tmp_path):
             seed=utils.SEED,
         )
 
-    assert 'Column_types should be either "categorical"' in str(info.value)
-
-
-def test_raise_error_unknown_name_in_col_type(tmp_path):
-    with pytest.raises(ValueError) as info:
-        ak.StructuredDataClassifier(
-            column_types={"age": "numerical", "parch": "categorical"},
-            column_names=["age", "fare"],
-            directory=tmp_path,
-            seed=utils.SEED,
-        )
-
-    assert "column_names and column_types are mismatched" in str(info.value)
+    assert 'column_types should be either "categorical"' in str(info.value)
 
 
 def test_structured_data_input_name_type_mismatch_error(tmp_path):

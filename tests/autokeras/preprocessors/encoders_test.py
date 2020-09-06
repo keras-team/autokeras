@@ -13,42 +13,36 @@
 # limitations under the License.
 
 import numpy as np
-import pytest
+import tensorflow as tf
 
-from autokeras import encoders
+from autokeras import preprocessors
+from autokeras.preprocessors import encoders
 
 
 def test_one_hot_encoder_deserialize_transforms_to_np():
-    encoder = encoders.OneHotEncoder()
+    encoder = encoders.OneHotEncoder(["a", "b", "c"])
     encoder.fit(np.array(["a", "b", "a"]))
 
-    encoder = encoders.deserialize(encoders.serialize(encoder))
-    one_hot = encoder.encode(np.array(["a"]))
+    encoder = preprocessors.deserialize(preprocessors.serialize(encoder))
+    one_hot = encoder.transform(
+        tf.data.Dataset.from_tensor_slices([["a"], ["c"], ["b"]]).batch(2)
+    )
 
-    assert np.array_equal(one_hot, [[1, 0]]) or np.array_equal(one_hot, [[0, 1]])
+    for data in one_hot:
+        assert data.shape[1:] == [3]
 
 
 def test_one_hot_encoder_decode_to_same_string():
-    encoder = encoders.OneHotEncoder()
-    encoder.fit(np.array(["a", "b", "a"]))
+    encoder = encoders.OneHotEncoder(["a", "b", "c"])
 
-    assert encoder.decode(encoder.encode(np.array(["a"])))[0] == "a"
+    result = encoder.postprocess(np.eye(3))
 
-
-def test_wrong_num_classes_error():
-    encoder = encoders.OneHotEncoder(num_classes=3)
-
-    with pytest.raises(ValueError) as info:
-        encoder.fit(np.array(["a", "b", "a"]))
-
-    assert "Expect 3 classes in the training targets" in str(info.value)
+    assert np.array_equal(result, np.array([["a"], ["b"], ["c"]]))
 
 
 def test_multi_label_postprocess_to_one_hot_labels():
-    y = np.random.rand(10, 3)
-    adapter = output_adapters.ClassificationAdapter(name="a", multi_label=True)
-    adapter.fit_transform(y)
+    encoder = encoders.MultiLabelEncoder()
 
-    y = adapter.postprocess(y)
+    y = encoder.postprocess(np.random.rand(10, 3))
 
     assert set(y.flatten().tolist()) == set([1, 0])

@@ -17,7 +17,6 @@ import pandas as pd
 import tensorflow as tf
 
 from autokeras.engine import adapter as adapter_module
-from autokeras.utils import data_utils
 
 
 class InputAdapter(adapter_module.Adapter):

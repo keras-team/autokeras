@@ -13,7 +13,6 @@
 # limitations under the License.
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.util import nest
 
 from autokeras.engine import analyser
 
@@ -22,7 +21,8 @@ NUMERICAL = "numerical"
 
 
 class InputAnalyser(analyser.Analyser):
-    pass
+    def finalize(self):
+        return
 
 
 class ImageAnalyser(InputAnalyser):
@@ -117,6 +117,15 @@ class StructuredDataAnalyser(InputAnalyser):
                     input_name=self.get_input_name(), shape=self.shape
                 )
             )
+
+        # Fill in the column_names
+        if self.column_names is None:
+            if self.column_types:
+                raise ValueError(
+                    "column_names must be specified, if "
+                    "column_types is specified."
+                )
+            self.column_names = [index for index in range(self.shape[1])]
 
         # Check if column_names has the correct length.
         if len(self.column_names) != self.shape[1]:

@@ -32,19 +32,24 @@ class Encoder(preprocessor.TargetPreprocessor):
         self.labels = labels
 
     def get_config(self):
-        config = super().get_config()
-        config.update({"labels": self.labels})
-        return config
+        return {"labels": self.labels}
+
+    def fit(self, dataset):
+        pass
 
 
 class OneHotEncoder(Encoder):
     def transform(self, dataset):
         keys_tensor = tf.constant(self.labels)
-        vals_tensor = tf.eye(len(self.labels))
+        vals_tensor = tf.constant(list(range(len(self.labels))))
         table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(keys_tensor, vals_tensor), -1
         )
-        return dataset.map(table)
+        eye = tf.eye(len(self.labels))
+        dataset = dataset.map(
+            lambda x: tf.nn.embedding_lookup(eye, table.lookup(tf.reshape(x, [-1])))
+        )
+        return dataset
 
     def postprocess(self, data):
         """Get label for every element in data.
@@ -89,6 +94,9 @@ class LabelEncoder(Encoder):
 
 
 class MultiLabelEncoder(Encoder):
+    def __init__(self, **kwargs):
+        super().__init__(labels=[], **kwargs)
+
     def transform(self, dataset):
         return dataset
 

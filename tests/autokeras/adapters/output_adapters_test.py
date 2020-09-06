@@ -18,7 +18,6 @@ import pytest
 import tensorflow as tf
 
 from autokeras.adapters import output_adapters
-from autokeras.utils import data_utils
 from tests import utils
 
 
