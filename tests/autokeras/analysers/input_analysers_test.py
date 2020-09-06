@@ -1,8 +1,23 @@
+# Copyright 2020 The AutoKeras Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import copy
-import pytest
-import tensorflow as tf
+
 import numpy as np
 import pandas as pd
+import pytest
+import tensorflow as tf
 
 from autokeras.analysers import input_analysers
 from tests import utils
@@ -13,7 +28,9 @@ def test_structured_data_input_less_col_name_error():
         analyser = input_analysers.StructuredDataAnalyser(
             column_names=list(range(8))
         )
-        dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(20, 10)).batch(32)
+        dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(20, 10)).batch(
+            32
+        )
         for x in dataset:
             analyser.update(x)
 
@@ -29,13 +46,16 @@ def test_structured_data_infer_col_types():
     )
     x = pd.read_csv(utils.TRAIN_CSV_PATH)
     x.pop("survived")
-    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype(np.unicode)).batch(32)
+    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype(np.unicode)).batch(
+        32
+    )
 
     for data in dataset:
         analyser.update(data)
     analyser.finalize()
 
     assert analyser.column_types == utils.COLUMN_TYPES
+
 
 def test_dont_infer_specified_column_types():
     column_types = copy.copy(utils.COLUMN_TYPES)
@@ -48,7 +68,9 @@ def test_dont_infer_specified_column_types():
     )
     x = pd.read_csv(utils.TRAIN_CSV_PATH)
     x.pop("survived")
-    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype(np.unicode)).batch(32)
+    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype(np.unicode)).batch(
+        32
+    )
 
     for data in dataset:
         analyser.update(data)

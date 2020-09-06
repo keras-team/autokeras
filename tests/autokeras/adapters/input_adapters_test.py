@@ -39,8 +39,7 @@ def test_structured_data_col_type_no_name_error():
 
 def test_structured_data_input_unsupported_type_error():
     with pytest.raises(TypeError) as info:
-        adapter = input_adapters.StructuredDataInputAdapter(
-        )
+        adapter = input_adapters.StructuredDataInputAdapter()
         adapter.adapt("unknown", batch_size=32)
 
     assert "Unsupported type" in str(info.value)
@@ -55,8 +54,6 @@ def test_structured_data_input_transform_to_dataset():
     x = adapter.adapt(x, batch_size=32)
 
     assert isinstance(x, tf.data.Dataset)
-
-
 
 
 def test_image_input_adapter_transform_to_dataset():

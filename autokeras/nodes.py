@@ -149,7 +149,6 @@ class StructuredDataInput(Input):
         self.column_types = analyser.column_types
         self.dtype = analyser.dtype
 
-
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []
         if self.dtype != tf.string:
