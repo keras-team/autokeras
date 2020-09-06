@@ -22,12 +22,7 @@ NUMERICAL = "numerical"
 
 
 class InputAnalyser(analyser.Analyser):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.shape = None
-
-    def update(self, data):
-        self.shape = data.shape.as_list()
+    pass
 
 
 class ImageAnalyser(InputAnalyser):
@@ -45,6 +40,26 @@ class ImageAnalyser(InputAnalyser):
         self.has_channel_dim = len(self.shape) == 4
 
 
+class TextAnalyser(InputAnalyser):
+    def correct_shape(self):
+        if len(self.shape) == 1:
+            return True
+        return len(self.shape) == 2 and self.shape[1] == 1
+
+    def finalize(self):
+        if not self.correct_shape():
+            raise ValueError(
+                "Expect the data to TextInput to have shape "
+                "(batch_size, 1), but "
+                "got input shape {shape}.".format(shape=self.shape)
+            )
+        if self.dtype != tf.string:
+            raise TypeError(
+                "Expect the data to TextInput to be strings, but got "
+                "{type}.".format(type=self.dtype)
+            )
+
+
 class StructuredDataAnalyser(InputAnalyser):
     def __init__(self, column_names=None, column_types=None, **kwargs):
         super().__init__(**kwargs)
@@ -55,11 +70,11 @@ class StructuredDataAnalyser(InputAnalyser):
         self.count_categorical = None
         self.count_unique_numerical = []
         self.num_col = None
-        self.dtype = None
 
     def update(self, data):
         super().update(data)
-        self.dtype = data.dtype
+        if len(self.shape) != 2:
+            return
         if data.dtype != tf.string:
             data = tf.strings.as_string(data)
         data = data.numpy()
@@ -87,7 +102,21 @@ class StructuredDataAnalyser(InputAnalyser):
                 self.count_categorical[i] += 1
 
     def finalize(self):
+        self.check()
         self.infer_column_types()
+
+    def get_input_name(self):
+        return "StrcturedDataInput"
+
+    def check(self):
+        if len(self.shape) != 2:
+            raise ValueError(
+                "Expect the data to {input_name} to have shape "
+                "(batch_size, num_features), but "
+                "got input shape {shape}.".format(
+                    input_name=self.get_input_name(), shape=self.shape
+                )
+            )
 
         # Check if column_names has the correct length.
         if len(self.column_names) != self.shape[1]:
@@ -126,3 +155,17 @@ class StructuredDataAnalyser(InputAnalyser):
         for key, value in column_types.items():
             if key not in self.column_types:
                 self.column_types[key] = value
+
+
+class TimeseriesAnalyser(StructuredDataAnalyser):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.batch_size = None
+
+    def update(self, data):
+        super().update(data)
+        if self.batch_size is None:
+            self.batch_size = self.shape[0]
+
+    def get_input_name(self):
+        return "TimeseriesInput"

@@ -43,7 +43,7 @@ def test_raise_error_unknown_name_in_col_type(tmp_path):
             seed=utils.SEED,
         )
 
-    assert "Column_names and column_types are mismatched" in str(info.value)
+    assert "column_names and column_types are mismatched" in str(info.value)
 
 
 def test_structured_data_input_name_type_mismatch_error(tmp_path):
@@ -56,7 +56,19 @@ def test_structured_data_input_name_type_mismatch_error(tmp_path):
         )
         clf.fit(x=utils.TRAIN_CSV_PATH, y="survived")
 
-    assert "Column_names and column_types are mismatched." in str(info.value)
+    assert "column_names and column_types are mismatched." in str(info.value)
+
+
+def test_structured_data_col_type_no_name_error(tmp_path):
+    with pytest.raises(ValueError) as info:
+        clf = ak.StructuredDataClassifier(
+            column_types={"age": "numerical", "parch": "categorical"},
+            directory=tmp_path,
+            seed=utils.SEED,
+        )
+        clf.fit(x=np.random.rand(100, 30), y=np.random.rand(100, 1))
+
+    assert "column_names must be specified" in str(info.value)
 
 
 @mock.patch("autokeras.AutoModel.fit")

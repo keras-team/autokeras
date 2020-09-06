@@ -174,14 +174,7 @@ class AutoModel(object):
 
         middle_nodes = []
         for input_node in inputs:
-            if isinstance(input_node, input_module.TextInput):
-                middle_nodes.append(blocks.TextBlock()(input_node))
-            if isinstance(input_node, input_module.ImageInput):
-                middle_nodes.append(blocks.ImageBlock()(input_node))
-            if isinstance(input_node, input_module.StructuredDataInput):
-                middle_nodes.append(blocks.StructuredDataBlock()(input_node))
-            if isinstance(input_node, input_module.TimeseriesInput):
-                middle_nodes.append(blocks.TimeseriesBlock()(input_node))
+            middle_nodes.append(input_node.get_block()(input_node))
 
         # Merge the middle nodes.
         if len(middle_nodes) > 1:

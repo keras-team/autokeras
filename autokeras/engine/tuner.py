@@ -67,15 +67,19 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
     def _pipeline_path(self, trial_id):
         return os.path.join(self.get_trial_dir(trial_id), "pipeline")
 
-    def _prepare_model_build(self, x, hp):
-        pipeline = self.hyper_pipeline.build(hp, x)
-        pipeline.fit(x)
-        x = pipeline.transform(x)
-        self.hypermodel.hypermodel.set_io_shapes(data_utils.dataset_shape(x))
-        return pipeline, x
+    def _prepare_model_build(self, hp, dataset, validation_data=None):
+        pipeline = self.hyper_pipeline.build(hp, dataset)
+        pipeline.fit(dataset)
+        dataset = pipeline.transform(dataset)
+        self.hypermodel.hypermodel.set_io_shapes(data_utils.dataset_shape(dataset))
+        if validation_data is not None:
+            validation_data = pipeline.transform(validation_data)
+        return pipeline, dataset, validation_data
 
     def _on_build_begin(self, trial_id, hp, args, kwargs):
-        pipeline, kwargs["x"] = self._prepare_model_build(kwargs["x"], hp)
+        pipeline, kwargs["x"], kwargs["validation_data"] = self._prepare_model_build(
+            hp, kwargs["x"], kwargs["validation_data"]
+        )
         pipeline.save(self._pipeline_path(trial_id))
 
     def _on_train_begin(self, model, hp, args, kwargs):
@@ -148,7 +152,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
         # Populate initial search space.
         hp = self.oracle.get_space()
-        self._prepare_model_build(fit_kwargs["x"], hp)
+        self._prepare_model_build(hp, fit_kwargs["x"], fit_kwargs["validation_data"])
         self.hypermodel.build(hp)
         self.oracle.update_space(hp)
 
@@ -212,14 +216,16 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         best_hp = best_trial.hyperparameters
         return self.hypermodel.build(best_hp)
 
-    def final_fit(self, x=None, **fit_kwargs):
+    def final_fit(self, x=None, validation_data=None, **fit_kwargs):
         best_trial = self.oracle.get_best_trials(1)[0]
         best_hp = best_trial.hyperparameters
-        pipeline, x = self._prepare_model_build(x, best_hp)
+        pipeline, x, validation_data = self._prepare_model_build(
+            best_hp, x, validation_data
+        )
 
         model = self._build_best_model()
         self.adapt(model, x)
-        model.fit(x, **fit_kwargs)
+        model.fit(x, validation_data=validation_data, **fit_kwargs)
         return pipeline, model
 
     @property

@@ -42,3 +42,13 @@ def test_wrong_num_classes_error():
         encoder.fit(np.array(["a", "b", "a"]))
 
     assert "Expect 3 classes in the training targets" in str(info.value)
+
+
+def test_multi_label_postprocess_to_one_hot_labels():
+    y = np.random.rand(10, 3)
+    adapter = output_adapters.ClassificationAdapter(name="a", multi_label=True)
+    adapter.fit_transform(y)
+
+    y = adapter.postprocess(y)
+
+    assert set(y.flatten().tolist()) == set([1, 0])

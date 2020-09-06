@@ -30,12 +30,9 @@ from autokeras.tuners import task_specific
 from autokeras.utils import types
 
 
-class SupervisedStructuredDataPipeline(auto_model.AutoModel):
-    def __init__(self, outputs, column_names, column_types, **kwargs):
-        inputs = input_module.StructuredDataInput()
-        inputs.column_types = column_types
-        inputs.column_names = column_names
-        self.check(column_names, column_types)
+class BaseStructuredDataPipeline(auto_model.AutoModel):
+    def __init__(self, inputs, outputs, **kwargs):
+        self.check(inputs.column_names, inputs.column_types)
         super().__init__(inputs=inputs, outputs=outputs, **kwargs)
         self._target_col_name = None
 
@@ -50,7 +47,7 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             for column_type in column_types.values():
                 if column_type not in ["categorical", "numerical"]:
                     raise ValueError(
-                        'Column_types should be either "categorical" '
+                        'column_types should be either "categorical" '
                         'or "numerical", but got {name}'.format(name=column_type)
                     )
 
@@ -64,7 +61,7 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
                 for column_name in input_node.column_types:
                     if column_name not in input_node.column_names:
                         raise ValueError(
-                            "Column_names and column_types are "
+                            "column_names and column_types are "
                             "mismatched. Cannot find column name "
                             "{name} in the data.".format(name=column_name)
                         )
@@ -73,7 +70,7 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
             for column_name in input_node.column_types:
                 if column_name not in input_node.column_names:
                     raise ValueError(
-                        "Column_names and column_types are "
+                        "column_names and column_types are "
                         "mismatched. Cannot find column name "
                         "{name} in the data.".format(name=column_name)
                     )
@@ -199,6 +196,14 @@ class SupervisedStructuredDataPipeline(auto_model.AutoModel):
         if isinstance(x, str):
             x, y = self._read_from_csv(x, y)
         return super().evaluate(x=x, y=y, batch_size=batch_size, **kwargs)
+
+
+class SupervisedStructuredDataPipeline(BaseStructuredDataPipeline):
+    def __init__(self, outputs, column_names, column_types, **kwargs):
+        inputs = input_module.StructuredDataInput(
+            column_names=column_names, column_types=column_types
+        )
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
 
 
 class StructuredDataClassifier(SupervisedStructuredDataPipeline):

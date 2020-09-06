@@ -16,6 +16,7 @@ import tensorflow as tf
 
 from autokeras import adapters
 from autokeras import analysers
+from autokeras import blocks
 from autokeras import hyper_preprocessors as hpps_module
 from autokeras import preprocessors
 from autokeras.engine import io_hypermodel
@@ -50,6 +51,9 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
     def get_analyser(self):
         return analysers.InputAnalyser()
 
+    def get_block(self):
+        return blocks.GeneralBlock()
+
     def config_from_analyser(self, analyser):
         pass
 
@@ -75,6 +79,9 @@ class ImageInput(Input):
     def get_analyser(self):
         return analysers.ImageAnalyser()
 
+    def get_block(self):
+        return blocks.ImageBlock()
+
     def config_from_analyser(self, analyser):
         self.has_channel_dim = analyser.has_channel_dim
 
@@ -95,11 +102,32 @@ class TextInput(Input):
     sentence.
     """
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._add_one_dimension = None
+
     def build(self):
         return tf.keras.Input(shape=self.shape, dtype=tf.string)
 
     def get_adapter(self):
-        return adapters.TextInputAdapter()
+        return adapters.TextAdapter()
+
+    def get_analyser(self):
+        return analysers.TextAnalyser()
+
+    def get_block(self):
+        return blocks.TextBlock()
+
+    def config_from_analyser(self, analyser):
+        self._add_one_dimension = len(analyser.shape) == 1
+
+    def get_hyper_preprocessors(self):
+        hyper_preprocessors = []
+        if self._add_one_dimension:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
+            )
+        return hyper_preprocessors
 
 
 class StructuredDataInput(Input):
@@ -138,10 +166,13 @@ class StructuredDataInput(Input):
         return config
 
     def get_adapter(self):
-        return adapters.StructuredDataInputAdapter()
+        return adapters.StructuredDataAdapter()
 
     def get_analyser(self):
         return analysers.StructuredDataAnalyser(self.column_names, self.column_types)
+
+    def get_block(self):
+        return blocks.StructuredDataBlock()
 
     def config_from_analyser(self, analyser):
         super().config_from_analyser(analyser)
@@ -158,7 +189,7 @@ class StructuredDataInput(Input):
         return hyper_preprocessors
 
 
-class TimeseriesInput(Input):
+class TimeseriesInput(StructuredDataInput):
     """Input node for timeseries data.
 
     # Arguments
@@ -181,10 +212,11 @@ class TimeseriesInput(Input):
     def __init__(
         self, lookback=None, column_names=None, column_types=None, **kwargs
     ):
-        super().__init__(**kwargs)
+        super().__init__(
+            column_names=column_names, column_types=column_types, **kwargs
+        )
         self.lookback = lookback
-        self.column_names = column_names
-        self.column_types = column_types
+        self.batch_size = None
 
     def build(self):
         if len(self.shape) == 1:
@@ -196,24 +228,32 @@ class TimeseriesInput(Input):
 
     def get_config(self):
         config = super().get_config()
-        config.update(
-            {
-                "lookback": self.lookback,
-                "column_names": self.column_names,
-                "column_types": self.column_types,
-            }
-        )
+        config.update({"lookback": self.lookback})
         return config
 
     def get_adapter(self):
-        return adapters.TimeseriesInputAdapter(
-            lookback=self.lookback,
-            column_names=self.column_names,
-            column_types=self.column_types,
+        return adapters.TimeseriesAdapter()
+
+    def get_analyser(self):
+        return analysers.TimeseriesAnalyser(
+            column_names=self.column_names, column_types=self.column_types
         )
 
-    def config_from_adapter(self, adapter):
-        super().config_from_adapter(adapter)
-        self.lookback = adapter.lookback
-        self.column_names = adapter.column_names
-        self.column_types = adapter.column_types
+    def get_block(self):
+        return blocks.TimeseriesBlock()
+
+    def config_from_analyser(self, analyser):
+        super().config_from_analyser(analyser)
+        self.batch_size = analyser.batch_size
+
+    def get_hyper_preprocessors(self):
+        hyper_preprocessors = []
+        if self.dtype != tf.string:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(
+                    preprocessors.SlidingWindow(
+                        lookback=self.lookback, batch_size=self.batch_size
+                    )
+                )
+            )
+        return hyper_preprocessors

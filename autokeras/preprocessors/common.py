@@ -32,7 +32,35 @@ class AddOneDimension(LambdaPreprocessor):
     def __init__(self, **kwargs):
         super().__init__(lambda x: tf.expand_dims(x, axis=-1), **kwargs)
 
+    def get_config(self):
+        return {}
+
 
 class CastToString(LambdaPreprocessor):
     def __init__(self, **kwargs):
         super().__init__(lambda x: tf.strings.as_string(x), **kwargs)
+
+    def get_config(self):
+        return {}
+
+
+class SlidingWindow(preprocessor.Preprocessor):
+    def __init__(self, lookback, batch_size, **kwargs):
+        super().__init__(**kwargs)
+        self.lookback = lookback
+        self.batch_size = batch_size
+
+    def transform(self, dataset):
+        dataset = dataset.unbatch()
+        dataset = dataset.window(self.lookback, shift=1, drop_remainder=True)
+        # dataset = dataset.flat_map(lambda x: x.batch(self.lookback))
+        # return dataset.batch(self.batch_size)
+        final_data = []
+        for window in dataset:
+            final_data.append([elems.numpy() for elems in window])
+        dataset = tf.data.Dataset.from_tensor_slices(final_data)
+        dataset = dataset.batch(self.batch_size)
+        return dataset
+
+    def get_config(self):
+        return {"lookback": self.lookback, "batch_size": self.batch_size}

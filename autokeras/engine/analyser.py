@@ -17,10 +17,15 @@ class Analyser(object):
     """Analyze the dataset. set the result back to the io hypermodels."""
 
     def __init__(self, **kwargs):
-        pass
+        super().__init__(**kwargs)
+        self.shape = None
+        self.dtype = None
 
-    def update(self, dataset):
-        pass
+    def update(self, data):
+        if self.dtype is None:
+            self.dtype = data.dtype
+        if self.shape is None:
+            self.shape = data.shape.as_list()
 
     def finalize(self):
-        pass
+        raise NotImplementedError

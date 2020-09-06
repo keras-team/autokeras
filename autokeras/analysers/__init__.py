@@ -17,5 +17,7 @@ from autokeras.analysers.input_analysers import NUMERICAL
 from autokeras.analysers.input_analysers import ImageAnalyser
 from autokeras.analysers.input_analysers import InputAnalyser
 from autokeras.analysers.input_analysers import StructuredDataAnalyser
+from autokeras.analysers.input_analysers import TextAnalyser
+from autokeras.analysers.input_analysers import TimeseriesAnalyser
 from autokeras.analysers.output_analysers import ClassificationAnalyser
 from autokeras.analysers.output_analysers import RegressionAnalyser
