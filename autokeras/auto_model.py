@@ -276,8 +276,13 @@ class AutoModel(object):
         )
 
     def _adapt(self, dataset, hms):
+        sources = [
+            dataset.map(lambda *a: nest.flatten(a)[index])
+            for index in range(len(hms))
+        ]
+        sources = nest.flatten(sources)
         adapted = []
-        for source, hm in zip(nest.flatten(dataset), hms):
+        for source, hm in zip(sources, hms):
             source = hm.get_adapter().adapt(source, self.batch_size)
             adapted.append(source)
         if len(adapted) == 1:
@@ -362,20 +367,24 @@ class AutoModel(object):
         self._check_data_format((x, y))
         if isinstance(x, tf.data.Dataset):
             dataset = x
-        else:
-            x = self._adapt(x, self.inputs)
-            y = self._adapt(y, self._heads)
-            dataset = tf.data.Dataset.zip((x, y))
+            x = dataset.map(lambda x, y: x)
+            y = dataset.map(lambda x, y: y)
+        x = self._adapt(x, self.inputs)
+        y = self._adapt(y, self._heads)
+        dataset = tf.data.Dataset.zip((x, y))
 
         # Convert validation data
         if validation_data:
             self._split_dataset = False
             self._check_data_format(validation_data, validation=True)
-            if not isinstance(validation_data, tf.data.Dataset):
-                x, y = validation_data
-                x = self._adapt(x, self.inputs)
-                y = self._adapt(y, self._heads)
-                validation_data = tf.data.Dataset.zip((x, y))
+            if isinstance(validation_data, tf.data.Dataset):
+                dataset = validation_data
+                x = dataset.map(lambda x, y: x)
+                y = dataset.map(lambda x, y: y)
+            x, y = validation_data
+            x = self._adapt(x, self.inputs)
+            y = self._adapt(y, self._heads)
+            validation_data = tf.data.Dataset.zip((x, y))
 
         return dataset, validation_data
 
@@ -439,10 +448,11 @@ class AutoModel(object):
         self._check_data_format((x, y))
         if isinstance(x, tf.data.Dataset):
             dataset = x
-        else:
-            x = self._adapt(x, self.inputs)
-            y = self._adapt(y, self._heads)
-            dataset = tf.data.Dataset.zip((x, y))
+            x = dataset.map(lambda x, y: x)
+            y = dataset.map(lambda x, y: y)
+        x = self._adapt(x, self.inputs)
+        y = self._adapt(y, self._heads)
+        dataset = tf.data.Dataset.zip((x, y))
         pipeline = self.tuner.get_best_pipeline()
         dataset = pipeline.transform(dataset)
         return self.tuner.get_best_model().evaluate(x=dataset, **kwargs)
