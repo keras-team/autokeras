@@ -78,7 +78,7 @@ y_train = pd.DataFrame(y_train)
 print(type(y_train)) # pandas.DataFrame
 
 # You can also use numpy.ndarray for x_train and y_train.
-x_train = x_train.to_numpy().astype(np.unicode)
+x_train = x_train.to_numpy()
 y_train = y_train.to_numpy()
 print(type(x_train)) # numpy.ndarray
 print(type(y_train)) # numpy.ndarray
@@ -101,7 +101,7 @@ The following code shows how to convert numpy.ndarray to tf.data.Dataset.
 """
 
 train_set = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-test_set = tf.data.Dataset.from_tensor_slices((x_test.to_numpy().astype(np.unicode), y_test))
+test_set = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 
 reg = ak.StructuredDataRegressor(max_trials=3, overwrite=True)
 # Feed the tensorflow Dataset to the regressor.
@@ -208,7 +208,7 @@ You can also export the best model found by AutoKeras as a Keras Model.
 
 model = reg.export_model()
 model.summary()
-model.predict(x_train)
+model.predict(x_train.astype(np.unicode))
 
 
 """

@@ -429,10 +429,7 @@ class AutoModel(object):
         model = self.tuner.get_best_model()
         dataset = pipeline.transform_x(dataset)
         y = model.predict(dataset, **kwargs)
-        y = pipeline.postprocess(y)
-        if isinstance(y, list) and len(y) == 1:
-            y = y[0]
-        return y
+        return pipeline.postprocess(y)
 
     def evaluate(self, x, y=None, **kwargs):
         """Evaluate the best model for the given data.
