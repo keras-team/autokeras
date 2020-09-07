@@ -55,17 +55,5 @@ def split_dataset(dataset, validation_split):
     return train_dataset, validation_dataset
 
 
-def list_to_tensor_shape(shapes):
-    if isinstance(shapes[0], int):
-        return tf.TensorShape(shapes)
-    return tuple([list_to_tensor_shape(shape) for shape in shapes])
-
-
-def tensor_shape_to_list(shapes):
-    if isinstance(shapes, tf.TensorShape):
-        return shapes.as_list()
-    return tuple([tensor_shape_to_list(shape) for shape in shapes])
-
-
 def dataset_shape(dataset):
     return tf.compat.v1.data.get_output_shapes(dataset)

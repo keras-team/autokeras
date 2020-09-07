@@ -33,6 +33,18 @@ def test_clf_head_one_hot_shape_error():
 
     assert "Expect the target data for a to have shape" in str(info.value)
 
+def test_clf_head_more_dim_error():
+    analyser = output_analysers.ClassificationAnalyser(name="a", num_classes=9)
+    dataset = tf.data.Dataset.from_tensor_slices(
+        np.random.rand(100, 32, 32, 3)
+    ).batch(32)
+
+    with pytest.raises(ValueError) as info:
+        for data in dataset:
+            analyser.update(data)
+        analyser.finalize()
+
+    assert "Expect the target data for a to have shape" in str(info.value)
 
 def test_wrong_num_classes_error():
     analyser = output_analysers.ClassificationAnalyser(name="a", num_classes=5)
@@ -115,3 +127,22 @@ def test_multi_label_two_classes_has_two_columns():
     analyser.finalize()
 
     assert analyser.encoded
+
+def test_reg_with_specified_output_dim_error():
+    analyser = output_analysers.RegressionAnalyser(name="a", output_dim=3)
+    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 2)).batch(32)
+
+    with pytest.raises(ValueError) as info:
+        for data in dataset:
+            analyser.update(data)
+        analyser.finalize()
+
+    assert "Expect the target data for a to have shape" in str(info.value)
+
+def test_reg_with_specified_output_dim_and_single_column_doesnt_crash():
+    analyser = output_analysers.RegressionAnalyser(name="a", output_dim=1)
+    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(10)).batch(32)
+
+    for data in dataset:
+        analyser.update(data)
+    analyser.finalize()

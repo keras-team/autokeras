@@ -35,8 +35,8 @@ class ClassificationAnalyser(TargetAnalyser):
         super().update(data)
         if len(self.shape) > 2:
             raise ValueError(
-                "Expect one hot encoded labels for {name} to have shape "
-                "(num_instances, num_classes), "
+                "Expect the target data for {name} to have shape "
+                "(batch_size, num_classes), "
                 "but got {shape}.".format(name=self.name, shape=self.shape)
             )
         if len(self.shape) > 1 and self.shape[1] > 1:
@@ -93,8 +93,6 @@ class ClassificationAnalyser(TargetAnalyser):
     def encoded_for_sigmoid(self):
         if not len(self.labels) == 2:
             return False
-        if len(self.shape) > 1 and self.shape[1] != 1:
-            return False
         return sorted(self.labels) == [0, 1]
 
 
@@ -106,8 +104,8 @@ class RegressionAnalyser(TargetAnalyser):
     def finalize(self):
         if self.output_dim and (self.expected_dim() != self.output_dim):
             raise ValueError(
-                "Expect target data for {name} to have shape "
-                "(num_instances, {output_dim}), "
+                "Expect the target data for {name} to have shape "
+                "(batch_size, {output_dim}), "
                 "but got {shape}.".format(
                     name=self.name, output_dim=self.output_dim, shape=self.shape
                 )

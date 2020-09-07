@@ -11,10 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import tensorflow as tf
 
 from autokeras import preprocessors
 from autokeras.engine import hyper_preprocessor
 
+def serialize(encoder):
+    return tf.keras.utils.serialize_keras_object(encoder)
+
+
+def deserialize(config, custom_objects=None):
+    return tf.keras.utils.deserialize_keras_object(
+        config,
+        module_objects=globals(),
+        custom_objects=custom_objects,
+        printable_module_name="preprocessors",
+    )
 
 class DefaultHyperPreprocessor(hyper_preprocessor.HyperPreprocessor):
     """HyperPreprocessor without hp usage."""

@@ -41,15 +41,6 @@ class HeadAdapter(adapter_module.Adapter):
             dataset = dataset.values
         return super().convert_to_dataset(dataset, batch_size)
 
-    def postprocess(self, y):
-        """Postprocess the output of the Keras Model."""
-        return y
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({"name": self.name})
-        return config
-
 
 class ClassificationAdapter(HeadAdapter):
     pass
