@@ -227,7 +227,7 @@ class RegressionHead(head_module.Head):
         return output_node
 
     def config_from_analyser(self, analyser):
-        pass
+        self._add_one_dimension = len(analyser.shape) == 1
 
     def get_adapter(self):
         return adapters.RegressionAdapter(name=self.name)
@@ -238,7 +238,12 @@ class RegressionHead(head_module.Head):
         )
 
     def get_hyper_preprocessors(self):
-        return []
+        hyper_preprocessors = []
+        if self._add_one_dimension:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
+            )
+        return hyper_preprocessors
 
 
 class SegmentationHead(ClassificationHead):

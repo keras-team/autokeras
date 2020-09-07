@@ -276,10 +276,13 @@ class AutoModel(object):
         )
 
     def _adapt(self, dataset, hms):
-        sources = [
-            dataset.map(lambda *a: nest.flatten(a)[index])
-            for index in range(len(hms))
-        ]
+        if isinstance(dataset, tf.data.Dataset):
+            sources = [
+                dataset.map(lambda *a: nest.flatten(a)[index])
+                for index in range(len(hms))
+            ]
+        else:
+            sources = dataset
         sources = nest.flatten(sources)
         adapted = []
         for source, hm in zip(sources, hms):
@@ -381,7 +384,8 @@ class AutoModel(object):
                 dataset = validation_data
                 x = dataset.map(lambda x, y: x)
                 y = dataset.map(lambda x, y: y)
-            x, y = validation_data
+            else:
+                x, y = validation_data
             x = self._adapt(x, self.inputs)
             y = self._adapt(y, self._heads)
             validation_data = tf.data.Dataset.zip((x, y))

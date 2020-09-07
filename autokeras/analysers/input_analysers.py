@@ -106,7 +106,7 @@ class StructuredDataAnalyser(InputAnalyser):
         self.infer_column_types()
 
     def get_input_name(self):
-        return "StrcturedDataInput"
+        return "StructuredDataInput"
 
     def check(self):
         if len(self.shape) != 2:
@@ -138,15 +138,6 @@ class StructuredDataAnalyser(InputAnalyser):
 
     def infer_column_types(self):
         column_types = {}
-
-        # Check if column_names has the correct length.
-        if len(self.column_names) != self.num_col:
-            raise ValueError(
-                "Expect column_names to have length {expect} "
-                "but got {actual}.".format(
-                    expect=self.num_col, actual=len(self.column_names)
-                )
-            )
 
         for i in range(self.num_col):
             if self.count_categorical[i] > 0:

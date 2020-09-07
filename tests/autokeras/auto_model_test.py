@@ -72,7 +72,8 @@ def test_evaluate(tuner_fn, tmp_path):
         input_node, output_node, directory=tmp_path, max_trials=1
     )
     auto_model.fit(x_train, y_train, epochs=1, validation_data=(x_train, y_train))
-    auto_model.evaluate(x_train, y_train)
+    auto_model.evaluate(
+        tf.data.Dataset.from_tensor_slices((x_train, y_train)))
     assert tuner_fn.called
 
 
