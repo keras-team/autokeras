@@ -14,6 +14,7 @@
 import tensorflow as tf
 
 from autokeras.preprocessors.common import AddOneDimension
+from autokeras.preprocessors.common import CastToInt32
 from autokeras.preprocessors.common import CastToString
 from autokeras.preprocessors.common import LambdaPreprocessor
 from autokeras.preprocessors.common import SlidingWindow

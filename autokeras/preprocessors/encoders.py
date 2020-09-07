@@ -27,12 +27,9 @@ class Encoder(preprocessor.TargetPreprocessor):
         labels: A list of strings.
     """
 
-    def __init__(self, labels, dtype, **kwargs):
+    def __init__(self, labels, convert_int=False, **kwargs):
         super().__init__(**kwargs)
         self.labels = list(map(str, labels))
-        self._convert_int = dtype in [tf.uint8, tf.uint16, tf.uint32, tf.uint64]
-        self._convert_str = dtype != tf.string
-        self.dtype = dtype
 
     def get_config(self):
         return {"labels": self.labels}
@@ -40,24 +37,21 @@ class Encoder(preprocessor.TargetPreprocessor):
     def fit(self, dataset):
         pass
 
-
-class OneHotEncoder(Encoder):
     def transform(self, dataset):
         keys_tensor = tf.constant(self.labels)
         vals_tensor = tf.constant(list(range(len(self.labels))))
         table = tf.lookup.StaticHashTable(
             tf.lookup.KeyValueTensorInitializer(keys_tensor, vals_tensor), -1
         )
-        eye = tf.eye(len(self.labels))
-        if self._convert_int:
-            dataset = dataset.map(lambda x: tf.cast(x, tf.int32))
-        if self._convert_str:
-            dataset = dataset.map(tf.strings.as_string)
 
-        dataset = dataset.map(lambda x: table.lookup(tf.reshape(x, [-1])))
-        dataset = dataset.map(
-            lambda x: tf.nn.embedding_lookup(eye, x)
-        )
+        return dataset.map(lambda x: table.lookup(tf.reshape(x, [-1])))
+
+
+class OneHotEncoder(Encoder):
+    def transform(self, dataset):
+        dataset = super().transform(dataset)
+        eye = tf.eye(len(self.labels))
+        dataset = dataset.map(lambda x: tf.nn.embedding_lookup(eye, x))
         return dataset
 
     def postprocess(self, data):
@@ -80,14 +74,6 @@ class OneHotEncoder(Encoder):
 
 
 class LabelEncoder(Encoder):
-    def transform(self, dataset):
-        keys_tensor = tf.constant(self.labels)
-        vals_tensor = tf.constant(list(range(len(self.labels))))
-        table = tf.lookup.StaticHashTable(
-            tf.lookup.KeyValueTensorInitializer(keys_tensor, vals_tensor), -1
-        )
-        return dataset.map(table)
-
     def postprocess(self, data):
         """Get label for every element in data.
 
@@ -104,7 +90,7 @@ class LabelEncoder(Encoder):
 
 class MultiLabelEncoder(Encoder):
     def __init__(self, **kwargs):
-        super().__init__(labels=[], dtype=tf.string, **kwargs)
+        super().__init__(labels=[], **kwargs)
 
     def transform(self, dataset):
         return dataset

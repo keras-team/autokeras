@@ -144,6 +144,14 @@ class ClassificationHead(head_module.Head):
             hyper_preprocessors.append(
                 hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
             )
+        if self._dtype in [tf.uint8, tf.uint16, tf.uint32, tf.uint64]:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(preprocessors.CastToInt32())
+            )
+        if not self._encoded and self._dtype != tf.string:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(preprocessors.CastToString())
+            )
         if self.multi_label:
             hyper_preprocessors.append(
                 hpps_module.DefaultHyperPreprocessor(
@@ -154,13 +162,13 @@ class ClassificationHead(head_module.Head):
             if self.num_classes == 2 and not self.multi_label:
                 hyper_preprocessors.append(
                     hpps_module.DefaultHyperPreprocessor(
-                        preprocessors.LabelEncoder(self._labels, self._dtype)
+                        preprocessors.LabelEncoder(self._labels)
                     )
                 )
             else:
                 hyper_preprocessors.append(
                     hpps_module.DefaultHyperPreprocessor(
-                        preprocessors.OneHotEncoder(self._labels, self._dtype)
+                        preprocessors.OneHotEncoder(self._labels)
                     )
                 )
         return hyper_preprocessors

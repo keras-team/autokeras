@@ -89,6 +89,4 @@ def test_image_blocks(tmp_path):
         seed=utils.SEED,
     )
 
-    automodel.fit(
-        x_train, y_train, validation_data=(x_train, y_train), epochs=1
-    )
+    automodel.fit(x_train, y_train, validation_data=(x_train, y_train), epochs=1)

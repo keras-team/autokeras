@@ -36,8 +36,15 @@ class AddOneDimension(LambdaPreprocessor):
         return {}
 
 
-class CastToString(preprocessor.Preprocessor):
+class CastToInt32(preprocessor.Preprocessor):
+    def get_config(self):
+        return {}
 
+    def transform(self, dataset):
+        return dataset.map(lambda x: tf.cast(x, tf.int32))
+
+
+class CastToString(preprocessor.Preprocessor):
     def get_config(self):
         return {}
 
