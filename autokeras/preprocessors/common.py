@@ -36,12 +36,13 @@ class AddOneDimension(LambdaPreprocessor):
         return {}
 
 
-class CastToString(LambdaPreprocessor):
-    def __init__(self, **kwargs):
-        super().__init__(lambda x: tf.strings.as_string(x), **kwargs)
+class CastToString(preprocessor.Preprocessor):
 
     def get_config(self):
         return {}
+
+    def transform(self, dataset):
+        return dataset.map(tf.strings.as_string)
 
 
 class SlidingWindow(preprocessor.Preprocessor):

@@ -20,7 +20,7 @@ from autokeras.preprocessors import encoders
 
 
 def test_one_hot_encoder_deserialize_transforms_to_np():
-    encoder = encoders.OneHotEncoder(["a", "b", "c"])
+    encoder = encoders.OneHotEncoder(["a", "b", "c"], dtype=tf.string)
     encoder.fit(np.array(["a", "b", "a"]))
 
     encoder = preprocessors.deserialize(preprocessors.serialize(encoder))
@@ -33,7 +33,7 @@ def test_one_hot_encoder_deserialize_transforms_to_np():
 
 
 def test_one_hot_encoder_decode_to_same_string():
-    encoder = encoders.OneHotEncoder(["a", "b", "c"])
+    encoder = encoders.OneHotEncoder(["a", "b", "c"], dtype=tf.string)
 
     result = encoder.postprocess(np.eye(3))
 

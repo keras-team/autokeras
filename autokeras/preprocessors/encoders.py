@@ -27,9 +27,12 @@ class Encoder(preprocessor.TargetPreprocessor):
         labels: A list of strings.
     """
 
-    def __init__(self, labels, **kwargs):
+    def __init__(self, labels, dtype, **kwargs):
         super().__init__(**kwargs)
-        self.labels = labels
+        self.labels = list(map(str, labels))
+        self._convert_int = dtype in [tf.uint8, tf.uint16, tf.uint32, tf.uint64]
+        self._convert_str = dtype != tf.string
+        self.dtype = dtype
 
     def get_config(self):
         return {"labels": self.labels}
@@ -46,8 +49,14 @@ class OneHotEncoder(Encoder):
             tf.lookup.KeyValueTensorInitializer(keys_tensor, vals_tensor), -1
         )
         eye = tf.eye(len(self.labels))
+        if self._convert_int:
+            dataset = dataset.map(lambda x: tf.cast(x, tf.int32))
+        if self._convert_str:
+            dataset = dataset.map(tf.strings.as_string)
+
+        dataset = dataset.map(lambda x: table.lookup(tf.reshape(x, [-1])))
         dataset = dataset.map(
-            lambda x: tf.nn.embedding_lookup(eye, table.lookup(tf.reshape(x, [-1])))
+            lambda x: tf.nn.embedding_lookup(eye, x)
         )
         return dataset
 
@@ -95,7 +104,7 @@ class LabelEncoder(Encoder):
 
 class MultiLabelEncoder(Encoder):
     def __init__(self, **kwargs):
-        super().__init__(labels=[], **kwargs)
+        super().__init__(labels=[], dtype=tf.string, **kwargs)
 
     def transform(self, dataset):
         return dataset

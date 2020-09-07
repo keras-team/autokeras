@@ -71,7 +71,7 @@ def test_image_blocks(tmp_path):
     num_instances = 10
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train = x_train[:num_instances]
-    y_regression = utils.generate_data(num_instances=num_instances, shape=(1,))
+    y_train = y_train[:num_instances]
 
     input_node = ak.ImageInput()
     output = ak.Normalization()(input_node)
@@ -90,5 +90,5 @@ def test_image_blocks(tmp_path):
     )
 
     automodel.fit(
-        x_train, y_regression, validation_data=(x_train, y_regression), epochs=1
+        x_train, y_train, validation_data=(x_train, y_train), epochs=1
     )
