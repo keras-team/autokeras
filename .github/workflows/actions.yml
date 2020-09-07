@@ -33,7 +33,7 @@ jobs:
         pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc1
     - name: Test with pytest
       run: |
-        pytest tests/integration_tests/io_api_test.py::test_io_api
+        pytest --cov=autokeras --cov-report xml:coverage.xml
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
