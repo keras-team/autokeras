@@ -16,6 +16,7 @@ import tensorflow as tf
 from autokeras import preprocessors
 from autokeras.engine import hyper_preprocessor
 
+
 def serialize(encoder):
     return tf.keras.utils.serialize_keras_object(encoder)
 
@@ -27,6 +28,7 @@ def deserialize(config, custom_objects=None):
         custom_objects=custom_objects,
         printable_module_name="preprocessors",
     )
+
 
 class DefaultHyperPreprocessor(hyper_preprocessor.HyperPreprocessor):
     """HyperPreprocessor without hp usage."""

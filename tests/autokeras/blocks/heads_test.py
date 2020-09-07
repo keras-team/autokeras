@@ -19,8 +19,8 @@ from tensorflow.python.util import nest
 
 import autokeras as ak
 from autokeras import nodes as input_module
-from autokeras.blocks import heads as head_module
 from autokeras import preprocessors
+from autokeras.blocks import heads as head_module
 
 
 def test_two_classes_infer_binary_crossentropy():
@@ -66,14 +66,19 @@ def test_multi_label_loss():
 def test_clf_head_get_multi_label_preprocessor():
     head = head_module.ClassificationHead(name="a", multi_label=True)
     head._encoded = True
-    assert isinstance(head.get_hyper_preprocessors()[0].preprocessor, preprocessors.MultiLabelEncoder)
+    assert isinstance(
+        head.get_hyper_preprocessors()[0].preprocessor,
+        preprocessors.MultiLabelEncoder,
+    )
+
 
 def test_clf_head_with_2_clases_get_label_encoder():
     head = head_module.ClassificationHead(name="a", num_classes=2)
     head._encoded = False
     head._labels = ["a", "b"]
-    assert isinstance(head.get_hyper_preprocessors()[-1].preprocessor, preprocessors.LabelEncoder)
-    
+    assert isinstance(
+        head.get_hyper_preprocessors()[-1].preprocessor, preprocessors.LabelEncoder
+    )
 
 
 def test_clf_head_build_with_zero_dropout_return_tensor():
