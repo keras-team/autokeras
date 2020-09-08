@@ -737,9 +737,27 @@ class Embedding(block_module.Block):
 
 class BERTBlock(block_module.Block):
     """Block for Pre-trained BERT.
+    The input should be sequence of sentences. The implementation is derived from
+    this [example](https://www.tensorflow.org/official_models/fine_tuning_bert)
 
+    # Example
+    ```python
+        # Using the Transformer Block with AutoModel.
+        import autokeras as ak
+        from autokeras import BERTBlock
+        from tensorflow.keras import losses
+
+        input_node = ak.TextInput()
+        output_node = BERTBlock(max_seq_len=128)(input_node)
+        output_node = ak.SpatialReduction(reduction_type='global_avg')(output_node)
+        output_node = ak.DenseBlock(num_layers=1, use_batchnorm = False)(output_node)
+        output_node = ak.ClassificationHead(
+            loss=losses.SparseCategoricalCrossentropy(from_logits=True),
+            dropout = 0.25)(output_node)
+        clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
+    ```
     # Arguments
-        max_seq_len: int. The maximum length of a sequence in
+        max_seq_len: int. The maximum length of a sequence that is
             used to train the model.
     """
 

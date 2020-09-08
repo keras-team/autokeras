@@ -24,7 +24,6 @@ from autokeras.engine import serializable
 from autokeras.utils import utils
 
 
-
 def feature_encoding_input(block):
     """Fetch the column_types and column_names.
 

@@ -87,10 +87,13 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
 
 
 class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
-    """
-    tokenizer = bert.tokenization.FullTokenizer(
-        vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
-        do_lower_case=True)
+    """Vectorization and Encoding the sentences using a given Tokenizer
+
+    # Arguments
+        tokenizer : bert.tokenization.FullTokenizer(
+            vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
+            do_lower_case=True)
+        max_seq_len : maximum length of the sequences after vectorization
     """
 
     def __init__(self, tokenizer, max_seq_len):
@@ -126,12 +129,7 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
 
     def get_encoded_sentence(self, input_tensor):
         input_array = np.array(input_tensor, dtype=object)
-        sentence = tf.constant(
-            [
-                self.encode_sentence(s[0])
-                for s in input_array
-            ]
-        )
+        sentence = tf.constant([self.encode_sentence(s[0]) for s in input_array])
         return sentence
 
     def bert_encode(self, input_tensor):

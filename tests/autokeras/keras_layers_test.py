@@ -123,4 +123,3 @@ def test_text_vectorization_with_tokenizer(tmp_path):
     output = token_layer(x_train)
     print(output.shape)
     assert output.shape == (3, x_train.shape[0], max_seq_len)
-
