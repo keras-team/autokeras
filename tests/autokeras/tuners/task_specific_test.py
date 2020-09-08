@@ -94,8 +94,6 @@ def test_txt_clf_init_hp0_equals_hp_of_a_model(tmp_path):
     hp.values = copy.copy(init_hp)
 
     clf.tuner.hypermodel.build(hp)
-    # print("TEXT_CLASSIFIER hp: ", set(init_hp.keys()),
-    #       "TextClassifier hp: ", set(hp._hps.keys()))
     a = set(init_hp.keys())
     b = set(hp._hps.keys())
     for i in a:

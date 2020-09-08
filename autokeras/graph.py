@@ -23,7 +23,6 @@ from autokeras.engine import head as head_module
 from autokeras.engine import serializable
 from autokeras.utils import utils
 
-# from official import nlp
 
 
 def feature_encoding_input(block):

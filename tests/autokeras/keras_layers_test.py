@@ -120,47 +120,7 @@ def test_text_vectorization_with_tokenizer(tmp_path):
     token_layer = layer_module.TextVectorizationWithTokenizer(
         tokenizer=tokenizer, max_seq_len=max_seq_len
     )
-    # dataset = tf.data.Dataset.from_tensor_slices(x_train).batch(32)
-
-    # for data in dataset.map(token_layer):
-    #     output = data
     output = token_layer(x_train)
     print(output.shape)
-    # # assert output.dtype == np.dtype("int32")
     assert output.shape == (3, x_train.shape[0], max_seq_len)
 
-
-# def test_text_vectorization_with_tokenizer(tmp_path):
-#     x_train, x_test, y_train = get_data()
-#     gs_folder_bert = (
-#         "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
-#     )
-#     tokenizer = official.nlp.bert.tokenization.FullTokenizer(
-#         vocab_file=os.path.join(gs_folder_bert, "vocab.txt"), do_lower_case=True
-#     )
-#     input_node = tf.keras.Input(shape=(1,), dtype=tf.string)
-#     token_layer = layer_module.TextVectorizationWithTokenizer(
-#         tokenizer=tokenizer, max_seq_len=16
-#     )
-#     hidden_node = token_layer(input_node)
-#     bert_output = bert_layer()(hidden_node)
-#     output_node = tf.keras.layers.Dense(2)(bert_output)
-#     model = tf.keras.Model(input_node, output_node)
-#     model.compile(
-#         loss=losses.SparseCategoricalCrossentropy(from_logits=True),
-#         optimizer="adam"
-#     )
-#     tf.data.Dataset.zip(
-#         (
-#             (tf.data.Dataset.from_tensor_slices(x_train).batch(32),),
-#             (tf.data.Dataset.from_tensor_slices(np.random.rand(3, 1)).batch(32),),
-#         )
-#     )
-#     model.fit(x_train, y_train, epochs=1)
-#
-#     model2 = tf.keras.Model(input_node, hidden_node)
-#     result = model2.predict(x_train)
-#     print("SHAPE of RESULT: ", result.shape, result)
-#
-#     output = model2.predict(x_test)
-#     assert output.dtype == np.dtype("int32")
