@@ -18,8 +18,7 @@ from autokeras.engine import named_hypermodel
 class HyperPreprocessor(named_hypermodel.NamedHyperModel):
     """Input data preprocessor search space.
 
-    This class defines the search space for input data preprocessor. A
-    preprocessor transforms the dataset using `tf.data` operations.
+    This class defines the search space for a Preprocessor.
     """
 
     def build(self, hp, dataset):
@@ -27,7 +26,7 @@ class HyperPreprocessor(named_hypermodel.NamedHyperModel):
 
         # Arguments
             hp: `HyperParameters` instance. The hyperparameters for building the
-                model.
+                a Preprocessor.
             dataset: tf.data.Dataset.
 
         # Returns

@@ -23,6 +23,13 @@ from autokeras.utils import utils
 
 
 class HyperPipeline(hpps_module.HyperPreprocessor):
+    """A search space consists of HyperPreprocessors.
+
+    # Arguments
+        inputs: a list of lists of HyperPreprocessors.
+        outputs: a list of lists of HyperPreprocessors.
+    """
+
     def __init__(self, inputs, outputs, **kwargs):
         super().__init__(**kwargs)
         self.inputs = inputs
@@ -30,11 +37,7 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
 
     @staticmethod
     def _build_preprocessors(hp, hpps_lists, dataset):
-        sources = [
-            dataset.map(lambda *a: nest.flatten(a)[index])
-            for index in range(len(hpps_lists))
-        ]
-        sources = nest.flatten(sources)
+        sources = data_utils.unzip_dataset(dataset)
         preprocessors_list = []
         for source, hpps_list in zip(sources, hpps_lists):
             data = source
@@ -47,6 +50,15 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
         return preprocessors_list
 
     def build(self, hp, dataset):
+        """Build a Pipeline by Hyperparameters.
+
+        # Arguments
+            hp: Hyperparameters.
+            dataset: tf.data.Dataset.
+
+        # Returns
+            An instance of Pipeline.
+        """
         x = dataset.map(lambda x, y: x)
         y = dataset.map(lambda x, y: y)
         return Pipeline(
@@ -56,6 +68,7 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
 
 
 def load_pipeline(filepath, custom_objects=None):
+    """Load a Pipeline instance from disk."""
     if custom_objects is None:
         custom_objects = {}
     with tf.keras.utils.custom_object_scope(custom_objects):
@@ -63,16 +76,34 @@ def load_pipeline(filepath, custom_objects=None):
 
 
 class Pipeline(pps_module.Preprocessor):
-    def __init__(self, inputs, outputs, x_shapes=None, **kwargs):
+    """A data pipeline for transform the entire dataset.
+
+    # Arguments
+        inputs: A list of lists of Preprocessors. For the input datasets for
+            the model.
+        outputs: A list of lists of Preprocessors. For the target datasets for
+            the model.
+    """
+
+    def __init__(self, inputs, outputs, **kwargs):
         super().__init__(**kwargs)
         self.inputs = inputs
         self.outputs = outputs
-        self.x_shapes = None
 
     def fit(self, dataset):
-        self.shapes = data_utils.dataset_shape(dataset)
+        """Fit the Preprocessors."""
+        # TODO: Implement.
+        return
 
     def transform(self, dataset):
+        """Transform the dataset to be ready for the model.
+
+        # Arguments
+            dataset: tf.data.Dataset.
+
+        # Returns
+            An instance of tf.data.Dataset. The transformed dataset.
+        """
         x = dataset.map(lambda x, y: x)
         y = dataset.map(lambda x, y: y)
         x = self.transform_x(x)
@@ -80,17 +111,29 @@ class Pipeline(pps_module.Preprocessor):
         return tf.data.Dataset.zip((x, y))
 
     def transform_x(self, dataset):
+        """Transform the input dataset for the model.
+
+        # Arguments
+            dataset: tf.data.Dataset. The input dataset for the model.
+
+        # Returns
+            An instance of tf.data.Dataset. The transformed dataset.
+        """
         return self._transform_data(dataset, self.inputs)
 
     def transform_y(self, dataset):
+        """Transform the target dataset for the model.
+
+        # Arguments
+            dataset: tf.data.Dataset. The target dataset for the model.
+
+        # Returns
+            An instance of tf.data.Dataset. The transformed dataset.
+        """
         return self._transform_data(dataset, self.outputs)
 
     def _transform_data(self, dataset, pps_lists):
-        sources = [
-            dataset.map(lambda *a: nest.flatten(a)[index])
-            for index in range(len(pps_lists))
-        ]
-        sources = nest.flatten(sources)
+        sources = data_utils.unzip_dataset(dataset)
         transformed = []
         for pps_list, data in zip(pps_lists, sources):
             for preprocessor in pps_list:
@@ -141,6 +184,16 @@ class Pipeline(pps_module.Preprocessor):
         )
 
     def postprocess(self, y):
+        """Postprocess the outputs of the model.
+
+        # Arguments
+            y: numpy.ndarray or a list of numpy.ndarrays. The output of the
+                Keras model.
+
+        # Returns
+            A list or an instance of numpy.ndarray. The postprocessed data for
+            the heads.
+        """
         outputs = []
         for data, preprocessors in zip(nest.flatten(y), self.outputs):
             for preprocessor in preprocessors[::-1]:

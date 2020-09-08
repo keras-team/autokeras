@@ -42,7 +42,7 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
     The data should be numpy.ndarray or tf.data.Dataset.
     """
 
-    def build(self):
+    def build(self, hp):
         return tf.keras.Input(shape=self.shape, dtype=tf.float32)
 
     def get_adapter(self):
@@ -106,7 +106,7 @@ class TextInput(Input):
         super().__init__(**kwargs)
         self._add_one_dimension = None
 
-    def build(self):
+    def build(self, hp):
         return tf.keras.Input(shape=self.shape, dtype=tf.string)
 
     def get_adapter(self):
@@ -155,7 +155,7 @@ class StructuredDataInput(Input):
         self.column_types = column_types
         self.dtype = None
 
-    def build(self):
+    def build(self, hp):
         return tf.keras.Input(shape=self.shape, dtype=tf.string)
 
     def get_config(self):
@@ -219,7 +219,7 @@ class TimeseriesInput(StructuredDataInput):
         self.lookback = lookback
         self.batch_size = None
 
-    def build(self):
+    def build(self, hp):
         if len(self.shape) == 1:
             self.shape = (
                 self.lookback,

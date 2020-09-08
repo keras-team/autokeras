@@ -254,7 +254,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         real_nodes = {}
         for input_node in self.inputs:
             node_id = self._node_to_id[input_node]
-            real_nodes[node_id] = input_node.build()
+            real_nodes[node_id] = input_node.build(hp)
         for block in self.blocks:
             temp_inputs = [
                 real_nodes[self._node_to_id[input_node]]

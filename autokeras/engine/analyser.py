@@ -14,7 +14,14 @@
 
 
 class Analyser(object):
-    """Analyze the dataset. set the result back to the io hypermodels."""
+    """Analyze the dataset for useful information.
+
+    Analyser is used by the input nodes and the heads of the hypermodel.  It
+    analyzes the dataset to get useful information, e.g., the shape of the
+    data, the data type of the dataset. The information will be used by the
+    input nodes and heads to construct the data pipeline and to build the Keras
+    Model.
+    """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -22,10 +29,16 @@ class Analyser(object):
         self.dtype = None
 
     def update(self, data):
+        """Update the statistics with a batch of data.
+
+        # Arguments
+            data: tf.Tensor. One batch of data from tf.data.Dataset.
+        """
         if self.dtype is None:
             self.dtype = data.dtype
         if self.shape is None:
             self.shape = data.shape.as_list()
 
     def finalize(self):
+        """Process recorded information after all updates."""
         raise NotImplementedError

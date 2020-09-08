@@ -57,3 +57,12 @@ def split_dataset(dataset, validation_split):
 
 def dataset_shape(dataset):
     return tf.compat.v1.data.get_output_shapes(dataset)
+
+
+def unzip_dataset(dataset):
+    return nest.flatten(
+        [
+            dataset.map(lambda *a: nest.flatten(a)[index])
+            for index in range(len(nest.flatten(dataset_shape(dataset))))
+        ]
+    )

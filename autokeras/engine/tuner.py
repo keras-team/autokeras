@@ -41,6 +41,8 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
     The fully trained model is the best model to be used by AutoModel.
 
     # Arguments
+        oracle: kerastuner Oracle.
+        hypermodel: kerastuner KerasHyperModel.
         **kwargs: The args supported by KerasTuner.
     """
 
@@ -54,7 +56,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
     def _populate_initial_space(self):
         # Override the function to prevent building the model during initialization.
-        pass
+        return
 
     def get_best_model(self):
         with hm_module.maybe_distribute(self.distribution_strategy):
@@ -68,6 +70,11 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         return os.path.join(self.get_trial_dir(trial_id), "pipeline")
 
     def _prepare_model_build(self, hp, dataset, validation_data=None):
+        """Prepare for building the Keras model.
+
+        It build the Pipeline from HyperPipeline, transform the dataset to set
+        the input shapes and output shapes of the HyperModel.
+        """
         pipeline = self.hyper_pipeline.build(hp, dataset)
         pipeline.fit(dataset)
         dataset = pipeline.transform(dataset)

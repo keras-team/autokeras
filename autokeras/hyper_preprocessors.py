@@ -31,7 +31,14 @@ def deserialize(config, custom_objects=None):
 
 
 class DefaultHyperPreprocessor(hyper_preprocessor.HyperPreprocessor):
-    """HyperPreprocessor without hp usage."""
+    """HyperPreprocessor without Hyperparameters to tune.
+
+    It would always return the same preprocessor. No hyperparameters to be
+    tuned.
+
+    # Arguments
+        preprocessor: The Preprocessor to return when calling build.
+    """
 
     def __init__(self, preprocessor, *args, **kwargs):
         super().__init__(*args, **kwargs)

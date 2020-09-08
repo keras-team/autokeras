@@ -19,15 +19,13 @@ from autokeras.engine import preprocessor
 
 
 class Encoder(preprocessor.TargetPreprocessor):
-    """OneHotEncoder to encode and decode the labels.
-
-    This class provides ways to transform data's classification label into vector.
+    """Transform labels to encodings.
 
     # Arguments
-        labels: A list of strings.
+        labels: A list of strings. The labels to be encoded.
     """
 
-    def __init__(self, labels, convert_int=False, **kwargs):
+    def __init__(self, labels, **kwargs):
         super().__init__(**kwargs)
         self.labels = list(map(str, labels))
 
@@ -35,9 +33,17 @@ class Encoder(preprocessor.TargetPreprocessor):
         return {"labels": self.labels}
 
     def fit(self, dataset):
-        pass
+        return
 
     def transform(self, dataset):
+        """Transform labels to integer encodings.
+
+        # Arguments
+            dataset: tf.data.Dataset. The dataset to be transformed.
+
+        # Returns
+            tf.data.Dataset. The transformed dataset.
+        """
         keys_tensor = tf.constant(self.labels)
         vals_tensor = tf.constant(list(range(len(self.labels))))
         table = tf.lookup.StaticHashTable(
@@ -49,13 +55,21 @@ class Encoder(preprocessor.TargetPreprocessor):
 
 class OneHotEncoder(Encoder):
     def transform(self, dataset):
+        """Transform labels to one-hot encodings.
+
+        # Arguments
+            dataset: tf.data.Dataset. The dataset to be transformed.
+
+        # Returns
+            tf.data.Dataset. The transformed dataset.
+        """
         dataset = super().transform(dataset)
         eye = tf.eye(len(self.labels))
         dataset = dataset.map(lambda x: tf.nn.embedding_lookup(eye, x))
         return dataset
 
     def postprocess(self, data):
-        """Get label for every element in data.
+        """Transform probabilities back to labels.
 
         # Arguments
             data: numpy.ndarray. The output probabilities of the classification head.
@@ -74,8 +88,10 @@ class OneHotEncoder(Encoder):
 
 
 class LabelEncoder(Encoder):
+    """Transform the labels to integer encodings."""
+
     def postprocess(self, data):
-        """Get label for every element in data.
+        """Transform probabilities back to labels.
 
         # Arguments
             data: numpy.ndarray. The output probabilities of the classification head.
@@ -89,6 +105,8 @@ class LabelEncoder(Encoder):
 
 
 class MultiLabelEncoder(Encoder):
+    """Encoder for multi-label data."""
+
     def __init__(self, **kwargs):
         super().__init__(labels=[], **kwargs)
 
@@ -96,6 +114,14 @@ class MultiLabelEncoder(Encoder):
         return dataset
 
     def postprocess(self, data):
+        """Transform probabilities to zeros and ones.
+
+        # Arguments
+            data: numpy.ndarray. The output probabilities of the classification head.
+
+        # Returns
+            numpy.ndarray. The zeros and ones predictions.
+        """
         data[data < 0.5] = 0
         data[data > 0.5] = 1
         return data

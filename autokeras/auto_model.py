@@ -277,13 +277,9 @@ class AutoModel(object):
 
     def _adapt(self, dataset, hms):
         if isinstance(dataset, tf.data.Dataset):
-            sources = [
-                dataset.map(lambda *a: nest.flatten(a)[index])
-                for index in range(len(hms))
-            ]
+            sources = data_utils.unzip_dataset(dataset)
         else:
-            sources = dataset
-        sources = nest.flatten(sources)
+            sources = nest.flatten(dataset)
         adapted = []
         for source, hm in zip(sources, hms):
             source = hm.get_adapter().adapt(source, self.batch_size)

@@ -18,7 +18,11 @@ from autokeras.engine import preprocessor
 
 
 class LambdaPreprocessor(preprocessor.Preprocessor):
-    """Build Preprocessor with a map function."""
+    """Build Preprocessor with a map function.
+
+    # Arguments
+        func: a callable function for the dataset to map.
+    """
 
     def __init__(self, func, **kwargs):
         super().__init__(**kwargs)
@@ -27,16 +31,20 @@ class LambdaPreprocessor(preprocessor.Preprocessor):
     def transform(self, dataset):
         return dataset.map(self.func)
 
-
-class AddOneDimension(LambdaPreprocessor):
-    def __init__(self, **kwargs):
-        super().__init__(lambda x: tf.expand_dims(x, axis=-1), **kwargs)
-
     def get_config(self):
         return {}
 
 
+class AddOneDimension(LambdaPreprocessor):
+    """Append one dimension of size one to the dataset shape."""
+
+    def __init__(self, **kwargs):
+        super().__init__(lambda x: tf.expand_dims(x, axis=-1), **kwargs)
+
+
 class CastToInt32(preprocessor.Preprocessor):
+    """Cast the dataset shape to tf.int32."""
+
     def get_config(self):
         return {}
 
@@ -45,6 +53,8 @@ class CastToInt32(preprocessor.Preprocessor):
 
 
 class CastToString(preprocessor.Preprocessor):
+    """Cast the dataset shape to tf.string."""
+
     def get_config(self):
         return {}
 
@@ -53,6 +63,19 @@ class CastToString(preprocessor.Preprocessor):
 
 
 class SlidingWindow(preprocessor.Preprocessor):
+    """Apply sliding window to the dataset.
+
+    It groups the consecutive data items together. Therefore, it inserts one
+    more dimension of size `lookback` to the dataset shape after the batch_size
+    dimension. It also reduce the number of instances in the dataset by
+    (lookback - 1).
+
+    # Arguments
+        lookback: Int. The window size. The number of data items to group
+            together.
+        batch_size: Int. The batch size of the dataset.
+    """
+
     def __init__(self, lookback, batch_size, **kwargs):
         super().__init__(**kwargs)
         self.lookback = lookback
@@ -61,9 +84,8 @@ class SlidingWindow(preprocessor.Preprocessor):
     def transform(self, dataset):
         dataset = dataset.unbatch()
         dataset = dataset.window(self.lookback, shift=1, drop_remainder=True)
-        # dataset = dataset.flat_map(lambda x: x.batch(self.lookback))
-        # return dataset.batch(self.batch_size)
         final_data = []
+        # TODO: Avoid iterating the dataset to speedup and save memory.
         for window in dataset:
             final_data.append([elems.numpy() for elems in window])
         dataset = tf.data.Dataset.from_tensor_slices(final_data)
