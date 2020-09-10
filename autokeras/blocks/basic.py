@@ -21,10 +21,10 @@ from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
+from autokeras import keras_layers
 from autokeras.applications import bert
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
-from autokeras import keras_layers
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
 
