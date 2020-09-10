@@ -91,26 +91,6 @@ def get_text_data():
     return train, test, y
 
 
-class bert_layer(tf.keras.layers.Layer):
-    def __init__(
-        self,
-    ):
-        super(bert_layer, self).__init__()
-        self.bert_encoder = bert.BERT()
-
-    def call(self, inputs):
-        bert_input = {
-            "input_word_ids": inputs[0],
-            "input_mask": inputs[1],
-            "input_type_ids": inputs[2],
-        }
-        output = self.bert_encoder(
-            bert_input,
-            training=True,
-        )
-        return output[1]
-
-
 def test_text_vectorization_with_tokenizer(tmp_path):
     x_train, x_test, y_train = get_text_data()
     tokenizer = official.nlp.bert.tokenization.FullTokenizer(
@@ -121,5 +101,4 @@ def test_text_vectorization_with_tokenizer(tmp_path):
         tokenizer=tokenizer, max_seq_len=max_seq_len
     )
     output = token_layer(x_train)
-    print(output.shape)
     assert output.shape == (3, x_train.shape[0], max_seq_len)
