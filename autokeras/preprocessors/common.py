@@ -84,11 +84,6 @@ class SlidingWindow(preprocessor.Preprocessor):
     def transform(self, dataset):
         dataset = dataset.unbatch()
         dataset = dataset.window(self.lookback, shift=1, drop_remainder=True)
-        final_data = []
-        # TODO: Avoid iterating the dataset to speedup and save memory.
-        for window in dataset:
-            final_data.append([elems.numpy() for elems in window])
-        dataset = tf.data.Dataset.from_tensor_slices(final_data)
         dataset = dataset.batch(self.batch_size)
         return dataset
 
