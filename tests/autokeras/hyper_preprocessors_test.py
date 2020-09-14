@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.adapters.input_adapters import ImageAdapter
-from autokeras.adapters.input_adapters import InputAdapter
-from autokeras.adapters.input_adapters import StructuredDataAdapter
-from autokeras.adapters.input_adapters import TextAdapter
-from autokeras.adapters.input_adapters import TimeseriesAdapter
-from autokeras.adapters.output_adapters import ClassificationAdapter
-from autokeras.adapters.output_adapters import RegressionAdapter
-from autokeras.adapters.output_adapters import SegmentationHeadAdapter
+from autokeras import hyper_preprocessors
+from autokeras import preprocessors
+
+
+def test_serialize_and_deserialize_default_hpps():
+    preprocessor = preprocessors.AddOneDimension()
+    hyper_preprocessor = hyper_preprocessors.DefaultHyperPreprocessor(preprocessor)
+    hyper_preprocessor = hyper_preprocessors.deserialize(
+        hyper_preprocessors.serialize(hyper_preprocessor)
+    )
+    assert isinstance(hyper_preprocessor.preprocessor, preprocessors.AddOneDimension)

@@ -12,27 +12,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kerastuner
-
 from autokeras.engine import serializable
 
 
-class Preprocessor(kerastuner.HyperModel, serializable.Serializable):
-    """Input data preprocessor search space.
+class Preprocessor(serializable.Serializable):
+    """A preprocessor for tf.data.Dataset.
 
-    This class defines the search space for input data preprocessor. A
-    preprocessor transforms the dataset using `tf.data` operations.
+    A preprocessor transforms the dataset using `tf.data` operations.
     """
 
-    def build(self, hp, x):
-        """Build the `tf.data` input preprocessor.
+    def fit(self, dataset):
+        """Fit the preprocessor with the dataset.
 
         # Arguments
-            hp: `HyperParameters` instance. The hyperparameters for building the
-                model.
-            x: `tf.data.Dataset` instance. The input data for preprocessing.
+            dataset: an instance of `tf.data.Dataset`.
+        """
+        # TODO: may need to change to a streaming way of fit to reduce the
+        # number of iterations through the dataset for speed. Need to be
+        # decided when we have more use cases for this fit.
+        raise NotImplementedError
+
+    def transform(self, dataset):
+        """Transform the dataset wth the preprocessor.
+
+        # Arguments
+            dataset: an instance of `tf.data.Dataset`.
 
         # Returns
-            `tf.data.Dataset`. The preprocessed data to pass to the model.
+            The transformed dataset.
+        """
+        raise NotImplementedError
+
+
+class TargetPreprocessor(Preprocessor):
+    """Preprocessor for target data."""
+
+    def postprocess(self, dataset):
+        """Postprocess the output of the Keras model.
+
+        # Arguments
+            dataset: numpy.ndarray. The corresponding output of the model.
+
+        # Returns
+            numpy.ndarray. The postprocessed data.
         """
         raise NotImplementedError

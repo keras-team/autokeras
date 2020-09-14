@@ -21,16 +21,15 @@ from typing import Union
 
 import pandas as pd
 
-from autokeras import auto_model
 from autokeras import blocks
 from autokeras import nodes as input_module
 from autokeras.engine import tuner
-from autokeras.tasks.structured_data_mixin import StructuredDataMixin
+from autokeras.tasks import structured_data
 from autokeras.tuners import greedy
 from autokeras.utils import types
 
 
-class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel):
+class SupervisedTimeseriesDataPipeline(structured_data.BaseStructuredDataPipeline):
     def __init__(
         self,
         outputs,
@@ -44,7 +43,6 @@ class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel
         inputs = input_module.TimeseriesInput(
             lookback=lookback, column_names=column_names, column_types=column_types
         )
-        self.check(column_names, column_types)
         super().__init__(inputs=inputs, outputs=outputs, **kwargs)
         self.predict_from = predict_from
         self.predict_until = predict_until
@@ -71,12 +69,21 @@ class SupervisedTimeseriesDataPipeline(StructuredDataMixin, auto_model.AutoModel
         if isinstance(x, str):
             self._target_col_name = y
             x, y = self._read_from_csv(x, y)
+
         if validation_data:
             x_val, y_val = validation_data
             if isinstance(x_val, str):
                 validation_data = self._read_from_csv(x_val, y_val)
 
+        self.check_in_fit(x)
         self.train_len = len(y)
+
+        if validation_data:
+            x_val, y_val = validation_data
+            train_len = len(y_val)
+            x_val = x_val[:train_len]
+            y_val = y_val[self.lookback - 1 :]
+            validation_data = x_val, y_val
 
         super().fit(
             x=x[: self.train_len],

@@ -106,6 +106,7 @@ The following example shows how to implement a single Dense layer block whose nu
 
 import autokeras as ak
 import tensorflow as tf
+import numpy as np
 
 class SingleDenseLayerBlock(ak.Block):
     

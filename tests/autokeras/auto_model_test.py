@@ -20,7 +20,6 @@ import pytest
 import tensorflow as tf
 
 import autokeras as ak
-from autokeras.utils import data_utils
 from tests import utils
 
 
@@ -59,14 +58,6 @@ def test_auto_model_project_name_field_as_specified(tmp_path):
     assert auto_model.project_name == "auto_model"
 
 
-def test_auto_model_preprocessors_is_list(tmp_path):
-    auto_model = ak.AutoModel(
-        ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
-    )
-
-    assert isinstance(auto_model.preprocessors, list)
-
-
 @mock.patch("autokeras.auto_model.get_tuner_class")
 def test_evaluate(tuner_fn, tmp_path):
     x_train = np.random.rand(100, 32)
@@ -81,7 +72,7 @@ def test_evaluate(tuner_fn, tmp_path):
         input_node, output_node, directory=tmp_path, max_trials=1
     )
     auto_model.fit(x_train, y_train, epochs=1, validation_data=(x_train, y_train))
-    auto_model.evaluate(x_train, y_train)
+    auto_model.evaluate(tf.data.Dataset.from_tensor_slices((x_train, y_train)))
     assert tuner_fn.called
 
 
@@ -165,19 +156,16 @@ def get_multi_io_auto_model(tmp_path):
 
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
-def test_multi_io_with_tf_dataset(tuner_fn, tmp_path):
+def test_multi_io_with_tf_dataset_doesnt_crash(tuner_fn, tmp_path):
     auto_model = get_multi_io_auto_model(tmp_path)
     x1 = utils.generate_data()
     y1 = utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1, y1)))
     auto_model.fit(dataset, epochs=2)
 
-    for adapter in auto_model._input_adapters + auto_model._output_adapters:
-        assert adapter.shape is not None
-
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
-def test_single_nested_dataset(tuner_fn, tmp_path):
+def test_single_nested_dataset_doesnt_crash(tuner_fn, tmp_path):
     auto_model = ak.AutoModel(
         ak.ImageInput(),
         ak.RegressionHead(),
@@ -189,9 +177,6 @@ def test_single_nested_dataset(tuner_fn, tmp_path):
     y1 = utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices(((x1,), y1))
     auto_model.fit(dataset, epochs=2)
-
-    for adapter in auto_model._input_adapters + auto_model._output_adapters:
-        assert adapter.shape is not None
 
 
 def dataset_error(x, y, validation_data, message, tmp_path):
@@ -263,7 +248,7 @@ def test_multi_input_predict2(tuner_fn, tmp_path):
 
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
-def test_single_input_predict(tuner_fn, tmp_path):
+def test_single_input_predict_doesnt_crash(tuner_fn, tmp_path):
     auto_model = get_single_io_auto_model(tmp_path)
     x1 = utils.generate_data()
     y1 = utils.generate_data(shape=(1,))
@@ -298,12 +283,7 @@ def test_no_validation_data_nor_split_error(tmp_path):
 
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
-def test_predict_tuple_x_and_tuple_y_call_model_predict_with_x(tuner_fn, tmp_path):
-    model = mock.Mock()
-    tuner = mock.Mock()
-    tuner.get_best_model.return_value = model
-    tuner_fn.return_value.return_value = tuner
-
+def test_predict_tuple_x_and_tuple_y_predict_doesnt_crash(tuner_fn, tmp_path):
     auto_model = ak.AutoModel(
         ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
     )
@@ -312,7 +292,3 @@ def test_predict_tuple_x_and_tuple_y_call_model_predict_with_x(tuner_fn, tmp_pat
     )
     auto_model.fit(dataset)
     auto_model.predict(dataset)
-
-    assert data_utils.dataset_shape(
-        model.predict.call_args_list[0][0][0]
-    ).as_list() == [None, 32, 32, 3]

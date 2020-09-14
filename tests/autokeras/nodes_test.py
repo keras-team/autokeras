@@ -12,11 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.adapters.input_adapters import ImageAdapter
-from autokeras.adapters.input_adapters import InputAdapter
-from autokeras.adapters.input_adapters import StructuredDataAdapter
-from autokeras.adapters.input_adapters import TextAdapter
-from autokeras.adapters.input_adapters import TimeseriesAdapter
-from autokeras.adapters.output_adapters import ClassificationAdapter
-from autokeras.adapters.output_adapters import RegressionAdapter
-from autokeras.adapters.output_adapters import SegmentationHeadAdapter
+import tensorflow as tf
+
+from autokeras import blocks
+from autokeras import nodes
+from autokeras import preprocessors
+
+
+def test_input_get_block_return_general_block():
+    input_node = nodes.Input()
+    assert isinstance(input_node.get_block(), blocks.GeneralBlock)
+
+
+def test_structured_data_input_get_pps_cast_to_string():
+    input_node = nodes.StructuredDataInput()
+    input_node.dtype = tf.float32
+    assert isinstance(
+        input_node.get_hyper_preprocessors()[0].preprocessor,
+        preprocessors.CastToString,
+    )

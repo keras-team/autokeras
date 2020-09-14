@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.engine import serializable
+from autokeras.engine import named_hypermodel
 
 
-class Node(serializable.Serializable):
+class Node(named_hypermodel.NamedHyperModel):
     """The nodes in a network connecting the blocks."""
 
-    def __init__(self, shape=None):
-        super().__init__()
+    def __init__(self, shape=None, **kwargs):
+        super().__init__(**kwargs)
         self.in_blocks = []
         self.out_blocks = []
         self.shape = shape
@@ -30,8 +30,10 @@ class Node(serializable.Serializable):
     def add_out_block(self, hypermodel):
         self.out_blocks.append(hypermodel)
 
-    def build(self):
+    def build(self, hp):
         raise NotImplementedError
 
     def get_config(self):
-        return {"shape": self.shape}
+        config = super().get_config()
+        config.update({"shape": self.shape})
+        return config

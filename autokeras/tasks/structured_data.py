@@ -20,22 +20,19 @@ from typing import Type
 from typing import Union
 
 import pandas as pd
+from tensorflow.python.util import nest
 
 from autokeras import auto_model
 from autokeras import blocks
 from autokeras import nodes as input_module
 from autokeras.engine import tuner
-from autokeras.tasks.structured_data_mixin import StructuredDataMixin
 from autokeras.tuners import task_specific
 from autokeras.utils import types
 
 
-class SupervisedStructuredDataPipeline(StructuredDataMixin, auto_model.AutoModel):
-    def __init__(self, outputs, column_names, column_types, **kwargs):
-        inputs = input_module.StructuredDataInput()
-        inputs.column_types = column_types
-        inputs.column_names = column_names
-        self.check(column_names, column_types)
+class BaseStructuredDataPipeline(auto_model.AutoModel):
+    def __init__(self, inputs, outputs, **kwargs):
+        self.check(inputs.column_names, inputs.column_types)
         super().__init__(inputs=inputs, outputs=outputs, **kwargs)
         self._target_col_name = None
 
@@ -44,6 +41,37 @@ class SupervisedStructuredDataPipeline(StructuredDataMixin, auto_model.AutoModel
         df = pd.read_csv(x)
         target = df.pop(y).to_numpy()
         return df, target
+
+    def check(self, column_names, column_types):
+        if column_types:
+            for column_type in column_types.values():
+                if column_type not in ["categorical", "numerical"]:
+                    raise ValueError(
+                        'column_types should be either "categorical" '
+                        'or "numerical", but got {name}'.format(name=column_type)
+                    )
+
+    def check_in_fit(self, x):
+        input_node = nest.flatten(self.inputs)[0]
+        # Extract column_names from pd.DataFrame.
+        if isinstance(x, pd.DataFrame) and input_node.column_names is None:
+            input_node.column_names = list(x.columns)
+
+        if input_node.column_names and input_node.column_types:
+            for column_name in input_node.column_types:
+                if column_name not in input_node.column_names:
+                    raise ValueError(
+                        "column_names and column_types are "
+                        "mismatched. Cannot find column name "
+                        "{name} in the data.".format(name=column_name)
+                    )
+
+    def read_for_predict(self, x):
+        if isinstance(x, str):
+            x = pd.read_csv(x)
+            if self._target_col_name in x:
+                x.pop(self._target_col_name)
+        return x
 
     def fit(
         self,
@@ -93,10 +121,13 @@ class SupervisedStructuredDataPipeline(StructuredDataMixin, auto_model.AutoModel
         if isinstance(x, str):
             self._target_col_name = y
             x, y = self._read_from_csv(x, y)
+
         if validation_data:
             x_val, y_val = validation_data
             if isinstance(x_val, str):
                 validation_data = self._read_from_csv(x_val, y_val)
+
+        self.check_in_fit(x)
 
         super().fit(
             x=x,
@@ -148,6 +179,14 @@ class SupervisedStructuredDataPipeline(StructuredDataMixin, auto_model.AutoModel
         if isinstance(x, str):
             x, y = self._read_from_csv(x, y)
         return super().evaluate(x=x, y=y, batch_size=batch_size, **kwargs)
+
+
+class SupervisedStructuredDataPipeline(BaseStructuredDataPipeline):
+    def __init__(self, outputs, column_names, column_types, **kwargs):
+        inputs = input_module.StructuredDataInput(
+            column_names=column_names, column_types=column_types
+        )
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
 
 
 class StructuredDataClassifier(SupervisedStructuredDataPipeline):

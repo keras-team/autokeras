@@ -17,6 +17,7 @@ from unittest import mock
 import numpy as np
 import pandas as pd
 import pytest
+from tensorflow.python.util import nest
 
 import autokeras as ak
 from tests import utils
@@ -30,19 +31,43 @@ def test_raise_error_unknown_str_in_col_type(tmp_path):
             seed=utils.SEED,
         )
 
-    assert 'Column_types should be either "categorical"' in str(info.value)
+    assert 'column_types should be either "categorical"' in str(info.value)
 
 
-def test_raise_error_unknown_name_in_col_type(tmp_path):
+def test_structured_data_input_name_type_mismatch_error(tmp_path):
     with pytest.raises(ValueError) as info:
-        ak.StructuredDataClassifier(
-            column_types={"age": "numerical", "parch": "categorical"},
+        clf = ak.StructuredDataClassifier(
+            column_types={"_age": "numerical", "parch": "categorical"},
             column_names=["age", "fare"],
             directory=tmp_path,
             seed=utils.SEED,
         )
+        clf.fit(x=utils.TRAIN_CSV_PATH, y="survived")
 
-    assert "Column_names and column_types are mismatched" in str(info.value)
+    assert "column_names and column_types are mismatched." in str(info.value)
+
+
+def test_structured_data_col_type_no_name_error(tmp_path):
+    with pytest.raises(ValueError) as info:
+        clf = ak.StructuredDataClassifier(
+            column_types={"age": "numerical", "parch": "categorical"},
+            directory=tmp_path,
+            seed=utils.SEED,
+        )
+        clf.fit(x=np.random.rand(100, 30), y=np.random.rand(100, 1))
+
+    assert "column_names must be specified" in str(info.value)
+
+
+@mock.patch("autokeras.AutoModel.fit")
+def test_structured_data_get_col_names_from_df(fit, tmp_path):
+    clf = ak.StructuredDataClassifier(
+        directory=tmp_path,
+        seed=utils.SEED,
+    )
+    clf.fit(x=utils.TRAIN_CSV_PATH, y="survived")
+
+    assert nest.flatten(clf.inputs)[0].column_names[0] == "sex"
 
 
 @mock.patch("autokeras.AutoModel.fit")

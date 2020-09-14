@@ -33,6 +33,7 @@ from autokeras.blocks.reduction import Flatten
 from autokeras.blocks.reduction import Merge
 from autokeras.blocks.reduction import SpatialReduction
 from autokeras.blocks.reduction import TemporalReduction
+from autokeras.blocks.wrapper import GeneralBlock
 from autokeras.blocks.wrapper import ImageBlock
 from autokeras.blocks.wrapper import StructuredDataBlock
 from autokeras.blocks.wrapper import TextBlock

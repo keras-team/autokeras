@@ -26,3 +26,10 @@ def test_split_data_has_one_batch_error():
         )
 
     assert "The dataset should at least contain 2 batches" in str(info.value)
+
+
+def test_unzip_dataset_doesnt_unzip_single_dataset():
+    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 32, 2))
+    dataset = data_utils.unzip_dataset(dataset)[0]
+    dataset = data_utils.unzip_dataset(dataset)[0]
+    assert data_utils.dataset_shape(dataset).as_list() == [32, 2]

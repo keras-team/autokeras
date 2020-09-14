@@ -16,7 +16,7 @@ import kerastuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from autokeras import adapters
+from autokeras import analysers
 from autokeras import blocks
 from tests import utils
 
@@ -137,7 +137,7 @@ def test_text_get_config_has_all_attributes():
 def test_structured_build_return_tensor():
     block = blocks.StructuredDataBlock()
     block.column_names = ["0", "1"]
-    block.column_types = {"0": adapters.NUMERICAL, "1": adapters.NUMERICAL}
+    block.column_types = {"0": analysers.NUMERICAL, "1": analysers.NUMERICAL}
 
     outputs = block.build(
         kerastuner.HyperParameters(), tf.keras.Input(shape=(2,), dtype=tf.string)
@@ -150,7 +150,7 @@ def test_structured_build_return_tensor():
 def test_structured_block_normalize_return_tensor():
     block = blocks.StructuredDataBlock(normalize=True)
     block.column_names = ["0", "1"]
-    block.column_types = {"0": adapters.NUMERICAL, "1": adapters.NUMERICAL}
+    block.column_types = {"0": analysers.NUMERICAL, "1": analysers.NUMERICAL}
 
     outputs = block.build(
         kerastuner.HyperParameters(), tf.keras.Input(shape=(2,), dtype=tf.string)
@@ -163,7 +163,7 @@ def test_structured_block_normalize_return_tensor():
 def test_structured_block_search_normalize_return_tensor():
     block = blocks.StructuredDataBlock(name="a")
     block.column_names = ["0", "1"]
-    block.column_types = {"0": adapters.NUMERICAL, "1": adapters.NUMERICAL}
+    block.column_types = {"0": analysers.NUMERICAL, "1": analysers.NUMERICAL}
     hp = kerastuner.HyperParameters()
     hp.values["a/" + blocks.wrapper.NORMALIZE] = True
 
@@ -194,7 +194,7 @@ def test_structured_get_config_has_all_attributes():
 def test_timeseries_build_return_tensor():
     block = blocks.TimeseriesBlock()
     block.column_names = ["0", "1"]
-    block.column_types = {"0": adapters.NUMERICAL, "1": adapters.NUMERICAL}
+    block.column_types = {"0": analysers.NUMERICAL, "1": analysers.NUMERICAL}
 
     outputs = block.build(
         kerastuner.HyperParameters(), tf.keras.Input(shape=(32, 2), dtype=tf.float32)

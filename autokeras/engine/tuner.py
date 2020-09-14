@@ -22,6 +22,8 @@ from tensorflow.keras import callbacks as tf_callbacks
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
+from autokeras import pipeline as pipeline_module
+from autokeras.utils import data_utils
 from autokeras.utils import utils
 
 
@@ -39,32 +41,57 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
     The fully trained model is the best model to be used by AutoModel.
 
     # Arguments
-        preprocessors: An instance or list of `Preprocessor` objects corresponding to
-            each AutoModel input, to preprocess a `tf.data.Dataset` before passing it
-            to the model. Defaults to None (no external preprocessing).
+        oracle: kerastuner Oracle.
+        hypermodel: kerastuner KerasHyperModel.
         **kwargs: The args supported by KerasTuner.
     """
 
-    def __init__(self, oracle, hypermodel, preprocessors=None, **kwargs):
+    def __init__(self, oracle, hypermodel, **kwargs):
         # Initialize before super() for reload to work.
         self._finished = False
         super().__init__(oracle, hypermodel, **kwargs)
-        self.preprocessors = nest.flatten(preprocessors)
         # Save or load the HyperModel.
         self.hypermodel.hypermodel.save(os.path.join(self.project_dir, "graph"))
+        self.hyper_pipeline = None
 
-    # Override the function to prevent building the model during initialization.
     def _populate_initial_space(self):
-        pass
+        # Override the function to prevent building the model during initialization.
+        return
 
     def get_best_model(self):
-        model = self._build_best_model()
         with hm_module.maybe_distribute(self.distribution_strategy):
-            model.load_weights(self.best_model_path)
+            model = tf.keras.models.load_model(self.best_model_path)
         return model
 
-    def _on_train_begin(self, model, hp, x, *args, **kwargs):
+    def get_best_pipeline(self):
+        return pipeline_module.load_pipeline(self.best_pipeline_path)
+
+    def _pipeline_path(self, trial_id):
+        return os.path.join(self.get_trial_dir(trial_id), "pipeline")
+
+    def _prepare_model_build(self, hp, dataset, validation_data=None):
+        """Prepare for building the Keras model.
+
+        It build the Pipeline from HyperPipeline, transform the dataset to set
+        the input shapes and output shapes of the HyperModel.
+        """
+        pipeline = self.hyper_pipeline.build(hp, dataset)
+        pipeline.fit(dataset)
+        dataset = pipeline.transform(dataset)
+        self.hypermodel.hypermodel.set_io_shapes(data_utils.dataset_shape(dataset))
+        if validation_data is not None:
+            validation_data = pipeline.transform(validation_data)
+        return pipeline, dataset, validation_data
+
+    def _on_build_begin(self, trial_id, hp, args, kwargs):
+        pipeline, kwargs["x"], kwargs["validation_data"] = self._prepare_model_build(
+            hp, kwargs["x"], kwargs["validation_data"]
+        )
+        pipeline.save(self._pipeline_path(trial_id))
+
+    def _on_train_begin(self, model, hp, args, kwargs):
         """Adapt the preprocessing layers and tune the fit arguments."""
+        x = kwargs["x"]
         self.adapt(model, x)
 
     @staticmethod
@@ -132,6 +159,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
         # Populate initial search space.
         hp = self.oracle.get_space()
+        self._prepare_model_build(hp, fit_kwargs["x"], fit_kwargs["validation_data"])
         self.hypermodel.build(hp)
         self.oracle.update_space(hp)
 
@@ -158,11 +186,15 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
                 )
                 copied_fit_kwargs.pop("validation_data")
 
-            model = self.final_fit(**copied_fit_kwargs)
+            pipeline, model = self.final_fit(**copied_fit_kwargs)
         else:
             model = self.get_best_models()[0]
+            pipeline = pipeline_module.load_pipeline(
+                self._pipeline_path(self.oracle.get_best_trials(1)[0].trial_id)
+            )
 
-        model.save_weights(self.best_model_path)
+        model.save(self.best_model_path)
+        pipeline.save(self.best_pipeline_path)
         self._finished = True
 
     def get_state(self):
@@ -191,15 +223,25 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         best_hp = best_trial.hyperparameters
         return self.hypermodel.build(best_hp)
 
-    def final_fit(self, x=None, **fit_kwargs):
+    def final_fit(self, x=None, validation_data=None, **fit_kwargs):
+        best_trial = self.oracle.get_best_trials(1)[0]
+        best_hp = best_trial.hyperparameters
+        pipeline, x, validation_data = self._prepare_model_build(
+            best_hp, x, validation_data
+        )
+
         model = self._build_best_model()
         self.adapt(model, x)
-        model.fit(x, **fit_kwargs)
-        return model
+        model.fit(x, validation_data=validation_data, **fit_kwargs)
+        return pipeline, model
 
     @property
     def best_model_path(self):
         return os.path.join(self.project_dir, "best_model")
+
+    @property
+    def best_pipeline_path(self):
+        return os.path.join(self.project_dir, "best_pipeline")
 
     @property
     def objective(self):

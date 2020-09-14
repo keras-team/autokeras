@@ -100,7 +100,7 @@ different choices to be tuned automatically.  See the following example for deta
 import autokeras as ak
 
 input_node = ak.TextInput()
-output_node = ak.TextBlock(vectorizer='ngram')(input_node)
+output_node = ak.TextBlock(block_type='ngram')(input_node)
 output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(
     inputs=input_node,

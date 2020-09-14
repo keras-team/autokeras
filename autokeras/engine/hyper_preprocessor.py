@@ -12,11 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.adapters.input_adapters import ImageAdapter
-from autokeras.adapters.input_adapters import InputAdapter
-from autokeras.adapters.input_adapters import StructuredDataAdapter
-from autokeras.adapters.input_adapters import TextAdapter
-from autokeras.adapters.input_adapters import TimeseriesAdapter
-from autokeras.adapters.output_adapters import ClassificationAdapter
-from autokeras.adapters.output_adapters import RegressionAdapter
-from autokeras.adapters.output_adapters import SegmentationHeadAdapter
+from autokeras.engine import named_hypermodel
+
+
+class HyperPreprocessor(named_hypermodel.NamedHyperModel):
+    """Input data preprocessor search space.
+
+    This class defines the search space for a Preprocessor.
+    """
+
+    def build(self, hp, dataset):
+        """Build the `tf.data` input preprocessor.
+
+        # Arguments
+            hp: `HyperParameters` instance. The hyperparameters for building the
+                a Preprocessor.
+            dataset: tf.data.Dataset.
+
+        # Returns
+            an instance of Preprocessor.
+        """
+        raise NotImplementedError
