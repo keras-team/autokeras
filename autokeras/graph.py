@@ -294,7 +294,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
     def _compile_keras_model(self, hp, model):
         # Specify hyperparameters from compile(...)
         optimizer_name = hp.Choice(
-            "optimizer", ["adam", "adadelta", "sgd"], default="adam"
+            "optimizer", ["adam", "adadelta", "sgd", "adam_weight_decay"], default="adam"
         )
         learning_rate = hp.Choice(
             "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 1e-5], default=1e-3

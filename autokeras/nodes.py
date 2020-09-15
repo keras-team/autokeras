@@ -42,6 +42,12 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
     The data should be numpy.ndarray or tf.data.Dataset.
     """
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.dtype = None
+        self.batch_size = None
+        self.num_samples = None
+
     def build(self, hp):
         return tf.keras.Input(shape=self.shape, dtype=tf.float32)
 
@@ -55,7 +61,10 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
         return blocks.GeneralBlock()
 
     def config_from_analyser(self, analyser):
-        pass
+        self.shape = analyser.shape
+        self.dtype = analyser.dtype
+        self.batch_size = analyser.batch_size
+        self.num_samples = analyser.num_samples
 
     def get_hyper_preprocessors(self):
         return []
@@ -83,6 +92,7 @@ class ImageInput(Input):
         return blocks.ImageBlock()
 
     def config_from_analyser(self, analyser):
+        super().config_from_analyser(analyser)
         self.has_channel_dim = analyser.has_channel_dim
 
     def get_hyper_preprocessors(self):
@@ -119,6 +129,7 @@ class TextInput(Input):
         return blocks.TextBlock()
 
     def config_from_analyser(self, analyser):
+        super().config_from_analyser(analyser)
         self._add_one_dimension = len(analyser.shape) == 1
 
     def get_hyper_preprocessors(self):
@@ -179,7 +190,6 @@ class StructuredDataInput(Input):
         self.column_names = analyser.column_names
         # Analyser keeps the specified ones and infer the missing ones.
         self.column_types = analyser.column_types
-        self.dtype = analyser.dtype
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []
@@ -217,7 +227,6 @@ class TimeseriesInput(StructuredDataInput):
             column_names=column_names, column_types=column_types, **kwargs
         )
         self.lookback = lookback
-        self.batch_size = None
 
     def build(self, hp):
         if len(self.shape) == 1:
@@ -243,9 +252,6 @@ class TimeseriesInput(StructuredDataInput):
     def get_block(self):
         return blocks.TimeseriesBlock()
 
-    def config_from_analyser(self, analyser):
-        super().config_from_analyser(analyser)
-        self.batch_size = analyser.batch_size
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []
