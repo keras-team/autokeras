@@ -116,12 +116,10 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
 
         Tokenizes, and adjusts the sentence length to the maximum sequence
         length. Some important tokens in the BERT tokenizer are:
-        [UNK]: 100
-        [CLS]: 101
-        [SEP]: 102
-        [MASK]: 103
-        Arguments:
-            s : Raw sentence string.
+        [UNK]: 100, [CLS]: 101, [SEP]: 102, [MASK]: 103.
+
+        # Arguments
+            s: Tensor. Raw sentence string.
         """
         tokens = list(self.tokenizer.tokenize(s))
         tokens.append("[SEP]")
