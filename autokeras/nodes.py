@@ -36,17 +36,11 @@ def deserialize(config, custom_objects=None):
     )
 
 
-class Input(node_module.Node, io_hypermodel.IOHyperModel):
+class Input(io_hypermodel.IOHyperModel, node_module.Node):
     """Input node for tensor data.
 
     The data should be numpy.ndarray or tf.data.Dataset.
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.dtype = None
-        self.batch_size = None
-        self.num_samples = None
 
     def build(self, hp):
         return tf.keras.Input(shape=self.shape, dtype=tf.float32)
@@ -59,12 +53,6 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
 
     def get_block(self):
         return blocks.GeneralBlock()
-
-    def config_from_analyser(self, analyser):
-        self.shape = analyser.shape
-        self.dtype = analyser.dtype
-        self.batch_size = analyser.batch_size
-        self.num_samples = analyser.num_samples
 
     def get_hyper_preprocessors(self):
         return []
@@ -251,7 +239,6 @@ class TimeseriesInput(StructuredDataInput):
 
     def get_block(self):
         return blocks.TimeseriesBlock()
-
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []

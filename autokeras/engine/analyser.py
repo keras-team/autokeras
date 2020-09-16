@@ -41,7 +41,7 @@ class Analyser(object):
         if self.shape is None:
             self.shape = data.shape.as_list()
         if self.batch_size is None:
-            batch_size = data.shape.as_list()[0]
+            self.batch_size = data.shape.as_list()[0]
         self.num_samples += data.shape.as_list()[0]
 
     def finalize(self):

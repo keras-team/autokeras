@@ -74,6 +74,11 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             self._build_network()
         self.override_hps = override_hps or []
 
+        # Temporary attributes
+        self.epochs = None
+        self.batch_size = None
+        self.num_samples = None
+
     def compile(self):
         """Share the information between blocks."""
         for block in self.blocks:
@@ -294,7 +299,9 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
     def _compile_keras_model(self, hp, model):
         # Specify hyperparameters from compile(...)
         optimizer_name = hp.Choice(
-            "optimizer", ["adam", "adadelta", "sgd", "adam_weight_decay"], default="adam"
+            "optimizer",
+            ["adam", "adadelta", "sgd", "adam_weight_decay"],
+            default="adam",
         )
         learning_rate = hp.Choice(
             "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 1e-5], default=1e-3
@@ -307,15 +314,11 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         elif optimizer_name == "sgd":
             optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
         elif optimizer_name == "adam_weight_decay":
-            # Set up epochs and steps
-            epochs = 3
-            batch_size = 16
-            # eval_batch_size = 32
-
-            train_data_size = 1024  # len(x_train)
-            steps_per_epoch = int(train_data_size / batch_size)
-            num_train_steps = steps_per_epoch * epochs
-            warmup_steps = int(epochs * train_data_size * 0.1 / batch_size)
+            steps_per_epoch = int(self.num_samples / self.batch_size)
+            num_train_steps = steps_per_epoch * self.epochs
+            warmup_steps = int(
+                self.epochs * self.num_samples * 0.1 / self.batch_size
+            )
 
             # creates an optimizer with learning rate schedule
             optimizer = official.nlp.optimization.create_optimizer(
@@ -336,3 +339,8 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             node.shape = tuple(shape[1:])
         for node, shape in zip(self.outputs, nest.flatten(shapes[1])):
             node.in_blocks[0].output_shape = tuple(shape[1:])
+
+    def set_fit_args(self, epochs=None, **kwargs):
+        self.epochs = epochs
+        self.batch_size = self.inputs[0].batch_size
+        self.num_samples = self.inputs[0].num_samples

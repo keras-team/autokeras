@@ -63,6 +63,9 @@ def test_txt_clf_init_hp2_equals_hp_of_a_model(tmp_path):
     clf = ak.TextClassifier(directory=tmp_path)
     clf.inputs[0].shape = (1,)
     clf.outputs[0].in_blocks[0].output_shape = (10,)
+    clf.tuner.hypermodel.hypermodel.epochs = 1000
+    clf.tuner.hypermodel.hypermodel.batch_size = 32
+    clf.tuner.hypermodel.hypermodel.num_samples = 20000
     init_hp = task_specific.TEXT_CLASSIFIER[2]
     hp = kerastuner.HyperParameters()
     hp.values = copy.copy(init_hp)

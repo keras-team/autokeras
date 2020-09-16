@@ -18,11 +18,10 @@ from autokeras.engine import named_hypermodel
 class Node(named_hypermodel.NamedHyperModel):
     """The nodes in a network connecting the blocks."""
 
-    def __init__(self, shape=None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.in_blocks = []
         self.out_blocks = []
-        self.shape = shape
 
     def add_in_block(self, hypermodel):
         self.in_blocks.append(hypermodel)
@@ -32,8 +31,3 @@ class Node(named_hypermodel.NamedHyperModel):
 
     def build(self, hp):
         raise NotImplementedError
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({"shape": self.shape})
-        return config

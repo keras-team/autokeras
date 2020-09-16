@@ -76,7 +76,6 @@ class ClassificationHead(head_module.Head):
         self._encoded = None
         self._add_one_dimension = False
         self._labels = None
-        self._dtype = None
 
     def infer_loss(self):
         if not self.num_classes:
@@ -131,12 +130,12 @@ class ClassificationHead(head_module.Head):
         )
 
     def config_from_analyser(self, analyser):
+        super().config_from_analyser(analyser)
         self.num_classes = analyser.num_classes
         self.loss = self.infer_loss()
         self._encoded = analyser.encoded
         self._add_one_dimension = len(analyser.shape) == 1
         self._labels = analyser.labels
-        self._dtype = analyser.dtype
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []
@@ -144,11 +143,11 @@ class ClassificationHead(head_module.Head):
             hyper_preprocessors.append(
                 hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
             )
-        if self._dtype in [tf.uint8, tf.uint16, tf.uint32, tf.uint64]:
+        if self.dtype in [tf.uint8, tf.uint16, tf.uint32, tf.uint64]:
             hyper_preprocessors.append(
                 hpps_module.DefaultHyperPreprocessor(preprocessors.CastToInt32())
             )
-        if not self._encoded and self._dtype != tf.string:
+        if not self._encoded and self.dtype != tf.string:
             hyper_preprocessors.append(
                 hpps_module.DefaultHyperPreprocessor(preprocessors.CastToString())
             )
@@ -227,6 +226,7 @@ class RegressionHead(head_module.Head):
         return output_node
 
     def config_from_analyser(self, analyser):
+        super().config_from_analyser(analyser)
         self._add_one_dimension = len(analyser.shape) == 1
 
     def get_adapter(self):
