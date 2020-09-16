@@ -361,7 +361,7 @@ def test_multi_head_restore_head_size():
 
 
 def test_bert_build_return_tensor():
-    block = blocks.BERTBlock()
+    block = blocks.BERTBlock(trainable=None)
 
     outputs = block.build(
         kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)

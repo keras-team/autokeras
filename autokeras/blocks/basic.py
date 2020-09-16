@@ -757,17 +757,25 @@ class BERTBlock(block_module.Block):
         clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
     ```
     # Arguments
-        max_seq_len: int. The maximum length of a sequence that is
+        max_seq_len: Int. The maximum length of a sequence that is
             used to train the model.
+        trainable: Boolean. Whether the weights in BERT are trainable. Defaults
+            to False. If it is None, it will be tuned automatically.
     """
 
-    def __init__(self, max_seq_len: Optional[int] = None, **kwargs):
+    def __init__(
+        self,
+        max_seq_len: Optional[int] = None,
+        trainable: Optional[bool] = False,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.max_seq_len = max_seq_len
+        self.trainable = trainable
 
     def get_config(self):
         config = super().get_config()
-        config.update({"max_seq_len": self.max_seq_len})
+        config.update({"max_seq_len": self.max_seq_len, "trainable": self.trainable})
         return config
 
     def build(self, hp, inputs=None):
@@ -795,9 +803,11 @@ class BERTBlock(block_module.Block):
 
         bert_encoder = bert.BERT()
 
-        output_node = bert_encoder(
-            bert_input,
-            training=True,
-        )
+        trainable = self.trainable
+        if trainable is None:
+            trainable = hp.Boolean("trainable", default=False)
+
+        bert_encoder.trainable = trainable
+        output_node = bert_encoder(bert_input, training=trainable)
 
         return output_node[1]
