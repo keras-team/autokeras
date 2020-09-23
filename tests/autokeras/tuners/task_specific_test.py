@@ -97,11 +97,6 @@ def test_txt_clf_init_hp0_equals_hp_of_a_model(tmp_path):
     hp.values = copy.copy(init_hp)
 
     clf.tuner.hypermodel.build(hp)
-    a = set(init_hp.keys())
-    b = set(hp._hps.keys())
-    for i in a:
-        if i not in b:
-            print(i)
     assert set(init_hp.keys()) == set(hp._hps.keys())
 
 

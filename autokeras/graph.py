@@ -304,7 +304,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             default="adam",
         )
         learning_rate = hp.Choice(
-            "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 1e-5], default=1e-3
+            "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 2e-5, 1e-5], default=1e-3
         )
 
         if optimizer_name == "adam":
@@ -320,10 +320,23 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
                 self.epochs * self.num_samples * 0.1 / self.batch_size
             )
 
-            # creates an optimizer with learning rate schedule
-            optimizer = official.nlp.optimization.create_optimizer(
-                2e-5, num_train_steps=num_train_steps, num_warmup_steps=warmup_steps
-            )
+            lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
+                initial_learning_rate=learning_rate,
+                decay_steps=num_train_steps,
+                end_learning_rate=0.0)
+            if warmup_steps:
+                lr_schedule = WarmUp(
+                    initial_learning_rate=learning_rate,
+                    decay_schedule_fn=lr_schedule,
+                    warmup_steps=warmup_steps)
+
+            optimizer = AdamWeightDecay(
+                learning_rate=lr_schedule,
+                weight_decay_rate=0.01,
+                beta_1=0.9,
+                beta_2=0.999,
+                epsilon=1e-6,
+                exclude_from_weight_decay=['LayerNorm', 'layer_norm', 'bias'])
 
         model.compile(
             optimizer=optimizer, metrics=self._get_metrics(), loss=self._get_loss()
@@ -340,7 +353,20 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         for node, shape in zip(self.outputs, nest.flatten(shapes[1])):
             node.in_blocks[0].output_shape = tuple(shape[1:])
 
-    def set_fit_args(self, epochs=None, **kwargs):
+    def set_fit_args(self, validation_split, epochs=None):
         self.epochs = epochs
+        # Epochs not specified by the user
+        if self.epochs is None:
+            self.epochs = 1
         self.batch_size = self.inputs[0].batch_size
-        self.num_samples = self.inputs[0].num_samples
+        # num_samples from analysers are before split
+        self.num_samples = self.inputs[0].num_samples * (1 - validation_split)
+
+
+@tf.keras.utils.register_keras_serializable()
+class AdamWeightDecay(official.nlp.optimization.AdamWeightDecay):
+    pass
+
+@tf.keras.utils.register_keras_serializable()
+class WarmUp(official.nlp.optimization.WarmUp):
+    pass

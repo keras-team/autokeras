@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 import kerastuner
 import pytest
 import tensorflow as tf
@@ -361,7 +363,7 @@ def test_multi_head_restore_head_size():
 
 
 def test_bert_build_return_tensor():
-    block = blocks.BERTBlock(trainable=None)
+    block = blocks.BertBlock()
 
     outputs = block.build(
         kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
@@ -371,8 +373,22 @@ def test_bert_build_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_bert_save_and_load(tmp_path):
+    block = blocks.BertBlock()
+
+    inputs = tf.keras.Input(shape=(1,), dtype=tf.string)
+    outputs = block.build(
+        kerastuner.HyperParameters(), inputs
+    )
+    print(outputs)
+
+    model = tf.keras.Model(inputs, outputs)
+    model.save(os.path.join(tmp_path, "model"))
+    model2 = tf.keras.models.load_model(os.path.join(tmp_path, "model"))
+
+
 def test_bert_deserialize_to_transformer():
-    serialized_block = blocks.serialize(blocks.BERTBlock())
+    serialized_block = blocks.serialize(blocks.BertBlock())
 
     block = blocks.deserialize(serialized_block)
 
@@ -380,7 +396,7 @@ def test_bert_deserialize_to_transformer():
 
 
 def test_bert_get_config_has_all_attributes():
-    block = blocks.BERTBlock()
+    block = blocks.BertBlock()
 
     config = block.get_config()
 

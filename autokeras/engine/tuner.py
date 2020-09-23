@@ -80,7 +80,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         pipeline.fit(dataset)
         dataset = pipeline.transform(dataset)
         self.hypermodel.hypermodel.set_io_shapes(data_utils.dataset_shape(dataset))
-        self.hypermodel.hypermodel.set_fit_args(**kwargs)
+
         if "validation_data" in kwargs:
             validation_data = pipeline.transform(kwargs["validation_data"])
         else:
@@ -127,7 +127,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         return model
 
     def search(
-        self, epochs=None, callbacks=None, fit_on_val_data=False, **fit_kwargs
+        self, epochs=None, callbacks=None, validation_split=0, **fit_kwargs
     ):
         """Search for the best HyperParameters.
 
@@ -137,14 +137,15 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
         # Arguments
             callbacks: A list of callback functions. Defaults to None.
-            fit_on_val_data: Boolean. Use the training set and validation set for the
-                final fit of the best model.
+            validation_split: Float.
         """
         if self._finished:
             return
 
         if callbacks is None:
             callbacks = []
+
+        self.hypermodel.hypermodel.set_fit_args(validation_split, epochs=epochs)
 
         # Insert early-stopping for adaptive number of epochs.
         epochs_provided = True
@@ -153,6 +154,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             epochs = 1000
             if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
                 callbacks.append(tf_callbacks.EarlyStopping(patience=10))
+
 
         # Insert early-stopping for acceleration.
         early_stopping_inserted = False
@@ -171,7 +173,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
         # Train the best model use validation data.
         # Train the best model with enought number of epochs.
-        if fit_on_val_data or early_stopping_inserted:
+        if validation_split or early_stopping_inserted:
             copied_fit_kwargs = copy.copy(fit_kwargs)
 
             # Remove early-stopping since no validation data.
@@ -184,12 +186,13 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
                 copied_fit_kwargs["epochs"] = self._get_best_trial_epochs()
 
             # Concatenate training and validation data.
-            if fit_on_val_data:
+            if validation_split:
                 copied_fit_kwargs["x"] = copied_fit_kwargs["x"].concatenate(
                     fit_kwargs["validation_data"]
                 )
                 copied_fit_kwargs.pop("validation_data")
 
+            self.hypermodel.hypermodel.set_fit_args(0, epochs=copied_fit_kwargs["epochs"])
             pipeline, model = self.final_fit(**copied_fit_kwargs)
         else:
             model = self.get_best_models()[0]

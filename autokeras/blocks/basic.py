@@ -15,18 +15,18 @@
 import os
 from typing import Optional
 
-import official.nlp.bert.tokenization
 import tensorflow as tf
 from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
 from autokeras import keras_layers
-from autokeras.applications import bert
+from autokeras import applications as ak_apps
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
+from autokeras import constants
 
 RESNET_V1 = {
     "resnet50": applications.ResNet50,
@@ -735,7 +735,7 @@ class Embedding(block_module.Block):
         return output_node
 
 
-class BERTBlock(block_module.Block):
+class BertBlock(block_module.Block):
     """Block for Pre-trained BERT.
     The input should be sequence of sentences. The implementation is derived from
     this [example](https://www.tensorflow.org/official_models/fine_tuning_bert)
@@ -749,65 +749,53 @@ class BERTBlock(block_module.Block):
 
         input_node = ak.TextInput()
         output_node = BERTBlock(max_seq_len=128)(input_node)
-        output_node = ak.SpatialReduction(reduction_type='global_avg')(output_node)
-        output_node = ak.DenseBlock(num_layers=1, use_batchnorm = False)(output_node)
-        output_node = ak.ClassificationHead(
-            loss=losses.SparseCategoricalCrossentropy(from_logits=True),
-            dropout = 0.25)(output_node)
+        output_node = ak.ClassificationHead()(output_node)
         clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
     ```
     # Arguments
-        max_seq_len: Int. The maximum length of a sequence that is
+        max_sequence_length: Int. The maximum length of a sequence that is
             used to train the model.
-        trainable: Boolean. Whether the weights in BERT are trainable. Defaults
-            to False. If it is None, it will be tuned automatically.
     """
 
     def __init__(
         self,
-        max_seq_len: Optional[int] = None,
-        trainable: Optional[bool] = False,
+        max_sequence_length: Optional[int] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.max_seq_len = max_seq_len
-        self.trainable = trainable
+        self.max_sequence_length = max_sequence_length
 
     def get_config(self):
         config = super().get_config()
-        config.update({"max_seq_len": self.max_seq_len, "trainable": self.trainable})
+        config.update({"max_sequence_length": self.max_sequence_length})
         return config
 
     def build(self, hp, inputs=None):
         input_tensor = nest.flatten(inputs)[0]
 
-        max_seq_len = self.max_seq_len or hp.Choice(
+        max_sequence_length = self.max_sequence_length or hp.Choice(
             "max_seq_len", [128, 256, 512], default=128
         )
-        # TOKENIZER
-        tokenizer = official.nlp.bert.tokenization.FullTokenizer(
-            vocab_file=os.path.join(bert.GS_FOLDER_BERT, "vocab.txt"),
-            do_lower_case=True,
-        )
 
-        tokenizer_layer = keras_layers.TextVectorizationWithTokenizer(
-            tokenizer=tokenizer, max_seq_len=max_seq_len
+        tokenizer_layer = keras_layers.BertTokenizer(
+            max_sequence_length=max_sequence_length
         )
         output_node = tokenizer_layer(input_tensor)
 
-        bert_input = {
-            "input_word_ids": output_node[0],
-            "input_mask": output_node[1],
-            "input_type_ids": output_node[2],
-        }
+        bert_encoder = keras_layers.BertEncoder()
 
-        bert_encoder = bert.BERT()
+        output_node = bert_encoder(output_node)
+        checkpoint = tf.train.Checkpoint(model=bert_encoder)
+        checkpoint.restore('/home/haifengj/bert_ckpt/bert_ckpt-1').assert_consumed()
+        # bert_encoder.load_weights('/home/haifengj/bert_ckpt/bert_ckpt-1')
 
-        trainable = self.trainable
-        if trainable is None:
-            trainable = hp.Boolean("trainable", default=False)
-
-        bert_encoder.trainable = trainable
-        output_node = bert_encoder(bert_input, training=trainable)
-
-        return output_node[1]
+        # origin_bert = ak_apps.bert.OriginBert()
+        # bert_encoder.set_weights(origin_bert.get_weights())
+        # checkpoint.save('/home/haifengj/temp/bert_ckpt')
+        # print(len(tf.train.list_variables('/tmp/ckpt')))
+        # print(len(tf.train.list_variables(constants.BERT_CHECKPOINT_PATH)))
+        # for a in tf.train.list_variables('/tmp/ckpt'):
+            # print(a)
+        # for a in tf.train.list_variables(constants.BERT_CHECKPOINT_PATH):
+            # print(a)
+        return output_node

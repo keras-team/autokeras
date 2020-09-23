@@ -71,7 +71,7 @@ def test_no_final_fit_without_epochs_and_fov(
 ):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
 
-    tuner.search(x=None, epochs=None, fit_on_val_data=False, validation_data=None)
+    tuner.search(x=None, epochs=None, validation_data=None)
 
     final_fit.assert_not_called()
 
@@ -89,7 +89,7 @@ def test_final_fit_best_epochs_if_epoch_unspecified(
     final_fit.return_value = mock.Mock(), mock.Mock()
 
     tuner.search(
-        x=mock.Mock(), epochs=None, fit_on_val_data=True, validation_data=mock.Mock()
+        x=mock.Mock(), epochs=None, validation_split=0.2, validation_data=mock.Mock()
     )
 
     assert final_fit.call_args_list[0][1]["epochs"] == 2
@@ -108,7 +108,7 @@ def test_super_with_1k_epochs_if_epoch_unspecified(
     final_fit.return_value = mock.Mock(), mock.Mock()
 
     tuner.search(
-        x=mock.Mock(), epochs=None, fit_on_val_data=True, validation_data=mock.Mock()
+        x=mock.Mock(), epochs=None, validation_split=0.2, validation_data=mock.Mock()
     )
 
     assert super_search.call_args_list[0][1]["epochs"] == 1000

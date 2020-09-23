@@ -49,7 +49,7 @@ IMAGE_CLASSIFIER = [
         "classification_head_1/spatial_reduction_1/reduction_type": "global_avg",
         "classification_head_1/dropout": 0,
         "optimizer": "adam",
-        "learning_rate": 1e-5,
+        "learning_rate": 2e-5,
     },
     {
         "image_block_1/block_type": "resnet",
@@ -72,6 +72,14 @@ IMAGE_CLASSIFIER = [
 ]
 
 TEXT_CLASSIFIER = [
+    {
+        "text_block_1/block_type": "bert",
+        "classification_head_1/dropout": 0,
+        "optimizer": "adam_weight_decay",
+        "learning_rate": 2e-5,
+        "text_block_1/bert_block_1/max_seq_len": 512,
+        "text_block_1/max_tokens": 20000,
+    },
     {
         "text_block_1/block_type": "vanilla",
         "classification_head_1/dropout": 0,
@@ -112,18 +120,6 @@ TEXT_CLASSIFIER = [
         "text_block_1/dense_block_1/use_batchnorm": False,
         "text_block_1/dense_block_1/dropout": 0.5,
         "text_block_1/dense_block_1/units_0": 20,
-    },
-    {
-        "text_block_1/block_type": "bert",
-        "classification_head_1/dropout": 0,
-        "optimizer": "adam_weight_decay",
-        "learning_rate": 1e-3,
-        "text_block_1/bert_block_1/max_seq_len": 128,
-        "text_block_1/dense_block_1/num_layers": 1,
-        "text_block_1/dense_block_1/use_batchnorm": False,
-        "text_block_1/dense_block_1/dropout": 0.5,
-        "text_block_1/dense_block_1/units_0": 20,
-        "text_block_1/max_tokens": 20000,
     },
 ]
 

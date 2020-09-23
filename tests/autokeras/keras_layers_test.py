@@ -13,13 +13,17 @@
 # limitations under the License.
 
 import os
+import json
 
 import numpy as np
 import official.nlp.bert.tokenization
+from official.nlp.bert import configs
+from official.modeling import tf_utils
 import tensorflow as tf
 
 from autokeras import keras_layers as layer_module
 from autokeras.applications import bert
+from autokeras import constants
 
 
 def test_multi_cat_encode_strings_correctly(tmp_path):
@@ -91,14 +95,60 @@ def get_text_data():
     return train, test, y
 
 
-def test_text_vectorization_with_tokenizer(tmp_path):
+def test_bert_tokenizer_output_correct_shape(tmp_path):
     x_train, x_test, y_train = get_text_data()
-    tokenizer = official.nlp.bert.tokenization.FullTokenizer(
-        vocab_file=os.path.join(bert.GS_FOLDER_BERT, "vocab.txt"), do_lower_case=True
-    )
     max_seq_len = 8
-    token_layer = layer_module.TextVectorizationWithTokenizer(
-        tokenizer=tokenizer, max_seq_len=max_seq_len
+    token_layer = layer_module.BertTokenizer(
+        max_sequence_length=max_sequence_length
     )
     output = token_layer(x_train)
-    assert output.shape == (3, x_train.shape[0], max_seq_len)
+    assert output[0].shape == (x_train.shape[0], max_seq_len)
+    assert output[1].shape == (x_train.shape[0], max_seq_len)
+    assert output[2].shape == (x_train.shape[0], max_seq_len)
+
+
+def test_bert_tokenizer_save_and_load(tmp_path):
+    x_train, x_test, y_train = get_text_data()
+    max_sequence_length = 8
+    layer = layer_module.BertTokenizer(
+        max_sequence_length=max_sequence_length
+    )
+
+    input_node = tf.keras.Input(shape=(1,), dtype=tf.string)
+    output_node = layer(input_node)
+    model = tf.keras.Model(input_node, output_node)
+    model.save(os.path.join(tmp_path, "model"))
+    model2 = tf.keras.models.load_model(os.path.join(tmp_path, "model"))
+
+    assert np.array_equal(model.predict(x_train), model2.predict(x_train))
+
+
+def test_transformer_encoder_save_and_load(tmp_path):
+    config_dict = json.loads(tf.io.gfile.GFile(constants.BERT_CONFIG_PATH).read())
+
+    bert_config = configs.BertConfig.from_dict(config_dict)
+
+    layer = layer_module.TransformerEncoder(
+        vocab_size=bert_config.vocab_size,
+        hidden_size=bert_config.hidden_size,
+        num_layers=bert_config.num_hidden_layers,
+        num_attention_heads=bert_config.num_attention_heads,
+        intermediate_size=bert_config.intermediate_size,
+        activation=tf_utils.get_activation(bert_config.hidden_act),
+        dropout_rate=bert_config.hidden_dropout_prob,
+        attention_dropout_rate=bert_config.attention_probs_dropout_prob,
+        sequence_length=None,
+        max_sequence_length=bert_config.max_position_embeddings,
+        type_vocab_size=bert_config.type_vocab_size,
+        embedding_width=bert_config.embedding_size,
+        initializer=tf.keras.initializers.TruncatedNormal(
+            stddev=bert_config.initializer_range))
+
+    inputs = [
+        tf.keras.Input(shape=(500,), dtype=tf.int64),
+        tf.keras.Input(shape=(500,), dtype=tf.int64),
+        tf.keras.Input(shape=(500,), dtype=tf.int64),
+    ]
+    model = tf.keras.Model(inputs, layer(inputs))
+    model.save(os.path.join(tmp_path, "model"))
+    model2 = tf.keras.models.load_model(os.path.join(tmp_path, "model"))

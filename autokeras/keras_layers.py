@@ -16,6 +16,12 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
+from official.nlp.bert import tokenization
+from official.nlp.modeling import networks
+from official.modeling import activations
+from official.nlp.modeling import layers
+
+from autokeras import constants
 
 INT = "int"
 NONE = "none"
@@ -86,30 +92,40 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
-    """Vectorization and Encoding the sentences using a given Tokenizer
+@tf.keras.utils.register_keras_serializable()
+class BertTokenizer(preprocessing.PreprocessingLayer):
+    """Vectorization and Encoding the sentences using BERT vocabulary.
 
     # Arguments
-        tokenizer : bert.tokenization.FullTokenizer(
-            vocab_file=os.path.join(gs_folder_bert, "vocab.txt"),
-            do_lower_case=True)
-        max_seq_len : maximum length of the sequences after vectorization.
+        max_sequence_length: maximum length of the sequences after vectorization.
     """
 
-    def __init__(self, tokenizer, max_seq_len):
-        super().__init__()
-        self.tokenizer = tokenizer
-        self.max_seq_len = max_seq_len
+    def __init__(self, max_sequence_length, **kwargs):
+        super().__init__(**kwargs)
+        self.tokenizer = tokenization.FullTokenizer(
+            vocab_file=constants.BERT_VOCAB_PATH,
+            do_lower_case=True,
+        )
+        self.max_sequence_length = max_sequence_length
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"max_sequence_length": self.max_sequence_length})
+        return config
 
     def build(self, input_shape):
         self.batch_size = input_shape
 
     def call(self, inputs):
-        output = tf.numpy_function(
+        input_word_ids = tf.numpy_function(
             func=self.bert_encode, inp=[inputs], Tout=tf.int32
         )
-        output.set_shape((None, None, None))
-        return output
+        input_word_ids.set_shape((None, None))
+        input_mask = tf.zeros_like(input_word_ids)
+
+        input_type_ids = tf.zeros_like(input_word_ids)
+
+        return input_word_ids, input_mask, input_type_ids
 
     def encode_sentence(self, s):
         """Encodes a sentence using the BERT tokenizer.
@@ -123,25 +139,126 @@ class TextVectorizationWithTokenizer(preprocessing.PreprocessingLayer):
         """
         tokens = list(self.tokenizer.tokenize(s))
         tokens.append("[SEP]")
-        if len(tokens) < self.max_seq_len - 1:
-            tokens = tokens + ["[UNK]"] * (self.max_seq_len - len(tokens) - 1)
-        else:
-            tokens = tokens[0 : self.max_seq_len - 1]
         encoded_sentence = self.tokenizer.convert_tokens_to_ids(tokens)
         return encoded_sentence
 
     def get_encoded_sentence(self, input_tensor):
         input_array = np.array(input_tensor, dtype=object)
-        sentence = tf.constant([self.encode_sentence(s[0]) for s in input_array])
+        sentence = tf.ragged.constant([self.encode_sentence(s[0]) for s in input_array])
         return sentence
 
     def bert_encode(self, input_tensor):
         sentence = self.get_encoded_sentence(input_tensor)
         cls = [self.tokenizer.convert_tokens_to_ids(["[CLS]"])] * sentence.shape[0]
-        input_word_ids = tf.concat([cls, sentence], axis=-1)
-        input_mask = tf.ones_like(input_word_ids).numpy()
-        type_cls = tf.zeros_like(cls)
-        type_s1 = tf.zeros_like(sentence)
-        input_type_ids = tf.concat([type_cls, type_s1], axis=-1).numpy()
-        inputs = tf.stack([input_word_ids.numpy(), input_mask, input_type_ids])
-        return inputs
+        input_word_ids = tf.concat([cls, sentence], axis=-1).to_tensor()
+        if input_word_ids.shape[-1] > self.max_sequence_length:
+            input_word_ids = input_word_ids[...,:self.max_sequence_length]
+
+        return input_word_ids
+
+
+@tf.keras.utils.register_keras_serializable()
+class BertEncoder(tf.keras.layers.Layer):
+  
+    def __init__(self,
+                 max_sequence_length=512,
+                 **kwargs):
+        super().__init__(**kwargs)
+        vocab_size=30522
+        hidden_size=768
+        num_layers=12
+        num_attention_heads=12
+        sequence_length=None
+        self.max_sequence_length = max_sequence_length
+        type_vocab_size=2
+        intermediate_size=3072
+        activation=activations.gelu
+        dropout_rate=0.1
+        attention_dropout_rate=0.1
+        initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02)
+        activation = tf.keras.activations.get(activation)
+        initializer = tf.keras.initializers.get(initializer)
+  
+        self.dropout_rate = dropout_rate
+
+        embedding_width = hidden_size
+        self._embedding_layer = layers.OnDeviceEmbedding(
+            vocab_size=vocab_size,
+            embedding_width=embedding_width,
+            initializer=initializer,
+            name='word_embeddings')
+
+        # Always uses dynamic slicing for simplicity.
+        self._position_embedding_layer = layers.PositionEmbedding(
+            initializer=initializer,
+            use_dynamic_slicing=True,
+            max_sequence_length=max_sequence_length,
+            name='position_embedding')
+        self._type_embedding_layer = layers.OnDeviceEmbedding(
+            vocab_size=type_vocab_size,
+            embedding_width=embedding_width,
+            initializer=initializer,
+            use_one_hot=True,
+            name='type_embeddings')
+        self._add = tf.keras.layers.Add()
+        self._layer_norm = tf.keras.layers.LayerNormalization(
+                name='embeddings/layer_norm',
+                axis=-1,
+                epsilon=1e-12,
+                dtype=tf.float32)
+        self._dropout = tf.keras.layers.Dropout(rate=self.dropout_rate)
+  
+        self._attention_mask = layers.SelfAttentionMask()
+        self._transformer_layers = []
+        for i in range(num_layers):
+            layer = layers.Transformer(
+                num_attention_heads=num_attention_heads,
+                intermediate_size=intermediate_size,
+                intermediate_activation=activation,
+                dropout_rate=dropout_rate,
+                attention_dropout_rate=attention_dropout_rate,
+                output_range=None,
+                kernel_initializer=initializer,
+                name='transformer/layer_%d' % i)
+            self._transformer_layers.append(layer)
+  
+        self._lambda = tf.keras.layers.Lambda(lambda x: tf.squeeze(x[:, 0:1, :], axis=1))
+        self._pooler_layer = tf.keras.layers.Dense(
+            units=hidden_size,
+            activation='tanh',
+            kernel_initializer=initializer,
+            name='pooler_transform')
+
+    def call(self, inputs):
+        word_ids = inputs[0]
+        mask = inputs[1]
+        type_ids = inputs[2]
+        word_embeddings = self._embedding_layer(word_ids)
+        position_embeddings = self._position_embedding_layer(word_embeddings)
+        type_embeddings = self._type_embedding_layer(type_ids)
+  
+        embeddings = self._add(
+            [word_embeddings, position_embeddings, type_embeddings])
+  
+        embeddings = (
+            self._layer_norm(embeddings))
+        embeddings = (
+            self._dropout(embeddings))
+        data = embeddings
+        attention_mask = self._attention_mask([data, mask])
+        encoder_outputs = []
+        for layer in self._transformer_layers:
+            data = layer([data, attention_mask])
+            encoder_outputs.append(data)
+  
+        first_token_tensor = (self._lambda(encoder_outputs[-1]))
+  
+        cls_output = self._pooler_layer(first_token_tensor)
+  
+        return cls_output
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"max_sequence_length": self.max_sequence_length})
+        return config
+  
