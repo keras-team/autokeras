@@ -27,6 +27,8 @@ class Analyser(object):
         super().__init__(**kwargs)
         self.shape = None
         self.dtype = None
+        self.num_samples = 0
+        self.batch_size = None
 
     def update(self, data):
         """Update the statistics with a batch of data.
@@ -38,6 +40,9 @@ class Analyser(object):
             self.dtype = data.dtype
         if self.shape is None:
             self.shape = data.shape.as_list()
+        if self.batch_size is None:
+            self.batch_size = data.shape.as_list()[0]
+        self.num_samples += data.shape.as_list()[0]
 
     def finalize(self):
         """Process recorded information after all updates."""

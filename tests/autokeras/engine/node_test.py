@@ -28,5 +28,6 @@ def test_time_series_input_node_build_to_a_tensor():
 def test_time_series_input_node_deserialize_build_to_tensor():
     node = ak.TimeseriesInput(shape=(32,), lookback=2)
     node = nodes.deserialize(nodes.serialize(node))
+    node.shape = (32,)
     output = node.build(kerastuner.HyperParameters())
     assert isinstance(output, tf.Tensor)

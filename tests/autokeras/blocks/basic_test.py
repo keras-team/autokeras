@@ -282,6 +282,17 @@ def test_dense_build_with_dropout_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_dense_build_with_bn_return_tensor():
+    block = blocks.DenseBlock(use_batchnorm=True)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(32,), dtype=tf.float32)
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
 def test_dense_deserialize_to_dense():
     serialized_block = blocks.serialize(blocks.DenseBlock())
 
@@ -358,3 +369,30 @@ def test_multi_head_restore_head_size():
     block = blocks.basic.MultiHeadSelfAttention.from_config(block.get_config())
 
     assert block.head_size == 16
+
+
+def test_bert_build_return_tensor():
+    block = blocks.BertBlock()
+
+    outputs = block.build(
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
+def test_bert_deserialize_to_transformer():
+    serialized_block = blocks.serialize(blocks.BertBlock())
+
+    block = blocks.deserialize(serialized_block)
+
+    assert isinstance(block, blocks.BertBlock)
+
+
+def test_bert_get_config_has_all_attributes():
+    block = blocks.BertBlock()
+
+    config = block.get_config()
+
+    assert utils.get_func_args(blocks.BertBlock.__init__).issubset(config.keys())

@@ -1,31 +1,33 @@
 import timeit
+import os
 
+import tensorflow as tf
 import numpy as np
 from tensorflow.keras.datasets import imdb
+from sklearn.datasets import load_files
 
 import autokeras as ak
 
 
 def imdb_raw():
-    index_offset = 3  # word index offset
-
-    (x_train, y_train), (x_test, y_test) = imdb.load_data(index_from=index_offset)
-
-    word_to_id = imdb.get_word_index()
-    word_to_id = {k: (v + index_offset) for k, v in word_to_id.items()}
-    word_to_id["<PAD>"] = 0
-    word_to_id["<START>"] = 1
-    word_to_id["<UNK>"] = 2
-
-    id_to_word = {value: key for key, value in word_to_id.items()}
-    x_train = list(
-        map(lambda sentence: " ".join(id_to_word[i] for i in sentence), x_train)
+    dataset = tf.keras.utils.get_file(
+        fname="aclImdb.tar.gz", 
+        origin="http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz", 
+        extract=True,
     )
-    x_test = list(
-        map(lambda sentence: " ".join(id_to_word[i] for i in sentence), x_test)
-    )
-    x_train = np.array(x_train, dtype=np.str)
-    x_test = np.array(x_test, dtype=np.str)
+    
+    # set path to dataset
+    IMDB_DATADIR = os.path.join(os.path.dirname(dataset), 'aclImdb')
+    
+    classes = ['pos', 'neg']
+    train_data = load_files(os.path.join(IMDB_DATADIR, 'train'), shuffle=True, categories=classes)
+    test_data = load_files(os.path.join(IMDB_DATADIR,  'test'), shuffle=False, categories=classes)
+
+    encoding = 'utf-8'
+    x_train = np.array(train_data.data)
+    y_train = np.array(train_data.target)
+    x_test = np.array(test_data.data)
+    y_test = np.array(test_data.target)
     return (x_train, y_train), (x_test, y_test)
 
 
@@ -36,7 +38,7 @@ def main():
                             overwrite=True)
 
     start_time = timeit.default_timer()
-    clf.fit(x_train, y_train)
+    clf.fit(x_train, y_train, batch_size=6)
     stop_time = timeit.default_timer()
 
     accuracy = clf.evaluate(x_test, y_test)[1]

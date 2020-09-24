@@ -22,12 +22,15 @@ class Encoder(preprocessor.TargetPreprocessor):
     """Transform labels to encodings.
 
     # Arguments
-        labels: A list of strings. The labels to be encoded.
+        labels: A list of labels of any type. The labels to be encoded.
     """
 
     def __init__(self, labels, **kwargs):
         super().__init__(**kwargs)
-        self.labels = list(map(str, labels))
+        self.labels = [
+            label.decode("utf-8") if isinstance(label, bytes) else str(label)
+            for label in labels
+        ]
 
     def get_config(self):
         return {"labels": self.labels}
@@ -89,6 +92,19 @@ class OneHotEncoder(Encoder):
 
 class LabelEncoder(Encoder):
     """Transform the labels to integer encodings."""
+
+    def transform(self, dataset):
+        """Transform labels to integer encodings.
+
+        # Arguments
+            dataset: tf.data.Dataset. The dataset to be transformed.
+
+        # Returns
+            tf.data.Dataset. The transformed dataset.
+        """
+        dataset = super().transform(dataset)
+        dataset = dataset.map(lambda x: tf.expand_dims(x, axis=-1))
+        return dataset
 
     def postprocess(self, data):
         """Transform probabilities back to labels.

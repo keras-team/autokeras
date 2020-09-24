@@ -36,7 +36,7 @@ def deserialize(config, custom_objects=None):
     )
 
 
-class Input(node_module.Node, io_hypermodel.IOHyperModel):
+class Input(io_hypermodel.IOHyperModel, node_module.Node):
     """Input node for tensor data.
 
     The data should be numpy.ndarray or tf.data.Dataset.
@@ -53,9 +53,6 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
 
     def get_block(self):
         return blocks.GeneralBlock()
-
-    def config_from_analyser(self, analyser):
-        pass
 
     def get_hyper_preprocessors(self):
         return []
@@ -83,6 +80,7 @@ class ImageInput(Input):
         return blocks.ImageBlock()
 
     def config_from_analyser(self, analyser):
+        super().config_from_analyser(analyser)
         self.has_channel_dim = analyser.has_channel_dim
 
     def get_hyper_preprocessors(self):
@@ -119,6 +117,7 @@ class TextInput(Input):
         return blocks.TextBlock()
 
     def config_from_analyser(self, analyser):
+        super().config_from_analyser(analyser)
         self._add_one_dimension = len(analyser.shape) == 1
 
     def get_hyper_preprocessors(self):
@@ -179,7 +178,6 @@ class StructuredDataInput(Input):
         self.column_names = analyser.column_names
         # Analyser keeps the specified ones and infer the missing ones.
         self.column_types = analyser.column_types
-        self.dtype = analyser.dtype
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []
@@ -217,7 +215,6 @@ class TimeseriesInput(StructuredDataInput):
             column_names=column_names, column_types=column_types, **kwargs
         )
         self.lookback = lookback
-        self.batch_size = None
 
     def build(self, hp):
         if len(self.shape) == 1:
@@ -242,10 +239,6 @@ class TimeseriesInput(StructuredDataInput):
 
     def get_block(self):
         return blocks.TimeseriesBlock()
-
-    def config_from_analyser(self, analyser):
-        super().config_from_analyser(analyser)
-        self.batch_size = analyser.batch_size
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []

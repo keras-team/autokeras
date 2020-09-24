@@ -21,6 +21,13 @@ class IOHyperModel(object):
     input nodes and heads.
     """
 
+    def __init__(self, shape=None, **kwargs):
+        super().__init__(**kwargs)
+        self.shape = shape
+        self.dtype = None
+        self.batch_size = None
+        self.num_samples = None
+
     def get_analyser(self):
         """Get the corresponding Analyser.
 
@@ -43,7 +50,10 @@ class IOHyperModel(object):
         # Arguments
             adapter: An instance of a subclass of autokeras.engine.Adapter.
         """
-        raise NotImplementedError
+        self.shape = analyser.shape
+        self.dtype = analyser.dtype
+        self.batch_size = analyser.batch_size
+        self.num_samples = analyser.num_samples
 
     def get_hyper_preprocessors(self):
         """Construct a list of HyperPreprocessors based on the learned information.

@@ -30,6 +30,7 @@ AUGMENT = "augment"
 TRANSFORMER = "transformer"
 MAX_TOKENS = "max_tokens"
 NGRAM = "ngram"
+BERT = "bert"
 
 
 class ImageBlock(block_module.Block):
@@ -142,7 +143,7 @@ class TextBlock(block_module.Block):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         if self.block_type is None:
-            block_type = hp.Choice(BLOCK_TYPE, [VANILLA, TRANSFORMER, NGRAM])
+            block_type = hp.Choice(BLOCK_TYPE, [VANILLA, TRANSFORMER, NGRAM, BERT])
             with hp.conditional_scope(BLOCK_TYPE, [block_type]):
                 output_node = self._build_block(hp, output_node, block_type)
         else:
@@ -158,22 +159,25 @@ class TextBlock(block_module.Block):
                 max_tokens=max_tokens
             ).build(hp, output_node)
             return basic.DenseBlock().build(hp, output_node)
-        output_node = preprocessing.TextToIntSequence(max_tokens=max_tokens).build(
-            hp, output_node
-        )
-        if block_type == TRANSFORMER:
-            output_node = basic.Transformer(
-                max_features=max_tokens + 1,
-                pretraining=self.pretraining,
-            ).build(hp, output_node)
+        if block_type == BERT:
+            output_node = basic.BertBlock().build(hp, output_node)
         else:
-            output_node = basic.Embedding(
-                max_features=max_tokens + 1,
-                pretraining=self.pretraining,
+            output_node = preprocessing.TextToIntSequence(
+                max_tokens=max_tokens
             ).build(hp, output_node)
-            output_node = basic.ConvBlock().build(hp, output_node)
-        output_node = reduction.SpatialReduction().build(hp, output_node)
-        output_node = basic.DenseBlock().build(hp, output_node)
+            if block_type == TRANSFORMER:
+                output_node = basic.Transformer(
+                    max_features=max_tokens + 1,
+                    pretraining=self.pretraining,
+                ).build(hp, output_node)
+            else:
+                output_node = basic.Embedding(
+                    max_features=max_tokens + 1,
+                    pretraining=self.pretraining,
+                ).build(hp, output_node)
+                output_node = basic.ConvBlock().build(hp, output_node)
+            output_node = reduction.SpatialReduction().build(hp, output_node)
+            output_node = basic.DenseBlock().build(hp, output_node)
         return output_node
 
 

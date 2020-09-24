@@ -15,21 +15,12 @@
 import copy
 
 import kerastuner
-import pytest
-import tensorflow as tf
 
 import autokeras as ak
 from autokeras.tuners import task_specific
 
 
-@pytest.fixture
-def clear_session():
-    tf.keras.backend.clear_session()
-    yield
-    tf.keras.backend.clear_session()
-
-
-def test_img_clf_init_hp0_equals_hp_of_a_model(clear_session, tmp_path):
+def test_img_clf_init_hp0_equals_hp_of_a_model(tmp_path):
     clf = ak.ImageClassifier(directory=tmp_path)
     clf.inputs[0].shape = (32, 32, 3)
     clf.outputs[0].in_blocks[0].output_shape = (10,)
@@ -42,7 +33,7 @@ def test_img_clf_init_hp0_equals_hp_of_a_model(clear_session, tmp_path):
     assert set(init_hp.keys()) == set(hp._hps.keys())
 
 
-def test_img_clf_init_hp1_equals_hp_of_a_model(clear_session, tmp_path):
+def test_img_clf_init_hp1_equals_hp_of_a_model(tmp_path):
     clf = ak.ImageClassifier(directory=tmp_path)
     clf.inputs[0].shape = (32, 32, 3)
     clf.outputs[0].in_blocks[0].output_shape = (10,)
@@ -55,7 +46,7 @@ def test_img_clf_init_hp1_equals_hp_of_a_model(clear_session, tmp_path):
     assert set(init_hp.keys()) == set(hp._hps.keys())
 
 
-def test_img_clf_init_hp2_equals_hp_of_a_model(clear_session, tmp_path):
+def test_img_clf_init_hp2_equals_hp_of_a_model(tmp_path):
     clf = ak.ImageClassifier(directory=tmp_path)
     clf.inputs[0].shape = (32, 32, 3)
     clf.outputs[0].in_blocks[0].output_shape = (10,)
@@ -68,11 +59,16 @@ def test_img_clf_init_hp2_equals_hp_of_a_model(clear_session, tmp_path):
     assert set(init_hp.keys()) == set(hp._hps.keys())
 
 
-def test_txt_clf_init_hp0_equals_hp_of_a_model(clear_session, tmp_path):
+def test_txt_clf_init_hp2_equals_hp_of_a_model(tmp_path):
     clf = ak.TextClassifier(directory=tmp_path)
     clf.inputs[0].shape = (1,)
+    clf.inputs[0].batch_size = 6
+    clf.inputs[0].num_samples = 1000
     clf.outputs[0].in_blocks[0].output_shape = (10,)
-    init_hp = task_specific.TEXT_CLASSIFIER[0]
+    clf.tuner.hypermodel.hypermodel.epochs = 1000
+    clf.tuner.hypermodel.hypermodel.batch_size = 32
+    clf.tuner.hypermodel.hypermodel.num_samples = 20000
+    init_hp = task_specific.TEXT_CLASSIFIER[2]
     hp = kerastuner.HyperParameters()
     hp.values = copy.copy(init_hp)
 
@@ -81,7 +77,7 @@ def test_txt_clf_init_hp0_equals_hp_of_a_model(clear_session, tmp_path):
     assert set(init_hp.keys()) == set(hp._hps.keys())
 
 
-def test_txt_clf_init_hp1_equals_hp_of_a_model(clear_session, tmp_path):
+def test_txt_clf_init_hp1_equals_hp_of_a_model(tmp_path):
     clf = ak.TextClassifier(directory=tmp_path)
     clf.inputs[0].shape = (1,)
     clf.outputs[0].in_blocks[0].output_shape = (10,)
@@ -94,7 +90,19 @@ def test_txt_clf_init_hp1_equals_hp_of_a_model(clear_session, tmp_path):
     assert set(init_hp.keys()) == set(hp._hps.keys())
 
 
-def test_sd_clf_init_hp0_equals_hp_of_a_model(clear_session, tmp_path):
+def test_txt_clf_init_hp0_equals_hp_of_a_model(tmp_path):
+    clf = ak.TextClassifier(directory=tmp_path)
+    clf.inputs[0].shape = (1,)
+    clf.outputs[0].in_blocks[0].output_shape = (10,)
+    init_hp = task_specific.TEXT_CLASSIFIER[0]
+    hp = kerastuner.HyperParameters()
+    hp.values = copy.copy(init_hp)
+
+    clf.tuner.hypermodel.build(hp)
+    assert set(init_hp.keys()) == set(hp._hps.keys())
+
+
+def test_sd_clf_init_hp0_equals_hp_of_a_model(tmp_path):
     clf = ak.StructuredDataClassifier(
         directory=tmp_path,
         column_names=["a", "b"],
@@ -111,7 +119,7 @@ def test_sd_clf_init_hp0_equals_hp_of_a_model(clear_session, tmp_path):
     assert set(init_hp.keys()) == set(hp._hps.keys())
 
 
-def test_sd_reg_init_hp0_equals_hp_of_a_model(clear_session, tmp_path):
+def test_sd_reg_init_hp0_equals_hp_of_a_model(tmp_path):
     clf = ak.StructuredDataRegressor(
         directory=tmp_path,
         column_names=["a", "b"],

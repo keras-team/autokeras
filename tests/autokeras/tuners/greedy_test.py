@@ -17,6 +17,7 @@ from unittest import mock
 import kerastuner
 import tensorflow as tf
 
+import autokeras as ak
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
 from tests import utils
@@ -50,7 +51,15 @@ def test_greedy_oracle_populate_different_values(get_best_trials):
 @mock.patch("autokeras.tuners.greedy.GreedyOracle.get_best_trials")
 def test_greedy_oracle_populate_doesnt_crash_with_init_hps(get_best_trials):
     hp = kerastuner.HyperParameters()
-    graph = utils.build_graph()
+    tf.keras.backend.clear_session()
+    input_node = ak.ImageInput(shape=(32, 32, 3))
+    input_node.batch_size = 32
+    input_node.num_samples = 1000
+    output_node = ak.ImageBlock()(input_node)
+    head = ak.ClassificationHead(num_classes=10)
+    head.output_shape = (10,)
+    output_node = head(output_node)
+    graph = ak.graph.Graph(inputs=input_node, outputs=output_node)
     graph.build(hp)
 
     oracle = greedy.GreedyOracle(

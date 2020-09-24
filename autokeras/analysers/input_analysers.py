@@ -158,14 +158,5 @@ class StructuredDataAnalyser(InputAnalyser):
 
 
 class TimeseriesAnalyser(StructuredDataAnalyser):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.batch_size = None
-
-    def update(self, data):
-        super().update(data)
-        if self.batch_size is None:
-            self.batch_size = self.shape[0]
-
     def get_input_name(self):
         return "TimeseriesInput"

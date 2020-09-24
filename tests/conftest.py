@@ -12,22 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.engine import named_hypermodel
+import shutil
+
+import pytest
+import tensorflow as tf
 
 
-class Node(named_hypermodel.NamedHyperModel):
-    """The nodes in a network connecting the blocks."""
+@pytest.fixture(autouse=True)
+def clear_session():
+    tf.keras.backend.clear_session()
+    yield
+    tf.keras.backend.clear_session()
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.in_blocks = []
-        self.out_blocks = []
 
-    def add_in_block(self, hypermodel):
-        self.in_blocks.append(hypermodel)
-
-    def add_out_block(self, hypermodel):
-        self.out_blocks.append(hypermodel)
-
-    def build(self, hp):
-        raise NotImplementedError
+@pytest.fixture(autouse=True)
+def remove_tmp_path(tmp_path):
+    yield
+    shutil.rmtree(tmp_path)

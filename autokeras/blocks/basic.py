@@ -19,6 +19,7 @@ from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
+from autokeras import keras_layers
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
 from autokeras.utils import layer_utils
@@ -728,4 +729,59 @@ class Embedding(block_module.Block):
             dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0.25)
         if dropout > 0:
             output_node = layers.Dropout(dropout)(output_node)
+        return output_node
+
+
+class BertBlock(block_module.Block):
+    """Block for Pre-trained BERT.
+    The input should be sequence of sentences. The implementation is derived from
+    this [example](https://www.tensorflow.org/official_models/fine_tuning_bert)
+
+    # Example
+    ```python
+        # Using the Transformer Block with AutoModel.
+        import autokeras as ak
+        from autokeras import BERTBlock
+        from tensorflow.keras import losses
+
+        input_node = ak.TextInput()
+        output_node = BERTBlock(max_seq_len=128)(input_node)
+        output_node = ak.ClassificationHead()(output_node)
+        clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
+    ```
+    # Arguments
+        max_sequence_length: Int. The maximum length of a sequence that is
+            used to train the model.
+    """
+
+    def __init__(
+        self,
+        max_sequence_length: Optional[int] = None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.max_sequence_length = max_sequence_length
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"max_sequence_length": self.max_sequence_length})
+        return config
+
+    def build(self, hp, inputs=None):
+        input_tensor = nest.flatten(inputs)[0]
+
+        max_sequence_length = self.max_sequence_length or hp.Choice(
+            "max_seq_len", [128, 256, 512], default=128
+        )
+
+        tokenizer_layer = keras_layers.BertTokenizer(
+            max_sequence_length=max_sequence_length
+        )
+        output_node = tokenizer_layer(input_tensor)
+
+        bert_encoder = keras_layers.BertEncoder()
+
+        output_node = bert_encoder(output_node)
+        bert_encoder.load_pretrained_weights()
+
         return output_node

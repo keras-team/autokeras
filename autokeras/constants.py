@@ -12,22 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.engine import named_hypermodel
+import os
 
-
-class Node(named_hypermodel.NamedHyperModel):
-    """The nodes in a network connecting the blocks."""
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.in_blocks = []
-        self.out_blocks = []
-
-    def add_in_block(self, hypermodel):
-        self.in_blocks.append(hypermodel)
-
-    def add_out_block(self, hypermodel):
-        self.out_blocks.append(hypermodel)
-
-    def build(self, hp):
-        raise NotImplementedError
+BERT_DIR = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
+BERT_CHECKPOINT_PATH = "gs://autokeras-download/checkpoints/bert/bert_ckpt-1"
+BERT_VOCAB_PATH = os.path.join(BERT_DIR, "vocab.txt")

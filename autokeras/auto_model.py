@@ -146,8 +146,6 @@ class AutoModel(object):
             **kwargs
         )
         self.overwrite = overwrite
-        # Used by tuner to decide whether to use validation set for final fit.
-        self._split_dataset = False
         self._heads = [output_node.in_blocks[0] for output_node in self.outputs]
 
     @property
@@ -253,6 +251,9 @@ class AutoModel(object):
                 "should be provided."
             )
 
+        if validation_data:
+            validation_split = 0
+
         dataset, validation_data = self._convert_to_dataset(
             x=x, y=y, validation_data=validation_data
         )
@@ -261,7 +262,6 @@ class AutoModel(object):
 
         # Split the data with validation_split.
         if validation_data is None and validation_split:
-            self._split_dataset = True
             dataset, validation_data = data_utils.split_dataset(
                 dataset, validation_split
             )
@@ -271,7 +271,7 @@ class AutoModel(object):
             epochs=epochs,
             callbacks=callbacks,
             validation_data=validation_data,
-            fit_on_val_data=self._split_dataset,
+            validation_split=validation_split,
             **kwargs
         )
 
@@ -374,7 +374,6 @@ class AutoModel(object):
 
         # Convert validation data
         if validation_data:
-            self._split_dataset = False
             self._check_data_format(validation_data, validation=True)
             if isinstance(validation_data, tf.data.Dataset):
                 dataset = validation_data

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import kerastuner
+import official.nlp.optimization
 import tensorflow as tf
 from tensorflow.python.util import nest
 
@@ -72,6 +73,11 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         if inputs and outputs:
             self._build_network()
         self.override_hps = override_hps or []
+
+        # Temporary attributes
+        self.epochs = None
+        self.batch_size = None
+        self.num_samples = None
 
     def compile(self):
         """Share the information between blocks."""
@@ -293,10 +299,12 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
     def _compile_keras_model(self, hp, model):
         # Specify hyperparameters from compile(...)
         optimizer_name = hp.Choice(
-            "optimizer", ["adam", "adadelta", "sgd"], default="adam"
+            "optimizer",
+            ["adam", "adadelta", "sgd", "adam_weight_decay"],
+            default="adam",
         )
         learning_rate = hp.Choice(
-            "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 1e-5], default=1e-3
+            "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 2e-5, 1e-5], default=1e-3
         )
 
         if optimizer_name == "adam":
@@ -305,6 +313,33 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             optimizer = tf.keras.optimizers.Adadelta(learning_rate=learning_rate)
         elif optimizer_name == "sgd":
             optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
+        elif optimizer_name == "adam_weight_decay":
+            steps_per_epoch = int(self.num_samples / self.batch_size)
+            num_train_steps = steps_per_epoch * self.epochs
+            warmup_steps = int(
+                self.epochs * self.num_samples * 0.1 / self.batch_size
+            )
+
+            lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
+                initial_learning_rate=learning_rate,
+                decay_steps=num_train_steps,
+                end_learning_rate=0.0,
+            )
+            if warmup_steps:
+                lr_schedule = WarmUp(
+                    initial_learning_rate=learning_rate,
+                    decay_schedule_fn=lr_schedule,
+                    warmup_steps=warmup_steps,
+                )
+
+            optimizer = AdamWeightDecay(
+                learning_rate=lr_schedule,
+                weight_decay_rate=0.01,
+                beta_1=0.9,
+                beta_2=0.999,
+                epsilon=1e-6,
+                exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"],
+            )
 
         model.compile(
             optimizer=optimizer, metrics=self._get_metrics(), loss=self._get_loss()
@@ -320,3 +355,22 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             node.shape = tuple(shape[1:])
         for node, shape in zip(self.outputs, nest.flatten(shapes[1])):
             node.in_blocks[0].output_shape = tuple(shape[1:])
+
+    def set_fit_args(self, validation_split, epochs=None):
+        self.epochs = epochs
+        # Epochs not specified by the user
+        if self.epochs is None:
+            self.epochs = 1
+        self.batch_size = self.inputs[0].batch_size
+        # num_samples from analysers are before split
+        self.num_samples = self.inputs[0].num_samples * (1 - validation_split)
+
+
+@tf.keras.utils.register_keras_serializable()
+class AdamWeightDecay(official.nlp.optimization.AdamWeightDecay):
+    pass
+
+
+@tf.keras.utils.register_keras_serializable()
+class WarmUp(official.nlp.optimization.WarmUp):
+    pass
