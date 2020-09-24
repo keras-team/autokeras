@@ -30,7 +30,7 @@ For detailed tutorial, please check [here](https://autokeras.com/tutorial/overvi
 To install the package, please use the `pip` installation as follows:
 
 ```shell
-pip3 install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc1
+pip3 install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc2
 pip3 install autokeras
 ```
 
