@@ -39,7 +39,6 @@ def imdb_raw():
 
 # Prepare the data.
 (x_train, y_train), (x_test, y_test) = imdb_raw()
-assert False
 print(x_train.shape)  # (25000,)
 print(y_train.shape)  # (25000, 1)
 print(x_train[0][:50])  # <START> this film was just brilliant casting <UNK>

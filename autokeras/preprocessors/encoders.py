@@ -22,7 +22,7 @@ class Encoder(preprocessor.TargetPreprocessor):
     """Transform labels to encodings.
 
     # Arguments
-        labels: A list of bytes or strings. The labels to be encoded.
+        labels: A list of labels of any type. The labels to be encoded.
     """
 
     def __init__(self, labels, **kwargs):

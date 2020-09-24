@@ -33,12 +33,12 @@ def imdb_raw():
 
 def main():
     (x_train, y_train), (x_test, y_test) = imdb_raw()
-    clf = ak.TextClassifier(max_trials=1,
+    clf = ak.TextClassifier(max_trials=10,
                             directory='tmp_dir',
                             overwrite=True)
 
     start_time = timeit.default_timer()
-    clf.fit(x_train, y_train, batch_size=6, epochs=1, shuffle=True)
+    clf.fit(x_train, y_train, batch_size=6)
     stop_time = timeit.default_timer()
 
     accuracy = clf.evaluate(x_test, y_test)[1]
