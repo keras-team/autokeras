@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 import kerastuner
 import pytest
 import tensorflow as tf
@@ -284,6 +282,17 @@ def test_dense_build_with_dropout_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_dense_build_with_bn_return_tensor():
+    block = blocks.DenseBlock(use_batchnorm=True)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(), tf.keras.Input(shape=(32,), dtype=tf.float32)
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
 def test_dense_deserialize_to_dense():
     serialized_block = blocks.serialize(blocks.DenseBlock())
 
@@ -373,26 +382,12 @@ def test_bert_build_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
-def test_bert_save_and_load(tmp_path):
-    block = blocks.BertBlock()
-
-    inputs = tf.keras.Input(shape=(1,), dtype=tf.string)
-    outputs = block.build(
-        kerastuner.HyperParameters(), inputs
-    )
-    print(outputs)
-
-    model = tf.keras.Model(inputs, outputs)
-    model.save(os.path.join(tmp_path, "model"))
-    model2 = tf.keras.models.load_model(os.path.join(tmp_path, "model"))
-
-
 def test_bert_deserialize_to_transformer():
     serialized_block = blocks.serialize(blocks.BertBlock())
 
     block = blocks.deserialize(serialized_block)
 
-    assert isinstance(block, blocks.BERTBlock)
+    assert isinstance(block, blocks.BertBlock)
 
 
 def test_bert_get_config_has_all_attributes():
@@ -400,4 +395,4 @@ def test_bert_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.BERTBlock.__init__).issubset(config.keys())
+    assert utils.get_func_args(blocks.BertBlock.__init__).issubset(config.keys())

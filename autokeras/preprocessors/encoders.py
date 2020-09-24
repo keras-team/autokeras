@@ -27,7 +27,10 @@ class Encoder(preprocessor.TargetPreprocessor):
 
     def __init__(self, labels, **kwargs):
         super().__init__(**kwargs)
-        self.labels = [label.decode('utf-8') if isinstance(label, bytes) else str(label) for label in labels]
+        self.labels = [
+            label.decode("utf-8") if isinstance(label, bytes) else str(label)
+            for label in labels
+        ]
 
     def get_config(self):
         return {"labels": self.labels}
@@ -89,6 +92,7 @@ class OneHotEncoder(Encoder):
 
 class LabelEncoder(Encoder):
     """Transform the labels to integer encodings."""
+
     def transform(self, dataset):
         """Transform labels to integer encodings.
 

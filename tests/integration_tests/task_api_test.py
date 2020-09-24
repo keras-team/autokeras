@@ -54,7 +54,9 @@ def test_text_classifier(tmp_path):
         metrics=["accuracy"],
         objective="accuracy",
     )
-    clf.fit(train_x, train_y, epochs=2, validation_data=(test_x, test_y), batch_size=6)
+    clf.fit(
+        train_x, train_y, epochs=2, validation_data=(test_x, test_y), batch_size=6
+    )
     clf.export_model()
     assert clf.predict(test_x).shape == (len(test_x), 1)
     assert clf.tuner._get_best_trial_epochs() <= 2

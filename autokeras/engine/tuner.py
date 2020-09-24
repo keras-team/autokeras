@@ -126,9 +126,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
                 layer = get_output_layer(layer.output)
         return model
 
-    def search(
-        self, epochs=None, callbacks=None, validation_split=0, **fit_kwargs
-    ):
+    def search(self, epochs=None, callbacks=None, validation_split=0, **fit_kwargs):
         """Search for the best HyperParameters.
 
         If there is not early-stopping in the callbacks, the early-stopping callback
@@ -154,7 +152,6 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             epochs = 1000
             if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
                 callbacks.append(tf_callbacks.EarlyStopping(patience=10))
-
 
         # Insert early-stopping for acceleration.
         early_stopping_inserted = False
@@ -192,7 +189,9 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
                 )
                 copied_fit_kwargs.pop("validation_data")
 
-            self.hypermodel.hypermodel.set_fit_args(0, epochs=copied_fit_kwargs["epochs"])
+            self.hypermodel.hypermodel.set_fit_args(
+                0, epochs=copied_fit_kwargs["epochs"]
+            )
             pipeline, model = self.final_fit(**copied_fit_kwargs)
         else:
             model = self.get_best_models()[0]

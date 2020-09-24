@@ -323,12 +323,14 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
                 initial_learning_rate=learning_rate,
                 decay_steps=num_train_steps,
-                end_learning_rate=0.0)
+                end_learning_rate=0.0,
+            )
             if warmup_steps:
                 lr_schedule = WarmUp(
                     initial_learning_rate=learning_rate,
                     decay_schedule_fn=lr_schedule,
-                    warmup_steps=warmup_steps)
+                    warmup_steps=warmup_steps,
+                )
 
             optimizer = AdamWeightDecay(
                 learning_rate=lr_schedule,
@@ -336,7 +338,8 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
                 beta_1=0.9,
                 beta_2=0.999,
                 epsilon=1e-6,
-                exclude_from_weight_decay=['LayerNorm', 'layer_norm', 'bias'])
+                exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"],
+            )
 
         model.compile(
             optimizer=optimizer, metrics=self._get_metrics(), loss=self._get_loss()
@@ -366,6 +369,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
 @tf.keras.utils.register_keras_serializable()
 class AdamWeightDecay(official.nlp.optimization.AdamWeightDecay):
     pass
+
 
 @tf.keras.utils.register_keras_serializable()
 class WarmUp(official.nlp.optimization.WarmUp):

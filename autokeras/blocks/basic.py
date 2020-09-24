@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from typing import Optional
 
 import tensorflow as tf
@@ -21,12 +20,10 @@ from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
 from autokeras import keras_layers
-from autokeras import applications as ak_apps
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
-from autokeras import constants
 
 RESNET_V1 = {
     "resnet50": applications.ResNet50,
@@ -785,17 +782,6 @@ class BertBlock(block_module.Block):
         bert_encoder = keras_layers.BertEncoder()
 
         output_node = bert_encoder(output_node)
-        checkpoint = tf.train.Checkpoint(model=bert_encoder)
-        checkpoint.restore('/home/haifengj/bert_ckpt/bert_ckpt-1').assert_consumed()
-        # bert_encoder.load_weights('/home/haifengj/bert_ckpt/bert_ckpt-1')
+        bert_encoder.load_pretrained_weights()
 
-        # origin_bert = ak_apps.bert.OriginBert()
-        # bert_encoder.set_weights(origin_bert.get_weights())
-        # checkpoint.save('/home/haifengj/temp/bert_ckpt')
-        # print(len(tf.train.list_variables('/tmp/ckpt')))
-        # print(len(tf.train.list_variables(constants.BERT_CHECKPOINT_PATH)))
-        # for a in tf.train.list_variables('/tmp/ckpt'):
-            # print(a)
-        # for a in tf.train.list_variables(constants.BERT_CHECKPOINT_PATH):
-            # print(a)
         return output_node
