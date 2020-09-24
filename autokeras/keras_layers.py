@@ -161,6 +161,7 @@ class BertTokenizer(preprocessing.PreprocessingLayer):
 @tf.keras.utils.register_keras_serializable()
 class BertEncoder(tf.keras.layers.Layer):
     """Cleaned up official.nlp.modeling.networks.TransformerEncoder."""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         embedding_width = 768
