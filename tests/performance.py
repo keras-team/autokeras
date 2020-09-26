@@ -38,10 +38,10 @@ def test_cifar10_accuracy_over_93(tmp_path):
 
 def test_imdb_accuracy_over_84(tmp_path):
     (x_train, y_train), (x_test, y_test) = utils.imdb_raw(num_instances=None)
-    clf = ak.TextClassifier(max_trials=2, directory=tmp_path)
+    clf = ak.TextClassifier(max_trials=3, directory=tmp_path)
     clf.fit(x_train, y_train, epochs=2)
     accuracy = clf.evaluate(x_test, y_test)[1]
-    assert accuracy >= 0.84
+    assert accuracy >= 0.92
 
 
 def test_titaninc_accuracy_over_77(tmp_path):
