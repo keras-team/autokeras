@@ -1,6 +1,6 @@
 """shell
 pip install autokeras
-pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc1
+pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc2
 """
 
 """
@@ -10,35 +10,38 @@ dataset](https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification)
 an example.
 """
 
+import os
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.datasets import imdb
+from sklearn.datasets import load_files
 
-# Load the integer sequence the IMDB dataset with Keras.
-index_offset = 3  # word index offset
-(x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=1000,
-                                                      index_from=index_offset)
-y_train = y_train.reshape(-1, 1)
-y_test = y_test.reshape(-1, 1)
-# Prepare the dictionary of index to word.
-word_to_id = imdb.get_word_index()
-word_to_id = {k: (v + index_offset) for k, v in word_to_id.items()}
-word_to_id["<PAD>"] = 0
-word_to_id["<START>"] = 1
-word_to_id["<UNK>"] = 2
-id_to_word = {value: key for key, value in word_to_id.items()}
-# Convert the word indices to words.
-x_train = list(map(lambda sentence: ' '.join(
-    id_to_word[i] for i in sentence), x_train))
-x_test = list(map(lambda sentence: ' '.join(
-    id_to_word[i] for i in sentence), x_test))
-x_train = np.array(x_train, dtype=np.str)
-x_test = np.array(x_test, dtype=np.str)
+dataset = tf.keras.utils.get_file(
+    fname="aclImdb.tar.gz",
+    origin="http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",
+    extract=True,
+)
+
+# set path to dataset
+IMDB_DATADIR = os.path.join(os.path.dirname(dataset), 'aclImdb')
+
+classes = ['pos', 'neg']
+train_data = load_files(os.path.join(IMDB_DATADIR, 'train'), shuffle=True, categories=classes)
+test_data = load_files(os.path.join(IMDB_DATADIR,  'test'), shuffle=False, categories=classes)
+
+x_train = np.array(train_data.data)
+y_train = np.array(train_data.target)
+x_test = np.array(test_data.data)
+y_test = np.array(test_data.target)
+
 print(x_train.shape)  # (25000,)
 print(y_train.shape)  # (25000, 1)
-print(x_train[0][:50])  # <START> this film was just brilliant casting <UNK>
+print(x_train[0][:50])  # this film was just brilliant casting
 
 """
 The second step is to run the [TextClassifier](/text_classifier).
+As a quick demo, we set epochs to 2.
+You can also leave the epochs unspecified for an adaptive number of epochs.
 """
 
 import autokeras as ak
@@ -46,7 +49,7 @@ import autokeras as ak
 # Initialize the text classifier.
 clf = ak.TextClassifier(
     overwrite=True,
-    max_trials=1) # It tries 10 different models.
+    max_trials=1)  # It only tries 1 model as a quick demo.
 # Feed the text classifier with training data.
 clf.fit(x_train, y_train, epochs=2)
 # Predict with the best model.
@@ -151,13 +154,12 @@ classification to be wrapped into tensorflow Dataset.
 Since the IMDB dataset is binary classification, it should not be one-hot encoded.
 """
 
-import tensorflow as tf
 train_set = tf.data.Dataset.from_tensor_slices(((x_train, ), (y_train, ))).batch(32)
 test_set = tf.data.Dataset.from_tensor_slices(((x_test, ), (y_test, ))).batch(32)
 
 clf = ak.TextClassifier(
     overwrite=True,
-    max_trials=3)
+    max_trials=2)
 # Feed the tensorflow Dataset to the classifier.
 clf.fit(train_set, epochs=2)
 # Predict with the best model.

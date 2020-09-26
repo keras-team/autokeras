@@ -1,6 +1,6 @@
 """shell
 pip install autokeras
-pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc1
+pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc2
 """
 
 """
@@ -29,6 +29,8 @@ print(y_train[:3])  # array([7, 2, 1], dtype=uint8)
 The second step is to run the ImageRegressor.
 It is recommended have more trials for more complicated datasets.
 This is just a quick demo of MNIST, so we set max_trials to 1.
+For the same reason, we set epochs to 2.
+You can also leave the epochs unspecified for an adaptive number of epochs.
 """
 
 # Initialize the image regressor.

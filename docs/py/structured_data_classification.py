@@ -1,6 +1,6 @@
 """shell
 pip install autokeras
-pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc1
+pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc2
 """
 
 """
@@ -21,6 +21,8 @@ test_file_path = tf.keras.utils.get_file("eval.csv", TEST_DATA_URL)
 """
 The second step is to run the
 [StructuredDataClassifier](/structured_data_classifier).
+As a quick demo, we set epochs to 10.
+You can also leave the epochs unspecified for an adaptive number of epochs.
 """
 
 # Initialize the structured data classifier.
@@ -70,7 +72,7 @@ y_train = pd.DataFrame(y_train)
 print(type(y_train)) # pandas.DataFrame
 
 # You can also use numpy.ndarray for x_train and y_train.
-x_train = x_train.to_numpy().astype(np.unicode)
+x_train = x_train.to_numpy()
 y_train = y_train.to_numpy()
 print(type(x_train)) # numpy.ndarray
 print(type(y_train)) # numpy.ndarray
@@ -98,7 +100,7 @@ Since the Titanic dataset is binary
 classification, it should not be one-hot encoded.
 """
 
-train_set = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_set = tf.data.Dataset.from_tensor_slices((x_train.astype(np.unicode), y_train))
 test_set = tf.data.Dataset.from_tensor_slices((x_test.to_numpy().astype(np.unicode), y_test))
 
 clf = ak.StructuredDataClassifier(
