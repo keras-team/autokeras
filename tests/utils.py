@@ -17,6 +17,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
+from sklearn.datasets import load_files
 
 import autokeras as ak
 
@@ -76,32 +77,33 @@ def generate_one_hot_labels(num_instances=100, num_classes=10, dtype="np"):
 
 
 def imdb_raw(num_instances=100):
-    index_offset = 3  # word index offset
-
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.imdb.load_data(
-        num_words=1000, index_from=index_offset
+    dataset = tf.keras.utils.get_file(
+        fname="aclImdb.tar.gz",
+        origin="http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",
+        extract=True,
     )
+
+    # set path to dataset
+    IMDB_DATADIR = os.path.join(os.path.dirname(dataset), "aclImdb")
+
+    classes = ["pos", "neg"]
+    train_data = load_files(
+        os.path.join(IMDB_DATADIR, "train"), shuffle=True, categories=classes
+    )
+    test_data = load_files(
+        os.path.join(IMDB_DATADIR, "test"), shuffle=False, categories=classes
+    )
+
+    x_train = np.array(train_data.data)
+    y_train = np.array(train_data.target)
+    x_test = np.array(test_data.data)
+    y_test = np.array(test_data.target)
+
     if num_instances is not None:
         x_train = x_train[:num_instances]
-        y_train = y_train[:num_instances].reshape(-1, 1)
+        y_train = y_train[:num_instances]
         x_test = x_test[:num_instances]
-        y_test = y_test[:num_instances].reshape(-1, 1)
-
-    word_to_id = tf.keras.datasets.imdb.get_word_index()
-    word_to_id = {k: (v + index_offset) for k, v in word_to_id.items()}
-    word_to_id["<PAD>"] = 0
-    word_to_id["<START>"] = 1
-    word_to_id["<UNK>"] = 2
-
-    id_to_word = {value: key for key, value in word_to_id.items()}
-    x_train = list(
-        map(lambda sentence: " ".join(id_to_word[i] for i in sentence), x_train)
-    )
-    x_test = list(
-        map(lambda sentence: " ".join(id_to_word[i] for i in sentence), x_test)
-    )
-    x_train = np.array(x_train, dtype=np.str)
-    x_test = np.array(x_test, dtype=np.str)
+        y_test = y_test[:num_instances]
     return (x_train, y_train), (x_test, y_test)
 
 

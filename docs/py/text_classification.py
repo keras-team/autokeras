@@ -149,9 +149,6 @@ integers, and one-hot encoded encoded labels, i.e. vectors of 0s and 1s.
 We also support using [tf.data.Dataset](
 https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable) format for
 the training data.
-The labels have to be one-hot encoded for multi-class
-classification to be wrapped into tensorflow Dataset.
-Since the IMDB dataset is binary classification, it should not be one-hot encoded.
 """
 
 train_set = tf.data.Dataset.from_tensor_slices(((x_train, ), (y_train, ))).batch(32)

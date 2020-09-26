@@ -51,7 +51,7 @@ https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable). The 
 two-dimensional with numerical or categorical values.
 
 For the classification labels,
-AutoKeras accepts both plain labels, i.e.  strings or integers, and one-hot encoded
+AutoKeras accepts both plain labels, i.e. strings or integers, and one-hot encoded
 encoded labels, i.e. vectors of 0s and 1s.
 The labels can be numpy.ndarray, pandas.DataFrame, or pandas.Series.
 
@@ -94,10 +94,6 @@ print(clf.evaluate(x_test, y_test))
 
 """
 The following code shows how to convert numpy.ndarray to tf.data.Dataset.
-Notably, the labels have to be one-hot encoded for multi-class
-classification to be wrapped into tensorflow Dataset.
-Since the Titanic dataset is binary
-classification, it should not be one-hot encoded.
 """
 
 train_set = tf.data.Dataset.from_tensor_slices((x_train.astype(np.unicode), y_train))
