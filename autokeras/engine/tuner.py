@@ -151,14 +151,18 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             epochs_provided = False
             epochs = 1000
             if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
-                callbacks.append(tf_callbacks.EarlyStopping(patience=10))
+                callbacks.append(
+                    tf_callbacks.EarlyStopping(patience=10, min_delta=1e-4)
+                )
 
         # Insert early-stopping for acceleration.
         early_stopping_inserted = False
         new_callbacks = self._deepcopy_callbacks(callbacks)
         if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
             early_stopping_inserted = True
-            new_callbacks.append(tf_callbacks.EarlyStopping(patience=10))
+            new_callbacks.append(
+                tf_callbacks.EarlyStopping(patience=10, min_delta=1e-4)
+            )
 
         # Populate initial search space.
         hp = self.oracle.get_space()
@@ -169,8 +173,8 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         super().search(epochs=epochs, callbacks=new_callbacks, **fit_kwargs)
 
         # Train the best model use validation data.
-        # Train the best model with enought number of epochs.
-        if validation_split or early_stopping_inserted:
+        # Train the best model with enough number of epochs.
+        if validation_split > 0 or early_stopping_inserted:
             copied_fit_kwargs = copy.copy(fit_kwargs)
 
             # Remove early-stopping since no validation data.
@@ -183,7 +187,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
                 copied_fit_kwargs["epochs"] = self._get_best_trial_epochs()
 
             # Concatenate training and validation data.
-            if validation_split:
+            if validation_split > 0:
                 copied_fit_kwargs["x"] = copied_fit_kwargs["x"].concatenate(
                     fit_kwargs["validation_data"]
                 )
@@ -222,7 +226,8 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
     def _get_best_trial_epochs(self):
         best_trial = self.oracle.get_best_trials(1)[0]
-        return self.oracle.get_trial(best_trial.trial_id).best_step
+        # steps counts from 0, so epochs = step + 1.
+        return self.oracle.get_trial(best_trial.trial_id).best_step + 1
 
     def _build_best_model(self):
         best_trial = self.oracle.get_best_trials(1)[0]

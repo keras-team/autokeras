@@ -23,7 +23,6 @@ def imdb_raw():
     train_data = load_files(os.path.join(IMDB_DATADIR, 'train'), shuffle=True, categories=classes)
     test_data = load_files(os.path.join(IMDB_DATADIR,  'test'), shuffle=False, categories=classes)
 
-    encoding = 'utf-8'
     x_train = np.array(train_data.data)
     y_train = np.array(train_data.target)
     x_test = np.array(test_data.data)
