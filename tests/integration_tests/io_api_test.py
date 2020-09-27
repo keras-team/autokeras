@@ -21,7 +21,7 @@ from tests import utils
 
 
 def test_io_api(tmp_path):
-    num_instances = 100
+    num_instances = 20
     (image_x, train_y), (test_x, test_y) = mnist.load_data()
     (text_x, train_y), (test_x, test_y) = utils.imdb_raw(num_instances=num_instances)
 
@@ -56,4 +56,5 @@ def test_io_api(tmp_path):
         [regression_y, classification_y],
         epochs=1,
         validation_split=0.2,
+        batch_size=4,
     )

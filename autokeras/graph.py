@@ -300,17 +300,16 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         # Specify hyperparameters from compile(...)
         optimizer_name = hp.Choice(
             "optimizer",
-            ["adam", "adadelta", "sgd", "adam_weight_decay"],
+            ["adam", "sgd", "adam_weight_decay"],
             default="adam",
         )
+        # TODO: add adadelta optimizer when it can optimize embedding layer on GPU.
         learning_rate = hp.Choice(
             "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 2e-5, 1e-5], default=1e-3
         )
 
         if optimizer_name == "adam":
             optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-        elif optimizer_name == "adadelta":
-            optimizer = tf.keras.optimizers.Adadelta(learning_rate=learning_rate)
         elif optimizer_name == "sgd":
             optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
         elif optimizer_name == "adam_weight_decay":

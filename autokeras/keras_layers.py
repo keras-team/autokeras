@@ -91,6 +91,7 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
+# TODO: Remove after KerasNLP is ready.
 @tf.keras.utils.register_keras_serializable()
 class BertTokenizer(preprocessing.PreprocessingLayer):
     """Vectorization and Encoding the sentences using BERT vocabulary.
@@ -158,6 +159,7 @@ class BertTokenizer(preprocessing.PreprocessingLayer):
         return input_word_ids
 
 
+# TODO: Remove after KerasNLP is ready.
 @tf.keras.utils.register_keras_serializable()
 class BertEncoder(tf.keras.layers.Layer):
     """Cleaned up official.nlp.modeling.networks.TransformerEncoder."""

@@ -182,14 +182,3 @@ def test_graph_can_init_with_one_missing_output():
     ak.ClassificationHead()(output_node)
 
     graph_module.Graph(input_node, output_node)
-
-
-def test_graph_compile_with_adadelta():
-    input_node = ak.ImageInput(shape=(32, 32, 3))
-    output_node = ak.ConvBlock()(input_node)
-    output_node = ak.RegressionHead(output_shape=(1,))(output_node)
-
-    graph = graph_module.Graph(input_node, output_node)
-    hp = kerastuner.HyperParameters()
-    hp.values = {"optimizer": "adadelta"}
-    graph.build(hp)
