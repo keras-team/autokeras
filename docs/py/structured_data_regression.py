@@ -1,6 +1,6 @@
 """shell
 pip install autokeras
-pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc1
+pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc2
 """
 
 """
@@ -31,6 +31,8 @@ test_file_path = 'eval.csv'
 """
 The second step is to run the
 [StructuredDataRegressor](/structured_data_regressor).
+As a quick demo, we set epochs to 10.
+You can also leave the epochs unspecified for an adaptive number of epochs.
 """
 
 # Initialize the structured data regressor.

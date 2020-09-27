@@ -1,6 +1,6 @@
 """shell
 pip install autokeras
-pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc1
+pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc2
 """
 
 """
@@ -22,6 +22,8 @@ print(y_train[:3])  # array([7, 2, 1], dtype=uint8)
 The second step is to run the ImageClassifier.
 It is recommended have more trials for more complicated datasets.
 This is just a quick demo of MNIST, so we set max_trials to 1.
+For the same reason, we set epochs to 10.
+You can also leave the epochs unspecified for an adaptive number of epochs.
 """
 
 # Initialize the image classifier.
@@ -155,9 +157,7 @@ print(y_train[:3])
 #        [0., 0., 0., 0., 1., 0., 0., 0., 0., 0.]])
 
 """
-We also support using tf.data.Dataset format for the training data. In this case, the
-images would have to be 3-dimentional. The labels have to be one-hot encoded for
-multi-class classification to be wrapped into tensorflow Dataset.
+We also support using tf.data.Dataset format for the training data.
 """
 
 train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,)))
