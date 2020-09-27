@@ -87,20 +87,6 @@ jobs:
       run: |
         python setup.py sdist bdist_wheel
         twine upload dist/*
-  docker-latest:
-    needs: [build, format, build-docs]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    steps:
-    - uses: actions/checkout@master
-    - name: Publish to Registry
-      uses: elgohr/Publish-Docker-Github-Action@master
-      with:
-        name: haifengjin/autokeras
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-        tags: "latest"
-        dockerfile: docker/Dockerfile
   docker-release:
     needs: [build, format, build-docs]
     runs-on: ubuntu-latest
