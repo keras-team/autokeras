@@ -84,11 +84,9 @@ class SlidingWindow(preprocessor.Preprocessor):
     def transform(self, dataset):
         dataset = dataset.unbatch()
         dataset = dataset.window(self.lookback, shift=1, drop_remainder=True)
-
-        def sub_to_batch(sub):
-            return sub.batch(self.lookback, drop_remainder=True)
-
-        dataset = dataset.flat_map(sub_to_batch)
+        dataset = dataset.flat_map(
+            lambda x: x.batch(self.lookback, drop_remainder=True)
+        )
         dataset = dataset.batch(self.batch_size)
         return dataset
 
