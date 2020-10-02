@@ -25,6 +25,7 @@ BLOCK_TYPE = "block_type"
 RESNET = "resnet"
 XCEPTION = "xception"
 VANILLA = "vanilla"
+EFFICIENT = "efficient"
 NORMALIZE = "normalize"
 AUGMENT = "augment"
 TRANSFORMER = "transformer"
@@ -78,6 +79,8 @@ class ImageBlock(block_module.Block):
             return basic.XceptionBlock().build(hp, output_node)
         elif block_type == VANILLA:
             return basic.ConvBlock().build(hp, output_node)
+        elif block_type == EFFICIENT:
+            return basic.EfficientNetBlock().build(hp, output_node)
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
@@ -98,7 +101,9 @@ class ImageBlock(block_module.Block):
             output_node = preprocessing.ImageAugmentation().build(hp, output_node)
 
         if self.block_type is None:
-            block_type = hp.Choice(BLOCK_TYPE, [RESNET, XCEPTION, VANILLA])
+            block_type = hp.Choice(
+                BLOCK_TYPE, [RESNET, XCEPTION, VANILLA, EFFICIENT]
+            )
             with hp.conditional_scope(BLOCK_TYPE, [block_type]):
                 output_node = self._build_block(hp, output_node, block_type)
         else:

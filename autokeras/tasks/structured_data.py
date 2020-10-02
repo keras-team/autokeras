@@ -139,14 +139,13 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
             **kwargs
         )
 
-    def predict(self, x, batch_size=32, **kwargs):
+    def predict(self, x, **kwargs):
         """Predict the output for a given testing data.
 
         # Arguments
             x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
                 Testing data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the testing data.
-            batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
 
         # Returns
@@ -155,9 +154,9 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
         """
         x = self.read_for_predict(x)
 
-        return super().predict(x=x, batch_size=batch_size, **kwargs)
+        return super().predict(x=x, **kwargs)
 
-    def evaluate(self, x, y=None, batch_size=32, **kwargs):
+    def evaluate(self, x, y=None, **kwargs):
         """Evaluate the best model for the given data.
 
         # Arguments
@@ -167,7 +166,6 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
             y: String, numpy.ndarray, or tensorflow.Dataset. Testing data y.
                 If the data is from a csv file, it should be a string corresponding
                 to the label column.
-            batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
         # Returns
@@ -178,7 +176,7 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
         """
         if isinstance(x, str):
             x, y = self._read_from_csv(x, y)
-        return super().evaluate(x=x, y=y, batch_size=batch_size, **kwargs)
+        return super().evaluate(x=x, y=y, **kwargs)
 
 
 class SupervisedStructuredDataPipeline(BaseStructuredDataPipeline):
