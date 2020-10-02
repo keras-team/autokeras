@@ -17,6 +17,7 @@ import tensorflow as tf
 from autokeras.blocks.basic import BertBlock
 from autokeras.blocks.basic import ConvBlock
 from autokeras.blocks.basic import DenseBlock
+from autokeras.blocks.basic import EfficientNetBlock
 from autokeras.blocks.basic import Embedding
 from autokeras.blocks.basic import ResNetBlock
 from autokeras.blocks.basic import RNNBlock

@@ -199,7 +199,7 @@ class AutoModel(object):
         self,
         x=None,
         y=None,
-        batch_size=32,
+        batch_size=4,
         epochs=None,
         callbacks=None,
         validation_split=0.2,
@@ -214,7 +214,7 @@ class AutoModel(object):
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x.
             y: numpy.ndarray or tensorflow.Dataset. Training data y.
-            batch_size: Int. Number of samples per gradient update. Defaults to 32.
+            batch_size: Int. Number of samples per gradient update. Defaults to 4.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, by default we train for a maximum of 1000 epochs,
                 but we stop training if the validation loss stops improving for 10

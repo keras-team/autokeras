@@ -18,6 +18,7 @@ from autokeras.blocks import CategoricalToNumerical
 from autokeras.blocks import ClassificationHead
 from autokeras.blocks import ConvBlock
 from autokeras.blocks import DenseBlock
+from autokeras.blocks import EfficientNetBlock
 from autokeras.blocks import Embedding
 from autokeras.blocks import Flatten
 from autokeras.blocks import ImageAugmentation

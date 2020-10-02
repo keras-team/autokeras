@@ -45,6 +45,18 @@ def test_resnet_v1_return_tensor():
     assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
+def test_efficientnet_b0_return_tensor():
+    block = blocks.EfficientNetBlock(version="b0", pretrained=False)
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
+
+
 def test_resnet_pretrained_build_return_tensor():
     block = blocks.ResNetBlock(pretrained=True)
 
@@ -100,6 +112,13 @@ def test_resnet_get_config_has_all_attributes():
 def test_resnet_wrong_version_error():
     with pytest.raises(ValueError) as info:
         blocks.ResNetBlock(version="abc")
+
+    assert "Expect version to be" in str(info.value)
+
+
+def test_efficientnet_wrong_version_error():
+    with pytest.raises(ValueError) as info:
+        blocks.EfficientNetBlock(version="abc")
 
     assert "Expect version to be" in str(info.value)
 

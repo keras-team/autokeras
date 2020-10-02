@@ -37,6 +37,17 @@ RESNET_V2 = {
     "resnet152_v2": applications.ResNet152V2,
 }
 
+EFFICIENT_VERSIONS = {
+    "b0": applications.EfficientNetB0,
+    "b1": applications.EfficientNetB1,
+    "b2": applications.EfficientNetB2,
+    "b3": applications.EfficientNetB3,
+    "b4": applications.EfficientNetB4,
+    "b5": applications.EfficientNetB5,
+    "b6": applications.EfficientNetB6,
+    "b7": applications.EfficientNetB7,
+}
+
 PRETRAINED = "pretrained"
 
 
@@ -650,6 +661,43 @@ class XceptionBlock(KerasApplicationBlock):
             min_size=71,
             **kwargs,
         )
+
+
+class EfficientNetBlock(KerasApplicationBlock):
+    """Block for EfficientNet.
+
+    # Arguments
+        version: String. The value should be one of 'b0', 'b1', ..., 'b7'.
+            The type of EfficientNet to use. If left unspecified, it will be tuned
+            automatically.
+        pretrained: Boolean. Whether to use ImageNet pretrained weights.
+            If left unspecified, it will be tuned automatically.
+    """
+
+    def __init__(
+        self,
+        version: Optional[str] = None,
+        pretrained: Optional[bool] = None,
+        **kwargs,
+    ):
+        if version is None:
+            models = EFFICIENT_VERSIONS
+        elif version in EFFICIENT_VERSIONS.keys():
+            models = {version: EFFICIENT_VERSIONS[version]}
+        else:
+            raise ValueError(
+                "Expect version to be in {expect}, but got "
+                "{version}.".format(
+                    expect=list(EFFICIENT_VERSIONS.keys()), version=version
+                )
+            )
+        super().__init__(
+            pretrained=pretrained,
+            models=models,
+            min_size=32,
+            **kwargs,
+        )
+        self.version = version
 
 
 class Embedding(block_module.Block):

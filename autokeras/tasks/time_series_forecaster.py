@@ -95,16 +95,16 @@ class SupervisedTimeseriesDataPipeline(structured_data.BaseStructuredDataPipelin
             **kwargs
         )
 
-    def predict(self, x, batch_size=32, **kwargs):
+    def predict(self, x, **kwargs):
         x = self.read_for_predict(x)
-        y_pred = super().predict(x=x, batch_size=batch_size, **kwargs)
+        y_pred = super().predict(x=x, **kwargs)
         lower_bound = self.train_len + self.predict_from
         if self.predict_until is None:
             self.predict_until = len(y_pred)
         upper_bound = min(self.train_len + self.predict_until + 1, len(y_pred))
         return y_pred[lower_bound:upper_bound]
 
-    def evaluate(self, x, y=None, batch_size=32, **kwargs):
+    def evaluate(self, x, y=None, **kwargs):
         """Evaluate the best model for the given data.
 
         # Arguments
@@ -114,7 +114,6 @@ class SupervisedTimeseriesDataPipeline(structured_data.BaseStructuredDataPipelin
             y: String, numpy.ndarray, or tensorflow.Dataset. Testing data y.
                 If the data is from a csv file, it should be a string corresponding
                 to the label column.
-            batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
         # Returns
@@ -125,9 +124,7 @@ class SupervisedTimeseriesDataPipeline(structured_data.BaseStructuredDataPipelin
         """
         if isinstance(x, str):
             x, y = self._read_from_csv(x, y)
-        return super().evaluate(
-            x=x[: len(y)], y=y[self.lookback - 1 :], batch_size=batch_size, **kwargs
-        )
+        return super().evaluate(x=x[: len(y)], y=y[self.lookback - 1 :], **kwargs)
 
 
 class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
@@ -265,30 +262,23 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
             **kwargs
         )
 
-    def predict(self, x=None, batch_size=32, **kwargs):
+    def predict(self, x=None, **kwargs):
         """Predict the output for a given testing data.
 
         # Arguments
             x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
                 Testing data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the testing data.
-            batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
 
         # Returns
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        return super().predict(x=x, batch_size=batch_size, **kwargs)
+        return super().predict(x=x, **kwargs)
 
     def fit_and_predict(
-        self,
-        x=None,
-        y=None,
-        validation_split=0.2,
-        validation_data=None,
-        batch_size=32,
-        **kwargs
+        self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
     ):
         """Search for the best model and then predict for remaining data points.
 
@@ -320,7 +310,6 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
-            batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         self.fit(
@@ -331,7 +320,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
             **kwargs
         )
 
-        return self.predict(x=x, batch_size=batch_size)
+        return self.predict(x=x)
 
 
 class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
@@ -435,7 +424,7 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
         """
         raise NotImplementedError
 
-    def predict(self, x=None, batch_size=32, **kwargs):
+    def predict(self, x=None, **kwargs):
         """Predict the output for a given testing data.
 
         # Arguments
@@ -444,7 +433,6 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
                 subsequent predictions depend on them. If the data is from a csv
                 file, it should be a string specifying the path of the csv file
                 of the testing data.
-            batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.predict.
 
         # Returns
@@ -454,13 +442,7 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
         raise NotImplementedError
 
     def fit_and_predict(
-        self,
-        x=None,
-        y=None,
-        validation_split=0.2,
-        validation_data=None,
-        batch_size=32,
-        **kwargs
+        self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
     ):
         """Search for the best model and then predict for remaining data points.
 
@@ -493,7 +475,6 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
-            batch_size: Int. Defaults to 32.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
         raise NotImplementedError
