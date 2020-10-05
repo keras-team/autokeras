@@ -31,6 +31,7 @@ from autokeras.engine import node as node_module
 from autokeras.engine import tuner
 from autokeras.nodes import Input
 from autokeras.utils import data_utils
+from autokeras.utils import utils
 
 TUNER_CLASSES = {
     "bayesian": tuners.BayesianOptimization,
@@ -199,7 +200,7 @@ class AutoModel(object):
         self,
         x=None,
         y=None,
-        batch_size=4,
+        batch_size=32,
         epochs=None,
         callbacks=None,
         validation_split=0.2,
@@ -214,7 +215,7 @@ class AutoModel(object):
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x.
             y: numpy.ndarray or tensorflow.Dataset. Training data y.
-            batch_size: Int. Number of samples per gradient update. Defaults to 4.
+            batch_size: Int. Number of samples per gradient update. Defaults to 32.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, by default we train for a maximum of 1000 epochs,
                 but we stop training if the validation loss stops improving for 10
@@ -242,8 +243,6 @@ class AutoModel(object):
                 validation data.
             **kwargs: Any arguments supported by keras.Model.fit.
         """
-        self.batch_size = batch_size
-
         # Check validation information.
         if not validation_data and not validation_split:
             raise ValueError(
@@ -255,7 +254,7 @@ class AutoModel(object):
             validation_split = 0
 
         dataset, validation_data = self._convert_to_dataset(
-            x=x, y=y, validation_data=validation_data
+            x=x, y=y, validation_data=validation_data, batch_size=batch_size
         )
         self._analyze_data(dataset)
         self._build_hyper_pipeline(dataset)
@@ -275,14 +274,14 @@ class AutoModel(object):
             **kwargs
         )
 
-    def _adapt(self, dataset, hms):
+    def _adapt(self, dataset, hms, batch_size):
         if isinstance(dataset, tf.data.Dataset):
             sources = data_utils.unzip_dataset(dataset)
         else:
             sources = nest.flatten(dataset)
         adapted = []
         for source, hm in zip(sources, hms):
-            source = hm.get_adapter().adapt(source, self.batch_size)
+            source = hm.get_adapter().adapt(source, batch_size)
             adapted.append(source)
         if len(adapted) == 1:
             return adapted[0]
@@ -358,7 +357,7 @@ class AutoModel(object):
             outputs=[head.get_hyper_preprocessors() for head in self._heads],
         )
 
-    def _convert_to_dataset(self, x, y, validation_data):
+    def _convert_to_dataset(self, x, y, validation_data, batch_size):
         """Convert the data to tf.data.Dataset."""
         # TODO: Handle other types of input, zip dataset, tensor, dict.
 
@@ -368,8 +367,8 @@ class AutoModel(object):
             dataset = x
             x = dataset.map(lambda x, y: x)
             y = dataset.map(lambda x, y: y)
-        x = self._adapt(x, self.inputs)
-        y = self._adapt(y, self._heads)
+        x = self._adapt(x, self.inputs, batch_size)
+        y = self._adapt(y, self._heads, batch_size)
         dataset = tf.data.Dataset.zip((x, y))
 
         # Convert validation data
@@ -381,8 +380,8 @@ class AutoModel(object):
                 y = dataset.map(lambda x, y: y)
             else:
                 x, y = validation_data
-            x = self._adapt(x, self.inputs)
-            y = self._adapt(y, self._heads)
+            x = self._adapt(x, self.inputs, batch_size)
+            y = self._adapt(y, self._heads, batch_size)
             validation_data = tf.data.Dataset.zip((x, y))
 
         return dataset, validation_data
@@ -404,7 +403,7 @@ class AutoModel(object):
             return True
         return False
 
-    def predict(self, x, **kwargs):
+    def predict(self, x, batch_size=32, **kwargs):
         """Predict the output for a given testing data.
 
         # Arguments
@@ -419,14 +418,17 @@ class AutoModel(object):
             if self._has_y(x):
                 x = x.map(lambda x, y: x)
         self._check_data_format((x, None), predict=True)
-        dataset = self._adapt(x, self.inputs)
+        dataset = self._adapt(x, self.inputs, batch_size)
         pipeline = self.tuner.get_best_pipeline()
         model = self.tuner.get_best_model()
         dataset = pipeline.transform_x(dataset)
         y = model.predict(dataset, **kwargs)
+        y = utils.predict_with_adaptive_batch_size(
+            model=model, batch_size=batch_size, x=dataset, **kwargs
+        )
         return pipeline.postprocess(y)
 
-    def evaluate(self, x, y=None, **kwargs):
+    def evaluate(self, x, y=None, batch_size=32, **kwargs):
         """Evaluate the best model for the given data.
 
         # Arguments
@@ -446,12 +448,15 @@ class AutoModel(object):
             dataset = x
             x = dataset.map(lambda x, y: x)
             y = dataset.map(lambda x, y: y)
-        x = self._adapt(x, self.inputs)
-        y = self._adapt(y, self._heads)
+        x = self._adapt(x, self.inputs, batch_size)
+        y = self._adapt(y, self._heads, batch_size)
         dataset = tf.data.Dataset.zip((x, y))
         pipeline = self.tuner.get_best_pipeline()
         dataset = pipeline.transform(dataset)
-        return self.tuner.get_best_model().evaluate(x=dataset, **kwargs)
+        model = self.tuner.get_best_model()
+        return utils.evaluate_with_adaptive_batch_size(
+            model=model, batch_size=batch_size, x=dataset, **kwargs
+        )
 
     def export_model(self):
         """Export the best Keras Model.

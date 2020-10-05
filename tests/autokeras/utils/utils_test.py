@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import pytest
+import tensorflow as tf
 
 from autokeras.utils import utils
 
@@ -42,3 +44,18 @@ def test_check_kt_version_error():
     assert "Keras Tuner package version needs to be at least 1.0.2rc2" in str(
         info.value
     )
+
+
+def test_run_with_adaptive_batch_size_raise_error():
+    def func(**kwargs):
+        raise tf.errors.ResourceExhaustedError(0, "", None)
+
+    with pytest.raises(tf.errors.ResourceExhaustedError):
+        utils.run_with_adaptive_batch_size(
+            batch_size=64,
+            func=func,
+            x=tf.data.Dataset.from_tensor_slices(np.random.rand(100, 1)).batch(64),
+            validation_data=tf.data.Dataset.from_tensor_slices(
+                np.random.rand(100, 1)
+            ).batch(64),
+        )
