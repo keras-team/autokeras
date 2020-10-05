@@ -87,16 +87,21 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             validation_data = None
         return pipeline, dataset, validation_data
 
-    def _on_build_begin(self, trial_id, hp, args, kwargs):
-        pipeline, kwargs["x"], kwargs["validation_data"] = self._prepare_model_build(
-            hp, **kwargs
-        )
-        pipeline.save(self._pipeline_path(trial_id))
+    def _build_and_fit_model(self, trial, fit_args, fit_kwargs):
+        (
+            pipeline,
+            fit_kwargs["x"],
+            fit_kwargs["validation_data"],
+        ) = self._prepare_model_build(trial.hyperparameters, **fit_kwargs)
+        pipeline.save(self._pipeline_path(trial.trial_id))
 
-    def _on_train_begin(self, model, hp, args, kwargs):
-        """Adapt the preprocessing layers and tune the fit arguments."""
-        x = kwargs["x"]
-        self.adapt(model, x)
+        model = self.hypermodel.build(trial.hyperparameters)
+        self.adapt(model, fit_kwargs["x"])
+
+        _, history = utils.fit_with_adaptive_batch_size(
+            model, self.hypermodel.hypermodel.batch_size, **fit_kwargs
+        )
+        return history
 
     @staticmethod
     def adapt(model, dataset):
@@ -243,7 +248,9 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
 
         model = self._build_best_model()
         self.adapt(model, kwargs["x"])
-        model.fit(**kwargs)
+        model, _ = utils.fit_with_adaptive_batch_size(
+            model, self.hypermodel.hypermodel.batch_size, **kwargs
+        )
         return pipeline, model
 
     @property

@@ -76,7 +76,6 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
 
         # Temporary attributes
         self.epochs = None
-        self.batch_size = None
         self.num_samples = None
 
     def compile(self):
@@ -360,9 +359,12 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         # Epochs not specified by the user
         if self.epochs is None:
             self.epochs = 1
-        self.batch_size = self.inputs[0].batch_size
         # num_samples from analysers are before split
         self.num_samples = self.inputs[0].num_samples * (1 - validation_split)
+
+    @property
+    def batch_size(self):
+        return self.inputs[0].batch_size
 
 
 @tf.keras.utils.register_keras_serializable()
