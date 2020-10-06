@@ -28,7 +28,6 @@ class InputAnalyser(analyser.Analyser):
 class ImageAnalyser(InputAnalyser):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.has_channel_dim = False
 
     def finalize(self):
         if len(self.shape) not in [3, 4]:
@@ -37,7 +36,6 @@ class ImageAnalyser(InputAnalyser):
                 "height, width, channels) or (batch_size, height, width) "
                 "dimensions, but got input shape {shape}".format(shape=self.shape)
             )
-        self.has_channel_dim = len(self.shape) == 4
 
 
 class TextAnalyser(InputAnalyser):

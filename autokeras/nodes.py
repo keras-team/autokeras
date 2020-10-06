@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import tensorflow as tf
+from tensorflow.python.util import nest
 
 from autokeras import adapters
 from autokeras import analysers
@@ -36,14 +37,24 @@ def deserialize(config, custom_objects=None):
     )
 
 
-class Input(io_hypermodel.IOHyperModel, node_module.Node):
+class Input(node_module.Node, io_hypermodel.IOHyperModel):
     """Input node for tensor data.
 
     The data should be numpy.ndarray or tf.data.Dataset.
+
+    # Arguments
+        name: String. The name of the input node. If unspecified, it will be set
+            automatically with the class name.
     """
 
-    def build(self, hp):
+    def __init__(self, name=None, **kwargs):
+        super().__init__(name=name, **kwargs)
+
+    def build_node(self, hp):
         return tf.keras.Input(shape=self.shape, dtype=tf.float32)
+
+    def build(self, hp, inputs=None):
+        return inputs
 
     def get_adapter(self):
         return adapters.InputAdapter()
@@ -64,11 +75,23 @@ class ImageInput(Input):
     The input data should be numpy.ndarray or tf.data.Dataset. The shape of the data
     should be should be (samples, width, height) or
     (samples, width, height, channels).
+
+    # Arguments
+        name: String. The name of the input node. If unspecified, it will be set
+            automatically with the class name.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.has_channel_dim = False
+    def __init__(self, name=None, **kwargs):
+        super().__init__(name=name, **kwargs)
+
+    def build_node(self, hp):
+        return tf.keras.Input(shape=self.shape, dtype=tf.float32)
+
+    def build(self, hp, inputs=None):
+        output_node = nest.flatten(inputs)[0]
+        if len(output_node.shape) == 3:
+            output_node = tf.expand_dims(output_node, axis=-1)
+        return output_node
 
     def get_adapter(self):
         return adapters.ImageAdapter()
@@ -79,18 +102,6 @@ class ImageInput(Input):
     def get_block(self):
         return blocks.ImageBlock()
 
-    def config_from_analyser(self, analyser):
-        super().config_from_analyser(analyser)
-        self.has_channel_dim = analyser.has_channel_dim
-
-    def get_hyper_preprocessors(self):
-        hyper_preprocessors = []
-        if not self.has_channel_dim:
-            hyper_preprocessors.append(
-                hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
-            )
-        return hyper_preprocessors
-
 
 class TextInput(Input):
     """Input node for text data.
@@ -98,14 +109,23 @@ class TextInput(Input):
     The input data should be numpy.ndarray or tf.data.Dataset. The data should be
     one-dimensional. Each element in the data should be a string which is a full
     sentence.
+
+    # Arguments
+        name: String. The name of the input node. If unspecified, it will be set
+            automatically with the class name.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._add_one_dimension = None
+    def __init__(self, name=None, **kwargs):
+        super().__init__(name=name, **kwargs)
 
-    def build(self, hp):
+    def build_node(self, hp):
         return tf.keras.Input(shape=self.shape, dtype=tf.string)
+
+    def build(self, hp, inputs=None):
+        output_node = nest.flatten(inputs)[0]
+        if len(output_node.shape) == 1:
+            output_node = tf.expand_dims(output_node, axis=-1)
+        return output_node
 
     def get_adapter(self):
         return adapters.TextAdapter()
@@ -115,18 +135,6 @@ class TextInput(Input):
 
     def get_block(self):
         return blocks.TextBlock()
-
-    def config_from_analyser(self, analyser):
-        super().config_from_analyser(analyser)
-        self._add_one_dimension = len(analyser.shape) == 1
-
-    def get_hyper_preprocessors(self):
-        hyper_preprocessors = []
-        if self._add_one_dimension:
-            hyper_preprocessors.append(
-                hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
-            )
-        return hyper_preprocessors
 
 
 class StructuredDataInput(Input):
@@ -146,16 +154,17 @@ class StructuredDataInput(Input):
             If None, it will be inferred from the data. A column will be judged as
             categorical if the number of different values is less than 5% of the
             number of instances.
+        name: String. The name of the input node. If unspecified, it will be set
+            automatically with the class name.
     """
 
-    def __init__(self, column_names=None, column_types=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, column_names=None, column_types=None, name=None, **kwargs):
+        super().__init__(name=name, **kwargs)
         self.column_names = column_names
         self.column_types = column_types
-        self.dtype = None
 
-    def build(self, hp):
-        return tf.keras.Input(shape=self.shape, dtype=tf.string)
+    def build_node(self, hp):
+        return tf.keras.Input(shape=self.shape, dtype=self.dtype)
 
     def get_config(self):
         config = super().get_config()
@@ -179,14 +188,6 @@ class StructuredDataInput(Input):
         # Analyser keeps the specified ones and infer the missing ones.
         self.column_types = analyser.column_types
 
-    def get_hyper_preprocessors(self):
-        hyper_preprocessors = []
-        if self.dtype != tf.string:
-            hyper_preprocessors.append(
-                hpps_module.DefaultHyperPreprocessor(preprocessors.CastToString())
-            )
-        return hyper_preprocessors
-
 
 class TimeseriesInput(StructuredDataInput):
     """Input node for timeseries data.
@@ -206,23 +207,25 @@ class TimeseriesInput(StructuredDataInput):
             If None, it will be inferred from the data. A column will be judged as
             categorical if the number of different values is less than 5% of the
             number of instances.
+        name: String. The name of the input node. If unspecified, it will be set
+            automatically with the class name.
     """
 
     def __init__(
-        self, lookback=None, column_names=None, column_types=None, **kwargs
+        self,
+        lookback=None,
+        column_names=None,
+        column_types=None,
+        name=None,
+        **kwargs
     ):
         super().__init__(
-            column_names=column_names, column_types=column_types, **kwargs
+            column_names=column_names, column_types=column_types, name=name, **kwargs
         )
         self.lookback = lookback
 
-    def build(self, hp):
-        if len(self.shape) == 1:
-            self.shape = (
-                self.lookback,
-                self.shape[0],
-            )
-        return tf.keras.Input(shape=self.shape, dtype=tf.float32)
+    def build_node(self, hp):
+        return tf.keras.Input(shape=self.shape, dtype=self.dtype)
 
     def get_config(self):
         config = super().get_config()
@@ -240,14 +243,16 @@ class TimeseriesInput(StructuredDataInput):
     def get_block(self):
         return blocks.TimeseriesBlock()
 
+    def config_from_analyser(self, analyser):
+        super().config_from_analyser(analyser)
+
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []
-        if self.dtype != tf.string:
-            hyper_preprocessors.append(
-                hpps_module.DefaultHyperPreprocessor(
-                    preprocessors.SlidingWindow(
-                        lookback=self.lookback, batch_size=self.batch_size
-                    )
+        hyper_preprocessors.append(
+            hpps_module.DefaultHyperPreprocessor(
+                preprocessors.SlidingWindow(
+                    lookback=self.lookback, batch_size=self.batch_size
                 )
             )
+        )
         return hyper_preprocessors

@@ -66,3 +66,17 @@ def unzip_dataset(dataset):
             for index in range(len(nest.flatten(dataset_shape(dataset))))
         ]
     )
+
+
+def cast_to_string(tensor):
+    if tensor.dtype == tf.string:
+        return tensor
+    return tf.strings.as_string(tensor)
+
+
+def cast_to_float32(tensor):
+    if tensor.dtype == tf.float32:
+        return tensor
+    if tensor.dtype == tf.string:
+        return tf.strings.to_number(tensor, tf.float32)
+    return tf.cast(tensor, tf.float32)

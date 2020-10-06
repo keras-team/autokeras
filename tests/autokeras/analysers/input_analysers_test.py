@@ -120,7 +120,7 @@ def test_image_input_with_three_dim():
         analyser.update(data)
     analyser.finalize()
 
-    assert not analyser.has_channel_dim
+    assert len(analyser.shape) == 3
 
 
 def test_image_input_with_illegal_dim():

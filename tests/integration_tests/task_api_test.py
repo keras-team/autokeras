@@ -21,7 +21,7 @@ from tests import utils
 
 
 def test_image_classifier(tmp_path):
-    train_x = utils.generate_data(num_instances=320, shape=(32, 32, 3))
+    train_x = utils.generate_data(num_instances=320, shape=(32, 32))
     train_y = utils.generate_one_hot_labels(num_instances=320, num_classes=10)
     clf = ak.ImageClassifier(
         directory=tmp_path,

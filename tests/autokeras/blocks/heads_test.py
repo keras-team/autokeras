@@ -25,7 +25,7 @@ from autokeras.blocks import heads as head_module
 
 def test_two_classes_infer_binary_crossentropy():
     dataset = np.array(["a", "a", "a", "b"])
-    head = head_module.ClassificationHead(name="a")
+    head = head_module.ClassificationHead(name="a", shape=(1,))
     adapter = head.get_adapter()
     dataset = adapter.adapt(dataset, batch_size=32)
     analyser = head.get_analyser()
@@ -33,17 +33,16 @@ def test_two_classes_infer_binary_crossentropy():
         analyser.update(data)
     analyser.finalize()
     head.config_from_analyser(analyser)
-    head.output_shape = (1,)
     head.build(
         kerastuner.HyperParameters(),
-        input_module.Input(shape=(32,)).build(kerastuner.HyperParameters()),
+        input_module.Input(shape=(32,)).build_node(kerastuner.HyperParameters()),
     )
     assert head.loss.name == "binary_crossentropy"
 
 
 def test_three_classes_infer_categorical_crossentropy():
     dataset = np.array(["a", "a", "c", "b"])
-    head = head_module.ClassificationHead(name="a")
+    head = head_module.ClassificationHead(name="a", shape=(1,))
     adapter = head.get_adapter()
     dataset = adapter.adapt(dataset, batch_size=32)
     analyser = head.get_analyser()
@@ -51,17 +50,17 @@ def test_three_classes_infer_categorical_crossentropy():
         analyser.update(data)
     analyser.finalize()
     head.config_from_analyser(analyser)
-    head.output_shape = (1,)
     head.build(
         kerastuner.HyperParameters(),
-        input_module.Input(shape=(32,)).build(kerastuner.HyperParameters()),
+        input_module.Input(shape=(32,)).build_node(kerastuner.HyperParameters()),
     )
     assert head.loss.name == "categorical_crossentropy"
 
 
 def test_multi_label_loss():
-    head = head_module.ClassificationHead(name="a", multi_label=True, num_classes=8)
-    head.output_shape = (8,)
+    head = head_module.ClassificationHead(
+        name="a", multi_label=True, num_classes=8, shape=(8,)
+    )
     input_node = tf.keras.Input(shape=(5,))
     output_node = head.build(kerastuner.HyperParameters(), input_node)
     model = tf.keras.Model(input_node, output_node)
@@ -88,8 +87,7 @@ def test_clf_head_with_2_clases_get_label_encoder():
 
 
 def test_clf_head_build_with_zero_dropout_return_tensor():
-    block = head_module.ClassificationHead(dropout=0)
-    block.output_shape = (8,)
+    block = head_module.ClassificationHead(dropout=0, shape=(8,))
 
     outputs = block.build(
         kerastuner.HyperParameters(),
@@ -102,7 +100,7 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
 
 def test_segmentation():
     dataset = np.array(["a", "a", "c", "b"])
-    head = head_module.SegmentationHead(name="a")
+    head = head_module.SegmentationHead(name="a", shape=(1,))
     adapter = head.get_adapter()
     dataset = adapter.adapt(dataset, batch_size=32)
     analyser = head.get_analyser()
@@ -110,8 +108,7 @@ def test_segmentation():
         analyser.update(data)
     analyser.finalize()
     head.config_from_analyser(analyser)
-    head.output_shape = (1,)
     head.build(
         kerastuner.HyperParameters(),
-        ak.Input(shape=(32,)).build(kerastuner.HyperParameters()),
+        ak.Input(shape=(32,)).build_node(kerastuner.HyperParameters()),
     )

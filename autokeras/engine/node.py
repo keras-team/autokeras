@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.engine import named_hypermodel
 
-
-class Node(named_hypermodel.NamedHyperModel):
+class Node(object):
     """The nodes in a network connecting the blocks."""
 
     def __init__(self, **kwargs):
@@ -28,6 +26,3 @@ class Node(named_hypermodel.NamedHyperModel):
 
     def add_out_block(self, hypermodel):
         self.out_blocks.append(hypermodel)
-
-    def build(self, hp):
-        raise NotImplementedError

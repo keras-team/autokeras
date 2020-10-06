@@ -57,13 +57,10 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
     # Arguments
         inputs: A list of input node(s) for the Graph.
         outputs: A list of output node(s) for the Graph.
-        override_hps: A list of HyperParameters. The predefined HyperParameters that
-            will override the space of the Hyperparameters defined in the Hypermodels
-            with the same names.
     """
 
-    def __init__(self, inputs=None, outputs=None, override_hps=None):
-        super().__init__()
+    def __init__(self, inputs=None, outputs=None, **kwargs):
+        super().__init__(**kwargs)
         self.inputs = nest.flatten(inputs)
         self.outputs = nest.flatten(outputs)
         self._node_to_id = {}
@@ -72,7 +69,6 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         self._block_to_id = {}
         if inputs and outputs:
             self._build_network()
-        self.override_hps = override_hps or []
 
         # Temporary attributes
         self.epochs = None
@@ -83,14 +79,6 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         for block in self.blocks:
             for func in COMPILE_FUNCTIONS.get(block.__class__, []):
                 func(block)
-
-    def _register_hps(self, hp):
-        """Register the override HyperParameters for current HyperParameters."""
-        for single_hp in self.override_hps:
-            name = single_hp.name
-            if name not in hp.values:
-                hp._register(single_hp)
-                hp.values[name] = single_hp.default
 
     def _build_network(self):
         self._node_to_id = {}
@@ -202,10 +190,6 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             str(self._node_to_id[node]): nodes_module.serialize(node)
             for node in self.inputs
         }
-        override_hps = [
-            kerastuner.engine.hyperparameters.serialize(hp)
-            for hp in self.override_hps
-        ]
         block_inputs = {
             str(block_id): [self._node_to_id[node] for node in block.inputs]
             for block_id, block in enumerate(self.blocks)
@@ -218,7 +202,6 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         outputs = [self._node_to_id[node] for node in self.outputs]
 
         return {
-            "override_hps": override_hps,  # List [serialized].
             "blocks": blocks,  # Dict {id: serialized}.
             "nodes": nodes,  # Dict {id: serialized}.
             "outputs": outputs,  # List of node_ids.
@@ -233,10 +216,6 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             int(node_id): nodes_module.deserialize(node)
             for node_id, node in config["nodes"].items()
         }
-        override_hps = [
-            kerastuner.engine.hyperparameters.deserialize(config)
-            for config in config["override_hps"]
-        ]
 
         inputs = [nodes[node_id] for node_id in nodes]
         for block_id, block in enumerate(blocks):
@@ -250,29 +229,32 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
                 nodes[node_id] = output_node
 
         outputs = [nodes[node_id] for node_id in config["outputs"]]
-        return cls(inputs=inputs, outputs=outputs, override_hps=override_hps)
+        return cls(inputs=inputs, outputs=outputs)
 
     def build(self, hp):
         """Build the HyperModel into a Keras Model."""
-        self._register_hps(hp)
         self.compile()
-        real_nodes = {}
-        for input_node in self.inputs:
-            node_id = self._node_to_id[input_node]
-            real_nodes[node_id] = input_node.build(hp)
+        keras_nodes = {}
+        keras_input_nodes = []
+        for node in self.inputs:
+            node_id = self._node_to_id[node]
+            input_node = node.build_node(hp)
+            output_node = node.build(hp, input_node)
+            keras_input_nodes.append(input_node)
+            keras_nodes[node_id] = output_node
         for block in self.blocks:
             temp_inputs = [
-                real_nodes[self._node_to_id[input_node]]
+                keras_nodes[self._node_to_id[input_node]]
                 for input_node in block.inputs
             ]
             outputs = block.build(hp, inputs=temp_inputs)
             outputs = nest.flatten(outputs)
             for output_node, real_output_node in zip(block.outputs, outputs):
-                real_nodes[self._node_to_id[output_node]] = real_output_node
+                keras_nodes[self._node_to_id[output_node]] = real_output_node
         model = tf.keras.Model(
-            [real_nodes[self._node_to_id[input_node]] for input_node in self.inputs],
+            keras_input_nodes,
             [
-                real_nodes[self._node_to_id[output_node]]
+                keras_nodes[self._node_to_id[output_node]]
                 for output_node in self.outputs
             ],
         )
@@ -352,7 +334,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         for node, shape in zip(self.inputs, nest.flatten(shapes[0])):
             node.shape = tuple(shape[1:])
         for node, shape in zip(self.outputs, nest.flatten(shapes[1])):
-            node.in_blocks[0].output_shape = tuple(shape[1:])
+            node.in_blocks[0].shape = tuple(shape[1:])
 
     def set_fit_args(self, validation_split, epochs=None):
         self.epochs = epochs
