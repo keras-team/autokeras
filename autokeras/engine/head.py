@@ -14,7 +14,6 @@
 
 import tensorflow as tf
 
-from autokeras.engine import block as block_module
 from autokeras.engine import io_hypermodel
 
 
@@ -50,7 +49,7 @@ def deserialize_loss(loss):
     return tf.keras.losses.deserialize(loss)
 
 
-class Head(io_hypermodel.IOHyperModel, block_module.Block):
+class Head(io_hypermodel.IOHyperModel):
     """Base class for the heads, e.g. classification, regression.
 
     # Arguments
@@ -58,13 +57,10 @@ class Head(io_hypermodel.IOHyperModel, block_module.Block):
             inferred from the AutoModel.
         metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
             be inferred from the AutoModel.
-        output_shape: Tuple of int(s). Defaults to None. If None, the output shape
-            will be inferred from the AutoModel.
     """
 
-    def __init__(self, loss=None, metrics=None, output_shape=None, **kwargs):
+    def __init__(self, loss=None, metrics=None, **kwargs):
         super().__init__(**kwargs)
-        self.output_shape = output_shape
         self.loss = loss
         if metrics is None:
             metrics = []
@@ -77,7 +73,6 @@ class Head(io_hypermodel.IOHyperModel, block_module.Block):
             {
                 "loss": serialize_loss(self.loss),
                 "metrics": serialize_metrics(self.metrics),
-                "output_shape": self.output_shape,
             }
         )
         return config

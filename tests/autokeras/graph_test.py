@@ -16,34 +16,9 @@ import os
 
 import kerastuner
 import pytest
-from kerastuner.engine import hyperparameters as hp_module
 
 import autokeras as ak
 from autokeras import graph as graph_module
-
-
-def test_set_hp():
-    input_node = ak.Input(shape=(32,))
-    output_node = input_node
-    output_node = ak.DenseBlock()(output_node)
-    head = ak.RegressionHead()
-    head.output_shape = (1,)
-    output_node = head(output_node)
-
-    graph = graph_module.Graph(
-        inputs=input_node,
-        outputs=output_node,
-        override_hps=[hp_module.Choice("dense_block_1/num_layers", [6], default=6)],
-    )
-    hp = kerastuner.HyperParameters()
-    graph.build(hp)
-
-    for single_hp in hp.space:
-        if single_hp.name == "dense_block_1/num_layers":
-            assert len(single_hp.values) == 1
-            assert single_hp.values[0] == 6
-            return
-    assert False
 
 
 def test_input_output_disconnect():
@@ -93,7 +68,7 @@ def test_graph_basics():
     input_node = ak.Input(shape=(30,))
     output_node = input_node
     output_node = ak.DenseBlock()(output_node)
-    output_node = ak.RegressionHead(output_shape=(1,))(output_node)
+    output_node = ak.RegressionHead(shape=(1,))(output_node)
 
     model = graph_module.Graph(inputs=input_node, outputs=output_node).build(
         kerastuner.HyperParameters()
@@ -114,7 +89,6 @@ def test_graph_save_load(tmp_path):
     graph = graph_module.Graph(
         inputs=[input1, input2],
         outputs=[output1, output2],
-        override_hps=[hp_module.Choice("dense_block_1/num_layers", [6], default=6)],
     )
     path = os.path.join(tmp_path, "graph")
     graph.save(path)
@@ -124,7 +98,6 @@ def test_graph_save_load(tmp_path):
     assert len(graph.outputs) == 2
     assert isinstance(graph.inputs[0].out_blocks[0], ak.DenseBlock)
     assert isinstance(graph.inputs[1].out_blocks[0], ak.ConvBlock)
-    assert isinstance(graph.override_hps[0], hp_module.Choice)
 
 
 def test_merge():
@@ -133,7 +106,7 @@ def test_merge():
     output_node1 = ak.DenseBlock()(input_node1)
     output_node2 = ak.DenseBlock()(input_node2)
     output_node = ak.Merge()([output_node1, output_node2])
-    output_node = ak.RegressionHead(output_shape=(1,))(output_node)
+    output_node = ak.RegressionHead(shape=(1,))(output_node)
 
     model = graph_module.Graph(
         inputs=[input_node1, input_node2], outputs=output_node

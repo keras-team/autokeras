@@ -57,7 +57,7 @@ def test_greedy_oracle_populate_doesnt_crash_with_init_hps(get_best_trials):
     input_node.num_samples = 1000
     output_node = ak.ImageBlock()(input_node)
     head = ak.ClassificationHead(num_classes=10)
-    head.output_shape = (10,)
+    head.shape = (10,)
     output_node = head(output_node)
     graph = ak.graph.Graph(inputs=input_node, outputs=output_node)
     graph.build(hp)

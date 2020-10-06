@@ -112,7 +112,7 @@ class ClassificationHead(head_module.Head):
 
         if dropout > 0:
             output_node = layers.Dropout(dropout)(output_node)
-        output_node = layers.Dense(self.output_shape[-1])(output_node)
+        output_node = layers.Dense(self.shape[-1])(output_node)
         if isinstance(self.loss, tf.keras.losses.BinaryCrossentropy):
             output_node = layers.Activation(activations.sigmoid, name=self.name)(
                 output_node
@@ -220,9 +220,7 @@ class RegressionHead(head_module.Head):
         if dropout > 0:
             output_node = layers.Dropout(dropout)(output_node)
         output_node = reduction.Flatten().build(hp, output_node)
-        output_node = layers.Dense(self.output_shape[-1], name=self.name)(
-            output_node
-        )
+        output_node = layers.Dense(self.shape[-1], name=self.name)(output_node)
         return output_node
 
     def config_from_analyser(self, analyser):

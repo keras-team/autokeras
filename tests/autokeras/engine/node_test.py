@@ -11,23 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import kerastuner
-import tensorflow as tf
-
-import autokeras as ak
-from autokeras import nodes
-
-
-def test_time_series_input_node_build_to_a_tensor():
-    node = ak.TimeseriesInput(shape=(32,), lookback=2)
-    output = node.build(kerastuner.HyperParameters())
-    assert isinstance(output, tf.Tensor)
-
-
-def test_time_series_input_node_deserialize_build_to_tensor():
-    node = ak.TimeseriesInput(shape=(32,), lookback=2)
-    node = nodes.deserialize(nodes.serialize(node))
-    node.shape = (32,)
-    output = node.build(kerastuner.HyperParameters())
-    assert isinstance(output, tf.Tensor)

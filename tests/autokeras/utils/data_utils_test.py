@@ -33,3 +33,13 @@ def test_unzip_dataset_doesnt_unzip_single_dataset():
     dataset = data_utils.unzip_dataset(dataset)[0]
     dataset = data_utils.unzip_dataset(dataset)[0]
     assert data_utils.dataset_shape(dataset).as_list() == [32, 2]
+
+
+def test_cast_to_string_with_float32():
+    tensor = tf.constant([0.1, 0.2], dtype=tf.float32)
+    assert tf.string == data_utils.cast_to_string(tensor).dtype
+
+
+def test_cast_to_float32_from_float32():
+    tensor = tf.constant([0.1, 0.2], dtype=tf.float32)
+    assert tf.float32 == data_utils.cast_to_float32(tensor).dtype

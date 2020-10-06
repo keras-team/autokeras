@@ -113,8 +113,7 @@ def build_graph():
     image_input.batch_size = 32
     image_input.num_samples = 1000
     merged_outputs = ak.SpatialReduction()(image_input)
-    head = ak.ClassificationHead(num_classes=10)
-    head.output_shape = (10,)
+    head = ak.ClassificationHead(num_classes=10, shape=(10,))
     classification_outputs = head(merged_outputs)
     return ak.graph.Graph(inputs=image_input, outputs=classification_outputs)
 

@@ -21,6 +21,7 @@ from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
 from autokeras import constants
+from autokeras.utils import data_utils
 
 INT = "int"
 NONE = "none"
@@ -64,14 +65,18 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
         output_nodes = []
         for input_node, encoding_layer in zip(split_inputs, self.encoding_layers):
             if encoding_layer is None:
-                number = tf.strings.to_number(input_node, tf.float32)
+                number = data_utils.cast_to_float32(input_node)
                 # Replace NaN with 0.
                 imputed = tf.where(
                     tf.math.is_nan(number), tf.zeros_like(number), number
                 )
                 output_nodes.append(imputed)
             else:
-                output_nodes.append(tf.cast(encoding_layer(input_node), tf.float32))
+                output_nodes.append(
+                    data_utils.cast_to_float32(
+                        encoding_layer(data_utils.cast_to_string(input_node))
+                    )
+                )
         if len(output_nodes) == 1:
             return output_nodes[0]
         return tf.keras.layers.Concatenate()(output_nodes)
@@ -81,7 +86,7 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
             if encoding_layer is None:
                 continue
             data_column = data.map(lambda x: tf.slice(x, [0, index], [-1, 1]))
-            encoding_layer.adapt(data_column)
+            encoding_layer.adapt(data_column.map(data_utils.cast_to_string))
 
     def get_config(self):
         config = {
