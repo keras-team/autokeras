@@ -207,9 +207,20 @@ clf = ak.AutoModel(
     inputs=input_node, 
     outputs=output_node, 
     overwrite=True,
-    max_trials=3)
-clf.fit(x_train, y_train, epochs=10)
+    max_trials=1)
+clf.fit(x_train, y_train, epochs=1)
+clf.predict(x_train)
 
+"""
+You can also export the best model found by AutoKeras as a Keras Model.
+"""
+
+model = clf.export_model()
+model.summary()
+print(x_train.dtype)
+# numpy array in object (mixed type) is not supported.
+# convert it to unicode.
+model.predict(x_train.astype(np.unicode))
 
 """
 ## Reference

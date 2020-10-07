@@ -38,7 +38,7 @@ You can also leave the epochs unspecified for an adaptive number of epochs.
 # Initialize the structured data regressor.
 reg = ak.StructuredDataRegressor(
     overwrite=True,
-    max_trials=3) # It tries 10 different models.
+    max_trials=3) # It tries 3 different models.
 # Feed the structured data regressor with training data.
 reg.fit(
     # The path to the train.csv file.
@@ -210,7 +210,9 @@ You can also export the best model found by AutoKeras as a Keras Model.
 
 model = reg.export_model()
 model.summary()
-model.predict(x_train.astype(np.unicode))
+# numpy array in object (mixed type) is not supported.
+# you need convert it to unicode or float first.
+model.predict(x_train)
 
 
 """
