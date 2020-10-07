@@ -56,6 +56,15 @@ def test_multi_label_transform_dataset_doesnt_change():
     assert encoder.transform(dataset) is dataset
 
 
+def test_multi_label_deserialize_without_error():
+    encoder = encoders.MultiLabelEncoder()
+    dataset = tf.data.Dataset.from_tensor_slices([1, 2]).batch(32)
+
+    encoder = preprocessors.deserialize(preprocessors.serialize(encoder))
+
+    assert encoder.transform(dataset) is dataset
+
+
 def test_label_encoder_decode_to_same_string():
     encoder = encoders.LabelEncoder(["a", "b"])
 
