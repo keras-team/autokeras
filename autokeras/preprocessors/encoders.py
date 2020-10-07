@@ -123,8 +123,8 @@ class LabelEncoder(Encoder):
 class MultiLabelEncoder(Encoder):
     """Encoder for multi-label data."""
 
-    def __init__(self, **kwargs):
-        kwargs.pop("labels", None)
+    def __init__(self, labels=None, **kwargs):
+        # TODO: support custom labels.
         super().__init__(labels=[], **kwargs)
 
     def transform(self, dataset):
