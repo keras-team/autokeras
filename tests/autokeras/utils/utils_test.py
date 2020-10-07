@@ -41,7 +41,7 @@ def test_check_kt_version_error():
     with pytest.raises(ImportError) as info:
         utils.check_kt_version()
 
-    assert "Keras Tuner package version needs to be at least 1.0.2rc2" in str(
+    assert "Keras Tuner package version needs to be at least 1.0.2rc3" in str(
         info.value
     )
 
