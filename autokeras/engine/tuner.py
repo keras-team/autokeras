@@ -117,6 +117,9 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             for layer in model.layers:
                 if isinstance(layer, tf.keras.layers.InputLayer):
                     continue
+                # Not allowing preprocessing layers after merging layer.
+                if len(nest.flatten(layer.input)) > 1:
+                    break
                 input_node = nest.flatten(layer.input)[0]
                 if input_node is tensor:
                     return layer
@@ -125,8 +128,9 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         for index, input_node in enumerate(nest.flatten(model.input)):
             temp_x = x.map(lambda *args: nest.flatten(args)[index])
             layer = get_output_layer(input_node)
-            while isinstance(layer, preprocessing.PreprocessingLayer):
-                layer.adapt(temp_x)
+            while layer is not None:
+                if isinstance(layer, preprocessing.PreprocessingLayer):
+                    layer.adapt(temp_x)
                 temp_x = temp_x.map(layer)
                 layer = get_output_layer(layer.output)
         return model

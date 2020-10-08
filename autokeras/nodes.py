@@ -22,6 +22,7 @@ from autokeras import hyper_preprocessors as hpps_module
 from autokeras import preprocessors
 from autokeras.engine import io_hypermodel
 from autokeras.engine import node as node_module
+from autokeras.utils import data_utils
 
 
 def serialize(obj):
@@ -51,10 +52,11 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
         super().__init__(name=name, **kwargs)
 
     def build_node(self, hp):
-        return tf.keras.Input(shape=self.shape, dtype=tf.float32)
+        return tf.keras.Input(shape=self.shape, dtype=self.dtype)
 
     def build(self, hp, inputs=None):
-        return inputs
+        input_node = nest.flatten(inputs)[0]
+        return data_utils.cast_to_float32(input_node)
 
     def get_adapter(self):
         return adapters.InputAdapter()
@@ -84,10 +86,8 @@ class ImageInput(Input):
     def __init__(self, name=None, **kwargs):
         super().__init__(name=name, **kwargs)
 
-    def build_node(self, hp):
-        return tf.keras.Input(shape=self.shape, dtype=tf.float32)
-
     def build(self, hp, inputs=None):
+        inputs = super().build(hp, inputs)
         output_node = nest.flatten(inputs)[0]
         if len(output_node.shape) == 3:
             output_node = tf.expand_dims(output_node, axis=-1)
@@ -163,9 +163,6 @@ class StructuredDataInput(Input):
         self.column_names = column_names
         self.column_types = column_types
 
-    def build_node(self, hp):
-        return tf.keras.Input(shape=self.shape, dtype=self.dtype)
-
     def get_config(self):
         config = super().get_config()
         config.update(
@@ -187,6 +184,9 @@ class StructuredDataInput(Input):
         self.column_names = analyser.column_names
         # Analyser keeps the specified ones and infer the missing ones.
         self.column_types = analyser.column_types
+
+    def build(self, hp, inputs=None):
+        return inputs
 
 
 class TimeseriesInput(StructuredDataInput):
@@ -223,9 +223,6 @@ class TimeseriesInput(StructuredDataInput):
             column_names=column_names, column_types=column_types, name=name, **kwargs
         )
         self.lookback = lookback
-
-    def build_node(self, hp):
-        return tf.keras.Input(shape=self.shape, dtype=self.dtype)
 
     def get_config(self):
         config = super().get_config()
