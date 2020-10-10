@@ -26,6 +26,8 @@ HELP_MESSAGE = (
 # the exception list.
 EXCEPTION_LIST = [
     autokeras.MultiCategoryEncoding,
+    autokeras.BertTokenizer,
+    autokeras.BertEncoder,
     autokeras.Head,
     autokeras.Node,
     autokeras.CategoricalToNumerical,
