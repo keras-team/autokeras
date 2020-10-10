@@ -19,12 +19,13 @@ from autokeras.preprocessors.common import CastToString
 from autokeras.preprocessors.common import LambdaPreprocessor
 from autokeras.preprocessors.common import SlidingWindow
 from autokeras.preprocessors.encoders import LabelEncoder
-from autokeras.preprocessors.encoders import MultiLabelEncoder
 from autokeras.preprocessors.encoders import OneHotEncoder
+from autokeras.preprocessors.postprocessors import SigmoidPostprocessor
+from autokeras.preprocessors.postprocessors import SoftmaxPostprocessor
 
 
-def serialize(encoder):
-    return tf.keras.utils.serialize_keras_object(encoder)
+def serialize(preprocessor):
+    return tf.keras.utils.serialize_keras_object(preprocessor)
 
 
 def deserialize(config, custom_objects=None):

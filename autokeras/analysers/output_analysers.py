@@ -28,7 +28,6 @@ class ClassificationAnalyser(TargetAnalyser):
         self.num_classes = num_classes
         self.label_encoder = None
         self.multi_label = multi_label
-        self.encoded = False
         self.labels = set()
 
     def update(self, data):
@@ -46,9 +45,6 @@ class ClassificationAnalyser(TargetAnalyser):
     def finalize(self):
         # TODO: support raw string labels for multi-label.
         self.labels = sorted(list(self.labels))
-
-        if (len(self.shape) > 1 and self.shape[1] > 1) or self.encoded_for_sigmoid():
-            self.encoded = True
 
         # Infer the num_classes if not specified.
         if not self.num_classes:
@@ -90,10 +86,19 @@ class ClassificationAnalyser(TargetAnalyser):
             expected = [self.num_classes]
         return expected
 
+    @property
+    def encoded(self):
+        return self.encoded_for_sigmoid or self.encoded_for_softmax
+
+    @property
     def encoded_for_sigmoid(self):
         if not len(self.labels) == 2:
             return False
         return sorted(self.labels) == [0, 1]
+
+    @property
+    def encoded_for_softmax(self):
+        return len(self.shape) > 1 and self.shape[1] > 1
 
 
 class RegressionAnalyser(TargetAnalyser):

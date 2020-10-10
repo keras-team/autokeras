@@ -43,6 +43,9 @@ class Preprocessor(serializable.Serializable):
         """
         raise NotImplementedError
 
+    def get_config(self):
+        return {}
+
 
 class TargetPreprocessor(Preprocessor):
     """Preprocessor for target data."""

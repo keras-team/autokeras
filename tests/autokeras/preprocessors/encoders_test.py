@@ -41,30 +41,6 @@ def test_one_hot_encoder_decode_to_same_string():
     assert np.array_equal(result, np.array([["a"], ["b"], ["c"]]))
 
 
-def test_multi_label_postprocess_to_one_hot_labels():
-    encoder = encoders.MultiLabelEncoder()
-
-    y = encoder.postprocess(np.random.rand(10, 3))
-
-    assert set(y.flatten().tolist()) == set([1, 0])
-
-
-def test_multi_label_transform_dataset_doesnt_change():
-    encoder = encoders.MultiLabelEncoder()
-    dataset = tf.data.Dataset.from_tensor_slices([1, 2]).batch(32)
-
-    assert encoder.transform(dataset) is dataset
-
-
-def test_multi_label_deserialize_without_error():
-    encoder = encoders.MultiLabelEncoder()
-    dataset = tf.data.Dataset.from_tensor_slices([1, 2]).batch(32)
-
-    encoder = preprocessors.deserialize(preprocessors.serialize(encoder))
-
-    assert encoder.transform(dataset) is dataset
-
-
 def test_label_encoder_decode_to_same_string():
     encoder = encoders.LabelEncoder(["a", "b"])
 
