@@ -68,12 +68,13 @@ def test_multi_label_loss():
     assert head.loss.name == "binary_crossentropy"
 
 
-def test_clf_head_get_multi_label_preprocessor():
+def test_clf_head_get_sigmoid_postprocessor():
     head = head_module.ClassificationHead(name="a", multi_label=True)
     head._encoded = True
+    head._encoded_for_sigmoid = True
     assert isinstance(
         head.get_hyper_preprocessors()[0].preprocessor,
-        preprocessors.MultiLabelEncoder,
+        preprocessors.SigmoidPostprocessor,
     )
 
 

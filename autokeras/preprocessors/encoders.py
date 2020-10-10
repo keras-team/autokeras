@@ -118,27 +118,3 @@ class LabelEncoder(Encoder):
         return np.array(
             list(map(lambda x: self.labels[int(round(x[0]))], np.array(data)))
         ).reshape(-1, 1)
-
-
-class MultiLabelEncoder(Encoder):
-    """Encoder for multi-label data."""
-
-    def __init__(self, labels=None, **kwargs):
-        # TODO: support custom labels.
-        super().__init__(labels=[], **kwargs)
-
-    def transform(self, dataset):
-        return dataset
-
-    def postprocess(self, data):
-        """Transform probabilities to zeros and ones.
-
-        # Arguments
-            data: numpy.ndarray. The output probabilities of the classification head.
-
-        # Returns
-            numpy.ndarray. The zeros and ones predictions.
-        """
-        data[data < 0.5] = 0
-        data[data > 0.5] = 1
-        return data

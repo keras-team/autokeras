@@ -15,6 +15,7 @@
 import tensorflow as tf
 
 from autokeras.engine import preprocessor
+from autokeras.utils import data_utils
 
 
 class LambdaPreprocessor(preprocessor.Preprocessor):
@@ -59,7 +60,7 @@ class CastToString(preprocessor.Preprocessor):
         return {}
 
     def transform(self, dataset):
-        return dataset.map(tf.strings.as_string)
+        return dataset.map(data_utils.cast_to_string)
 
 
 class SlidingWindow(preprocessor.Preprocessor):

@@ -74,6 +74,8 @@ class ClassificationHead(head_module.Head):
         super().__init__(loss=loss, metrics=metrics, **kwargs)
         # Infered from analyser.
         self._encoded = None
+        self._encoded_for_sigmoid = None
+        self._encoded_for_softmax = None
         self._add_one_dimension = False
         self._labels = None
 
@@ -134,42 +136,53 @@ class ClassificationHead(head_module.Head):
         self.num_classes = analyser.num_classes
         self.loss = self.infer_loss()
         self._encoded = analyser.encoded
+        self._encoded_for_sigmoid = analyser.encoded_for_sigmoid
+        self._encoded_for_softmax = analyser.encoded_for_softmax
         self._add_one_dimension = len(analyser.shape) == 1
         self._labels = analyser.labels
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []
+
         if self._add_one_dimension:
             hyper_preprocessors.append(
                 hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
             )
+
         if self.dtype in [tf.uint8, tf.uint16, tf.uint32, tf.uint64]:
             hyper_preprocessors.append(
                 hpps_module.DefaultHyperPreprocessor(preprocessors.CastToInt32())
             )
+
         if not self._encoded and self.dtype != tf.string:
             hyper_preprocessors.append(
                 hpps_module.DefaultHyperPreprocessor(preprocessors.CastToString())
             )
-        if self.multi_label:
+
+        if self._encoded_for_sigmoid:
             hyper_preprocessors.append(
                 hpps_module.DefaultHyperPreprocessor(
-                    preprocessors.MultiLabelEncoder()
+                    preprocessors.SigmoidPostprocessor()
                 )
             )
-        if not self._encoded:
-            if self.num_classes == 2 and not self.multi_label:
-                hyper_preprocessors.append(
-                    hpps_module.DefaultHyperPreprocessor(
-                        preprocessors.LabelEncoder(self._labels)
-                    )
+        elif self._encoded_for_softmax:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(
+                    preprocessors.SoftmaxPostprocessor()
                 )
-            else:
-                hyper_preprocessors.append(
-                    hpps_module.DefaultHyperPreprocessor(
-                        preprocessors.OneHotEncoder(self._labels)
-                    )
+            )
+        elif self.num_classes == 2:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(
+                    preprocessors.LabelEncoder(self._labels)
                 )
+            )
+        else:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(
+                    preprocessors.OneHotEncoder(self._labels)
+                )
+            )
         return hyper_preprocessors
 
 
