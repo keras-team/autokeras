@@ -113,8 +113,8 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
 
     def __init__(self, column_names, column_types, **kwargs):
         super().__init__(**kwargs)
-        self.column_types = column_names
-        self.column_names = column_types
+        self.column_names = column_names
+        self.column_types = column_types
         encoding = []
         for column_name in self.column_names:
             column_type = self.column_types[column_name]
