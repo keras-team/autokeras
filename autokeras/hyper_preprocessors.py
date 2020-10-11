@@ -56,3 +56,33 @@ class DefaultHyperPreprocessor(hyper_preprocessor.HyperPreprocessor):
     def from_config(cls, config):
         config["preprocessor"] = preprocessors.deserialize(config["preprocessor"])
         return super().from_config(config)
+
+
+class TrainableHyperPreprocessor(hyper_preprocessor.HyperPreprocessor):
+    """HyperPreprocessor without Hyperparameters to tune, but needs to be fit on
+    training data.
+
+    It would always return the preprocessor after running the fit operation.
+    No hyperparameters to be tuned.
+
+    # Arguments
+        preprocessor: The Preprocessor to return when calling build.
+    """
+
+    def __init__(self, preprocessor, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.preprocessor = preprocessor
+
+    def build(self, hp, dataset):
+        self.preprocessor.fit(dataset)
+        return self.preprocessor
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"preprocessor": preprocessors.serialize(self.preprocessor)})
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        config["preprocessor"] = preprocessors.deserialize(config["preprocessor"])
+        return super().from_config(config)

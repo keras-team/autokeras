@@ -23,3 +23,17 @@ def test_serialize_and_deserialize_default_hpps():
         hyper_preprocessors.serialize(hyper_preprocessor)
     )
     assert isinstance(hyper_preprocessor.preprocessor, preprocessors.AddOneDimension)
+
+
+def test_serialize_and_deserialize_trainable_hpps():
+    preprocessor = preprocessors.CategoricalToNumerical(
+        column_names=["column_a", "column_b"],
+        column_types={"column_a": "numerical", "column_b": "numerical"},
+    )
+    hyper_preprocessor = hyper_preprocessors.TrainableHyperPreprocessor(preprocessor)
+    hyper_preprocessor = hyper_preprocessors.deserialize(
+        hyper_preprocessors.serialize(hyper_preprocessor)
+    )
+    assert isinstance(
+        hyper_preprocessor.preprocessor, preprocessors.CategoricalToNumerical
+    )

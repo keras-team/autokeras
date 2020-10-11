@@ -14,6 +14,8 @@
 
 import tensorflow as tf
 
+from autokeras import analysers
+from autokeras import keras_layers
 from autokeras.engine import preprocessor
 from autokeras.utils import data_utils
 
@@ -93,3 +95,43 @@ class SlidingWindow(preprocessor.Preprocessor):
 
     def get_config(self):
         return {"lookback": self.lookback, "batch_size": self.batch_size}
+
+
+class CategoricalToNumerical(preprocessor.Preprocessor):
+    """Encode the categorical features to numerical features.
+
+    # Arguments
+        column_names: A list of strings specifying the names of the columns. The
+            length of the list should be equal to the number of columns of the data.
+            Defaults to None. If None, it will be obtained from the header of the csv
+            file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should either
+            be 'numerical' or 'categorical', indicating the type of that column.
+            Defaults to None. If not None, the column_names need to be specified.
+            If None, it will be inferred from the data.
+    """
+
+    def __init__(self, column_names, column_types, **kwargs):
+        super().__init__(**kwargs)
+        self.column_types = column_names
+        self.column_names = column_types
+        encoding = []
+        for column_name in self.column_names:
+            column_type = self.column_types[column_name]
+            if column_type == analysers.CATEGORICAL:
+                # TODO: Search to use one-hot or int.
+                encoding.append(keras_layers.INT)
+            else:
+                encoding.append(keras_layers.NONE)
+        self.layer = keras_layers.MultiCategoryEncoding(encoding)
+
+    def fit(self, dataset):
+        self.layer.adapt(dataset)
+
+    def transform(self, dataset):
+        for data in dataset.map(self.layer):
+            result = data
+        return result
+
+    def get_config(self):
+        return {"column_types": self.column_types, "column_names": self.column_names}
