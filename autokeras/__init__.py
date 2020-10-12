@@ -58,6 +58,8 @@ from autokeras.tuners import BayesianOptimization
 from autokeras.tuners import Greedy
 from autokeras.tuners import Hyperband
 from autokeras.tuners import RandomSearch
+from autokeras.utils.io_utils import image_dataset_from_directory
+from autokeras.utils.io_utils import text_dataset_from_directory
 from autokeras.utils.utils import check_kt_version
 from autokeras.utils.utils import check_tf_version
 
