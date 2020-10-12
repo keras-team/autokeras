@@ -21,7 +21,7 @@ from autokeras import blocks as blocks_module
 from autokeras import nodes as nodes_module
 from autokeras.engine import head as head_module
 from autokeras.engine import serializable
-from autokeras.utils import utils
+from autokeras.utils import io_utils
 
 
 def feature_encoding_input(block):
@@ -48,7 +48,7 @@ def load_graph(filepath, custom_objects=None):
     if custom_objects is None:
         custom_objects = {}
     with tf.keras.utils.custom_object_scope(custom_objects):
-        return Graph.from_config(utils.load_json(filepath))
+        return Graph.from_config(io_utils.load_json(filepath))
 
 
 class Graph(kerastuner.HyperModel, serializable.Serializable):
@@ -328,7 +328,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         return model
 
     def save(self, filepath):
-        utils.save_json(filepath, self.get_config())
+        io_utils.save_json(filepath, self.get_config())
 
     def set_io_shapes(self, shapes):
         for node, shape in zip(self.inputs, nest.flatten(shapes[0])):

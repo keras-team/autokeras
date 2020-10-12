@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import re
 
 import kerastuner
@@ -59,18 +58,6 @@ def check_kt_version() -> None:
             "You can use `pip freeze` to check afterwards that everything is "
             "ok.".format(version=kerastuner.__version__)
         )
-
-
-def save_json(path, obj):
-    obj = json.dumps(obj)
-    with tf.io.gfile.GFile(path, "w") as f:
-        f.write(obj)
-
-
-def load_json(path):
-    with tf.io.gfile.GFile(path, "r") as f:
-        obj = f.read()
-    return json.loads(obj)
 
 
 def contain_instance(instance_list, instance_type):
