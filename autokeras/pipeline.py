@@ -19,7 +19,7 @@ from autokeras import preprocessors as preprocessors_module
 from autokeras.engine import hyper_preprocessor as hpps_module
 from autokeras.engine import preprocessor as pps_module
 from autokeras.utils import data_utils
-from autokeras.utils import utils
+from autokeras.utils import io_utils
 
 
 class HyperPipeline(hpps_module.HyperPreprocessor):
@@ -72,7 +72,7 @@ def load_pipeline(filepath, custom_objects=None):
     if custom_objects is None:
         custom_objects = {}
     with tf.keras.utils.custom_object_scope(custom_objects):
-        return Pipeline.from_config(utils.load_json(filepath))
+        return Pipeline.from_config(io_utils.load_json(filepath))
 
 
 class Pipeline(pps_module.Preprocessor):
@@ -144,7 +144,7 @@ class Pipeline(pps_module.Preprocessor):
         return tuple(transformed)
 
     def save(self, filepath):
-        utils.save_json(filepath, self.get_config())
+        io_utils.save_json(filepath, self.get_config())
 
     def get_config(self):
         return {
