@@ -77,7 +77,7 @@ def test_structured_data_regressor(tmp_path):
     num_train = 400
     data = pd.read_csv(utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)[:num_data]
     x_train, x_test = data[:num_train], data[num_train:]
-    y = utils.generate_data(num_instances=num_data, shape=(1,))
+    y = utils.generate_data(num_instances=num_data, shape=tuple())
     y_train, y_test = y[:num_train], y[num_train:]
     clf = ak.StructuredDataRegressor(
         directory=tmp_path, max_trials=2, seed=utils.SEED
