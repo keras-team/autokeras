@@ -375,9 +375,8 @@ class AutoModel(object):
         if validation_data:
             self._check_data_format(validation_data, validation=True)
             if isinstance(validation_data, tf.data.Dataset):
-                dataset = validation_data
-                x = dataset.map(lambda x, y: x)
-                y = dataset.map(lambda x, y: y)
+                x = validation_data.map(lambda x, y: x)
+                y = validation_data.map(lambda x, y: y)
             else:
                 x, y = validation_data
             x = self._adapt(x, self.inputs, batch_size)
