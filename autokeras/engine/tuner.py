@@ -135,7 +135,9 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
                 layer = get_output_layer(layer.output)
         return model
 
-    def search(self, epochs=None, callbacks=None, validation_split=0, **fit_kwargs):
+    def search(
+        self, epochs=None, callbacks=None, validation_split=0, hp=None, **fit_kwargs
+    ):
         """Search for the best HyperParameters.
 
         If there is not early-stopping in the callbacks, the early-stopping callback
@@ -145,6 +147,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         # Arguments
             callbacks: A list of callback functions. Defaults to None.
             validation_split: Float.
+            hp: Custom hyper parameters object.
         """
         if self._finished:
             return
@@ -174,7 +177,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             )
 
         # Populate initial search space.
-        hp = self.oracle.get_space()
+        hp = hp if hp else self.oracle.get_space()
         self._prepare_model_build(hp, **fit_kwargs)
         self.hypermodel.build(hp)
         self.oracle.update_space(hp)

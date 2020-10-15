@@ -37,6 +37,7 @@ workon ak
 
 pip install -e ".[tests]"
 pip uninstall autokeras
+pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc2
 add2virtualenv .
 ``` 
 

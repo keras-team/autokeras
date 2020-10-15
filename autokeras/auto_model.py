@@ -205,6 +205,7 @@ class AutoModel(object):
         callbacks=None,
         validation_split=0.2,
         validation_data=None,
+        hp=None,
         **kwargs
     ):
         """Search for the best model and hyperparameters for the AutoModel.
@@ -241,6 +242,7 @@ class AutoModel(object):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
+            hp: Custom hyper parameters object.
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         """
@@ -272,6 +274,7 @@ class AutoModel(object):
             callbacks=callbacks,
             validation_data=validation_data,
             validation_split=validation_split,
+            hp=hp,
             **kwargs
         )
 
