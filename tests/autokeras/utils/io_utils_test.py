@@ -116,3 +116,16 @@ def test_load_image_data_grey_scale():
     io_utils.image_dataset_from_directory(
         IMG_DATA_DIR, image_size=(180, 180), color_mode="grayscale"
     )
+
+
+def test_path_to_image():
+    img_dir = os.path.join(IMG_DATA_DIR, "roses")
+    assert isinstance(
+        io_utils.path_to_image(
+            os.path.join(img_dir, os.listdir(img_dir)[5]),
+            num_channels=3,
+            image_size=(180, 180),
+            interpolation="bilinear",
+        ),
+        tf.Tensor,
+    )

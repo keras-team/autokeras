@@ -20,6 +20,7 @@ from typing import Type
 from typing import Union
 
 import pandas as pd
+import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import auto_model
@@ -122,7 +123,7 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
             self._target_col_name = y
             x, y = self._read_from_csv(x, y)
 
-        if validation_data:
+        if validation_data and not isinstance(validation_data, tf.data.Dataset):
             x_val, y_val = validation_data
             if isinstance(x_val, str):
                 validation_data = self._read_from_csv(x_val, y_val)

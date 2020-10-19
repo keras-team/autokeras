@@ -88,6 +88,10 @@ PAGES = {
         'autokeras.ClassificationHead',
         'autokeras.RegressionHead',
     ],
+    'utils.md': [
+        'autokeras.image_dataset_from_directory',
+        'autokeras.text_dataset_from_directory',
+    ]
 }
 
 
