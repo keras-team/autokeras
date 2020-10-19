@@ -63,7 +63,7 @@ from autokeras.utils.io_utils import text_dataset_from_directory
 from autokeras.utils.utils import check_kt_version
 from autokeras.utils.utils import check_tf_version
 
-__version__ = "1.0.10"
+__version__ = "1.0.11"
 
 check_tf_version()
 check_kt_version()
