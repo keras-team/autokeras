@@ -30,7 +30,7 @@ def test_mnist_accuracy_over_98(tmp_path):
 
 def test_cifar10_accuracy_over_93(tmp_path):
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-    clf = ak.ImageClassifier(max_trials=2, directory=tmp_path)
+    clf = ak.ImageClassifier(max_trials=3, directory=tmp_path)
     clf.fit(x_train, y_train, epochs=5)
     accuracy = clf.evaluate(x_test, y_test)[1]
     assert accuracy >= 0.93

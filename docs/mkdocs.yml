@@ -42,6 +42,7 @@ nav:
     - Multi-Modal and Multi-Task: tutorial/multi.md
     - Customized Model: tutorial/customized.md
     - Export Model: tutorial/export.md
+    - Load Data from Disk: tutorial/load.md
     - FAQ: tutorial/faq.md
   - Extensions:
     - TensorFlow Cloud: extensions/tf_cloud.md
@@ -59,4 +60,5 @@ nav:
     - Base Class: base.md
     - Node: node.md
     - Block: block.md
+    - Utils: utils.md
   - About: about.md

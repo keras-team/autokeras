@@ -229,14 +229,8 @@ def image_dataset_from_directory(
     )
 
     images = tf.data.Dataset.from_tensor_slices(image_paths)
-    images = images.map(tf.io.read_file)
     images = images.map(
-        lambda img: tf.io.decode_image(
-            img, channels=num_channels, expand_animations=False
-        )
-    )
-    images = images.map(
-        lambda img: tf.image.resize(img, image_size, method=interpolation)
+        lambda img: path_to_image(img, num_channels, image_size, interpolation)
     )
 
     labels = np.array(class_names)[np.array(labels)]
@@ -245,3 +239,11 @@ def image_dataset_from_directory(
     dataset = tf.data.Dataset.zip((images, labels))
     dataset = dataset.batch(batch_size)
     return dataset
+
+
+def path_to_image(image, num_channels, image_size, interpolation):
+    image = tf.io.read_file(image)
+    image = tf.io.decode_image(image, channels=num_channels, expand_animations=False)
+    image = tf.image.resize(image, image_size, method=interpolation)
+    image.set_shape((image_size[0], image_size[1], num_channels))
+    return image
