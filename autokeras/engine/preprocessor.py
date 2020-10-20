@@ -30,7 +30,7 @@ class Preprocessor(serializable.Serializable):
         # TODO: may need to change to a streaming way of fit to reduce the
         # number of iterations through the dataset for speed. Need to be
         # decided when we have more use cases for this fit.
-        raise NotImplementedError
+        pass
 
     def transform(self, dataset):
         """Transform the dataset wth the preprocessor.
