@@ -94,9 +94,10 @@ class Pipeline(pps_module.Preprocessor):
     def fit(self, dataset):
         """Fit the Preprocessors."""
         x = dataset.map(lambda x, y: x)
-        for preprocessor in self.inputs:
-            preprocessor.fit(x)
-            x = preprocessor.transform(x)
+        for pps_list in self.inputs:
+            for preprocessor in pps_list:
+                preprocessor.fit(x)
+                x = preprocessor.transform(x)
         return
 
     def transform(self, dataset):
