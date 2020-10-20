@@ -44,6 +44,7 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
             preprocessors = []
             for hyper_preprocessor in hpps_list:
                 preprocessor = hyper_preprocessor.build(hp, data)
+                preprocessor.fit(data)
                 data = preprocessor.transform(data)
                 preprocessors.append(preprocessor)
             preprocessors_list.append(preprocessors)
@@ -92,7 +93,10 @@ class Pipeline(pps_module.Preprocessor):
 
     def fit(self, dataset):
         """Fit the Preprocessors."""
-        # TODO: Implement.
+        x = dataset.map(lambda x, y: x)
+        for preprocessor in self.inputs:
+            preprocessor.fit(x)
+            x = preprocessor.transform(x)
         return
 
     def transform(self, dataset):

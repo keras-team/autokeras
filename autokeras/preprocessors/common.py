@@ -16,6 +16,7 @@ import tensorflow as tf
 
 from autokeras import analysers
 from autokeras import keras_layers
+from autokeras import preprocessors
 from autokeras.engine import preprocessor
 from autokeras.utils import data_utils
 
@@ -134,4 +135,13 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
         return result
 
     def get_config(self):
-        return {"column_types": self.column_types, "column_names": self.column_names}
+        return {
+            "column_types": self.column_types,
+            "column_names": self.column_names,
+            "layer": preprocessors.serialize(self.layer),
+        }
+
+    @classmethod
+    def from_config(cls, config):
+        config["layer"] = preprocessors.deserialize(config["layer"])
+        return super().from_config(config)
