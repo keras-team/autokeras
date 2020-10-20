@@ -1,607 +1,359 @@
-from copy import deepcopy
+# Copyright 2020 The AutoKeras Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-from queue import Queue
+import kerastuner
+import official.nlp.optimization
+import tensorflow as tf
+from tensorflow.python.util import nest
 
-from keras import Input
-from keras.engine import Model
-from keras.layers import Concatenate, Dense, BatchNormalization, Dropout, Activation, Flatten
-
-from autokeras import constant
-from autokeras.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_weighted_add, \
-    wider_pre_dense, wider_pre_conv, deeper_conv_block, dense_to_deeper_block
-from autokeras.layers import WeightedAdd, StubConcatenate, StubWeightedAdd
-from autokeras.stub import to_stub_model
-from autokeras.utils import get_int_tuple, is_layer, layer_width
-
-
-class NetworkDescriptor:
-    CONCAT_CONNECT = 'concat'
-    ADD_CONNECT = 'add'
-
-    def __init__(self):
-        self.skip_connections = []
-        self.conv_widths = []
-        self.dense_widths = []
-
-    @property
-    def n_dense(self):
-        return len(self.dense_widths)
-
-    @property
-    def n_conv(self):
-        return len(self.conv_widths)
-
-    def add_conv_width(self, width):
-        self.conv_widths.append(width)
-
-    def add_dense_width(self, width):
-        self.dense_widths.append(width)
-
-    def add_skip_connection(self, u, v, connection_type):
-        if connection_type not in [self.CONCAT_CONNECT, self.ADD_CONNECT]:
-            raise ValueError('connection_type should be NetworkDescriptor.CONCAT_CONNECT '
-                             'or NetworkDescriptor.ADD_CONNECT.')
-        self.skip_connections.append((u, v, connection_type))
+from autokeras import blocks as blocks_module
+from autokeras import nodes as nodes_module
+from autokeras.engine import head as head_module
+from autokeras.engine import serializable
+from autokeras.utils import io_utils
 
 
-def to_real_layer(layer):
-    if is_layer(layer, 'Dense'):
-        return Dense(layer.units, activation=layer.activation)
-    if is_layer(layer, 'Conv'):
-        return layer.func(layer.filters, kernel_size=layer.kernel_size, padding='same')
-    if is_layer(layer, 'Pooling'):
-        return layer.func(padding='same')
-    if is_layer(layer, 'BatchNormalization'):
-        return BatchNormalization()
-    if is_layer(layer, 'Concatenate'):
-        return Concatenate()
-    if is_layer(layer, 'WeightedAdd'):
-        return WeightedAdd()
-    if is_layer(layer, 'Dropout'):
-        return Dropout(layer.rate)
-    if is_layer(layer, 'Activation'):
-        return Activation(layer.func)
-    if is_layer(layer, 'Flatten'):
-        return Flatten()
+def feature_encoding_input(block):
+    """Fetch the column_types and column_names.
 
-
-class Graph:
-    """A class represent the neural architecture graph of a Keras model.
-
-    Graph extracts the neural architecture graph from a Keras model. Each node in the graph
-    is a intermediate tensor between layers. Each layer is an edge in the graph.
-
-    Notably, multiple edges may refer to the same layer. (e.g. WeightedAdd layer is adding
-    two tensor into one tensor. So it is related to two edges.)
-
-    Attributes:
-        model: The Keras model, from which to extract the graph.
-        node_list: A list of tensors, the indices of the list are the identifiers.
-        layer_list: A list of Keras layers, the indices of the list are the identifiers.
-        node_to_id: A dict instance mapping from tensors to their identifiers.
-        layer_to_id: A dict instance mapping from Keras layers to their identifiers.
-        layer_id_to_input_node_ids: A dict instance mapping from layer identifiers
-            to their input nodes identifiers.
-        adj_list: A two dimensional list. The adjacency list of the graph. The first dimension is
-            identified by tensor identifiers. In each edge list, the elements are two-element tuples
-            of (tensor identifier, layer identifier).
-        reverse_adj_list: A reverse adjacent list in the same format as adj_list.
-        next_vis: A boolean list marking whether a node has been visited or not.
-        pre_vis: A boolean list marking whether a node has been visited or not.
-        middle_layer_vis: A boolean list marking whether a node has been visited or not.
+    The values are fetched for FeatureEncoding from StructuredDataInput.
     """
-    def __init__(self, model, weighted=True):
-        model = to_stub_model(model, weighted)
-        layers = model.layers[1:]
-        self.weighted = weighted
-        self.input = model.inputs[0]
-        self.output = model.outputs[0]
-        self.node_list = []
-        self.layer_list = []
-        # node id start with 0
-        self.node_to_id = {}
-        self.layer_to_id = {}
-        self.layer_id_to_input_node_ids = {}
-        self.layer_id_to_output_node_ids = {}
-        self.adj_list = {}
-        self.reverse_adj_list = {}
-        self.operation_history = []
-
-        self.next_vis = None
-        self.pre_vis = None
-        self.middle_layer_vis = None
-        self.input_shape = model.input_shape
-
-        # Add all nodes
-        for layer in layers:
-            if isinstance(layer.input, list):
-                for temp_input in layer.input:
-                    if temp_input not in self.node_list:
-                        self._add_node(temp_input)
-            else:
-                if layer.input not in self.node_list:
-                    self._add_node(layer.input)
-            self._add_node(layer.output)
-
-        # Add all edges
-        for layer in layers:
-            if isinstance(layer.input, list):
-                for temp_input in layer.input:
-                    self._add_edge(layer,
-                                   self.node_to_id[temp_input],
-                                   self.node_to_id[layer.output])
-            else:
-                self._add_edge(layer,
-                               self.node_to_id[layer.input],
-                               self.node_to_id[layer.output])
-
-    def clear_operation_history(self):
-        self.operation_history = []
-
-    @property
-    def n_nodes(self):
-        """Return the number of nodes in the model."""
-        return len(self.node_list)
-
-    @property
-    def n_layers(self):
-        """Return the number of layers in the model."""
-        return len(self.layer_list)
-
-    def _add_node(self, node):
-        """Add node to node list if it not in node list."""
-        node_id = len(self.node_list)
-        self.node_to_id[node] = node_id
-        self.node_list.append(node)
-        self.adj_list[node_id] = []
-        self.reverse_adj_list[node_id] = []
-
-    def _add_new_node(self):
-        node_value = len(self.node_list)
-        self._add_node(node_value)
-        return self.node_to_id[node_value]
-
-    def _add_edge(self, layer, input_id, output_id):
-        """Add edge to the graph."""
-
-        if layer in self.layer_to_id:
-            layer_id = self.layer_to_id[layer]
-            self.layer_id_to_input_node_ids[layer_id].append(input_id)
-            self.layer_id_to_output_node_ids[layer_id].append(output_id)
-        else:
-            layer_id = len(self.layer_list)
-            self.layer_list.append(layer)
-            self.layer_to_id[layer] = layer_id
-            self.layer_id_to_input_node_ids[layer_id] = [input_id]
-            self.layer_id_to_output_node_ids[layer_id] = [output_id]
-
-        self.adj_list[input_id].append((output_id, layer_id))
-        self.reverse_adj_list[output_id].append((input_id, layer_id))
-
-    def _redirect_edge(self, u_id, v_id, new_v_id):
-        """Redirect the edge to a new node.
-        Change the edge originally from u_id to v_id into an edge from u_id to new_v_id
-        while keeping all other property of the edge the same.
-        """
-        layer_id = None
-        for index, edge_tuple in enumerate(self.adj_list[u_id]):
-            if edge_tuple[0] == v_id:
-                layer_id = edge_tuple[1]
-                self.adj_list[u_id][index] = (new_v_id, layer_id)
-                break
-
-        for index, edge_tuple in enumerate(self.reverse_adj_list[v_id]):
-            if edge_tuple[0] == u_id:
-                layer_id = edge_tuple[1]
-                self.reverse_adj_list[v_id].remove(edge_tuple)
-                break
-        self.reverse_adj_list[new_v_id].append((u_id, layer_id))
-        for index, value in enumerate(self.layer_id_to_output_node_ids[layer_id]):
-            if value == v_id:
-                self.layer_id_to_output_node_ids[layer_id][index] = new_v_id
-                break
-
-    def _replace_layer(self, layer_id, new_layer):
-        """Replace the layer with a new layer."""
-        old_layer = self.layer_list[layer_id]
-        self.layer_list[layer_id] = new_layer
-        self.layer_to_id[new_layer] = layer_id
-        self.layer_to_id.pop(old_layer)
-
-    def _topological_order(self):
-        """Return the topological order of the node ids."""
-        q = Queue()
-        in_degree = {}
-        for i in range(self.n_nodes):
-            in_degree[i] = 0
-        for u in range(self.n_nodes):
-            for v, _ in self.adj_list[u]:
-                in_degree[v] += 1
-        for i in range(self.n_nodes):
-            if in_degree[i] == 0:
-                q.put(i)
-
-        order_list = []
-        while not q.empty():
-            u = q.get()
-            order_list.append(u)
-            for v, _ in self.adj_list[u]:
-                in_degree[v] -= 1
-                if in_degree[v] == 0:
-                    q.put(v)
-        return order_list
-
-    def _get_pooling_layers(self, start_node_id, end_node_id):
-        layer_list = []
-        node_list = [start_node_id]
-        self._depth_first_search(end_node_id, layer_list, node_list)
-        return filter(lambda layer_id: is_layer(self.layer_list[layer_id], 'Pooling'), layer_list)
-
-    def _depth_first_search(self, target_id, layer_id_list, node_list):
-        u = node_list[-1]
-        if u == target_id:
-            return True
-
-        for v, layer_id in self.adj_list[u]:
-            layer_id_list.append(layer_id)
-            node_list.append(v)
-            if self._depth_first_search(target_id, layer_id_list, node_list):
-                return True
-            layer_id_list.pop()
-            node_list.pop()
-
-        return False
-
-    def _search_next(self, u, start_dim, total_dim, n_add):
-        """Search downward the graph for widening the layers.
-
-        Args:
-            u: The starting node identifier.
-            start_dim: The dimension to insert the additional dimensions.
-            total_dim: The total number of dimensions the layer has before widening.
-            n_add: The number of dimensions to add.
-        """
-        if self.next_vis[u]:
-            return
-        self.next_vis[u] = True
-        self._search_pre(u, start_dim, total_dim, n_add)
-        for v, layer_id in self.adj_list[u]:
-            layer = self.layer_list[layer_id]
-
-            if is_layer(layer, 'Conv'):
-                new_layer = wider_next_conv(layer, start_dim, total_dim, n_add, self.weighted)
-                self._replace_layer(layer_id, new_layer)
-
-            elif is_layer(layer, 'Dense'):
-                new_layer = wider_next_dense(layer, start_dim, total_dim, n_add, self.weighted)
-                self._replace_layer(layer_id, new_layer)
-
-            elif is_layer(layer, 'BatchNormalization'):
-                if not self.middle_layer_vis[layer_id]:
-                    self.middle_layer_vis[layer_id] = True
-                    new_layer = wider_bn(layer, start_dim, total_dim, n_add, self.weighted)
-                    self._replace_layer(layer_id, new_layer)
-                self._search_next(v, start_dim, total_dim, n_add)
-
-            elif is_layer(layer, 'WeightedAdd'):
-                if not self.middle_layer_vis[layer_id]:
-                    self.middle_layer_vis[layer_id] = True
-                    new_layer = wider_weighted_add(layer, n_add, self.weighted)
-                    self._replace_layer(layer_id, new_layer)
-                self._search_next(v, start_dim, total_dim, n_add)
-
-            elif is_layer(layer, 'Concatenate'):
-                next_start_dim = start_dim
-                next_total_dim = self._upper_layer_width(v)
-                if self.layer_id_to_input_node_ids[layer_id][1] == u:
-                    # u is on the right of the concat
-                    next_start_dim += next_total_dim - total_dim
-                self._search_next(v, next_start_dim, next_total_dim, n_add)
-
-            else:
-                self._search_next(v, start_dim, total_dim, n_add)
-
-    def _search_pre(self, u, start_dim, total_dim, n_add):
-        """Search upward the graph for widening the layers.
-
-        Args:
-            u: The starting node identifier.
-            start_dim: The dimension to insert the additional dimensions.
-            total_dim: The total number of dimensions the layer has before widening.
-            n_add: The number of dimensions to add.
-        """
-        if self.pre_vis[u]:
-            return
-        self.pre_vis[u] = True
-        self._search_next(u, start_dim, total_dim, n_add)
-        for v, layer_id in self.reverse_adj_list[u]:
-            layer = self.layer_list[layer_id]
-            if is_layer(layer, 'Conv'):
-                new_layer = wider_pre_conv(layer, n_add, self.weighted)
-                self._replace_layer(layer_id, new_layer)
-            elif is_layer(layer, 'Dense'):
-                new_layer = wider_pre_dense(layer, n_add, self.weighted)
-                self._replace_layer(layer_id, new_layer)
-            elif is_layer(layer, 'BatchNormalization'):
-                self._search_pre(v, start_dim, total_dim, n_add)
-            elif is_layer(layer, 'Concatenate'):
-                if self.layer_id_to_input_node_ids[layer_id][1] == v:
-                    # v is on the right
-                    other_branch_v = self.layer_id_to_input_node_ids[layer_id][0]
-                    if self.pre_vis[other_branch_v]:
-                        # The other branch is already been widen, which means the widen for upper part of this concat
-                        #  layer is done.
-                        continue
-                    pre_total_dim = self._upper_layer_width(v)
-                    pre_start_dim = start_dim - (total_dim - pre_total_dim)
-                    self._search_pre(v, pre_start_dim, pre_total_dim, n_add)
-            else:
-                self._search_pre(v, start_dim, total_dim, n_add)
-
-    def _upper_layer_width(self, u):
-        for v, layer_id in self.reverse_adj_list[u]:
-            layer = self.layer_list[layer_id]
-            if is_layer(layer, 'Conv') or is_layer(layer, 'Dense'):
-                return layer_width(layer)
-            elif is_layer(layer, 'Concatenate'):
-                a = self.layer_id_to_input_node_ids[layer_id][0]
-                b = self.layer_id_to_input_node_ids[layer_id][1]
-                return self._upper_layer_width(a) + self._upper_layer_width(b)
-            else:
-                return self._upper_layer_width(v)
-        return self.input_shape[-1]
-
-    def to_conv_deeper_model(self, target_id, kernel_size):
-        """Insert a convolution, batch-normalization, relu block after the target block.
-
-        Args:
-            target_id: A convolutional layer ID. The new block should be inserted after the relu layer
-                in its conv-batch-relu block.
-            kernel_size: An integer. The kernel size of the new convolutional layer.
-
-        Returns:
-            A new Keras model with the inserted block.
-        """
-        self.operation_history.append(('to_conv_deeper_model', target_id, kernel_size))
-        target = self.layer_list[target_id]
-        new_layers = deeper_conv_block(target, kernel_size, self.weighted)
-        output_id = self._conv_block_end_node(target_id)
-
-        self._insert_new_layers(new_layers, output_id)
-
-    def to_wider_model(self, pre_layer_id, n_add):
-        """Widen the last dimension of the output of the pre_layer.
-
-        Args:
-            pre_layer_id: A convolutional layer or dense layer.
-            n_add: The number of dimensions to add.
-
-        Returns:
-            A new Keras model with the widened layers.
-        """
-        self.operation_history.append(('to_wider_model', pre_layer_id, n_add))
-        pre_layer = self.layer_list[pre_layer_id]
-        output_id = self.layer_id_to_output_node_ids[pre_layer_id][0]
-        self.next_vis = [False] * self.n_nodes
-        self.pre_vis = [False] * self.n_nodes
-        self.middle_layer_vis = [False] * len(self.layer_list)
-        dim = layer_width(pre_layer)
-        self._search_next(output_id, dim, dim, n_add)
-
-    def to_dense_deeper_model(self, target_id):
-        """Insert a dense layer after the target layer.
-
-        Args:
-            target_id: A dense layer.
-
-        Returns:
-            A new Keras model with an inserted dense layer.
-        """
-        self.operation_history.append(('to_dense_deeper_model', target_id))
-        target = self.layer_list[target_id]
-        new_layers = dense_to_deeper_block(target, self.weighted)
-        output_id = self._dense_block_end_node(target_id)
-
-        self._insert_new_layers(new_layers, output_id)
-
-    def _insert_new_layers(self, new_layers, output_id):
-        node_ids = []
-        n_new_layers = len(new_layers)
-        for i in range(n_new_layers):
-            node_ids.append(self._add_new_node())
-        for i in range(n_new_layers - 1):
-            self._add_edge(new_layers[i], node_ids[i], node_ids[i + 1])
-        self._add_edge(new_layers[n_new_layers - 1], node_ids[n_new_layers - 1], self.adj_list[output_id][0][0])
-        self._redirect_edge(output_id, self.adj_list[output_id][0][0], node_ids[0])
-
-    def _block_end_node(self, layer_id, block_size):
-        ret = self.layer_id_to_output_node_ids[layer_id][0]
-        for i in range(block_size - 2):
-            ret = self.adj_list[ret][0][0]
-        return ret
-
-    def _dense_block_end_node(self, layer_id):
-        return self._block_end_node(layer_id, constant.DENSE_BLOCK_SIZE)
-
-    def _conv_block_end_node(self, layer_id):
-        """
-
-        Args:
-            layer_id: the convolutional layer ID.
-
-        Returns:
-            The input node ID of the last layer in the convolutional block.
-
-        """
-        return self._block_end_node(layer_id, constant.CONV_BLOCK_SIZE)
-
-    def to_add_skip_model(self, start_id, end_id):
-        """Add a weighted add skip connection from before start node to end node.
-
-        Args:
-            start_id: The convolutional layer ID, after which to start the skip-connection.
-            end_id: The convolutional layer ID, after which to end the skip-connection.
-
-        Returns:
-            A new Keras model with the added connection.
-        """
-        self.operation_history.append(('to_add_skip_model', start_id, end_id))
-        conv_layer_ids = self._conv_layer_ids_in_order()
-        start_id = conv_layer_ids[conv_layer_ids.index(start_id) + 1]
-        conv_input_id = self.layer_id_to_input_node_ids[start_id][0]
-
-        dropout_input_id = self._conv_block_end_node(end_id)
-
-        # Add the pooling layer chain.
-        pooling_layer_list = self._get_pooling_layers(conv_input_id, dropout_input_id)
-        skip_output_id = conv_input_id
-        for index, layer_id in enumerate(pooling_layer_list):
-            layer = self.layer_list[layer_id]
-            new_node_id = self._add_new_node()
-            self._add_edge(deepcopy(layer), skip_output_id, new_node_id)
-            skip_output_id = new_node_id
-
-        # Add the weighted add layer.
-        new_node_id = self._add_new_node()
-        layer = StubWeightedAdd()
-        if self.weighted:
-            layer.set_weights(WeightedAdd().get_weights())
-
-        dropout_output_id = self.adj_list[dropout_input_id][0][0]
-        self._redirect_edge(dropout_input_id, dropout_output_id, new_node_id)
-        self._add_edge(layer, new_node_id, dropout_output_id)
-        self._add_edge(layer, skip_output_id, dropout_output_id)
-
-    def to_concat_skip_model(self, start_id, end_id):
-        """Add a weighted add concatenate connection from before start node to end node.
-
-        Returns:
-            A new Keras model with the added connection.
-        """
-        self.operation_history.append(('to_concat_skip_model', start_id, end_id))
-        # start = self.layer_list[start_id]
-        conv_layer_ids = self._conv_layer_ids_in_order()
-        start_id = conv_layer_ids[conv_layer_ids.index(start_id) + 1]
-        conv_input_id = self.layer_id_to_input_node_ids[start_id][0]
-
-        end = self.layer_list[end_id]
-        dropout_input_id = self._conv_block_end_node(end_id)
-
-        # Add the pooling layer chain.
-        pooling_layer_list = self._get_pooling_layers(conv_input_id, dropout_input_id)
-        skip_output_id = conv_input_id
-        for index, layer_id in enumerate(pooling_layer_list):
-            layer = self.layer_list[layer_id]
-            new_node_id = self._add_new_node()
-            self._add_edge(deepcopy(layer), skip_output_id, new_node_id)
-            skip_output_id = new_node_id
-
-        # Add the concatenate layer.
-        new_node_id = self._add_new_node()
-        layer = StubConcatenate()
-
-        dropout_output_id = self.adj_list[dropout_input_id][0][0]
-        self._redirect_edge(dropout_input_id, dropout_output_id, new_node_id)
-        self._add_edge(layer, new_node_id, dropout_output_id)
-        self._add_edge(layer, skip_output_id, dropout_output_id)
-
-        # Widen the related layers.
-        self.next_vis = [False] * self.n_nodes
-        self.pre_vis = [False] * self.n_nodes
-        self.middle_layer_vis = [False] * len(self.layer_list)
-
-        self.pre_vis[dropout_output_id] = True
-        dim = layer_width(end)
-        n_add = self._upper_layer_width(conv_input_id)
-        self._search_next(dropout_output_id, dim, dim, n_add)
-
-    def extract_descriptor(self):
-        ret = NetworkDescriptor()
-        topological_node_list = self._topological_order()
-        for u in topological_node_list:
-            for v, layer_id in self.adj_list[u]:
-                layer = self.layer_list[layer_id]
-                if is_layer(layer, 'Conv'):
-                    ret.add_conv_width(layer_width(layer))
-                if is_layer(layer, 'Dense'):
-                    ret.add_dense_width(layer_width(layer))
-
-        layer_count = 0
-        # The position of each node, how many Conv and Dense layers before it.
-        pos = [0] * len(topological_node_list)
-        for u in topological_node_list:
-            pos[u] = layer_count
-            for v, layer_id in self.adj_list[u]:
-                layer = self.layer_list[layer_id]
-                if is_layer(layer, 'Conv') or is_layer(layer, 'Dense'):
-                    layer_count += 1
-
-        for u in topological_node_list:
-            for v, layer_id in self.adj_list[u]:
-                if pos[u] == pos[v]:
+    if not isinstance(block.inputs[0], nodes_module.StructuredDataInput):
+        raise TypeError(
+            "CategoricalToNumerical can only be used with StructuredDataInput."
+        )
+    block.column_types = block.inputs[0].column_types
+    block.column_names = block.inputs[0].column_names
+
+
+# Compile the graph.
+COMPILE_FUNCTIONS = {
+    blocks_module.StructuredDataBlock: [feature_encoding_input],
+    blocks_module.CategoricalToNumerical: [feature_encoding_input],
+}
+
+
+def load_graph(filepath, custom_objects=None):
+    if custom_objects is None:
+        custom_objects = {}
+    with tf.keras.utils.custom_object_scope(custom_objects):
+        return Graph.from_config(io_utils.load_json(filepath))
+
+
+class Graph(kerastuner.HyperModel, serializable.Serializable):
+    """A graph consists of connected Blocks, or Heads.
+
+    # Arguments
+        inputs: A list of input node(s) for the Graph.
+        outputs: A list of output node(s) for the Graph.
+    """
+
+    def __init__(self, inputs=None, outputs=None, **kwargs):
+        super().__init__(**kwargs)
+        self.inputs = nest.flatten(inputs)
+        self.outputs = nest.flatten(outputs)
+        self._node_to_id = {}
+        self._nodes = []
+        self.blocks = []
+        self._block_to_id = {}
+        if inputs and outputs:
+            self._build_network()
+
+        # Temporary attributes
+        self.epochs = None
+        self.num_samples = None
+
+    def compile(self):
+        """Share the information between blocks."""
+        for block in self.blocks:
+            for func in COMPILE_FUNCTIONS.get(block.__class__, []):
+                func(block)
+
+    def _build_network(self):
+        self._node_to_id = {}
+
+        # Recursively find all the interested nodes.
+        for input_node in self.inputs:
+            self._search_network(input_node, self.outputs, set(), set())
+        self._nodes = sorted(
+            list(self._node_to_id.keys()), key=lambda x: self._node_to_id[x]
+        )
+
+        for node in self.inputs + self.outputs:
+            if node not in self._node_to_id:
+                raise ValueError("Inputs and outputs not connected.")
+
+        # Find the blocks.
+        blocks = []
+        for input_node in self._nodes:
+            for block in input_node.out_blocks:
+                if (
+                    any(
+                        [
+                            output_node in self._node_to_id
+                            for output_node in block.outputs
+                        ]
+                    )
+                    and block not in blocks
+                ):
+                    blocks.append(block)
+
+        # Check if all the inputs of the blocks are set as inputs.
+        for block in blocks:
+            for input_node in block.inputs:
+                if input_node not in self._node_to_id:
+                    raise ValueError(
+                        "A required input is missing for HyperModel "
+                        "{name}.".format(name=block.name)
+                    )
+
+        # Calculate the in degree of all the nodes
+        in_degree = [0] * len(self._nodes)
+        for node_id, node in enumerate(self._nodes):
+            in_degree[node_id] = len(
+                [block for block in node.in_blocks if block in blocks]
+            )
+
+        # Add the blocks in topological order.
+        self.blocks = []
+        self._block_to_id = {}
+        while len(blocks) != 0:
+            new_added = []
+
+            # Collect blocks with in degree 0.
+            for block in blocks:
+                if any([in_degree[self._node_to_id[node]] for node in block.inputs]):
                     continue
-                layer = self.layer_list[layer_id]
-                if is_layer(layer, 'Concatenate'):
-                    ret.add_skip_connection(pos[u], pos[v], NetworkDescriptor.CONCAT_CONNECT)
-                if is_layer(layer, 'WeightedAdd'):
-                    ret.add_skip_connection(pos[u], pos[v], NetworkDescriptor.ADD_CONNECT)
+                new_added.append(block)
 
-        return ret
+            # Remove the collected blocks from blocks.
+            for block in new_added:
+                blocks.remove(block)
 
-    def produce_model(self):
-        """Build a new Keras model based on the current graph."""
-        input_tensor = Input(shape=get_int_tuple(self.input.shape[1:]))
-        input_id = self.node_to_id[self.input]
-        output_id = self.node_to_id[self.output]
+            for block in new_added:
+                # Add the collected blocks to the Graph.
+                self._add_block(block)
 
-        new_to_old_layer = {}
-        self.node_list[input_id] = input_tensor
-        self.node_to_id[input_tensor] = input_id
-        for v in self._topological_order():
-            for u, layer_id in self.reverse_adj_list[v]:
-                layer = self.layer_list[layer_id]
+                # Decrease the in degree of the output nodes.
+                for output_node in block.outputs:
+                    output_node_id = self._node_to_id[output_node]
+                    in_degree[output_node_id] -= 1
 
-                if isinstance(layer, (StubWeightedAdd, StubConcatenate)):
-                    edge_input_tensor = list(map(lambda x: self.node_list[x],
-                                                 self.layer_id_to_input_node_ids[layer_id]))
-                else:
-                    edge_input_tensor = self.node_list[u]
+    def _search_network(self, input_node, outputs, in_stack_nodes, visited_nodes):
+        visited_nodes.add(input_node)
+        in_stack_nodes.add(input_node)
 
-                new_layer = to_real_layer(layer)
-                new_to_old_layer[new_layer] = layer
+        outputs_reached = False
+        if input_node in outputs:
+            outputs_reached = True
 
-                temp_tensor = new_layer(edge_input_tensor)
-                self.node_list[v] = temp_tensor
-                self.node_to_id[temp_tensor] = v
-        model = Model(input_tensor, self.node_list[output_id])
-        for layer in model.layers[1:]:
-            if not isinstance(layer, (Activation, Dropout, Concatenate)):
-                old_layer = new_to_old_layer[layer]
-                layer.set_weights(old_layer.get_weights())
+        for block in input_node.out_blocks:
+            for output_node in block.outputs:
+                if output_node in in_stack_nodes:
+                    raise ValueError("The network has a cycle.")
+                if output_node not in visited_nodes:
+                    self._search_network(
+                        output_node, outputs, in_stack_nodes, visited_nodes
+                    )
+                if output_node in self._node_to_id.keys():
+                    outputs_reached = True
+
+        if outputs_reached:
+            self._add_node(input_node)
+
+        in_stack_nodes.remove(input_node)
+
+    def _add_block(self, block):
+        if block not in self.blocks:
+            block_id = len(self.blocks)
+            self._block_to_id[block] = block_id
+            self.blocks.append(block)
+
+    def _add_node(self, input_node):
+        if input_node not in self._node_to_id:
+            self._node_to_id[input_node] = len(self._node_to_id)
+
+    def get_config(self):
+        blocks = [blocks_module.serialize(block) for block in self.blocks]
+        nodes = {
+            str(self._node_to_id[node]): nodes_module.serialize(node)
+            for node in self.inputs
+        }
+        block_inputs = {
+            str(block_id): [self._node_to_id[node] for node in block.inputs]
+            for block_id, block in enumerate(self.blocks)
+        }
+        block_outputs = {
+            str(block_id): [self._node_to_id[node] for node in block.outputs]
+            for block_id, block in enumerate(self.blocks)
+        }
+
+        outputs = [self._node_to_id[node] for node in self.outputs]
+
+        return {
+            "blocks": blocks,  # Dict {id: serialized}.
+            "nodes": nodes,  # Dict {id: serialized}.
+            "outputs": outputs,  # List of node_ids.
+            "block_inputs": block_inputs,  # Dict {id: List of node_ids}.
+            "block_outputs": block_outputs,  # Dict {id: List of node_ids}.
+        }
+
+    @classmethod
+    def from_config(cls, config):
+        blocks = [blocks_module.deserialize(block) for block in config["blocks"]]
+        nodes = {
+            int(node_id): nodes_module.deserialize(node)
+            for node_id, node in config["nodes"].items()
+        }
+
+        inputs = [nodes[node_id] for node_id in nodes]
+        for block_id, block in enumerate(blocks):
+            input_nodes = [
+                nodes[node_id] for node_id in config["block_inputs"][str(block_id)]
+            ]
+            output_nodes = nest.flatten(block(input_nodes))
+            for output_node, node_id in zip(
+                output_nodes, config["block_outputs"][str(block_id)]
+            ):
+                nodes[node_id] = output_node
+
+        outputs = [nodes[node_id] for node_id in config["outputs"]]
+        return cls(inputs=inputs, outputs=outputs)
+
+    def build(self, hp):
+        """Build the HyperModel into a Keras Model."""
+        self.compile()
+        keras_nodes = {}
+        keras_input_nodes = []
+        for node in self.inputs:
+            node_id = self._node_to_id[node]
+            input_node = node.build_node(hp)
+            output_node = node.build(hp, input_node)
+            keras_input_nodes.append(input_node)
+            keras_nodes[node_id] = output_node
+        for block in self.blocks:
+            temp_inputs = [
+                keras_nodes[self._node_to_id[input_node]]
+                for input_node in block.inputs
+            ]
+            outputs = block.build(hp, inputs=temp_inputs)
+            outputs = nest.flatten(outputs)
+            for output_node, real_output_node in zip(block.outputs, outputs):
+                keras_nodes[self._node_to_id[output_node]] = real_output_node
+        model = tf.keras.Model(
+            keras_input_nodes,
+            [
+                keras_nodes[self._node_to_id[output_node]]
+                for output_node in self.outputs
+            ],
+        )
+
+        return self._compile_keras_model(hp, model)
+
+    def _get_metrics(self):
+        metrics = {}
+        for output_node in self.outputs:
+            block = output_node.in_blocks[0]
+            if isinstance(block, head_module.Head):
+                metrics[block.name] = block.metrics
+        return metrics
+
+    def _get_loss(self):
+        loss = {}
+        for output_node in self.outputs:
+            block = output_node.in_blocks[0]
+            if isinstance(block, head_module.Head):
+                loss[block.name] = block.loss
+        return loss
+
+    def _compile_keras_model(self, hp, model):
+        # Specify hyperparameters from compile(...)
+        optimizer_name = hp.Choice(
+            "optimizer",
+            ["adam", "sgd", "adam_weight_decay"],
+            default="adam",
+        )
+        # TODO: add adadelta optimizer when it can optimize embedding layer on GPU.
+        learning_rate = hp.Choice(
+            "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 2e-5, 1e-5], default=1e-3
+        )
+
+        if optimizer_name == "adam":
+            optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        elif optimizer_name == "sgd":
+            optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
+        elif optimizer_name == "adam_weight_decay":
+            steps_per_epoch = int(self.num_samples / self.batch_size)
+            num_train_steps = steps_per_epoch * self.epochs
+            warmup_steps = int(
+                self.epochs * self.num_samples * 0.1 / self.batch_size
+            )
+
+            lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
+                initial_learning_rate=learning_rate,
+                decay_steps=num_train_steps,
+                end_learning_rate=0.0,
+            )
+            if warmup_steps:
+                lr_schedule = WarmUp(
+                    initial_learning_rate=learning_rate,
+                    decay_schedule_fn=lr_schedule,
+                    warmup_steps=warmup_steps,
+                )
+
+            optimizer = AdamWeightDecay(
+                learning_rate=lr_schedule,
+                weight_decay_rate=0.01,
+                beta_1=0.9,
+                beta_2=0.999,
+                epsilon=1e-6,
+                exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"],
+            )
+
+        model.compile(
+            optimizer=optimizer, metrics=self._get_metrics(), loss=self._get_loss()
+        )
+
         return model
 
-    def _layer_ids_in_order(self, layer_ids):
-        node_id_to_order_index = {}
-        for index, node_id in enumerate(self._topological_order()):
-            node_id_to_order_index[node_id] = index
-        return sorted(layer_ids,
-                      key=lambda layer_id:
-                      node_id_to_order_index[self.layer_id_to_output_node_ids[layer_id][0]])
+    def save(self, filepath):
+        io_utils.save_json(filepath, self.get_config())
 
-    def _layer_ids_by_type(self, type_str):
-        return list(filter(lambda layer_id: is_layer(self.layer_list[layer_id], type_str), range(self.n_layers)))
+    def set_io_shapes(self, shapes):
+        for node, shape in zip(self.inputs, nest.flatten(shapes[0])):
+            node.shape = tuple(shape[1:])
+        for node, shape in zip(self.outputs, nest.flatten(shapes[1])):
+            node.in_blocks[0].shape = tuple(shape[1:])
 
-    def _conv_layer_ids_in_order(self):
-        return self._layer_ids_in_order(self._layer_ids_by_type('Conv'))
+    def set_fit_args(self, validation_split, epochs=None):
+        self.epochs = epochs
+        # Epochs not specified by the user
+        if self.epochs is None:
+            self.epochs = 1
+        # num_samples from analysers are before split
+        self.num_samples = self.inputs[0].num_samples * (1 - validation_split)
 
-    def _dense_layer_ids_in_order(self):
-        return self._layer_ids_in_order(self._layer_ids_by_type('Dense'))
+    @property
+    def batch_size(self):
+        return self.inputs[0].batch_size
 
-    def deep_layer_ids(self):
-        return self._conv_layer_ids_in_order() + self._dense_layer_ids_in_order()[:-1]
 
-    def wide_layer_ids(self):
-        return self._conv_layer_ids_in_order()[:-1] + self._dense_layer_ids_in_order()[:-1]
+@tf.keras.utils.register_keras_serializable()
+class AdamWeightDecay(official.nlp.optimization.AdamWeightDecay):
+    pass
 
-    def skip_connection_layer_ids(self):
-        return self._conv_layer_ids_in_order()[1:]
+
+@tf.keras.utils.register_keras_serializable()
+class WarmUp(official.nlp.optimization.WarmUp):
+    pass

@@ -1,6 +1,18 @@
+# vim swp files
+*.swp
+# caffe/pytorch model files
+*.pth
+
+# Mkdocs
+/docs/sources
+/docs/site
+
 .DS_Store
+.vscode
+settings.json
 .idea
 .pytest_cache
+/experiments
 
 # resource temp folder
 tests/resources/temp/*
@@ -48,6 +60,7 @@ htmlcov/
 .tox/
 .coverage
 .coverage.*
+cov.xml
 .cache
 nosetests.xml
 coverage.xml
@@ -110,3 +123,5 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+examples/text_cnn/glove_embedding/

@@ -1,0 +1,64 @@
+site_name: AutoKeras
+theme:
+  favicon: '/img/favicon.png'
+  logo: '/img/logo_white.svg'
+  name: 'material'
+  palette:
+    primary: 'red'
+    accent: 'red'
+
+docs_dir: sources
+repo_url: https://github.com/keras-team/autokeras
+site_url: http://autokeras.com
+edit_uri: ""
+site_description: 'Documentation for AutoKeras.'
+google_analytics: ['UA-44322747-3', 'autokeras.com']
+markdown_extensions:
+  - codehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_div_format
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - admonition
+
+extra_javascript:
+  - https://unpkg.com/mermaid@8.4.4/dist/mermaid.min.js
+
+nav:
+  - Home: index.md
+  - Installation: install.md
+  - Tutorials:
+    - Overview: tutorial/overview.md
+    - Image Classification: tutorial/image_classification.md
+    - Image Regression: tutorial/image_regression.md
+    - Text Classification: tutorial/text_classification.md
+    - Text Regression: tutorial/text_regression.md
+    - Structured Data Classification: tutorial/structured_data_classification.md
+    - Structured Data Regression: tutorial/structured_data_regression.md
+    - Multi-Modal and Multi-Task: tutorial/multi.md
+    - Customized Model: tutorial/customized.md
+    - Export Model: tutorial/export.md
+    - Load Data from Disk: tutorial/load.md
+    - FAQ: tutorial/faq.md
+  - Extensions:
+    - TensorFlow Cloud: extensions/tf_cloud.md
+    - TRAINS: extensions/trains.md
+  - Docker: docker.md
+  - Contributing Guide: contributing.md
+  - Documentation:
+    - ImageClassifier: image_classifier.md
+    - ImageRegressor: image_regressor.md
+    - TextClassifier: text_classifier.md
+    - TextRegressor: text_regressor.md
+    - StructuredDataClassifier: structured_data_classifier.md
+    - StructuredDataRegressor: structured_data_regressor.md
+    - AutoModel: auto_model.md
+    - Base Class: base.md
+    - Node: node.md
+    - Block: block.md
+    - Utils: utils.md
+  - About: about.md
