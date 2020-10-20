@@ -143,5 +143,10 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
 
     @classmethod
     def from_config(cls, config):
-        config["layer"] = preprocessors.deserialize(config["layer"])
-        return super().from_config(config)
+        init_config = {
+            "column_types": config["column_types"],
+            "column_names": config["column_names"],
+        }
+        obj = cls(**init_config)
+        obj.layer = preprocessors.deserialize(config["layer"])
+        return obj
