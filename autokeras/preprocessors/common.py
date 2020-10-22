@@ -136,7 +136,7 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
 
     def get_config(self):
         vocab = []
-        for encoding_layer in self.encoding_layers:
+        for encoding_layer in self.layer.encoding_layers:
             if encoding_layer is None:
                 vocab.append([])
             else:
