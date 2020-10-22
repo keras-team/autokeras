@@ -135,11 +135,17 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
         return result
 
     def get_config(self):
+        vocab = []
+        for encoding_layer in self.encoding_layers:
+            if encoding_layer is None:
+                vocab.append([])
+            else:
+                vocab.append(encoding_layer.get_vocabulary())
         return {
             "column_types": self.column_types,
             "column_names": self.column_names,
             "layer": preprocessors.serialize(self.layer),
-            "encoding_layers": preprocessors.serialize(self.layer.encoding_layers),
+            "encoding_vocab": vocab,
         }
 
     @classmethod
@@ -150,5 +156,9 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
         }
         obj = cls(**init_config)
         obj.layer = preprocessors.deserialize(config["layer"])
-        obj.layer.encoding_layers = preprocessors.deserialize(config["encoding_layers"])
+        for encoding_layer, vocab in zip(
+            obj.layer.encoding_layers, config["encoding_vocab"]
+        ):
+            if encoding_layer is not None:
+                encoding_layer.set_vocabulary(vocab)
         return obj
