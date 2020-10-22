@@ -149,9 +149,7 @@ class BertTokenizer(preprocessing.PreprocessingLayer):
 
     def get_encoded_sentence(self, input_tensor):
         input_array = np.array(input_tensor, dtype=object)
-        sentence = tf.ragged.constant(
-            [self.encode_sentence(s[0]) for s in input_array]
-        )
+        sentence = tf.ragged.constant([self.encode_sentence(s[0]) for s in input_array])
         return sentence
 
     def bert_encode(self, input_tensor):
@@ -235,9 +233,7 @@ class BertEncoder(tf.keras.layers.Layer):
         position_embeddings = self._position_embedding_layer(word_embeddings)
         type_embeddings = self._type_embedding_layer(type_ids)
 
-        embeddings = self._add(
-            [word_embeddings, position_embeddings, type_embeddings]
-        )
+        embeddings = self._add([word_embeddings, position_embeddings, type_embeddings])
 
         embeddings = self._layer_norm(embeddings)
         embeddings = self._dropout(embeddings)
