@@ -144,7 +144,7 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
         return {
             "column_types": self.column_types,
             "column_names": self.column_names,
-            "encoding": preprocessors.serialize(self.layer),
+            "encoding_layer": preprocessors.serialize(self.layer),
             "encoding_vocab": vocab,
         }
 
@@ -155,7 +155,7 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
             "column_names": config["column_names"],
         }
         obj = cls(**init_config)
-        obj.layer = preprocessors.deserialize(config["layer"])
+        obj.layer = preprocessors.deserialize(config["encoding_layer"])
         for encoding_layer, vocab in zip(
             obj.layer.encoding_layers, config["encoding_vocab"]
         ):
