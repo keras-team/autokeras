@@ -31,8 +31,12 @@ def test_serialize_and_deserialize_default_hpps():
 def test_serialize_and_deserialize_default_hpps_categorical():
     x_train = np.array([["a", "ab", 2.1], ["b", "bc", 1.0], ["a", "bc", "nan"]])
     preprocessor = preprocessors.CategoricalToNumerical(
-        column_names=["column_a", "column_b"],
-        column_types={"column_a": "numerical", "column_b": "numerical"},
+        column_names=["column_a", "column_b", "column_c"],
+        column_types={
+            "column_a": "categorical",
+            "column_b": "categorical",
+            "column_c": "numerical",
+        },
     )
 
     hyper_preprocessor = hyper_preprocessors.DefaultHyperPreprocessor(preprocessor)
