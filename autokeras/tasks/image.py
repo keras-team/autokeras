@@ -149,7 +149,8 @@ class ImageClassifier(SupervisedImagePipeline):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
-            **kwargs: Any arguments supported by [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+            **kwargs: Any arguments supported by
+                [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         """
         super().fit(
             x=x,
@@ -271,7 +272,8 @@ class ImageRegressor(SupervisedImagePipeline):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
-            **kwargs: Any arguments supported by [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+            **kwargs: Any arguments supported by
+                [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         """
         super().fit(
             x=x,
@@ -394,7 +396,8 @@ class ImageSegmenter(SupervisedImagePipeline):
                 validation data should be the same as the training data.
                 The best model found would be fit on the training dataset without the
                 validation data.
-            **kwargs: Any arguments supported by [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+            **kwargs: Any arguments supported by
+                [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         """
         super().fit(
             x=x,
