@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+from typing import Optional
 
 import numpy as np
 import tensorflow as tf
@@ -68,14 +69,14 @@ def get_training_or_validation_split(samples, labels, validation_split, subset):
 
 
 def text_dataset_from_directory(
-    directory,
-    batch_size=32,
-    max_length=None,
-    shuffle=True,
-    seed=None,
-    validation_split=None,
-    subset=None,
-):
+    directory: str,
+    batch_size: int = 32,
+    max_length: Optional[int] = None,
+    shuffle: bool = True,
+    seed: Optional[int] = None,
+    validation_split: Optional[float] = None,
+    subset: Optional[str] = None,
+) -> tf.data.Dataset:
     """Generates a `tf.data.Dataset` from text files in a directory.
 
     If your directory structure is:
