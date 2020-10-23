@@ -155,6 +155,7 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
         }
         obj = cls(**init_config)
         obj.layer = keras_layers.MultiCategoryEncoding(config["encoding"])
+        obj.layer.build(None)
         for encoding_layer, vocab in zip(
             obj.layer.encoding_layers, config["encoding_vocab"]
         ):
