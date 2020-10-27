@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pathlib
+from pathlib import Path
 from typing import Optional
 from typing import Type
 from typing import Union
@@ -70,7 +70,7 @@ class TextClassifier(SupervisedTextPipeline):
         metrics: Optional[types.MetricsType] = None,
         project_name: str = "text_classifier",
         max_trials: int = 100,
-        directory: Union[str, pathlib.Path, None] = None,
+        directory: Union[str, Path, None] = None,
         objective: str = "val_loss",
         tuner: Union[str, Type[tuner.AutoTuner]] = None,
         overwrite: bool = False,
@@ -189,16 +189,16 @@ class TextRegressor(SupervisedTextPipeline):
 
     def __init__(
         self,
-        output_dim=None,
-        loss="mean_squared_error",
-        metrics=None,
-        project_name="text_regressor",
-        max_trials=100,
-        directory=None,
-        objective="val_loss",
+        output_dim: Optional[int] = None,
+        loss: types.LossType = "mean_squared_error",
+        metrics: Optional[types.MetricsType] = None,
+        project_name: str = "text_regressor",
+        max_trials: int = 100,
+        directory: Union[str, Path, None] = None,
+        objective: str = "val_loss",
         tuner: Union[str, Type[tuner.AutoTuner]] = None,
-        overwrite=False,
-        seed=None,
+        overwrite: bool = False,
+        seed: Optional[int] = None,
         **kwargs
     ):
         if tuner is None:

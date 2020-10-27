@@ -14,6 +14,7 @@
 
 import json
 from typing import Optional
+from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -142,16 +143,16 @@ def text_dataset_from_directory(
 
 
 def image_dataset_from_directory(
-    directory,
-    batch_size=32,
-    color_mode="rgb",
-    image_size=(256, 256),
-    interpolation="bilinear",
-    shuffle=True,
-    seed=None,
-    validation_split=None,
-    subset=None,
-):
+    directory: str,
+    batch_size: int = 32,
+    color_mode: str = "rgb",
+    image_size: Tuple[int, int] = (256, 256),
+    interpolation: str = "bilinear",
+    shuffle: bool = True,
+    seed: Optional[int] = None,
+    validation_split: Optional[float] = None,
+    subset: Optional[str] = None,
+) -> tf.data.Dataset:
     """Generates a `tf.data.Dataset` from image files in a directory.
     If your directory structure is:
 
