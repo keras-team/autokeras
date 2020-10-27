@@ -25,7 +25,6 @@ HELP_MESSAGE = (
 # TODO: add types and remove all elements from
 # the exception list.
 EXCEPTION_LIST = [
-    autokeras.image_dataset_from_directory,
     autokeras.MultiCategoryEncoding,
     autokeras.BertTokenizer,
     autokeras.BertEncoder,
@@ -38,12 +37,7 @@ EXCEPTION_LIST = [
     autokeras.ImageInput,
     autokeras.Input,
     autokeras.StructuredDataInput,
-    autokeras.TimeseriesInput,
     autokeras.TextInput,
-    autokeras.ImageClassifier,
-    autokeras.ImageRegressor,
-    autokeras.TextRegressor,
-    autokeras.TimeseriesForecaster,
     autokeras.BayesianOptimization,
     autokeras.Greedy,
     autokeras.Hyperband,
