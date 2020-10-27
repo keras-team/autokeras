@@ -789,7 +789,7 @@ class BertBlock(block_module.Block):
     ```python
         # Using the Transformer Block with AutoModel.
         import autokeras as ak
-        from autokeras.blocks import BertBlock
+        from autokeras import BertBlock
         from tensorflow.keras import losses
 
         input_node = ak.TextInput()
