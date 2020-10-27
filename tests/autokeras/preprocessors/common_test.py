@@ -28,7 +28,7 @@ def test_time_series_input_transform():
 
 def test_categorical_to_numerical_input_transform():
     x_train = np.array([["a", "ab", 2.1], ["b", "bc", 1.0], ["a", "bc", "nan"]])
-    preprocessor = common.CategoricalToNumerical(
+    preprocessor = common.CategoricalToNumericalPreprocessor(
         column_names=["column_a", "column_b", "column_c"],
         column_types={
             "column_a": "categorical",

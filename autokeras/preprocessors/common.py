@@ -98,7 +98,7 @@ class SlidingWindow(preprocessor.Preprocessor):
         return {"lookback": self.lookback, "batch_size": self.batch_size}
 
 
-class CategoricalToNumerical(preprocessor.Preprocessor):
+class CategoricalToNumericalPreprocessor(preprocessor.Preprocessor):
     """Encode the categorical features to numerical features.
 
     # Arguments
