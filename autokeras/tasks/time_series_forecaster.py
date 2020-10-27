@@ -178,7 +178,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
 
     def __init__(
         self,
-        output_dim=None,
+        output_dim: Optional[int] = None,
         column_names: Optional[List[str]] = None,
         column_types: Optional[Dict[str, str]] = None,
         lookback: Optional[int] = None,

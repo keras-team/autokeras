@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import tensorflow as tf
 from tensorflow.python.util import nest
@@ -213,10 +216,10 @@ class TimeseriesInput(StructuredDataInput):
 
     def __init__(
         self,
-        lookback=None,
-        column_names=None,
-        column_types=None,
-        name=None,
+        lookback: Optional[int] = None,
+        column_names: Optional[List[str]] = None,
+        column_types: Optional[Dict[str, str]] = None,
+        name: Optional[str] = None,
         **kwargs
     ):
         super().__init__(
