@@ -17,14 +17,14 @@ AutoKeras only support **Python 3**.
 If you followed previous steps to use virtualenv to install tensorflow,
 you can just activate the virtualenv and use the following command to install AutoKeras. 
 ```
-pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc3
+pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc4
 pip install autokeras
 ```
 
 If you did not use virtualenv, and you use `python3` command to execute your python program,
 please use the following command to install AutoKeras.
 ```
-python3 -m pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc3
+python3 -m pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc4
 python3 -m pip install autokeras
 ```
 
