@@ -48,7 +48,8 @@ def test_serialize_and_deserialize_default_hpps_categorical():
         hyper_preprocessors.serialize(hyper_preprocessor)
     )
     assert isinstance(
-        hyper_preprocessor.preprocessor, preprocessors.CategoricalToNumerical
+        hyper_preprocessor.preprocessor,
+        preprocessors.CategoricalToNumericalPreprocessor,
     )
 
     result = hyper_preprocessor.preprocessor.transform(dataset)
