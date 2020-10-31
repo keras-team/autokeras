@@ -112,7 +112,10 @@ class GreedyOracle(kerastuner.Oracle):
         trie = Trie()
         best_hps = self._get_best_hps()
         for hp in best_hps.space:
-            if best_hps.is_active(hp):
+            # Not picking the fixed hps for generating new values.
+            if best_hps.is_active(hp) and not isinstance(
+                hp, kerastuner.engine.hyperparameters.Fixed
+            ):
                 trie.insert(hp.name)
         all_nodes = trie.nodes
 

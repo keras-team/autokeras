@@ -16,10 +16,9 @@ import re
 
 import kerastuner
 import tensorflow as tf
+from kerastuner.engine import hyperparameters
 from packaging.version import parse
 from tensorflow.python.util import nest
-
-from autokeras import hyperparameters
 
 
 def validate_num_inputs(inputs, num):
@@ -113,9 +112,26 @@ def run_with_adaptive_batch_size(batch_size, func, **fit_kwargs):
     return history
 
 
-def get_hyperparameter(hp, dtype):
-    if hp is None:
+def get_hyperparameter(value, hp, dtype):
+    if value is None:
         return hp
-    elif isinstance(hp, dtype):
-        return hyperparameters.Fixed(hp)
-    return hp
+    elif isinstance(value, dtype):
+        return hyperparameters.Fixed(hp.name, value)
+    return value
+
+
+def add_to_hp(hp, hps, name=None):
+    """Add the HyperParameter (self) to the HyperParameters.
+
+    # Arguments
+        hp: kerastuner.HyperParameters.
+        name: String. If left unspecified, the hp name is used.
+    """
+    kwargs = hp.get_config()
+    if name is None:
+        name = hp.name
+    kwargs.pop("conditions")
+    kwargs.pop("name")
+    class_name = hp.__class__.__name__
+    func = getattr(hps, class_name)
+    return func(name=name, **kwargs)

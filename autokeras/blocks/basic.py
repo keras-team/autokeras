@@ -16,11 +16,11 @@ from typing import Optional
 from typing import Union
 
 import tensorflow as tf
+from kerastuner.engine import hyperparameters
 from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
 
-from autokeras import hyperparameters
 from autokeras import keras_layers
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
@@ -59,7 +59,8 @@ class DenseBlock(block_module.Block):
     # Arguments
         num_layers: Int. The number of Dense layers in the block.
             If left unspecified, it will be tuned automatically.
-        num_units: Int or ak.Choice. The number of units in each dense layer.
+        num_units: Int or kerastuner.engine.hyperparameters.Choice.
+            The number of units in each dense layer.
             If left unspecified, it will be tuned automatically.
         use_bn: Boolean. Whether to use BatchNormalization layers.
             If left unspecified, it will be tuned automatically.
@@ -78,7 +79,10 @@ class DenseBlock(block_module.Block):
         super().__init__(**kwargs)
         self.num_layers = num_layers
         self.num_units = utils.get_hyperparameter(
-            hyperparameters.Choice([16, 32, 64, 128, 256, 512, 1024], default=32),
+            num_units,
+            hyperparameters.Choice(
+                "num_units", [16, 32, 64, 128, 256, 512, 1024], default=32
+            ),
             int,
         )
         self.use_batchnorm = use_batchnorm
@@ -89,12 +93,17 @@ class DenseBlock(block_module.Block):
         config.update(
             {
                 "num_layers": self.num_layers,
-                "num_units": self.num_units,
+                "num_units": hyperparameters.serialize(self.num_units),
                 "use_batchnorm": self.use_batchnorm,
                 "dropout": self.dropout,
             }
         )
         return config
+
+    @classmethod
+    def from_config(cls, config):
+        config["num_units"] = hyperparameters.deserialize(config["num_units"])
+        return cls(**config)
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -113,7 +122,7 @@ class DenseBlock(block_module.Block):
             dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
 
         for i in range(num_layers):
-            units = self.num_units.add_to_hp(hp, "units_{i}".format(i=i))
+            units = utils.add_to_hp(self.num_units, hp, "units_{i}".format(i=i))
             output_node = layers.Dense(units)(output_node)
             if use_batchnorm:
                 output_node = layers.BatchNormalization()(output_node)
@@ -206,7 +215,8 @@ class ConvBlock(block_module.Block):
     """Block for vanilla ConvNets.
 
     # Arguments
-        kernel_size: Int or ak.Choice. The size of the kernel.
+        kernel_size: Int or kerastuner.engine.hyperparameters.Choice.
+            The size of the kernel.
             If left unspecified, it will be tuned automatically.
         num_blocks: Int. The number of conv blocks, each of which may contain
             convolutional, max pooling, dropout, and activation. If left unspecified,
@@ -234,7 +244,9 @@ class ConvBlock(block_module.Block):
     ):
         super().__init__(**kwargs)
         self.kernel_size = utils.get_hyperparameter(
-            hyperparameters.Choice([3, 5, 7], default=3), int
+            kernel_size,
+            hyperparameters.Choice("kernel_size", [3, 5, 7], default=3),
+            int,
         )
         self.num_blocks = num_blocks
         self.num_layers = num_layers
@@ -246,7 +258,7 @@ class ConvBlock(block_module.Block):
         config = super().get_config()
         config.update(
             {
-                "kernel_size": self.kernel_size,
+                "kernel_size": hyperparameters.serialize(self.kernel_size),
                 "num_blocks": self.num_blocks,
                 "num_layers": self.num_layers,
                 "max_pooling": self.max_pooling,
@@ -256,13 +268,18 @@ class ConvBlock(block_module.Block):
         )
         return config
 
+    @classmethod
+    def from_config(cls, config):
+        config["kernel_size"] = hyperparameters.deserialize(config["kernel_size"])
+        return cls(**config)
+
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
 
-        kernel_size = self.kernel_size.add_to_hp(hp, "kernel_size")
+        kernel_size = utils.add_to_hp(self.kernel_size, hp)
         num_blocks = self.num_blocks or hp.Choice("num_blocks", [1, 2, 3], default=2)
         num_layers = self.num_layers or hp.Choice("num_layers", [1, 2], default=2)
         separable = self.separable

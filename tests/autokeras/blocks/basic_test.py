@@ -280,7 +280,9 @@ def test_rnn_get_config_has_all_attributes():
 
 
 def test_dense_build_return_tensor():
-    block = blocks.DenseBlock()
+    block = blocks.DenseBlock(
+        num_units=kerastuner.engine.hyperparameters.Choice("num_units", [10, 20])
+    )
 
     outputs = block.build(
         kerastuner.HyperParameters(), tf.keras.Input(shape=(32,), dtype=tf.float32)
