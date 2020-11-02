@@ -173,6 +173,8 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        max_model_size: Int. Maximum number of scalars in the parameters of a
+            model. Models larger than this are rejected.
         **kwargs: Any arguments supported by AutoModel.
     """
 
@@ -193,6 +195,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
         tuner: Union[str, Type[tuner.AutoTuner]] = None,
         overwrite: bool = False,
         seed: Optional[int] = None,
+        max_model_size: Optional[int] = None,
         **kwargs
     ):
         if tuner is None:
@@ -213,6 +216,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
+            max_model_size=max_model_size,
             **kwargs
         )
         self.lookback = lookback
@@ -366,6 +370,8 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        max_model_size: Int. Maximum number of scalars in the parameters of a
+            model. Models larger than this are rejected.
         **kwargs: Any arguments supported by AutoModel.
     """
 
@@ -385,6 +391,7 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
         objective="val_loss",
         overwrite=False,
         seed=None,
+        max_model_size: Optional[int] = None,
         **kwargs
     ):
         raise NotImplementedError

@@ -59,6 +59,8 @@ class TextClassifier(SupervisedTextPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        max_model_size: Int. Maximum number of scalars in the parameters of a
+            model. Models larger than this are rejected.
         **kwargs: Any arguments supported by AutoModel.
     """
 
@@ -75,6 +77,7 @@ class TextClassifier(SupervisedTextPipeline):
         tuner: Union[str, Type[tuner.AutoTuner]] = None,
         overwrite: bool = False,
         seed: Optional[int] = None,
+        max_model_size: Optional[int] = None,
         **kwargs
     ):
         if tuner is None:
@@ -93,6 +96,7 @@ class TextClassifier(SupervisedTextPipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
+            max_model_size=max_model_size,
             **kwargs
         )
 
@@ -184,6 +188,8 @@ class TextRegressor(SupervisedTextPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        max_model_size: Int. Maximum number of scalars in the parameters of a
+            model. Models larger than this are rejected.
         **kwargs: Any arguments supported by AutoModel.
     """
 
@@ -199,6 +205,7 @@ class TextRegressor(SupervisedTextPipeline):
         tuner: Union[str, Type[tuner.AutoTuner]] = None,
         overwrite: bool = False,
         seed: Optional[int] = None,
+        max_model_size: Optional[int] = None,
         **kwargs
     ):
         if tuner is None:
@@ -214,6 +221,7 @@ class TextRegressor(SupervisedTextPipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
+            max_model_size=max_model_size,
             **kwargs
         )
 
