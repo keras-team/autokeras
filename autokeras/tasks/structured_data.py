@@ -225,6 +225,8 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        max_model_size: Int. Maximum number of scalars in the parameters of a
+            model. Models larger than this are rejected.
         **kwargs: Any arguments supported by AutoModel.
     """
 
@@ -243,6 +245,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
         tuner: Union[str, Type[tuner.AutoTuner]] = None,
         overwrite: bool = False,
         seed: Optional[int] = None,
+        max_model_size: Optional[int] = None,
         **kwargs
     ):
         if tuner is None:
@@ -263,6 +266,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
+            max_model_size=max_model_size,
             **kwargs
         )
 
@@ -353,6 +357,8 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        max_model_size: Int. Maximum number of scalars in the parameters of a
+            model. Models larger than this are rejected.
         **kwargs: Any arguments supported by AutoModel.
     """
 
@@ -370,6 +376,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
         tuner: Union[str, Type[tuner.AutoTuner]] = None,
         overwrite: bool = False,
         seed: Optional[int] = None,
+        max_model_size: Optional[int] = None,
         **kwargs
     ):
         if tuner is None:
@@ -387,5 +394,6 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
             tuner=tuner,
             overwrite=overwrite,
             seed=seed,
+            max_model_size=max_model_size,
             **kwargs
         )

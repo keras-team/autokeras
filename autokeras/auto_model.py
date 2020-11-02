@@ -109,6 +109,8 @@ class AutoModel(object):
             project of the same name if one is found. Otherwise, overwrites the
             project.
         seed: Int. Random seed.
+        max_model_size: Int. Maximum number of scalars in the parameters of a
+            model. Models larger than this are rejected.
         **kwargs: Any arguments supported by kerastuner.Tuner.
     """
 
@@ -123,6 +125,7 @@ class AutoModel(object):
         tuner: Union[str, Type[tuner.AutoTuner]] = "greedy",
         overwrite: bool = False,
         seed: Optional[int] = None,
+        max_model_size: Optional[int] = None,
         **kwargs
     ):
         self.inputs = nest.flatten(inputs)
@@ -144,6 +147,7 @@ class AutoModel(object):
             directory=directory,
             seed=self.seed,
             project_name=project_name,
+            max_model_size=max_model_size,
             **kwargs
         )
         self.overwrite = overwrite
