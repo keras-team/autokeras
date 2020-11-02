@@ -212,7 +212,7 @@ class Greedy(tuner_module.AutoTuner):
         max_trials: int = 10,
         initial_hps: Optional[List[Dict[str, Any]]] = None,
         seed: Optional[int] = None,
-        hyperparameters: kerastuner.HyperParameters = None,
+        hyperparameters: Optional[kerastuner.HyperParameters] = None,
         tune_new_entries: bool = True,
         allow_new_entries: bool = True,
         **kwargs
