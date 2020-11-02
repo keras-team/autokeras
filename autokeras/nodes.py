@@ -87,7 +87,7 @@ class ImageInput(Input):
             automatically with the class name.
     """
 
-    def __init__(self, name: str = None, **kwargs):
+    def __init__(self, name: Optional[str] = None, **kwargs):
         super().__init__(name=name, **kwargs)
 
     def build(self, hp, inputs=None):
