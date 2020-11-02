@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import List
 
 import numpy as np
 import tensorflow as tf
@@ -42,7 +43,7 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
     # TODO: Support one-hot encoding.
     # TODO: Support frequency encoding.
 
-    def __init__(self, encoding, **kwargs):
+    def __init__(self, encoding: List[str], **kwargs):
         super().__init__(**kwargs)
         self.encoding = encoding
         self.encoding_layers = []
@@ -105,7 +106,7 @@ class BertTokenizer(preprocessing.PreprocessingLayer):
         max_sequence_length: maximum length of the sequences after vectorization.
     """
 
-    def __init__(self, max_sequence_length, **kwargs):
+    def __init__(self, max_sequence_length: int, **kwargs):
         super().__init__(**kwargs)
         self.tokenizer = tokenization.FullTokenizer(
             vocab_file=constants.BERT_VOCAB_PATH,

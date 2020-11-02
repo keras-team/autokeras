@@ -11,6 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import kerastuner
 import numpy as np
@@ -200,14 +204,14 @@ class GreedyOracle(kerastuner.Oracle):
 class Greedy(tuner_module.AutoTuner):
     def __init__(
         self,
-        hypermodel,
-        objective="val_loss",
-        max_trials=10,
-        initial_hps=None,
-        seed=None,
-        hyperparameters=None,
-        tune_new_entries=True,
-        allow_new_entries=True,
+        hypermodel: kerastuner.HyperModel,
+        objective: str = "val_loss",
+        max_trials: int = 10,
+        initial_hps: Optional[List[Dict[str, Any]]] = None,
+        seed: Optional[int] = None,
+        hyperparameters: kerastuner.HyperParameters = None,
+        tune_new_entries: bool = True,
+        allow_new_entries: bool = True,
         **kwargs
     ):
         self.seed = seed
