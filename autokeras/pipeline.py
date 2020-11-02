@@ -30,10 +30,11 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
         outputs: a list of lists of HyperPreprocessors.
     """
 
-    def __init__(self, inputs, outputs, **kwargs):
+    def __init__(self, inputs, outputs, task=None, **kwargs):
         super().__init__(**kwargs)
         self.inputs = inputs
         self.outputs = outputs
+        self.task = task
 
     @staticmethod
     def _build_preprocessors(hp, hpps_lists, dataset):
@@ -65,6 +66,7 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
         return Pipeline(
             inputs=self._build_preprocessors(hp, self.inputs, x),
             outputs=self._build_preprocessors(hp, self.outputs, y),
+            task=self.task
         )
 
 
@@ -86,10 +88,11 @@ class Pipeline(pps_module.Preprocessor):
             the model.
     """
 
-    def __init__(self, inputs, outputs, **kwargs):
+    def __init__(self, inputs, outputs, task='object_detection', **kwargs):
         super().__init__(**kwargs)
         self.inputs = inputs
         self.outputs = outputs
+        self.task = task  ## Add this to HyperPipeline
 
     def fit(self, dataset):
         """Fit the Preprocessors."""
@@ -116,11 +119,26 @@ class Pipeline(pps_module.Preprocessor):
         # Returns
             An instance of tf.data.Dataset. The transformed dataset.
         """
+        # Edit to check if it's object detection and branch differently TODO
+        if self.task == 'object_detection':
+            return self.obj_det_transform(dataset)
         x = dataset.map(lambda x, y: x)
         y = dataset.map(lambda x, y: y)
         x = self.transform_x(x)
         y = self.transform_y(y)
         return tf.data.Dataset.zip((x, y))
+
+    def obj_det_transform(self, dataset):
+        sources = data_utils.unzip_dataset(dataset)
+        transformed = []
+        pps_lists = self.inputs  ## what about self.outputs?
+        for pps_list, data in zip(pps_lists, sources):
+            for preprocessor in pps_list:
+                data = preprocessor.transform(data)
+            transformed.append(data)
+        if len(transformed) == 1:
+            return transformed[0]
+        return tuple(transformed)
 
     def transform_x(self, dataset):
         """Transform the input dataset for the model.

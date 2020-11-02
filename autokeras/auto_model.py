@@ -111,6 +111,8 @@ class AutoModel(object):
         seed: Int. Random seed.
         max_model_size: Int. Maximum number of scalars in the parameters of a
             model. Models larger than this are rejected.
+        task: Str. Set the task to 'object_detection' for specific data pipeline.
+            Defaults to None.
         **kwargs: Any arguments supported by kerastuner.Tuner.
     """
 
@@ -126,6 +128,7 @@ class AutoModel(object):
         overwrite: bool = False,
         seed: Optional[int] = None,
         max_model_size: Optional[int] = None,
+        task: Optional[str] = None,
         **kwargs
     ):
         self.inputs = nest.flatten(inputs)
@@ -152,6 +155,7 @@ class AutoModel(object):
         )
         self.overwrite = overwrite
         self._heads = [output_node.in_blocks[0] for output_node in self.outputs]
+        self.task = task
 
     @property
     def objective(self):
@@ -360,6 +364,7 @@ class AutoModel(object):
         self.tuner.hyper_pipeline = pipeline.HyperPipeline(
             inputs=[node.get_hyper_preprocessors() for node in self.inputs],
             outputs=[head.get_hyper_preprocessors() for head in self._heads],
+            task=self.task
         )
 
     def _convert_to_dataset(self, x, y, validation_data, batch_size):
