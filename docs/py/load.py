@@ -4,6 +4,7 @@ pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc4
 """
 
 """
+## Load Images from Disk
 If the data is too large to put in memory all at once, we can load it batch by batch into memory from disk with tf.data.Dataset.
 This [function](https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/image_dataset_from_directory) can help you build such a tf.data.Dataset for image data.
 
@@ -70,6 +71,7 @@ clf.fit(train_data, epochs=1)
 print(clf.evaluate(test_data))
 
 """
+## Load Texts from Disk
 You can also load text datasets in the same way.
 """
 
@@ -110,6 +112,7 @@ print(clf.evaluate(test_data))
 
 
 """
+## Load Data with Python Generators
 If you want to use generators, you can refer to the following code.
 """
 
