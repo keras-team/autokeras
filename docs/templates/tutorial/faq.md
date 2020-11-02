@@ -69,3 +69,16 @@ auto_model = ak.ImageClassifier(
     distribution_strategy=tf.distribute.MirroredStrategy(),
 )
 ```
+
+## How to constrain the model size?
+You can use the `max_model_size` argument for any model in AutoKeras.
+
+```python
+import autokeras as ak
+
+
+auto_model = ak.ImageClassifier(
+    max_trials=3,
+    max_model_size=1000000000,
+)
+```
