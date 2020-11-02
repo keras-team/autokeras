@@ -52,7 +52,7 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
             automatically with the class name.
     """
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name: Optional[str] = None, **kwargs):
         super().__init__(name=name, **kwargs)
 
     def build_node(self, hp):
@@ -87,7 +87,7 @@ class ImageInput(Input):
             automatically with the class name.
     """
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name: str = None, **kwargs):
         super().__init__(name=name, **kwargs)
 
     def build(self, hp, inputs=None):
@@ -119,7 +119,7 @@ class TextInput(Input):
             automatically with the class name.
     """
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name: Optional[str] = None, **kwargs):
         super().__init__(name=name, **kwargs)
 
     def build_node(self, hp):
@@ -162,7 +162,13 @@ class StructuredDataInput(Input):
             automatically with the class name.
     """
 
-    def __init__(self, column_names=None, column_types=None, name=None, **kwargs):
+    def __init__(
+        self,
+        column_names: Optional[List[str]] = None,
+        column_types: Optional[Dict[str, str]] = None,
+        name: Optional[str] = None,
+        **kwargs
+    ):
         super().__init__(name=name, **kwargs)
         self.column_names = column_names
         self.column_types = column_types

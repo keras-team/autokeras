@@ -127,7 +127,13 @@ class TextBlock(block_module.Block):
             If left unspecified, it will be tuned automatically.
     """
 
-    def __init__(self, block_type=None, max_tokens=None, pretraining=None, **kwargs):
+    def __init__(
+        self,
+        block_type: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        pretraining: Optional[str] = None,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self.block_type = block_type
         self.max_tokens = max_tokens
