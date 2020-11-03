@@ -326,7 +326,9 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
             learning_rate_fn = tf.optimizers.schedules.PiecewiseConstantDecay(
                 boundaries=learning_rate_boundaries, values=learning_rates
             )
-            optimizer = tf.optimizers.SGD(learning_rate=learning_rate_fn, momentum=0.9)
+            optimizer = tf.optimizers.SGD(
+                learning_rate=learning_rate_fn, momentum=0.9
+            )
 
         model.compile(
             optimizer=optimizer, metrics=self._get_metrics(), loss=self._get_loss()

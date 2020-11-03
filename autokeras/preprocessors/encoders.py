@@ -15,8 +15,9 @@
 import numpy as np
 import tensorflow as tf
 
-from autokeras.engine import preprocessor
 from autokeras import keras_layers
+from autokeras.engine import preprocessor
+
 
 class Encoder(preprocessor.TargetPreprocessor):
     """Transform labels to encodings.
@@ -157,12 +158,13 @@ class Encoder(preprocessor.TargetPreprocessor):
 
         return dataset.map(lambda x: table.lookup(tf.reshape(x, [-1])))
 
+
 class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
     """Transform labels to encodings.
 
-        # Arguments
-            labels: A list of labels of any type. The labels to be encoded.
-        """
+    # Arguments
+        labels: A list of labels of any type. The labels to be encoded.
+    """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -170,7 +172,7 @@ class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
         #     label.decode("utf-8") if isinstance(label, bytes) else str(label)
         #     for label in labels
         # ]
-        ## Check if this is correct, could be done differently
+        # Check if this is correct, could be done differently
         self.preprocess_data = keras_layers.ObjectDetectionPreProcessing()
         self.label_encoder = keras_layers.LabelEncoder()
 
@@ -190,10 +192,14 @@ class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
             tf.data.Dataset. The transformed dataset.
         """
         autotune = tf.data.experimental.AUTOTUNE
-        train_dataset = dataset.map(self.preprocess_data, num_parallel_calls=autotune)
+        train_dataset = dataset.map(
+            self.preprocess_data, num_parallel_calls=autotune
+        )
         # train_dataset = train_dataset.shuffle(8 * batch_size)
         # train_dataset = train_dataset.padded_batch(
-        #     batch_size=batch_size, padding_values=(0.0, 1e-8, -1), drop_remainder=True
+        #     batch_size=batch_size, p
+        #     adding_values=(0.0, 1e-8, -1),
+        #     drop_remainder=True
         # )
         train_dataset = train_dataset.map(
             self.label_encoder.encode_batch, num_parallel_calls=autotune
