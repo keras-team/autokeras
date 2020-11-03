@@ -1,7 +1,7 @@
-isort --sl autokeras tests
-black --line-length 85 autokeras tests
+isort --sl autokeras tests benchmark
+black --line-length 85 autokeras tests benchmark
 
-for i in $(find autokeras tests -name '*.py') # or whatever other pattern...
+for i in $(find autokeras tests benchmark -name '*.py') # or whatever other pattern...
 do
   if ! grep -q Copyright $i
   then
@@ -10,4 +10,4 @@ do
   fi
 done
 
-flake8 autokeras tests
+flake8 autokeras tests benchmark
