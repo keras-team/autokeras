@@ -979,3 +979,59 @@ class BertBlock(block_module.Block):
         bert_encoder.load_pretrained_weights()
 
         return output_node
+
+class RetinaNetBlock(block_module.Block):
+    """Block for RetinaNet.
+    The input should be an Image. The implementation is derived from
+    this [example](https://keras.io/examples/vision/retinanet/)
+
+    # Example
+    ```python
+        # Using the Transformer Block with AutoModel.
+        import autokeras as ak
+        from autokeras import BERTBlock
+        from tensorflow.keras import losses
+
+        input_node = ak.TextInput()
+        output_node = BERTBlock(max_seq_len=128)(input_node)
+        output_node = ak.ClassificationHead()(output_node)
+        clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
+    ```
+    # Arguments
+        max_sequence_length: Int. The maximum length of a sequence that is
+            used to train the model.
+    """
+
+    def __init__(
+        self,
+        num_classes: int = None,
+        backbone: Optional[str] = None,  # confirm what to pass in case of a function
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.num_classes = num_classes
+        self.backbone = backbone
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"num_classes": self.num_classes,
+                       "backbone": self.backbone,
+                       })
+        return config
+
+    def build(self, hp, inputs=None):
+        if self.num_classes is None:
+            raise ValueError(
+                "Number of classes is to be defined but got ".format(
+                    self.num_classes
+                )
+            )
+        input_tensor = nest.flatten(inputs)[0]
+        ## Preprocess the input
+        # pre_process = keras_layers.ObjectDetectionPreProcessing()
+        # input_tensor = pre_process(input_tensor)
+        print("Input after preprocessing: ", input_tensor.shape)
+        ret_net = keras_layers.RetinaNet(self.num_classes, self.backbone)
+        output_node = ret_net(input_tensor)
+        print("Output after RetinaNet: ", output_node.shape)
+        return output_node
