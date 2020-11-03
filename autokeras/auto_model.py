@@ -263,7 +263,8 @@ class AutoModel(object):
         dataset, validation_data = self._convert_to_dataset(
             x=x, y=y, validation_data=validation_data, batch_size=batch_size
         )
-        self._analyze_data(dataset)
+        if not self.task == 'object_detection':
+            self._analyze_data(dataset)
         self._build_hyper_pipeline(dataset)
 
         # Split the data with validation_split.
