@@ -372,7 +372,12 @@ class AutoModel(object):
         # Convert training data.
         if self.task == 'object_detection':
             # This is a dict of samples
-            dataset = tf.data.Dataset.zip((x, y))
+            if isinstance(x, tf.data.Dataset) and y is not None:
+                raise ValueError(
+                    "Expected y to be None when x is "
+                    "tf.data.Dataset."
+                )
+            dataset = x
             return dataset, validation_data
 
         self._check_data_format((x, y))
