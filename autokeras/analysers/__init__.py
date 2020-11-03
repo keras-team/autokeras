@@ -21,3 +21,4 @@ from autokeras.analysers.input_analysers import TextAnalyser
 from autokeras.analysers.input_analysers import TimeseriesAnalyser
 from autokeras.analysers.output_analysers import ClassificationAnalyser
 from autokeras.analysers.output_analysers import RegressionAnalyser
+from autokeras.analysers.output_analysers import ObjectDetectionAnalyser
