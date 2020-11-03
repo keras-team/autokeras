@@ -1,26 +1,33 @@
 """
 Search for a good model for the [Titanic](https://www.kaggle.com/c/titanic) dataset.
-First, you need to download the titanic dataset file
-[train.csv](
-https://raw.githubusercontent.com/keras-team/autokeras/master/tests/
-fixtures/titanic/train.csv
-)
-and
-[eval.csv](
-https://raw.githubusercontent.com/keras-team/autokeras/master/tests/
-fixtures/titanic/eval.csv
-).
-Second, replace `PATH_TO/train.csv` and `PATH_TO/eval.csv` in the following example
-with the real path to those two files.
-Then, you can run the code.
 """
+
+import timeit
+
+import tensorflow as tf
 
 import autokeras as ak
 
-# Initialize the classifier.
-clf = ak.StructuredDataClassifier(max_trials=30)
-# x is the path to the csv file. y is the column name of the column to predict.
-clf.fit(x='PATH_TO/train.csv', y='survived')
-# Evaluate the accuracy of the found model.
-print('Accuracy: {accuracy}'.format(
-    accuracy=clf.evaluate(x='PATH_TO/eval.csv', y='survived')))
+TRAIN_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
+TEST_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
+
+
+def main():
+    # Initialize the classifier.
+    train_file_path = tf.keras.utils.get_file("train.csv", TRAIN_DATA_URL)
+    test_file_path = tf.keras.utils.get_file("eval.csv", TEST_DATA_URL)
+    clf = ak.StructuredDataClassifier(max_trials=10, directory='tmp_dir', overwrite=True)
+
+    start_time = timeit.default_timer()
+    # x is the path to the csv file. y is the column name of the column to predict.
+    clf.fit(train_file_path, 'survived')
+    stop_time = timeit.default_timer()
+
+    # Evaluate the accuracy of the found model.
+    accuracy = clf.evaluate(test_file_path, 'survived')[1]
+    print('Accuracy: {accuracy}%'.format(accuracy=round(accuracy * 100, 2)))
+    print('Total time: {time} seconds.'.format(time=round(stop_time - start_time, 2)))
+
+
+if __name__ == "__main__":
+    main()
