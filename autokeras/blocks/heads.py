@@ -347,6 +347,7 @@ class ObjectDetectionHead(head_module.Head):
         if loss is None:
             loss = RetinaNetLoss(self.num_classes)
         super().__init__(loss=loss, metrics=metrics, **kwargs)
+        self.loss = loss
         # Infered from analyser.
         # self._encoded = None
         # self._encoded_for_sigmoid = None
@@ -378,20 +379,20 @@ class ObjectDetectionHead(head_module.Head):
     # def get_adapter(self):
     #     return adapters.ClassificationAdapter(name=self.name)
     #
-    # def get_analyser(self):
-    #     return analysers.ClassificationAnalyser(
-    #         name=self.name, multi_label=self.multi_label
-    #     )
-    #
-    # def config_from_analyser(self, analyser):
-    #     super().config_from_analyser(analyser)
-    #     self.num_classes = analyser.num_classes
-    #     self.loss = self.infer_loss()
-    #     self._encoded = analyser.encoded
-    #     self._encoded_for_sigmoid = analyser.encoded_for_sigmoid
-    #     self._encoded_for_softmax = analyser.encoded_for_softmax
-    #     self._add_one_dimension = len(analyser.shape) == 1
-    #     self._labels = analyser.labels
+    def get_analyser(self):
+        return analysers.ObjectDetectionAnalyser(
+            name=self.name, num_classes = self.num_classes
+        )
+
+    def config_from_analyser(self, analyser):
+        super().config_from_analyser(analyser)
+        self.num_classes = analyser.num_classes
+        # self.loss = self.loss if self.loss else RetinaNetLoss(self.num_classes)
+        # self._encoded = analyser.encoded
+        # self._encoded_for_sigmoid = analyser.encoded_for_sigmoid
+        # self._encoded_for_softmax = analyser.encoded_for_softmax
+        # self._add_one_dimension = len(analyser.shape) == 1
+        # self._labels = analyser.labels
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []

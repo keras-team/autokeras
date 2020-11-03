@@ -263,8 +263,8 @@ class AutoModel(object):
         dataset, validation_data = self._convert_to_dataset(
             x=x, y=y, validation_data=validation_data, batch_size=batch_size
         )
-        if not self.task == 'object_detection':
-            self._analyze_data(dataset)
+        # if not self.task == 'object_detection':
+        self._analyze_data(dataset)
         self._build_hyper_pipeline(dataset)
 
         # Split the data with validation_split.
@@ -347,11 +347,15 @@ class AutoModel(object):
         input_analysers = [node.get_analyser() for node in self.inputs]
         output_analysers = [head.get_analyser() for head in self._heads]
         analysers = input_analysers + output_analysers
-        for x, y in dataset:
-            x = nest.flatten(x)
-            y = nest.flatten(y)
-            for item, analyser in zip(x + y, analysers):
+        if self.task == 'object_detection':
+            for item, analyser in zip(dataset, analysers):
                 analyser.update(item)
+        else:
+            for x, y in dataset:
+                x = nest.flatten(x)
+                y = nest.flatten(y)
+                for item, analyser in zip(x + y, analysers):
+                    analyser.update(item)
 
         for analyser in analysers:
             analyser.finalize()
