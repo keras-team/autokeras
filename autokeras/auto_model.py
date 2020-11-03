@@ -362,7 +362,7 @@ class AutoModel(object):
         self.tuner.hyper_pipeline = pipeline.HyperPipeline(
             inputs=[node.get_hyper_preprocessors() for node in self.inputs],
             outputs=[head.get_hyper_preprocessors() for head in self._heads],
-            task=self.task
+            task=self.task,
         )
 
     def _convert_to_dataset(self, x, y, validation_data, batch_size):

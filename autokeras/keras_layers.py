@@ -1817,8 +1817,13 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
             )
         return image, boxes
 
-    def resize_and_pad_image(self,
-            image, min_side=800.0, max_side=1333.0, jitter=[640, 1024], stride=128.0
+    def resize_and_pad_image(
+        self,
+        image,
+        min_side=800.0,
+        max_side=1333.0,
+        jitter=[640, 1024],
+        stride=128.0,
     ):
         """Resizes and pads image while preserving aspect ratio.
 
@@ -1872,7 +1877,9 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
         Returns:
           swapped boxes with shape same as that of boxes.
         """
-        return tf.stack([boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]], axis=-1)
+        return tf.stack(
+            [boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]], axis=-1
+        )
 
     def convert_to_xywh(self, boxes):
         """Changes the box format to center, width and height.
@@ -1886,7 +1893,10 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
           converted boxes with shape same as that of boxes.
         """
         return tf.concat(
-            [(boxes[..., :2] + boxes[..., 2:]) / 2.0, boxes[..., 2:] - boxes[..., :2]],
+            [
+                (boxes[..., :2] + boxes[..., 2:]) / 2.0,
+                boxes[..., 2:] - boxes[..., :2],
+            ],
             axis=-1,
         )
 
@@ -1902,9 +1912,13 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
           converted boxes with shape same as that of boxes.
         """
         return tf.concat(
-            [boxes[..., :2] - boxes[..., 2:] / 2.0, boxes[..., :2] + boxes[..., 2:] / 2.0],
+            [
+                boxes[..., :2] - boxes[..., 2:] / 2.0,
+                boxes[..., :2] + boxes[..., 2:] / 2.0,
+            ],
             axis=-1,
         )
+
 
 class FeaturePyramid(tf.keras.layers.Layer):
     """Builds the Feature Pyramid with the feature maps from the backbone.
@@ -1949,7 +1963,11 @@ class FeaturePyramid(tf.keras.layers.Layer):
         )
         c3_output, c4_output, c5_output = [
             backbone.get_layer(layer_name).output
-            for layer_name in ["conv3_block4_out", "conv4_block6_out", "conv5_block3_out"]
+            for layer_name in [
+                "conv3_block4_out",
+                "conv4_block6_out",
+                "conv5_block3_out",
+            ]
         ]
         return tf.keras.Model(
             inputs=[backbone.inputs], outputs=[c3_output, c4_output, c5_output]
@@ -2082,6 +2100,7 @@ class RetinaNet(tf.keras.Model):
         box_outputs = tf.concat(box_outputs, axis=1)
         return tf.concat([box_outputs, cls_outputs], axis=-1)
 
+
 def build_head(output_filters, bias_init):
     """Builds the class/box predictions head.
 
@@ -2097,7 +2116,9 @@ def build_head(output_filters, bias_init):
     kernel_init = tf.initializers.RandomNormal(0.0, 0.01)
     for _ in range(4):
         head.add(
-            tf.keras.layers.Conv2D(256, 3, padding="same", kernel_initializer=kernel_init)
+            tf.keras.layers.Conv2D(
+                256, 3, padding="same", kernel_initializer=kernel_init
+            )
         )
         head.add(tf.keras.layers.ReLU())
     head.add(
@@ -2207,7 +2228,8 @@ class LabelEncoder:
         """Transforms the ground truth boxes into targets for training"""
         box_target = tf.concat(
             [
-                (matched_gt_boxes[:, :2] - anchor_boxes[:, :2]) / anchor_boxes[:, 2:],
+                (matched_gt_boxes[:, :2] - anchor_boxes[:, :2])
+                / anchor_boxes[:, 2:],
                 tf.math.log(matched_gt_boxes[:, 2:] / anchor_boxes[:, 2:]),
             ],
             axis=-1,
@@ -2242,7 +2264,9 @@ class LabelEncoder:
         for i in range(batch_size):
             label = self._encode_sample(images_shape, gt_boxes[i], cls_ids[i])
             labels = labels.write(i, label)
-        batch_images = tf.keras.applications.resnet.preprocess_input(batch_images)  ## TODO
+        batch_images = tf.keras.applications.resnet.preprocess_input(
+            batch_images
+        )  # TODO
         return batch_images, labels.stack()
 
 
@@ -2314,7 +2338,11 @@ class RetinaNetLoss(tf.losses.Loss):
         clf_loss = tf.where(tf.equal(ignore_mask, 1.0), 0.0, clf_loss)
         box_loss = tf.where(tf.equal(positive_mask, 1.0), box_loss, 0.0)
         normalizer = tf.reduce_sum(positive_mask, axis=-1)
-        clf_loss = tf.math.divide_no_nan(tf.reduce_sum(clf_loss, axis=-1), normalizer)
-        box_loss = tf.math.divide_no_nan(tf.reduce_sum(box_loss, axis=-1), normalizer)
+        clf_loss = tf.math.divide_no_nan(
+            tf.reduce_sum(clf_loss, axis=-1), normalizer
+        )
+        box_loss = tf.math.divide_no_nan(
+            tf.reduce_sum(box_loss, axis=-1), normalizer
+        )
         loss = clf_loss + box_loss
         return loss

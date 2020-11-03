@@ -23,10 +23,10 @@ from tensorflow.python.util import nest
 from autokeras import adapters
 from autokeras import analysers
 from autokeras import hyper_preprocessors as hpps_module
-from autokeras.keras_layers import RetinaNetLoss
 from autokeras import preprocessors
 from autokeras.blocks import reduction
 from autokeras.engine import head as head_module
+from autokeras.keras_layers import RetinaNetLoss
 from autokeras.utils import types
 from autokeras.utils import utils
 
@@ -398,6 +398,7 @@ class ObjectDetectionHead(head_module.Head):
 
         hyper_preprocessors.append(
             hpps_module.DefaultHyperPreprocessor(
-                preprocessors.ObjectDetectionLabelEncoder())
+                preprocessors.ObjectDetectionLabelEncoder()
+            )
         )
         return hyper_preprocessors

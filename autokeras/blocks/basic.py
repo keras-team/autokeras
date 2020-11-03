@@ -980,6 +980,7 @@ class BertBlock(block_module.Block):
 
         return output_node
 
+
 class RetinaNetBlock(block_module.Block):
     """Block for RetinaNet.
     The input should be an Image. The implementation is derived from
@@ -1014,20 +1015,23 @@ class RetinaNetBlock(block_module.Block):
 
     def get_config(self):
         config = super().get_config()
-        config.update({"num_classes": self.num_classes,
-                       "backbone": self.backbone,
-                       })
+        config.update(
+            {
+                "num_classes": self.num_classes,
+                "backbone": self.backbone,
+            }
+        )
         return config
 
     def build(self, hp, inputs=None):
         if self.num_classes is None:
             raise ValueError(
-                "Number of classes is to be defined but got ".format(
+                "Number of classes is to be defined but got {}".format(
                     self.num_classes
                 )
             )
         input_tensor = nest.flatten(inputs)[0]
-        ## Preprocess the input
+        # Preprocess the input
         # pre_process = keras_layers.ObjectDetectionPreProcessing()
         # input_tensor = pre_process(input_tensor)
         print("Input after preprocessing: ", input_tensor.shape)
