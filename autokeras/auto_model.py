@@ -370,6 +370,11 @@ class AutoModel(object):
         # TODO: Handle other types of input, zip dataset, tensor, dict.
 
         # Convert training data.
+        if self.task == 'object_detection':
+            # This is a dict of samples
+            dataset = tf.data.Dataset.zip((x, y))
+            return dataset, validation_data
+
         self._check_data_format((x, y))
         if isinstance(x, tf.data.Dataset):
             dataset = x
@@ -419,12 +424,16 @@ class AutoModel(object):
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        if isinstance(x, tf.data.Dataset) and self._has_y(x):
-            x = x.map(lambda x, y: x)
-        self._check_data_format((x, None), predict=True)
-        dataset = self._adapt(x, self.inputs, batch_size)
+        if self.task=='object_detection':
+            dataset = x
+        else:
+            if isinstance(x, tf.data.Dataset) and self._has_y(x):
+                    x = x.map(lambda x, y: x)
+            self._check_data_format((x, None), predict=True)
+            dataset = self._adapt(x, self.inputs, batch_size)
         pipeline = self.tuner.get_best_pipeline()
         model = self.tuner.get_best_model()
+        # TODO Validation Transform will be different
         dataset = pipeline.transform_x(dataset)
         dataset = tf.data.Dataset.zip((dataset, dataset))
         y = model.predict(dataset, **kwargs)
@@ -448,14 +457,17 @@ class AutoModel(object):
             The attribute model.metrics_names will give you the display labels for
             the scalar outputs.
         """
-        self._check_data_format((x, y))
-        if isinstance(x, tf.data.Dataset):
+        if self.task=='object_detection':
             dataset = x
-            x = dataset.map(lambda x, y: x)
-            y = dataset.map(lambda x, y: y)
-        x = self._adapt(x, self.inputs, batch_size)
-        y = self._adapt(y, self._heads, batch_size)
-        dataset = tf.data.Dataset.zip((x, y))
+        else:
+            self._check_data_format((x, y))
+            if isinstance(x, tf.data.Dataset):
+                dataset = x
+                x = dataset.map(lambda x, y: x)
+                y = dataset.map(lambda x, y: y)
+            x = self._adapt(x, self.inputs, batch_size)
+            y = self._adapt(y, self._heads, batch_size)
+            dataset = tf.data.Dataset.zip((x, y))
         pipeline = self.tuner.get_best_pipeline()
         dataset = pipeline.transform(dataset)
         model = self.tuner.get_best_model()
