@@ -21,6 +21,7 @@ from autokeras.preprocessors.common import LambdaPreprocessor
 from autokeras.preprocessors.common import SlidingWindow
 from autokeras.preprocessors.encoders import LabelEncoder
 from autokeras.preprocessors.encoders import OneHotEncoder
+from autokeras.preprocessors.encoders import ObjectDetectionLabelEncoder
 from autokeras.preprocessors.postprocessors import SigmoidPostprocessor
 from autokeras.preprocessors.postprocessors import SoftmaxPostprocessor
 

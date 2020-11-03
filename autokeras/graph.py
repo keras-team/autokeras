@@ -281,7 +281,7 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
         # Specify hyperparameters from compile(...)
         optimizer_name = hp.Choice(
             "optimizer",
-            ["adam", "sgd", "adam_weight_decay"],
+            ["adam", "sgd", "adam_weight_decay", "sgd_lr_fn"],
             default="adam",
         )
         # TODO: add adadelta optimizer when it can optimize embedding layer on GPU.
@@ -320,6 +320,13 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
                 epsilon=1e-6,
                 exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"],
             )
+        elif optimizer_name == "sgd_lr_fn":
+            learning_rates = [2.5e-06, 0.000625, 0.00125, 0.0025, 0.00025, 2.5e-05]
+            learning_rate_boundaries = [125, 250, 500, 240000, 360000]
+            learning_rate_fn = tf.optimizers.schedules.PiecewiseConstantDecay(
+                boundaries=learning_rate_boundaries, values=learning_rates
+            )
+            optimizer = tf.optimizers.SGD(learning_rate=learning_rate_fn, momentum=0.9)
 
         model.compile(
             optimizer=optimizer, metrics=self._get_metrics(), loss=self._get_loss()

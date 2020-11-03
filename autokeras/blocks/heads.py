@@ -23,6 +23,7 @@ from tensorflow.python.util import nest
 from autokeras import adapters
 from autokeras import analysers
 from autokeras import hyper_preprocessors as hpps_module
+from autokeras.keras_layers import RetinaNetLoss
 from autokeras import preprocessors
 from autokeras.blocks import reduction
 from autokeras.engine import head as head_module
@@ -303,3 +304,100 @@ class SegmentationHead(ClassificationHead):
 
     def get_adapter(self):
         return adapters.SegmentationHeadAdapter(name=self.name)
+
+
+class ObjectDetectionHead(head_module.Head):
+    """ObjectDetectionHead.
+
+    Use sigmoid and binary crossentropy for binary classification and multi-label
+    classification. Use softmax and categorical crossentropy for multi-class
+    (more than 2) classification. Use Accuracy as metrics by default.
+
+    The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
+    pd.DataFrame or pd.Series. It can be raw labels, one-hot encoded if more than two
+    classes, or binary encoded for binary classification.
+
+    The raw labels will be encoded to one column if two classes were found,
+    or one-hot encoded if more than two classes were found.
+
+    # Arguments
+        num_classes: Int. Defaults to None. If None, it will be inferred from the
+            data.
+        multi_label: Boolean. Defaults to False.
+        loss: A Keras loss function. Uses RetinaNetLoss.
+        metrics: A list of Keras metrics. Defaults to use 'accuracy'.
+        dropout: Float. The dropout rate for the layers.
+            If left unspecified, it will be tuned automatically.
+    """
+
+    def __init__(
+        self,
+        num_classes: Optional[int] = None,
+        # multi_label: bool = False,
+        loss: Optional[types.LossType] = None,
+        metrics: Optional[types.MetricsType] = None,
+        # dropout: Optional[float] = None,
+        **kwargs
+    ):
+        self.num_classes = num_classes
+        # self.multi_label = multi_label
+        # self.dropout = dropout
+        if metrics is None:
+            metrics = ["accuracy"]
+        if loss is None:
+            loss = RetinaNetLoss(self.num_classes)
+        super().__init__(loss=loss, metrics=metrics, **kwargs)
+        # Infered from analyser.
+        # self._encoded = None
+        # self._encoded_for_sigmoid = None
+        # self._encoded_for_softmax = None
+        # self._add_one_dimension = False
+        # self._labels = None
+
+    # def infer_loss(self):
+    #     if not self.num_classes:
+    #         return None
+    #     if self.num_classes == 2 or self.multi_label:
+    #         return losses.BinaryCrossentropy()
+    #     return losses.CategoricalCrossentropy()
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "num_classes": self.num_classes,
+                # "multi_label": self.multi_label,
+                # "dropout": self.dropout,
+            }
+        )
+        return config
+
+    def build(self, hp, inputs):
+        return inputs
+
+    # def get_adapter(self):
+    #     return adapters.ClassificationAdapter(name=self.name)
+    #
+    # def get_analyser(self):
+    #     return analysers.ClassificationAnalyser(
+    #         name=self.name, multi_label=self.multi_label
+    #     )
+    #
+    # def config_from_analyser(self, analyser):
+    #     super().config_from_analyser(analyser)
+    #     self.num_classes = analyser.num_classes
+    #     self.loss = self.infer_loss()
+    #     self._encoded = analyser.encoded
+    #     self._encoded_for_sigmoid = analyser.encoded_for_sigmoid
+    #     self._encoded_for_softmax = analyser.encoded_for_softmax
+    #     self._add_one_dimension = len(analyser.shape) == 1
+    #     self._labels = analyser.labels
+
+    def get_hyper_preprocessors(self):
+        hyper_preprocessors = []
+
+        hyper_preprocessors.append(
+            hpps_module.DefaultHyperPreprocessor(
+                preprocessors.ObjectDetectionLabelEncoder())
+        )
+        return hyper_preprocessors
