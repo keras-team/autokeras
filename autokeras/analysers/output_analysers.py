@@ -120,3 +120,12 @@ class RegressionAnalyser(TargetAnalyser):
         if len(self.shape) == 1:
             return 1
         return self.shape[1]
+
+
+class ObjectDetectionAnalyser(TargetAnalyser):
+    def __init__(self, num_classes=None, **kwargs):
+        super().__init__(**kwargs)
+        self.num_classes = num_classes
+
+    def finalize(self):
+        pass
