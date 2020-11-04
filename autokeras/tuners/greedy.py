@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import statistics
 from typing import Any
 from typing import Dict
 from typing import List
@@ -18,6 +19,7 @@ from typing import Optional
 
 import kerastuner
 import numpy as np
+import pandas as pd
 
 from autokeras.engine import tuner as tuner_module
 
@@ -202,6 +204,20 @@ class GreedyOracle(kerastuner.Oracle):
             self._tried_so_far.add(values_hash)
             break
         return values
+
+    def _score_trial(self, trial):
+        metric_history = trial.metrics.metrics[self.objective.name]
+        total_steps = len(metric_history._observations)
+        data = []
+        for i in range(total_steps):
+            data.append(statistics.mean(metric_history._observations[i].value))
+        data = pd.DataFrame(data).ewm(com=1).mean().to_numpy().flatten()
+        if metric_history.direction == "min":
+            score = data.min()
+        else:
+            score = data.max()
+        trial.score = score
+        trial.best_step = trial.metrics.get_best_step(self.objective.name)
 
 
 class Greedy(tuner_module.AutoTuner):
