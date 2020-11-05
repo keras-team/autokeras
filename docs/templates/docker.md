@@ -6,7 +6,7 @@
 The following command download Auto-Keras docker image to your machine.  
 
 ```
-docker pull garawalid/autokeras:latest
+docker pull haifengjin/autokeras:latest
 ```
 
 Image releases are tagged using the following format:
@@ -21,7 +21,7 @@ Image releases are tagged using the following format:
 ## Start Auto-Keras Docker container
 
 ```
-docker run -it --shm-size 2G garawalid/autokeras /bin/bash
+docker run -it --shm-size 2G haifengjin/autokeras /bin/bash
 ```
 
 In case you need more memory to run the container, change the value of `shm-size`. ([Docker run reference](https://docs.docker.com/engine/reference/run/#general-form))
@@ -33,7 +33,7 @@ In case you need more memory to run the container, change the value of `shm-size
 To run a local script `file.py` using Auto-Keras within the container, mount the host directory `-v hostDir:/app`.
 
 ```
-docker run -it -v hostDir:/app --shm-size 2G garawalid/autokeras python file.py
+docker run -it -v hostDir:/app --shm-size 2G haifengjin/autokeras python file.py
 ```
 
 ## Example :
@@ -47,5 +47,5 @@ curl https://raw.githubusercontent.com/keras-team/autokeras/master/examples/mnis
 
 Run the mnist example :
 ```
-docker run -it -v "$(pwd)":/app --shm-size 2G garawalid/autokeras python mnist.py
+docker run -it -v "$(pwd)":/app --shm-size 2G haifengjin/autokeras python mnist.py
 ```
