@@ -57,7 +57,8 @@ class DenseBlock(block_module.Block):
     """Block for Dense layers.
 
     # Arguments
-        num_layers: Int. The number of Dense layers in the block.
+        num_layers: Int or kerastuner.engine.hyperparameters.Choice.
+            The number of Dense layers in the block.
             If left unspecified, it will be tuned automatically.
         num_units: Int or kerastuner.engine.hyperparameters.Choice.
             The number of units in each dense layer.
@@ -70,14 +71,18 @@ class DenseBlock(block_module.Block):
 
     def __init__(
         self,
-        num_layers: Optional[int] = None,
+        num_layers: Optional[Union[int, hyperparameters.Choice]] = None,
         num_units: Optional[Union[int, hyperparameters.Choice]] = None,
         use_batchnorm: Optional[bool] = None,
         dropout: Optional[float] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.num_layers = num_layers
+        self.num_layers = utils.get_hyperparameter(
+            num_layers,
+            hyperparameters.Choice("num_layers", [1, 2, 3], default=2),
+            int,
+        )
         self.num_units = utils.get_hyperparameter(
             num_units,
             hyperparameters.Choice(
@@ -92,7 +97,7 @@ class DenseBlock(block_module.Block):
         config = super().get_config()
         config.update(
             {
-                "num_layers": self.num_layers,
+                "num_layers": hyperparameters.serialize(self.num_layers),
                 "num_units": hyperparameters.serialize(self.num_units),
                 "use_batchnorm": self.use_batchnorm,
                 "dropout": self.dropout,
@@ -102,6 +107,7 @@ class DenseBlock(block_module.Block):
 
     @classmethod
     def from_config(cls, config):
+        config["num_layers"] = hyperparameters.deserialize(config["num_layers"])
         config["num_units"] = hyperparameters.deserialize(config["num_units"])
         return cls(**config)
 
@@ -112,7 +118,6 @@ class DenseBlock(block_module.Block):
         output_node = input_node
         output_node = reduction.Flatten().build(hp, output_node)
 
-        num_layers = self.num_layers or hp.Choice("num_layers", [1, 2, 3], default=2)
         use_batchnorm = self.use_batchnorm
         if use_batchnorm is None:
             use_batchnorm = hp.Boolean("use_batchnorm", default=False)
@@ -121,7 +126,7 @@ class DenseBlock(block_module.Block):
         else:
             dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
 
-        for i in range(num_layers):
+        for i in range(utils.add_to_hp(self.num_layers, hp)):
             units = utils.add_to_hp(self.num_units, hp, "units_{i}".format(i=i))
             output_node = layers.Dense(units)(output_node)
             if use_batchnorm:
