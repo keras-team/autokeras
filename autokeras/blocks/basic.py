@@ -65,7 +65,8 @@ class DenseBlock(block_module.Block):
             If left unspecified, it will be tuned automatically.
         use_bn: Boolean. Whether to use BatchNormalization layers.
             If left unspecified, it will be tuned automatically.
-        dropout: Float. The dropout rate for the layers.
+        dropout: Float or kerastuner.engine.hyperparameters.Choice.
+            The dropout rate for the layers.
             If left unspecified, it will be tuned automatically.
     """
 
@@ -74,7 +75,7 @@ class DenseBlock(block_module.Block):
         num_layers: Optional[Union[int, hyperparameters.Choice]] = None,
         num_units: Optional[Union[int, hyperparameters.Choice]] = None,
         use_batchnorm: Optional[bool] = None,
-        dropout: Optional[float] = None,
+        dropout: Optional[Union[float, hyperparameters.Choice]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -91,7 +92,13 @@ class DenseBlock(block_module.Block):
             int,
         )
         self.use_batchnorm = use_batchnorm
-        self.dropout = dropout
+        self.dropout = utils.get_hyperparameter(
+            dropout,
+            hyperparameters.Choice(
+                "dropout", [0.0, 0.2, 0.3, 0.4, 0.5, 0.6], default=0.0
+            ),
+            float,
+        )
 
     def get_config(self):
         config = super().get_config()
@@ -100,7 +107,7 @@ class DenseBlock(block_module.Block):
                 "num_layers": hyperparameters.serialize(self.num_layers),
                 "num_units": hyperparameters.serialize(self.num_units),
                 "use_batchnorm": self.use_batchnorm,
-                "dropout": self.dropout,
+                "dropout": hyperparameters.serialize(self.dropout),
             }
         )
         return config
@@ -109,6 +116,7 @@ class DenseBlock(block_module.Block):
     def from_config(cls, config):
         config["num_layers"] = hyperparameters.deserialize(config["num_layers"])
         config["num_units"] = hyperparameters.deserialize(config["num_units"])
+        config["dropout"] = hyperparameters.deserialize(config["dropout"])
         return cls(**config)
 
     def build(self, hp, inputs=None):
@@ -121,10 +129,6 @@ class DenseBlock(block_module.Block):
         use_batchnorm = self.use_batchnorm
         if use_batchnorm is None:
             use_batchnorm = hp.Boolean("use_batchnorm", default=False)
-        if self.dropout is not None:
-            dropout = self.dropout
-        else:
-            dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
 
         for i in range(utils.add_to_hp(self.num_layers, hp)):
             units = utils.add_to_hp(self.num_units, hp, "units_{i}".format(i=i))
@@ -132,8 +136,10 @@ class DenseBlock(block_module.Block):
             if use_batchnorm:
                 output_node = layers.BatchNormalization()(output_node)
             output_node = layers.ReLU()(output_node)
-            if dropout > 0:
-                output_node = layers.Dropout(dropout)(output_node)
+            if utils.add_to_hp(self.dropout, hp) > 0:
+                output_node = layers.Dropout(utils.add_to_hp(self.dropout, hp))(
+                    output_node
+                )
         return output_node
 
 
