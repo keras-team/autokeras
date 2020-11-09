@@ -22,7 +22,7 @@ class TargetAnalyser(analyser.Analyser):
         self.name = name
 
 
-class (TargetAnalyser):
+class ClassificationAnalyser(TargetAnalyser):
     def __init__(self, num_classes=None, multi_label=False, **kwargs):
         super().__init__(**kwargs)
         self.num_classes = num_classes
