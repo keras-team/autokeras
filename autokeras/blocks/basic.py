@@ -94,9 +94,7 @@ class DenseBlock(block_module.Block):
         self.use_batchnorm = use_batchnorm
         self.dropout = utils.get_hyperparameter(
             dropout,
-            hyperparameters.Choice(
-                "dropout", [0.0, 0.2, 0.3, 0.4, 0.5, 0.6], default=0.0
-            ),
+            hyperparameters.Choice("dropout", [0.0, 0.25, 0.5], default=0.0),
             float,
         )
 
