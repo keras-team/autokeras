@@ -350,8 +350,10 @@ class AutoModel(object):
         output_analysers = [head.get_analyser() for head in self._heads]
         analysers = input_analysers + output_analysers
         if self.task == 'object_detection':
-            for item, analyser in zip(dataset, analysers):
-                analyser.update(item)
+            return
+            # TODO Figure out the analyser for dictionaries
+            # for item, analyser in zip(dataset, analysers):
+            #     analyser.update(item)
         else:
             for x, y in dataset:
                 x = nest.flatten(x)
