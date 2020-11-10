@@ -127,5 +127,19 @@ class ObjectDetectionAnalyser(TargetAnalyser):
         super().__init__(**kwargs)
         self.num_classes = num_classes
 
+    def update(self, data):
+        """Update the statistics with a batch of data.
+
+        # Arguments
+            data: tf.Tensor. One batch of data from tf.data.Dataset.
+        """
+        if self.dtype is None:
+            self.dtype = data.element_spec['image'].dtype
+        if self.shape is None:
+            self.shape = data.element_spec['image'].shape
+        if self.batch_size is None:
+            self.batch_size = data.element_spec['image'].shape.as_list()[0]
+        self.num_samples += len(data)
+
     def finalize(self):
         pass
