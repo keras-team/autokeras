@@ -349,12 +349,11 @@ class AutoModel(object):
         input_analysers = [node.get_analyser() for node in self.inputs]
         output_analysers = [head.get_analyser() for head in self._heads]
         analysers = input_analysers + output_analysers
-        print(analysers)
         if self.task == 'object_detection':
             analysers = output_analysers
-            # return
             # TODO Figure out the analyser for dictionaries
             for item, analyser in zip(dataset, analysers):
+                print(analyser)
                 analyser.update(item)
         else:
             for x, y in dataset:
