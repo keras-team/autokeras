@@ -29,7 +29,6 @@ def test_augment_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_augment_build_with_translation_factor_range_return_tensor():
@@ -41,7 +40,6 @@ def test_augment_build_with_translation_factor_range_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_augment_build_with_no_flip_return_tensor():
@@ -53,7 +51,6 @@ def test_augment_build_with_no_flip_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_augment_build_with_vflip_only_return_tensor():
@@ -65,7 +62,6 @@ def test_augment_build_with_vflip_only_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_augment_build_with_zoom_factor_return_tensor():
@@ -77,7 +73,6 @@ def test_augment_build_with_zoom_factor_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_augment_build_with_contrast_factor_return_tensor():
@@ -89,7 +84,6 @@ def test_augment_build_with_contrast_factor_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_augment_deserialize_to_augment():
@@ -118,7 +112,6 @@ def test_ngram_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_ngram_build_with_ngrams_return_tensor():
@@ -129,7 +122,6 @@ def test_ngram_build_with_ngrams_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_ngram_deserialize_to_ngram():
@@ -158,7 +150,6 @@ def test_int_seq_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_int_seq_build_with_seq_len_return_tensor():
@@ -169,7 +160,6 @@ def test_int_seq_build_with_seq_len_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_int_seq_deserialize_to_int_seq():
@@ -200,7 +190,6 @@ def test_cat_to_num_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_cat_to_num_deserialize_to_cat_to_num():

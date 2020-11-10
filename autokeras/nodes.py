@@ -23,10 +23,10 @@ from autokeras import adapters
 from autokeras import analysers
 from autokeras import blocks
 from autokeras import hyper_preprocessors as hpps_module
+from autokeras import keras_layers
 from autokeras import preprocessors
 from autokeras.engine import io_hypermodel
 from autokeras.engine import node as node_module
-from autokeras.utils import data_utils
 
 
 def serialize(obj):
@@ -60,7 +60,7 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
-        return data_utils.cast_to_float32(input_node)
+        return keras_layers.CastToFloat32()(input_node)
 
     def get_adapter(self):
         return adapters.InputAdapter()
@@ -94,7 +94,7 @@ class ImageInput(Input):
         inputs = super().build(hp, inputs)
         output_node = nest.flatten(inputs)[0]
         if len(output_node.shape) == 3:
-            output_node = tf.expand_dims(output_node, axis=-1)
+            output_node = keras_layers.ExpandLastDim()(output_node)
         return output_node
 
     def get_adapter(self):
@@ -128,7 +128,7 @@ class TextInput(Input):
     def build(self, hp, inputs=None):
         output_node = nest.flatten(inputs)[0]
         if len(output_node.shape) == 1:
-            output_node = tf.expand_dims(output_node, axis=-1)
+            output_node = keras_layers.ExpandLastDim()(output_node)
         return output_node
 
     def get_adapter(self):

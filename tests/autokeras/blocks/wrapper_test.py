@@ -30,7 +30,6 @@ def test_image_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_image_block_xception_return_tensor():
@@ -42,7 +41,6 @@ def test_image_block_xception_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_image_block_normalize_return_tensor():
@@ -54,7 +52,6 @@ def test_image_block_normalize_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_image_block_augment_return_tensor():
@@ -66,7 +63,6 @@ def test_image_block_augment_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_image_deserialize_to_image():
@@ -93,7 +89,6 @@ def test_text_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_text_block_ngram_return_tensor():
@@ -104,7 +99,6 @@ def test_text_block_ngram_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_text_block_transformer_return_tensor():
@@ -115,7 +109,6 @@ def test_text_block_transformer_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_text_deserialize_to_text():
@@ -144,7 +137,6 @@ def test_structured_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_structured_block_normalize_return_tensor():
@@ -157,7 +149,6 @@ def test_structured_block_normalize_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_structured_block_search_normalize_return_tensor():
@@ -170,7 +161,6 @@ def test_structured_block_search_normalize_return_tensor():
     outputs = block.build(hp, tf.keras.Input(shape=(2,), dtype=tf.string))
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_structured_deserialize_to_structured():
@@ -201,7 +191,6 @@ def test_timeseries_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_timeseries_deserialize_to_timeseries():

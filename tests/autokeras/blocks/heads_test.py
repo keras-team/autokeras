@@ -96,7 +96,6 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_segmentation():
