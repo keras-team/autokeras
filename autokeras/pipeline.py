@@ -61,6 +61,12 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
         # Returns
             An instance of Pipeline.
         """
+        if self.task == 'object_detection':
+            return Pipeline(
+                inputs=self._build_preprocessors(hp, self.inputs, dataset),
+                outputs=self._build_preprocessors(hp, self.outputs, dataset),
+                task=self.task,
+            )
         x = dataset.map(lambda x, y: x)
         y = dataset.map(lambda x, y: y)
         return Pipeline(
@@ -119,7 +125,7 @@ class Pipeline(pps_module.Preprocessor):
         # Returns
             An instance of tf.data.Dataset. The transformed dataset.
         """
-        # Edit to check if it's object detection and branch differently TODO
+        # TODO Edit to check if it's object detection and branch differently
         if self.task == "object_detection":
             return self.obj_det_transform(dataset)
         x = dataset.map(lambda x, y: x)
