@@ -131,13 +131,14 @@ class ObjectDetectionAnalyser(TargetAnalyser):
         # Arguments
             data: tf.Tensor. One batch of data from tf.data.Dataset.
         """
-        if self.dtype is None:
-            self.dtype = data.element_spec['image'].dtype
-        if self.shape is None:
-            self.shape = data.element_spec['image'].shape
-        if self.batch_size is None:
-            self.batch_size = data.element_spec['image'].shape.as_list()[0]
-        self.num_samples += len(data)
+        ## TODO The data has multiple
+        # if self.dtype is None:
+        #     self.dtype = data['image'].dtype
+        # if self.shape is None:
+        #     self.shape = data['image'].shape
+        # if self.batch_size is None:
+        #     self.batch_size = data['image'].shape.as_list()[0]
+        self.num_samples += len(data)/4
 
     def finalize(self):
         pass
