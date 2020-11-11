@@ -161,7 +161,8 @@ def test_preprocessing_adapt_with_text_vec():
             super().adapt(*args, **kwargs)
             self.is_called = True
 
-    (x_train, y_train), (x_test, y_test) = utils.imdb_raw()
+    x_train = utils.generate_text_data()
+    y_train = np.random.randint(0, 2, (100,))
     dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train)).batch(32)
     layer1 = MockLayer(max_tokens=5000, output_mode="int", output_sequence_length=40)
     model = tf.keras.models.Sequential()

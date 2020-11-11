@@ -22,10 +22,9 @@ from tests import utils
 def test_text_and_structured_data(tmp_path):
     # Prepare the data.
     num_instances = 80
-    (x_text, y_train), (x_test, y_test) = utils.imdb_raw()
+    x_text = utils.generate_text_data(num_instances)
     x_structured_data = pd.read_csv(utils.TRAIN_CSV_PATH)
 
-    x_text = x_text[:num_instances]
     x_structured_data = x_structured_data[:num_instances]
     y_classification = utils.generate_one_hot_labels(
         num_instances=num_instances, num_classes=3

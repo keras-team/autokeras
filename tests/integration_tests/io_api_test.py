@@ -23,10 +23,9 @@ from tests import utils
 def test_io_api(tmp_path):
     num_instances = 20
     (image_x, train_y), (test_x, test_y) = mnist.load_data()
-    (text_x, train_y), (test_x, test_y) = utils.imdb_raw(num_instances=num_instances)
+    text_x = utils.generate_text_data(num_instances=num_instances)
 
     image_x = image_x[:num_instances]
-    text_x = text_x[:num_instances]
     structured_data_x = (
         pd.read_csv(utils.TRAIN_CSV_PATH)
         .to_numpy()

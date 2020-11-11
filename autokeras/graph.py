@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import kerastuner
-import official.nlp.optimization
 import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import blocks as blocks_module
+from autokeras import keras_layers
 from autokeras import nodes as nodes_module
 from autokeras.engine import head as head_module
 from autokeras.engine import serializable
@@ -306,13 +306,13 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
                 end_learning_rate=0.0,
             )
             if warmup_steps:
-                lr_schedule = WarmUp(
+                lr_schedule = keras_layers.WarmUp(
                     initial_learning_rate=learning_rate,
                     decay_schedule_fn=lr_schedule,
                     warmup_steps=warmup_steps,
                 )
 
-            optimizer = AdamWeightDecay(
+            optimizer = keras_layers.AdamWeightDecay(
                 learning_rate=lr_schedule,
                 weight_decay_rate=0.01,
                 beta_1=0.9,
@@ -347,13 +347,3 @@ class Graph(kerastuner.HyperModel, serializable.Serializable):
     @property
     def batch_size(self):
         return self.inputs[0].batch_size
-
-
-@tf.keras.utils.register_keras_serializable()
-class AdamWeightDecay(official.nlp.optimization.AdamWeightDecay):
-    pass
-
-
-@tf.keras.utils.register_keras_serializable()
-class WarmUp(official.nlp.optimization.WarmUp):
-    pass

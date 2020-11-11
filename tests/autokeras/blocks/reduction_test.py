@@ -32,7 +32,6 @@ def test_merge_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_merge_single_input_return_tensor():
@@ -44,7 +43,6 @@ def test_merge_single_input_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_merge_inputs_with_same_shape_return_tensor():
@@ -59,7 +57,6 @@ def test_merge_inputs_with_same_shape_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_merge_deserialize_to_merge():
@@ -87,7 +84,6 @@ def test_temporal_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_temporal_global_max_return_tensor():
@@ -99,7 +95,6 @@ def test_temporal_global_max_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_temporal_global_avg_return_tensor():
@@ -111,7 +106,6 @@ def test_temporal_global_avg_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_reduction_2d_tensor_return_input_node():
@@ -154,7 +148,6 @@ def test_spatial_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_spatial_deserialize_to_spatial():

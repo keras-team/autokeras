@@ -11,13 +11,46 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
+import numpy as np
 import tensorflow as tf
+from sklearn.datasets import load_files
 from tensorflow.keras.datasets import cifar10
 from tensorflow.keras.datasets import mnist
 
 import autokeras as ak
-from tests import utils
+
+
+def imdb_raw(num_instances=100):
+    dataset = tf.keras.utils.get_file(
+        fname="aclImdb.tar.gz",
+        origin="http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",
+        extract=True,
+    )
+
+    # set path to dataset
+    IMDB_DATADIR = os.path.join(os.path.dirname(dataset), "aclImdb")
+
+    classes = ["pos", "neg"]
+    train_data = load_files(
+        os.path.join(IMDB_DATADIR, "train"), shuffle=True, categories=classes
+    )
+    test_data = load_files(
+        os.path.join(IMDB_DATADIR, "test"), shuffle=False, categories=classes
+    )
+
+    x_train = np.array(train_data.data)
+    y_train = np.array(train_data.target)
+    x_test = np.array(test_data.data)
+    y_test = np.array(test_data.target)
+
+    if num_instances is not None:
+        x_train = x_train[:num_instances]
+        y_train = y_train[:num_instances]
+        x_test = x_test[:num_instances]
+        y_test = y_test[:num_instances]
+    return (x_train, y_train), (x_test, y_test)
 
 
 def test_mnist_accuracy_over_98(tmp_path):
@@ -37,7 +70,7 @@ def test_cifar10_accuracy_over_93(tmp_path):
 
 
 def test_imdb_accuracy_over_92(tmp_path):
-    (x_train, y_train), (x_test, y_test) = utils.imdb_raw(num_instances=None)
+    (x_train, y_train), (x_test, y_test) = imdb_raw(num_instances=None)
     clf = ak.TextClassifier(max_trials=3, directory=tmp_path)
     clf.fit(x_train, y_train, batch_size=6, epochs=1)
     accuracy = clf.evaluate(x_test, y_test)[1]

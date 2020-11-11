@@ -30,7 +30,6 @@ def test_resnet_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_resnet_v1_return_tensor():
@@ -42,7 +41,6 @@ def test_resnet_v1_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_efficientnet_b0_return_tensor():
@@ -54,7 +52,6 @@ def test_efficientnet_b0_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_resnet_pretrained_build_return_tensor():
@@ -66,7 +63,6 @@ def test_resnet_pretrained_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_resnet_pretrained_with_one_channel_input():
@@ -78,7 +74,6 @@ def test_resnet_pretrained_with_one_channel_input():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_resnet_pretrained_error_with_two_channels():
@@ -132,7 +127,6 @@ def test_xception_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_xception_pretrained_build_return_tensor():
@@ -144,7 +138,6 @@ def test_xception_pretrained_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_xception_pretrained_with_one_channel_input():
@@ -156,7 +149,6 @@ def test_xception_pretrained_with_one_channel_input():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_xception_pretrained_error_with_two_channels():
@@ -196,7 +188,6 @@ def test_conv_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_conv_with_small_image_size_return_tensor():
@@ -208,7 +199,6 @@ def test_conv_with_small_image_size_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_conv_build_with_dropout_return_tensor():
@@ -220,7 +210,6 @@ def test_conv_build_with_dropout_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_conv_deserialize_to_conv():
@@ -248,7 +237,6 @@ def test_rnn_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_rnn_input_shape_one_dim_error():
@@ -289,7 +277,6 @@ def test_dense_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_dense_build_with_dropout_return_tensor():
@@ -300,7 +287,6 @@ def test_dense_build_with_dropout_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_dense_build_with_bn_return_tensor():
@@ -311,7 +297,6 @@ def test_dense_build_with_bn_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_dense_deserialize_to_dense():
@@ -338,7 +323,6 @@ def test_embed_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_embed_deserialize_to_embed():
@@ -365,7 +349,6 @@ def test_transformer_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_transformer_deserialize_to_transformer():
@@ -400,7 +383,6 @@ def test_bert_build_return_tensor():
     )
 
     assert len(nest.flatten(outputs)) == 1
-    assert isinstance(nest.flatten(outputs)[0], tf.Tensor)
 
 
 def test_bert_deserialize_to_transformer():

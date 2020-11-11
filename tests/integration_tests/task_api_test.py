@@ -46,7 +46,10 @@ def test_image_regressor(tmp_path):
 
 
 def test_text_classifier(tmp_path):
-    (train_x, train_y), (test_x, test_y) = utils.imdb_raw()
+    train_x = utils.generate_text_data(num_instances=320)
+    train_y = np.random.randint(0, 2, 320)
+    test_x = train_x
+    test_y = train_y
     clf = ak.TextClassifier(
         directory=tmp_path,
         max_trials=2,
@@ -63,9 +66,10 @@ def test_text_classifier(tmp_path):
 
 
 def test_text_regressor(tmp_path):
-    (train_x, train_y), (test_x, test_y) = utils.imdb_raw()
-    train_y = utils.generate_data(num_instances=train_y.shape[0], shape=(1,))
-    test_y = utils.generate_data(num_instances=test_y.shape[0], shape=(1,))
+    train_x = utils.generate_text_data(num_instances=300)
+    test_x = train_x
+    train_y = utils.generate_data(num_instances=300, shape=(1,))
+    test_y = train_y
     clf = ak.TextRegressor(directory=tmp_path, max_trials=2, seed=utils.SEED)
     clf.fit(train_x, train_y, epochs=1, validation_data=(test_x, test_y))
     clf.export_model()
