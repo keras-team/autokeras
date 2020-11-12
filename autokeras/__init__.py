@@ -41,6 +41,8 @@ from autokeras.engine.head import Head
 from autokeras.engine.node import Node
 from autokeras.keras_layers import BertEncoder
 from autokeras.keras_layers import BertTokenizer
+from autokeras.keras_layers import CastToFloat32
+from autokeras.keras_layers import ExpandLastDim
 from autokeras.keras_layers import MultiCategoryEncoding
 from autokeras.nodes import ImageInput
 from autokeras.nodes import Input
@@ -69,7 +71,9 @@ check_tf_version()
 check_kt_version()
 
 CUSTOM_OBJECTS = {
-    "MultiCategoryEncoding": MultiCategoryEncoding,
-    "BertTokenizer": BertTokenizer,
     "BertEncoder": BertEncoder,
+    "BertTokenizer": BertTokenizer,
+    "CastToFloat32": CastToFloat32,
+    "ExpandLastDim": ExpandLastDim,
+    "MultiCategoryEncoding": MultiCategoryEncoding,
 }
