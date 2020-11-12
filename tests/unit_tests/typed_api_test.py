@@ -26,6 +26,8 @@ HELP_MESSAGE = (
 # the exception list.
 EXCEPTION_LIST = [
     autokeras.BayesianOptimization,
+    autokeras.CastToFloat32,
+    autokeras.ExpandLastDim,
     autokeras.RandomSearch,
 ]
 
