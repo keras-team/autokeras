@@ -68,7 +68,9 @@ class Head(io_hypermodel.IOHyperModel):
         **kwargs
     ):
         super().__init__(**kwargs)
+        
         self.loss = loss
+        
         if metrics is None:
             metrics = []
         self.metrics = metrics
@@ -86,6 +88,8 @@ class Head(io_hypermodel.IOHyperModel):
 
     @classmethod
     def from_config(cls, config):
+        '''Build an instance from the config of this object.'''
+        
         config["loss"] = deserialize_loss(config["loss"])
         config["metrics"] = deserialize_metrics(config["metrics"])
         return super().from_config(config)

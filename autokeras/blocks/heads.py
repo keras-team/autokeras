@@ -114,6 +114,7 @@ class ClassificationHead(head_module.Head):
 
         if dropout > 0:
             output_node = layers.Dropout(dropout)(output_node)
+            
         output_node = layers.Dense(self.shape[-1])(output_node)
         if isinstance(self.loss, tf.keras.losses.BinaryCrossentropy):
             output_node = layers.Activation(activations.sigmoid, name=self.name)(
@@ -218,43 +219,90 @@ class RegressionHead(head_module.Head):
         self.dropout = dropout
 
     def get_config(self):
+        '''
+        Adds our config to the config we inherited.
+        '''
         config = super().get_config()
         config.update({"output_dim": self.output_dim, "dropout": self.dropout})
         return config
 
     def build(self, hp, inputs=None):
+        """
+        Builds the network.
+        
+        hp: a kerastuner.hyperparameters.HyperParameters() object specifying our hyperparameters.
+        Docs: https://github.com/keras-team/keras-tuner/blob/master/kerastuner/engine/hyperparameters.py
+        """
+        
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
+        
+        #Use only the first input:
         input_node = inputs[0]
+        
+        #Initialize:
         output_node = input_node
 
         dropout = self.dropout or hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
 
         if dropout > 0:
             output_node = layers.Dropout(dropout)(output_node)
+            
         output_node = reduction.Flatten().build(hp, output_node)
         output_node = layers.Dense(self.shape[-1], name=self.name)(output_node)
         return output_node
 
     def config_from_analyser(self, analyser):
+        """Load the learned information on dataset from the Analyser.
+
+        # Arguments
+            adapter: An instance of a subclass of autokeras.engine.Adapter.
+        """
+        
         super().config_from_analyser(analyser)
+        
+        #If we only have one in our input data, add another at the end.
         self._add_one_dimension = len(analyser.shape) == 1
 
     def get_adapter(self):
+        """Get the corresponding Adapter.
+
+        # Returns
+            An instance of a subclass of autokeras.engine.Adapter, which checks, 
+            converts, and batchifies a dataset
+        """
+        
         return adapters.RegressionAdapter(name=self.name)
 
     def get_analyser(self):
+        """Get the corresponding Analyser.
+
+        # Returns
+            An instance of a subclass of autokeras.engine.Analyser, which analyzes 
+            input data to inform input nodes.
+        """
+        
         return analysers.RegressionAnalyser(
             name=self.name, output_dim=self.output_dim
         )
 
     def get_hyper_preprocessors(self):
+        """Construct a list of HyperPreprocessors based on the learned information.
+
+        # Returns
+            A list of HyperPreprocessors for the corresponding data, which define 
+            the search space for a Preprocessor.
+        """
+        
         hyper_preprocessors = []
         if self._add_one_dimension:
             hyper_preprocessors.append(
                 hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
             )
+            
         return hyper_preprocessors
+
+
 
 
 class SegmentationHead(ClassificationHead):

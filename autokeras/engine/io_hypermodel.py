@@ -35,7 +35,8 @@ class IOHyperModel(block_module.Block):
         """Get the corresponding Analyser.
 
         # Returns
-            An instance of a subclass of autokeras.engine.Analyser.
+            An instance of a subclass of autokeras.engine.Analyser, which analyzes 
+            input data to inform input nodes.
         """
         raise NotImplementedError
 
@@ -43,7 +44,8 @@ class IOHyperModel(block_module.Block):
         """Get the corresponding Adapter.
 
         # Returns
-            An instance of a subclass of autokeras.engine.Adapter.
+            An instance of a subclass of autokeras.engine.Adapter, which checks, 
+            converts, and batchifies a dataset
         """
         raise NotImplementedError
 
@@ -62,7 +64,8 @@ class IOHyperModel(block_module.Block):
         """Construct a list of HyperPreprocessors based on the learned information.
 
         # Returns
-            A list of HyperPreprocessors for the corresponding data.
+            A list of HyperPreprocessors for the corresponding data, which define 
+            the search space for a Preprocessor.
         """
         raise NotImplementedError
 
