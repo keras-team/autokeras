@@ -33,7 +33,7 @@ class Preprocessor(serializable.Serializable):
         pass
 
     def transform(self, dataset):
-        """Transform the dataset wth the preprocessor.
+        """Transform the dataset with the preprocessor.
 
         # Arguments
             dataset: an instance of `tf.data.Dataset`.
