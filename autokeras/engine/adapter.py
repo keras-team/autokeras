@@ -21,7 +21,7 @@ from autokeras.utils import data_utils
 class Adapter(object):
     """Adpat the input and output format for Keras Model.
 
-    Adapter is used by the input nodes and the heads of the hypermodel. It do
+    Adapter is used by the input nodes and the heads of the hypermodel. It does
     some type checking for the data and converts it to tf.data.Dataset format.
     It also batches the dataset if it is not batched.
     """
