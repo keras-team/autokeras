@@ -197,6 +197,10 @@ class AutoModel(object):
         elif all([isinstance(output, head_module.Head) for output in self.outputs]):
             graph = self._assemble()
             self.outputs = graph.outputs
+        else:
+            raise ValueError(
+                "AutoModel outputs should all be either an autokeras.Head or autokeras ak.Node."
+            )
 
         return graph
 
