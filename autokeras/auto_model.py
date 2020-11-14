@@ -217,8 +217,10 @@ class AutoModel(object):
         validation data.
 
         # Arguments
-            x: numpy.ndarray or tensorflow.Dataset. Training data x.
+            x: numpy.ndarray or tensorflow.Dataset. Training data x. 
+                If x is a tensorflow.Dataset, each element should be an in/out pair: (input, output).
             y: numpy.ndarray or tensorflow.Dataset. Training data y.
+                If x is a tensorflow.Dataset, this should be None.
             batch_size: Int. Number of samples per gradient update. Defaults to 32.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, by default we train for a maximum of 1000 epochs,
