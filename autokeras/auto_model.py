@@ -199,7 +199,7 @@ class AutoModel(object):
             self.outputs = graph.outputs
         else:
             raise ValueError(
-                "AutoModel outputs should all be either an autokeras.Head or"\
+                "AutoModel outputs should all be either an autokeras.Head or"
                 "autokeras ak.Node."
             )
 
@@ -222,7 +222,7 @@ class AutoModel(object):
         validation data.
 
         # Arguments
-            x: numpy.ndarray or tensorflow.Dataset. Training data x. 
+            x: numpy.ndarray or tensorflow.Dataset. Training data x.
                 If x is a tensorflow.Dataset, each element should be an in/out pair:
                 (input, output).
             y: numpy.ndarray or tensorflow.Dataset. Training data y.

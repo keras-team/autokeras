@@ -55,17 +55,17 @@ class Block(named_hypermodel.NamedHyperModel):
                         name=self.name, type=type(input_node)
                     )
                 )
-                    
-            #Add this node to the graph by making this node an output of the input:
+
+            # Add this node to the graph by making this node an output of the input:
             input_node.add_out_block(self)
         self.outputs = []
-        
-        #Connect this block to the output node's inputs as well:
+
+        # Connect this block to the output node's inputs as well:
         for _ in range(self._num_output_node):
             output_node = node_module.Node()
             output_node.add_in_block(self)
             self.outputs.append(output_node)
-            
+
         return self.outputs
 
     def build(self, hp, inputs=None):

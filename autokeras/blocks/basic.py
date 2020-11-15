@@ -239,11 +239,11 @@ class ConvBlock(block_module.Block):
         dropout: Float. Between 0 and 1. The dropout rate for after the
             convolutional layers. If left unspecified, it will be tuned
             automatically.
-        padding: one of "valid", "same" (case-insensitive), or None. "valid" means 
-            no padding.  "same" results in padding evenly to the left/right or 
-            up/down of the input such that output has the same height/width dimension 
+        padding: one of "valid", "same" (case-insensitive), or None. "valid" means
+            no padding.  "same" results in padding evenly to the left/right or
+            up/down of the input such that output has the same height/width dimension
             as the input.  None means use a heuristic to choose this.
-        num_filters: The number of output filters in the convolution, or None to 
+        num_filters: The number of output filters in the convolution, or None to
             autotune.
     """
 
@@ -324,25 +324,29 @@ class ConvBlock(block_module.Block):
 
         for i in range(num_blocks):
             for j in range(num_layers):
-                
-                #Auto-choose num_filters if it is not specified:
+
+                # Auto-choose num_filters if it is not specified:
                 if self.num_filters is None:
-                    self.num_filters=hp.Choice(
+                    self.num_filters = hp.Choice(
                         "filters_{i}_{j}".format(i=i, j=j),
                         [16, 32, 64, 128, 256, 512],
                         default=32,
                     )
-                    
+
                 output_node = conv(
                     self.num_filters,
                     kernel_size,
-                    padding=self._get_padding(self.padding, kernel_size, output_node),
+                    padding=self._get_padding(
+                        self.padding, kernel_size, output_node
+                    ),
                     activation="relu",
                 )(output_node)
             if max_pooling:
                 output_node = pool(
                     kernel_size - 1,
-                    padding=self._get_padding(self.padding, kernel_size - 1, output_node),
+                    padding=self._get_padding(
+                        self.padding, kernel_size - 1, output_node
+                    ),
                 )(output_node)
             if dropout > 0:
                 output_node = layers.Dropout(dropout)(output_node)
@@ -350,14 +354,16 @@ class ConvBlock(block_module.Block):
 
     @staticmethod
     def _get_padding(padding, kernel_size, output_node):
-        '''
+        """
         Return the provided padding if it is set, or use a heuristic to choose it.
-        '''
-        
+        """
+
         if padding:
             return padding
         else:
-            if all([kernel_size * 2 <= length for length in output_node.shape[1:-1]]):
+            if all(
+                [kernel_size * 2 <= length for length in output_node.shape[1:-1]]
+            ):
                 return "valid"
             return "same"
 
