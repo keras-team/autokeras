@@ -26,6 +26,7 @@ from autokeras.blocks import ImageBlock
 from autokeras.blocks import Merge
 from autokeras.blocks import Normalization
 from autokeras.blocks import RegressionHead
+from autokeras.blocks import FlexibleRegressionHead
 from autokeras.blocks import ResNetBlock
 from autokeras.blocks import RNNBlock
 from autokeras.blocks import SpatialReduction

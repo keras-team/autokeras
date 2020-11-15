@@ -120,3 +120,15 @@ class RegressionAnalyser(TargetAnalyser):
         if len(self.shape) == 1:
             return 1
         return self.shape[1]
+    
+class FlexibleAnalyser(TargetAnalyser):
+    '''
+    This is an analyzer that goes with the flow and just allows whatever dimensions 
+    are provided by the data at this stage.
+    '''
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def finalize(self):
+        #Use whatever we have available
+        self.output_dim=self.shape

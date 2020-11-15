@@ -303,6 +303,94 @@ class RegressionHead(head_module.Head):
         return hyper_preprocessors
 
 
+class FlexibleRegressionHead(head_module.Head):
+    """Regression layers for a general output (for example an Image).
+
+    The targets passing to the head would have to be whatever is expected at the output.
+
+    # Arguments
+        loss: A Keras loss function. Defaults to use `mean_squared_error`.
+        metrics: A list of Keras metrics. Defaults to use `mean_squared_error`.
+    """
+
+    def __init__(
+        self,
+        loss: types.LossType = "mean_squared_error",
+        metrics: Optional[types.MetricsType] = None,
+        **kwargs
+    ):
+        if metrics is None:
+            metrics = ["mean_squared_error"]
+            
+        super().__init__(loss=loss, metrics=metrics, **kwargs)
+
+    def get_config(self):
+        '''
+        Adds our config to the config we inherited.
+        '''
+        config = super().get_config()
+        return config
+
+    def build(self, hp, inputs=None):
+        """
+        Builds the network.
+        
+        hp: a kerastuner.hyperparameters.HyperParameters() object specifying our hyperparameters.
+        Docs: https://github.com/keras-team/keras-tuner/blob/master/kerastuner/engine/hyperparameters.py
+        """
+        
+        inputs = nest.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        
+        #Use only the first input:
+        input_node = inputs[0]
+        
+        #Put an identity layer in place because we need to name our output so the names match later:
+        identity=tf.keras.layers.Layer(name=self.name)
+        output_node=identity(input_node)
+        
+        return output_node
+
+    def config_from_analyser(self, analyser):
+        """Load the learned information on dataset from the Analyser.
+
+        # Arguments
+            adapter: An instance of a subclass of autokeras.engine.Adapter.
+        """
+        
+        super().config_from_analyser(analyser)
+        
+    def get_adapter(self):
+        """Get the corresponding Adapter.
+
+        # Returns
+            An instance of a subclass of autokeras.engine.Adapter, which checks, 
+            converts, and batchifies a dataset
+        """
+        
+        return adapters.RegressionAdapter(name=self.name)
+
+    def get_analyser(self):
+        """Get the corresponding Analyser.
+
+        # Returns
+            An instance of a subclass of autokeras.engine.Analyser, which analyzes 
+            input data to inform input nodes.
+        """
+        
+        return analysers.FlexibleAnalyser(name=self.name)
+
+    def get_hyper_preprocessors(self):
+        """Construct a list of HyperPreprocessors based on the learned information.
+
+        # Returns
+            A list of HyperPreprocessors for the corresponding data, which define 
+            the search space for a Preprocessor.
+        """
+        
+        hyper_preprocessors = []
+            
+        return hyper_preprocessors
 
 
 class SegmentationHead(ClassificationHead):
