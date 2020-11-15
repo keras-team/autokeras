@@ -239,6 +239,10 @@ class ConvBlock(block_module.Block):
         dropout: Float. Between 0 and 1. The dropout rate for after the
             convolutional layers. If left unspecified, it will be tuned
             automatically.
+        padding: one of "valid", "same" (case-insensitive), or None. "valid" means 
+            no padding.  "same" results in padding evenly to the left/right or 
+            up/down of the input such that output has the same height/width dimension 
+            as the input.  None means use a heuristic to choose this.
     """
 
     def __init__(
@@ -249,6 +253,7 @@ class ConvBlock(block_module.Block):
         max_pooling: Optional[bool] = None,
         separable: Optional[bool] = None,
         dropout: Optional[float] = None,
+        padding: Optional[str] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -262,6 +267,7 @@ class ConvBlock(block_module.Block):
         self.max_pooling = max_pooling
         self.separable = separable
         self.dropout = dropout
+        self.padding = padding
 
     def get_config(self):
         config = super().get_config()
@@ -273,6 +279,7 @@ class ConvBlock(block_module.Block):
                 "max_pooling": self.max_pooling,
                 "separable": self.separable,
                 "dropout": self.dropout,
+                "padding": self.padding,
             }
         )
         return config
@@ -319,23 +326,30 @@ class ConvBlock(block_module.Block):
                         default=32,
                     ),
                     kernel_size,
-                    padding=self._get_padding(kernel_size, output_node),
+                    padding=self._get_padding(self.padding, kernel_size, output_node),
                     activation="relu",
                 )(output_node)
             if max_pooling:
                 output_node = pool(
                     kernel_size - 1,
-                    padding=self._get_padding(kernel_size - 1, output_node),
+                    padding=self._get_padding(self.padding, kernel_size - 1, output_node),
                 )(output_node)
             if dropout > 0:
                 output_node = layers.Dropout(dropout)(output_node)
         return output_node
 
     @staticmethod
-    def _get_padding(kernel_size, output_node):
-        if all([kernel_size * 2 <= length for length in output_node.shape[1:-1]]):
-            return "valid"
-        return "same"
+    def _get_padding(padding, kernel_size, output_node):
+        '''
+        Return the provided padding if it is set, or use a heuristic to choose it.
+        '''
+        
+        if padding:
+            return padding
+        else:
+            if all([kernel_size * 2 <= length for length in output_node.shape[1:-1]]):
+                return "valid"
+            return "same"
 
 
 class MultiHeadSelfAttention(block_module.Block):
