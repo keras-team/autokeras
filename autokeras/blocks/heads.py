@@ -230,8 +230,7 @@ class RegressionHead(head_module.Head):
         """
         Builds the network.
         
-        hp: a kerastuner.hyperparameters.HyperParameters() object specifying our hyperparameters.
-        Docs: https://github.com/keras-team/keras-tuner/blob/master/kerastuner/engine/hyperparameters.py
+        hp: a kerastuner.hyperparameters.HyperParameters() object w/ hyperparameters.
         """
         
         inputs = nest.flatten(inputs)
@@ -306,7 +305,7 @@ class RegressionHead(head_module.Head):
 class FlexibleRegressionHead(head_module.Head):
     """Regression layers for a general output (for example an Image).
 
-    The targets passing to the head would have to be whatever is expected at the output.
+    The shape of the input needs to be what is expected at the output.
 
     # Arguments
         loss: A Keras loss function. Defaults to use `mean_squared_error`.
@@ -335,8 +334,7 @@ class FlexibleRegressionHead(head_module.Head):
         """
         Builds the network.
         
-        hp: a kerastuner.hyperparameters.HyperParameters() object specifying our hyperparameters.
-        Docs: https://github.com/keras-team/keras-tuner/blob/master/kerastuner/engine/hyperparameters.py
+        hp: a kerastuner.hyperparameters.HyperParameters() object w/ hyperparameters.
         """
         
         inputs = nest.flatten(inputs)
@@ -345,7 +343,7 @@ class FlexibleRegressionHead(head_module.Head):
         #Use only the first input:
         input_node = inputs[0]
         
-        #Put an identity layer in place because we need to name our output so the names match later:
+        #Put an identity layer in place so we can name the ouptut and prevent an err:
         identity=tf.keras.layers.Layer(name=self.name)
         output_node=identity(input_node)
         

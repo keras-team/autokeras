@@ -199,7 +199,8 @@ class AutoModel(object):
             self.outputs = graph.outputs
         else:
             raise ValueError(
-                "AutoModel outputs should all be either an autokeras.Head or autokeras ak.Node."
+                "AutoModel outputs should all be either an autokeras.Head or"\
+                "autokeras ak.Node."
             )
 
         return graph
@@ -222,7 +223,8 @@ class AutoModel(object):
 
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x. 
-                If x is a tensorflow.Dataset, each element should be an in/out pair: (input, output).
+                If x is a tensorflow.Dataset, each element should be an in/out pair:
+                (input, output).
             y: numpy.ndarray or tensorflow.Dataset. Training data y.
                 If x is a tensorflow.Dataset, this should be None.
             batch_size: Int. Number of samples per gradient update. Defaults to 32.

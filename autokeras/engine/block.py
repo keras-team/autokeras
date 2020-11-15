@@ -56,7 +56,7 @@ class Block(named_hypermodel.NamedHyperModel):
                     )
                 )
                     
-            #Add this node to the graph by making this node as an output of the input:
+            #Add this node to the graph by making this node an output of the input:
             input_node.add_out_block(self)
         self.outputs = []
         
