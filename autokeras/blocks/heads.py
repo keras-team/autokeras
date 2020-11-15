@@ -343,7 +343,7 @@ class FlexibleRegressionHead(head_module.Head):
         #Use only the first input:
         input_node = inputs[0]
         
-        #Put an identity layer in place so we can name the ouptut and prevent an err:
+        #Put an identity layer in place so we can name the ouptut to prevent an err:
         identity=tf.keras.layers.Layer(name=self.name)
         output_node=identity(input_node)
         

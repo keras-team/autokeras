@@ -243,7 +243,8 @@ class ConvBlock(block_module.Block):
             no padding.  "same" results in padding evenly to the left/right or 
             up/down of the input such that output has the same height/width dimension 
             as the input.  None means use a heuristic to choose this.
-        num_filters: The number of output filters in the convolution, or None to autotune.
+        num_filters: The number of output filters in the convolution, or None to 
+            autotune.
     """
 
     def __init__(
