@@ -243,6 +243,7 @@ class ConvBlock(block_module.Block):
             no padding.  "same" results in padding evenly to the left/right or 
             up/down of the input such that output has the same height/width dimension 
             as the input.  None means use a heuristic to choose this.
+        num_filters: The number of output filters in the convolution, or None to autotune.
     """
 
     def __init__(
@@ -254,6 +255,7 @@ class ConvBlock(block_module.Block):
         separable: Optional[bool] = None,
         dropout: Optional[float] = None,
         padding: Optional[str] = None,
+        num_filters: Optional[int] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -268,6 +270,7 @@ class ConvBlock(block_module.Block):
         self.separable = separable
         self.dropout = dropout
         self.padding = padding
+        self.num_filters = num_filters
 
     def get_config(self):
         config = super().get_config()
@@ -280,6 +283,7 @@ class ConvBlock(block_module.Block):
                 "separable": self.separable,
                 "dropout": self.dropout,
                 "padding": self.padding,
+                "num_filters": self.num_filters,
             }
         )
         return config
@@ -319,12 +323,17 @@ class ConvBlock(block_module.Block):
 
         for i in range(num_blocks):
             for j in range(num_layers):
-                output_node = conv(
-                    hp.Choice(
+                
+                #Auto-choose num_filters if it is not specified:
+                if self.num_filters is None:
+                    self.num_filters=hp.Choice(
                         "filters_{i}_{j}".format(i=i, j=j),
                         [16, 32, 64, 128, 256, 512],
                         default=32,
-                    ),
+                    )
+                    
+                output_node = conv(
+                    self.num_filters,
                     kernel_size,
                     padding=self._get_padding(self.padding, kernel_size, output_node),
                     activation="relu",
