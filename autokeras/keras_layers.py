@@ -1766,22 +1766,39 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
     def build(self, input_shape):
         self.batch_size = input_shape
 
-    def call(self, sample):
-        """Applies preprocessing step to a single sample
+    def call(self, inputs):
+        """Applies preprocessing step to a batch of images and bboxes and their
+        labels.
 
         Arguments:
-          sample: A dict representing a single training sample.
+          inputs: A batch of [image, (bbox, label)].
 
         Returns:
-          image: Resized and padded image with random horizontal flipping applied.
-          bbox: Bounding boxes with the shape `(num_objects, 4)` where each box is
-            of the format `[x, y, width, height]`.
-          class_id: An tensor representing the class id of the objects, having
+          images: List of Resized and padded images with random horizontal
+            flipping applied.
+          bboxes: List of Bounding boxes with the shape `(num_objects, 4)`
+           where each box is of the format `[x, y, width, height]`.
+          class_ids: List of tensors representing the class id of the objects, having
             shape `(num_objects,)`.
         """
-        image = sample["image"]
-        bbox = self.swap_xy(sample["objects"]["bbox"])
-        class_id = tf.cast(sample["objects"]["label"], dtype=tf.int32)
+        images = []
+        bboxes = []
+        class_ids = []
+        for i in range(inputs.shape[0]):
+            image, bbox, class_id = self.data_transform(inputs[i])
+            images.append(image)
+            bboxes.append(bbox)
+            class_ids.append(class_id)
+        # check if this needs to be converted to tf.Dataset or not
+        images = tf.stack(images)
+        bboxes = tf.stack(bboxes)
+        class_ids = tf.stack(class_ids)
+        return images, bboxes, class_ids
+
+    def data_transform(self, sample):
+        image = sample[0]
+        bbox = self.swap_xy(sample[1][0])
+        class_id = tf.cast(sample[1][1], dtype=tf.int32)
 
         image, bbox = self.random_flip_horizontal(image, bbox)
         image, image_shape, _ = self.resize_and_pad_image(image)
