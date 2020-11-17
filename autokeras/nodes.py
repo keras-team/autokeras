@@ -255,6 +255,15 @@ class TimeseriesInput(StructuredDataInput):
 
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []
+        if self.column_names:
+            hyper_preprocessors.append(
+                hpps_module.DefaultHyperPreprocessor(
+                    preprocessors.CategoricalToNumericalPreprocessor(
+                        column_names=self.column_names,
+                        column_types=self.column_types,
+                    )
+                )
+            )
         hyper_preprocessors.append(
             hpps_module.DefaultHyperPreprocessor(
                 preprocessors.SlidingWindow(
