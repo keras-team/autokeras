@@ -110,8 +110,10 @@ def test_timeseries_forecaster(tmp_path):
     lookback = 2
     predict_from = 1
     predict_until = 10
-    train_x = utils.generate_data(num_instances=100, shape=(38,), dtype='dataset')
-    train_y = utils.generate_data(num_instances=80, shape=(1,), dtype='dataset')
+    train_x = utils.generate_data(num_instances=100, shape=(38,))
+    train_x = tf.data.Dataset.from_tensor_slices(train_x)
+    train_y = utils.generate_data(num_instances=80, shape=(1,))
+    train_y = tf.data.Dataset.from_tensor_slices(train_y)
     clf = ak.TimeseriesForecaster(
         lookback=lookback,
         directory=tmp_path,
