@@ -227,7 +227,8 @@ class ConvBlock(block_module.Block):
         kernel_size: Int or kerastuner.engine.hyperparameters.Choice.
             The size of the kernel.
             If left unspecified, it will be tuned automatically.
-        num_blocks: Int. The number of conv blocks, each of which may contain
+        num_blocks: Int or kerastuner.engine.hyperparameters.Choice.
+            The number of conv blocks, each of which may contain
             convolutional, max pooling, dropout, and activation. If left unspecified,
             it will be tuned automatically.
         num_layers: Int. The number of convolutional layers in each block. If left
@@ -244,7 +245,7 @@ class ConvBlock(block_module.Block):
     def __init__(
         self,
         kernel_size: Optional[Union[int, hyperparameters.Choice]] = None,
-        num_blocks: Optional[int] = None,
+        num_blocks: Optional[Union[int, hyperparameters.Choice]] = None,
         num_layers: Optional[int] = None,
         max_pooling: Optional[bool] = None,
         separable: Optional[bool] = None,
@@ -257,7 +258,11 @@ class ConvBlock(block_module.Block):
             hyperparameters.Choice("kernel_size", [3, 5, 7], default=3),
             int,
         )
-        self.num_blocks = num_blocks
+        self.num_blocks = utils.get_hyperparameter(
+            num_blocks,
+            hyperparameters.Choice("num_blocks", [1, 2, 3], default=2),
+            int,
+        )
         self.num_layers = num_layers
         self.max_pooling = max_pooling
         self.separable = separable
@@ -268,7 +273,7 @@ class ConvBlock(block_module.Block):
         config.update(
             {
                 "kernel_size": hyperparameters.serialize(self.kernel_size),
-                "num_blocks": self.num_blocks,
+                "num_blocks": hyperparameters.serialize(self.num_blocks),
                 "num_layers": self.num_layers,
                 "max_pooling": self.max_pooling,
                 "separable": self.separable,
@@ -280,6 +285,7 @@ class ConvBlock(block_module.Block):
     @classmethod
     def from_config(cls, config):
         config["kernel_size"] = hyperparameters.deserialize(config["kernel_size"])
+        config["num_blocks"] = hyperparameters.deserialize(config["num_blocks"])
         return cls(**config)
 
     def build(self, hp, inputs=None):
@@ -289,7 +295,6 @@ class ConvBlock(block_module.Block):
         output_node = input_node
 
         kernel_size = utils.add_to_hp(self.kernel_size, hp)
-        num_blocks = self.num_blocks or hp.Choice("num_blocks", [1, 2, 3], default=2)
         num_layers = self.num_layers or hp.Choice("num_layers", [1, 2], default=2)
         separable = self.separable
         if separable is None:
@@ -310,7 +315,7 @@ class ConvBlock(block_module.Block):
         else:
             dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
 
-        for i in range(num_blocks):
+        for i in range(utils.add_to_hp(self.num_blocks, hp)):
             for j in range(num_layers):
                 output_node = conv(
                     hp.Choice(
