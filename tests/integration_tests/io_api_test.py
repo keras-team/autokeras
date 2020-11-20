@@ -14,7 +14,6 @@
 
 import numpy as np
 import pandas as pd
-from tensorflow.python.keras.datasets import mnist
 
 import autokeras as ak
 from tests import utils
@@ -22,7 +21,7 @@ from tests import utils
 
 def test_io_api(tmp_path):
     num_instances = 20
-    (image_x, train_y), (test_x, test_y) = mnist.load_data()
+    image_x = utils.generate_data(num_instances=num_instances, shape=(28, 28))
     text_x = utils.generate_text_data(num_instances=num_instances)
 
     image_x = image_x[:num_instances]

@@ -35,9 +35,6 @@ class LambdaPreprocessor(preprocessor.Preprocessor):
     def transform(self, dataset):
         return dataset.map(self.func)
 
-    def get_config(self):
-        return {}
-
 
 class AddOneDimension(LambdaPreprocessor):
     """Append one dimension of size one to the dataset shape."""
@@ -49,18 +46,12 @@ class AddOneDimension(LambdaPreprocessor):
 class CastToInt32(preprocessor.Preprocessor):
     """Cast the dataset shape to tf.int32."""
 
-    def get_config(self):
-        return {}
-
     def transform(self, dataset):
         return dataset.map(lambda x: tf.cast(x, tf.int32))
 
 
 class CastToString(preprocessor.Preprocessor):
     """Cast the dataset shape to tf.string."""
-
-    def get_config(self):
-        return {}
 
     def transform(self, dataset):
         return dataset.map(data_utils.cast_to_string)
