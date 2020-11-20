@@ -17,6 +17,7 @@ import tensorflow as tf
 
 from autokeras.preprocessors import common
 from autokeras.utils import data_utils
+from tests import utils
 
 
 def test_time_series_input_transform():
@@ -48,3 +49,12 @@ def test_categorical_to_numerical_input_transform():
         assert result[0][1] != result[2][1]
         assert result[2][2] == 0
         assert result.dtype == tf.float32
+
+
+def test_cast_to_int32_return_int32():
+    dataset = utils.generate_one_hot_labels(100, 10, "dataset")
+    dataset = dataset.map(lambda x: tf.cast(x, tf.uint8))
+    dataset = common.CastToInt32().transform(dataset)
+    for data in dataset:
+        assert data.dtype == tf.int32
+        break

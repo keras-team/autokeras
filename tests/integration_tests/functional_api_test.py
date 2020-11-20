@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import pandas as pd
-from tensorflow.python.keras.datasets import mnist
 
 import autokeras as ak
 from tests import utils
@@ -68,9 +68,8 @@ def test_text_and_structured_data(tmp_path):
 
 def test_image_blocks(tmp_path):
     num_instances = 10
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    x_train = x_train[:num_instances]
-    y_train = y_train[:num_instances]
+    x_train = utils.generate_data(num_instances=num_instances, shape=(28, 28))
+    y_train = np.random.randint(0, 10, num_instances)
 
     input_node = ak.ImageInput()
     output = ak.Normalization()(input_node)

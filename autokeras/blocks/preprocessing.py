@@ -25,7 +25,9 @@ from autokeras.engine import block as block_module
 
 
 class Normalization(block_module.Block):
-    """Perform basic image transformation and augmentation.
+    """Perform feature-wise normalization on data.
+
+    Refer to Normalization layer in keras preprocessing layers for more information.
 
     # Arguments
         axis: Integer or tuple of integers, the axis or axes that should be
