@@ -123,7 +123,7 @@ class StructuredDataAnalyser(InputAnalyser):
                     "column_names must be specified, if "
                     "column_types is specified."
                 )
-            self.column_names = [index for index in range(self.shape[1])]
+            self.column_names = [str(index) for index in range(self.shape[1])]
 
         # Check if column_names has the correct length.
         if len(self.column_names) != self.shape[1]:

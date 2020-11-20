@@ -121,9 +121,7 @@ class CategoricalToNumericalPreprocessor(preprocessor.Preprocessor):
         self.layer.adapt(dataset)
 
     def transform(self, dataset):
-        for data in dataset.map(self.layer):
-            result = data
-        return result
+        return dataset.map(self.layer)
 
     def get_config(self):
         vocab = []

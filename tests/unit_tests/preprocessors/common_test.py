@@ -40,14 +40,15 @@ def test_categorical_to_numerical_input_transform():
     dataset = tf.data.Dataset.from_tensor_slices(x_train).batch(32)
 
     preprocessor.fit(tf.data.Dataset.from_tensor_slices(x_train).batch(32))
-    result = preprocessor.transform(dataset)
+    results = preprocessor.transform(dataset)
 
-    assert result[0][0] == result[2][0]
-    assert result[0][0] != result[1][0]
-    assert result[0][1] != result[1][1]
-    assert result[0][1] != result[2][1]
-    assert result[2][2] == 0
-    assert result.dtype == tf.float32
+    for result in results:
+        assert result[0][0] == result[2][0]
+        assert result[0][0] != result[1][0]
+        assert result[0][1] != result[1][1]
+        assert result[0][1] != result[2][1]
+        assert result[2][2] == 0
+        assert result.dtype == tf.float32
 
 
 def test_cast_to_int32_return_int32():

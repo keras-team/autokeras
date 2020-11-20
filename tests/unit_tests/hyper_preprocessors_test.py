@@ -52,11 +52,12 @@ def test_serialize_and_deserialize_default_hpps_categorical():
         preprocessors.CategoricalToNumericalPreprocessor,
     )
 
-    result = hyper_preprocessor.preprocessor.transform(dataset)
+    results = hyper_preprocessor.preprocessor.transform(dataset)
 
-    assert result[0][0] == result[2][0]
-    assert result[0][0] != result[1][0]
-    assert result[0][1] != result[1][1]
-    assert result[0][1] != result[2][1]
-    assert result[2][2] == 0
-    assert result.dtype == tf.float32
+    for result in results:
+        assert result[0][0] == result[2][0]
+        assert result[0][0] != result[1][0]
+        assert result[0][1] != result[1][1]
+        assert result[0][1] != result[2][1]
+        assert result[2][2] == 0
+        assert result.dtype == tf.float32
