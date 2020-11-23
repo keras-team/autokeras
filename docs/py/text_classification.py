@@ -1,6 +1,6 @@
 """shell
 pip install autokeras
-pip install git+https://github.com/keras-team/keras-tuner.git@1.0.2rc4
+pip install git+https://github.com/keras-team/keras-tuner.git
 """
 
 """
