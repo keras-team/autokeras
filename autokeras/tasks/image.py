@@ -491,7 +491,20 @@ class ImageObjectDetector(SupervisedImagePipeline):
                 the data should be (samples, width, height)
                 or (samples, width, height, channels).
             y: numpy.ndarray or tensorflow.Dataset. Training data y. They are the
-                corresponding bounding boxes of images in x. [TODO Add description of format and an example]
+                tuples of bounding boxes and their corresponding class IDs w.r.t.
+                the images in x. For example, the element_spec of a TensorFlow
+                Dataset should return below results.
+                (TensorSpec(shape=(None, None, 3), # Image shape
+                            dtype=tf.uint8,
+                            name=None),
+                 (TensorSpec(shape=(None, 4), # bbox shapes
+                             dtype=tf.float32,
+                             name=None),
+                  TensorSpec(shape=(None,), # class ID shapes
+                             dtype=tf.int32,
+                             name=None)
+                  )
+                 )
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, by default we train for a maximum of 1000 epochs,
                 but we stop training if the validation loss stops improving for 10
