@@ -16,6 +16,7 @@ from unittest import mock
 
 import autokeras as ak
 from tests import utils
+import numpy as np
 
 
 @mock.patch("autokeras.AutoModel.fit")
@@ -49,6 +50,24 @@ def test_img_seg_fit_call_auto_model_fit(fit, tmp_path):
     auto_model.fit(
         x=utils.generate_data(num_instances=100, shape=(32, 32, 3)),
         y=utils.generate_data(num_instances=100, shape=(32, 32)),
+    )
+
+    assert fit.is_called
+
+
+@mock.patch("autokeras.AutoModel.fit")
+def test_img_obj_det_fit_call_auto_model_fit(fit, tmp_path):
+    auto_model = ak.tasks.image.ImageObjectDetector(directory=tmp_path, seed=utils.SEED)
+    images = utils.generate_data(num_instances=100, shape=(32, 32, 3))
+    bboxes = utils.generate_data(num_instances=100, shape=(3, 4))
+    class_ids = utils.generate_data(num_instances=100, shape=(3,))
+    labels = np.zeros(100)
+    for i in range(100):
+        labels[i] = (bboxes[i], class_ids[i])
+
+    auto_model.fit(
+        x=images,
+        y=labels,
     )
 
     assert fit.is_called
