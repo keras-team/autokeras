@@ -153,7 +153,7 @@ class Pipeline(pps_module.Preprocessor):
             transformed.append(data)
         if len(transformed) == 1:
             return transformed[0]
-        return tuple(transformed)
+        return tf.data.Dataset.zip(tuple(transformed))
 
     def save(self, filepath):
         io_utils.save_json(filepath, self.get_config())

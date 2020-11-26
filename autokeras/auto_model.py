@@ -426,6 +426,7 @@ class AutoModel(object):
         pipeline = self.tuner.get_best_pipeline()
         model = self.tuner.get_best_model()
         dataset = pipeline.transform_x(dataset)
+        dataset = tf.data.Dataset.zip((dataset, dataset))
         y = model.predict(dataset, **kwargs)
         y = utils.predict_with_adaptive_batch_size(
             model=model, batch_size=batch_size, x=dataset, **kwargs

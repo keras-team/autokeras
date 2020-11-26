@@ -23,6 +23,16 @@ import autokeras as ak
 from tests import utils
 
 
+def get_tuner_class(*args, **kwargs):
+    pipeline = mock.Mock()
+    pipeline.transform_x.side_effect = lambda x: x
+    tuner = mock.Mock()
+    tuner.get_best_pipeline.return_value = pipeline
+    tuner_class = mock.Mock()
+    tuner_class.return_value = tuner
+    return tuner_class
+
+
 def test_auto_model_objective_is_kt_objective(tmp_path):
     auto_model = ak.AutoModel(
         ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
@@ -82,7 +92,7 @@ def get_single_io_auto_model(tmp_path):
     )
 
 
-@mock.patch("autokeras.auto_model.get_tuner_class")
+@mock.patch("autokeras.auto_model.get_tuner_class", side_effect=get_tuner_class)
 def test_auto_model_predict(tuner_fn, tmp_path):
     x_train = np.random.rand(100, 32, 32, 3)
     y_train = np.random.rand(100, 1)
@@ -221,7 +231,7 @@ def test_dataset_and_y(tuner_fn, tmp_path):
     dataset_error(x, y, val_dataset, "Expected y to be None", tmp_path)
 
 
-@mock.patch("autokeras.auto_model.get_tuner_class")
+@mock.patch("autokeras.auto_model.get_tuner_class", side_effect=get_tuner_class)
 def test_multi_input_predict(tuner_fn, tmp_path):
     auto_model = get_multi_io_auto_model(tmp_path)
     x1 = utils.generate_data()
@@ -233,7 +243,7 @@ def test_multi_input_predict(tuner_fn, tmp_path):
     auto_model.predict(dataset2)
 
 
-@mock.patch("autokeras.auto_model.get_tuner_class")
+@mock.patch("autokeras.auto_model.get_tuner_class", side_effect=get_tuner_class)
 def test_multi_input_predict2(tuner_fn, tmp_path):
     auto_model = get_multi_io_auto_model(tmp_path)
     x1 = utils.generate_data()
@@ -245,7 +255,7 @@ def test_multi_input_predict2(tuner_fn, tmp_path):
     auto_model.predict(dataset2)
 
 
-@mock.patch("autokeras.auto_model.get_tuner_class")
+@mock.patch("autokeras.auto_model.get_tuner_class", side_effect=get_tuner_class)
 def test_single_input_predict_doesnt_crash(tuner_fn, tmp_path):
     auto_model = get_single_io_auto_model(tmp_path)
     x1 = utils.generate_data()
@@ -280,7 +290,7 @@ def test_no_validation_data_nor_split_error(tmp_path):
     assert "Either validation_data or a non-zero" in str(info.value)
 
 
-@mock.patch("autokeras.auto_model.get_tuner_class")
+@mock.patch("autokeras.auto_model.get_tuner_class", side_effect=get_tuner_class)
 def test_predict_tuple_x_and_tuple_y_predict_doesnt_crash(tuner_fn, tmp_path):
     auto_model = ak.AutoModel(
         ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
