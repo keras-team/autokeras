@@ -56,3 +56,4 @@ def test_io_api(tmp_path):
         validation_split=0.2,
         batch_size=4,
     )
+    automodel.predict([image_x, text_x, structured_data_x])
