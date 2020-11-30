@@ -9,7 +9,6 @@ All the tasks and the [AutoModel](/auto_model/#automodel-class) has this
 
 """shell
 pip install autokeras
-pip install git+https://github.com/keras-team/keras-tuner.git
 """
 
 import tensorflow as tf
