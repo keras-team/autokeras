@@ -467,7 +467,7 @@ class ImageObjectDetector(SupervisedImagePipeline):
         max_model_size: Optional[int] = None,
         **kwargs
     ):
-        pass
+        pass  # pragma: no cover
 
     def fit(
         self,
@@ -527,4 +527,4 @@ class ImageObjectDetector(SupervisedImagePipeline):
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         """
-        pass
+        pass  # pragma: no cover
