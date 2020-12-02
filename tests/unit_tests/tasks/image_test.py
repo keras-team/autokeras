@@ -62,11 +62,13 @@ def test_img_obj_det_fit_call_auto_model_fit(fit, tmp_path):
         directory=tmp_path, seed=utils.SEED
     )
     images = utils.generate_data(num_instances=100, shape=(32, 32, 3))
-    bboxes = utils.generate_data(num_instances=100, shape=(3, 4))
-    class_ids = utils.generate_data(num_instances=100, shape=(3,))
+    # bboxes = utils.generate_data(num_instances=100, shape=(3, 4))
+    # class_ids = utils.generate_data(num_instances=100, shape=(3,))
     labels = np.zeros(100)
     for i in range(100):
-        labels[i] = (bboxes[i], class_ids[i])
+        bboxes = np.random.rand((3,4))
+        class_ids = np.random.rand((3,))
+        labels[i] = (bboxes, class_ids)
 
     auto_model.fit(
         x=images,
