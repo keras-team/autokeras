@@ -14,8 +14,6 @@
 
 from unittest import mock
 
-import numpy as np
-
 import autokeras as ak
 from tests import utils
 
@@ -61,14 +59,8 @@ def test_img_obj_det_fit_call_auto_model_fit(fit, tmp_path):
     auto_model = ak.tasks.image.ImageObjectDetector(
         directory=tmp_path, seed=utils.SEED
     )
-    images = utils.generate_data(num_instances=100, shape=(32, 32, 3))
-    # bboxes = utils.generate_data(num_instances=100, shape=(3, 4))
-    # class_ids = utils.generate_data(num_instances=100, shape=(3,))
-    labels = np.zeros(100)
-    for i in range(100):
-        bboxes = np.random.rand((3,4))
-        class_ids = np.random.rand((3,))
-        labels[i] = (bboxes, class_ids)
+
+    images, labels = utils.get_object_detection_data()
 
     auto_model.fit(
         x=images,
