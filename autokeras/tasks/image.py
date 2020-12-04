@@ -467,7 +467,21 @@ class ImageObjectDetector(SupervisedImagePipeline):
         max_model_size: Optional[int] = None,
         **kwargs
     ):
-        pass  # pragma: no cover
+        if tuner is None:
+            tuner = greedy.Greedy
+        super().__init__(
+            outputs=blocks.ObjectDetectionHead(
+                num_classes=num_classes, loss=loss, metrics=metrics
+            ),
+            max_trials=max_trials,
+            directory=directory,
+            project_name=project_name,
+            objective=objective,
+            tuner=tuner,
+            overwrite=overwrite,
+            seed=seed,
+            **kwargs
+        )
 
     def fit(
         self,
@@ -528,7 +542,15 @@ class ImageObjectDetector(SupervisedImagePipeline):
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         """
-        pass  # pragma: no cover
+        super().fit(
+            x=x,
+            y=y,
+            epochs=epochs,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            validation_data=validation_data,
+            **kwargs
+        )
 
     def predict(self, x, **kwargs):
         """Predict the output for a given testing data.

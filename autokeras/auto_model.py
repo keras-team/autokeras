@@ -177,6 +177,7 @@ class AutoModel(object):
         """Assemble the Blocks based on the input output nodes."""
         inputs = nest.flatten(self.inputs)
         outputs = nest.flatten(self.outputs)
+        print(outputs)
 
         middle_nodes = [input_node.get_block()(input_node) for input_node in inputs]
 
