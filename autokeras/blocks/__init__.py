@@ -24,6 +24,7 @@ from autokeras.blocks.basic import RNNBlock
 from autokeras.blocks.basic import Transformer
 from autokeras.blocks.basic import XceptionBlock
 from autokeras.blocks.heads import ClassificationHead
+from autokeras.blocks.heads import ObjectDetectionHead
 from autokeras.blocks.heads import RegressionHead
 from autokeras.blocks.heads import SegmentationHead
 from autokeras.blocks.preprocessing import CategoricalToNumerical
