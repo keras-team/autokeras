@@ -61,7 +61,7 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
         # Returns
             An instance of Pipeline.
         """
-        if self.task == 'object_detection':
+        if self.task == "object_detection":
             return Pipeline(
                 inputs=self._build_preprocessors(hp, self.inputs, dataset),
                 outputs=self._build_preprocessors(hp, self.outputs, dataset),
