@@ -155,7 +155,8 @@ class AutoModel(object):
         )
         self.overwrite = overwrite
         self._heads = [output_node.in_blocks[0] for output_node in self.outputs]
-        self.task = task
+        if blocks.ObjectDetectionHead in self._heads:
+            self.task = "object_detection"
 
     @property
     def objective(self):
@@ -177,7 +178,6 @@ class AutoModel(object):
         """Assemble the Blocks based on the input output nodes."""
         inputs = nest.flatten(self.inputs)
         outputs = nest.flatten(self.outputs)
-        print(outputs)
 
         middle_nodes = [input_node.get_block()(input_node) for input_node in inputs]
 

@@ -50,6 +50,7 @@ from autokeras.nodes import StructuredDataInput
 from autokeras.nodes import TextInput
 from autokeras.nodes import TimeseriesInput
 from autokeras.tasks import ImageClassifier
+from autokeras.tasks import ImageObjectDetector
 from autokeras.tasks import ImageRegressor
 from autokeras.tasks import StructuredDataClassifier
 from autokeras.tasks import StructuredDataRegressor
