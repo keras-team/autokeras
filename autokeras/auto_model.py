@@ -155,8 +155,10 @@ class AutoModel(object):
         )
         self.overwrite = overwrite
         self._heads = [output_node.in_blocks[0] for output_node in self.outputs]
-        if blocks.ObjectDetectionHead in self._heads:
-            self.task = "object_detection"
+        for head in self._heads:
+            if isinstance(head, blocks.ObjectDetectionHead):
+                self.task = "object_detection"
+                break
 
     @property
     def objective(self):
