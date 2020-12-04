@@ -347,7 +347,7 @@ class AutoModel(object):
         input_analysers = [node.get_analyser() for node in self.inputs]
         output_analysers = [head.get_analyser() for head in self._heads]
         analysers = input_analysers + output_analysers
-        if self.task == 'object_detection':
+        if self.task == "object_detection":
             analysers = output_analysers
             # TODO Figure out the analyser for dictionaries
             for item, analyser in zip(dataset, analysers):
@@ -378,12 +378,11 @@ class AutoModel(object):
         # TODO: Handle other types of input, zip dataset, tensor, dict.
 
         # Convert training data.
-        if self.task == 'object_detection':
+        if self.task == "object_detection":
             # This is a dict of samples
             if isinstance(x, tf.data.Dataset) and y is not None:
                 raise ValueError(
-                    "Expected y to be None when x is "
-                    "tf.data.Dataset."
+                    "Expected y to be None when x is " "tf.data.Dataset."
                 )
             dataset = x
             return dataset, validation_data
@@ -437,7 +436,7 @@ class AutoModel(object):
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        if self.task=='object_detection':
+        if self.task == "object_detection":
             dataset = x
         else:
             if isinstance(x, tf.data.Dataset) and self._has_y(x):
@@ -470,7 +469,7 @@ class AutoModel(object):
             The attribute model.metrics_names will give you the display labels for
             the scalar outputs.
         """
-        if self.task=='object_detection':
+        if self.task == "object_detection":
             dataset = x
         else:
             self._check_data_format((x, y))

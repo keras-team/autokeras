@@ -381,7 +381,7 @@ class ObjectDetectionHead(head_module.Head):
     #
     def get_analyser(self):
         return analysers.ObjectDetectionAnalyser(
-            name=self.name, num_classes = self.num_classes
+            name=self.name, num_classes=self.num_classes
         )
 
     def config_from_analyser(self, analyser):
