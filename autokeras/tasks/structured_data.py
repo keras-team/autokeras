@@ -280,7 +280,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
         validation_data=None,
         **kwargs
     ):
-        """Search for the best model and hyperparameters for the task.
+        """Search for the best model and hyperparameters for the AutoMode.
 
         # Arguments
             x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
