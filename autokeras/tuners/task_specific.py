@@ -118,7 +118,7 @@ TEXT_CLASSIFIER = [
         "classification_head_1/dropout": 0,
         "optimizer": "adam_weight_decay",
         "learning_rate": 2e-5,
-        "text_block_1/bert_block_1/max_seq_len": 512,
+        "text_block_1/bert_block_1/max_sequence_length": 512,
         "text_block_1/max_tokens": 20000,
     },
 ]

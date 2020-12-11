@@ -853,32 +853,47 @@ class BertBlock(block_module.Block):
         clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
     ```
     # Arguments
-        max_sequence_length: Int. The maximum length of a sequence that is
-            used to train the model.
+        max_sequence_length: Int or kerastuner.engine.hyperparameters.Choice.
+            The maximum length of a sequence that is used to train the model.
     """
 
     def __init__(
         self,
-        max_sequence_length: Optional[int] = None,
+        max_sequence_length: Optional[Union[int, hyperparameters.Choice]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.max_sequence_length = max_sequence_length
+        self.max_sequence_length = utils.get_hyperparameter(
+            max_sequence_length,
+            hyperparameters.Choice(
+                "max_sequence_length", [128, 256, 512], default=128
+            ),
+            int,
+        )
 
     def get_config(self):
         config = super().get_config()
-        config.update({"max_sequence_length": self.max_sequence_length})
+        config.update(
+            {
+                "max_sequence_length": hyperparameters.serialize(
+                    self.max_sequence_length
+                )
+            }
+        )
         return config
+
+    @classmethod
+    def from_config(cls, config):
+        config["max_sequence_length"] = hyperparameters.deserialize(
+            config["max_sequence_length"]
+        )
+        return cls(**config)
 
     def build(self, hp, inputs=None):
         input_tensor = nest.flatten(inputs)[0]
 
-        max_sequence_length = self.max_sequence_length or hp.Choice(
-            "max_seq_len", [128, 256, 512], default=128
-        )
-
         tokenizer_layer = keras_layers.BertTokenizer(
-            max_sequence_length=max_sequence_length
+            max_sequence_length=utils.add_to_hp(self.max_sequence_length, hp)
         )
         output_node = tokenizer_layer(input_tensor)
 
