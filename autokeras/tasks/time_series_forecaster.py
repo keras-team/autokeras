@@ -226,7 +226,7 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
     def fit(
         self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
     ):
-        """Search for the best model and hyperparameters for the task.
+        """Search for the best model and hyperparameters for the AutoModel.
 
         # Arguments
             x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
@@ -399,7 +399,7 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
     def fit(
         self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
     ):
-        """Search for the best model and hyperparameters for the task.
+        """Search for the best model and hyperparameters for the AutoModel.
 
         # Arguments
             x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
