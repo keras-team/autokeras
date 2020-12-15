@@ -110,7 +110,7 @@ def test_timeseries_forecaster(tmp_path):
     lookback = 2
     predict_from = 1
     predict_until = 10
-    train_x = utils.generate_data(num_instances=100, shape=(38,))
+    train_x = utils.generate_data_with_categorical(num_instances=100)
     train_y = utils.generate_data(num_instances=80, shape=(1,))
     clf = ak.TimeseriesForecaster(
         lookback=lookback,

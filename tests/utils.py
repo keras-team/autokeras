@@ -92,6 +92,22 @@ def generate_text_data(num_instances=100):
     )
 
 
+def generate_data_with_categorical(
+    num_instances=100, num_numerical=10, num_categorical=3, num_classes=5, dtype="np"
+):
+    categorical_data = np.random.randint(
+        num_classes, size=(num_instances, num_categorical)
+    )
+    numerical_data = np.random.rand(num_instances, num_numerical)
+    data = np.concatenate((numerical_data, categorical_data), axis=1)
+    if data.dtype == np.float64:
+        data = data.astype(np.float32)
+    if dtype == "np":
+        return data
+    if dtype == "dataset":
+        return tf.data.Dataset.from_tensor_slices(data)
+
+
 def build_graph():
     tf.keras.backend.clear_session()
     image_input = ak.ImageInput(shape=(32, 32, 3))
