@@ -11,7 +11,6 @@ The first step is to prepare your data. Here we use the MNIST dataset as an exam
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.datasets import mnist
-from tensorflow.python.keras.utils.data_utils import Sequence
 import autokeras as ak
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 print(x_train.shape)  # (60000, 28, 28)
