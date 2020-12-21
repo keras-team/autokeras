@@ -47,5 +47,5 @@ curl https://raw.githubusercontent.com/keras-team/autokeras/master/examples/mnis
 
 Run the mnist example :
 ```
-docker run -it -v "$(pwd)":/app --shm-size 2G haifengjin/autokeras python mnist.py
+docker run -it -v "$(pwd)":/app --shm-size 2G haifengjin/autokeras python /app/mnist.py
 ```
