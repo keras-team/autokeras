@@ -3,9 +3,6 @@ theme:
   favicon: '/img/favicon.png'
   logo: '/img/logo_white.svg'
   name: 'material'
-  palette:
-    primary: 'red'
-    accent: 'red'
 
 docs_dir: sources
 repo_url: https://github.com/keras-team/autokeras
@@ -24,6 +21,9 @@ markdown_extensions:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
   - admonition
+
+extra_css:
+  - stylesheets/extra.css
 
 extra_javascript:
   - https://unpkg.com/mermaid@8.4.4/dist/mermaid.min.js
