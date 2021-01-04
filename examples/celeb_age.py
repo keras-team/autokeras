@@ -27,7 +27,6 @@ import tensorflow as tf
 from google.colab import drive
 from PIL import Image
 from scipy.io import loadmat
-from tensorflow.python.keras.utils.data_utils import Sequence
 import autokeras as ak
 drive.mount("/content/drive")
 
