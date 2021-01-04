@@ -1,6 +1,6 @@
 <?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg id="logo" width="600" height="100" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g fill="#ef5350">
+<g fill="#d00000">
 <g transform="translate(-58, -40) scale(0.8)">
 <path d="M150 50 L150 174.8528137423857 L130 154.8528137423857 L130 70 "/>
 <path d="M131 69 L73.4314575050762 126.5685424949238 L73.4314575050762 154.8528137423857 L131 97.2842712474619 "/>
