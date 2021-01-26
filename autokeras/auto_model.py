@@ -180,8 +180,10 @@ class AutoModel(object):
         """Assemble the Blocks based on the input output nodes."""
         inputs = nest.flatten(self.inputs)
         outputs = nest.flatten(self.outputs)
-        print(inputs, outputs)
-        if isinstance(outputs, blocks.ObjectDetectionHead):
+        # print(inputs, outputs)
+        #[<autokeras.nodes.ImageInput object at 0x7fd3330ae940>]
+        # [<autokeras.blocks.heads.ObjectDetectionHead object at 0x7fd33f7c7a90>]
+        if isinstance(outputs, blocks.heads.ObjectDetectionHead):
             print("Object Detection Pipeline")  # TODO work after this
 
         middle_nodes = []
