@@ -186,15 +186,15 @@ class AutoModel(object):
         for output in outputs:
             if isinstance(output, blocks.ObjectDetectionHead):
                 print("Object Detection Pipeline")  # TODO work after this
-                output_node = blocks.RetinaNetBlock()
+                output_node = blocks.RetinaNetBlock()(inputs[0])
                 outputs = nest.flatten(
                     [output_blocks(output_node) for output_blocks in outputs]
                 )
                 return graph_module.Graph(inputs=inputs, outputs=outputs)
 
-
-
-        middle_nodes = [input_node.get_block()(input_node) for input_node in inputs]
+        middle_nodes = []
+        for input_node in inputs:
+            middle_nodes.append(input_node.get_block()(input_node))
 
         # Merge the middle nodes.
         if len(middle_nodes) > 1:
