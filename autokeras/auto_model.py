@@ -180,6 +180,7 @@ class AutoModel(object):
         """Assemble the Blocks based on the input output nodes."""
         inputs = nest.flatten(self.inputs)
         outputs = nest.flatten(self.outputs)
+        print(inputs, outputs)
         if isinstance(outputs, blocks.ObjectDetectionHead):
             print("Object Detection Pipeline")  # TODO work after this
 
@@ -355,6 +356,7 @@ class AutoModel(object):
         if self.task == "object_detection":
             analysers = output_analysers
             # TODO Figure out the analyser for dictionaries
+            # We don't have a dictionary now
             for item, analyser in zip(dataset, analysers):
                 print(analyser)
                 analyser.update(item)
