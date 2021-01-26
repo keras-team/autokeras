@@ -183,8 +183,16 @@ class AutoModel(object):
         # print(inputs, outputs)
         #[<autokeras.nodes.ImageInput object at 0x7fd3330ae940>]
         # [<autokeras.blocks.heads.ObjectDetectionHead object at 0x7fd33f7c7a90>]
-        if isinstance(outputs, blocks.heads.ObjectDetectionHead):
-            print("Object Detection Pipeline")  # TODO work after this
+        for output in outputs:
+            if isinstance(output, blocks.ObjectDetectionHead):
+                print("Object Detection Pipeline")  # TODO work after this
+                output_node = blocks.RetinaNetBlock()
+                outputs = nest.flatten(
+                    [output_blocks(output_node) for output_blocks in outputs]
+                )
+                return graph_module.Graph(inputs=inputs, outputs=outputs)
+
+
 
         middle_nodes = []
         for input_node in inputs:
