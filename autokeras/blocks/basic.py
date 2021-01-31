@@ -147,39 +147,63 @@ class RNNBlock(block_module.Block):
     # Arguments
         return_sequences: Boolean. Whether to return the last output in the
             output sequence, or the full sequence. Defaults to False.
-        bidirectional: Boolean. Bidirectional RNN. If left unspecified, it will be
+        bidirectional: Boolean or kerastuner.engine.hyperparameters.Boolean.
+            Bidirectional RNN. If left unspecified, it will be
             tuned automatically.
-        num_layers: Int. The number of layers in RNN. If left unspecified, it will
+        num_layers: Int or kerastuner.engine.hyperparameters.Choice.
+            The number of layers in RNN. If left unspecified, it will
             be tuned automatically.
-        layer_type: String. 'gru' or 'lstm'. If left unspecified, it will be tuned
+        layer_type: String or or kerastuner.engine.hyperparameters.Choice.
+            'gru' or 'lstm'. If left unspecified, it will be tuned
             automatically.
     """
 
     def __init__(
         self,
         return_sequences: bool = False,
-        bidirectional: Optional[bool] = None,
-        num_layers: Optional[int] = None,
-        layer_type: Optional[int] = None,
+        bidirectional: Optional[Union[bool, hyperparameters.Boolean]] = None,
+        num_layers: Optional[Union[int, hyperparameters.Choice]] = None,
+        layer_type: Optional[Union[str, hyperparameters.Choice]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.return_sequences = return_sequences
-        self.bidirectional = bidirectional
-        self.num_layers = num_layers
-        self.layer_type = layer_type
+        self.bidirectional = utils.get_hyperparameter(
+            bidirectional,
+            hyperparameters.Boolean("bidirectional", default=True),
+            bool,
+        )
+        self.num_layers = utils.get_hyperparameter(
+            num_layers,
+            hyperparameters.Choice("num_layers", [1, 2, 3], default=2),
+            int,
+        )
+        self.layer_type = utils.get_hyperparameter(
+            layer_type,
+            hyperparameters.Choice("layer_type", ["gru", "lstm"], default="lstm"),
+            str,
+        )
 
     def get_config(self):
         config = super().get_config()
         config.update(
             {
                 "return_sequences": self.return_sequences,
-                "bidirectional": self.bidirectional,
-                "num_layers": self.num_layers,
-                "layer_type": self.layer_type,
+                "bidirectional": hyperparameters.serialize(self.bidirectional),
+                "num_layers": hyperparameters.serialize(self.num_layers),
+                "layer_type": hyperparameters.serialize(self.layer_type),
             }
         )
         return config
+
+    @classmethod
+    def from_config(cls, config):
+        config["bidirectional"] = hyperparameters.deserialize(
+            config["bidirectional"]
+        )
+        config["num_layers"] = hyperparameters.deserialize(config["num_layers"])
+        config["layer_type"] = hyperparameters.deserialize(config["layer_type"])
+        return cls(**config)
 
     def build(self, hp, inputs=None):
         inputs = nest.flatten(inputs)
@@ -196,13 +220,9 @@ class RNNBlock(block_module.Block):
         feature_size = shape[-1]
         output_node = input_node
 
-        bidirectional = self.bidirectional
-        if bidirectional is None:
-            bidirectional = hp.Boolean("bidirectional", default=True)
-        layer_type = self.layer_type or hp.Choice(
-            "layer_type", ["gru", "lstm"], default="lstm"
-        )
-        num_layers = self.num_layers or hp.Choice("num_layers", [1, 2, 3], default=2)
+        bidirectional = utils.add_to_hp(self.bidirectional, hp)
+        layer_type = utils.add_to_hp(self.layer_type, hp)
+        num_layers = utils.add_to_hp(self.num_layers, hp)
         rnn_layers = {"gru": layers.GRU, "lstm": layers.LSTM}
         in_layer = rnn_layers[layer_type]
         for i in range(num_layers):
