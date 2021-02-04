@@ -192,6 +192,13 @@ class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
             tf.data.Dataset. The transformed dataset.
         """
         autotune = tf.data.experimental.AUTOTUNE
+        for item in dataset:
+            print("image: ", item[0])
+            # cv2_imshow(item[0].numpy())
+            print("bbox: ", item[1][0][:4])
+            # print(item[1][1])
+            print("labels: ", item[1][1])
+            break
         train_dataset = dataset.map(
             self.preprocess_data, num_parallel_calls=autotune
         )

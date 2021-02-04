@@ -185,7 +185,7 @@ class AutoModel(object):
         # [<autokeras.blocks.heads.ObjectDetectionHead object at 0x7fd33f7c7a90>]
         for output in outputs:
             if isinstance(output, blocks.ObjectDetectionHead):
-                print("Object Detection Pipeline")  # TODO work after this
+                print("Object Detection Pipeline")  # pipeline starts working
                 output_node = blocks.RetinaNetBlock()(inputs[0])
                 outputs = nest.flatten(
                     [output_blocks(output_node) for output_blocks in outputs]
