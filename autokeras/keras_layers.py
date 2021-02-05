@@ -1796,11 +1796,11 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
         # return images, bboxes, class_ids
         return self.data_transform(inputs)
 
-    def data_transform(self, sample):
-        print("input to data_transform: ", tf.shape(sample), tf.shape(sample[0]))
-        image = sample[0]
-        bbox = self.swap_xy(sample[1][0]) #check this function
-        class_id = tf.cast(sample[1][1], dtype=tf.int32)
+    def data_transform(self, sample_x, sample_y):
+        print("input to data_transform: ", tf.shape(sample_x), tf.shape(sample_y))
+        image = sample_x
+        bbox = self.swap_xy(sample_y[0]) #check this function
+        class_id = tf.cast(sample_y[1], dtype=tf.int32)
 
         image, bbox = self.random_flip_horizontal(image, bbox)
         image, image_shape, _ = self.resize_and_pad_image(image)
