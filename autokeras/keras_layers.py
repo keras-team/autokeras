@@ -1766,7 +1766,7 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
     def build(self, input_shape):
         self.batch_size = input_shape
 
-    def call(self, inputs):
+    def call(self, input_x, input_y):
         """Applies preprocessing step to a batch of images and bboxes and their
         labels.
 
@@ -1794,7 +1794,7 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
         # bboxes = tf.stack(bboxes)
         # class_ids = tf.stack(class_ids)
         # return images, bboxes, class_ids
-        return self.data_transform(inputs)
+        return self.data_transform(input_x, input_y)
 
     def data_transform(self, sample_x, sample_y):
         print("input to data_transform: ", tf.shape(sample_x), tf.shape(sample_y))
