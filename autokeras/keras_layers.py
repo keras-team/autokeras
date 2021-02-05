@@ -1781,19 +1781,20 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
           class_ids: List of tensors representing the class id of the objects, having
             shape `(num_objects,)`.
         """
-        images = []
-        bboxes = []
-        class_ids = []
-        for i in range(inputs.shape[0]):
-            image, bbox, class_id = self.data_transform(inputs[i])
-            images.append(image)
-            bboxes.append(bbox)
-            class_ids.append(class_id)
-        # check if this needs to be converted to tf.Dataset or not
-        images = tf.stack(images)
-        bboxes = tf.stack(bboxes)
-        class_ids = tf.stack(class_ids)
-        return images, bboxes, class_ids
+        # images = []
+        # bboxes = []
+        # class_ids = []
+        # for i in range(inputs.shape[0]):
+        #     image, bbox, class_id = self.data_transform(inputs[i])
+        #     images.append(image)
+        #     bboxes.append(bbox)
+        #     class_ids.append(class_id)
+        # # check if this needs to be converted to tf.Dataset or not
+        # images = tf.stack(images)
+        # bboxes = tf.stack(bboxes)
+        # class_ids = tf.stack(class_ids)
+        # return images, bboxes, class_ids
+        return self.data_transform(inputs)
 
     def data_transform(self, sample):
         image = sample[0]
@@ -2273,7 +2274,9 @@ class LabelEncoder:
         return label
 
     def encode_batch(self, batch_images, gt_boxes, cls_ids):
-        """Creates box and classification targets for a batch"""
+        """Creates box and classification targets for a batch
+        Not required anymore.
+        """
         images_shape = tf.shape(batch_images)
         batch_size = images_shape[0]
 
@@ -2285,6 +2288,14 @@ class LabelEncoder:
             batch_images
         )  # TODO
         return batch_images, labels.stack()
+
+    def encode_sample_func(self, image, gt_boxes, cls_ids):
+        image_shape = [0] + tf.shape(image)
+        label = self._encode_sample(image_shape, gt_boxes, cls_ids)
+        preprocessed_image = tf.keras.applications.resnet.preprocess_input(
+            image
+        )
+        return preprocessed_image, label
 
 
 class RetinaNetBoxLoss(tf.losses.Loss):
