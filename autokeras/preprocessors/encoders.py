@@ -209,6 +209,6 @@ class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
         #     drop_remainder=True
         # )
         train_dataset = train_dataset.map(
-            self.label_encoder.encode_batch, num_parallel_calls=autotune
+            self.label_encoder.encode_sample_func, num_parallel_calls=autotune
         )
         return train_dataset
