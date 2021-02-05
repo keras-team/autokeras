@@ -1798,7 +1798,7 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
 
     def data_transform(self, sample):
         image = sample[0]
-        bbox = self.swap_xy(sample[1][0])
+        bbox = self.swap_xy(sample[1][0]) #check this function
         class_id = tf.cast(sample[1][1], dtype=tf.int32)
 
         image, bbox = self.random_flip_horizontal(image, bbox)
@@ -1895,6 +1895,7 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
         Returns:
           swapped boxes with shape same as that of boxes.
         """
+        print("input to swapy_xy: ", tf.shape(boxes))
         return tf.stack(
             [boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]], axis=-1
         )
