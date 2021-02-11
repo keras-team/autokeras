@@ -38,10 +38,13 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
 
     @staticmethod
     def _build_preprocessors(hp, hpps_lists, dataset):
+        print("_build_preprocessors ", dataset.element_spec)
         sources = data_utils.unzip_dataset(dataset)
+        print("_build_preprocessors ", sources.element_spec)
         preprocessors_list = []
         for source, hpps_list in zip(sources, hpps_lists):
             data = source
+            print("inside for loop ", data.element_spec)
             preprocessors = []
             for hyper_preprocessor in hpps_list:
                 preprocessor = hyper_preprocessor.build(hp, data)
@@ -137,6 +140,7 @@ class Pipeline(pps_module.Preprocessor):
     def obj_det_transform(self, dataset):
         # sources = data_utils.unzip_dataset(dataset)
         print("HIT THE obj_det_transform")
+        print(dataset.element_spec)
         transformed = []
         pps_lists = self.outputs  # what about self.inputs?
         # for pps_list, data in zip(pps_lists, sources):
