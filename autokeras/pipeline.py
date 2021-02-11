@@ -135,12 +135,14 @@ class Pipeline(pps_module.Preprocessor):
         return tf.data.Dataset.zip((x, y))
 
     def obj_det_transform(self, dataset):
-        sources = data_utils.unzip_dataset(dataset)
+        # sources = data_utils.unzip_dataset(dataset)
+        print("HIT THE obj_det_transform")
         transformed = []
         pps_lists = self.outputs  # what about self.inputs?
-        for pps_list, data in zip(pps_lists, sources):
+        # for pps_list, data in zip(pps_lists, sources):
+        for pps_list in pps_lists:
             for preprocessor in pps_list:
-                data = preprocessor.transform(data)
+                data = preprocessor.transform(dataset)
             transformed.append(data)
         if len(transformed) == 1:
             return transformed[0]

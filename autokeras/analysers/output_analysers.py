@@ -138,7 +138,7 @@ class ObjectDetectionAnalyser(TargetAnalyser):
         #     self.shape = data['image'].shape
         # if self.batch_size is None:
         #     self.batch_size = data['image'].shape.as_list()[0]
-        self.num_samples += len(data) / 4
+        self.num_samples += len(data) / 4 # Check if this is correct
 
     def finalize(self):
         pass
