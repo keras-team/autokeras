@@ -41,8 +41,8 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
         print("_build_preprocessors ", dataset.element_spec)
         sources = data_utils.unzip_dataset(dataset)
         # print("_build_preprocessors ", sources.element_spec)
-        for i in range(4):
-            print("build ", sources[i].shape)
+        for i in range(min(3, len(sources))):
+            print("build ", sources[i].element_spec)
 
         preprocessors_list = []
         for source, hpps_list in zip(sources, hpps_lists):
