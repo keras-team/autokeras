@@ -281,7 +281,7 @@ class AutoModel(object):
         )
         # if not self.task == 'object_detection':
         self._analyze_data(dataset)
-        self._build_hyper_pipeline(dataset)
+        self._build_hyper_pipeline(dataset) # check how this works
 
         # Split the data with validation_split.
         if validation_data is None and validation_split:
@@ -396,12 +396,12 @@ class AutoModel(object):
 
         # Convert training data.
         if self.task == "object_detection":
-            # This is a dict of samples
             if isinstance(x, tf.data.Dataset) and y is not None:
                 raise ValueError(
                     "Expected y to be None when x is " "tf.data.Dataset."
                 )
             dataset = x
+            # dataset = self._adapt(x, self._heads, batch_size)
             return dataset, validation_data
 
         self._check_data_format((x, y))
