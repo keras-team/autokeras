@@ -85,7 +85,7 @@ class StructuredDataAnalyser(InputAnalyser):
             self.num_col = len(x)
             self.count_numerical = np.zeros(self.num_col)
             self.count_categorical = np.zeros(self.num_col)
-            for i in range(len(x)):
+            for _ in range(len(x)):
                 self.count_unique_numerical.append({})
         for i in range(self.num_col):
             x[i] = x[i].decode("utf-8")
