@@ -59,7 +59,8 @@ class Merge(block_module.Block):
             return inputs
 
         if not all(
-            shape_compatible(input_node.shape, inputs[0].shape) for input_node in inputs
+            shape_compatible(input_node.shape, inputs[0].shape)
+            for input_node in inputs
         ):
             inputs = [Flatten().build(hp, input_node) for input_node in inputs]
 
