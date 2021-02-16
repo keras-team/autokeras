@@ -375,7 +375,7 @@ class ConvBlock(block_module.Block):
 
     @staticmethod
     def _get_padding(kernel_size, output_node):
-        if all([kernel_size * 2 <= length for length in output_node.shape[1:-1]]):
+        if all(kernel_size * 2 <= length for length in output_node.shape[1:-1]):
             return "valid"
         return "same"
 
@@ -441,8 +441,7 @@ class MultiHeadSelfAttention(block_module.Block):
         concat_attention = tf.reshape(
             attention, (batch_size, tf.shape(attention)[1], self.head_size)
         )  # (batch_size, seq_len, head_size)
-        output = combine_heads(concat_attention)  # (batch_size, seq_len, head_size)
-        return output
+        return combine_heads(concat_attention)  # (batch_size, seq_len, head_size)
 
     @staticmethod
     def attention(query, key, value):
@@ -597,8 +596,7 @@ class Transformer(block_module.Block):
         ffn_output = ffn(out1)
         ffn_output = dropout2(ffn_output)
         add_inputs_2 = tf.keras.layers.Add()([out1, ffn_output])
-        output = layernorm2(add_inputs_2)
-        return output
+        return layernorm2(add_inputs_2)
 
     @staticmethod
     def pos_array_funct(maxlen, batch_size):

@@ -192,7 +192,7 @@ class ImageAugmentation(block_module.Block):
         translation_factor = self.translation_factor
         if translation_factor is None:
             translation_factor = hp.Choice("translation_factor", [0.0, 0.1])
-        if translation_factor != 0 and translation_factor != (0, 0):
+        if translation_factor not in [0, (0, 0)]:
             height_factor, width_factor = self._get_fraction_value(
                 translation_factor
             )
@@ -211,9 +211,9 @@ class ImageAugmentation(block_module.Block):
             flip_mode = ""
         elif horizontal_flip and vertical_flip:
             flip_mode = "horizontal_and_vertical"
-        elif horizontal_flip and not vertical_flip:
+        elif horizontal_flip:
             flip_mode = "horizontal"
-        elif not horizontal_flip and vertical_flip:
+        else:
             flip_mode = "vertical"
         if flip_mode != "":
             output_node = preprocessing.RandomFlip(mode=flip_mode)(output_node)
@@ -229,7 +229,7 @@ class ImageAugmentation(block_module.Block):
         zoom_factor = self.zoom_factor
         if zoom_factor is None:
             zoom_factor = hp.Choice("zoom_factor", [0.0, 0.1])
-        if zoom_factor != 0 and zoom_factor != (0, 0):
+        if zoom_factor not in [0, (0, 0)]:
             height_factor, width_factor = self._get_fraction_value(zoom_factor)
             # TODO: Add back RandomZoom when it is ready.
             # output_node = preprocessing.RandomZoom(
@@ -239,7 +239,7 @@ class ImageAugmentation(block_module.Block):
         contrast_factor = self.contrast_factor
         if contrast_factor is None:
             contrast_factor = hp.Choice("contrast_factor", [0.0, 0.1])
-        if contrast_factor != 0 and contrast_factor != (0, 0):
+        if contrast_factor not in [0, (0, 0)]:
             output_node = preprocessing.RandomContrast(contrast_factor)(output_node)
 
         return output_node

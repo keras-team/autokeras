@@ -81,10 +81,8 @@ class ClassificationAnalyser(TargetAnalyser):
     def get_expected_shape(self):
         # Compute expected shape from num_classes.
         if self.num_classes == 2 and not self.multi_label:
-            expected = [1]
-        else:
-            expected = [self.num_classes]
-        return expected
+            return [1]
+        return [self.num_classes]
 
     @property
     def encoded(self):
@@ -92,7 +90,7 @@ class ClassificationAnalyser(TargetAnalyser):
 
     @property
     def encoded_for_sigmoid(self):
-        if not len(self.labels) == 2:
+        if len(self.labels) != 2:
             return False
         return sorted(self.labels) == [0, 1]
 
