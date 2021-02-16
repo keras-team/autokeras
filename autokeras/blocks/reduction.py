@@ -59,8 +59,7 @@ class Merge(block_module.Block):
             return inputs
 
         if not all(
-                shape_compatible(input_node.shape, inputs[0].shape)
-                for input_node in inputs
+            shape_compatible(input_node.shape, inputs[0].shape) for input_node in inputs
         ):
             inputs = [Flatten().build(hp, input_node) for input_node in inputs]
 
@@ -124,9 +123,7 @@ class Reduction(block_module.Block):
         if self.reduction_type is not None:
             return self._build_block(hp, output_node, self.reduction_type)
 
-        reduction_type = hp.Choice(
-            REDUCTION_TYPE, [FLATTEN, GLOBAL_MAX, GLOBAL_AVG]
-        )
+        reduction_type = hp.Choice(REDUCTION_TYPE, [FLATTEN, GLOBAL_MAX, GLOBAL_AVG])
         with hp.conditional_scope(REDUCTION_TYPE, [reduction_type]):
             return self._build_block(hp, output_node, reduction_type)
 
