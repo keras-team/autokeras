@@ -508,7 +508,7 @@ class Transformer(block_module.Block):
         embedding_dim: Optional[int] = None,
         num_heads: Optional[int] = None,
         dense_dim: Optional[int] = None,
-        dropout: Optional[int] = None,
+        dropout: Optional[float] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -557,7 +557,7 @@ class Transformer(block_module.Block):
         dense_dim = self.dense_dim or hp.Choice(
             "dense_dim", [128, 256, 512, 1024, 2048], default=2048
         )
-        dropout = self.dropout or hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
+        dropout = self.dropout or hp.Choice("dropout", [0.0, 0.25, 0.5], default=0.0)
 
         ffn = tf.keras.Sequential(
             [
@@ -784,52 +784,79 @@ class Embedding(block_module.Block):
     # Arguments
         max_features: Int. Size of the vocabulary. Must be set if not using
             TextToIntSequence before this block. Defaults to 20001.
-        pretraining: String. 'random' (use random weights instead any pretrained
+        pretraining: String or kerastuner.engine.hyperparameters.Choice.
+            'random' (use random weights instead any pretrained
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
-        embedding_dim: Int. If left unspecified, it will be tuned automatically.
-        dropout: Float. The dropout rate for after the Embedding layer.
+        embedding_dim: Int or kerastuner.engine.hyperparameters.Choice.
+            If left unspecified, it will be tuned automatically.
+        dropout: Float or kerastuner.engine.hyperparameters.Choice.
+            The dropout rate for after the Embedding layer.
             If left unspecified, it will be tuned automatically.
     """
 
     def __init__(
         self,
         max_features: int = 20001,
-        pretraining: Optional[str] = None,
-        embedding_dim: Optional[int] = None,
-        dropout: Optional[float] = None,
+        pretraining: Optional[Union[str, hyperparameters.Choice]] = None,
+        embedding_dim: Optional[Union[int, hyperparameters.Choice]] = None,
+        dropout: Optional[Union[float, hyperparameters.Choice]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.max_features = max_features
-        self.pretraining = pretraining
-        self.embedding_dim = embedding_dim
-        self.dropout = dropout
+        self.pretraining = utils.get_hyperparameter(
+            pretraining,
+            hyperparameters.Choice(
+                "pretraining",
+                ["random", "glove", "fasttext", "word2vec", "none"],
+                default="none",
+            ),
+            str,
+        )
+        self.embedding_dim = utils.get_hyperparameter(
+            embedding_dim,
+            hyperparameters.Choice(
+                "embedding_dim", [32, 64, 128, 256, 512], default=128
+            ),
+            int,
+        )
+        self.dropout = utils.get_hyperparameter(
+            dropout,
+            hyperparameters.Choice("dropout", [0.0, 0.25, 0.5], default=0.25),
+            float,
+        )
 
     def get_config(self):
         config = super().get_config()
         config.update(
             {
                 "max_features": self.max_features,
-                "pretraining": self.pretraining,
-                "embedding_dim": self.embedding_dim,
-                "dropout": self.dropout,
+                "pretraining": hyperparameters.serialize(self.pretraining),
+                "embedding_dim": hyperparameters.serialize(self.embedding_dim),
+                "dropout": hyperparameters.serialize(self.dropout),
             }
         )
         return config
+
+    @classmethod
+    def from_config(cls, config):
+        config["pretraining"] = hyperparameters.deserialize(config["pretraining"])
+        config["embedding_dim"] = hyperparameters.deserialize(
+            config["embedding_dim"]
+        )
+        config["dropout"] = hyperparameters.deserialize(config["dropout"])
+        return cls(**config)
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         # TODO: support more pretrained embedding layers.
         # glove, fasttext, and word2vec
-        pretraining = self.pretraining or hp.Choice(
-            "pretraining",
-            ["random", "glove", "fasttext", "word2vec", "none"],
-            default="none",
-        )
-        embedding_dim = self.embedding_dim or hp.Choice(
-            "embedding_dim", [32, 64, 128, 256, 512], default=128
-        )
+
+        pretraining = utils.add_to_hp(self.pretraining, hp)
+
+        embedding_dim = utils.add_to_hp(self.embedding_dim, hp)
+
         if pretraining != "none":
             # TODO: load from pretrained weights
             layer = layers.Embedding(
@@ -846,10 +873,7 @@ class Embedding(block_module.Block):
             # input_length=input_node.shape[1],
             # trainable=True)
         output_node = layer(input_node)
-        if self.dropout is not None:
-            dropout = self.dropout
-        else:
-            dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0.25)
+        dropout = utils.add_to_hp(self.dropout, hp)
         if dropout > 0:
             output_node = layers.Dropout(dropout)(output_node)
         return output_node
