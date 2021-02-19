@@ -1744,7 +1744,7 @@ def _is_punctuation(char):
 
 # @tf.keras.utils.register_keras_serializable()
 # class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):  # TODO Because this is a layer, input must be in batched
-class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
+class ObjectDetectionPreProcessing:
     """Vectorization and Encoding the sentences using BERT vocabulary.
 
     # Arguments
