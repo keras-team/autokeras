@@ -193,7 +193,7 @@ class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
         """
         autotune = tf.data.experimental.AUTOTUNE
         for item in dataset:
-            print("received item shape: ", tf.shape(item))
+            print("image shape: ", tf.shape(item[0]))
             print("image: ", item[0])
             # cv2_imshow(item[0].numpy())
             print("bbox: ", item[1][0])
