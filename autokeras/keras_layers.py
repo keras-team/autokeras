@@ -1794,6 +1794,7 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
         # bboxes = tf.stack(bboxes)
         # class_ids = tf.stack(class_ids)
         # return images, bboxes, class_ids
+        print("input to call: ", tf.shape(input_x), tf.shape(input_y[0]), tf.shape(input_y[1]))
         return self.data_transform(input_x, input_y)
 
     def data_transform(self, sample_x, sample_y):
