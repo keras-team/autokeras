@@ -201,7 +201,7 @@ class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
             print("labels: ", item[1][1])
             break
         train_dataset = dataset.map(
-            self.preprocess_data, num_parallel_calls=autotune
+            self.preprocess_data.data_transform, num_parallel_calls=autotune
         )
         # train_dataset = train_dataset.shuffle(8 * batch_size)
         # train_dataset = train_dataset.padded_batch(
