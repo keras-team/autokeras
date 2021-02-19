@@ -1920,25 +1920,6 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
             axis=-1,
         )
 
-    def convert_to_corners(self, boxes):
-        """Changes the box format to corner coordinates
-
-        Arguments:
-          boxes: A tensor of rank 2 or higher with a shape of `(..., num_boxes, 4)`
-            representing bounding boxes where each box is of the format
-            `[x, y, width, height]`.
-
-        Returns:
-          converted boxes with shape same as that of boxes.
-        """
-        return tf.concat(
-            [
-                boxes[..., :2] - boxes[..., 2:] / 2.0,
-                boxes[..., :2] + boxes[..., 2:] / 2.0,
-            ],
-            axis=-1,
-        )
-
 
 class FeaturePyramid(tf.keras.layers.Layer):
     """Builds the Feature Pyramid with the feature maps from the backbone.
@@ -2243,6 +2224,25 @@ class LabelEncoder:
             boxes1_area[:, None] + boxes2_area - intersection_area, 1e-8
         )
         return tf.clip_by_value(intersection_area / union_area, 0.0, 1.0)
+
+    def convert_to_corners(self, boxes):
+        """Changes the box format to corner coordinates
+
+        Arguments:
+          boxes: A tensor of rank 2 or higher with a shape of `(..., num_boxes, 4)`
+            representing bounding boxes where each box is of the format
+            `[x, y, width, height]`.
+
+        Returns:
+          converted boxes with shape same as that of boxes.
+        """
+        return tf.concat(
+            [
+                boxes[..., :2] - boxes[..., 2:] / 2.0,
+                boxes[..., :2] + boxes[..., 2:] / 2.0,
+            ],
+            axis=-1,
+        )
 
     def _compute_box_target(self, anchor_boxes, matched_gt_boxes):
         """Transforms the ground truth boxes into targets for training"""
