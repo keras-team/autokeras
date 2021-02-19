@@ -209,6 +209,7 @@ class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
         #     adding_values=(0.0, 1e-8, -1),
         #     drop_remainder=True
         # )
+        print("after preprocessing: ", train_dataset.element_spec)
         train_dataset = train_dataset.map(
             self.label_encoder.encode_sample_func, num_parallel_calls=autotune
         )
