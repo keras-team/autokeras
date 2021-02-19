@@ -1797,7 +1797,7 @@ class ObjectDetectionPreProcessing(preprocessing.PreprocessingLayer):
         return self.data_transform(input_x, input_y)
 
     def data_transform(self, sample_x, sample_y):
-        print("input to data_transform: ", tf.shape(sample_x), tf.shape(sample_y))
+        print("input to data_transform: ", tf.shape(sample_x), tf.shape(sample_y[0]), tf.shape(sample_y[1]))
         image = sample_x
         bbox = self.swap_xy(sample_y[0]) #check this function
         class_id = tf.cast(sample_y[1], dtype=tf.int32)
