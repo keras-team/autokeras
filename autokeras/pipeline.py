@@ -38,16 +38,31 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
 
     @staticmethod
     def _build_preprocessors(hp, hpps_lists, dataset):
-        print("_build_preprocessors ", dataset.element_spec)
-        sources = data_utils.unzip_dataset(dataset)
+        sources = data_utils.unzip_dataset(dataset) ## SOURCE of ERROR TODO: Another function
         # print("_build_preprocessors ", sources.element_spec)
-        for i in range(min(3, len(sources))):
-            print("build ", sources[i].element_spec)
+        # for i in range(min(3, len(sources))): TODO: Delete this
+        #     print("build ", sources[i].element_spec)
 
         preprocessors_list = []
         for source, hpps_list in zip(sources, hpps_lists):
             data = source
-            print("inside for loop ", data.element_spec)
+            preprocessors = []
+            for hyper_preprocessor in hpps_list:
+                preprocessor = hyper_preprocessor.build(hp, data)
+                preprocessor.fit(data)
+                data = preprocessor.transform(data)
+                preprocessors.append(preprocessor)
+            preprocessors_list.append(preprocessors)
+        return preprocessors_list
+
+    @staticmethod
+    def _build_preprocessors_obj_det(hp, hpps_lists, dataset):
+        print("_build_preprocessors_obj_det ", dataset.element_spec)
+        preprocessors_list = []
+        # for source, hpps_list in zip(sources, hpps_lists):
+        for hpps_list in hpps_lists:
+            data = dataset
+            print("inside for loop ", data.element_spec, hpps_list)
             preprocessors = []
             for hyper_preprocessor in hpps_list:
                 preprocessor = hyper_preprocessor.build(hp, data)
@@ -69,8 +84,8 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
         """
         if self.task == "object_detection":
             return Pipeline(
-                inputs=self._build_preprocessors(hp, self.inputs, dataset),
-                outputs=self._build_preprocessors(hp, self.outputs, dataset),
+                inputs=self._build_preprocessors_obj_det(hp, self.inputs, dataset),
+                outputs=self._build_preprocessors_obj_det(hp, self.outputs, dataset),
                 task=self.task,
             )
         x = dataset.map(lambda x, y: x)
