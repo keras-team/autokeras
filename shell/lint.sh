@@ -1,14 +1,14 @@
-isort --sl -c autokeras tests benchmark
+isort --sl -c .
 if ! [ $? -eq 0 ]
 then
     exit 1
 fi
-flake8 autokeras tests benchmark
+flake8 .
 if ! [ $? -eq 0 ]
 then
     exit 1
 fi
-black --check --line-length 85 autokeras tests benchmark
+black --check --line-length 85 .
 if ! [ $? -eq 0 ]
 then
     exit 1

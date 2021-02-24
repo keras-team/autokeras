@@ -1,5 +1,5 @@
-isort --sl autokeras tests benchmark
-black --line-length 85 autokeras tests benchmark
+isort --sl .
+black --line-length 85 .
 
 for i in $(find autokeras tests benchmark -name '*.py') # or whatever other pattern...
 do
@@ -10,4 +10,4 @@ do
   fi
 done
 
-flake8 autokeras tests benchmark
+flake8 .
