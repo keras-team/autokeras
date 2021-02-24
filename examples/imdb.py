@@ -14,8 +14,8 @@ def imdb_raw():
     index_offset = 3  # word index offset
 
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.imdb.load_data(
-        num_words=max_features,
-        index_from=index_offset)
+        num_words=max_features, index_from=index_offset
+    )
     x_train = x_train
     y_train = y_train.reshape(-1, 1)
     x_test = x_test
@@ -28,10 +28,12 @@ def imdb_raw():
     word_to_id["<UNK>"] = 2
 
     id_to_word = {value: key for key, value in word_to_id.items()}
-    x_train = list(map(lambda sentence: ' '.join(
-        id_to_word[i] for i in sentence), x_train))
-    x_test = list(map(lambda sentence: ' '.join(
-        id_to_word[i] for i in sentence), x_test))
+    x_train = list(
+        map(lambda sentence: " ".join(id_to_word[i] for i in sentence), x_train)
+    )
+    x_test = list(
+        map(lambda sentence: " ".join(id_to_word[i] for i in sentence), x_test)
+    )
     x_train = np.array(x_train, dtype=np.str)
     x_test = np.array(x_test, dtype=np.str)
     return (x_train, y_train), (x_test, y_test)
@@ -48,4 +50,4 @@ clf = ak.TextClassifier(max_trials=3)
 # Search for the best model.
 clf.fit(x_train, y_train, epochs=2)
 # Evaluate on the testing data.
-print('Accuracy: {accuracy}'.format(accuracy=clf.evaluate(x_test, y_test)))
+print("Accuracy: {accuracy}".format(accuracy=clf.evaluate(x_test, y_test)))
