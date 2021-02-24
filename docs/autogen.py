@@ -109,8 +109,8 @@ autokeras_dir = pathlib.Path(__file__).resolve().parents[1]
 
 
 def py_to_nb_md(dest_dir):
+    dir_path = "py"
     for file_path in os.listdir("py/"):
-        dir_path = "py"
         file_name = file_path
         py_path = os.path.join(dir_path, file_path)
         file_name_no_ext = os.path.splitext(file_name)[0]
