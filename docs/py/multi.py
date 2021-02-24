@@ -2,20 +2,31 @@
 pip install autokeras
 """
 
+import numpy as np
+
+import autokeras as ak
+
 """
-In this tutorial we are making use of the 
+In this tutorial we are making use of the
 [AutoModel](/auto_model/#automodel-class)
  API to show how to handle multi-modal data and multi-task.
 
 ## What is multi-modal?
 
-Multi-modal data means each data instance has multiple forms of information. For example, a photo can be saved as a image. Besides the image, it may also have when and where it was taken as its attributes, which can be represented as structured data. 
+Multi-modal data means each data instance has multiple forms of information.
+For example, a photo can be saved as a image. Besides the image, it may also
+have when and where it was taken as its attributes, which can be represented as
+structured data.
 
 ## What is multi-task?
 
-Multi-task here we refer to we want to predict multiple targets with the same input features. For example, we not only want to classify an image according to its content, but we also want to regress its quality as a float number between 0 and 1.
+Multi-task here we refer to we want to predict multiple targets with the same
+input features. For example, we not only want to classify an image according to
+its content, but we also want to regress its quality as a float number between
+0 and 1.
 
-The following diagram shows an example of multi-modal and multi-task neural network model.
+The following diagram shows an example of multi-modal and multi-task neural
+network model.
 
 <div class="mermaid">
 graph TD
@@ -25,14 +36,16 @@ graph TD
     id3 --> id5(RegressionHead)
 </div>
 
-It has two inputs the images and the structured data. Each image is associated with a set of attributes in the structured data. From these data, we are trying to predict the classification label and the regression value at the same time.
+It has two inputs the images and the structured data. Each image is associated
+with a set of attributes in the structured data. From these data, we are trying
+to predict the classification label and the regression value at the same time.
 
 ## Data Preparation
 
-To illustrate our idea, we generate some random image and structured data as the multi-modal data.
+To illustrate our idea, we generate some random image and structured data as
+the multi-modal data.
 """
 
-import numpy as np
 
 num_instances = 100
 # Generate image data.
@@ -51,31 +64,34 @@ classification_target = np.random.randint(5, size=num_instances)
 
 """
 ## Build and Train the Model
-Then we initialize the multi-modal and multi-task model with 
+Then we initialize the multi-modal and multi-task model with
 [AutoModel](/auto_model/#automodel-class).
 Since this is just a demo, we use small amount of `max_trials` and `epochs`.
 """
 
-import autokeras as ak
+
 # Initialize the multi with multiple inputs and outputs.
 model = ak.AutoModel(
     inputs=[ak.ImageInput(), ak.StructuredDataInput()],
     outputs=[
-        ak.RegressionHead(metrics=['mae']),
-        ak.ClassificationHead(loss='categorical_crossentropy', metrics=['accuracy'])
+        ak.RegressionHead(metrics=["mae"]),
+        ak.ClassificationHead(loss="categorical_crossentropy", metrics=["accuracy"]),
     ],
     overwrite=True,
-    max_trials=2)
+    max_trials=2,
+)
 # Fit the model with prepared data.
 model.fit(
     [image_data, structured_data],
     [regression_target, classification_target],
-    epochs=3)
+    epochs=3,
+)
 
 """
 ## Validation Data
 By default, AutoKeras use the last 20% of training data as validation data.
-As shown in the example below, you can use `validation_split` to specify the percentage.
+As shown in the example below, you can use `validation_split` to specify the
+percentage.
 """
 
 model.fit(
@@ -83,7 +99,8 @@ model.fit(
     [regression_target, classification_target],
     # Split the training data and use the last 15% as validation data.
     validation_split=0.15,
-    epochs=2)
+    epochs=2,
+)
 
 """
 You can also use your own validation set
@@ -108,8 +125,10 @@ model.fit(
     # Use your own validation set.
     validation_data=(
         [image_val, structured_val],
-        [regression_val, classification_val]),
-    epochs=2)
+        [regression_val, classification_val],
+    ),
+    epochs=2,
+)
 
 """
 ## Customized Search Space
@@ -133,13 +152,11 @@ graph LR
 </div>
 """
 
-import autokeras as ak
-
 input_node1 = ak.ImageInput()
 output_node = ak.Normalization()(input_node1)
 output_node = ak.ImageAugmentation()(output_node)
 output_node1 = ak.ConvBlock()(output_node)
-output_node2 = ak.ResNetBlock(version='v2')(output_node)
+output_node2 = ak.ResNetBlock(version="v2")(output_node)
 output_node1 = ak.Merge()([output_node1, output_node2])
 
 input_node2 = ak.StructuredDataInput()
@@ -151,10 +168,11 @@ output_node1 = ak.ClassificationHead()(output_node)
 output_node2 = ak.RegressionHead()(output_node)
 
 auto_model = ak.AutoModel(
-    inputs=[input_node1, input_node2], 
+    inputs=[input_node1, input_node2],
     outputs=[output_node1, output_node2],
     overwrite=True,
-    max_trials=2)
+    max_trials=2,
+)
 
 image_data = np.random.rand(num_instances, 32, 32, 3).astype(np.float32)
 structured_data = np.random.rand(num_instances, 20).astype(np.float32)
@@ -165,7 +183,8 @@ auto_model.fit(
     [image_data, structured_data],
     [classification_target, regression_target],
     batch_size=32,
-    epochs=3)
+    epochs=3,
+)
 
 """
 ## Data Format
@@ -179,8 +198,8 @@ for the format of different types of data.
 You can also refer to the Data Format section of the tutorials of
 [Image Classification](/tutorial/image_classification/#data-format),
 [Text Classification](/tutorial/text_classification/#data-format),
-[Structured Data Classification](/tutorial/structured_data_classification/#data-format).
-
+[Structured Data Classification](
+/tutorial/structured_data_classification/#data-format).
 
 ## Reference
 [AutoModel](/auto_model/#automodel-class),
