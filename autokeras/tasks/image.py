@@ -529,3 +529,30 @@ class ImageObjectDetector(SupervisedImagePipeline):
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         """
         pass  # pragma: no cover
+
+    def predict(
+        self,
+        x,
+        **kwargs
+    ):
+        """Predict the output for a given testing data.
+
+        # Arguments
+            x: numpy.ndarray or tensorflow.Dataset. Testing data x. The shape of
+                the data should be (samples, width, height) or (samples, width,
+                height, channels).
+            **kwargs: Any arguments supported by keras.Model.predict.
+
+        # Returns
+            'nmsed_boxes': A [batch_size, max_detections, 4] float32 tensor
+              containing the non-max suppressed boxes.
+            'nmsed_scores': A [batch_size, max_detections] float32 tensor containing
+              the scores for the boxes.
+            'nmsed_classes': A [batch_size, max_detections] float32 tensor
+              containing the class for boxes.
+            'valid_detections': A [batch_size] int32 tensor indicating the number of
+              valid detections per batch item. Only the top valid_detections[i] entries
+              in nms_boxes[i], nms_scores[i] and nms_class[i] are valid. The rest of the
+              entries are zero paddings.
+        """
+        pass  # pragma: no cover
