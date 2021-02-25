@@ -530,11 +530,7 @@ class ImageObjectDetector(SupervisedImagePipeline):
         """
         pass  # pragma: no cover
 
-    def predict(
-        self,
-        x,
-        **kwargs
-    ):
+    def predict(self, x, **kwargs):
         """Predict the output for a given testing data.
 
         # Arguments
@@ -551,8 +547,8 @@ class ImageObjectDetector(SupervisedImagePipeline):
             'nmsed_classes': A [batch_size, max_detections] float32 tensor
               containing the class for boxes.
             'valid_detections': A [batch_size] int32 tensor indicating the number of
-              valid detections per batch item. Only the top valid_detections[i] entries
-              in nms_boxes[i], nms_scores[i] and nms_class[i] are valid. The rest of the
-              entries are zero paddings.
+              valid detections per batch item. Only the top valid_detections[i]
+              entries in nms_boxes[i], nms_scores[i] and nms_class[i] are valid. The
+              rest of the entries are zero paddings.
         """
         pass  # pragma: no cover
