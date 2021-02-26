@@ -147,7 +147,7 @@ class GreedyOracle(kerastuner.Oracle):
                 "values": values,
             }
 
-        for i in range(self._max_collisions):
+        for _ in range(self._max_collisions):
             hp_names = self._select_hps()
             values = self._generate_hp_values(hp_names)
             # Reached max collisions.
