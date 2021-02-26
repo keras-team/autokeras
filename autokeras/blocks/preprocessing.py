@@ -211,9 +211,9 @@ class ImageAugmentation(block_module.Block):
             flip_mode = ""
         elif horizontal_flip and vertical_flip:
             flip_mode = "horizontal_and_vertical"
-        elif horizontal_flip:
+        elif horizontal_flip and not vertical_flip:
             flip_mode = "horizontal"
-        else:
+        elif not horizontal_flip and vertical_flip:
             flip_mode = "vertical"
         if flip_mode != "":
             output_node = preprocessing.RandomFlip(mode=flip_mode)(output_node)
