@@ -540,15 +540,14 @@ class ImageObjectDetector(SupervisedImagePipeline):
             **kwargs: Any arguments supported by keras.Model.predict.
 
         # Returns
-            'nmsed_boxes': A [batch_size, max_detections, 4] float32 tensor
-              containing the non-max suppressed boxes.
-            'nmsed_scores': A [batch_size, max_detections] float32 tensor containing
-              the scores for the boxes.
-            'nmsed_classes': A [batch_size, max_detections] float32 tensor
-              containing the class for boxes.
-            'valid_detections': A [batch_size] int32 tensor indicating the number of
-              valid detections per batch item. Only the top valid_detections[i]
-              entries in nms_boxes[i], nms_scores[i] and nms_class[i] are valid. The
-              rest of the entries are zero paddings.
+            labels: [batch_size, 3] shaped tensor containing tuples of
+                (bboxes, classIDs, scores) for each image in the testing data x, where
+                each bounding box is defined by 4 values [ymin, xmin, ymax, xmax]. Box
+                coordinates are measured from top left image corner, are 0-indexed and
+                proportional to sides i.e. between [0,1]. Shape of the bounding boxes
+                should be (None, 4), and shape of the classIDs should be (None,) in each
+                tuple, where None represents the number of bounding boxes detected in an
+                image. The scores denote the probability with which a class is detected
+                in the corresponding bounding box.
         """
         pass  # pragma: no cover
