@@ -159,7 +159,7 @@ class Encoder(preprocessor.TargetPreprocessor):
         return dataset.map(lambda x: table.lookup(tf.reshape(x, [-1])))
 
 
-class ObjectDetectionLabelEncoder(preprocessor):
+class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
     """Transform labels to encodings.
 
     # Arguments
