@@ -550,3 +550,26 @@ class ImageObjectDetector(SupervisedImagePipeline):
             validation_data=validation_data,
             **kwargs
         )
+
+    def predict(self, x, **kwargs):
+        """Predict the output for a given testing data.
+
+        # Arguments
+            x: numpy.ndarray or tensorflow.Dataset. Testing data x. The shape of
+                the data should be (samples, width, height) or (samples, width,
+                height, channels).
+            **kwargs: Any arguments supported by keras.Model.predict.
+
+        # Returns
+            labels: [batch_size, 3] shaped tensor containing tuples of
+                (bboxes, classIDs, scores) for each image in the testing data x,
+                where each bounding box is defined by 4 values [ymin, xmin, ymax,
+                xmax]. Box coordinates are measured from top left image corner,
+                are 0-indexed and proportional to sides i.e. between [0,1]. Shape
+                of the bounding boxes should be (None, 4), and shape of the
+                classIDs should be (None,) in each tuple, where None represents
+                the number of bounding boxes detected in an image. The scores
+                denote the probability with which a class is detected in the
+                corresponding bounding box.
+        """
+        pass  # pragma: no cover

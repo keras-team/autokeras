@@ -159,7 +159,7 @@ class Encoder(preprocessor.TargetPreprocessor):
         return dataset.map(lambda x: table.lookup(tf.reshape(x, [-1])))
 
 
-class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
+class ObjectDetectionLabelEncoder(preprocessor):
     """Transform labels to encodings.
 
     # Arguments
@@ -173,8 +173,8 @@ class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
         #     for label in labels
         # ]
         # Check if this is correct, could be done differently
-        self.preprocess_data = keras_layers.ObjectDetectionPreProcessing()
-        self.label_encoder = keras_layers.LabelEncoder()
+        self.preprocess_data = keras_layers.ObjectDetectionPreProcessing()  # 1st preprocessor
+        self.label_encoder = keras_layers.LabelEncoder()  # 2nd preprocessor
 
     def get_config(self):
         return {"label_encoder": self.label_encoder}
@@ -201,7 +201,8 @@ class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
             print("labels: ", item[1][1])
             break
         train_dataset = dataset.map(
-            self.preprocess_data.data_transform, num_parallel_calls=autotune
+            lambda x, y: self.preprocess_data.data_transform(x,y),
+            num_parallel_calls=autotune
         )
         # train_dataset = train_dataset.shuffle(8 * batch_size)
         # train_dataset = train_dataset.padded_batch(
@@ -211,6 +212,7 @@ class ObjectDetectionLabelEncoder(preprocessor.TargetPreprocessor):
         # )
         print("after preprocessing: ", train_dataset.element_spec)
         train_dataset = train_dataset.map(
-            self.label_encoder.encode_sample_func, num_parallel_calls=autotune
+            lambda x, y, z: self.label_encoder.encode_sample_func(x, y, z),
+            num_parallel_calls=autotune
         )
         return train_dataset
