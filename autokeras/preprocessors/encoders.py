@@ -269,8 +269,7 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
         # class_ids = tf.stack(class_ids)
         # return images, bboxes, class_ids
         print("NEW CHANGE: ", dataset.element_spec)
-        self.func = lambda self, x: self.data_transform(x)
-        return dataset.map(self.func)
+        return dataset.map(self.data_transform)
 
     def data_transform(self, sample):
         sample_x = sample[0]
