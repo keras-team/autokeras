@@ -269,9 +269,11 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
         # class_ids = tf.stack(class_ids)
         # return images, bboxes, class_ids
         print("NEW CHANGE: ", dataset.element_spec)
-        return dataset.map(lambda x, y: self.data_transform(x, y))
+        return dataset.map(lambda x: self.data_transform(x))
 
-    def data_transform(self, sample_x, sample_y):
+    def data_transform(self, sample):
+        sample_x = sample[0]
+        sample_y = sample[1]
         print("input to data_transform: ", tf.shape(sample_x), tf.shape(sample_y[0]), tf.shape(sample_y[1]))
         image = sample_x
         bbox = self.swap_xy(sample_y[0])  # check this function
