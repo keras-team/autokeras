@@ -269,18 +269,19 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
         # class_ids = tf.stack(class_ids)
         # return images, bboxes, class_ids
         print("NEW CHANGE: ", dataset.element_spec)
-        return dataset.map(self.data_transform)
+        return dataset.map(ObjectDetectionLabelEncoder.data_transform)
 
-    def data_transform(self, sample):
+    @staticmethod
+    def data_transform(sample):
         sample_x = sample[0]
         sample_y = sample[1]
         print("input to data_transform: ", tf.shape(sample_x), tf.shape(sample_y[0]), tf.shape(sample_y[1]))
         image = sample_x
-        bbox = self.swap_xy(sample_y[0])  # check this function
+        bbox = ObjectDetectionLabelEncoder.swap_xy(sample_y[0])  # check this function
         class_id = tf.cast(sample_y[1], dtype=tf.int32)
 
-        image, bbox = self.random_flip_horizontal(image, bbox)
-        image, image_shape, _ = self.resize_and_pad_image(image)
+        image, bbox = ObjectDetectionLabelEncoder.random_flip_horizontal(image, bbox)
+        image, image_shape, _ = ObjectDetectionLabelEncoder.resize_and_pad_image(image)
 
         bbox = tf.stack(
             [
@@ -291,10 +292,11 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
             ],
             axis=-1,
         )
-        bbox = self.convert_to_xywh(bbox)
+        bbox = ObjectDetectionLabelEncoder.convert_to_xywh(bbox)
         return image, bbox, class_id
 
-    def random_flip_horizontal(self, image, boxes):
+    @staticmethod
+    def random_flip_horizontal(image, boxes):
         """Flips image and boxes horizontally with 50% chance
 
         Arguments:
@@ -313,8 +315,8 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
             )
         return image, boxes
 
+    @staticmethod
     def resize_and_pad_image(
-            self,
             image,
             min_side=800.0,
             max_side=1333.0,
@@ -364,7 +366,8 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
         )
         return image, image_shape, ratio
 
-    def swap_xy(self, boxes):
+    @staticmethod
+    def swap_xy(boxes):
         """Swaps order the of x and y coordinates of the boxes.
 
         Arguments:
@@ -378,7 +381,8 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
             [boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]], axis=-1
         )
 
-    def convert_to_xywh(self, boxes):
+    @staticmethod
+    def convert_to_xywh(boxes):
         """Changes the box format to center, width and height.
 
         Arguments:
