@@ -822,7 +822,8 @@ class Embedding(block_module.Block):
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
         embedding_dim: Int. If left unspecified, it will be tuned automatically.
-        dropout: Float. The dropout rate for after the Embedding layer.
+        dropout: Float or kerastuner.engine.hyperparameters.Choice.
+            The dropout rate for the layers.
             If left unspecified, it will be tuned automatically.
     """
 
@@ -831,14 +832,18 @@ class Embedding(block_module.Block):
         max_features: int = 20001,
         pretraining: Optional[str] = None,
         embedding_dim: Optional[int] = None,
-        dropout: Optional[float] = None,
+        dropout: Optional[Union[float, hyperparameters.Choice]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.max_features = max_features
         self.pretraining = pretraining
         self.embedding_dim = embedding_dim
-        self.dropout = dropout
+        self.dropout = utils.get_hyperparameter(
+            dropout,
+            hyperparameters.Choice("dropout", [0.0, 0.25, 0.5], default=0.0),
+            float,
+        )
 
     def get_config(self):
         config = super().get_config()
@@ -847,10 +852,15 @@ class Embedding(block_module.Block):
                 "max_features": self.max_features,
                 "pretraining": self.pretraining,
                 "embedding_dim": self.embedding_dim,
-                "dropout": self.dropout,
+                "dropout": hyperparameters.serialize(self.dropout),
             }
         )
         return config
+
+    @classmethod
+    def from_config(cls, config):
+        config["dropout"] = hyperparameters.deserialize(config["dropout"])
+        return cls(**config)
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
@@ -880,10 +890,7 @@ class Embedding(block_module.Block):
             # input_length=input_node.shape[1],
             # trainable=True)
         output_node = layer(input_node)
-        if self.dropout is not None:
-            dropout = self.dropout
-        else:
-            dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0.25)
+        dropout = utils.add_to_hp(self.dropout, hp)
         if dropout > 0:
             output_node = layers.Dropout(dropout)(output_node)
         return output_node
