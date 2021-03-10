@@ -271,11 +271,10 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
         print("NEW CHANGE: ", dataset.element_spec)
         return dataset.map(data_transform)
 
-
 # @staticmethod
-def data_transform(sample_x, sample_y):
-    # sample_x = sample[0]
-    # sample_y = sample[1]
+def data_transform(sample):
+    sample_x = sample[0]
+    sample_y = sample[1]
     print("input to data_transform: ", tf.shape(sample_x), tf.shape(sample_y[0]), tf.shape(sample_y[1]))
     image = sample_x
     bbox = swap_xy(sample_y[0])  # check this function
