@@ -231,6 +231,7 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
         #     do_lower_case=True,
         # )
         # self.max_sequence_length = max_sequence_length
+        self.mapping_func = lambda self, x: data_transform(x)
 
     def get_config(self):
         config = super().get_config()
@@ -269,7 +270,7 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
         # class_ids = tf.stack(class_ids)
         # return images, bboxes, class_ids
         print("NEW CHANGE: ", dataset.element_spec)
-        return dataset.map(data_transform)
+        return dataset.map(self.mapping_func)
 
 # @staticmethod
 def data_transform(sample):
