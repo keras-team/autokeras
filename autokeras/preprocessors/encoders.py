@@ -231,7 +231,7 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
         #     do_lower_case=True,
         # )
         # self.max_sequence_length = max_sequence_length
-        self.mapping_func = lambda self, x: data_transform(x)
+        self.mapping_func = lambda x, y: data_transform(x, y)
 
     def get_config(self):
         config = super().get_config()
@@ -273,9 +273,9 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
         return dataset.map(self.mapping_func)
 
 # @staticmethod
-def data_transform(sample):
-    sample_x = sample[0]
-    sample_y = sample[1]
+def data_transform(sample_x, sample_y):
+    # sample_x = sample[0]
+    # sample_y = sample[1]
     print("input to data_transform: ", tf.shape(sample_x), tf.shape(sample_y[0]), tf.shape(sample_y[1]))
     image = sample_x
     bbox = swap_xy(sample_y[0])  # check this function
