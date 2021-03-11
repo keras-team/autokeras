@@ -47,7 +47,7 @@ clf = ak.ImageClassifier(
     # 'val_f1_score' is just add a 'val_' prefix
     # to the function name or the metric name.
 
-    objective=kerastuner.Objective('val_f1_score', direction='min'),
+    objective=kerastuner.Objective('val_f1_score', direction='max'),
     # Include it as one of the metrics.
     metrics=[f1_score],
 )
