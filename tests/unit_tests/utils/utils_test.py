@@ -65,9 +65,10 @@ def test_get_hyperparameter_with_none_return_hp():
     assert isinstance(hp, hyperparameters.Choice)
 
 
-def test_get_hyperparameter_with_int_return_fixed():
-    hp = utils.get_hyperparameter(10, hyperparameters.Choice("hp", [10, 20]), int)
-    assert isinstance(hp, hyperparameters.Fixed)
+def test_get_hyperparameter_with_int_return_int():
+    value = utils.get_hyperparameter(10, hyperparameters.Choice("hp", [10, 20]), int)
+    assert isinstance(value, int)
+    assert value == 10
 
 
 def test_get_hyperparameter_with_hp_return_same():
