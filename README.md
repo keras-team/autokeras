@@ -1,15 +1,20 @@
-<img src="https://autokeras.com/img/row_red.svg" alt="drawing" width="400px" style="display: block; margin-left: auto; margin-right: auto"/>
+<p align="center">
+  <img width="500" alt="logo" src="https://autokeras.com/img/row_red.svg"/>
+</p>
 
 [![](https://github.com/keras-team/autokeras/workflows/Tests/badge.svg?branch=master)](https://github.com/keras-team/autokeras/actions?query=workflow%3ATests+branch%3Amaster)
 [![codecov](https://codecov.io/gh/keras-team/autokeras/branch/master/graph/badge.svg)](https://codecov.io/gh/keras-team/autokeras)
 [![PyPI version](https://badge.fury.io/py/autokeras.svg)](https://badge.fury.io/py/autokeras)
+![Python](https://img.shields.io/badge/python-v3.5.0+-success.svg)
+![Tensorflow](https://img.shields.io/badge/tensorflow-v2.3.0+-success.svg)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/keras-team/autokeras/issues)
 
 Official Website: [autokeras.com](https://autokeras.com)
 
 ##
 AutoKeras: An AutoML system based on Keras.
 It is developed by <a href="http://faculty.cs.tamu.edu/xiahu/index.html" target="_blank" rel="nofollow">DATA Lab</a> at Texas A&M University.
-The goal of AutoKeras is to make machine learning accessible for everyone.
+The goal of AutoKeras is to make machine learning accessible to everyone.
 
 ## Example
 
@@ -23,7 +28,7 @@ clf.fit(x_train, y_train)
 results = clf.predict(x_test)
 ```
 
-For detailed tutorial, please check [here](https://autokeras.com/tutorial/overview/).
+For a detailed tutorial, please check [here](https://autokeras.com/tutorial/overview/).
 
 ## Installation
 
@@ -44,7 +49,7 @@ Please follow the [installation guide](https://autokeras.com/install) for more d
 You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
 
 **Emails**:
-Subscribe our [email list](https://groups.google.com/forum/#!forum/autokeras-announce/join) to receive announcements.
+Subscribe to our [email list](https://groups.google.com/forum/#!forum/autokeras-announce/join) to receive announcements.
 
 ### Questions and Discussions
 
@@ -73,13 +78,13 @@ Everyone can easily join as a developer.
 Here is how we manage our project.
 
 * **Triage the issues**: 
-We pick the important issues to work on from [GitHub issues](https://github.com/keras-team/autokeras/issues).
+We pick the critical issues to work on from [GitHub issues](https://github.com/keras-team/autokeras/issues).
 They will be added to this [Project](https://github.com/keras-team/autokeras/projects/3).
 Some of the issues will then be added to the [milestones](https://github.com/keras-team/autokeras/milestones),
 which are used to plan for the releases.
 * **Assign the tasks**: We assign the tasks to people during the online meetings.
 * **Discuss**: We can have discussions in multiple places. The code reviews are on GitHub.
-Questions can be asked in Slack or during the meetings.
+Questions can be asked in Slack or during meetings.
 
 Please join our [Slack](https://autokeras.com/#community) and send Haifeng Jin a message.
 Or drop by our [online meetings](https://autokeras.com/#community) and talk to us.

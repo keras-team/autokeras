@@ -1,16 +1,17 @@
 """shell
 pip install autokeras
 """
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.datasets import mnist
+
+import autokeras as ak
 
 """
 ## A Simple Example
 The first step is to prepare your data. Here we use the MNIST dataset as an example
 """
 
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras.datasets import mnist
-import autokeras as ak
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 print(x_train.shape)  # (60000, 28, 28)
 print(y_train.shape)  # (60000,)
@@ -25,9 +26,7 @@ You can also leave the epochs unspecified for an adaptive number of epochs.
 """
 
 # Initialize the image classifier.
-clf = ak.ImageClassifier(
-    overwrite=True,
-    max_trials=1)
+clf = ak.ImageClassifier(overwrite=True, max_trials=1)
 # Feed the image classifier with training data.
 clf.fit(x_train, y_train, epochs=10)
 
@@ -42,8 +41,9 @@ print(clf.evaluate(x_test, y_test))
 
 """
 ## Validation Data
-By default, AutoKeras use the last 20% of training data as validation data. As shown in
-the example below, you can use validation_split to specify the percentage.
+By default, AutoKeras use the last 20% of training data as validation data. As
+shown in the example below, you can use validation_split to specify the
+percentage.
 """
 
 clf.fit(
@@ -55,8 +55,8 @@ clf.fit(
 )
 
 """
-You can also use your own validation set instead of splitting it from the training data
-with validation_data.
+You can also use your own validation set instead of splitting it from the
+training data with validation_data.
 """
 
 split = 50000
@@ -74,12 +74,13 @@ clf.fit(
 
 """
 ## Customized Search Space
-For advanced users, you may customize your search space by using AutoModel instead of
-ImageClassifier. You can configure the ImageBlock for some high-level configurations,
-e.g., block_type for the type of neural network to search, normalize for whether to do
-data normalization, augment for whether to do data augmentation. You can also do not
-specify these arguments, which would leave the different choices to be tuned
-automatically. See the following example for detail.
+For advanced users, you may customize your search space by using AutoModel
+instead of ImageClassifier. You can configure the ImageBlock for some
+high-level configurations, e.g., block_type for the type of neural network to
+search, normalize for whether to do data normalization, augment for whether to
+do data augmentation. You can also do not specify these arguments, which would
+leave the different choices to be tuned automatically. See the following
+example for detail.
 """
 
 input_node = ak.ImageInput()
@@ -93,10 +94,8 @@ output_node = ak.ImageBlock(
 )(input_node)
 output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(
-    inputs=input_node,
-    outputs=output_node,
-    overwrite=True,
-    max_trials=1)
+    inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
+)
 clf.fit(x_train, y_train, epochs=10)
 
 """
@@ -115,25 +114,26 @@ output_node = ak.ImageAugmentation(horizontal_flip=False)(output_node)
 output_node = ak.ResNetBlock(version="v2")(output_node)
 output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(
-    inputs=input_node,
-    outputs=output_node,
-    overwrite=True,
-    max_trials=1)
+    inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
+)
 clf.fit(x_train, y_train, epochs=10)
 
 """
 ## Data Format
 The AutoKeras ImageClassifier is quite flexible for the data format.
 
-For the image, it accepts data formats both with and without the channel dimension. The
-images in the MNIST dataset do not have the channel dimension. Each image is a matrix
-with shape (28, 28). AutoKeras also accepts images of three dimensions with the channel
-dimension at last, e.g., (32, 32, 3), (28, 28, 1).
+For the image, it accepts data formats both with and without the channel
+dimension. The images in the MNIST dataset do not have the channel dimension.
+Each image is a matrix with shape (28, 28). AutoKeras also accepts images of
+three dimensions with the channel dimension at last, e.g., (32, 32, 3), (28,
+28, 1).
 
-For the classification labels, AutoKeras accepts both plain labels, i.e. strings or
-integers, and one-hot encoded encoded labels, i.e. vectors of 0s and 1s.
+For the classification labels, AutoKeras accepts both plain labels, i.e.
+strings or integers, and one-hot encoded encoded labels, i.e. vectors of 0s and
+1s.
 
-So if you prepare your data in the following way, the ImageClassifier should still work.
+So if you prepare your data in the following way, the ImageClassifier should
+still work.
 """
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -161,9 +161,7 @@ We also support using tf.data.Dataset format for the training data.
 train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,)))
 test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,)))
 
-clf = ak.ImageClassifier(
-    overwrite=True,
-    max_trials=1)
+clf = ak.ImageClassifier(overwrite=True, max_trials=1)
 # Feed the tensorflow Dataset to the classifier.
 clf.fit(train_set, epochs=10)
 # Predict with the best model.

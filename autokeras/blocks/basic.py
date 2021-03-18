@@ -375,7 +375,7 @@ class ConvBlock(block_module.Block):
 
     @staticmethod
     def _get_padding(kernel_size, output_node):
-        if all([kernel_size * 2 <= length for length in output_node.shape[1:-1]]):
+        if all(kernel_size * 2 <= length for length in output_node.shape[1:-1]):
             return "valid"
         return "same"
 
@@ -441,8 +441,7 @@ class MultiHeadSelfAttention(block_module.Block):
         concat_attention = tf.reshape(
             attention, (batch_size, tf.shape(attention)[1], self.head_size)
         )  # (batch_size, seq_len, head_size)
-        output = combine_heads(concat_attention)  # (batch_size, seq_len, head_size)
-        return output
+        return combine_heads(concat_attention)  # (batch_size, seq_len, head_size)
 
     @staticmethod
     def attention(query, key, value):
@@ -488,50 +487,94 @@ class Transformer(block_module.Block):
     # Arguments
         max_features: Int. Size of the vocabulary. Must be set if not using
             TextToIntSequence before this block. Defaults to 20001.
-        pretraining: String. 'random' (use random weights instead any pretrained
+        pretraining: String or kerastuner.engine.hyperparameters.Choice.
+            'random' (use random weights instead any pretrained
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
-        embedding_dim: Int. Output dimension of the Attention block.
+        embedding_dim: Int or kerastuner.engine.hyperparameters.Choice.
+            Output dimension of the Attention block.
             If left unspecified, it will be tuned automatically.
-        num_heads: Int. The number of attention heads. If left unspecified,
+        num_heads: Int or kerastuner.engine.hyperparameters.Choice.
+            The number of attention heads. If left unspecified,
             it will be tuned automatically.
-        dense_dim: Int. The output dimension of the Feed-Forward Network. If left
+        dense_dim: Int or kerastuner.engine.hyperparameters.Choice.
+            The output dimension of the Feed-Forward Network. If left
             unspecified, it will be tuned automatically.
-        dropout: Float. Between 0 and 1. If left unspecified, it will be
+        dropout: Float or kerastuner.engine.hyperparameters.Choice.
+            Between 0 and 1. If left unspecified, it will be
             tuned automatically.
     """
 
     def __init__(
         self,
         max_features: int = 20001,
-        pretraining: Optional[str] = None,
-        embedding_dim: Optional[int] = None,
-        num_heads: Optional[int] = None,
-        dense_dim: Optional[int] = None,
-        dropout: Optional[float] = None,
+        pretraining: Optional[Union[str, hyperparameters.Choice]] = None,
+        embedding_dim: Optional[Union[int, hyperparameters.Choice]] = None,
+        num_heads: Optional[Union[int, hyperparameters.Choice]] = None,
+        dense_dim: Optional[Union[int, hyperparameters.Choice]] = None,
+        dropout: Optional[Union[float, hyperparameters.Choice]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.max_features = max_features
-        self.pretraining = pretraining
-        self.embedding_dim = embedding_dim
-        self.num_heads = num_heads
-        self.dense_dim = dense_dim
-        self.dropout = dropout
+        self.pretraining = utils.get_hyperparameter(
+            pretraining,
+            hyperparameters.Choice(
+                "pretraining",
+                ["random", "glove", "fasttext", "word2vec", "none"],
+                default="none",
+            ),
+            str,
+        )
+        self.embedding_dim = utils.get_hyperparameter(
+            embedding_dim,
+            hyperparameters.Choice(
+                "embedding_dim", [32, 64, 128, 256, 512], default=128
+            ),
+            int,
+        )
+        self.num_heads = utils.get_hyperparameter(
+            num_heads,
+            hyperparameters.Choice("num_heads", [8, 16, 32], default=8),
+            int,
+        )
+        self.dense_dim = utils.get_hyperparameter(
+            dense_dim,
+            hyperparameters.Choice(
+                "dense_dim", [128, 256, 512, 1024, 2048], default=2048
+            ),
+            int,
+        )
+        self.dropout = utils.get_hyperparameter(
+            dropout,
+            hyperparameters.Choice("dropout", [0.0, 0.25, 0.5], default=0.0),
+            float,
+        )
 
     def get_config(self):
         config = super().get_config()
         config.update(
             {
                 "max_features": self.max_features,
-                "pretraining": self.pretraining,
-                "embedding_dim": self.embedding_dim,
-                "num_heads": self.num_heads,
-                "dense_dim": self.dense_dim,
-                "dropout": self.dropout,
+                "pretraining": hyperparameters.serialize(self.pretraining),
+                "embedding_dim": hyperparameters.serialize(self.embedding_dim),
+                "num_heads": hyperparameters.serialize(self.num_heads),
+                "dense_dim": hyperparameters.serialize(self.dense_dim),
+                "dropout": hyperparameters.serialize(self.dropout),
             }
         )
         return config
+
+    @classmethod
+    def from_config(cls, config):
+        config["pretraining"] = hyperparameters.deserialize(config["pretraining"])
+        config["embedding_dim"] = hyperparameters.deserialize(
+            config["embedding_dim"]
+        )
+        config["num_heads"] = hyperparameters.deserialize(config["num_heads"])
+        config["dense_dim"] = hyperparameters.deserialize(config["dense_dim"])
+        config["dropout"] = hyperparameters.deserialize(config["dropout"])
+        return cls(**config)
 
     def build(self, hp, inputs=None):
         """
@@ -544,20 +587,12 @@ class Transformer(block_module.Block):
         """
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
-        pretraining = self.pretraining or hp.Choice(
-            "pretraining",
-            ["random", "glove", "fasttext", "word2vec", "none"],
-            default="none",
-        )
-        embedding_dim = self.embedding_dim or hp.Choice(
-            "embedding_dim", [32, 64, 128, 256, 512], default=128
-        )
-        num_heads = self.num_heads or hp.Choice("num_heads", [8, 16, 32], default=8)
+        pretraining = utils.add_to_hp(self.pretraining, hp)
+        embedding_dim = utils.add_to_hp(self.embedding_dim, hp)
+        num_heads = utils.add_to_hp(self.num_heads, hp)
 
-        dense_dim = self.dense_dim or hp.Choice(
-            "dense_dim", [128, 256, 512, 1024, 2048], default=2048
-        )
-        dropout = self.dropout or hp.Choice("dropout", [0.0, 0.25, 0.5], default=0.0)
+        dense_dim = utils.add_to_hp(self.dense_dim, hp)
+        dropout = utils.add_to_hp(self.dropout, hp)
 
         ffn = tf.keras.Sequential(
             [
@@ -597,8 +632,7 @@ class Transformer(block_module.Block):
         ffn_output = ffn(out1)
         ffn_output = dropout2(ffn_output)
         add_inputs_2 = tf.keras.layers.Add()([out1, ffn_output])
-        output = layernorm2(add_inputs_2)
-        return output
+        return layernorm2(add_inputs_2)
 
     @staticmethod
     def pos_array_funct(maxlen, batch_size):
@@ -789,9 +823,10 @@ class Embedding(block_module.Block):
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
         embedding_dim: Int or kerastuner.engine.hyperparameters.Choice.
+            Output dimension of the Attention block.
             If left unspecified, it will be tuned automatically.
         dropout: Float or kerastuner.engine.hyperparameters.Choice.
-            The dropout rate for after the Embedding layer.
+            The dropout rate for the layers.
             If left unspecified, it will be tuned automatically.
     """
 
@@ -842,21 +877,18 @@ class Embedding(block_module.Block):
     @classmethod
     def from_config(cls, config):
         config["pretraining"] = hyperparameters.deserialize(config["pretraining"])
+        config["dropout"] = hyperparameters.deserialize(config["dropout"])
         config["embedding_dim"] = hyperparameters.deserialize(
             config["embedding_dim"]
         )
-        config["dropout"] = hyperparameters.deserialize(config["dropout"])
         return cls(**config)
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
         # TODO: support more pretrained embedding layers.
         # glove, fasttext, and word2vec
-
         pretraining = utils.add_to_hp(self.pretraining, hp)
-
         embedding_dim = utils.add_to_hp(self.embedding_dim, hp)
-
         if pretraining != "none":
             # TODO: load from pretrained weights
             layer = layers.Embedding(

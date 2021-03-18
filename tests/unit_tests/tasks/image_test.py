@@ -52,3 +52,19 @@ def test_img_seg_fit_call_auto_model_fit(fit, tmp_path):
     )
 
     assert fit.is_called
+
+
+@mock.patch("autokeras.AutoModel.fit")
+def test_img_obj_det_fit_call_auto_model_fit(fit, tmp_path):
+    auto_model = ak.tasks.image.ImageObjectDetector(
+        directory=tmp_path, seed=utils.SEED
+    )
+
+    images, labels = utils.get_object_detection_data()
+
+    auto_model.fit(
+        x=images,
+        y=labels,
+    )
+
+    assert fit.is_called

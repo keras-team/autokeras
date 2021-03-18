@@ -1,3 +1,12 @@
+"""shell
+pip install autokeras
+"""
+import tensorflow as tf
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.models import load_model
+
+import autokeras as ak
+
 """
 You can easily export your model the best model found by AutoKeras as a Keras Model.
 
@@ -7,24 +16,14 @@ All the tasks and the [AutoModel](/auto_model/#automodel-class) has this
 
 """
 
-"""shell
-pip install autokeras
-"""
-
-import tensorflow as tf
 
 print(tf.__version__)
-
-from tensorflow.keras.datasets import mnist
-import tensorflow as tf
-import autokeras as ak
-
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
 # Initialize the image classifier.
 clf = ak.ImageClassifier(
-    overwrite=True,
-    max_trials=1)  # Try only 1 model.(Increase accordingly)
+    overwrite=True, max_trials=1
+)  # Try only 1 model.(Increase accordingly)
 # Feed the image classifier with training data.
 clf.fit(x_train, y_train, epochs=1)  # Change no of epochs to improve the model
 # Export as a Keras Model.
@@ -34,10 +33,9 @@ print(type(model))  # <class 'tensorflow.python.keras.engine.training.Model'>
 
 try:
     model.save("model_autokeras", save_format="tf")
-except:
+except Exception:
     model.save("model_autokeras.h5")
 
-from tensorflow.keras.models import load_model
 
 loaded_model = load_model("model_autokeras", custom_objects=ak.CUSTOM_OBJECTS)
 
