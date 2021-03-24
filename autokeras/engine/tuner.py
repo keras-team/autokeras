@@ -85,6 +85,7 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
             validation_data = pipeline.transform(kwargs["validation_data"])
         else:
             validation_data = None
+        print("_prepare_model_build changes dataset to: ", dataset.element_spec)
         return pipeline, dataset, validation_data
 
     def _build_and_fit_model(self, trial, fit_args, fit_kwargs):
