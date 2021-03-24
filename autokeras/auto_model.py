@@ -288,7 +288,7 @@ class AutoModel(object):
             dataset, validation_data = data_utils.split_dataset(
                 dataset, validation_split
             )
-
+        print("dataset after hyper pipeline is built: ", dataset.element_spec)
         self.tuner.search(
             x=dataset,
             epochs=epochs,
@@ -368,7 +368,7 @@ class AutoModel(object):
             # TODO Figure out the analyser for dictionaries
             # We don't have a dictionary now
             for item, analyser in zip(dataset, analysers):
-                print(analyser)
+                print("Analyser: ", analyser)
                 analyser.update(item)
         else:
             for x, y in dataset:
