@@ -239,6 +239,7 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
         return config
 
     def build(self, input_shape):
+        print("BUILD OF ObjectDetectionLabelEncoder CALLED")
         self.batch_size = input_shape
 
     def transform(self, dataset):

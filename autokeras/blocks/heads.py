@@ -374,6 +374,7 @@ class ObjectDetectionHead(head_module.Head):
         return config
 
     def build(self, hp, inputs):
+        print("BUILD OF ObjectDetectionHead CALLED")
         return inputs
 
     # def get_adapter(self):
