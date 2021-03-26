@@ -82,6 +82,7 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
         # Returns
             An instance of Pipeline.
         """
+        print("build of HyperPipeline")
         if self.task == "object_detection":
             return Pipeline(
                 inputs=self._build_preprocessors_obj_det(hp, self.inputs, dataset),
@@ -123,6 +124,8 @@ class Pipeline(pps_module.Preprocessor):
 
     def fit(self, dataset):
         """Fit the Preprocessors."""
+        if self.task == "object_detection":
+            return
         x = dataset.map(lambda x, y: x)
         sources_x = data_utils.unzip_dataset(x)
         for pps_list, data in zip(self.inputs, sources_x):
