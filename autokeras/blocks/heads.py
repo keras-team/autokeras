@@ -396,6 +396,7 @@ class ObjectDetectionHead(head_module.Head):
         # self._labels = analyser.labels
 
     def get_hyper_preprocessors(self):
+        print("Returned preprocessors.ObjectDetectionLabelEncoder()")
         hyper_preprocessors = []
 
         hyper_preprocessors.append(
