@@ -67,7 +67,7 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
             for hyper_preprocessor in hpps_list:
                 preprocessor = hyper_preprocessor.build(hp, data)
                 preprocessor.fit(data)
-                data = preprocessor.transform(data)
+                # data = preprocessor.transform(data)  # SOURCE OF ERROR
                 preprocessors.append(preprocessor)
             preprocessors_list.append(preprocessors)
         return preprocessors_list
