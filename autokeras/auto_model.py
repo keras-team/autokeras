@@ -186,7 +186,7 @@ class AutoModel(object):
         for output in outputs:
             if isinstance(output, blocks.ObjectDetectionHead):
                 print("Object Detection Pipeline")  # pipeline starts working
-                output_node = blocks.RetinaNetBlock()(inputs[0])
+                output_node = blocks.RetinaNetBlock(num_classes=80)(inputs[0])
                 outputs = nest.flatten(
                     [output_blocks(output_node) for output_blocks in outputs]
                 )
