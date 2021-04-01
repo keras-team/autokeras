@@ -228,7 +228,9 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
         self.predict_from = predict_from
         self.predict_until = predict_until
 
-    def fit(self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs):
+    def fit(
+        self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
+    ):
         """Search for the best model and hyperparameters for the AutoModel.
 
         # Arguments
@@ -399,7 +401,9 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
     ):
         raise NotImplementedError
 
-    def fit(self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs):
+    def fit(
+        self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
+    ):
         """Search for the best model and hyperparameters for the AutoModel.
 
         # Arguments
