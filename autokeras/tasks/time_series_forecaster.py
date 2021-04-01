@@ -97,16 +97,16 @@ class SupervisedTimeseriesDataPipeline(structured_data.BaseStructuredDataPipelin
 
     def predict(self, x, **kwargs):
         x = self.read_for_predict(x)
+        if len(x) < self.train_len:
+            raise ValueError(
+                "The prediction data requires the original training"
+                "data to make predictions on subsequent data points"
+            )
         y_pred = super().predict(x=x, **kwargs)
         lower_bound = self.train_len + self.predict_from
         if self.predict_until is None:
             self.predict_until = len(y_pred)
         upper_bound = min(self.train_len + self.predict_until + 1, len(y_pred))
-        if upper_bound < lower_bound:
-            raise ValueError(
-                "The prediction data requires the original training"
-                "data to make predictions on subsequent data points"
-            )
         return y_pred[lower_bound:upper_bound]
 
     def evaluate(self, x, y=None, **kwargs):
