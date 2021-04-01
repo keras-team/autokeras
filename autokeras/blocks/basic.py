@@ -763,11 +763,12 @@ class XceptionBlock(KerasApplicationBlock):
             If left unspecified, it will be tuned automatically.
     """
 
-    def __init__(self, pretrained: Optional[bool] = None, min_size: Optional[Union[int, hyperparameters.Choice]] = None, **kwargs):
+    def __init__(self, pretrained: Optional[bool] = None,
+     min_size: Optional[Union[int, hyperparameters.Choice]] = None, 
+     **kwargs):
         super().__init__(
             pretrained=pretrained,
             models={"xception": applications.Xception},
-            min_size=71,
             min_size = utils.get_hyperparameter(
             min_size, 
             hyperparameters.Choice(
