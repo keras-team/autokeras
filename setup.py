@@ -34,7 +34,7 @@ setup(
             "pytest-xdist",
             "pytest-cov",
             "coverage",
-            "typeguard>=2,<2.11.0",
+            "typeguard>=2,<2.13.0",
             "typedapi>=0.2,<0.3",
         ],
     },
