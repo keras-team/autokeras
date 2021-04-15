@@ -2,6 +2,11 @@
 pip install autokeras
 """
 
+import pandas as pd
+import tensorflow as tf
+
+import autokeras as ak
+
 """
 To make this tutorial easy to follow, we use the UCI Airquality dataset, and try to
 forecast the AH value at the different timesteps. Some basic preprocessing has also
@@ -12,8 +17,6 @@ The first step is to prepare your data. Here we use the [UCI Airquality dataset]
 (https://archive.ics.uci.edu/ml/datasets/Air+Quality) as an example.
 """
 
-import pandas as pd
-import tensorflow as tf
 dataset = tf.keras.utils.get_file(
     fname='AirQualityUCI.csv',
     origin="https://archive.ics.uci.edu/ml/machine-learning-databases/00360/"
@@ -56,7 +59,6 @@ The second step is to run the [TimeSeriesForecaster](/time_series_forecaster).
 As a quick demo, we set epochs to 10.
 You can also leave the epochs unspecified for an adaptive number of epochs.
 """
-import autokeras as ak
 
 predict_from = 1
 predict_until = 10
