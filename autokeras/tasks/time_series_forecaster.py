@@ -100,7 +100,7 @@ class SupervisedTimeseriesDataPipeline(structured_data.BaseStructuredDataPipelin
         if len(x) < self.train_len:
             raise ValueError(
                 "The prediction data requires the original training"
-                "data to make predictions on subsequent data points"
+                " data to make predictions on subsequent data points"
             )
         y_pred = super().predict(x=x, **kwargs)
         lower_bound = self.train_len + self.predict_from

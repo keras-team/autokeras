@@ -45,6 +45,23 @@ def test_tsf_predict_call_automodel_predict(predict, fit, tmp_path):
 
 
 @mock.patch("autokeras.AutoModel.fit")
+@mock.patch("autokeras.AutoModel.predict")
+def test_tsf_predict_call_automodel_predict_fails(predict, fit, tmp_path):
+    auto_model = ak.TimeseriesForecaster(
+        lookback=10, directory=tmp_path, seed=utils.SEED
+    )
+
+    auto_model.fit(x=utils.TRAIN_CSV_PATH, y="survived")
+    # Predict data doesn't contain train time steps
+    try:
+        auto_model.predict(x=utils.TEST_CSV_PATH, y="survived")
+    except ValueError as e:
+        assert fit.is_called
+        assert "The prediction data requires the original training data to make"
+        " predictions on subsequent data points" in str(e)
+
+
+@mock.patch("autokeras.AutoModel.fit")
 def test_tsf_fit_call_automodel_fit(fit, tmp_path):
     auto_model = ak.TimeseriesForecaster(
         lookback=10, directory=tmp_path, seed=utils.SEED
