@@ -1037,5 +1037,5 @@ class RetinaNetBlock(block_module.Block):
         print("Input after preprocessing: ", input_tensor.shape)
         ret_net = keras_layers.RetinaNet(self.num_classes, self.backbone)
         output_node = ret_net(input_tensor)
-        print("Output after RetinaNet: ", output_node.shape)
+        # print("Output after RetinaNet: ", output_node.shape)
         return output_node

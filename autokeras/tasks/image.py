@@ -457,7 +457,7 @@ class ImageObjectDetector(SupervisedImagePipeline):
         multi_label: bool = False,
         loss: types.LossType = None,
         metrics: Optional[types.MetricsType] = None,
-        project_name: str = "image_classifier",
+        project_name: str = "image_object_detection",
         max_trials: int = 100,
         directory: Union[str, Path, None] = None,
         objective: str = "val_loss",

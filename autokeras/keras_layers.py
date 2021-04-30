@@ -24,7 +24,6 @@ from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
 from autokeras import constants
-from autokeras.engine import preprocessor
 from autokeras.utils import data_utils
 
 INT = "int"
@@ -1743,9 +1742,9 @@ def _is_punctuation(char):
     return False
 
 
-# @tf.keras.utils.register_keras_serializable()
-# class ObjectDetectionPreProcessing(preprocessor.Preprocessor):  # TODO Convert to a preprocessor
-class ObjectDetectionPreProcessing:
+# class ObjectDetectionPreProcessing(preprocessor.Preprocessor):
+@tf.keras.utils.register_keras_serializable()
+class ObjectDetectionPreProcessing(object):
     """ObjectDetectionPreProcessing layer.
 
     # Arguments
@@ -1796,13 +1795,23 @@ class ObjectDetectionPreProcessing:
         # bboxes = tf.stack(bboxes)
         # class_ids = tf.stack(class_ids)
         # return images, bboxes, class_ids
-        print("input to call: ", tf.shape(input_x), tf.shape(input_y[0]), tf.shape(input_y[1]))
+        print(
+            "input to call: ",
+            tf.shape(input_x),
+            tf.shape(input_y[0]),
+            tf.shape(input_y[1]),
+        )
         return self.data_transform(input_x, input_y)
 
     def data_transform(self, sample_x, sample_y):
-        print("input to data_transform: ", tf.shape(sample_x), tf.shape(sample_y[0]), tf.shape(sample_y[1]))
+        print(
+            "input to data_transform: ",
+            tf.shape(sample_x),
+            tf.shape(sample_y[0]),
+            tf.shape(sample_y[1]),
+        )
         image = sample_x
-        bbox = self.swap_xy(sample_y[0]) #check this function
+        bbox = self.swap_xy(sample_y[0])  # check this function
         class_id = tf.cast(sample_y[1], dtype=tf.int32)
 
         image, bbox = self.random_flip_horizontal(image, bbox)
@@ -1924,6 +1933,7 @@ class ObjectDetectionPreProcessing:
         )
 
 
+@tf.keras.utils.register_keras_serializable()
 class FeaturePyramid(tf.keras.layers.Layer):
     """Builds the Feature Pyramid with the feature maps from the backbone.
 
@@ -1945,6 +1955,14 @@ class FeaturePyramid(tf.keras.layers.Layer):
         self.conv_c6_3x3 = tf.keras.layers.Conv2D(256, 3, 2, "same")
         self.conv_c7_3x3 = tf.keras.layers.Conv2D(256, 3, 2, "same")
         self.upsample_2x = tf.keras.layers.UpSampling2D(2)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"backbone": self.backbone})
+        return config
+
+    def from_config(cls, config):
+        return cls(**config)
 
     def call(self, images, training=False):
         c3_output, c4_output, c5_output = self.backbone(images, training=training)
@@ -1978,6 +1996,7 @@ class FeaturePyramid(tf.keras.layers.Layer):
         )
 
 
+@tf.keras.utils.register_keras_serializable()
 class AnchorBox:
     """Generates anchor boxes.
 
@@ -2005,6 +2024,26 @@ class AnchorBox:
         self._strides = [2 ** i for i in range(3, 8)]
         self._areas = [x ** 2 for x in [32.0, 64.0, 128.0, 256.0, 512.0]]
         self._anchor_dims = self._compute_dims()
+
+    def get_config(self):
+        # config  = {
+        #     "aspect_ratios": self.aspect_ratios,
+        #     "scales": self.scales,
+        #     "_num_anchors": self._num_anchors,
+        #     "_strides": self._strides,
+        #     "_areas": self._areas,
+        #     "_anchor_dims": self._anchor_dims
+        # }
+        # return config
+        return {}
+
+    def from_config(cls, config):
+        """Build an instance from the config of this object.
+
+        # Arguments
+            config: Dict. The config of the object.
+        """
+        return cls(**config)
 
     def _compute_dims(self):
         """Computes anchor box dimensions for all ratios and scales at all levels
@@ -2072,6 +2111,7 @@ class AnchorBox:
         return tf.concat(anchors, axis=0)
 
 
+@tf.keras.utils.register_keras_serializable()
 class RetinaNet(tf.keras.Model):
     """A subclassed Keras model implementing the RetinaNet architecture.
 
@@ -2086,25 +2126,35 @@ class RetinaNet(tf.keras.Model):
         self.fpn = FeaturePyramid(backbone)
         self.num_classes = num_classes
 
-        prior_probability = tf.constant_initializer(-np.log((1 - 0.01) / 0.01))
-        self.cls_head = build_head(9 * num_classes, prior_probability)
-        self.box_head = build_head(9 * 4, "zeros")
+        # prior_probability = tf.constant_initializer(-np.log((1 - 0.01) / 0.01))
+        # self.cls_head = build_head(9 * num_classes, prior_probability)
+        # self.box_head = build_head(9 * 4, "zeros")
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"num_classes": self.num_classes, "backbone": self.backbone})
+        return config
+
+    def from_config(cls, config):
+        return cls(**config)
 
     def call(self, image, training=False):
         features = self.fpn(image, training=training)
-        N = tf.shape(image)[0]
-        cls_outputs = []
-        box_outputs = []
-        for feature in features:
-            box_outputs.append(tf.reshape(self.box_head(feature), [N, -1, 4]))
-            cls_outputs.append(
-                tf.reshape(self.cls_head(feature), [N, -1, self.num_classes])
-            )
-        cls_outputs = tf.concat(cls_outputs, axis=1)
-        box_outputs = tf.concat(box_outputs, axis=1)
-        return tf.concat([box_outputs, cls_outputs], axis=-1)
+        # N = tf.shape(image)[0]
+        # cls_outputs = []
+        # box_outputs = []
+        # for feature in features:
+        #     box_outputs.append(tf.reshape(self.box_head(feature), [N, -1, 4]))
+        #     cls_outputs.append(
+        #         tf.reshape(self.cls_head(feature), [N, -1, self.num_classes])
+        #     )
+        # cls_outputs = tf.concat(cls_outputs, axis=1)
+        # box_outputs = tf.concat(box_outputs, axis=1)
+        # return tf.concat([box_outputs, cls_outputs], axis=-1)
+        return features
 
 
+@tf.keras.utils.register_keras_serializable()
 def build_head(output_filters, bias_init):
     """Builds the class/box predictions head.
 
@@ -2138,7 +2188,10 @@ def build_head(output_filters, bias_init):
     return head
 
 
-class LabelEncoder:
+@tf.keras.utils.register_keras_serializable()
+class ObjectDetectionLabelEncoder(
+    object
+):  # change name, get_config and set_config, serialize and de-serialize
     """Transforms the raw labels into targets for training.
 
     This class has operations to generate targets for a batch of samples which
@@ -2155,6 +2208,17 @@ class LabelEncoder:
         self._box_variance = tf.convert_to_tensor(
             [0.1, 0.1, 0.2, 0.2], dtype=tf.float32
         )
+
+    def get_config(self):
+        return {"_anchor_box": self._anchor_box, "_box_variance": self._box_variance}
+
+    def from_config(cls, config):
+        """Build an instance from the config of this object.
+
+        # Arguments
+            config: Dict. The config of the object.
+        """
+        return cls(**config)
 
     def _match_anchor_boxes(
         self, anchor_boxes, gt_boxes, match_iou=0.5, ignore_iou=0.4
@@ -2297,12 +2361,11 @@ class LabelEncoder:
     def encode_sample_func(self, image, gt_boxes, cls_ids):
         image_shape = [0] + tf.shape(image)
         label = self._encode_sample(image_shape, gt_boxes, cls_ids)
-        preprocessed_image = tf.keras.applications.resnet.preprocess_input(
-            image
-        )
+        preprocessed_image = tf.keras.applications.resnet.preprocess_input(image)
         return preprocessed_image, label
 
 
+@tf.keras.utils.register_keras_serializable()
 class RetinaNetBoxLoss(tf.losses.Loss):
     """Implements Smooth L1 loss"""
 
@@ -2323,7 +2386,16 @@ class RetinaNetBoxLoss(tf.losses.Loss):
         )
         return tf.reduce_sum(loss, axis=-1)
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({"_delta": self._delta})
+        return config
 
+    def from_config(cls, config):
+        return cls(**config)
+
+
+@tf.keras.utils.register_keras_serializable()
 class RetinaNetClassificationLoss(tf.losses.Loss):
     """Implements Focal loss"""
 
@@ -2344,7 +2416,16 @@ class RetinaNetClassificationLoss(tf.losses.Loss):
         loss = alpha * tf.pow(1.0 - pt, self._gamma) * cross_entropy
         return tf.reduce_sum(loss, axis=-1)
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({"_alpha": self._alpha, "_gamma": self._gamma})
+        return config
 
+    def from_config(cls, config):
+        return cls(**config)
+
+
+@tf.keras.utils.register_keras_serializable()
 class RetinaNetLoss(tf.losses.Loss):
     """Wrapper to combine both the losses"""
 
@@ -2379,3 +2460,17 @@ class RetinaNetLoss(tf.losses.Loss):
         )
         loss = clf_loss + box_loss
         return loss
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "_clf_loss": self._clf_loss,
+                "_box_loss": self._box_loss,
+                "_num_classes": self._num_classes,
+            }
+        )
+        return config
+
+    def from_config(cls, config):
+        return cls(**config)

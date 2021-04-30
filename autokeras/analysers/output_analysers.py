@@ -136,9 +136,9 @@ class ObjectDetectionAnalyser(TargetAnalyser):
         #     self.dtype = data['image'].dtype
         # if self.shape is None:
         #     self.shape = data['image'].shape
-        # if self.batch_size is None:
-        #     self.batch_size = data['image'].shape.as_list()[0]
-        self.num_samples += len(data) / 4 # Check if this is correct
+        if self.batch_size is None:
+            self.batch_size = 32  # data['image'].shape.as_list()[0]
+        self.num_samples += len(data)  # Check if this is correct
 
     def finalize(self):
         pass

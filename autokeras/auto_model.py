@@ -181,7 +181,7 @@ class AutoModel(object):
         inputs = nest.flatten(self.inputs)
         outputs = nest.flatten(self.outputs)
         # print(inputs, outputs)
-        #[<autokeras.nodes.ImageInput object at 0x7fd3330ae940>]
+        # [<autokeras.nodes.ImageInput object at 0x7fd3330ae940>]
         # [<autokeras.blocks.heads.ObjectDetectionHead object at 0x7fd33f7c7a90>]
         for output in outputs:
             if isinstance(output, blocks.ObjectDetectionHead):
@@ -281,7 +281,7 @@ class AutoModel(object):
         )
         # if not self.task == 'object_detection':
         self._analyze_data(dataset)
-        self._build_hyper_pipeline(dataset) # check how this works
+        self._build_hyper_pipeline(dataset)  # check how this works
 
         # Split the data with validation_split.
         if validation_data is None and validation_split:
@@ -457,7 +457,7 @@ class AutoModel(object):
             dataset = x
         else:
             if isinstance(x, tf.data.Dataset) and self._has_y(x):
-                    x = x.map(lambda x, y: x)
+                x = x.map(lambda x, y: x)
             self._check_data_format((x, None), predict=True)
             dataset = self._adapt(x, self.inputs, batch_size)
         pipeline = self.tuner.get_best_pipeline()

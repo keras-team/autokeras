@@ -15,6 +15,7 @@
 from typing import Optional
 
 import tensorflow as tf
+from numpy import log as np_log
 from tensorflow.keras import activations
 from tensorflow.keras import layers
 from tensorflow.keras import losses
@@ -27,6 +28,7 @@ from autokeras import preprocessors
 from autokeras.blocks import reduction
 from autokeras.engine import head as head_module
 from autokeras.keras_layers import RetinaNetLoss
+from autokeras.keras_layers import build_head
 from autokeras.utils import types
 from autokeras.utils import utils
 
@@ -367,15 +369,35 @@ class ObjectDetectionHead(head_module.Head):
         config.update(
             {
                 "num_classes": self.num_classes,
-                # "multi_label": self.multi_label,
-                # "dropout": self.dropout,
             }
         )
         return config
 
     def build(self, hp, inputs):
-        print("BUILD OF ObjectDetectionHead CALLED")
-        return inputs
+        """
+        inputs: features from the feature pyramid network
+        """
+        if self.num_classes is None:
+            raise ValueError(
+                "Number of classes is to be defined but got {}".format(
+                    self.num_classes
+                )
+            )
+        prior_probability = tf.constant_initializer(-np_log((1 - 0.01) / 0.01))
+        cls_head = build_head(9 * self.num_classes, prior_probability)
+        box_head = build_head(9 * 4, "zeros")
+        print("BUILD OF ObjectDetectionHead CALLED. Inputs: ", len(inputs))
+        N = 32  # tf.shape(inputs)[0]  # batch_size
+        cls_outputs = []
+        box_outputs = []
+        for feature in inputs:
+            box_outputs.append(tf.reshape(box_head(feature), [N, -1, 4]))
+            cls_outputs.append(
+                tf.reshape(cls_head(feature), [N, -1, self.num_classes])
+            )
+        cls_outputs = tf.concat(cls_outputs, axis=1)
+        box_outputs = tf.concat(box_outputs, axis=1)
+        return tf.concat([box_outputs, cls_outputs], axis=-1)
 
     # def get_adapter(self):
     #     return adapters.ClassificationAdapter(name=self.name)

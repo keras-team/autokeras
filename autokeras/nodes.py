@@ -95,6 +95,7 @@ class ImageInput(Input):
         output_node = nest.flatten(inputs)[0]
         if len(output_node.shape) == 3:
             output_node = keras_layers.ExpandLastDim()(output_node)
+        print("output_node shape in ImageInput: ", output_node.shape)
         return output_node
 
     def get_adapter(self):
