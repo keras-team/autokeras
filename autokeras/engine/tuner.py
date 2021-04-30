@@ -134,7 +134,14 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
                 layer = get_output_layer(layer.output)
         return model
 
-    def search(self, epochs=None, callbacks=None, validation_split=0, **fit_kwargs):
+    def search(
+        self,
+        epochs=None,
+        callbacks=None,
+        validation_split=0,
+        verbose=1,
+        **fit_kwargs
+    ):
         """Search for the best HyperParameters.
 
         If there is not early-stopping in the callbacks, the early-stopping callback
@@ -178,7 +185,11 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         self.hypermodel.build(hp)
         self.oracle.update_space(hp)
 
-        super().search(epochs=epochs, callbacks=new_callbacks, **fit_kwargs)
+        super().search(
+            epochs=epochs,
+            callbacks=new_callbacks,
+            verbose=verbose,
+            **fit_kwargs)
 
         # Train the best model use validation data.
         # Train the best model with enough number of epochs.
