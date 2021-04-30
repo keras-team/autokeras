@@ -29,7 +29,7 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
         inputs: a list of lists of HyperPreprocessors.
         outputs: a list of lists of HyperPreprocessors.
     """
-    
+
     def __init__(self, inputs, outputs, task=None, **kwargs):
         super().__init__(**kwargs)
         self.inputs = inputs

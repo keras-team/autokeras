@@ -224,4 +224,3 @@ class ObjectDetectionLabelEncoder(preprocessor.Preprocessor):
         )
 
         return train_dataset
-        

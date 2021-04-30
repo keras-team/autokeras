@@ -24,7 +24,6 @@ from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
 
 from autokeras import constants
-from autokeras.engine import preprocessor
 from autokeras.utils import data_utils
 
 INT = "int"
