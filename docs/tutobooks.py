@@ -86,9 +86,7 @@ def nb_to_py(nb_path, py_path):
     for cell in nb["cells"]:
         if cell["cell_type"] == "code":
             # Is it a shell cell?
-            if (cell["source"] and
-                    cell["source"][0] and
-                    cell["source"][0][0] == "!"):
+            if cell["source"] and cell["source"][0] and cell["source"][0][0] == "!":
                 # It's a shell cell
                 py += '"""shell\n'
                 py += "".join(cell["source"]) + "\n"
@@ -144,17 +142,17 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
         e, cell_type, py, tag = _get_next_script_element(py)
         lines = e.split("\n")
 
-        if all(l == "" for l in lines):
+        if all(line == "" for line in lines):
             continue
 
         if lines and not lines[0]:
             lines = lines[1:]
-        source = [l + "\n" for l in lines]
+        source = [line + "\n" for line in lines]
         # Drop last newline char
         if source and not source[-1].strip():
             source = source[:-1]
         if tag == "shell":
-            source = ["!" + l for l in source]
+            source = ["!" + line for line in source]
             cell_type = "code"
         if tag != "invisible" and source:
             cell = {"cell_type": cell_type, "source": source}
@@ -173,8 +171,8 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
     notebook["cells"] = cells
     if loc > MAX_LOC:
         raise ValueError(
-            'Found %d lines of code, but expected fewer than %d'
-            % (loc, MAX_LOC))
+            "Found %d lines of code, but expected fewer than %d" % (loc, MAX_LOC)
+        )
 
     f = open(nb_path, "w")
     f.write(json.dumps(notebook, indent=1, sort_keys=True))
@@ -288,7 +286,7 @@ def validate(py):
         raise ValueError("Missing `Last modified:` field.")
     if not lines[5].startswith("Description: "):
         raise ValueError("Missing `Description:` field.")
-    description = lines[5][len("Description: "):]
+    description = lines[5][len("Description: ") :]
     if not description:
         raise ValueError("Missing `Description:` field content.")
     if not description[0] == description[0].upper():
@@ -306,7 +304,8 @@ def validate(py):
     for i, line in enumerate(lines):
         if line.endswith(" "):
             raise ValueError(
-                "Found trailing space on line %d; line: `%s`" % (i, line))
+                "Found trailing space on line %d; line: `%s`" % (i, line)
+            )
     # Validate style with black
     fpath = "/tmp/" + str(random.randint(1e6, 1e7)) + ".py"
     f = open(fpath, "w")
@@ -330,7 +329,7 @@ def _count_locs(lines):
     string_open = False
     for line in lines:
         line = line.strip()
-        if not line or line.startswith('#'):
+        if not line or line.startswith("#"):
             continue
         if not string_open:
             if not line.startswith('"""'):
@@ -398,7 +397,7 @@ def _get_next_script_element(py):
             elines.append(line)
 
     if etype == "markdown":
-        py = "\n".join(lines[i + 1:])
+        py = "\n".join(lines[i + 1 :])
     else:
         py = "\n".join(lines[i:])
     e = "\n".join(elines)
@@ -408,17 +407,17 @@ def _get_next_script_element(py):
 
 def _parse_header(header):
     lines = header.split("\n")
-    title = lines[0][len("Title: "):]
+    title = lines[0][len("Title: ") :]
     author_line = lines[1]
     if author_line.startswith("Authors"):
-        author = author_line[len("Authors: "):]
+        author = author_line[len("Authors: ") :]
         auth_field = "Authors"
     else:
-        author = author_line[len("Author: "):]
+        author = author_line[len("Author: ") :]
         auth_field = "Author"
-    date_created = lines[2][len("Date created: "):]
-    last_modified = lines[3][len("Last modified: "):]
-    description = lines[4][len("Description: "):]
+    date_created = lines[2][len("Date created: ") :]
+    last_modified = lines[3][len("Last modified: ") :]
+    description = lines[4][len("Description: ") :]
     return {
         "title": title,
         "author": author,

@@ -509,10 +509,11 @@ class ImageObjectDetector(SupervisedImagePipeline):
             y: numpy.ndarray. Training data y. They are the
                 tuples of bounding boxes and their corresponding class IDs w.r.t.
                 the images in x. Each bounding box is defined by 4 values
-                [ymin, xmin, ymax, xmax]. Shape of the bounding boxes should be
-                (None, 4), and shape of the classIDs should be (None,) in each
-                tuple, where None represents the number of bounding boxes in a single
-                image.
+                [ymin, xmin, ymax, xmax]. Box coordinates are measured from top left
+                image corner, are 0-indexed and proportional to sides i.e. between
+                [0,1]. Shape of the bounding boxes should be (None, 4), and shape of
+                the classIDs should be (None,) in each tuple, where None represents
+                the number of bounding boxes in a single image.
             epochs: Int. The number of epochs to train each model during the search.
                 If unspecified, by default we train for a maximum of 1000 epochs,
                 but we stop training if the validation loss stops improving for 10

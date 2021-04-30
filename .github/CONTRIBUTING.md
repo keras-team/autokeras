@@ -20,8 +20,21 @@ for the issues for beginner.
 
 
 ## Setup Environment
+We introduce 3 different options: **GitHub Codespaces**, **VS Code & Remote-Containers**, **the general setup**.
+You can choose base on your preference.
 
-### virtualenv
+### Option 1: GitHub Codespaces
+You can simply open the repository in GitHub Codespaces.
+The environment is already setup there.
+
+### Option 2: VS Code & Remote-Containers
+Open VS Code.
+Install the `Remote-Containers` extension.
+Press `F1` key. Enter `Remote-Containers: Open Folder in Container` to open the repository root folder.
+The environment is already setup there.
+
+### Option 3: The General Setup
+
 Install [Virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
 Create a new virtualenv named `ak` based on python3.
 ```
@@ -29,7 +42,6 @@ mkvirtualenv -p python3 ak
 ```
 Please use this virtualenv for development.
 
-### Installation
 Clone the repo. Go to the repo directory.
 Run the following commands.
 ```
@@ -41,6 +53,15 @@ add2virtualenv .
 ``` 
 
 ## Run Tests
+
+### GitHub Codespaces or VS Code & Remote-Containers
+If you are using "GitHub Codespaces" or "VS Code & Remote-Containers",
+you can simply open any `*_test.py` file under the `tests` directory,
+and wait a few seconds, you will see the test tab on the left of the window.
+
+### General Setup
+
+If you are using the general setup.
 
 Activate the virtualenv.
 Go to the repo directory
@@ -62,12 +83,6 @@ pytest tests/integration_tests
 ```
 
 ## Code Style
-### Option 1: Automatic
-It automatically formats the code every time you commit.
-To setup:
-1. Install Docker.
-2. Run `cd .git/hooks && ln -s -f ../../shell/pre-commit.sh pre-commit` from the repo directory.
-### Option 2: Manually
 You can run the following manually every time you want to format your code.
 1. Run `shell/format.sh` to format your code.
 2. Run `shell/lint.sh` to check.

@@ -1,0 +1,5 @@
+{
+    "dockerFile": "Dockerfile",
+    "postCreateCommand": "sh /setup.sh",
+    "extensions": ["ms-python.python"]
+}

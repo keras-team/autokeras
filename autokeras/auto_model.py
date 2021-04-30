@@ -192,9 +192,7 @@ class AutoModel(object):
                 )
                 return graph_module.Graph(inputs=inputs, outputs=outputs)
 
-        middle_nodes = []
-        for input_node in inputs:
-            middle_nodes.append(input_node.get_block()(input_node))
+        middle_nodes = [input_node.get_block()(input_node) for input_node in inputs]
 
         # Merge the middle nodes.
         if len(middle_nodes) > 1:
@@ -440,9 +438,7 @@ class AutoModel(object):
                 return True
         # The nest has one level.
         # It matches the single IO case.
-        if len(shapes) == 2 and len(self.inputs) == 1 and len(self.outputs) == 1:
-            return True
-        return False
+        return len(shapes) == 2 and len(self.inputs) == 1 and len(self.outputs) == 1
 
     def predict(self, x, batch_size=32, **kwargs):
         """Predict the output for a given testing data.
@@ -458,9 +454,8 @@ class AutoModel(object):
         if self.task == "object_detection":
             dataset = x
         else:
-            if isinstance(x, tf.data.Dataset):
-                if self._has_y(x):
-                    x = x.map(lambda x, y: x)
+            if isinstance(x, tf.data.Dataset) and self._has_y(x):
+                x = x.map(lambda x, y: x)
             self._check_data_format((x, None), predict=True)
             dataset = self._adapt(x, self.inputs, batch_size)
         pipeline = self.tuner.get_best_pipeline()

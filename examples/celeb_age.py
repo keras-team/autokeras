@@ -5,36 +5,38 @@ turnout.
 This example is adapted from a
 [notebook](https://gist.github.com/mapmeld/98d1e9839f2d1f9c4ee197953661ed07) which
 estimates a person's age from their image, trained on the
-[IMDB-WIKI](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/) photographs of famous
+[IMDB-WIKI](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/) photographs
+of famous
 people.
 
 First, prepare your image data in a numpy.ndarray or tensorflow.Dataset format. Each
 image must have the same shape, meaning each has the same width, height, and color
 channels as other images in the set.
 """
-
-"""
-### Connect your Google Drive for Data
-"""
-
-
-import os
 from datetime import datetime
 from datetime import timedelta
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from google.colab import drive
 from PIL import Image
 from scipy.io import loadmat
+
 import autokeras as ak
+
+"""
+### Connect your Google Drive for Data
+"""
+
+
 drive.mount("/content/drive")
 
 """
 ### Install AutoKeras and TensorFlow
 
-Download the master branch to your Google Drive for this tutorial. In general, you can
-use *pip install autokeras* .
+Download the master branch to your Google Drive for this tutorial. In general,
+you can use *pip install autokeras* .
 """
 
 """shell
@@ -53,28 +55,28 @@ git+git://github.com/keras-team/keras-tuner.git@d2d69cba21a0b482a85ce2a38893e232
 """
 
 """shell
-!mkdir ./drive/My\ Drive/mlin/celebs
+!mkdir "./drive/My Drive/mlin/celebs"
 """
 
 """shell
-! wget -O ./drive/My\ Drive/mlin/celebs/imdb_0.tar
+! wget -O "./drive/My Drive/mlin/celebs/imdb_0.tar"
 https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/static/imdb_0.tar
 """
 
 """shell
-! cd ./drive/My\ Drive/mlin/celebs && tar -xf imdb_0.tar
-! rm ./drive/My\ Drive/mlin/celebs/imdb_0.tar
+! cd "./drive/My Drive/mlin/celebs" && tar -xf imdb_0.tar
+! rm "./drive/My Drive/mlin/celebs/imdb_0.tar"
 """
 
 """
-Uncomment and run the below cell if you need to re-run the cells again and above don't
-need to install everything from the beginning.
+Uncomment and run the below cell if you need to re-run the cells again and
+above don't need to install everything from the beginning.
 """
 
 # ! cd ./drive/My\ Drive/mlin/celebs.
 
 """shell
-! ls ./drive/My\ Drive/mlin/celebs/imdb/
+! ls "./drive/My Drive/mlin/celebs/imdb/"
 """
 
 """shell
@@ -105,7 +107,7 @@ def datenum_to_datetime(datenum):
             + timedelta(seconds=round(seconds))
             - timedelta(days=366)
         )
-    except:
+    except Exception:
         return datenum_to_datetime(700000)
 
 
@@ -203,13 +205,14 @@ reg.fit(train_imgs, train_ages)
 # predict_y = reg.predict(test_images)  # Uncomment if required
 
 # Evaluate the chosen model with testing data
-print(reg.evaluate(test_images, test_ages))
+print(reg.evaluate(train_imgs, train_ages))
 
 """
 ### **Validation Data**
 
-By default, AutoKeras use the last 20% of training data as validation data. As shown in
-the example below, you can use validation_split to specify the percentage.
+By default, AutoKeras use the last 20% of training data as validation data. As
+shown in the example below, you can use validation_split to specify the
+percentage.
 """
 
 reg.fit(
@@ -221,8 +224,8 @@ reg.fit(
 )
 
 """
-You can also use your own validation set instead of splitting it from the training data
-with validation_data.
+You can also use your own validation set instead of splitting it from the
+training data with validation_data.
 """
 
 split = 460000
@@ -241,12 +244,13 @@ reg.fit(
 """
 ### **Customized Search Space**
 
-For advanced users, you may customize your search space by using AutoModel instead of
-ImageRegressor. You can configure the ImageBlock for some high-level configurations,
-e.g., block_type for the type of neural network to search, normalize for whether to do
-data normalization, augment for whether to do data augmentation. You can also choose not
-to specify these arguments, which would leave the different choices to be tuned
-automatically. See the following example for detail.
+For advanced users, you may customize your search space by using AutoModel
+instead of ImageRegressor. You can configure the ImageBlock for some high-level
+configurations, e.g., block_type for the type of neural network to search,
+normalize for whether to do data normalization, augment for whether to do data
+augmentation. You can also choose not to specify these arguments, which would
+leave the different choices to be tuned automatically. See the following
+example for detail.
 """
 
 
@@ -288,15 +292,16 @@ clf.fit(x_train, y_train, epochs=3)
 """
 The AutoKeras ImageClassifier is quite flexible for the data format.
 
-For the image, it accepts data formats both with and without the channel dimension. The
-images in the IMDB-Wiki dataset do not have a channel dimension. Each image is a matrix
-with shape (128, 128). AutoKeras also accepts images with a channel dimension at last,
-e.g., (32, 32, 3), (28, 28, 1).
+For the image, it accepts data formats both with and without the channel
+dimension. The images in the IMDB-Wiki dataset do not have a channel dimension.
+Each image is a matrix with shape (128, 128). AutoKeras also accepts images
+with a channel dimension at last, e.g., (32, 32, 3), (28, 28, 1).
 
-For the classification labels, AutoKeras accepts both plain labels, i.e. strings or
-integers, and one-hot encoded labels, i.e. vectors of 0s and 1s.
+For the classification labels, AutoKeras accepts both plain labels, i.e.
+strings or integers, and one-hot encoded labels, i.e. vectors of 0s and 1s.
 
-So if you prepare your data in the following way, the ImageClassifier should still work.
+So if you prepare your data in the following way, the ImageClassifier should
+still work.
 """
 
 # Reshape the images to have the channel dimension.
@@ -308,9 +313,9 @@ print(test_imgs.shape)  # (100, 128, 128, 1)
 print(train_ages[:3])
 
 """
-We also support using tf.data.Dataset format for the training data. In this case, the
-images would have to be 3-dimentional. The labels have to be one-hot encoded for
-multi-class classification to be wrapped into tensorflow Dataset.
+We also support using tf.data.Dataset format for the training data. In this
+case, the images would have to be 3-dimentional. The labels have to be one-hot
+encoded for multi-class classification to be wrapped into tensorflow Dataset.
 """
 
 

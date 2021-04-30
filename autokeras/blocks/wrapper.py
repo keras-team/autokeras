@@ -263,8 +263,7 @@ class TimeseriesBlock(block_module.Block):
         super().__init__(**kwargs)
 
     def get_config(self):
-        config = super().get_config()
-        return config
+        return super().get_config()
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]

@@ -16,7 +16,6 @@ import re
 
 import kerastuner
 import tensorflow as tf
-from kerastuner.engine import hyperparameters
 from packaging.version import parse
 from tensorflow.python.util import nest
 
@@ -114,8 +113,6 @@ def run_with_adaptive_batch_size(batch_size, func, **fit_kwargs):
 def get_hyperparameter(value, hp, dtype):
     if value is None:
         return hp
-    elif isinstance(value, dtype):
-        return hyperparameters.Fixed(hp.name, value)
     return value
 
 
@@ -126,6 +123,8 @@ def add_to_hp(hp, hps, name=None):
         hp: kerastuner.HyperParameters.
         name: String. If left unspecified, the hp name is used.
     """
+    if not isinstance(hp, kerastuner.engine.hyperparameters.HyperParameter):
+        return hp
     kwargs = hp.get_config()
     if name is None:
         name = hp.name

@@ -64,10 +64,7 @@ class Merge(block_module.Block):
                 for input_node in inputs
             ]
         ):
-            new_inputs = []
-            for input_node in inputs:
-                new_inputs.append(Flatten().build(hp, input_node))
-            inputs = new_inputs
+            inputs = [Flatten().build(hp, input_node) for input_node in inputs]
 
         # TODO: Even inputs have different shape[-1], they can still be Add(
         #  ) after another layer. Check if the inputs are all of the same
@@ -82,10 +79,10 @@ class Merge(block_module.Block):
         return layers.Concatenate()(inputs)
 
     def _inputs_same_shape(self, inputs):
-        for input_node in inputs:
-            if input_node.shape.as_list() != inputs[0].shape.as_list():
-                return False
-        return True
+        return all(
+            input_node.shape.as_list() == inputs[0].shape.as_list()
+            for input_node in inputs
+        )
 
 
 class Flatten(block_module.Block):
@@ -126,14 +123,12 @@ class Reduction(block_module.Block):
         if len(output_node.shape) <= 2:
             return output_node
 
-        if self.reduction_type is None:
-            reduction_type = hp.Choice(
-                REDUCTION_TYPE, [FLATTEN, GLOBAL_MAX, GLOBAL_AVG]
-            )
-            with hp.conditional_scope(REDUCTION_TYPE, [reduction_type]):
-                return self._build_block(hp, output_node, reduction_type)
-        else:
+        if self.reduction_type is not None:
             return self._build_block(hp, output_node, self.reduction_type)
+
+        reduction_type = hp.Choice(REDUCTION_TYPE, [FLATTEN, GLOBAL_MAX, GLOBAL_AVG])
+        with hp.conditional_scope(REDUCTION_TYPE, [reduction_type]):
+            return self._build_block(hp, output_node, reduction_type)
 
     def _build_block(self, hp, output_node, reduction_type):
         if reduction_type == FLATTEN:
