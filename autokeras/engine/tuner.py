@@ -186,10 +186,8 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
         self.oracle.update_space(hp)
 
         super().search(
-            epochs=epochs,
-            callbacks=new_callbacks,
-            verbose=verbose,
-            **fit_kwargs)
+            epochs=epochs, callbacks=new_callbacks, verbose=verbose, **fit_kwargs
+        )
 
         # Train the best model use validation data.
         # Train the best model with enough number of epochs.
