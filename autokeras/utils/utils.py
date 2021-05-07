@@ -63,18 +63,22 @@ def contain_instance(instance_list, instance_type):
     return any([isinstance(instance, instance_type) for instance in instance_list])
 
 
-def evaluate_with_adaptive_batch_size(model, batch_size, **fit_kwargs):
+def evaluate_with_adaptive_batch_size(model, batch_size, verbose=1, **fit_kwargs):
     return run_with_adaptive_batch_size(
         batch_size,
-        lambda x, validation_data, **kwargs: model.evaluate(x, **kwargs),
+        lambda x, validation_data, **kwargs: model.evaluate(
+            x, verbose=verbose, **kwargs
+        ),
         **fit_kwargs
     )
 
 
-def predict_with_adaptive_batch_size(model, batch_size, **fit_kwargs):
+def predict_with_adaptive_batch_size(model, batch_size, verbose=1, **fit_kwargs):
     return run_with_adaptive_batch_size(
         batch_size,
-        lambda x, validation_data, **kwargs: model.predict(x, **kwargs),
+        lambda x, validation_data, **kwargs: model.predict(
+            x, verbose=verbose, **kwargs
+        ),
         **fit_kwargs
     )
 
