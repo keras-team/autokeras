@@ -252,6 +252,12 @@ class AutoModel(object):
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit)
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+
+        #Returns
+            history: A History object corresponding to the best model.
+                Its History.history attribute is a record of training
+                loss values and metrics values at successive epochs, as well as
+                validation loss values and validation metrics values (if applicable).
         """
         # Check validation information.
         if not validation_data and not validation_split:
@@ -275,7 +281,7 @@ class AutoModel(object):
                 dataset, validation_split
             )
 
-        self.tuner.search(
+        history = self.tuner.search(
             x=dataset,
             epochs=epochs,
             callbacks=callbacks,
@@ -284,6 +290,8 @@ class AutoModel(object):
             verbose=verbose,
             **kwargs
         )
+
+        return history
 
     def _adapt(self, dataset, hms, batch_size):
         if isinstance(dataset, tf.data.Dataset):
