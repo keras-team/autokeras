@@ -28,8 +28,9 @@ def test_multi_cat_encode_strings_correctly(tmp_path):
     dataset = tf.data.Dataset.from_tensor_slices(x_train).batch(32)
 
     layer.adapt(tf.data.Dataset.from_tensor_slices(x_train).batch(32))
-    for data in dataset.map(layer):
-        result = data
+
+    for data in dataset:
+        result = layer(data)
 
     assert result[0][0] == result[2][0]
     assert result[0][0] != result[1][0]
@@ -148,3 +149,19 @@ def test_adam_weight_decay(tmp_path):
     model.compile(loss="mse", optimizer=optimizer)
     model.fit(np.random.rand(100, 10), np.random.rand(100, 10), epochs=2)
     model.save(os.path.join(tmp_path, "model"))
+
+
+def test_cast_to_float32_return_float32_tensor(tmp_path):
+    layer = layer_module.CastToFloat32()
+
+    tensor = layer(tf.constant(["0.3"], dtype=tf.string))
+
+    assert tf.float32 == tensor.dtype
+
+
+def test_expand_last_dim_return_tensor_with_more_dims(tmp_path):
+    layer = layer_module.ExpandLastDim()
+
+    tensor = layer(tf.constant([0.1, 0.2], dtype=tf.float32))
+
+    assert 2 == len(tensor.shape.as_list())

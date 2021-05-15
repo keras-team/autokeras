@@ -33,12 +33,18 @@ ONE_HOT = "one-hot"
 
 @tf.keras.utils.register_keras_serializable()
 class CastToFloat32(preprocessing.PreprocessingLayer):
+    def get_config(self):
+        return super().get_config()
+
     def call(self, inputs):
         return data_utils.cast_to_float32(inputs)
 
 
 @tf.keras.utils.register_keras_serializable()
 class ExpandLastDim(preprocessing.PreprocessingLayer):
+    def get_config(self):
+        return super().get_config()
+
     def call(self, inputs):
         return tf.expand_dims(inputs, axis=-1)
 
@@ -65,7 +71,12 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
             if encoding == NONE:
                 self.encoding_layers.append(None)
             elif encoding == INT:
-                self.encoding_layers.append(preprocessing.StringLookup())
+                # Set a temporary vocabulary to prevent the error of no
+                # vocabulary when calling the layer to build the model.  The
+                # vocabulary would be reset by adapting the layer later.
+                self.encoding_layers.append(
+                    preprocessing.StringLookup(vocabulary=["NONE"])
+                )
             elif encoding == ONE_HOT:
                 self.encoding_layers.append(None)
 
@@ -484,21 +495,23 @@ class OnDeviceEmbedding(tf.keras.layers.Layer):
         super(OnDeviceEmbedding, self).build(input_shape)
 
     def call(self, inputs):
-        flat_inputs = tf.reshape(inputs, [-1])
-        if self._use_one_hot:
-            one_hot_data = tf.one_hot(
+        flat_inputs = tf.reshape(inputs, [-1])  # pragma: no cover
+        if self._use_one_hot:  # pragma: no cover
+            one_hot_data = tf.one_hot(  # pragma: no cover
                 flat_inputs, depth=self._vocab_size, dtype=self.embeddings.dtype
             )
-            embeddings = tf.matmul(one_hot_data, self.embeddings)
+            embeddings = tf.matmul(one_hot_data, self.embeddings)  # pragma: no cover
         else:
-            embeddings = tf.gather(self.embeddings, flat_inputs)
-        embeddings = tf.reshape(
+            embeddings = tf.gather(self.embeddings, flat_inputs)  # pragma: no cover
+        embeddings = tf.reshape(  # pragma: no cover
             embeddings,
             # Work around b/142213824: prefer concat to shape over a Python list.
             tf.concat([tf.shape(inputs), [self._embedding_width]], axis=0),
         )
-        embeddings.set_shape(inputs.shape.as_list() + [self._embedding_width])
-        return embeddings
+        embeddings.set_shape(
+            inputs.shape.as_list() + [self._embedding_width]
+        )  # pragma: no cover
+        return embeddings  # pragma: no cover
 
 
 @tf.keras.utils.register_keras_serializable()
@@ -580,47 +593,49 @@ class PositionEmbedding(tf.keras.layers.Layer):
 
     def call(self, inputs):
         """Implements call() for the layer."""
-        input_shape = get_shape_list(inputs, expected_rank=3)
-        if self._use_dynamic_slicing:
-            position_embeddings = self._position_embeddings[: input_shape[1], :]
+        input_shape = get_shape_list(inputs, expected_rank=3)  # pragma: no cover
+        if self._use_dynamic_slicing:  # pragma: no cover
+            position_embeddings = self._position_embeddings[  # pragma: no cover
+                : input_shape[1], :
+            ]
         else:
             position_embeddings = self._position_embeddings  # pragma: no cover
 
-        return tf.broadcast_to(position_embeddings, input_shape)
+        return tf.broadcast_to(position_embeddings, input_shape)  # pragma: no cover
 
 
 def get_shape_list(tensor, expected_rank=None, name=None):
     """official.modeling.tf_utils.get_shape_list"""
-    if expected_rank is not None:
-        assert_rank(tensor, expected_rank, name)
+    if expected_rank is not None:  # pragma: no cover
+        assert_rank(tensor, expected_rank, name)  # pragma: no cover
 
-    shape = tensor.shape.as_list()
+    shape = tensor.shape.as_list()  # pragma: no cover
 
-    non_static_indexes = []
-    for (index, dim) in enumerate(shape):
-        if dim is None:
-            non_static_indexes.append(index)
+    non_static_indexes = []  # pragma: no cover
+    for (index, dim) in enumerate(shape):  # pragma: no cover
+        if dim is None:  # pragma: no cover
+            non_static_indexes.append(index)  # pragma: no cover
 
-    if not non_static_indexes:
+    if not non_static_indexes:  # pragma: no cover
         return shape  # pragma: no cover
 
-    dyn_shape = tf.shape(tensor)
-    for index in non_static_indexes:
-        shape[index] = dyn_shape[index]
-    return shape
+    dyn_shape = tf.shape(tensor)  # pragma: no cover
+    for index in non_static_indexes:  # pragma: no cover
+        shape[index] = dyn_shape[index]  # pragma: no cover
+    return shape  # pragma: no cover
 
 
 def assert_rank(tensor, expected_rank, name=None):
     """official.modeling.tf_utils.assert_rank"""
-    expected_rank_dict = {}
-    if isinstance(expected_rank, six.integer_types):
-        expected_rank_dict[expected_rank] = True
-    else:
-        for x in expected_rank:
-            expected_rank_dict[x] = True
+    expected_rank_dict = {}  # pragma: no cover
+    if isinstance(expected_rank, six.integer_types):  # pragma: no cover
+        expected_rank_dict[expected_rank] = True  # pragma: no cover
+    else:  # pragma: no cover
+        for x in expected_rank:  # pragma: no cover
+            expected_rank_dict[x] = True  # pragma: no cover
 
-    actual_rank = tensor.shape.ndims
-    if actual_rank not in expected_rank_dict:
+    actual_rank = tensor.shape.ndims  # pragma: no cover
+    if actual_rank not in expected_rank_dict:  # pragma: no cover
         raise ValueError(  # pragma: no cover
             "For the tensor `%s`, the actual tensor rank `%d` (shape = %s) is not "
             "equal to the expected tensor rank `%s`"
@@ -633,33 +648,35 @@ class SelfAttentionMask(tf.keras.layers.Layer):
     """official.nlp.modeling.layers.SelfAttentionMask"""
 
     def call(self, inputs):
-        from_tensor = inputs[0]
-        to_mask = inputs[1]
-        from_shape = get_shape_list(from_tensor, expected_rank=[2, 3])
-        batch_size = from_shape[0]
-        from_seq_length = from_shape[1]
+        from_tensor = inputs[0]  # pragma: no cover
+        to_mask = inputs[1]  # pragma: no cover
+        from_shape = get_shape_list(
+            from_tensor, expected_rank=[2, 3]
+        )  # pragma: no cover
+        batch_size = from_shape[0]  # pragma: no cover
+        from_seq_length = from_shape[1]  # pragma: no cover
 
-        to_shape = get_shape_list(to_mask, expected_rank=2)
-        to_seq_length = to_shape[1]
+        to_shape = get_shape_list(to_mask, expected_rank=2)  # pragma: no cover
+        to_seq_length = to_shape[1]  # pragma: no cover
 
-        to_mask = tf.cast(
-            tf.reshape(to_mask, [batch_size, 1, to_seq_length]),
-            dtype=from_tensor.dtype,
-        )
+        to_mask = tf.cast(  # pragma: no cover
+            tf.reshape(to_mask, [batch_size, 1, to_seq_length]),  # pragma: no cover
+            dtype=from_tensor.dtype,  # pragma: no cover
+        )  # pragma: no cover
 
         # We don't assume that `from_tensor` is a mask (although it could be). We
         # don't actually care if we attend *from* padding tokens (only *to* padding)
         # tokens so we create a tensor of all ones.
         #
         # `broadcast_ones` = [batch_size, from_seq_length, 1]
-        broadcast_ones = tf.ones(
+        broadcast_ones = tf.ones(  # pragma: no cover
             shape=[batch_size, from_seq_length, 1], dtype=from_tensor.dtype
         )
 
         # Here we broadcast along two dimensions to create the mask.
-        mask = broadcast_ones * to_mask
+        mask = broadcast_ones * to_mask  # pragma: no cover
 
-        return mask
+        return mask  # pragma: no cover
 
 
 @tf.keras.utils.register_keras_serializable()
@@ -827,12 +844,14 @@ class Transformer(tf.keras.layers.Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
     def call(self, inputs):
-        if isinstance(inputs, (list, tuple)) and len(inputs) == 2:
-            input_tensor, attention_mask = inputs
+        if (
+            isinstance(inputs, (list, tuple)) and len(inputs) == 2
+        ):  # pragma: no cover
+            input_tensor, attention_mask = inputs  # pragma: no cover
         else:
             input_tensor, attention_mask = (inputs, None)  # pragma: no cover
 
-        if self._output_range:
+        if self._output_range:  # pragma: no cover
             target_tensor = input_tensor[
                 :, 0 : self._output_range, :
             ]  # pragma: no cover
@@ -840,27 +859,35 @@ class Transformer(tf.keras.layers.Layer):
                 :, 0 : self._output_range, :
             ]  # pragma: no cover
         else:
-            target_tensor = input_tensor
-        attention_inputs = [target_tensor, input_tensor]
+            target_tensor = input_tensor  # pragma: no cover
+        attention_inputs = [target_tensor, input_tensor]  # pragma: no cover
 
-        attention_output = self._attention_layer(attention_inputs, attention_mask)
-        attention_output = self._attention_dropout(attention_output)
-        attention_output = self._attention_layer_norm(
+        attention_output = self._attention_layer(
+            attention_inputs, attention_mask
+        )  # pragma: no cover
+        attention_output = self._attention_dropout(
+            attention_output
+        )  # pragma: no cover
+        attention_output = self._attention_layer_norm(  # pragma: no cover
             target_tensor + attention_output
         )
-        intermediate_output = self._intermediate_dense(attention_output)
+        intermediate_output = self._intermediate_dense(
+            attention_output
+        )  # pragma: no cover
         intermediate_output = self._intermediate_activation_layer(
             intermediate_output
-        )
-        layer_output = self._output_dense(intermediate_output)
-        layer_output = self._output_dropout(layer_output)
+        )  # pragma: no cover
+        layer_output = self._output_dense(intermediate_output)  # pragma: no cover
+        layer_output = self._output_dropout(layer_output)  # pragma: no cover
         # During mixed precision training, attention_output is from layer norm and
         # is always fp32 for now. Cast layer_output to fp32 for the subsequent
         # add.
-        layer_output = tf.cast(layer_output, tf.float32)
-        layer_output = self._output_layer_norm(layer_output + attention_output)
+        layer_output = tf.cast(layer_output, tf.float32)  # pragma: no cover
+        layer_output = self._output_layer_norm(
+            layer_output + attention_output
+        )  # pragma: no cover
 
-        return layer_output
+        return layer_output  # pragma: no cover
 
 
 EinsumDense = tf.keras.layers.experimental.EinsumDense
@@ -1078,26 +1105,30 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         """
         # Take the dot product between "query" and "key" to get the raw
         # attention scores.
-        attention_scores = tf.einsum(
+        attention_scores = tf.einsum(  # pragma: no cover
             self._dot_product_equation, key_tensor, query_tensor
         )
-        attention_scores = tf.multiply(
+        attention_scores = tf.multiply(  # pragma: no cover
             attention_scores, 1.0 / math.sqrt(float(self._key_size))
         )
 
         # Normalize the attention scores to probabilities.
         # `attention_scores` = [B, N, T, S]
-        attention_scores = self._masked_softmax(attention_scores, attention_mask)
+        attention_scores = self._masked_softmax(
+            attention_scores, attention_mask
+        )  # pragma: no cover
 
         # This is actually dropping out entire tokens to attend to, which might
         # seem a bit unusual, but is taken from the original Transformer paper.
-        attention_scores_dropout = self._dropout_layer(attention_scores)
+        attention_scores_dropout = self._dropout_layer(
+            attention_scores
+        )  # pragma: no cover
 
         # `context_layer` = [B, T, N, H]
         attention_output = tf.einsum(
             self._combine_equation, attention_scores_dropout, value_tensor
-        )
-        return attention_output, attention_scores
+        )  # pragma: no cover
+        return attention_output, attention_scores  # pragma: no cover
 
     def call(self, inputs, attention_mask=None):
         """Implements the forward pass.
@@ -1129,36 +1160,36 @@ class MultiHeadAttention(tf.keras.layers.Layer):
           attention
             axes.
         """
-        inputs_len = len(inputs)
-        if inputs_len > 3 or inputs_len < 2:
+        inputs_len = len(inputs)  # pragma: no cover
+        if inputs_len > 3 or inputs_len < 2:  # pragma: no cover
             raise ValueError(  # pragma: no cover
                 "Expects inputs list of length 2 or 3, namely [query, value] or "
                 "[query, value, key]. "
                 "Given length: %d" % inputs_len
             )
-        query = inputs[0]
-        value = inputs[1]
-        key = inputs[2] if inputs_len == 3 else value
+        query = inputs[0]  # pragma: no cover
+        value = inputs[1]  # pragma: no cover
+        key = inputs[2] if inputs_len == 3 else value  # pragma: no cover
 
         #   N = `num_attention_heads`
         #   H = `size_per_head`
         # `query_tensor` = [B, T, N ,H]
-        query_tensor = self._query_dense(query)
+        query_tensor = self._query_dense(query)  # pragma: no cover
 
         # `key_tensor` = [B, S, N, H]
-        key_tensor = self._key_dense(key)
+        key_tensor = self._key_dense(key)  # pragma: no cover
 
         # `value_tensor` = [B, S, N, H]
-        value_tensor = self._value_dense(value)
+        value_tensor = self._value_dense(value)  # pragma: no cover
 
         attention_output, attention_scores = self._compute_attention(
             query_tensor, key_tensor, value_tensor, attention_mask
-        )
-        attention_output = self._output_dense(attention_output)
+        )  # pragma: no cover
+        attention_output = self._output_dense(attention_output)  # pragma: no cover
 
-        if self._return_attention_scores:
+        if self._return_attention_scores:  # pragma: no cover
             return attention_output, attention_scores  # pragma: no cover
-        return attention_output
+        return attention_output  # pragma: no cover
 
 
 @tf.keras.utils.register_keras_serializable()
@@ -1290,12 +1321,14 @@ class DenseEinsum(tf.keras.layers.Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
     def call(self, inputs):
-        ret = tf.einsum(self._einsum_string, inputs, self._kernel)
-        if self._use_bias:
-            ret += self._bias
-        if self._activation is not None:
-            ret = self._activation(ret)
-        return ret
+        ret = tf.einsum(
+            self._einsum_string, inputs, self._kernel
+        )  # pragma: no cover
+        if self._use_bias:  # pragma: no cover
+            ret += self._bias  # pragma: no cover
+        if self._activation is not None:  # pragma: no cover
+            ret = self._activation(ret)  # pragma: no cover
+        return ret  # pragma: no cover
 
 
 def _build_proj_equation(free_dims, bound_dims, output_dims):
@@ -1409,22 +1442,28 @@ class MaskedSoftmax(tf.keras.layers.Layer):
         super(MaskedSoftmax, self).__init__(**kwargs)
 
     def call(self, scores, mask=None):
-        if mask is not None:
-            for _ in range(len(scores.shape) - len(mask.shape)):
-                mask = tf.expand_dims(mask, axis=self._mask_expansion_axes)
+        if mask is not None:  # pragma: no cover
+            for _ in range(len(scores.shape) - len(mask.shape)):  # pragma: no cover
+                mask = tf.expand_dims(
+                    mask, axis=self._mask_expansion_axes
+                )  # pragma: no cover
 
             # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
             # masked positions, this operation will create a tensor which is 0.0 for
             # positions we want to attend and -10000.0 for masked positions.
-            adder = (1.0 - tf.cast(mask, scores.dtype)) * -10000.0
+            adder = (
+                1.0 - tf.cast(mask, scores.dtype)
+            ) * -10000.0  # pragma: no cover
 
             # Since we are adding it to the raw scores before the softmax, this is
             # effectively the same as removing these entirely.
-            scores += adder
+            scores += adder  # pragma: no cover
 
-        if len(self._normalization_axes) == 1:
-            return tf.nn.softmax(scores, axis=self._normalization_axes[0])
-        else:
+        if len(self._normalization_axes) == 1:  # pragma: no cover
+            return tf.nn.softmax(
+                scores, axis=self._normalization_axes[0]
+            )  # pragma: no cover
+        else:  # pragma: no cover
             return tf.math.exp(  # pragma: no cover
                 scores
                 - tf.math.reduce_logsumexp(

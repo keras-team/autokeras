@@ -123,7 +123,10 @@ class TextToNgramVector(block_module.Block):
         else:
             ngrams = hp.Int("ngrams", min_value=1, max_value=2, default=2)
         return preprocessing.TextVectorization(
-            max_tokens=self.max_tokens, ngrams=ngrams, output_mode="tf-idf"
+            max_tokens=self.max_tokens,
+            ngrams=ngrams,
+            output_mode="tf-idf",
+            pad_to_max_tokens=True,
         )(input_node)
 
     def get_config(self):
