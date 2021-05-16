@@ -43,3 +43,8 @@ def test_cast_to_string_with_float32():
 def test_cast_to_float32_from_float32():
     tensor = tf.constant([0.1, 0.2], dtype=tf.float32)
     assert tf.float32 == data_utils.cast_to_float32(tensor).dtype
+
+
+def test_cast_to_float32_from_string():
+    tensor = tf.constant(["0.3"], dtype=tf.string)
+    assert tf.float32 == data_utils.cast_to_float32(tensor).dtype
