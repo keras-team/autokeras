@@ -39,6 +39,7 @@ nav:
     - Text Regression: tutorial/text_regression.md
     - Structured Data Classification: tutorial/structured_data_classification.md
     - Structured Data Regression: tutorial/structured_data_regression.md
+    - TimeSeriesForecaster: tutorial/timeseries_forecaster.md
     - Multi-Modal and Multi-Task: tutorial/multi.md
     - Customized Model: tutorial/customized.md
     - Export Model: tutorial/export.md
