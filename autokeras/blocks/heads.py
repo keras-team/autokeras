@@ -228,7 +228,10 @@ class RegressionHead(head_module.Head):
         input_node = inputs[0]
         output_node = input_node
 
-        dropout = self.dropout or hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
+        if self.dropout is not None:
+            dropout = self.dropout
+        else:
+            dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
 
         if dropout > 0:
             output_node = layers.Dropout(dropout)(output_node)
