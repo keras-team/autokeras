@@ -214,7 +214,8 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             )
             pipeline, model, history = self.final_fit(**copied_fit_kwargs)
         else:
-            print("None History Case for Some Reason")
+            # TODO: Add return history functionality in Keras Tuner
+            model = self.get_best_models()[0]
             pipeline = pipeline_module.load_pipeline(
                 self._pipeline_path(self.oracle.get_best_trials(1)[0].trial_id)
             )
