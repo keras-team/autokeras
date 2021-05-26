@@ -12,8 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
-BERT_DIR = "gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12"
-BERT_CHECKPOINT_PATH = "gs://autokeras-download/checkpoints/bert/bert_ckpt-1"
-BERT_VOCAB_PATH = os.path.join(BERT_DIR, "vocab.txt")
+BERT_CHECKPOINT_PATH = "https://github.com/keras-team/autokeras/releases/download/1.0.13/bert_checkpoint.tar.gz"  # noqa: E501
+BERT_VOCAB_PATH = "https://github.com/keras-team/autokeras/releases/download/1.0.13/bert_vocab.txt"  # noqa: E501

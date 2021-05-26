@@ -13,6 +13,7 @@
 # limitations under the License.
 import collections
 import math
+import os
 import re
 import unicodedata
 from typing import List
@@ -281,8 +282,14 @@ class BertEncoder(tf.keras.layers.Layer):
         return cls_output
 
     def load_pretrained_weights(self):
+        path = tf.keras.utils.get_file(
+            "bert_checkpoint", constants.BERT_CHECKPOINT_PATH, extract=True
+        )
+        path = os.path.join(
+            os.path.abspath(os.path.join(path, os.pardir)), "bert", "bert_ckpt-1"
+        )
         checkpoint = tf.train.Checkpoint(model=self)
-        checkpoint.restore(constants.BERT_CHECKPOINT_PATH).assert_consumed()
+        checkpoint.restore(path).assert_consumed()
 
 
 @tf.keras.utils.register_keras_serializable()
@@ -1505,7 +1512,8 @@ def load_vocab(vocab_file):
     """Loads a vocabulary file into a dictionary."""
     vocab = collections.OrderedDict()
     index = 0
-    with tf.io.gfile.GFile(vocab_file, "r") as reader:
+    path = tf.keras.utils.get_file("bert_vocab.txt", vocab_file)
+    with tf.io.gfile.GFile(path, "r") as reader:
         while True:
             token = convert_to_unicode(reader.readline())
             if not token:
