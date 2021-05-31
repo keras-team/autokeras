@@ -119,6 +119,17 @@ def test_clf_head_hpps_with_uint8_contain_cast_to_int32():
     )
 
 
+def test_reg_head_build_with_zero_dropout_return_tensor():
+    block = head_module.RegressionHead(dropout=0, shape=(8,))
+
+    outputs = block.build(
+        kerastuner.HyperParameters(),
+        tf.keras.Input(shape=(5,), dtype=tf.float32),
+    )
+
+    assert len(nest.flatten(outputs)) == 1
+
+
 def test_segmentation():
     dataset = np.array(["a", "a", "c", "b"])
     head = head_module.SegmentationHead(name="a", shape=(1,))
