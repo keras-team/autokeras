@@ -111,7 +111,7 @@ class AutoModel(object):
         seed: Int. Random seed.
         max_model_size: Int. Maximum number of scalars in the parameters of a
             model. Models larger than this are rejected.
-        **kwargs: Any arguments supported by kerastuner.Tuner.
+        **kwargs: Any arguments supported by keras_tuner.Tuner.
     """
 
     def __init__(

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kerastuner
+import keras_tuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
@@ -24,7 +24,7 @@ def test_augment_build_return_tensor():
     block = blocks.ImageAugmentation()
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
@@ -35,7 +35,7 @@ def test_augment_build_with_translation_factor_range_return_tensor():
     block = blocks.ImageAugmentation(translation_factor=(0, 0.1))
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
@@ -46,7 +46,7 @@ def test_augment_build_with_no_flip_return_tensor():
     block = blocks.ImageAugmentation(vertical_flip=False, horizontal_flip=False)
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
@@ -57,7 +57,7 @@ def test_augment_build_with_vflip_only_return_tensor():
     block = blocks.ImageAugmentation(vertical_flip=True, horizontal_flip=False)
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
@@ -68,7 +68,7 @@ def test_augment_build_with_zoom_factor_return_tensor():
     block = blocks.ImageAugmentation(zoom_factor=0.1)
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
@@ -79,7 +79,7 @@ def test_augment_build_with_contrast_factor_return_tensor():
     block = blocks.ImageAugmentation(contrast_factor=0.1)
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
@@ -108,7 +108,7 @@ def test_ngram_build_return_tensor():
     block = blocks.TextToNgramVector()
 
     outputs = block.build(
-        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+        keras_tuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -118,7 +118,7 @@ def test_ngram_build_with_ngrams_return_tensor():
     block = blocks.TextToNgramVector(ngrams=2)
 
     outputs = block.build(
-        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+        keras_tuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -146,7 +146,7 @@ def test_int_seq_build_return_tensor():
     block = blocks.TextToIntSequence()
 
     outputs = block.build(
-        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+        keras_tuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -156,7 +156,7 @@ def test_int_seq_build_with_seq_len_return_tensor():
     block = blocks.TextToIntSequence(output_sequence_length=50)
 
     outputs = block.build(
-        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+        keras_tuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -186,7 +186,7 @@ def test_cat_to_num_build_return_tensor():
     block.column_types = {"a": "num"}
 
     outputs = block.build(
-        kerastuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+        keras_tuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
     )
 
     assert len(nest.flatten(outputs)) == 1

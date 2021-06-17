@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kerastuner
+import keras_tuner
 
 from autokeras.engine import tuner as tuner_module
 
 
-class RandomSearch(kerastuner.RandomSearch, tuner_module.AutoTuner):
+class RandomSearch(keras_tuner.RandomSearch, tuner_module.AutoTuner):
     """KerasTuner RandomSearch with preprocessing layer tuning."""
 
     pass

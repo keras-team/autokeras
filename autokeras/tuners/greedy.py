@@ -16,7 +16,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-import kerastuner
+import keras_tuner
 import numpy as np
 
 from autokeras.engine import tuner as tuner_module
@@ -75,7 +75,7 @@ class Trie(object):
         return ret
 
 
-class GreedyOracle(kerastuner.Oracle):
+class GreedyOracle(keras_tuner.Oracle):
     """An oracle combining random search and greedy algorithm.
 
     It groups the HyperParameters into several categories, namely, HyperGraph,
@@ -118,7 +118,7 @@ class GreedyOracle(kerastuner.Oracle):
         for hp in best_hps.space:
             # Not picking the fixed hps for generating new values.
             if best_hps.is_active(hp) and not isinstance(
-                hp, kerastuner.engine.hyperparameters.Fixed
+                hp, keras_tuner.engine.hyperparameters.Fixed
             ):
                 trie.insert(hp.name)
         all_nodes = trie.nodes
@@ -139,11 +139,11 @@ class GreedyOracle(kerastuner.Oracle):
                 self._tried_initial_hps[index] = True
                 return hps
 
-    def _populate_space(self, trial_id):
+    def populate_space(self, trial_id):
         if not all(self._tried_initial_hps):
             values = self._next_initial_hps()
             return {
-                "status": kerastuner.engine.trial.TrialStatus.RUNNING,
+                "status": keras_tuner.engine.trial.TrialStatus.RUNNING,
                 "values": values,
             }
 
@@ -155,12 +155,12 @@ class GreedyOracle(kerastuner.Oracle):
                 continue
             # Values found.
             return {
-                "status": kerastuner.engine.trial.TrialStatus.RUNNING,
+                "status": keras_tuner.engine.trial.TrialStatus.RUNNING,
                 "values": values,
             }
         # All stages reached max collisions.
         return {
-            "status": kerastuner.engine.trial.TrialStatus.STOPPED,
+            "status": keras_tuner.engine.trial.TrialStatus.STOPPED,
             "values": None,
         }
 
@@ -176,7 +176,7 @@ class GreedyOracle(kerastuner.Oracle):
 
         collisions = 0
         while True:
-            hps = kerastuner.HyperParameters()
+            hps = keras_tuner.HyperParameters()
             # Generate a set of random values.
             for hp in self.hyperparameters.space:
                 hps.merge([hp])
@@ -207,12 +207,12 @@ class GreedyOracle(kerastuner.Oracle):
 class Greedy(tuner_module.AutoTuner):
     def __init__(
         self,
-        hypermodel: kerastuner.HyperModel,
+        hypermodel: keras_tuner.HyperModel,
         objective: str = "val_loss",
         max_trials: int = 10,
         initial_hps: Optional[List[Dict[str, Any]]] = None,
         seed: Optional[int] = None,
-        hyperparameters: Optional[kerastuner.HyperParameters] = None,
+        hyperparameters: Optional[keras_tuner.HyperParameters] = None,
         tune_new_entries: bool = True,
         allow_new_entries: bool = True,
         **kwargs

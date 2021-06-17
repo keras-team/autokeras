@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kerastuner
+import keras_tuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
@@ -51,7 +51,7 @@ def load_graph(filepath, custom_objects=None):
         return Graph.from_config(io_utils.load_json(filepath))
 
 
-class Graph(kerastuner.HyperModel, serializable.Serializable):
+class Graph(keras_tuner.HyperModel, serializable.Serializable):
     """A graph consists of connected Blocks, or Heads.
 
     # Arguments

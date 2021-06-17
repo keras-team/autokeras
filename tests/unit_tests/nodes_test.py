@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kerastuner
+import keras_tuner
 
 from autokeras import blocks
 from autokeras import nodes
@@ -25,7 +25,7 @@ def test_input_get_block_return_general_block():
 
 def test_time_series_input_node_build_no_error():
     node = nodes.TimeseriesInput(lookback=2, shape=(32,))
-    hp = kerastuner.HyperParameters()
+    hp = keras_tuner.HyperParameters()
 
     input_node = node.build_node(hp)
     node.build(hp, input_node)
@@ -34,7 +34,7 @@ def test_time_series_input_node_build_no_error():
 def test_time_series_input_node_deserialize_build_no_error():
     node = nodes.TimeseriesInput(lookback=2, shape=(32,))
     node = nodes.deserialize(nodes.serialize(node))
-    hp = kerastuner.HyperParameters()
+    hp = keras_tuner.HyperParameters()
 
     input_node = node.build_node(hp)
     node.build(hp, input_node)

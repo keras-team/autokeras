@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kerastuner
+import keras_tuner
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.util import nest
@@ -36,8 +36,8 @@ def test_two_classes_infer_binary_crossentropy():
     analyser.finalize()
     head.config_from_analyser(analyser)
     head.build(
-        kerastuner.HyperParameters(),
-        input_module.Input(shape=(32,)).build_node(kerastuner.HyperParameters()),
+        keras_tuner.HyperParameters(),
+        input_module.Input(shape=(32,)).build_node(keras_tuner.HyperParameters()),
     )
     assert head.loss.name == "binary_crossentropy"
 
@@ -53,8 +53,8 @@ def test_three_classes_infer_categorical_crossentropy():
     analyser.finalize()
     head.config_from_analyser(analyser)
     head.build(
-        kerastuner.HyperParameters(),
-        input_module.Input(shape=(32,)).build_node(kerastuner.HyperParameters()),
+        keras_tuner.HyperParameters(),
+        input_module.Input(shape=(32,)).build_node(keras_tuner.HyperParameters()),
     )
     assert head.loss.name == "categorical_crossentropy"
 
@@ -64,7 +64,7 @@ def test_multi_label_loss():
         name="a", multi_label=True, num_classes=8, shape=(8,)
     )
     input_node = tf.keras.Input(shape=(5,))
-    output_node = head.build(kerastuner.HyperParameters(), input_node)
+    output_node = head.build(keras_tuner.HyperParameters(), input_node)
     model = tf.keras.Model(input_node, output_node)
     assert model.layers[-1].activation.__name__ == "sigmoid"
     assert head.loss.name == "binary_crossentropy"
@@ -93,7 +93,7 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
     block = head_module.ClassificationHead(dropout=0, shape=(8,))
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(5,), dtype=tf.float32),
     )
 
@@ -123,7 +123,7 @@ def test_reg_head_build_with_zero_dropout_return_tensor():
     block = head_module.RegressionHead(dropout=0, shape=(8,))
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(5,), dtype=tf.float32),
     )
 
@@ -141,6 +141,6 @@ def test_segmentation():
     analyser.finalize()
     head.config_from_analyser(analyser)
     head.build(
-        kerastuner.HyperParameters(),
-        ak.Input(shape=(32,)).build_node(kerastuner.HyperParameters()),
+        keras_tuner.HyperParameters(),
+        ak.Input(shape=(32,)).build_node(keras_tuner.HyperParameters()),
     )
