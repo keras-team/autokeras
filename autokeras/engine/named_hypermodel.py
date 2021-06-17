@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kerastuner
+import keras_tuner
 import tensorflow as tf
 
 from autokeras.engine import serializable
 from autokeras.utils import utils
 
 
-class NamedHyperModel(kerastuner.HyperModel, serializable.Serializable):
+class NamedHyperModel(keras_tuner.HyperModel, serializable.Serializable):
     """
 
     # Arguments

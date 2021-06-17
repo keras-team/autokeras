@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kerastuner
+import keras_tuner
 
 from autokeras.engine import tuner as tuner_module
 
 
-class Hyperband(kerastuner.Hyperband, tuner_module.AutoTuner):
+class Hyperband(keras_tuner.Hyperband, tuner_module.AutoTuner):
     """KerasTuner Hyperband with preprocessing layer tuning."""
 
     def __init__(

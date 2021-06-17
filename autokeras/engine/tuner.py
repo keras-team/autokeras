@@ -15,9 +15,9 @@
 import copy
 import os
 
-import kerastuner
+import keras_tuner
 import tensorflow as tf
-from kerastuner.engine import hypermodel as hm_module
+from keras_tuner.engine import hypermodel as hm_module
 from tensorflow.keras import callbacks as tf_callbacks
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
@@ -27,7 +27,7 @@ from autokeras.utils import data_utils
 from autokeras.utils import utils
 
 
-class AutoTuner(kerastuner.engine.tuner.Tuner):
+class AutoTuner(keras_tuner.engine.tuner.Tuner):
     """A Tuner class based on KerasTuner for AutoKeras.
 
     Different from KerasTuner's Tuner class. AutoTuner's not only tunes the
@@ -41,8 +41,8 @@ class AutoTuner(kerastuner.engine.tuner.Tuner):
     The fully trained model is the best model to be used by AutoModel.
 
     # Arguments
-        oracle: kerastuner Oracle.
-        hypermodel: kerastuner KerasHyperModel.
+        oracle: keras_tuner Oracle.
+        hypermodel: keras_tuner KerasHyperModel.
         **kwargs: The args supported by KerasTuner.
     """
 

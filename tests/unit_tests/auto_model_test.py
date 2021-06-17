@@ -14,7 +14,7 @@
 
 from unittest import mock
 
-import kerastuner
+import keras_tuner
 import numpy as np
 import pytest
 import tensorflow as tf
@@ -38,7 +38,7 @@ def test_auto_model_objective_is_kt_objective(tmp_path):
         ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
     )
 
-    assert isinstance(auto_model.objective, kerastuner.Objective)
+    assert isinstance(auto_model.objective, keras_tuner.Objective)
 
 
 def test_auto_model_max_trial_field_as_specified(tmp_path):

@@ -14,7 +14,7 @@
 
 import os
 
-import kerastuner
+import keras_tuner
 import pytest
 
 import autokeras as ak
@@ -71,7 +71,7 @@ def test_graph_basics():
     output_node = ak.RegressionHead(shape=(1,))(output_node)
 
     model = graph_module.Graph(inputs=input_node, outputs=output_node).build(
-        kerastuner.HyperParameters()
+        keras_tuner.HyperParameters()
     )
     assert model.input_shape == (None, 30)
     assert model.output_shape == (None, 1)
@@ -110,7 +110,7 @@ def test_merge():
 
     model = graph_module.Graph(
         inputs=[input_node1, input_node2], outputs=output_node
-    ).build(kerastuner.HyperParameters())
+    ).build(keras_tuner.HyperParameters())
     assert model.input_shape == [(None, 30), (None, 40)]
     assert model.output_shape == (None, 1)
 

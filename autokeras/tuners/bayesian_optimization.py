@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kerastuner
+import keras_tuner
 
 from autokeras.engine import tuner as tuner_module
 
 
-class BayesianOptimization(kerastuner.BayesianOptimization, tuner_module.AutoTuner):
+class BayesianOptimization(keras_tuner.BayesianOptimization, tuner_module.AutoTuner):
     """KerasTuner BayesianOptimization with preprocessing layer tuning."""
 
     pass

@@ -15,7 +15,7 @@
 import numpy as np
 import pytest
 import tensorflow as tf
-from kerastuner.engine import hyperparameters
+from keras_tuner.engine import hyperparameters
 
 from autokeras.utils import utils
 
@@ -37,7 +37,7 @@ def test_check_tf_version_error():
 
 
 def test_check_kt_version_error():
-    utils.kerastuner.__version__ = "1.0.0"
+    utils.keras_tuner.__version__ = "1.0.0"
 
     with pytest.raises(ImportError) as info:
         utils.check_kt_version()

@@ -16,7 +16,7 @@ from typing import Optional
 from typing import Union
 
 import tensorflow as tf
-from kerastuner.engine import hyperparameters
+from keras_tuner.engine import hyperparameters
 from tensorflow.keras import applications
 from tensorflow.keras import layers
 from tensorflow.python.util import nest
@@ -57,15 +57,15 @@ class DenseBlock(block_module.Block):
     """Block for Dense layers.
 
     # Arguments
-        num_layers: Int or kerastuner.engine.hyperparameters.Choice.
+        num_layers: Int or keras_tuner.engine.hyperparameters.Choice.
             The number of Dense layers in the block.
             If left unspecified, it will be tuned automatically.
-        num_units: Int or kerastuner.engine.hyperparameters.Choice.
+        num_units: Int or keras_tuner.engine.hyperparameters.Choice.
             The number of units in each dense layer.
             If left unspecified, it will be tuned automatically.
         use_bn: Boolean. Whether to use BatchNormalization layers.
             If left unspecified, it will be tuned automatically.
-        dropout: Float or kerastuner.engine.hyperparameters.Choice.
+        dropout: Float or keras_tuner.engine.hyperparameters.Choice.
             The dropout rate for the layers.
             If left unspecified, it will be tuned automatically.
     """
@@ -147,13 +147,13 @@ class RNNBlock(block_module.Block):
     # Arguments
         return_sequences: Boolean. Whether to return the last output in the
             output sequence, or the full sequence. Defaults to False.
-        bidirectional: Boolean or kerastuner.engine.hyperparameters.Boolean.
+        bidirectional: Boolean or keras_tuner.engine.hyperparameters.Boolean.
             Bidirectional RNN. If left unspecified, it will be
             tuned automatically.
-        num_layers: Int or kerastuner.engine.hyperparameters.Choice.
+        num_layers: Int or keras_tuner.engine.hyperparameters.Choice.
             The number of layers in RNN. If left unspecified, it will
             be tuned automatically.
-        layer_type: String or or kerastuner.engine.hyperparameters.Choice.
+        layer_type: String or or keras_tuner.engine.hyperparameters.Choice.
             'gru' or 'lstm'. If left unspecified, it will be tuned
             automatically.
     """
@@ -244,17 +244,17 @@ class ConvBlock(block_module.Block):
     """Block for vanilla ConvNets.
 
     # Arguments
-        kernel_size: Int or kerastuner.engine.hyperparameters.Choice.
+        kernel_size: Int or keras_tuner.engine.hyperparameters.Choice.
             The size of the kernel.
             If left unspecified, it will be tuned automatically.
-        num_blocks: Int or kerastuner.engine.hyperparameters.Choice.
+        num_blocks: Int or keras_tuner.engine.hyperparameters.Choice.
             The number of conv blocks, each of which may contain
             convolutional, max pooling, dropout, and activation. If left unspecified,
             it will be tuned automatically.
         num_layers: Int or hyperparameters.Choice.
             The number of convolutional layers in each block. If left
             unspecified, it will be tuned automatically.
-        filters: Int or kerastuner.engine.hyperparameters.Choice. The number of
+        filters: Int or keras_tuner.engine.hyperparameters.Choice. The number of
             filters in the convolutional layers. If left unspecified, it will
             be tuned automatically.
         max_pooling: Boolean. Whether to use max pooling layer in each block. If left
@@ -487,20 +487,20 @@ class Transformer(block_module.Block):
     # Arguments
         max_features: Int. Size of the vocabulary. Must be set if not using
             TextToIntSequence before this block. Defaults to 20001.
-        pretraining: String or kerastuner.engine.hyperparameters.Choice.
+        pretraining: String or keras_tuner.engine.hyperparameters.Choice.
             'random' (use random weights instead any pretrained
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
-        embedding_dim: Int or kerastuner.engine.hyperparameters.Choice.
+        embedding_dim: Int or keras_tuner.engine.hyperparameters.Choice.
             Output dimension of the Attention block.
             If left unspecified, it will be tuned automatically.
-        num_heads: Int or kerastuner.engine.hyperparameters.Choice.
+        num_heads: Int or keras_tuner.engine.hyperparameters.Choice.
             The number of attention heads. If left unspecified,
             it will be tuned automatically.
-        dense_dim: Int or kerastuner.engine.hyperparameters.Choice.
+        dense_dim: Int or keras_tuner.engine.hyperparameters.Choice.
             The output dimension of the Feed-Forward Network. If left
             unspecified, it will be tuned automatically.
-        dropout: Float or kerastuner.engine.hyperparameters.Choice.
+        dropout: Float or keras_tuner.engine.hyperparameters.Choice.
             Between 0 and 1. If left unspecified, it will be
             tuned automatically.
     """
@@ -818,14 +818,14 @@ class Embedding(block_module.Block):
     # Arguments
         max_features: Int. Size of the vocabulary. Must be set if not using
             TextToIntSequence before this block. Defaults to 20001.
-        pretraining: String or kerastuner.engine.hyperparameters.Choice.
+        pretraining: String or keras_tuner.engine.hyperparameters.Choice.
             'random' (use random weights instead any pretrained
             model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
             If left unspecified, it will be tuned automatically.
-        embedding_dim: Int or kerastuner.engine.hyperparameters.Choice.
+        embedding_dim: Int or keras_tuner.engine.hyperparameters.Choice.
             Output dimension of the Attention block.
             If left unspecified, it will be tuned automatically.
-        dropout: Float or kerastuner.engine.hyperparameters.Choice.
+        dropout: Float or keras_tuner.engine.hyperparameters.Choice.
             The dropout rate for the layers.
             If left unspecified, it will be tuned automatically.
     """
@@ -929,7 +929,7 @@ class BertBlock(block_module.Block):
         clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
     ```
     # Arguments
-        max_sequence_length: Int or kerastuner.engine.hyperparameters.Choice.
+        max_sequence_length: Int or keras_tuner.engine.hyperparameters.Choice.
             The maximum length of a sequence that is used to train the model.
     """
 

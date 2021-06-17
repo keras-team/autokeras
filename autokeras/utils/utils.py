@@ -14,7 +14,7 @@
 
 import re
 
-import kerastuner
+import keras_tuner
 import tensorflow as tf
 from packaging.version import parse
 from tensorflow.python.util import nest
@@ -48,14 +48,14 @@ def check_tf_version() -> None:
 
 
 def check_kt_version() -> None:
-    if parse(kerastuner.__version__) < parse("1.0.2"):
+    if parse(keras_tuner.__version__) < parse("1.0.3"):
         raise ImportError(
-            "The Keras Tuner package version needs to be at least 1.0.2 \n"
+            "The Keras Tuner package version needs to be at least 1.0.3 \n"
             "for AutoKeras to run. Currently, your Keras Tuner version is \n"
             "{version}. Please upgrade with \n"
             "`$ pip install --upgrade keras-tuner`. \n"
             "You can use `pip freeze` to check afterwards that everything is "
-            "ok.".format(version=kerastuner.__version__)
+            "ok.".format(version=keras_tuner.__version__)
         )
 
 
@@ -124,10 +124,10 @@ def add_to_hp(hp, hps, name=None):
     """Add the HyperParameter (self) to the HyperParameters.
 
     # Arguments
-        hp: kerastuner.HyperParameters.
+        hp: keras_tuner.HyperParameters.
         name: String. If left unspecified, the hp name is used.
     """
-    if not isinstance(hp, kerastuner.engine.hyperparameters.HyperParameter):
+    if not isinstance(hp, keras_tuner.engine.hyperparameters.HyperParameter):
         return hp
     kwargs = hp.get_config()
     if name is None:

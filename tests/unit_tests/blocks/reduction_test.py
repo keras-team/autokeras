@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kerastuner
+import keras_tuner
 import tensorflow as tf
 from tensorflow.python.util import nest
 
@@ -24,7 +24,7 @@ def test_merge_build_return_tensor():
     block = blocks.Merge()
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         [
             tf.keras.Input(shape=(32,), dtype=tf.float32),
             tf.keras.Input(shape=(4, 8), dtype=tf.float32),
@@ -38,7 +38,7 @@ def test_merge_single_input_return_tensor():
     block = blocks.Merge()
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(32,), dtype=tf.float32),
     )
 
@@ -49,7 +49,7 @@ def test_merge_inputs_with_same_shape_return_tensor():
     block = blocks.Merge()
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         [
             tf.keras.Input(shape=(32,), dtype=tf.float32),
             tf.keras.Input(shape=(32,), dtype=tf.float32),
@@ -79,7 +79,7 @@ def test_temporal_build_return_tensor():
     block = blocks.TemporalReduction()
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(32, 10), dtype=tf.float32),
     )
 
@@ -90,7 +90,7 @@ def test_temporal_global_max_return_tensor():
     block = blocks.TemporalReduction(reduction_type="global_max")
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(32, 10), dtype=tf.float32),
     )
 
@@ -101,7 +101,7 @@ def test_temporal_global_avg_return_tensor():
     block = blocks.TemporalReduction(reduction_type="global_avg")
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(32, 10), dtype=tf.float32),
     )
 
@@ -113,7 +113,7 @@ def test_reduction_2d_tensor_return_input_node():
     input_node = tf.keras.Input(shape=(32,), dtype=tf.float32)
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         input_node,
     )
 
@@ -143,7 +143,7 @@ def test_spatial_build_return_tensor():
     block = blocks.SpatialReduction()
 
     outputs = block.build(
-        kerastuner.HyperParameters(),
+        keras_tuner.HyperParameters(),
         tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 

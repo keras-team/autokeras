@@ -34,7 +34,7 @@ def called_with_early_stopping(func):
     )
 
 
-@mock.patch("kerastuner.engine.base_tuner.BaseTuner.search")
+@mock.patch("keras_tuner.engine.base_tuner.BaseTuner.search")
 @mock.patch("autokeras.engine.tuner.AutoTuner.final_fit")
 @mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
 def test_final_fit_with_specified_epochs(_, final_fit, super_search, tmp_path):
@@ -46,7 +46,7 @@ def test_final_fit_with_specified_epochs(_, final_fit, super_search, tmp_path):
     assert final_fit.call_args_list[0][1]["epochs"] == 10
 
 
-@mock.patch("kerastuner.engine.base_tuner.BaseTuner.search")
+@mock.patch("keras_tuner.engine.base_tuner.BaseTuner.search")
 @mock.patch("autokeras.engine.tuner.AutoTuner.final_fit")
 @mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
 def test_tuner_call_super_with_early_stopping(_, final_fit, super_search, tmp_path):
@@ -58,14 +58,14 @@ def test_tuner_call_super_with_early_stopping(_, final_fit, super_search, tmp_pa
     assert called_with_early_stopping(super_search)
 
 
-@mock.patch("kerastuner.engine.base_tuner.BaseTuner.search")
+@mock.patch("keras_tuner.engine.base_tuner.BaseTuner.search")
 @mock.patch("autokeras.engine.tuner.AutoTuner.final_fit")
 @mock.patch(
     "autokeras.engine.tuner.AutoTuner.get_best_models", return_value=[mock.Mock()]
 )
 @mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
 @mock.patch("autokeras.pipeline.load_pipeline")
-@mock.patch("kerastuner.Oracle.get_best_trials", return_value=[mock.Mock()])
+@mock.patch("keras_tuner.Oracle.get_best_trials", return_value=[mock.Mock()])
 def test_no_final_fit_without_epochs_and_fov(
     _, _1, _2, get_best_models, final_fit, super_search, tmp_path
 ):
@@ -76,7 +76,7 @@ def test_no_final_fit_without_epochs_and_fov(
     final_fit.assert_not_called()
 
 
-@mock.patch("kerastuner.engine.base_tuner.BaseTuner.search")
+@mock.patch("keras_tuner.engine.base_tuner.BaseTuner.search")
 @mock.patch("autokeras.engine.tuner.AutoTuner.final_fit")
 @mock.patch(
     "autokeras.engine.tuner.AutoTuner._get_best_trial_epochs", return_value=2
@@ -95,7 +95,7 @@ def test_final_fit_best_epochs_if_epoch_unspecified(
     assert final_fit.call_args_list[0][1]["epochs"] == 2
 
 
-@mock.patch("kerastuner.engine.base_tuner.BaseTuner.search")
+@mock.patch("keras_tuner.engine.base_tuner.BaseTuner.search")
 @mock.patch("autokeras.engine.tuner.AutoTuner.final_fit")
 @mock.patch(
     "autokeras.engine.tuner.AutoTuner._get_best_trial_epochs", return_value=2
@@ -115,7 +115,7 @@ def test_super_with_1k_epochs_if_epoch_unspecified(
     assert called_with_early_stopping(super_search)
 
 
-@mock.patch("kerastuner.engine.base_tuner.BaseTuner.search")
+@mock.patch("keras_tuner.engine.base_tuner.BaseTuner.search")
 @mock.patch("autokeras.engine.tuner.AutoTuner.final_fit")
 @mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
 def test_tuner_not_call_super_search_with_overwrite(
