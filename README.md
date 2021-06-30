@@ -18,7 +18,7 @@ The goal of AutoKeras is to make machine learning accessible to everyone.
 
 ## Learning resources
 
-* Here is a short example of using the package.
+* A short example.
 
 ```python
 import autokeras as ak
