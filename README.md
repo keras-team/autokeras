@@ -16,9 +16,9 @@ AutoKeras: An AutoML system based on Keras.
 It is developed by <a href="http://faculty.cs.tamu.edu/xiahu/index.html" target="_blank" rel="nofollow">DATA Lab</a> at Texas A&M University.
 The goal of AutoKeras is to make machine learning accessible to everyone.
 
-## Example
+## Learning resources
 
-Here is a short example of using the package.
+* Here is a short example of using the package.
 
 ```python
 import autokeras as ak
@@ -28,7 +28,13 @@ clf.fit(x_train, y_train)
 results = clf.predict(x_test)
 ```
 
-For a detailed tutorial, please check [here](https://autokeras.com/tutorial/overview/).
+* [Official website tutorials](https://autokeras.com/tutorial/overview/).
+
+* The book of [*Automated Machine Learning in Action*](https://www.manning.com/books/automated-machine-learning-in-action?query=automated&utm_source=jin&utm_medium=affiliate&utm_campaign=affiliate&a_aid=jin).
+<p align="center">
+<a href="https://www.manning.com/books/automated-machine-learning-in-action?query=automated&utm_source=jin&utm_medium=affiliate&utm_campaign=affiliate&a_aid=jin"><img src="https://images.manning.com/360/480/resize/book/4/0abac0f-1865-42b6-bc03-ed6bfd8f6ec8/Song-AML-MEAP-HI.png" alt="drawing" width="200"/></a>
+</p>
+
 
 ## Installation
 
