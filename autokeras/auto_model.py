@@ -253,7 +253,7 @@ class AutoModel(object):
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
 
-        #Returns
+        # Returns
             history: A History object corresponding to the best model.
                 Its History.history attribute is a record of training
                 loss values and metrics values at successive epochs, as well as
