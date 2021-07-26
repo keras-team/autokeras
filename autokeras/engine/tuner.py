@@ -216,6 +216,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         else:
             # TODO: Add return history functionality in Keras Tuner
             model = self.get_best_models()[0]
+            history = None
             pipeline = pipeline_module.load_pipeline(
                 self._pipeline_path(self.oracle.get_best_trials(1)[0].trial_id)
             )
