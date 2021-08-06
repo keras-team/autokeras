@@ -21,7 +21,7 @@ setup(
     install_requires=[
         "packaging",
         "keras-tuner>=1.0.2",
-        "tensorflow>=2.3.0<2.6",
+        "tensorflow>=2.3.0<=2.5.0",
         "scikit-learn",
         "pandas",
     ],
