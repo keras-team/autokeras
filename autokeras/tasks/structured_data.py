@@ -118,6 +118,11 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
                 validation data.
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+        # Returns
+            history: A Keras History object corresponding to the best model.
+                Its History.history attribute is a record of training
+                loss values and metrics values at successive epochs, as well as
+                validation loss values and validation metrics values (if applicable).
         """
         # x is file path of training data
         if isinstance(x, str):
@@ -131,7 +136,7 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
 
         self.check_in_fit(x)
 
-        super().fit(
+        history = super().fit(
             x=x,
             y=y,
             epochs=epochs,
@@ -140,6 +145,7 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
             validation_data=validation_data,
             **kwargs
         )
+        return history
 
     def predict(self, x, **kwargs):
         """Predict the output for a given testing data.
@@ -311,8 +317,13 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                 validation data should be the same as the training data.
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+        # Returns
+            history: A Keras History object corresponding to the best model.
+                Its History.history attribute is a record of training
+                loss values and metrics values at successive epochs, as well as
+                validation loss values and validation metrics values (if applicable).
         """
-        super().fit(
+        history = super().fit(
             x=x,
             y=y,
             epochs=epochs,
@@ -321,6 +332,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
             validation_data=validation_data,
             **kwargs
         )
+        return history
 
 
 class StructuredDataRegressor(SupervisedStructuredDataPipeline):

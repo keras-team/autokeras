@@ -39,7 +39,7 @@ def called_with_early_stopping(func):
 @mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
 def test_final_fit_with_specified_epochs(_, final_fit, super_search, tmp_path):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
-    final_fit.return_value = mock.Mock(), mock.Mock()
+    final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(x=None, epochs=10, validation_data=None)
 
@@ -51,7 +51,7 @@ def test_final_fit_with_specified_epochs(_, final_fit, super_search, tmp_path):
 @mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
 def test_tuner_call_super_with_early_stopping(_, final_fit, super_search, tmp_path):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
-    final_fit.return_value = mock.Mock(), mock.Mock()
+    final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(x=None, epochs=10, validation_data=None)
 
@@ -86,7 +86,7 @@ def test_final_fit_best_epochs_if_epoch_unspecified(
     _, best_epochs, final_fit, super_search, tmp_path
 ):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
-    final_fit.return_value = mock.Mock(), mock.Mock()
+    final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(
         x=mock.Mock(), epochs=None, validation_split=0.2, validation_data=mock.Mock()
@@ -105,7 +105,7 @@ def test_super_with_1k_epochs_if_epoch_unspecified(
     _, best_epochs, final_fit, super_search, tmp_path
 ):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
-    final_fit.return_value = mock.Mock(), mock.Mock()
+    final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(
         x=mock.Mock(), epochs=None, validation_split=0.2, validation_data=mock.Mock()
@@ -122,7 +122,7 @@ def test_tuner_not_call_super_search_with_overwrite(
     _, final_fit, super_search, tmp_path
 ):
     tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
-    final_fit.return_value = mock.Mock(), mock.Mock()
+    final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(x=None, epochs=10, validation_data=None)
     tuner.save()

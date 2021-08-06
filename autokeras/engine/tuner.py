@@ -184,7 +184,6 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         self._prepare_model_build(hp, **fit_kwargs)
         self.hypermodel.build(hp)
         self.oracle.update_space(hp)
-
         super().search(
             epochs=epochs, callbacks=new_callbacks, verbose=verbose, **fit_kwargs
         )
@@ -213,9 +212,11 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             self.hypermodel.hypermodel.set_fit_args(
                 0, epochs=copied_fit_kwargs["epochs"]
             )
-            pipeline, model = self.final_fit(**copied_fit_kwargs)
+            pipeline, model, history = self.final_fit(**copied_fit_kwargs)
         else:
+            # TODO: Add return history functionality in Keras Tuner
             model = self.get_best_models()[0]
+            history = None
             pipeline = pipeline_module.load_pipeline(
                 self._pipeline_path(self.oracle.get_best_trials(1)[0].trial_id)
             )
@@ -223,6 +224,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         model.save(self.best_model_path)
         pipeline.save(self.best_pipeline_path)
         self._finished = True
+        return history
 
     def get_state(self):
         state = super().get_state()
@@ -260,10 +262,10 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
         model = self._build_best_model()
         self.adapt(model, kwargs["x"])
-        model, _ = utils.fit_with_adaptive_batch_size(
+        model, history = utils.fit_with_adaptive_batch_size(
             model, self.hypermodel.hypermodel.batch_size, **kwargs
         )
-        return pipeline, model
+        return pipeline, model, history
 
     @property
     def best_model_path(self):
