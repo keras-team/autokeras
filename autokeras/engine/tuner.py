@@ -117,10 +117,10 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             for layer in model.layers:
                 if isinstance(layer, tf.keras.layers.InputLayer):
                     continue
-                if not isinstance(layer, preprocessing.PreprocessingLayer):
-                    break
                 input_node = nest.flatten(layer.input)[0]
                 if input_node is tensor:
+                    if not isinstance(layer, preprocessing.PreprocessingLayer):
+                        break
                     return layer
             return None
 
