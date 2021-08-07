@@ -29,7 +29,7 @@ jobs:
           ${{ runner.os }}-pip-
     - name: Install dependencies
       run: |
-        pip install -e ".[tests]" --progress-bar off --upgrade
+        pip install -e ".[tests]" --progress-bar off
     - name: Test with pytest
       run: |
         pytest --cov=autokeras --cov-report xml:coverage.xml
