@@ -13,7 +13,7 @@ import autokeras as ak
 ## A Simple Example
 The first step is to prepare your data. Here we use the [California housing
 dataset](
-https://scikit-learn.org/stable/datasets/index.html#california-housing-dataset)
+https://scikit-learn.org/stable/datasets/real_world.html#california-housing-dataset)
 as an example.
 """
 
