@@ -8,7 +8,6 @@ readme = this_file.parent / "README.md"
 
 setup(
     name="autokeras",
-    version="1.0.16",
     description="AutoML for deep learning",
     package_data={"": ["README.md"]},
     long_description=readme.read_text(encoding="utf-8"),
@@ -16,7 +15,6 @@ setup(
     author="Data Analytics at Texas A&M (DATA) Lab, Keras Team",
     author_email="jhfjhfj1@gmail.com",
     url="http://autokeras.com",
-    download_url="https://github.com/keras-team/autokeras/archive/1.0.16.tar.gz",
     keywords=["AutoML", "Keras"],
     install_requires=[
         "packaging",
@@ -43,7 +41,6 @@ setup(
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
@@ -51,6 +48,6 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Software Development :: Libraries",
     ],
-    license="MIT",
+    license="Apache License 2.0",
     packages=find_packages(exclude=("tests",)),
 )
