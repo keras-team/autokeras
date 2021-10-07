@@ -40,6 +40,9 @@ class CastToFloat32(preprocessing.PreprocessingLayer):
     def call(self, inputs):
         return data_utils.cast_to_float32(inputs)
 
+    def adapt(self, data):
+        return
+
 
 @tf.keras.utils.register_keras_serializable()
 class ExpandLastDim(preprocessing.PreprocessingLayer):
@@ -48,6 +51,9 @@ class ExpandLastDim(preprocessing.PreprocessingLayer):
 
     def call(self, inputs):
         return tf.expand_dims(inputs, axis=-1)
+
+    def adapt(self, data):
+        return
 
 
 @tf.keras.utils.register_keras_serializable()
