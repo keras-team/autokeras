@@ -75,9 +75,7 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
                 # Set a temporary vocabulary to prevent the error of no
                 # vocabulary when calling the layer to build the model.  The
                 # vocabulary would be reset by adapting the layer later.
-                self.encoding_layers.append(
-                    preprocessing.StringLookup(vocabulary=["NONE"])
-                )
+                self.encoding_layers.append(preprocessing.StringLookup())
             elif encoding == ONE_HOT:
                 self.encoding_layers.append(None)
 
@@ -684,6 +682,9 @@ class SelfAttentionMask(tf.keras.layers.Layer):
         mask = broadcast_ones * to_mask  # pragma: no cover
 
         return mask  # pragma: no cover
+
+    def get_config(self):
+        return super().get_config()
 
 
 @tf.keras.utils.register_keras_serializable()
