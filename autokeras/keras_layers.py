@@ -194,6 +194,9 @@ class BertTokenizer(preprocessing.PreprocessingLayer):
 
         return input_word_ids
 
+    def adapt(self, data):
+        return
+
 
 # TODO: Remove after KerasNLP is ready.
 @tf.keras.utils.register_keras_serializable()
