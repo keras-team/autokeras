@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import copy
 import os
 
@@ -112,26 +113,32 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         # TODO: Use Keras Tuner for preprocessing layers adapt.
         x = dataset.map(lambda x, y: x)
 
-        def get_output_layer(tensor):
+        def get_output_layers(tensor):
+            output_layers = []
             tensor = nest.flatten(tensor)[0]
             for layer in model.layers:
                 if isinstance(layer, tf.keras.layers.InputLayer):
                     continue
                 input_node = nest.flatten(layer.input)[0]
                 if input_node is tensor:
-                    if not isinstance(layer, preprocessing.PreprocessingLayer):
-                        break
-                    return layer
-            return None
+                    if isinstance(layer, preprocessing.PreprocessingLayer):
+                        output_layers.append(layer)
+            return output_layers
+
+        dq = collections.deque()
 
         for index, input_node in enumerate(nest.flatten(model.input)):
-            temp_x = x.map(lambda *args: nest.flatten(args)[index])
-            layer = get_output_layer(input_node)
-            while layer is not None:
-                if isinstance(layer, preprocessing.PreprocessingLayer):
-                    layer.adapt(temp_x)
-                temp_x = temp_x.map(layer)
-                layer = get_output_layer(layer.output)
+            in_x = x.map(lambda *args: nest.flatten(args)[index])
+            for layer in get_output_layers(input_node):
+                dq.append((layer, in_x))
+
+        while len(dq):
+            layer, in_x = dq.popleft()
+            layer.adapt(in_x)
+            out_x = in_x.map(layer)
+            for next_layer in get_output_layers(layer.output):
+                dq.append((next_layer, out_x))
+
         return model
 
     def search(
