@@ -40,6 +40,9 @@ class CastToFloat32(preprocessing.PreprocessingLayer):
     def call(self, inputs):
         return data_utils.cast_to_float32(inputs)
 
+    def adapt(self, data):
+        return
+
 
 @tf.keras.utils.register_keras_serializable()
 class ExpandLastDim(preprocessing.PreprocessingLayer):
@@ -48,6 +51,9 @@ class ExpandLastDim(preprocessing.PreprocessingLayer):
 
     def call(self, inputs):
         return tf.expand_dims(inputs, axis=-1)
+
+    def adapt(self, data):
+        return
 
 
 @tf.keras.utils.register_keras_serializable()
@@ -75,9 +81,7 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
                 # Set a temporary vocabulary to prevent the error of no
                 # vocabulary when calling the layer to build the model.  The
                 # vocabulary would be reset by adapting the layer later.
-                self.encoding_layers.append(
-                    preprocessing.StringLookup(vocabulary=["NONE"])
-                )
+                self.encoding_layers.append(preprocessing.StringLookup())
             elif encoding == ONE_HOT:
                 self.encoding_layers.append(None)
 
@@ -189,6 +193,9 @@ class BertTokenizer(preprocessing.PreprocessingLayer):
             input_word_ids = input_word_ids[..., : self.max_sequence_length]
 
         return input_word_ids
+
+    def adapt(self, data):
+        return  # pragma: no cover
 
 
 # TODO: Remove after KerasNLP is ready.
@@ -684,6 +691,9 @@ class SelfAttentionMask(tf.keras.layers.Layer):
         mask = broadcast_ones * to_mask  # pragma: no cover
 
         return mask  # pragma: no cover
+
+    def get_config(self):
+        return super().get_config()
 
 
 @tf.keras.utils.register_keras_serializable()

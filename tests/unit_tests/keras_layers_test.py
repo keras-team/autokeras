@@ -62,9 +62,11 @@ def test_init_multi_one_hot_encode():
 
 
 def test_call_multi_with_single_column_return_right_shape():
+    x_train = np.array([["a"], ["b"], ["a"]])
     layer = layer_module.MultiCategoryEncoding(encoding=[layer_module.INT])
+    layer.adapt(tf.data.Dataset.from_tensor_slices(x_train).batch(32))
 
-    assert layer(np.array([["a"], ["b"], ["a"]])).shape == (3, 1)
+    assert layer(x_train).shape == (3, 1)
 
 
 def get_text_data():

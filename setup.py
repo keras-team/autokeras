@@ -19,7 +19,7 @@ setup(
     install_requires=[
         "packaging",
         "keras-tuner>=1.0.2",
-        "tensorflow<=2.5.0,>=2.3.0",
+        "tf-nightly==2.8.0.dev20211016",
         "scikit-learn",
         "pandas",
     ],
@@ -41,7 +41,6 @@ setup(
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering :: Mathematics",
