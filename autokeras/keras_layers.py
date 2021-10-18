@@ -195,7 +195,7 @@ class BertTokenizer(preprocessing.PreprocessingLayer):
         return input_word_ids
 
     def adapt(self, data):
-        return
+        return  # pragma: no cover
 
 
 # TODO: Remove after KerasNLP is ready.
