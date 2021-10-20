@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import copy
 from typing import Any
 from typing import Dict
 from typing import List
@@ -94,7 +95,7 @@ class GreedyOracle(keras_tuner.Oracle):
 
     def __init__(self, initial_hps=None, seed=None, **kwargs):
         super().__init__(seed=seed, **kwargs)
-        self.initial_hps = initial_hps or []
+        self.initial_hps = copy.deepcopy(initial_hps) or []
         self._tried_initial_hps = [False] * len(self.initial_hps)
 
     def get_state(self):

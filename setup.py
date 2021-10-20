@@ -18,7 +18,7 @@ setup(
     keywords=["AutoML", "Keras"],
     install_requires=[
         "packaging",
-        "keras-tuner>=1.0.2",
+        "keras-tuner==1.1.0rc0",
         "tf-nightly==2.8.0.dev20211016",
         "scikit-learn",
         "pandas",
