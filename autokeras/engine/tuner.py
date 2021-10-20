@@ -18,7 +18,6 @@ import os
 
 import keras_tuner
 import tensorflow as tf
-from keras_tuner.engine import hypermodel as hm_module
 from tensorflow.keras import callbacks as tf_callbacks
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.python.util import nest
@@ -43,7 +42,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
     # Arguments
         oracle: keras_tuner Oracle.
-        hypermodel: keras_tuner KerasHyperModel.
+        hypermodel: keras_tuner HyperModel.
         **kwargs: The args supported by KerasTuner.
     """
 
@@ -52,7 +51,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         self._finished = False
         super().__init__(oracle, hypermodel, **kwargs)
         # Save or load the HyperModel.
-        self.hypermodel.hypermodel.save(os.path.join(self.project_dir, "graph"))
+        self.hypermodel.save(os.path.join(self.project_dir, "graph"))
         self.hyper_pipeline = None
 
     def _populate_initial_space(self):
@@ -60,7 +59,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         return
 
     def get_best_model(self):
-        with hm_module.maybe_distribute(self.distribution_strategy):
+        with keras_tuner.engine.tuner.maybe_distribute(self.distribution_strategy):
             model = tf.keras.models.load_model(self.best_model_path)
         return model
 
@@ -80,7 +79,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         pipeline = self.hyper_pipeline.build(hp, dataset)
         pipeline.fit(dataset)
         dataset = pipeline.transform(dataset)
-        self.hypermodel.hypermodel.set_io_shapes(data_utils.dataset_shape(dataset))
+        self.hypermodel.set_io_shapes(data_utils.dataset_shape(dataset))
 
         if "validation_data" in kwargs:
             validation_data = pipeline.transform(kwargs["validation_data"])
@@ -88,19 +87,19 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             validation_data = None
         return pipeline, dataset, validation_data
 
-    def _build_and_fit_model(self, trial, fit_args, fit_kwargs):
+    def _build_and_fit_model(self, trial, *args, **kwargs):
+        model = self.hypermodel.build(trial.hyperparameters)
         (
             pipeline,
-            fit_kwargs["x"],
-            fit_kwargs["validation_data"],
-        ) = self._prepare_model_build(trial.hyperparameters, **fit_kwargs)
+            kwargs["x"],
+            kwargs["validation_data"],
+        ) = self._prepare_model_build(trial.hyperparameters, **kwargs)
         pipeline.save(self._pipeline_path(trial.trial_id))
 
-        model = self.hypermodel.build(trial.hyperparameters)
-        self.adapt(model, fit_kwargs["x"])
+        self.adapt(model, kwargs["x"])
 
         _, history = utils.fit_with_adaptive_batch_size(
-            model, self.hypermodel.hypermodel.batch_size, **fit_kwargs
+            model, self.hypermodel.batch_size, **kwargs
         )
         return history
 
@@ -165,7 +164,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         if callbacks is None:
             callbacks = []
 
-        self.hypermodel.hypermodel.set_fit_args(validation_split, epochs=epochs)
+        self.hypermodel.set_fit_args(validation_split, epochs=epochs)
 
         # Insert early-stopping for adaptive number of epochs.
         epochs_provided = True
@@ -216,9 +215,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
                 )
                 copied_fit_kwargs.pop("validation_data")
 
-            self.hypermodel.hypermodel.set_fit_args(
-                0, epochs=copied_fit_kwargs["epochs"]
-            )
+            self.hypermodel.set_fit_args(0, epochs=copied_fit_kwargs["epochs"])
             pipeline, model, history = self.final_fit(**copied_fit_kwargs)
         else:
             # TODO: Add return history functionality in Keras Tuner
@@ -270,7 +267,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         model = self._build_best_model()
         self.adapt(model, kwargs["x"])
         model, history = utils.fit_with_adaptive_batch_size(
-            model, self.hypermodel.hypermodel.batch_size, **kwargs
+            model, self.hypermodel.batch_size, **kwargs
         )
         return pipeline, model, history
 

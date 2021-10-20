@@ -229,7 +229,7 @@ def test_conv_get_config_has_all_attributes():
 
 
 def test_rnn_build_return_tensor():
-    block = blocks.RNNBlock()
+    block = blocks.RNNBlock(bidirectional=False)
 
     outputs = block.build(
         keras_tuner.HyperParameters(),

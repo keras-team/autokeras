@@ -193,8 +193,12 @@ class AutoModel(object):
             graph = graph_module.Graph(inputs=self.inputs, outputs=self.outputs)
         # Using input/output API.
         elif all([isinstance(output, head_module.Head) for output in self.outputs]):
+            # Clear session to reset get_uid(). The names of the blocks will
+            # start to count from 1 for new blocks in a new AutoModel afterwards.
+            tf.keras.backend.clear_session()
             graph = self._assemble()
             self.outputs = graph.outputs
+            tf.keras.backend.clear_session()
 
         return graph
 
@@ -375,6 +379,7 @@ class AutoModel(object):
             inputs=[node.get_hyper_preprocessors() for node in self.inputs],
             outputs=[head.get_hyper_preprocessors() for head in self._heads],
         )
+        self.tuner.hypermodel.hyper_pipeline = self.tuner.hyper_pipeline
 
     def _convert_to_dataset(self, x, y, validation_data, batch_size):
         """Convert the data to tf.data.Dataset."""
