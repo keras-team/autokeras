@@ -8,7 +8,7 @@ readme = this_file.parent / "README.md"
 
 setup(
     name="autokeras",
-    version="1.0.16",
+    version="1.0.16.post1",
     description="AutoML for deep learning",
     package_data={"": ["README.md"]},
     long_description=readme.read_text(encoding="utf-8"),
@@ -16,12 +16,11 @@ setup(
     author="Data Analytics at Texas A&M (DATA) Lab, Keras Team",
     author_email="jhfjhfj1@gmail.com",
     url="http://autokeras.com",
-    download_url="https://github.com/keras-team/autokeras/archive/1.0.16.tar.gz",
     keywords=["AutoML", "Keras"],
     install_requires=[
         "packaging",
-        "keras-tuner>=1.0.2",
-        "tensorflow<=2.5.0,>=2.3.0",
+        "keras-tuner>=1.0.2,<1.1",
+        "tensorflow>=2.3.0,<2.6",
         "scikit-learn",
         "pandas",
     ],
