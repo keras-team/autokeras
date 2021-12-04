@@ -30,7 +30,7 @@ jobs:
           ${{ runner.os }}-pip-
     - name: Install dependencies
       run: |
-        pip install tensorflow
+        pip install tf-nightly --progress-bar off --upgrade
         pip install -e ".[tests]" --progress-bar off
     - name: Test with pytest
       run: |
