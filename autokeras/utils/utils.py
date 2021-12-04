@@ -36,9 +36,9 @@ def to_snake_case(name):
 
 
 def check_tf_version() -> None:
-    if parse(tf.__version__) < parse("2.3.0"):
+    if parse(tf.__version__) < parse("2.8.0"):
         raise ImportError(
-            "The Tensorflow package version needs to be at least 2.3.0 \n"
+            "The Tensorflow package version needs to be at least 2.8.0 \n"
             "for AutoKeras to run. Currently, your TensorFlow version is \n"
             "{version}. Please upgrade with \n"
             "`$ pip install --upgrade tensorflow`. \n"
@@ -48,9 +48,9 @@ def check_tf_version() -> None:
 
 
 def check_kt_version() -> None:
-    if parse(keras_tuner.__version__) < parse("1.0.3"):
+    if parse(keras_tuner.__version__) < parse("1.1.0"):
         raise ImportError(
-            "The Keras Tuner package version needs to be at least 1.0.3 \n"
+            "The Keras Tuner package version needs to be at least 1.1.0 \n"
             "for AutoKeras to run. Currently, your Keras Tuner version is \n"
             "{version}. Please upgrade with \n"
             "`$ pip install --upgrade keras-tuner`. \n"
