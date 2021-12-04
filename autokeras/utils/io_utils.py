@@ -18,7 +18,7 @@ from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.keras.preprocessing import dataset_utils
+from keras.preprocessing import dataset_utils
 
 WHITELIST_FORMATS = (".bmp", ".gif", ".jpeg", ".jpg", ".png")
 

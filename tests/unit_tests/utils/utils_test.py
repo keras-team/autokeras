@@ -33,7 +33,7 @@ def test_check_tf_version_error():
     with pytest.raises(ImportError) as info:
         utils.check_tf_version()
 
-    assert "Tensorflow package version needs to be at least 2.3.0" in str(info.value)
+    assert "Tensorflow package version needs to be at least" in str(info.value)
 
 
 def test_check_kt_version_error():

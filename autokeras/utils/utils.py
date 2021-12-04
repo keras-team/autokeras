@@ -36,9 +36,9 @@ def to_snake_case(name):
 
 
 def check_tf_version() -> None:
-    if parse(tf.__version__) < parse("2.8.0"):
+    if parse(tf.__version__) < parse("2.7.0"):
         raise ImportError(
-            "The Tensorflow package version needs to be at least 2.8.0 \n"
+            "The Tensorflow package version needs to be at least 2.7.0 \n"
             "for AutoKeras to run. Currently, your TensorFlow version is \n"
             "{version}. Please upgrade with \n"
             "`$ pip install --upgrade tensorflow`. \n"
