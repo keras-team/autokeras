@@ -13,8 +13,8 @@ forecast the AH value at the different timesteps. Some basic preprocessing has a
 been performed on the dataset as it required cleanup.
 
 ## A Simple Example
-The first step is to prepare your data. Here we use the [UCI Airquality dataset]
-(https://archive.ics.uci.edu/ml/datasets/Air+Quality) as an example.
+The first step is to prepare your data. Here we use the [UCI Airquality
+dataset](https://archive.ics.uci.edu/ml/datasets/Air+Quality) as an example.
 """
 
 dataset = tf.keras.utils.get_file(
