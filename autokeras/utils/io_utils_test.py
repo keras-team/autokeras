@@ -18,8 +18,8 @@ import shutil
 import pytest
 import tensorflow as tf
 
+from autokeras import test_utils
 from autokeras.utils import io_utils
-from tests import utils
 
 IMG_DATA_DIR = os.path.join(
     os.path.dirname(
@@ -64,7 +64,7 @@ def test_load_image_data():
         image_size=(180, 180),
         validation_split=0.2,
         subset="training",
-        seed=utils.SEED,
+        seed=test_utils.SEED,
     )
 
     val_dataset = io_utils.image_dataset_from_directory(
@@ -72,7 +72,7 @@ def test_load_image_data():
         image_size=(180, 180),
         validation_split=0.2,
         subset="validation",
-        seed=utils.SEED,
+        seed=test_utils.SEED,
     )
 
     for data in dataset:
@@ -93,7 +93,7 @@ def test_load_image_data_raise_subset_error():
             image_size=(180, 180),
             validation_split=0.2,
             subset="abcd",
-            seed=utils.SEED,
+            seed=test_utils.SEED,
         )
     assert "`subset` must be either" in str(info.value)
 

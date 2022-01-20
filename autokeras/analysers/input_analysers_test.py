@@ -19,8 +19,8 @@ import pandas as pd
 import pytest
 import tensorflow as tf
 
+from autokeras import test_utils
 from autokeras.analysers import input_analysers
-from tests import utils
 
 
 def test_structured_data_input_less_col_name_error():
@@ -41,10 +41,10 @@ def test_structured_data_input_less_col_name_error():
 
 def test_structured_data_infer_col_types():
     analyser = input_analysers.StructuredDataAnalyser(
-        column_names=utils.COLUMN_NAMES,
+        column_names=test_utils.COLUMN_NAMES,
         column_types=None,
     )
-    x = pd.read_csv(utils.TRAIN_CSV_PATH)
+    x = pd.read_csv(test_utils.TRAIN_CSV_PATH)
     x.pop("survived")
     dataset = tf.data.Dataset.from_tensor_slices(x.values.astype(np.unicode)).batch(
         32
@@ -54,19 +54,19 @@ def test_structured_data_infer_col_types():
         analyser.update(data)
     analyser.finalize()
 
-    assert analyser.column_types == utils.COLUMN_TYPES
+    assert analyser.column_types == test_utils.COLUMN_TYPES
 
 
 def test_dont_infer_specified_column_types():
-    column_types = copy.copy(utils.COLUMN_TYPES)
+    column_types = copy.copy(test_utils.COLUMN_TYPES)
     column_types.pop("sex")
     column_types["age"] = "categorical"
 
     analyser = input_analysers.StructuredDataAnalyser(
-        column_names=utils.COLUMN_NAMES,
+        column_names=test_utils.COLUMN_NAMES,
         column_types=column_types,
     )
-    x = pd.read_csv(utils.TRAIN_CSV_PATH)
+    x = pd.read_csv(test_utils.TRAIN_CSV_PATH)
     x.pop("survived")
     dataset = tf.data.Dataset.from_tensor_slices(x.values.astype(np.unicode)).batch(
         32
@@ -81,7 +81,7 @@ def test_dont_infer_specified_column_types():
 
 def test_structured_data_input_with_illegal_dim():
     analyser = input_analysers.StructuredDataAnalyser(
-        column_names=utils.COLUMN_NAMES,
+        column_names=test_utils.COLUMN_NAMES,
         column_types=None,
     )
     dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(100, 32, 32)).batch(
@@ -170,7 +170,7 @@ def test_text_illegal_type_error():
 
 def test_time_series_input_with_illegal_dim():
     analyser = input_analysers.TimeseriesAnalyser(
-        column_names=utils.COLUMN_NAMES,
+        column_names=test_utils.COLUMN_NAMES,
         column_types=None,
     )
     dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(100, 32, 32)).batch(

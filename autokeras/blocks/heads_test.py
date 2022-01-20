@@ -21,8 +21,8 @@ import autokeras as ak
 from autokeras import hyper_preprocessors
 from autokeras import nodes as input_module
 from autokeras import preprocessors
+from autokeras import test_utils
 from autokeras.blocks import heads as head_module
-from tests import utils
 
 
 def test_two_classes_infer_binary_crossentropy():
@@ -101,7 +101,7 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
 
 
 def test_clf_head_hpps_with_uint8_contain_cast_to_int32():
-    dataset = utils.generate_one_hot_labels(100, 10, "dataset")
+    dataset = test_utils.generate_one_hot_labels(100, 10, "dataset")
     dataset = dataset.map(lambda x: tf.cast(x, tf.uint8))
     head = head_module.ClassificationHead(shape=(8,))
     analyser = head.get_analyser()

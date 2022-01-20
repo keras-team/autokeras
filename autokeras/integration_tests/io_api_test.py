@@ -16,24 +16,24 @@ import numpy as np
 import pandas as pd
 
 import autokeras as ak
-from tests import utils
+from autokeras import test_utils
 
 
 def test_io_api(tmp_path):
     num_instances = 20
-    image_x = utils.generate_data(num_instances=num_instances, shape=(28, 28))
-    text_x = utils.generate_text_data(num_instances=num_instances)
+    image_x = test_utils.generate_data(num_instances=num_instances, shape=(28, 28))
+    text_x = test_utils.generate_text_data(num_instances=num_instances)
 
     image_x = image_x[:num_instances]
     structured_data_x = (
-        pd.read_csv(utils.TRAIN_CSV_PATH)
+        pd.read_csv(test_utils.TRAIN_CSV_PATH)
         .to_numpy()
         .astype(np.unicode)[:num_instances]
     )
-    classification_y = utils.generate_one_hot_labels(
+    classification_y = test_utils.generate_one_hot_labels(
         num_instances=num_instances, num_classes=3
     )
-    regression_y = utils.generate_data(num_instances=num_instances, shape=(1,))
+    regression_y = test_utils.generate_data(num_instances=num_instances, shape=(1,))
 
     # Build model and train.
     automodel = ak.AutoModel(
@@ -47,7 +47,7 @@ def test_io_api(tmp_path):
         directory=tmp_path,
         max_trials=2,
         tuner=ak.RandomSearch,
-        seed=utils.SEED,
+        seed=test_utils.SEED,
     )
     automodel.fit(
         [image_x, text_x, structured_data_x],

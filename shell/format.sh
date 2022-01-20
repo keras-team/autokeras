@@ -1,7 +1,7 @@
 isort --sl .
 black --line-length 85 .
 
-for i in $(find autokeras tests benchmark -name '*.py') # or whatever other pattern...
+for i in $(find autokeras benchmark -name '*.py') # or whatever other pattern...
 do
   if ! grep -q Copyright $i
   then

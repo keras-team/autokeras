@@ -15,16 +15,16 @@
 from unittest import mock
 
 import autokeras as ak
-from tests import utils
+from autokeras import test_utils
 
 
 @mock.patch("autokeras.AutoModel.fit")
 def test_img_clf_fit_call_auto_model_fit(fit, tmp_path):
-    auto_model = ak.ImageClassifier(directory=tmp_path, seed=utils.SEED)
+    auto_model = ak.ImageClassifier(directory=tmp_path, seed=test_utils.SEED)
 
     auto_model.fit(
-        x=utils.generate_data(num_instances=100, shape=(32, 32, 3)),
-        y=utils.generate_one_hot_labels(num_instances=100, num_classes=10),
+        x=test_utils.generate_data(num_instances=100, shape=(32, 32, 3)),
+        y=test_utils.generate_one_hot_labels(num_instances=100, num_classes=10),
     )
 
     assert fit.is_called
@@ -32,11 +32,11 @@ def test_img_clf_fit_call_auto_model_fit(fit, tmp_path):
 
 @mock.patch("autokeras.AutoModel.fit")
 def test_img_reg_fit_call_auto_model_fit(fit, tmp_path):
-    auto_model = ak.ImageRegressor(directory=tmp_path, seed=utils.SEED)
+    auto_model = ak.ImageRegressor(directory=tmp_path, seed=test_utils.SEED)
 
     auto_model.fit(
-        x=utils.generate_data(num_instances=100, shape=(32, 32, 3)),
-        y=utils.generate_data(num_instances=100, shape=(1,)),
+        x=test_utils.generate_data(num_instances=100, shape=(32, 32, 3)),
+        y=test_utils.generate_data(num_instances=100, shape=(1,)),
     )
 
     assert fit.is_called
@@ -44,11 +44,13 @@ def test_img_reg_fit_call_auto_model_fit(fit, tmp_path):
 
 @mock.patch("autokeras.AutoModel.fit")
 def test_img_seg_fit_call_auto_model_fit(fit, tmp_path):
-    auto_model = ak.tasks.image.ImageSegmenter(directory=tmp_path, seed=utils.SEED)
+    auto_model = ak.tasks.image.ImageSegmenter(
+        directory=tmp_path, seed=test_utils.SEED
+    )
 
     auto_model.fit(
-        x=utils.generate_data(num_instances=100, shape=(32, 32, 3)),
-        y=utils.generate_data(num_instances=100, shape=(32, 32)),
+        x=test_utils.generate_data(num_instances=100, shape=(32, 32, 3)),
+        y=test_utils.generate_data(num_instances=100, shape=(32, 32)),
     )
 
     assert fit.is_called
@@ -57,10 +59,10 @@ def test_img_seg_fit_call_auto_model_fit(fit, tmp_path):
 @mock.patch("autokeras.AutoModel.fit")
 def test_img_obj_det_fit_call_auto_model_fit(fit, tmp_path):
     auto_model = ak.tasks.image.ImageObjectDetector(
-        directory=tmp_path, seed=utils.SEED
+        directory=tmp_path, seed=test_utils.SEED
     )
 
-    images, labels = utils.get_object_detection_data()
+    images, labels = test_utils.get_object_detection_data()
 
     auto_model.fit(
         x=images,

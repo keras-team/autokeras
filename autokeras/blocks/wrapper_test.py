@@ -18,7 +18,7 @@ from tensorflow.python.util import nest
 
 from autokeras import analysers
 from autokeras import blocks
-from tests import utils
+from autokeras import test_utils
 
 
 def test_image_build_return_tensor():
@@ -78,7 +78,9 @@ def test_image_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.ImageBlock.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.ImageBlock.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_text_build_return_tensor():
@@ -124,7 +126,9 @@ def test_text_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.TextBlock.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.TextBlock.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_structured_build_return_tensor():
@@ -176,7 +180,7 @@ def test_structured_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.StructuredDataBlock.__init__).issubset(
+    assert test_utils.get_func_args(blocks.StructuredDataBlock.__init__).issubset(
         config.keys()
     )
 
@@ -207,6 +211,6 @@ def test_timeseries_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.TimeseriesBlock.__init__).issubset(
+    assert test_utils.get_func_args(blocks.TimeseriesBlock.__init__).issubset(
         config.keys()
     )

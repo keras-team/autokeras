@@ -16,20 +16,20 @@ import numpy as np
 import pandas as pd
 
 import autokeras as ak
-from tests import utils
+from autokeras import test_utils
 
 
 def test_text_and_structured_data(tmp_path):
     # Prepare the data.
     num_instances = 80
-    x_text = utils.generate_text_data(num_instances)
-    x_structured_data = pd.read_csv(utils.TRAIN_CSV_PATH)
+    x_text = test_utils.generate_text_data(num_instances)
+    x_structured_data = pd.read_csv(test_utils.TRAIN_CSV_PATH)
 
     x_structured_data = x_structured_data[:num_instances]
-    y_classification = utils.generate_one_hot_labels(
+    y_classification = test_utils.generate_one_hot_labels(
         num_instances=num_instances, num_classes=3
     )
-    y_regression = utils.generate_data(num_instances=num_instances, shape=(1,))
+    y_regression = test_utils.generate_data(num_instances=num_instances, shape=(1,))
 
     # Build model and train.
     structured_data_input = ak.StructuredDataInput()
@@ -55,7 +55,7 @@ def test_text_and_structured_data(tmp_path):
         outputs=[regression_outputs, classification_outputs],
         max_trials=2,
         tuner=ak.Hyperband,
-        seed=utils.SEED,
+        seed=test_utils.SEED,
     )
 
     automodel.fit(
@@ -68,7 +68,7 @@ def test_text_and_structured_data(tmp_path):
 
 def test_image_blocks(tmp_path):
     num_instances = 10
-    x_train = utils.generate_data(num_instances=num_instances, shape=(28, 28))
+    x_train = test_utils.generate_data(num_instances=num_instances, shape=(28, 28))
     y_train = np.random.randint(0, 10, num_instances)
 
     input_node = ak.ImageInput()
@@ -84,7 +84,7 @@ def test_image_blocks(tmp_path):
         outputs=output_node,
         directory=tmp_path,
         max_trials=1,
-        seed=utils.SEED,
+        seed=test_utils.SEED,
     )
 
     automodel.fit(x_train, y_train, validation_data=(x_train, y_train), epochs=1)

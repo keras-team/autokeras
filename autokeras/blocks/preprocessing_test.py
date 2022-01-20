@@ -17,7 +17,7 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import blocks
-from tests import utils
+from autokeras import test_utils
 
 
 def test_augment_build_return_tensor():
@@ -99,7 +99,7 @@ def test_augment_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.ImageAugmentation.__init__).issubset(
+    assert test_utils.get_func_args(blocks.ImageAugmentation.__init__).issubset(
         config.keys()
     )
 
@@ -137,7 +137,7 @@ def test_ngram_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.TextToNgramVector.__init__).issubset(
+    assert test_utils.get_func_args(blocks.TextToNgramVector.__init__).issubset(
         config.keys()
     )
 
@@ -175,7 +175,7 @@ def test_int_seq_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.TextToIntSequence.__init__).issubset(
+    assert test_utils.get_func_args(blocks.TextToIntSequence.__init__).issubset(
         config.keys()
     )
 
@@ -205,6 +205,6 @@ def test_cat_to_num_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.CategoricalToNumerical.__init__).issubset(
+    assert test_utils.get_func_args(blocks.CategoricalToNumerical.__init__).issubset(
         config.keys()
     )

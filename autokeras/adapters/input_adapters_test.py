@@ -18,9 +18,9 @@ import pandas as pd
 import pytest
 import tensorflow as tf
 
+from autokeras import test_utils
 from autokeras.adapters import input_adapters
 from autokeras.utils import data_utils
-from tests import utils
 
 
 def test_structured_data_input_unsupported_type_error():
@@ -33,7 +33,7 @@ def test_structured_data_input_unsupported_type_error():
 
 def test_structured_data_input_transform_to_dataset():
     x = tf.data.Dataset.from_tensor_slices(
-        pd.read_csv(utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)
+        pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)
     )
     adapter = input_adapters.StructuredDataAdapter()
 
@@ -43,7 +43,7 @@ def test_structured_data_input_transform_to_dataset():
 
 
 def test_image_input_adapter_transform_to_dataset():
-    x = utils.generate_data()
+    x = test_utils.generate_data()
     adapter = input_adapters.ImageAdapter()
     assert isinstance(adapter.adapt(x, batch_size=32), tf.data.Dataset)
 

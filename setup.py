@@ -32,7 +32,6 @@ setup(
             "pytest-xdist",
             "pytest-cov",
             "coverage",
-            "typeguard>=2,<2.11.0",
             "typedapi>=0.2,<0.3",
         ],
     },
@@ -48,5 +47,5 @@ setup(
         "Topic :: Software Development :: Libraries",
     ],
     license="Apache License 2.0",
-    packages=find_packages(exclude=("tests",)),
+    packages=find_packages(exclude=("*test*",)),
 )

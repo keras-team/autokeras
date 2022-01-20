@@ -19,9 +19,9 @@ import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 
 from autokeras import keras_layers
+from autokeras import test_utils
 from autokeras.engine import tuner as tuner_module
 from autokeras.tuners import greedy
-from tests import utils
 
 
 def called_with_early_stopping(func):
@@ -38,7 +38,7 @@ def called_with_early_stopping(func):
 @mock.patch("autokeras.engine.tuner.AutoTuner.final_fit")
 @mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
 def test_final_fit_with_specified_epochs(_, final_fit, super_search, tmp_path):
-    tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    tuner = greedy.Greedy(hypermodel=test_utils.build_graph(), directory=tmp_path)
     final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(x=None, epochs=10, validation_data=None)
@@ -50,7 +50,7 @@ def test_final_fit_with_specified_epochs(_, final_fit, super_search, tmp_path):
 @mock.patch("autokeras.engine.tuner.AutoTuner.final_fit")
 @mock.patch("autokeras.engine.tuner.AutoTuner._prepare_model_build")
 def test_tuner_call_super_with_early_stopping(_, final_fit, super_search, tmp_path):
-    tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    tuner = greedy.Greedy(hypermodel=test_utils.build_graph(), directory=tmp_path)
     final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(x=None, epochs=10, validation_data=None)
@@ -69,7 +69,7 @@ def test_tuner_call_super_with_early_stopping(_, final_fit, super_search, tmp_pa
 def test_no_final_fit_without_epochs_and_fov(
     _, _1, _2, get_best_models, final_fit, super_search, tmp_path
 ):
-    tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    tuner = greedy.Greedy(hypermodel=test_utils.build_graph(), directory=tmp_path)
 
     tuner.search(x=None, epochs=None, validation_data=None)
 
@@ -85,7 +85,7 @@ def test_no_final_fit_without_epochs_and_fov(
 def test_final_fit_best_epochs_if_epoch_unspecified(
     _, best_epochs, final_fit, super_search, tmp_path
 ):
-    tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    tuner = greedy.Greedy(hypermodel=test_utils.build_graph(), directory=tmp_path)
     final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(
@@ -104,7 +104,7 @@ def test_final_fit_best_epochs_if_epoch_unspecified(
 def test_super_with_1k_epochs_if_epoch_unspecified(
     _, best_epochs, final_fit, super_search, tmp_path
 ):
-    tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    tuner = greedy.Greedy(hypermodel=test_utils.build_graph(), directory=tmp_path)
     final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(
@@ -121,14 +121,14 @@ def test_super_with_1k_epochs_if_epoch_unspecified(
 def test_tuner_not_call_super_search_with_overwrite(
     _, final_fit, super_search, tmp_path
 ):
-    tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    tuner = greedy.Greedy(hypermodel=test_utils.build_graph(), directory=tmp_path)
     final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(x=None, epochs=10, validation_data=None)
     tuner.save()
     super_search.reset_mock()
 
-    tuner = greedy.Greedy(hypermodel=utils.build_graph(), directory=tmp_path)
+    tuner = greedy.Greedy(hypermodel=test_utils.build_graph(), directory=tmp_path)
     tuner.search(x=None, epochs=10, validation_data=None)
 
     super_search.assert_not_called()
@@ -136,7 +136,7 @@ def test_tuner_not_call_super_search_with_overwrite(
 
 def test_tuner_does_not_crash_with_distribution_strategy(tmp_path):
     tuner = greedy.Greedy(
-        hypermodel=utils.build_graph(),
+        hypermodel=test_utils.build_graph(),
         directory=tmp_path,
         distribution_strategy=tf.distribute.MirroredStrategy(),
     )
@@ -161,7 +161,7 @@ def test_preprocessing_adapt_with_text_vec():
             super().adapt(*args, **kwargs)
             self.is_called = True
 
-    x_train = utils.generate_text_data()
+    x_train = test_utils.generate_text_data()
     y_train = np.random.randint(0, 2, (100,))
     dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train)).batch(32)
     layer1 = MockLayer(max_tokens=5000, output_mode="int", output_sequence_length=40)
