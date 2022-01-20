@@ -17,7 +17,7 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import blocks
-from tests import utils
+from autokeras import test_utils
 
 
 def test_merge_build_return_tensor():
@@ -72,7 +72,7 @@ def test_merge_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.Merge.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.Merge.__init__).issubset(config.keys())
 
 
 def test_temporal_build_return_tensor():
@@ -134,7 +134,7 @@ def test_temporal_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.TemporalReduction.__init__).issubset(
+    assert test_utils.get_func_args(blocks.TemporalReduction.__init__).issubset(
         config.keys()
     )
 
@@ -163,6 +163,6 @@ def test_spatial_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.SpatialReduction.__init__).issubset(
+    assert test_utils.get_func_args(blocks.SpatialReduction.__init__).issubset(
         config.keys()
     )

@@ -18,9 +18,9 @@ import keras_tuner
 import tensorflow as tf
 
 import autokeras as ak
+from autokeras import test_utils
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
-from tests import utils
 
 
 def test_greedy_oracle_get_state_update_space_can_run():
@@ -34,9 +34,9 @@ def test_greedy_oracle_get_state_update_space_can_run():
 @mock.patch("autokeras.tuners.greedy.GreedyOracle.get_best_trials")
 def test_greedy_oracle_populate_different_values(get_best_trials):
     hp = keras_tuner.HyperParameters()
-    utils.build_graph().build(hp)
+    test_utils.build_graph().build(hp)
 
-    oracle = greedy.GreedyOracle(objective="val_loss", seed=utils.SEED)
+    oracle = greedy.GreedyOracle(objective="val_loss", seed=test_utils.SEED)
     trial = mock.Mock()
     trial.hyperparameters = hp
     get_best_trials.return_value = [trial]
@@ -65,7 +65,7 @@ def test_greedy_oracle_populate_doesnt_crash_with_init_hps(get_best_trials):
     oracle = greedy.GreedyOracle(
         initial_hps=task_specific.IMAGE_CLASSIFIER,
         objective="val_loss",
-        seed=utils.SEED,
+        seed=test_utils.SEED,
     )
     trial = mock.Mock()
     trial.hyperparameters = hp
@@ -87,9 +87,9 @@ def test_greedy_oracle_stop_reach_max_collision(
 ):
 
     hp = keras_tuner.HyperParameters()
-    utils.build_graph().build(hp)
+    test_utils.build_graph().build(hp)
 
-    oracle = greedy.GreedyOracle(objective="val_loss", seed=utils.SEED)
+    oracle = greedy.GreedyOracle(objective="val_loss", seed=test_utils.SEED)
     trial = mock.Mock()
     trial.hyperparameters = hp
     get_best_trials.return_value = [trial]
@@ -107,7 +107,7 @@ def test_greedy_oracle_stop_reach_max_collision(
 def test_greedy_oracle_populate_space_with_no_hp(get_best_trials):
     hp = keras_tuner.HyperParameters()
 
-    oracle = greedy.GreedyOracle(objective="val_loss", seed=utils.SEED)
+    oracle = greedy.GreedyOracle(objective="val_loss", seed=test_utils.SEED)
     trial = mock.Mock()
     trial.hyperparameters = hp
     get_best_trials.return_value = [trial]

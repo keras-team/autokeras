@@ -20,7 +20,7 @@ import pytest
 import tensorflow as tf
 
 import autokeras as ak
-from tests import utils
+from autokeras import test_utils
 
 
 def get_tuner_class(*args, **kwargs):
@@ -166,8 +166,8 @@ def get_multi_io_auto_model(tmp_path):
 @mock.patch("autokeras.auto_model.get_tuner_class")
 def test_multi_io_with_tf_dataset_doesnt_crash(tuner_fn, tmp_path):
     auto_model = get_multi_io_auto_model(tmp_path)
-    x1 = utils.generate_data()
-    y1 = utils.generate_data(shape=(1,))
+    x1 = test_utils.generate_data()
+    y1 = test_utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1, y1)))
     auto_model.fit(dataset, epochs=2)
 
@@ -181,8 +181,8 @@ def test_single_nested_dataset_doesnt_crash(tuner_fn, tmp_path):
         max_trials=2,
         overwrite=False,
     )
-    x1 = utils.generate_data()
-    y1 = utils.generate_data(shape=(1,))
+    x1 = test_utils.generate_data()
+    y1 = test_utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices(((x1,), y1))
     auto_model.fit(dataset, epochs=2)
 
@@ -196,24 +196,24 @@ def dataset_error(x, y, validation_data, message, tmp_path):
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
 def test_data_io_consistency_input(tuner_fn, tmp_path):
-    x1 = utils.generate_data()
-    y1 = utils.generate_data(shape=(1,))
+    x1 = test_utils.generate_data()
+    y1 = test_utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices(((x1,), (y1, y1)))
     dataset_error(dataset, None, dataset, "Expected x to have", tmp_path)
 
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
 def test_data_io_consistency_output(tuner_fn, tmp_path):
-    x1 = utils.generate_data()
-    y1 = utils.generate_data(shape=(1,))
+    x1 = test_utils.generate_data()
+    y1 = test_utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1,)))
     dataset_error(dataset, None, dataset, "Expected y to have", tmp_path)
 
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
 def test_data_io_consistency_validation(tuner_fn, tmp_path):
-    x1 = utils.generate_data()
-    y1 = utils.generate_data(shape=(1,))
+    x1 = test_utils.generate_data()
+    y1 = test_utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1, y1)))
     val_dataset = tf.data.Dataset.from_tensor_slices(((x1,), (y1, y1)))
     dataset_error(
@@ -223,8 +223,8 @@ def test_data_io_consistency_validation(tuner_fn, tmp_path):
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
 def test_dataset_and_y(tuner_fn, tmp_path):
-    x1 = utils.generate_data()
-    y1 = utils.generate_data(shape=(1,))
+    x1 = test_utils.generate_data()
+    y1 = test_utils.generate_data(shape=(1,))
     x = tf.data.Dataset.from_tensor_slices((x1, x1))
     y = tf.data.Dataset.from_tensor_slices((y1, y1))
     val_dataset = tf.data.Dataset.from_tensor_slices(((x1,), (y1, y1)))
@@ -234,8 +234,8 @@ def test_dataset_and_y(tuner_fn, tmp_path):
 @mock.patch("autokeras.auto_model.get_tuner_class", side_effect=get_tuner_class)
 def test_multi_input_predict(tuner_fn, tmp_path):
     auto_model = get_multi_io_auto_model(tmp_path)
-    x1 = utils.generate_data()
-    y1 = utils.generate_data(shape=(1,))
+    x1 = test_utils.generate_data()
+    y1 = test_utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1, y1)))
     auto_model.fit(dataset, None, epochs=2, validation_data=dataset)
 
@@ -246,8 +246,8 @@ def test_multi_input_predict(tuner_fn, tmp_path):
 @mock.patch("autokeras.auto_model.get_tuner_class", side_effect=get_tuner_class)
 def test_multi_input_predict2(tuner_fn, tmp_path):
     auto_model = get_multi_io_auto_model(tmp_path)
-    x1 = utils.generate_data()
-    y1 = utils.generate_data(shape=(1,))
+    x1 = test_utils.generate_data()
+    y1 = test_utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1, y1)))
     auto_model.fit(dataset, None, epochs=2, validation_data=dataset)
 
@@ -258,8 +258,8 @@ def test_multi_input_predict2(tuner_fn, tmp_path):
 @mock.patch("autokeras.auto_model.get_tuner_class", side_effect=get_tuner_class)
 def test_single_input_predict_doesnt_crash(tuner_fn, tmp_path):
     auto_model = get_single_io_auto_model(tmp_path)
-    x1 = utils.generate_data()
-    y1 = utils.generate_data(shape=(1,))
+    x1 = test_utils.generate_data()
+    y1 = test_utils.generate_data(shape=(1,))
     dataset = tf.data.Dataset.from_tensor_slices((x1, y1))
     auto_model.fit(dataset, None, epochs=2, validation_data=dataset)
 

@@ -18,7 +18,7 @@ import tensorflow as tf
 from tensorflow.python.util import nest
 
 from autokeras import blocks
-from tests import utils
+from autokeras import test_utils
 
 
 def test_resnet_build_return_tensor():
@@ -101,7 +101,9 @@ def test_resnet_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.ResNetBlock.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.ResNetBlock.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_resnet_wrong_version_error():
@@ -176,7 +178,9 @@ def test_xception_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.XceptionBlock.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.XceptionBlock.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_conv_build_return_tensor():
@@ -225,7 +229,9 @@ def test_conv_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.ConvBlock.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.ConvBlock.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_rnn_build_return_tensor():
@@ -264,7 +270,7 @@ def test_rnn_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.RNNBlock.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.RNNBlock.__init__).issubset(config.keys())
 
 
 def test_dense_build_return_tensor():
@@ -312,7 +318,9 @@ def test_dense_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.DenseBlock.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.DenseBlock.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_embed_build_return_tensor():
@@ -338,7 +346,9 @@ def test_embed_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.Embedding.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.Embedding.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_transformer_build_return_tensor():
@@ -364,7 +374,9 @@ def test_transformer_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.Transformer.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.Transformer.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_multi_head_restore_head_size():
@@ -398,4 +410,6 @@ def test_bert_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert utils.get_func_args(blocks.BertBlock.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.BertBlock.__init__).issubset(
+        config.keys()
+    )

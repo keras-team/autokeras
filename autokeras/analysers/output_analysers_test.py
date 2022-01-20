@@ -16,14 +16,14 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
+from autokeras import test_utils
 from autokeras.analysers import output_analysers
-from tests import utils
 
 
 def test_clf_head_one_hot_shape_error():
     analyser = output_analysers.ClassificationAnalyser(name="a", num_classes=9)
     dataset = tf.data.Dataset.from_tensor_slices(
-        utils.generate_one_hot_labels(dtype="np", num_classes=10)
+        test_utils.generate_one_hot_labels(dtype="np", num_classes=10)
     ).batch(32)
 
     with pytest.raises(ValueError) as info:
@@ -76,7 +76,7 @@ def test_one_class_error():
 
 def test_infer_ten_classes():
     analyser = output_analysers.ClassificationAnalyser(name="a")
-    dataset = utils.generate_one_hot_labels(dtype="dataset", num_classes=10)
+    dataset = test_utils.generate_one_hot_labels(dtype="dataset", num_classes=10)
 
     for data in dataset:
         analyser.update(data)

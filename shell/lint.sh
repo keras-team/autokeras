@@ -16,7 +16,7 @@ then
   echo "Please run \"sh shell/format.sh\" to format the code."
   exit 1
 fi
-for i in $(find autokeras tests benchmark -name '*.py') # or whatever other pattern...
+for i in $(find autokeras benchmark -name '*.py') # or whatever other pattern...
 do
   if ! grep -q Copyright $i
   then
