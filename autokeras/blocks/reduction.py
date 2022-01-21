@@ -15,8 +15,8 @@
 from typing import Optional
 
 import tensorflow as tf
+from tensorflow import nest
 from tensorflow.keras import layers
-from tensorflow.python.util import nest
 
 from autokeras.engine import block as block_module
 from autokeras.utils import layer_utils

@@ -17,7 +17,7 @@ from unittest import mock
 import numpy as np
 import pandas as pd
 import pytest
-from tensorflow.python.util import nest
+from tensorflow import nest
 
 import autokeras as ak
 from autokeras import test_utils

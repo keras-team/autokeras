@@ -20,7 +20,7 @@ from typing import Union
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.util import nest
+from tensorflow import nest
 
 from autokeras import blocks
 from autokeras import graph as graph_module

@@ -14,7 +14,7 @@
 
 import keras_tuner
 import tensorflow as tf
-from tensorflow.python.util import nest
+from tensorflow import nest
 
 from autokeras import blocks as blocks_module
 from autokeras import keras_layers

@@ -21,7 +21,7 @@ from typing import Union
 
 import pandas as pd
 import tensorflow as tf
-from tensorflow.python.util import nest
+from tensorflow import nest
 
 from autokeras import auto_model
 from autokeras import blocks

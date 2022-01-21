@@ -17,9 +17,9 @@ from typing import Union
 
 import tensorflow as tf
 from keras_tuner.engine import hyperparameters
+from tensorflow import nest
 from tensorflow.keras import applications
 from tensorflow.keras import layers
-from tensorflow.python.util import nest
 
 from autokeras import keras_layers
 from autokeras.blocks import reduction

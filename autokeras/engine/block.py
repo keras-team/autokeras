@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tensorflow.python.util import nest
+from tensorflow import nest
 
 from autokeras.engine import named_hypermodel
 from autokeras.engine import node as node_module

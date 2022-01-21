@@ -21,8 +21,8 @@ from typing import List
 import numpy as np
 import six
 import tensorflow as tf
+from tensorflow import nest
 from tensorflow.keras.layers.experimental import preprocessing
-from tensorflow.python.util import nest
 
 from autokeras import constants
 from autokeras.utils import data_utils
