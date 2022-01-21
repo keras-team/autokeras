@@ -20,7 +20,6 @@ setup(
         "packaging",
         "tensorflow>=2.8.0rc0",
         "keras-tuner>=1.1.0",
-        "scikit-learn",
         "pandas",
     ],
     extras_require={
@@ -33,6 +32,7 @@ setup(
             "pytest-cov",
             "coverage",
             "typedapi>=0.2,<0.3",
+            "scikit-learn",
         ],
     },
     classifiers=[
