@@ -45,6 +45,11 @@ def test_check_kt_version_error():
     assert "Keras Tuner package version needs to be at least" in str(info.value)
 
 
+def test_check_kt_version_master():
+    utils.keras_tuner.__version__ = "master"
+    utils.check_kt_version()
+
+
 def test_run_with_adaptive_batch_size_raise_error():
     def func(**kwargs):
         raise tf.errors.ResourceExhaustedError(0, "", None)

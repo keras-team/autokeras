@@ -17,7 +17,7 @@ import re
 import keras_tuner
 import tensorflow as tf
 from packaging.version import parse
-from tensorflow.python.util import nest
+from tensorflow import nest
 
 
 def validate_num_inputs(inputs, num):
@@ -48,6 +48,8 @@ def check_tf_version() -> None:
 
 
 def check_kt_version() -> None:
+    if keras_tuner.__version__ == "master":
+        return
     if parse(keras_tuner.__version__) < parse("1.1.0"):
         raise ImportError(
             "The Keras Tuner package version needs to be at least 1.1.0 \n"

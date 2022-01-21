@@ -14,7 +14,7 @@
 
 from typing import Optional
 
-from tensorflow.python.util import nest
+from tensorflow import nest
 
 from autokeras.blocks import basic
 from autokeras.blocks import preprocessing

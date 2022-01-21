@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import tensorflow as tf
-from tensorflow.python.util import nest
+from tensorflow import nest
 
 from autokeras import preprocessors as preprocessors_module
 from autokeras.engine import hyper_preprocessor as hpps_module

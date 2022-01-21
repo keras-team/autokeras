@@ -15,7 +15,7 @@
 import keras_tuner
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.util import nest
+from tensorflow import nest
 
 import autokeras as ak
 from autokeras import hyper_preprocessors

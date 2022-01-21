@@ -15,10 +15,10 @@
 from typing import Optional
 
 import tensorflow as tf
+from tensorflow import nest
 from tensorflow.keras import activations
 from tensorflow.keras import layers
 from tensorflow.keras import losses
-from tensorflow.python.util import nest
 
 from autokeras import adapters
 from autokeras import analysers
