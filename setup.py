@@ -18,7 +18,7 @@ setup(
     keywords=["AutoML", "Keras"],
     install_requires=[
         "packaging",
-        "tensorflow>=2.8.0rc0",
+        "tensorflow>=2.8.0rc1",
         "keras-tuner>=1.1.0",
         "pandas",
     ],
