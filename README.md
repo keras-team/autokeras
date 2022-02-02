@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/keras-team/autokeras/branch/master/graph/badge.svg)](https://codecov.io/gh/keras-team/autokeras)
 [![PyPI version](https://badge.fury.io/py/autokeras.svg)](https://badge.fury.io/py/autokeras)
 ![Python](https://img.shields.io/badge/python-v3.7.0+-success.svg)
-![Tensorflow](https://img.shields.io/badge/tensorflow-v2.5.0+-success.svg)
+![Tensorflow](https://img.shields.io/badge/tensorflow-v2.8.0+-success.svg)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/keras-team/autokeras/issues)
 
 Official Website: [autokeras.com](https://autokeras.com)
@@ -46,7 +46,7 @@ pip3 install autokeras
 
 Please follow the [installation guide](https://autokeras.com/install) for more details.
 
-**Note:** Currently, AutoKeras is only compatible with **Python >= 3.5** and **TensorFlow >= 2.3.0**.
+**Note:** Currently, AutoKeras is only compatible with **Python >= 3.7** and **TensorFlow >= 2.8.0**.
 
 ## Community
 ### Stay Up-to-Date
