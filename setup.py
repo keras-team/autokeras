@@ -18,7 +18,7 @@ setup(
     keywords=["AutoML", "Keras"],
     install_requires=[
         "packaging",
-        "tensorflow>=2.8.0rc1",
+        "tensorflow>=2.8.0",
         "keras-tuner>=1.1.0",
         "pandas",
     ],
@@ -42,6 +42,8 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Scientific/Engineering :: Mathematics",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Software Development :: Libraries",
