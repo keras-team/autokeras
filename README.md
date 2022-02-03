@@ -49,12 +49,9 @@ Please follow the [installation guide](https://autokeras.com/install) for more d
 **Note:** Currently, AutoKeras is only compatible with **Python >= 3.7** and **TensorFlow >= 2.8.0**.
 
 ## Community
+
 ### Stay Up-to-Date
 
-**Twitter**:
-You can also follow us on Twitter [@autokeras](https://twitter.com/autokeras) for the latest news.
-
-**Emails**:
 Subscribe to our [email list](https://groups.google.com/forum/#!forum/autokeras-announce/join) to receive announcements.
 
 ### Questions and Discussions
@@ -63,8 +60,6 @@ Subscribe to our [email list](https://groups.google.com/forum/#!forum/autokeras-
 Ask your questions on our [GitHub Discussions](https://github.com/keras-team/autokeras/discussions).
 It is a forum hosted on GitHub. We will monitor and answer the questions there.
 
-### Instant Communications
-
 **Slack**:
 [Request an invitation](https://keras-slack-autojoin.herokuapp.com/).
 Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel for communication.
@@ -72,29 +67,14 @@ Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel f
 **QQ Group**:
 Join our QQ group 1150366085. Password: akqqgroup
 
-**Online Meetings**:
-Join the [online meeting Google group](https://groups.google.com/forum/#!forum/autokeras/join).
-The calendar event will appear on your Google Calendar.
-
-
 ## Contributing Code
 
-We engage in keeping everything about AutoKeras open to the public.
-Everyone can easily join as a developer.
 Here is how we manage our project.
 
-* **Triage the issues**: 
 We pick the critical issues to work on from [GitHub issues](https://github.com/keras-team/autokeras/issues).
 They will be added to this [Project](https://github.com/keras-team/autokeras/projects/3).
 Some of the issues will then be added to the [milestones](https://github.com/keras-team/autokeras/milestones),
 which are used to plan for the releases.
-* **Assign the tasks**: We assign the tasks to people during the online meetings.
-* **Discuss**: We can have discussions in multiple places. The code reviews are on GitHub.
-Questions can be asked in Slack or during meetings.
-
-Please join our [Slack](https://autokeras.com/#community) and send Haifeng Jin a message.
-Or drop by our [online meetings](https://autokeras.com/#community) and talk to us.
-We will help you get started!
 
 Refer to our [Contributing Guide](https://autokeras.com/contributing/) to learn the best practices.
 
