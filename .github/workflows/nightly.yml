@@ -30,8 +30,10 @@ jobs:
           ${{ runner.os }}-pip-
     - name: Install dependencies
       run: |
-        pip install tf-nightly --progress-bar off --upgrade
         pip install -e ".[tests]" --progress-bar off
+        pip uninstall keras -y
+        pip uninstall tensorflow -y
+        pip install tf-nightly --progress-bar off --upgrade
     - name: Test with pytest
       run: |
         pytest --cov=autokeras --cov-report xml:coverage.xml
