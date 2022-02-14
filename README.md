@@ -37,9 +37,8 @@ results = clf.predict(x_test)
 
 * The LivePorjects of [*Image Classification with AutoKeras *](https://www.manning.com/liveprojectseries/autokeras-ser).
 <p align="center">
-<a href="https://images.manning.com/360/480/resize/liveProjectSeries/9/38c715a-0c8c-4f66-b440-83d29993877a/ImageClassificationwithAutoKeras.jpg" alt="drawing" width="200"/></a>
+<a href="https://www.manning.com/liveprojectseries/autokeras-ser"><img src="https://images.manning.com/360/480/resize/liveProjectSeries/9/38c715a-0c8c-4f66-b440-83d29993877a/ImageClassificationwithAutoKeras.jpg" alt="drawing" width="200"/></a>
 </p>
-
 
 ## Installation
 
