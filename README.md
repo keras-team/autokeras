@@ -35,6 +35,11 @@ results = clf.predict(x_test)
 <a href="https://www.manning.com/books/automated-machine-learning-in-action?query=automated&utm_source=jin&utm_medium=affiliate&utm_campaign=affiliate&a_aid=jin"><img src="https://images.manning.com/360/480/resize/book/4/0abac0f-1865-42b6-bc03-ed6bfd8f6ec8/Song-AML-MEAP-HI.png" alt="drawing" width="200"/></a>
 </p>
 
+* The LivePorjects of [*Image Classification with AutoKeras *](https://www.manning.com/liveprojectseries/autokeras-ser).
+<p align="center">
+<a href="https://images.manning.com/360/480/resize/liveProjectSeries/9/38c715a-0c8c-4f66-b440-83d29993877a/ImageClassificationwithAutoKeras.jpg" alt="drawing" width="200"/></a>
+</p>
+
 
 ## Installation
 
