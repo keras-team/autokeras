@@ -9,7 +9,6 @@ repo_url: https://github.com/keras-team/autokeras
 site_url: http://autokeras.com
 edit_uri: ""
 site_description: 'Documentation for AutoKeras.'
-google_analytics: ['UA-44322747-3', 'autokeras.com']
 markdown_extensions:
   - codehilite
   - pymdownx.superfences:
@@ -21,6 +20,11 @@ markdown_extensions:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
   - admonition
+
+extra:
+  analytics:
+    provider: google
+    property: UA-44322747-3
 
 extra_css:
   - stylesheets/extra.css
