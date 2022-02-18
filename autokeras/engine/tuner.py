@@ -88,7 +88,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         return pipeline, dataset, validation_data
 
     def _build_and_fit_model(self, trial, *args, **kwargs):
-        model = self.hypermodel.build(trial.hyperparameters)
+        model = self._try_build(trial.hyperparameters)
         (
             pipeline,
             kwargs["x"],
@@ -188,7 +188,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         # Populate initial search space.
         hp = self.oracle.get_space()
         self._prepare_model_build(hp, **fit_kwargs)
-        self.hypermodel.build(hp)
+        self._try_build(hp)
         self.oracle.update_space(hp)
         super().search(
             epochs=epochs, callbacks=new_callbacks, verbose=verbose, **fit_kwargs
@@ -255,7 +255,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
     def _build_best_model(self):
         best_trial = self.oracle.get_best_trials(1)[0]
         best_hp = best_trial.hyperparameters
-        return self.hypermodel.build(best_hp)
+        return self._try_build(best_hp)
 
     def final_fit(self, **kwargs):
         best_trial = self.oracle.get_best_trials(1)[0]
