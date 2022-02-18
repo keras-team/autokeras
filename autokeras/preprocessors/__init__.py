@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import tensorflow as tf
+from tensorflow import keras
 
 from autokeras.preprocessors.common import AddOneDimension
 from autokeras.preprocessors.common import CastToInt32
@@ -26,11 +27,11 @@ from autokeras.preprocessors.postprocessors import SoftmaxPostprocessor
 
 
 def serialize(preprocessor):
-    return tf.keras.utils.serialize_keras_object(preprocessor)
+    return keras.utils.serialize_keras_object(preprocessor)
 
 
 def deserialize(config, custom_objects=None):
-    return tf.keras.utils.deserialize_keras_object(
+    return keras.utils.deserialize_keras_object(
         config,
         module_objects=globals(),
         custom_objects=custom_objects,

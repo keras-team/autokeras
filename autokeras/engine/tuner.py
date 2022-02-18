@@ -17,7 +17,7 @@ import copy
 import os
 
 import keras_tuner
-import tensorflow as tf
+from tensorflow import keras
 from tensorflow import nest
 from tensorflow.keras import callbacks as tf_callbacks
 from tensorflow.keras.layers.experimental import preprocessing
@@ -60,7 +60,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
     def get_best_model(self):
         with keras_tuner.engine.tuner.maybe_distribute(self.distribution_strategy):
-            model = tf.keras.models.load_model(self.best_model_path)
+            model = keras.models.load_model(self.best_model_path)
         return model
 
     def get_best_pipeline(self):
@@ -116,7 +116,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             output_layers = []
             tensor = nest.flatten(tensor)[0]
             for layer in model.layers:
-                if isinstance(layer, tf.keras.layers.InputLayer):
+                if isinstance(layer, keras.layers.InputLayer):
                     continue
                 input_node = nest.flatten(layer.input)[0]
                 if input_node is tensor:

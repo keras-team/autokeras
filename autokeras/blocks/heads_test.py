@@ -15,6 +15,7 @@
 import keras_tuner
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow import nest
 
 import autokeras as ak
@@ -63,9 +64,9 @@ def test_multi_label_loss():
     head = head_module.ClassificationHead(
         name="a", multi_label=True, num_classes=8, shape=(8,)
     )
-    input_node = tf.keras.Input(shape=(5,))
+    input_node = keras.Input(shape=(5,))
     output_node = head.build(keras_tuner.HyperParameters(), input_node)
-    model = tf.keras.Model(input_node, output_node)
+    model = keras.Model(input_node, output_node)
     assert model.layers[-1].activation.__name__ == "sigmoid"
     assert head.loss.name == "binary_crossentropy"
 
@@ -94,7 +95,7 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(5,), dtype=tf.float32),
+        keras.Input(shape=(5,), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -124,7 +125,7 @@ def test_reg_head_build_with_zero_dropout_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(5,), dtype=tf.float32),
+        keras.Input(shape=(5,), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1

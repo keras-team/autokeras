@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import tensorflow as tf
+from tensorflow import keras
 
 from autokeras.blocks.basic import BertBlock
 from autokeras.blocks.basic import ConvBlock
@@ -43,11 +44,11 @@ from autokeras.blocks.wrapper import TimeseriesBlock
 
 
 def serialize(obj):
-    return tf.keras.utils.serialize_keras_object(obj)
+    return keras.utils.serialize_keras_object(obj)
 
 
 def deserialize(config, custom_objects=None):
-    return tf.keras.utils.deserialize_keras_object(
+    return keras.utils.deserialize_keras_object(
         config,
         module_objects=globals(),
         custom_objects=custom_objects,

@@ -14,6 +14,7 @@
 
 import keras_tuner
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow import nest
 
 from autokeras import analysers
@@ -26,7 +27,7 @@ def test_image_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -37,7 +38,7 @@ def test_image_block_xception_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -48,7 +49,7 @@ def test_image_block_normalize_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -59,7 +60,7 @@ def test_image_block_augment_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -87,7 +88,7 @@ def test_text_build_return_tensor():
     block = blocks.TextBlock()
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+        keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -97,7 +98,7 @@ def test_text_block_ngram_return_tensor():
     block = blocks.TextBlock(block_type="ngram")
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+        keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -107,7 +108,7 @@ def test_text_block_transformer_return_tensor():
     block = blocks.TextBlock(block_type="transformer")
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), tf.keras.Input(shape=(1,), dtype=tf.string)
+        keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -137,7 +138,7 @@ def test_structured_build_return_tensor():
     block.column_types = {"0": analysers.NUMERICAL, "1": analysers.NUMERICAL}
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), tf.keras.Input(shape=(2,), dtype=tf.string)
+        keras_tuner.HyperParameters(), keras.Input(shape=(2,), dtype=tf.string)
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -149,7 +150,7 @@ def test_structured_block_normalize_return_tensor():
     block.column_types = {"0": analysers.NUMERICAL, "1": analysers.NUMERICAL}
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), tf.keras.Input(shape=(2,), dtype=tf.string)
+        keras_tuner.HyperParameters(), keras.Input(shape=(2,), dtype=tf.string)
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -162,7 +163,7 @@ def test_structured_block_search_normalize_return_tensor():
     hp = keras_tuner.HyperParameters()
     hp.values["a/" + blocks.wrapper.NORMALIZE] = True
 
-    outputs = block.build(hp, tf.keras.Input(shape=(2,), dtype=tf.string))
+    outputs = block.build(hp, keras.Input(shape=(2,), dtype=tf.string))
 
     assert len(nest.flatten(outputs)) == 1
 
@@ -192,7 +193,7 @@ def test_timeseries_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 2), dtype=tf.float32),
+        keras.Input(shape=(32, 2), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1

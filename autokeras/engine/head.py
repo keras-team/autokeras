@@ -13,7 +13,7 @@
 # limitations under the License.
 from typing import Optional
 
-import tensorflow as tf
+from tensorflow import keras
 
 from autokeras.engine import io_hypermodel
 from autokeras.utils import types
@@ -25,7 +25,7 @@ def serialize_metrics(metrics):
         if isinstance(metric, str):
             serialized.append([metric])
         else:
-            serialized.append(tf.keras.metrics.serialize(metric))
+            serialized.append(keras.metrics.serialize(metric))
     return serialized
 
 
@@ -35,20 +35,20 @@ def deserialize_metrics(metrics):
         if isinstance(metric, list):
             deserialized.append(metric[0])
         else:
-            deserialized.append(tf.keras.metrics.deserialize(metric))
+            deserialized.append(keras.metrics.deserialize(metric))
     return deserialized
 
 
 def serialize_loss(loss):
     if isinstance(loss, str):
         return [loss]
-    return tf.keras.losses.serialize(loss)
+    return keras.losses.serialize(loss)
 
 
 def deserialize_loss(loss):
     if isinstance(loss, list):
         return loss[0]
-    return tf.keras.losses.deserialize(loss)
+    return keras.losses.deserialize(loss)
 
 
 class Head(io_hypermodel.IOHyperModel):

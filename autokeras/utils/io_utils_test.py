@@ -17,13 +17,14 @@ import shutil
 
 import pytest
 import tensorflow as tf
+from tensorflow import keras
 
 from autokeras import test_utils
 from autokeras.utils import io_utils
 
 IMG_DATA_DIR = os.path.join(
     os.path.dirname(
-        tf.keras.utils.get_file(
+        keras.utils.get_file(
             origin="https://storage.googleapis.com/"
             + "download.tensorflow.org/example_images/flower_photos.tgz",
             fname="image_data",
@@ -37,7 +38,7 @@ IMG_DATA_DIR = os.path.join(
 def test_load_imdb_dataset():
     data_dir = os.path.join(
         os.path.dirname(
-            tf.keras.utils.get_file(
+            keras.utils.get_file(
                 fname="text_data",
                 origin="http://ai.stanford.edu/"
                 + "~amaas/data/sentiment/aclImdb_v1.tar.gz",

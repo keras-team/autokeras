@@ -20,6 +20,7 @@ from typing import Type
 from typing import Union
 
 import tensorflow as tf
+from tensorflow import keras
 
 from autokeras import auto_model
 from autokeras import blocks
@@ -109,7 +110,7 @@ class ImageClassifier(SupervisedImagePipeline):
         x: Optional[types.DatasetType] = None,
         y: Optional[types.DatasetType] = None,
         epochs: Optional[int] = None,
-        callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
+        callbacks: Optional[List[keras.callbacks.Callback]] = None,
         validation_split: Optional[float] = 0.2,
         validation_data: Union[
             tf.data.Dataset, Tuple[types.DatasetType, types.DatasetType], None
@@ -241,7 +242,7 @@ class ImageRegressor(SupervisedImagePipeline):
         x: Optional[types.DatasetType] = None,
         y: Optional[types.DatasetType] = None,
         epochs: Optional[int] = None,
-        callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
+        callbacks: Optional[List[keras.callbacks.Callback]] = None,
         validation_split: Optional[float] = 0.2,
         validation_data: Union[
             types.DatasetType, Tuple[types.DatasetType], None
@@ -371,7 +372,7 @@ class ImageSegmenter(SupervisedImagePipeline):
         x: Optional[types.DatasetType] = None,
         y: Optional[types.DatasetType] = None,
         epochs: Optional[int] = None,
-        callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
+        callbacks: Optional[List[keras.callbacks.Callback]] = None,
         validation_split: Optional[float] = 0.2,
         validation_data: Union[
             types.DatasetType, Tuple[types.DatasetType], None
@@ -492,7 +493,7 @@ class ImageObjectDetector(SupervisedImagePipeline):
         x: Optional[types.DatasetType] = None,
         y: Optional[types.DatasetType] = None,
         epochs: Optional[int] = None,
-        callbacks: Optional[List[tf.keras.callbacks.Callback]] = None,
+        callbacks: Optional[List[keras.callbacks.Callback]] = None,
         validation_split: Optional[float] = 0.2,
         validation_data: Union[
             tf.data.Dataset, Tuple[types.DatasetType, types.DatasetType], None

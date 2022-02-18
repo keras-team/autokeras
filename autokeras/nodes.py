@@ -17,6 +17,7 @@ from typing import List
 from typing import Optional
 
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow import nest
 
 from autokeras import adapters
@@ -30,11 +31,11 @@ from autokeras.engine import node as node_module
 
 
 def serialize(obj):
-    return tf.keras.utils.serialize_keras_object(obj)
+    return keras.utils.serialize_keras_object(obj)
 
 
 def deserialize(config, custom_objects=None):
-    return tf.keras.utils.deserialize_keras_object(
+    return keras.utils.deserialize_keras_object(
         config,
         module_objects=globals(),
         custom_objects=custom_objects,
@@ -56,7 +57,7 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
         super().__init__(name=name, **kwargs)
 
     def build_node(self, hp):
-        return tf.keras.Input(shape=self.shape, dtype=self.dtype)
+        return keras.Input(shape=self.shape, dtype=self.dtype)
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
@@ -123,7 +124,7 @@ class TextInput(Input):
         super().__init__(name=name, **kwargs)
 
     def build_node(self, hp):
-        return tf.keras.Input(shape=self.shape, dtype=tf.string)
+        return keras.Input(shape=self.shape, dtype=tf.string)
 
     def build(self, hp, inputs=None):
         output_node = nest.flatten(inputs)[0]

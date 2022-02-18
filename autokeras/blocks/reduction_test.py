@@ -14,6 +14,7 @@
 
 import keras_tuner
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow import nest
 
 from autokeras import blocks
@@ -26,8 +27,8 @@ def test_merge_build_return_tensor():
     outputs = block.build(
         keras_tuner.HyperParameters(),
         [
-            tf.keras.Input(shape=(32,), dtype=tf.float32),
-            tf.keras.Input(shape=(4, 8), dtype=tf.float32),
+            keras.Input(shape=(32,), dtype=tf.float32),
+            keras.Input(shape=(4, 8), dtype=tf.float32),
         ],
     )
 
@@ -39,7 +40,7 @@ def test_merge_single_input_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(32,), dtype=tf.float32),
+        keras.Input(shape=(32,), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -51,8 +52,8 @@ def test_merge_inputs_with_same_shape_return_tensor():
     outputs = block.build(
         keras_tuner.HyperParameters(),
         [
-            tf.keras.Input(shape=(32,), dtype=tf.float32),
-            tf.keras.Input(shape=(32,), dtype=tf.float32),
+            keras.Input(shape=(32,), dtype=tf.float32),
+            keras.Input(shape=(32,), dtype=tf.float32),
         ],
     )
 
@@ -80,7 +81,7 @@ def test_temporal_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 10), dtype=tf.float32),
+        keras.Input(shape=(32, 10), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -91,7 +92,7 @@ def test_temporal_global_max_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 10), dtype=tf.float32),
+        keras.Input(shape=(32, 10), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -102,7 +103,7 @@ def test_temporal_global_avg_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 10), dtype=tf.float32),
+        keras.Input(shape=(32, 10), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -110,7 +111,7 @@ def test_temporal_global_avg_return_tensor():
 
 def test_reduction_2d_tensor_return_input_node():
     block = blocks.TemporalReduction()
-    input_node = tf.keras.Input(shape=(32,), dtype=tf.float32)
+    input_node = keras.Input(shape=(32,), dtype=tf.float32)
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
@@ -144,7 +145,7 @@ def test_spatial_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        tf.keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
