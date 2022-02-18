@@ -135,7 +135,7 @@ def py_to_nb_md(dest_dir):
                 + ".ipynb"
                 + ")   &nbsp; &nbsp;"
                 # + '<span class="k-dot">•</span>'
-                + ":octicons-octoface-16: "
+                + ":octicons-mark-github-16: "
                 "[**GitHub source**](https://github.com/"
                 + github_repo_dir
                 + "py/"
