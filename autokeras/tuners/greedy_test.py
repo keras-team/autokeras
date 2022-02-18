@@ -15,7 +15,7 @@
 from unittest import mock
 
 import keras_tuner
-import tensorflow as tf
+from tensorflow import keras
 
 import autokeras as ak
 from autokeras import test_utils
@@ -51,7 +51,7 @@ def test_greedy_oracle_populate_different_values(get_best_trials):
 @mock.patch("autokeras.tuners.greedy.GreedyOracle.get_best_trials")
 def test_greedy_oracle_populate_doesnt_crash_with_init_hps(get_best_trials):
     hp = keras_tuner.HyperParameters()
-    tf.keras.backend.clear_session()
+    keras.backend.clear_session()
     input_node = ak.ImageInput(shape=(32, 32, 3))
     input_node.batch_size = 32
     input_node.num_samples = 1000
@@ -72,7 +72,7 @@ def test_greedy_oracle_populate_doesnt_crash_with_init_hps(get_best_trials):
     get_best_trials.return_value = [trial]
 
     for i in range(10):
-        tf.keras.backend.clear_session()
+        keras.backend.clear_session()
         values = oracle.populate_space("a")["values"]
         hp = oracle.hyperparameters.copy()
         hp.values = values

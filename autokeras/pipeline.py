@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow import nest
 
 from autokeras import preprocessors as preprocessors_module
@@ -72,7 +73,7 @@ def load_pipeline(filepath, custom_objects=None):
     """Load a Pipeline instance from disk."""
     if custom_objects is None:
         custom_objects = {}
-    with tf.keras.utils.custom_object_scope(custom_objects):
+    with keras.utils.custom_object_scope(custom_objects):
         return Pipeline.from_config(io_utils.load_json(filepath))
 
 

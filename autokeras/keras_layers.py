@@ -21,7 +21,9 @@ from typing import List
 import numpy as np
 import six
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow import nest
+from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
 
 from autokeras import constants
@@ -32,7 +34,7 @@ NONE = "none"
 ONE_HOT = "one-hot"
 
 
-@tf.keras.utils.register_keras_serializable()
+@keras.utils.register_keras_serializable()
 class CastToFloat32(preprocessing.PreprocessingLayer):
     def get_config(self):
         return super().get_config()
@@ -44,7 +46,7 @@ class CastToFloat32(preprocessing.PreprocessingLayer):
         return
 
 
-@tf.keras.utils.register_keras_serializable()
+@keras.utils.register_keras_serializable()
 class ExpandLastDim(preprocessing.PreprocessingLayer):
     def get_config(self):
         return super().get_config()
@@ -56,7 +58,7 @@ class ExpandLastDim(preprocessing.PreprocessingLayer):
         return
 
 
-@tf.keras.utils.register_keras_serializable()
+@keras.utils.register_keras_serializable()
 class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
     """Encode the categorical features to numerical features.
 
@@ -81,7 +83,7 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
                 # Set a temporary vocabulary to prevent the error of no
                 # vocabulary when calling the layer to build the model.  The
                 # vocabulary would be reset by adapting the layer later.
-                self.encoding_layers.append(preprocessing.StringLookup())
+                self.encoding_layers.append(layers.StringLookup())
             elif encoding == ONE_HOT:
                 self.encoding_layers.append(None)
 
@@ -110,7 +112,7 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
                 )
         if len(output_nodes) == 1:
             return output_nodes[0]
-        return tf.keras.layers.Concatenate()(output_nodes)
+        return layers.Concatenate()(output_nodes)
 
     def adapt(self, data):
         for index, encoding_layer in enumerate(self.encoding_layers):
@@ -128,7 +130,7 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
 
 
 # TODO: Remove after KerasNLP is ready.
-@tf.keras.utils.register_keras_serializable()
+@keras.utils.register_keras_serializable()
 class BertTokenizer(preprocessing.PreprocessingLayer):
     """Vectorization and Encoding the sentences using BERT vocabulary.
 
@@ -199,15 +201,15 @@ class BertTokenizer(preprocessing.PreprocessingLayer):
 
 
 # TODO: Remove after KerasNLP is ready.
-@tf.keras.utils.register_keras_serializable()
-class BertEncoder(tf.keras.layers.Layer):
+@keras.utils.register_keras_serializable()
+class BertEncoder(layers.Layer):
     """Cleaned up official.nlp.modeling.networks.TransformerEncoder."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         embedding_width = 768
         dropout_rate = 0.1
-        initializer = tf.keras.initializers.TruncatedNormal(stddev=0.02)
+        initializer = keras.initializers.TruncatedNormal(stddev=0.02)
 
         self._embedding_layer = OnDeviceEmbedding(
             vocab_size=30522,
@@ -230,11 +232,11 @@ class BertEncoder(tf.keras.layers.Layer):
             use_one_hot=True,
             name="type_embeddings",
         )
-        self._add = tf.keras.layers.Add()
-        self._layer_norm = tf.keras.layers.LayerNormalization(
+        self._add = layers.Add()
+        self._layer_norm = layers.LayerNormalization(
             name="embeddings/layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
         )
-        self._dropout = tf.keras.layers.Dropout(rate=dropout_rate)
+        self._dropout = layers.Dropout(rate=dropout_rate)
 
         self._attention_mask = SelfAttentionMask()
         self._transformer_layers = []
@@ -251,10 +253,8 @@ class BertEncoder(tf.keras.layers.Layer):
             )
             self._transformer_layers.append(layer)
 
-        self._lambda = tf.keras.layers.Lambda(
-            lambda x: tf.squeeze(x[:, 0:1, :], axis=1)
-        )
-        self._pooler_layer = tf.keras.layers.Dense(
+        self._lambda = layers.Lambda(lambda x: tf.squeeze(x[:, 0:1, :], axis=1))
+        self._pooler_layer = layers.Dense(
             units=embedding_width,
             activation="tanh",
             kernel_initializer=initializer,
@@ -289,7 +289,7 @@ class BertEncoder(tf.keras.layers.Layer):
         return cls_output
 
     def load_pretrained_weights(self):
-        path = tf.keras.utils.get_file(
+        path = keras.utils.get_file(
             "bert_checkpoint", constants.BERT_CHECKPOINT_PATH, extract=True
         )
         path = os.path.join(
@@ -299,8 +299,8 @@ class BertEncoder(tf.keras.layers.Layer):
         checkpoint.restore(path).assert_consumed()
 
 
-@tf.keras.utils.register_keras_serializable()
-class AdamWeightDecay(tf.keras.optimizers.Adam):
+@keras.utils.register_keras_serializable()
+class AdamWeightDecay(keras.optimizers.Adam):
     """official.nlp.optimization.AdamWeightDecay"""
 
     def __init__(
@@ -414,8 +414,8 @@ class AdamWeightDecay(tf.keras.optimizers.Adam):
         return True
 
 
-@tf.keras.utils.register_keras_serializable()
-class WarmUp(tf.keras.optimizers.schedules.LearningRateSchedule):
+@keras.utils.register_keras_serializable()
+class WarmUp(keras.optimizers.schedules.LearningRateSchedule):
     """official.nlp.optimization.WarmUp"""
 
     def __init__(
@@ -460,7 +460,7 @@ class WarmUp(tf.keras.optimizers.schedules.LearningRateSchedule):
         }
 
 
-@tf.keras.utils.register_keras_serializable()
+@keras.utils.register_keras_serializable()
 def gelu(x):
     """official.modeling.activations.gelu"""
     cdf = 0.5 * (
@@ -469,8 +469,8 @@ def gelu(x):
     return x * cdf
 
 
-@tf.keras.utils.register_keras_serializable()
-class OnDeviceEmbedding(tf.keras.layers.Layer):
+@keras.utils.register_keras_serializable()
+class OnDeviceEmbedding(layers.Layer):
     """official.nlp.modeling.layers.OnDeviceEmbedding"""
 
     def __init__(
@@ -528,8 +528,8 @@ class OnDeviceEmbedding(tf.keras.layers.Layer):
         return embeddings  # pragma: no cover
 
 
-@tf.keras.utils.register_keras_serializable()
-class PositionEmbedding(tf.keras.layers.Layer):
+@keras.utils.register_keras_serializable()
+class PositionEmbedding(layers.Layer):
     """official.nlp.modeling.layers.PositionEmbedding"""
 
     def __init__(
@@ -551,13 +551,13 @@ class PositionEmbedding(tf.keras.layers.Layer):
                 "`max_sequence_length` must be set."
             )
         self._max_sequence_length = max_sequence_length
-        self._initializer = tf.keras.initializers.get(initializer)
+        self._initializer = keras.initializers.get(initializer)
         self._use_dynamic_slicing = use_dynamic_slicing
 
     def get_config(self):
         config = {
             "max_sequence_length": self._max_sequence_length,
-            "initializer": tf.keras.initializers.serialize(self._initializer),
+            "initializer": keras.initializers.serialize(self._initializer),
             "use_dynamic_slicing": self._use_dynamic_slicing,
         }
         base_config = super(PositionEmbedding, self).get_config()
@@ -657,8 +657,8 @@ def assert_rank(tensor, expected_rank, name=None):
         )
 
 
-@tf.keras.utils.register_keras_serializable()
-class SelfAttentionMask(tf.keras.layers.Layer):
+@keras.utils.register_keras_serializable()
+class SelfAttentionMask(layers.Layer):
     """official.nlp.modeling.layers.SelfAttentionMask"""
 
     def call(self, inputs):
@@ -696,8 +696,8 @@ class SelfAttentionMask(tf.keras.layers.Layer):
         return super().get_config()
 
 
-@tf.keras.utils.register_keras_serializable()
-class Transformer(tf.keras.layers.Layer):
+@keras.utils.register_keras_serializable()
+class Transformer(layers.Layer):
     """official.nlp.modeling.layers.Transformer"""
 
     def __init__(
@@ -725,13 +725,13 @@ class Transformer(tf.keras.layers.Layer):
         self._attention_dropout_rate = attention_dropout_rate
         self._dropout_rate = dropout_rate
         self._output_range = output_range
-        self._kernel_initializer = tf.keras.initializers.get(kernel_initializer)
-        self._bias_initializer = tf.keras.initializers.get(bias_initializer)
-        self._kernel_regularizer = tf.keras.regularizers.get(kernel_regularizer)
-        self._bias_regularizer = tf.keras.regularizers.get(bias_regularizer)
-        self._activity_regularizer = tf.keras.regularizers.get(activity_regularizer)
-        self._kernel_constraint = tf.keras.constraints.get(kernel_constraint)
-        self._bias_constraint = tf.keras.constraints.get(bias_constraint)
+        self._kernel_initializer = keras.initializers.get(kernel_initializer)
+        self._bias_initializer = keras.initializers.get(bias_initializer)
+        self._kernel_regularizer = keras.regularizers.get(kernel_regularizer)
+        self._bias_regularizer = keras.regularizers.get(bias_regularizer)
+        self._activity_regularizer = keras.regularizers.get(activity_regularizer)
+        self._kernel_constraint = keras.constraints.get(kernel_constraint)
+        self._bias_constraint = keras.constraints.get(bias_constraint)
 
     def build(self, input_shape):
         input_tensor = input_shape[0] if len(input_shape) == 2 else input_shape
@@ -780,10 +780,10 @@ class Transformer(tf.keras.layers.Layer):
         self._attention_layer.build([input_tensor_shape] * 3)
         self._attention_output_dense = self._attention_layer._output_dense
         # pylint: enable=protected-access
-        self._attention_dropout = tf.keras.layers.Dropout(rate=self._dropout_rate)
+        self._attention_dropout = layers.Dropout(rate=self._dropout_rate)
         # Use float32 in layernorm for numeric stability.
         # It is probably safe in mixed_float16, but we haven't validated this yet.
-        self._attention_layer_norm = tf.keras.layers.LayerNormalization(
+        self._attention_layer_norm = layers.LayerNormalization(
             name="self_attention_layer_norm",
             axis=-1,
             epsilon=1e-12,
@@ -801,13 +801,13 @@ class Transformer(tf.keras.layers.Layer):
             bias_constraint=self._bias_constraint,
             name="intermediate",
         )
-        policy = tf.keras.mixed_precision.global_policy()
+        policy = keras.mixed_precision.global_policy()
         if policy.name == "mixed_bfloat16":
             # bfloat16 causes BERT with the LAMB optimizer to not converge
             # as well, so we use float32.
             # TODO(b/154538392): Investigate this.
             policy = tf.float32  # pragma: no cover
-        self._intermediate_activation_layer = tf.keras.layers.Activation(
+        self._intermediate_activation_layer = layers.Activation(
             self._intermediate_activation, dtype=policy
         )
         self._output_dense = DenseEinsum(
@@ -821,9 +821,9 @@ class Transformer(tf.keras.layers.Layer):
             bias_constraint=self._bias_constraint,
             name="output",
         )
-        self._output_dropout = tf.keras.layers.Dropout(rate=self._dropout_rate)
+        self._output_dropout = layers.Dropout(rate=self._dropout_rate)
         # Use float32 in layernorm for numeric stability.
-        self._output_layer_norm = tf.keras.layers.LayerNormalization(
+        self._output_layer_norm = layers.LayerNormalization(
             name="output_layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
         )
 
@@ -837,25 +837,21 @@ class Transformer(tf.keras.layers.Layer):
             "dropout_rate": self._dropout_rate,
             "attention_dropout_rate": self._attention_dropout_rate,
             "output_range": self._output_range,
-            "kernel_initializer": tf.keras.initializers.serialize(
+            "kernel_initializer": keras.initializers.serialize(
                 self._kernel_initializer
             ),
-            "bias_initializer": tf.keras.initializers.serialize(
-                self._bias_initializer
-            ),
-            "kernel_regularizer": tf.keras.regularizers.serialize(
+            "bias_initializer": keras.initializers.serialize(self._bias_initializer),
+            "kernel_regularizer": keras.regularizers.serialize(
                 self._kernel_regularizer
             ),
-            "bias_regularizer": tf.keras.regularizers.serialize(
-                self._bias_regularizer
-            ),
-            "activity_regularizer": tf.keras.regularizers.serialize(
+            "bias_regularizer": keras.regularizers.serialize(self._bias_regularizer),
+            "activity_regularizer": keras.regularizers.serialize(
                 self._activity_regularizer
             ),
-            "kernel_constraint": tf.keras.constraints.serialize(
+            "kernel_constraint": keras.constraints.serialize(
                 self._kernel_constraint
             ),
-            "bias_constraint": tf.keras.constraints.serialize(self._bias_constraint),
+            "bias_constraint": keras.constraints.serialize(self._bias_constraint),
         }
         base_config = super(Transformer, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -907,11 +903,11 @@ class Transformer(tf.keras.layers.Layer):
         return layer_output  # pragma: no cover
 
 
-EinsumDense = tf.keras.layers.experimental.EinsumDense
+EinsumDense = layers.experimental.EinsumDense
 
 
-@tf.keras.utils.register_keras_serializable()
-class MultiHeadAttention(tf.keras.layers.Layer):
+@keras.utils.register_keras_serializable()
+class MultiHeadAttention(layers.Layer):
     """official.nlp.modeling.layers.attention.MultiHeadAttention"""
 
     def __init__(
@@ -941,12 +937,12 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         self._use_bias = use_bias
         self._output_shape = output_shape
         self._return_attention_scores = return_attention_scores
-        self._kernel_initializer = tf.keras.initializers.get(kernel_initializer)
-        self._bias_initializer = tf.keras.initializers.get(bias_initializer)
-        self._kernel_regularizer = tf.keras.regularizers.get(kernel_regularizer)
-        self._bias_regularizer = tf.keras.regularizers.get(bias_regularizer)
-        self._kernel_constraint = tf.keras.constraints.get(kernel_constraint)
-        self._bias_constraint = tf.keras.constraints.get(bias_constraint)
+        self._kernel_initializer = keras.initializers.get(kernel_initializer)
+        self._bias_initializer = keras.initializers.get(bias_initializer)
+        self._kernel_regularizer = keras.regularizers.get(kernel_regularizer)
+        self._bias_regularizer = keras.regularizers.get(bias_regularizer)
+        self._kernel_constraint = keras.constraints.get(kernel_constraint)
+        self._bias_constraint = keras.constraints.get(bias_constraint)
         if attention_axes is not None and not isinstance(
             attention_axes, collections.abc.Sized
         ):
@@ -964,25 +960,21 @@ class MultiHeadAttention(tf.keras.layers.Layer):
             "output_shape": self._output_shape,
             "attention_axes": self._attention_axes,
             "return_attention_scores": self._return_attention_scores,
-            "kernel_initializer": tf.keras.initializers.serialize(
+            "kernel_initializer": keras.initializers.serialize(
                 self._kernel_initializer
             ),
-            "bias_initializer": tf.keras.initializers.serialize(
-                self._bias_initializer
-            ),
-            "kernel_regularizer": tf.keras.regularizers.serialize(
+            "bias_initializer": keras.initializers.serialize(self._bias_initializer),
+            "kernel_regularizer": keras.regularizers.serialize(
                 self._kernel_regularizer
             ),
-            "bias_regularizer": tf.keras.regularizers.serialize(
-                self._bias_regularizer
-            ),
-            "activity_regularizer": tf.keras.regularizers.serialize(
+            "bias_regularizer": keras.regularizers.serialize(self._bias_regularizer),
+            "activity_regularizer": keras.regularizers.serialize(
                 self._activity_regularizer
             ),
-            "kernel_constraint": tf.keras.constraints.serialize(
+            "kernel_constraint": keras.constraints.serialize(
                 self._kernel_constraint
             ),
-            "bias_constraint": tf.keras.constraints.serialize(self._bias_constraint),
+            "bias_constraint": keras.constraints.serialize(self._bias_constraint),
         }
         base_config = super(MultiHeadAttention, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -1098,7 +1090,7 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         self._masked_softmax = MaskedSoftmax(
             mask_expansion_axes=[1], normalization_axes=norm_axes
         )
-        self._dropout_layer = tf.keras.layers.Dropout(rate=self._dropout)
+        self._dropout_layer = layers.Dropout(rate=self._dropout)
 
     def _compute_attention(
         self, query_tensor, key_tensor, value_tensor, attention_mask=None
@@ -1209,8 +1201,8 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         return attention_output  # pragma: no cover
 
 
-@tf.keras.utils.register_keras_serializable()
-class DenseEinsum(tf.keras.layers.Layer):
+@keras.utils.register_keras_serializable()
+class DenseEinsum(layers.Layer):
     """from official.nlp.modeling.layers.dense_einsum.DenseEinsum"""
 
     def __init__(
@@ -1234,14 +1226,14 @@ class DenseEinsum(tf.keras.layers.Layer):
             if isinstance(output_shape, (list, tuple))
             else (output_shape,)
         )
-        self._activation = tf.keras.activations.get(activation)
+        self._activation = keras.activations.get(activation)
         self._use_bias = use_bias
-        self._kernel_initializer = tf.keras.initializers.get(kernel_initializer)
-        self._bias_initializer = tf.keras.initializers.get(bias_initializer)
-        self._kernel_regularizer = tf.keras.regularizers.get(kernel_regularizer)
-        self._bias_regularizer = tf.keras.regularizers.get(bias_regularizer)
-        self._kernel_constraint = tf.keras.constraints.get(kernel_constraint)
-        self._bias_constraint = tf.keras.constraints.get(bias_constraint)
+        self._kernel_initializer = keras.initializers.get(kernel_initializer)
+        self._bias_initializer = keras.initializers.get(bias_initializer)
+        self._kernel_regularizer = keras.regularizers.get(kernel_regularizer)
+        self._bias_regularizer = keras.regularizers.get(bias_regularizer)
+        self._kernel_constraint = keras.constraints.get(kernel_constraint)
+        self._bias_constraint = keras.constraints.get(bias_constraint)
         self._num_summed_dimensions = num_summed_dimensions
         self._einsum_string = None
 
@@ -1312,27 +1304,23 @@ class DenseEinsum(tf.keras.layers.Layer):
         config = {
             "output_shape": self._output_shape,
             "num_summed_dimensions": self._num_summed_dimensions,
-            "activation": tf.keras.activations.serialize(self._activation),
+            "activation": keras.activations.serialize(self._activation),
             "use_bias": self._use_bias,
-            "kernel_initializer": tf.keras.initializers.serialize(
+            "kernel_initializer": keras.initializers.serialize(
                 self._kernel_initializer
             ),
-            "bias_initializer": tf.keras.initializers.serialize(
-                self._bias_initializer
-            ),
-            "kernel_regularizer": tf.keras.regularizers.serialize(
+            "bias_initializer": keras.initializers.serialize(self._bias_initializer),
+            "kernel_regularizer": keras.regularizers.serialize(
                 self._kernel_regularizer
             ),
-            "bias_regularizer": tf.keras.regularizers.serialize(
-                self._bias_regularizer
-            ),
-            "activity_regularizer": tf.keras.regularizers.serialize(
+            "bias_regularizer": keras.regularizers.serialize(self._bias_regularizer),
+            "activity_regularizer": keras.regularizers.serialize(
                 self._activity_regularizer
             ),
-            "kernel_constraint": tf.keras.constraints.serialize(
+            "kernel_constraint": keras.constraints.serialize(
                 self._kernel_constraint
             ),
-            "bias_constraint": tf.keras.constraints.serialize(self._bias_constraint),
+            "bias_constraint": keras.constraints.serialize(self._bias_constraint),
         }
         base_config = super(DenseEinsum, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -1441,8 +1429,8 @@ def _build_attention_equation(qkv_rank, attn_axes):
     return dot_product_equation, combine_equation, attn_scores_rank
 
 
-@tf.keras.utils.register_keras_serializable()
-class MaskedSoftmax(tf.keras.layers.Layer):
+@keras.utils.register_keras_serializable()
+class MaskedSoftmax(layers.Layer):
     """Performs a softmax with optional masking on a tensor.
 
     Args:
@@ -1522,7 +1510,7 @@ def load_vocab(vocab_file):
     """Loads a vocabulary file into a dictionary."""
     vocab = collections.OrderedDict()
     index = 0
-    path = tf.keras.utils.get_file("bert_vocab.txt", vocab_file)
+    path = keras.utils.get_file("bert_vocab.txt", vocab_file)
     with tf.io.gfile.GFile(path, "r") as reader:
         while True:
             token = convert_to_unicode(reader.readline())

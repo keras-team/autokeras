@@ -16,6 +16,7 @@ from unittest import mock
 
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow.keras.layers.experimental import preprocessing
 
 import autokeras as ak
@@ -29,7 +30,7 @@ def called_with_early_stopping(func):
     callbacks = func.call_args_list[0][1]["callbacks"]
     return any(
         [
-            isinstance(callback, tf.keras.callbacks.EarlyStopping)
+            isinstance(callback, keras.callbacks.EarlyStopping)
             for callback in callbacks
         ]
     )
@@ -148,8 +149,8 @@ def test_preprocessing_adapt_with_cat_to_int_and_norm():
     x = np.array([["a", 5], ["b", 6]]).astype(np.unicode)
     y = np.array([[1, 2], [3, 4]]).astype(np.unicode)
     dataset = tf.data.Dataset.from_tensor_slices((x, y)).batch(32)
-    model = tf.keras.models.Sequential()
-    model.add(tf.keras.Input(shape=(2,), dtype=tf.string))
+    model = keras.models.Sequential()
+    model.add(keras.Input(shape=(2,), dtype=tf.string))
     model.add(keras_layers.MultiCategoryEncoding(["int", "none"]))
     model.add(preprocessing.Normalization(axis=-1))
 
@@ -166,11 +167,11 @@ def test_preprocessing_adapt_with_text_vec():
     y_train = np.random.randint(0, 2, (100,))
     dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train)).batch(32)
     layer1 = MockLayer(max_tokens=5000, output_mode="int", output_sequence_length=40)
-    model = tf.keras.models.Sequential()
-    model.add(tf.keras.Input(shape=(1,), dtype=tf.string))
+    model = keras.models.Sequential()
+    model.add(keras.Input(shape=(1,), dtype=tf.string))
     model.add(layer1)
-    model.add(tf.keras.layers.Embedding(50001, 10))
-    model.add(tf.keras.layers.Dense(1))
+    model.add(keras.layers.Embedding(50001, 10))
+    model.add(keras.layers.Dense(1))
 
     tuner_module.AutoTuner.adapt(model, dataset)
 
@@ -178,11 +179,9 @@ def test_preprocessing_adapt_with_text_vec():
 
 
 def test_adapt_with_model_with_preprocessing_layer_only():
-    input_node = tf.keras.Input(shape=(10,))
-    output_node = tf.keras.layers.experimental.preprocessing.Normalization()(
-        input_node
-    )
-    model = tf.keras.Model(input_node, output_node)
+    input_node = keras.Input(shape=(10,))
+    output_node = keras.layers.experimental.preprocessing.Normalization()(input_node)
+    model = keras.Model(input_node, output_node)
     greedy.Greedy.adapt(
         model,
         tf.data.Dataset.from_tensor_slices(
@@ -195,7 +194,7 @@ def test_build_block_in_blocks_with_same_name(tmp_path):
     class Block1(ak.Block):
         def build(self, hp, inputs):
             hp.Boolean("a")
-            return tf.keras.layers.Dense(3)(tf.nest.flatten(inputs)[0])
+            return keras.layers.Dense(3)(tf.nest.flatten(inputs)[0])
 
     class Block2(ak.Block):
         def build(self, hp, inputs):

@@ -16,6 +16,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 
 from autokeras import keras_layers as layer_module
 
@@ -47,9 +48,9 @@ def test_model_save_load_output_same(tmp_path):
     )
     layer.adapt(tf.data.Dataset.from_tensor_slices(x_train).batch(32))
 
-    model = tf.keras.Sequential([tf.keras.Input(shape=(3,), dtype=tf.string), layer])
+    model = keras.Sequential([keras.Input(shape=(3,), dtype=tf.string), layer])
     model.save(os.path.join(tmp_path, "model"))
-    model2 = tf.keras.models.load_model(os.path.join(tmp_path, "model"))
+    model2 = keras.models.load_model(os.path.join(tmp_path, "model"))
 
     assert np.array_equal(model.predict(x_train), model2.predict(x_train))
 
@@ -107,11 +108,11 @@ def test_bert_tokenizer_save_and_load(tmp_path):
     max_sequence_length = 8
     layer = layer_module.BertTokenizer(max_sequence_length=max_sequence_length)
 
-    input_node = tf.keras.Input(shape=(1,), dtype=tf.string)
+    input_node = keras.Input(shape=(1,), dtype=tf.string)
     output_node = layer(input_node)
-    model = tf.keras.Model(input_node, output_node)
+    model = keras.Model(input_node, output_node)
     model.save(os.path.join(tmp_path, "model"))
-    model2 = tf.keras.models.load_model(os.path.join(tmp_path, "model"))
+    model2 = keras.models.load_model(os.path.join(tmp_path, "model"))
 
     assert np.array_equal(model.predict(x_train), model2.predict(x_train))
 
@@ -119,18 +120,18 @@ def test_bert_tokenizer_save_and_load(tmp_path):
 def test_transformer_encoder_save_and_load(tmp_path):
     layer = layer_module.BertEncoder()
     inputs = [
-        tf.keras.Input(shape=(500,), dtype=tf.int64),
-        tf.keras.Input(shape=(500,), dtype=tf.int64),
-        tf.keras.Input(shape=(500,), dtype=tf.int64),
+        keras.Input(shape=(500,), dtype=tf.int64),
+        keras.Input(shape=(500,), dtype=tf.int64),
+        keras.Input(shape=(500,), dtype=tf.int64),
     ]
-    model = tf.keras.Model(inputs, layer(inputs))
+    model = keras.Model(inputs, layer(inputs))
     model.save(os.path.join(tmp_path, "model"))
-    tf.keras.models.load_model(os.path.join(tmp_path, "model"))
+    keras.models.load_model(os.path.join(tmp_path, "model"))
 
 
 def test_adam_weight_decay(tmp_path):
-    model = tf.keras.Sequential([tf.keras.layers.Dense(10, input_shape=(10,))])
-    lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
+    model = keras.Sequential([keras.layers.Dense(10, input_shape=(10,))])
+    lr_schedule = keras.optimizers.schedules.PolynomialDecay(
         initial_learning_rate=0.1,
         decay_steps=100,
         end_learning_rate=0.0,

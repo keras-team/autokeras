@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import keras_tuner
-import tensorflow as tf
+from tensorflow import keras
 
 from autokeras.engine import serializable
 from autokeras.utils import utils
@@ -30,7 +30,7 @@ class NamedHyperModel(keras_tuner.HyperModel, serializable.Serializable):
     def __init__(self, name: str = None, **kwargs):
         if not name:
             prefix = self.__class__.__name__
-            name = prefix + "_" + str(tf.keras.backend.get_uid(prefix))
+            name = prefix + "_" + str(keras.backend.get_uid(prefix))
             name = utils.to_snake_case(name)
         super().__init__(name=name, **kwargs)
 

@@ -17,7 +17,7 @@ from typing import Tuple
 from typing import Union
 
 from tensorflow import nest
-from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras import layers
 
 from autokeras import analysers
 from autokeras import keras_layers
@@ -42,7 +42,7 @@ class Normalization(block_module.Block):
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
-        return preprocessing.Normalization(axis=self.axis)(input_node)
+        return layers.Normalization(axis=self.axis)(input_node)
 
     def get_config(self):
         config = super().get_config()
@@ -87,7 +87,7 @@ class TextToIntSequence(block_module.Block):
             output_sequence_length = hp.Choice(
                 "output_sequence_length", [64, 128, 256, 512], default=64
             )
-        output_node = preprocessing.TextVectorization(
+        output_node = layers.TextVectorization(
             max_tokens=self.max_tokens,
             output_mode="int",
             output_sequence_length=output_sequence_length,
@@ -122,7 +122,7 @@ class TextToNgramVector(block_module.Block):
             ngrams = self.ngrams
         else:
             ngrams = hp.Int("ngrams", min_value=1, max_value=2, default=2)
-        return preprocessing.TextVectorization(
+        return layers.TextVectorization(
             max_tokens=self.max_tokens,
             ngrams=ngrams,
             output_mode="tf-idf",
@@ -199,9 +199,9 @@ class ImageAugmentation(block_module.Block):
             height_factor, width_factor = self._get_fraction_value(
                 translation_factor
             )
-            output_node = preprocessing.RandomTranslation(
-                height_factor, width_factor
-            )(output_node)
+            output_node = layers.RandomTranslation(height_factor, width_factor)(
+                output_node
+            )
 
         # Flip
         horizontal_flip = self.horizontal_flip
@@ -219,14 +219,14 @@ class ImageAugmentation(block_module.Block):
         elif not horizontal_flip and vertical_flip:
             flip_mode = "vertical"
         if flip_mode != "":
-            output_node = preprocessing.RandomFlip(mode=flip_mode)(output_node)
+            output_node = layers.RandomFlip(mode=flip_mode)(output_node)
 
         # Rotate
         rotation_factor = self.rotation_factor
         if rotation_factor is None:
             rotation_factor = hp.Choice("rotation_factor", [0.0, 0.1])
         if rotation_factor != 0:
-            output_node = preprocessing.RandomRotation(rotation_factor)(output_node)
+            output_node = layers.RandomRotation(rotation_factor)(output_node)
 
         # Zoom
         zoom_factor = self.zoom_factor
@@ -235,7 +235,7 @@ class ImageAugmentation(block_module.Block):
         if zoom_factor not in [0, (0, 0)]:
             height_factor, width_factor = self._get_fraction_value(zoom_factor)
             # TODO: Add back RandomZoom when it is ready.
-            # output_node = preprocessing.RandomZoom(
+            # output_node = layers.RandomZoom(
             # height_factor, width_factor)(output_node)
 
         # Contrast
@@ -243,7 +243,7 @@ class ImageAugmentation(block_module.Block):
         if contrast_factor is None:
             contrast_factor = hp.Choice("contrast_factor", [0.0, 0.1])
         if contrast_factor not in [0, (0, 0)]:
-            output_node = preprocessing.RandomContrast(contrast_factor)(output_node)
+            output_node = layers.RandomContrast(contrast_factor)(output_node)
 
         return output_node
 

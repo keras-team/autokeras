@@ -15,6 +15,7 @@
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from tensorflow import keras
 
 import autokeras as ak
 from autokeras import test_utils
@@ -33,7 +34,7 @@ def test_image_classifier(tmp_path):
     keras_model = clf.export_model()
     clf.evaluate(train_x, train_y)
     assert clf.predict(train_x).shape == (len(train_x), 10)
-    assert isinstance(keras_model, tf.keras.Model)
+    assert isinstance(keras_model, keras.Model)
 
 
 def test_image_regressor(tmp_path):
@@ -135,4 +136,4 @@ def test_timeseries_forecaster(tmp_path):
     assert clf.fit_and_predict(
         train_x, train_y, epochs=1, validation_split=0.2
     ).shape == (predict_until - predict_from + 1, 1)
-    assert isinstance(keras_model, tf.keras.Model)
+    assert isinstance(keras_model, keras.Model)

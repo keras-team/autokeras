@@ -17,6 +17,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 
 import autokeras as ak
 
@@ -46,10 +47,10 @@ COLUMN_TYPES = {
 TRAIN_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
 TEST_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
 
-TRAIN_CSV_PATH = tf.keras.utils.get_file(
+TRAIN_CSV_PATH = keras.utils.get_file(
     fname=os.path.basename(TRAIN_DATA_URL), origin=TRAIN_DATA_URL
 )
-TEST_CSV_PATH = tf.keras.utils.get_file(
+TEST_CSV_PATH = keras.utils.get_file(
     fname=os.path.basename(TEST_DATA_URL), origin=TEST_DATA_URL
 )
 
@@ -68,7 +69,7 @@ def generate_data(num_instances=100, shape=(32, 32, 3), dtype="np"):
 def generate_one_hot_labels(num_instances=100, num_classes=10, dtype="np"):
     np.random.seed(SEED)
     labels = np.random.randint(num_classes, size=num_instances)
-    data = tf.keras.utils.to_categorical(labels)
+    data = keras.utils.to_categorical(labels)
     if dtype == "np":
         return data
     if dtype == "dataset":
@@ -109,7 +110,7 @@ def generate_data_with_categorical(
 
 
 def build_graph():
-    tf.keras.backend.clear_session()
+    keras.backend.clear_session()
     image_input = ak.ImageInput(shape=(32, 32, 3))
     image_input.batch_size = 32
     image_input.num_samples = 1000

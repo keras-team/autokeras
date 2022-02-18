@@ -17,6 +17,7 @@ from typing import Union
 
 import tensorflow as tf
 from keras_tuner.engine import hyperparameters
+from tensorflow import keras
 from tensorflow import nest
 from tensorflow.keras import applications
 from tensorflow.keras import layers
@@ -594,7 +595,7 @@ class Transformer(block_module.Block):
         dense_dim = utils.add_to_hp(self.dense_dim, hp)
         dropout = utils.add_to_hp(self.dropout, hp)
 
-        ffn = tf.keras.Sequential(
+        ffn = keras.Sequential(
             [
                 layers.Dense(dense_dim, activation="relu"),
                 layers.Dense(embedding_dim),
@@ -622,16 +623,16 @@ class Transformer(block_module.Block):
             embedding_dim=embedding_dim,
             dropout=dropout,
         ).build(hp, positions)
-        output_node = tf.keras.layers.Add()([token_embedding, position_embedding])
+        output_node = keras.layers.Add()([token_embedding, position_embedding])
         attn_output = MultiHeadSelfAttention(embedding_dim, num_heads).build(
             hp, output_node
         )
         attn_output = dropout1(attn_output)
-        add_inputs_1 = tf.keras.layers.Add()([output_node, attn_output])
+        add_inputs_1 = keras.layers.Add()([output_node, attn_output])
         out1 = layernorm1(add_inputs_1)
         ffn_output = ffn(out1)
         ffn_output = dropout2(ffn_output)
-        add_inputs_2 = tf.keras.layers.Add()([out1, ffn_output])
+        add_inputs_2 = keras.layers.Add()([out1, ffn_output])
         return layernorm2(add_inputs_2)
 
     @staticmethod
@@ -686,7 +687,7 @@ class KerasApplicationBlock(block_module.Block):
         if hp.Boolean("imagenet_size", default=False):
             min_size = 224
         if input_node.shape[1] < min_size or input_node.shape[2] < min_size:
-            input_node = layers.experimental.preprocessing.Resizing(
+            input_node = layers.Resizing(
                 max(min_size, input_node.shape[1]),
                 max(min_size, input_node.shape[2]),
             )(input_node)

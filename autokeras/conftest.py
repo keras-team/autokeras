@@ -15,14 +15,14 @@
 import shutil
 
 import pytest
-import tensorflow as tf
+from tensorflow import keras
 
 
 @pytest.fixture(autouse=True)
 def clear_session():
-    tf.keras.backend.clear_session()
+    keras.backend.clear_session()
     yield
-    tf.keras.backend.clear_session()
+    keras.backend.clear_session()
 
 
 @pytest.fixture(autouse=True)

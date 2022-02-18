@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import keras_tuner
-import tensorflow as tf
+from tensorflow import keras
 from tensorflow import nest
 
 from autokeras import blocks as blocks_module
@@ -47,7 +47,7 @@ COMPILE_FUNCTIONS = {
 def load_graph(filepath, custom_objects=None):
     if custom_objects is None:
         custom_objects = {}
-    with tf.keras.utils.custom_object_scope(custom_objects):
+    with keras.utils.custom_object_scope(custom_objects):
         return Graph.from_config(io_utils.load_json(filepath))
 
 
@@ -251,7 +251,7 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
             outputs = nest.flatten(outputs)
             for output_node, real_output_node in zip(block.outputs, outputs):
                 keras_nodes[self._node_to_id[output_node]] = real_output_node
-        model = tf.keras.Model(
+        model = keras.Model(
             keras_input_nodes,
             [
                 keras_nodes[self._node_to_id[output_node]]
@@ -290,9 +290,9 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
         )
 
         if optimizer_name == "adam":
-            optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+            optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
         elif optimizer_name == "sgd":
-            optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
+            optimizer = keras.optimizers.SGD(learning_rate=learning_rate)
         elif optimizer_name == "adam_weight_decay":
             steps_per_epoch = int(self.num_samples / self.batch_size)
             num_train_steps = steps_per_epoch * self.epochs
@@ -300,7 +300,7 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
                 self.epochs * self.num_samples * 0.1 / self.batch_size
             )
 
-            lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
+            lr_schedule = keras.optimizers.schedules.PolynomialDecay(
                 initial_learning_rate=learning_rate,
                 decay_steps=num_train_steps,
                 end_learning_rate=0.0,

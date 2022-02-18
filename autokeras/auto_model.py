@@ -20,6 +20,7 @@ from typing import Union
 
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow import nest
 
 from autokeras import blocks
@@ -198,10 +199,10 @@ class AutoModel(object):
             # When initializing multiple AutoModel with Task API, if not
             # counting from 1 for each of the AutoModel, the predefined hp
             # values in task specifiec tuners would not match the names.
-            tf.keras.backend.clear_session()
+            keras.backend.clear_session()
             graph = self._assemble()
             self.outputs = graph.outputs
-            tf.keras.backend.clear_session()
+            keras.backend.clear_session()
 
         return graph
 
@@ -496,7 +497,7 @@ class AutoModel(object):
         """Export the best Keras Model.
 
         # Returns
-            tf.keras.Model instance. The best model found during the search, loaded
+            keras.Model instance. The best model found during the search, loaded
             with trained weights.
         """
         return self.tuner.get_best_model()
