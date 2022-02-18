@@ -195,6 +195,9 @@ class AutoModel(object):
         elif all([isinstance(output, head_module.Head) for output in self.outputs]):
             # Clear session to reset get_uid(). The names of the blocks will
             # start to count from 1 for new blocks in a new AutoModel afterwards.
+            # When initializing multiple AutoModel with Task API, if not
+            # counting from 1 for each of the AutoModel, the predefined hp
+            # values in task specifiec tuners would not match the names.
             tf.keras.backend.clear_session()
             graph = self._assemble()
             self.outputs = graph.outputs

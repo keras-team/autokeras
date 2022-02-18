@@ -18,6 +18,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 
+import autokeras as ak
 from autokeras import keras_layers
 from autokeras import test_utils
 from autokeras.engine import tuner as tuner_module
@@ -188,3 +189,28 @@ def test_adapt_with_model_with_preprocessing_layer_only():
             (np.random.rand(100, 10), np.random.rand(100, 10))
         ).batch(32),
     )
+
+
+def test_build_block_in_blocks_with_same_name(tmp_path):
+    class Block1(ak.Block):
+        def build(self, hp, inputs):
+            hp.Boolean("a")
+            return tf.keras.layers.Dense(3)(tf.nest.flatten(inputs)[0])
+
+    class Block2(ak.Block):
+        def build(self, hp, inputs):
+            hp.Boolean("b")
+            return Block1().build(hp, inputs)
+
+    inputs = ak.Input()
+    outputs = Block2()(inputs)
+    outputs = ak.RegressionHead()(outputs)
+    auto_model = ak.AutoModel(inputs, outputs, max_trials=5, directory=tmp_path)
+    auto_model.fit(np.random.rand(100, 5), np.random.rand(100, 1), epochs=1)
+
+    trials = [trial for trial_id, trial in auto_model.tuner.oracle.trials.items()]
+    for trial in trials:
+        print(trial.hyperparameters.values)
+        assert len(trial.hyperparameters.values) == len(
+            trials[0].hyperparameters.values
+        )
