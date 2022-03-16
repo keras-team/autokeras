@@ -13,12 +13,13 @@
 # limitations under the License.
 
 import json
+import multiprocessing
+import os
 from typing import Optional
 from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
-from keras.preprocessing import dataset_utils
 
 WHITELIST_FORMATS = (".bmp", ".gif", ".jpeg", ".jpg", ".png")
 
@@ -33,6 +34,136 @@ def load_json(path):
     with tf.io.gfile.GFile(path, "r") as f:
         obj = f.read()
     return json.loads(obj)
+
+
+def index_directory(
+    directory,
+    labels,
+    formats,
+    class_names=None,
+    shuffle=True,
+    seed=None,
+    follow_links=False,
+):
+    """Make list of all files in the subdirs of `directory`, with their labels.
+
+    # Arguments
+      directory: The target directory (string).
+      labels: Either "inferred"
+          (labels are generated from the directory structure),
+          None (no labels),
+          or a list/tuple of integer labels of the same size as the number of
+          valid files found in the directory. Labels should be sorted according
+          to the alphanumeric order of the image file paths
+          (obtained via `os.walk(directory)` in Python).
+      formats: Allowlist of file extensions to index (e.g. ".jpg", ".txt").
+      class_names: Only valid if "labels" is "inferred". This is the explicit
+          list of class names (must match names of subdirectories). Used
+          to control the order of the classes
+          (otherwise alphanumerical order is used).
+      shuffle: Whether to shuffle the data. Default: True.
+          If set to False, sorts the data in alphanumeric order.
+      seed: Optional random seed for shuffling.
+      follow_links: Whether to visits subdirectories pointed to by symlinks.
+
+    # Returns
+      tuple (file_paths, labels, class_names).
+        file_paths: list of file paths (strings).
+        labels: list of matching integer labels (same length as file_paths)
+        class_names: names of the classes corresponding to these labels, in order.
+    """
+    subdirs = []
+    for subdir in sorted(os.listdir(directory)):
+        if os.path.isdir(os.path.join(directory, subdir)):
+            subdirs.append(subdir)
+    if not class_names:
+        class_names = subdirs
+    else:
+        if set(class_names) != set(subdirs):  # pragma: no cover
+            raise ValueError(  # pragma: no cover
+                "The `class_names` passed did not match the "
+                "names of the subdirectories of the target directory. "
+                "Expected: %s, but received: %s" % (subdirs, class_names)
+            )
+    class_indices = dict(zip(class_names, range(len(class_names))))
+
+    # Build an index of the files
+    # in the different class subfolders.
+    pool = multiprocessing.pool.ThreadPool()
+    results = []
+    filenames = []
+
+    for dirpath in (os.path.join(directory, subdir) for subdir in subdirs):
+        results.append(
+            pool.apply_async(
+                index_subdirectory, (dirpath, class_indices, follow_links, formats)
+            )
+        )
+    labels_list = []
+    for res in results:
+        partial_filenames, partial_labels = res.get()
+        labels_list.append(partial_labels)
+        filenames += partial_filenames
+    i = 0
+    labels = np.zeros((len(filenames),), dtype="int32")
+    for partial_labels in labels_list:
+        labels[i : i + len(partial_labels)] = partial_labels
+        i += len(partial_labels)
+
+    print(
+        "Found %d files belonging to %d classes."
+        % (len(filenames), len(class_names))
+    )
+    pool.close()
+    pool.join()
+    file_paths = [os.path.join(directory, fname) for fname in filenames]
+
+    if shuffle:
+        # Shuffle globally to erase macro-structure
+        if seed is None:
+            seed = np.random.randint(1e6)  # pragma: no cover
+        rng = np.random.RandomState(seed)
+        rng.shuffle(file_paths)
+        rng = np.random.RandomState(seed)
+        rng.shuffle(labels)
+    return file_paths, labels, class_names
+
+
+def iter_valid_files(directory, follow_links, formats):
+    walk = os.walk(directory, followlinks=follow_links)
+    for root, _, files in sorted(walk, key=lambda x: x[0]):
+        for fname in sorted(files):
+            if fname.lower().endswith(formats):
+                yield root, fname
+
+
+def index_subdirectory(directory, class_indices, follow_links, formats):
+    """Recursively walks directory and list image paths and their class index.
+
+    # Arguments
+      directory: string, target directory.
+      class_indices: dict mapping class names to their index.
+      follow_links: boolean, whether to recursively follow subdirectories
+        (if False, we only list top-level images in `directory`).
+      formats: Allowlist of file extensions to index (e.g. ".jpg", ".txt").
+
+    # Returns
+      tuple `(filenames, labels)`. `filenames` is a list of relative file
+        paths, and `labels` is a list of integer labels corresponding to these
+        files.
+    """
+    dirname = os.path.basename(directory)
+    valid_files = iter_valid_files(directory, follow_links, formats)
+    labels = []
+    filenames = []
+    for root, fname in valid_files:
+        labels.append(class_indices[dirname])
+        absolute_path = os.path.join(root, fname)
+        relative_path = os.path.join(
+            dirname, os.path.relpath(absolute_path, directory)
+        )
+        filenames.append(relative_path)
+    return filenames, labels
 
 
 def get_training_or_validation_split(samples, labels, validation_split, subset):
@@ -121,7 +252,7 @@ def text_dataset_from_directory(
     """
     if seed is None:
         seed = np.random.randint(1e6)
-    file_paths, labels, class_names = dataset_utils.index_directory(
+    file_paths, labels, class_names = index_directory(
         directory, "inferred", formats=(".txt",), shuffle=shuffle, seed=seed
     )
 
@@ -222,7 +353,7 @@ def image_dataset_from_directory(
 
     if seed is None:
         seed = np.random.randint(1e6)
-    image_paths, labels, class_names = dataset_utils.index_directory(
+    image_paths, labels, class_names = index_directory(
         directory, "inferred", formats=WHITELIST_FORMATS, shuffle=shuffle, seed=seed
     )
 
