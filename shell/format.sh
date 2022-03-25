@@ -1,4 +1,4 @@
-isort --sl .
+isort --sl --profile=black .
 black --line-length 85 .
 
 for i in $(find autokeras benchmark -name '*.py') # or whatever other pattern...

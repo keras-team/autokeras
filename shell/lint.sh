@@ -1,4 +1,4 @@
-isort --sl -c .
+isort --sl --profile=black -c .
 if ! [ $? -eq 0 ]
 then
   echo "Please run \"sh shell/format.sh\" to format the code."
