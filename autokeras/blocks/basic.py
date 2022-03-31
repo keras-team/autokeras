@@ -749,7 +749,8 @@ class XceptionBlock(KerasApplicationBlock):
 
     An Xception structure, used for specifying your model with specific datasets.
 
-    The original Xception architecture is from https://arxiv.org/abs/1610.02357.
+    The original Xception architecture is from
+    [https://arxiv.org/abs/1610.02357](https://arxiv.org/abs/1610.02357).
     The data first goes through the entry flow, then through the middle flow which
     is repeated eight times, and finally through the exit flow.
 
