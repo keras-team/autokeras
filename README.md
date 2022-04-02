@@ -30,7 +30,7 @@ results = clf.predict(x_test)
 
 * [Official website tutorials](https://autokeras.com/tutorial/overview/).
 * The book of [*Automated Machine Learning in Action*](https://www.manning.com/books/automated-machine-learning-in-action?query=automated&utm_source=jin&utm_medium=affiliate&utm_campaign=affiliate&a_aid=jin).
-* The LivePorjects of [*Image Classification with AutoKeras*](https://www.manning.com/liveprojectseries/autokeras-ser).
+* The LiveProjects of [*Image Classification with AutoKeras*](https://www.manning.com/liveprojectseries/autokeras-ser).
 <p align="center">
 <a href="https://www.manning.com/books/automated-machine-learning-in-action?query=automated&utm_source=jin&utm_medium=affiliate&utm_campaign=affiliate&a_aid=jin"><img src="https://images.manning.com/360/480/resize/book/0/fc56aaf-b2ba-4ef4-85b3-4a31edbe8ecc/Song-AML-HI.png" alt="drawing" width="266"/></a>
 &nbsp
