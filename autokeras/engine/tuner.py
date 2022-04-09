@@ -33,11 +33,11 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
     Different from KerasTuner's Tuner class. AutoTuner's not only tunes the
     Hypermodel which can be directly built into a Keras model, but also the
     preprocessors. Therefore, a HyperGraph stores the overall search space containing
-    both the Preprocessors and Hypermodel. For every trial, the HyperGraph build the
+    both the Preprocessors and Hypermodel. For every trial, the HyperGraph builds the
     PreprocessGraph and KerasGraph with the provided HyperParameters.
 
     The AutoTuner uses EarlyStopping for acceleration during the search and fully
-    train the model with full epochs and with both training and validation data.
+    trains the model with full epochs and with both training and validation data.
     The fully trained model is the best model to be used by AutoModel.
 
     # Arguments
@@ -72,7 +72,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
     def _prepare_model_build(self, hp, **kwargs):
         """Prepare for building the Keras model.
 
-        It build the Pipeline from HyperPipeline, transform the dataset to set
+        It builds the Pipeline from HyperPipeline, transforms the dataset to set
         the input shapes and output shapes of the HyperModel.
         """
         dataset = kwargs["x"]
