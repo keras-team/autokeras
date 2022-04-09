@@ -262,9 +262,9 @@ class ConvBlock(block_module.Block):
             unspecified, it will be tuned automatically.
         separable: Boolean. Whether to use separable conv layers.
             If left unspecified, it will be tuned automatically.
-        dropout: Float. Between 0 and 1. The dropout rate for after the
-            convolutional layers. If left unspecified, it will be tuned
-            automatically.
+        dropout: Float or kerastuner.engine.hyperparameters.Choice range Between 0 and 1. 
+            The dropout rate for after the convolutional layers. If left unspecified, it 
+            will be tuned automatically.
     """
 
     def __init__(
@@ -275,7 +275,7 @@ class ConvBlock(block_module.Block):
         filters: Optional[Union[int, hyperparameters.Choice]] = None,
         max_pooling: Optional[bool] = None,
         separable: Optional[bool] = None,
-        dropout: Optional[float] = None,
+        dropout: Optional[Union[float, hyperparameters.Choice]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -303,7 +303,11 @@ class ConvBlock(block_module.Block):
         )
         self.max_pooling = max_pooling
         self.separable = separable
-        self.dropout = dropout
+        self.dropout = utils.get_hyperparameter(
+            dropout,
+            hyperparameters.Choice("dropout", [0.0, 0.25, 0.5], default=0.0),
+            float,
+        );
 
     def get_config(self):
         config = super().get_config()
@@ -315,7 +319,7 @@ class ConvBlock(block_module.Block):
                 "filters": hyperparameters.serialize(self.filters),
                 "max_pooling": self.max_pooling,
                 "separable": self.separable,
-                "dropout": self.dropout,
+                "dropout": hyperparameters.serialize(self.dropout),
             }
         )
         return config
@@ -326,6 +330,7 @@ class ConvBlock(block_module.Block):
         config["num_blocks"] = hyperparameters.deserialize(config["num_blocks"])
         config["num_layers"] = hyperparameters.deserialize(config["num_layers"])
         config["filters"] = hyperparameters.deserialize(config["filters"])
+        config["dropout"] = hyperparameters.deserialize(config["dropout"])
         return cls(**config)
 
     def build(self, hp, inputs=None):
@@ -350,11 +355,6 @@ class ConvBlock(block_module.Block):
             max_pooling = hp.Boolean("max_pooling", default=True)
         pool = layer_utils.get_max_pooling(input_node.shape)
 
-        if self.dropout is not None:
-            dropout = self.dropout
-        else:
-            dropout = hp.Choice("dropout", [0.0, 0.25, 0.5], default=0)
-
         for i in range(utils.add_to_hp(self.num_blocks, hp)):
             for j in range(utils.add_to_hp(self.num_layers, hp)):
                 output_node = conv(
@@ -370,8 +370,10 @@ class ConvBlock(block_module.Block):
                     kernel_size - 1,
                     padding=self._get_padding(kernel_size - 1, output_node),
                 )(output_node)
-            if dropout > 0:
-                output_node = layers.Dropout(dropout)(output_node)
+            if utils.add_to_hp(self.dropout, hp) > 0:
+                output_node = layers.Dropout(utils.add_to_hp(self.dropout, hp))(
+                    output_node
+                )
         return output_node
 
     @staticmethod
