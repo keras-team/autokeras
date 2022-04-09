@@ -262,9 +262,10 @@ class ConvBlock(block_module.Block):
             unspecified, it will be tuned automatically.
         separable: Boolean. Whether to use separable conv layers.
             If left unspecified, it will be tuned automatically.
-        dropout: Float or kerastuner.engine.hyperparameters.Choice range Between 0 and 1. 
-            The dropout rate for after the convolutional layers. If left unspecified, it 
-            will be tuned automatically.
+        dropout: Float or kerastuner.engine.hyperparameters.
+            Choice range Between 0 and 1. 
+            The dropout rate after convolutional layers. 
+            If left unspecified, it will be tuned automatically.
     """
 
     def __init__(
