@@ -148,7 +148,8 @@ class ImageAugmentation(block_module.Block):
             If left unspecified, it will be tuned automatically.
         horizontal_flip: Boolean. Whether to flip the image horizontally.
             If left unspecified, it will be tuned automatically.
-        rotation_factor: Float. A positive float represented as fraction of 2pi
+        rotation_factor: Float or kerastuner.engine.hyperparameters.Choice range
+            between [0, 1]. A positive float represented as fraction of 2pi
             upper bound for rotating clockwise and counter-clockwise. When
             represented as a single float, lower = upper.
             If left unspecified, it will be tuned automatically.
