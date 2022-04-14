@@ -16,12 +16,14 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+from keras_tuner.engine import hyperparameters
 from tensorflow import nest
 from tensorflow.keras import layers
 
 from autokeras import analysers
 from autokeras import keras_layers
 from autokeras.engine import block as block_module
+from autokeras.utils import utils
 
 
 class Normalization(block_module.Block):
@@ -178,7 +180,11 @@ class ImageAugmentation(block_module.Block):
         self.translation_factor = translation_factor
         self.horizontal_flip = horizontal_flip
         self.vertical_flip = vertical_flip
-        self.rotation_factor = rotation_factor
+        self.rotation_factor = utils.get_hyperparameter(
+            rotation_factor,
+            hyperparameters.Choice("rotation_factor", [0.0, 0.1]),
+            float,
+        )
         self.zoom_factor = zoom_factor
         self.contrast_factor = contrast_factor
 
@@ -223,9 +229,7 @@ class ImageAugmentation(block_module.Block):
             output_node = layers.RandomFlip(mode=flip_mode)(output_node)
 
         # Rotate
-        rotation_factor = self.rotation_factor
-        if rotation_factor is None:
-            rotation_factor = hp.Choice("rotation_factor", [0.0, 0.1])
+        rotation_factor = utils.add_to_hp(self.rotation_factor, hp)
         if rotation_factor != 0:
             output_node = layers.RandomRotation(rotation_factor)(output_node)
 
@@ -255,12 +259,19 @@ class ImageAugmentation(block_module.Block):
                 "translation_factor": self.translation_factor,
                 "horizontal_flip": self.horizontal_flip,
                 "vertical_flip": self.vertical_flip,
-                "rotation_factor": self.rotation_factor,
+                "rotation_factor": hyperparameters.serialize(self.rotation_factor),
                 "zoom_factor": self.zoom_factor,
                 "contrast_factor": self.contrast_factor,
             }
         )
         return config
+
+    @classmethod
+    def from_config(cls, config):
+        config["rotation_factor"] = hyperparameters.deserialize(
+            config["rotation_factor"]
+        )
+        return cls(**config)
 
 
 class CategoricalToNumerical(block_module.Block):
