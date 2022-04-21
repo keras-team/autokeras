@@ -171,7 +171,7 @@ class ImageAugmentation(block_module.Block):
         translation_factor: Optional[Union[float, Tuple[float, float]]] = None,
         vertical_flip: Optional[bool] = None,
         horizontal_flip: Optional[bool] = None,
-        rotation_factor: Optional[float] = None,
+        rotation_factor: Optional[Union[float, hyperparameters.Choice]] = None,
         zoom_factor: Optional[Union[float, Tuple[float, float]]] = None,
         contrast_factor: Optional[Union[float, Tuple[float, float]]] = None,
         **kwargs
