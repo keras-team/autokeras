@@ -143,8 +143,9 @@ class ImageAugmentation(block_module.Block):
     # Arguments
         translation_factor: A positive float represented as fraction value, or a
             tuple of 2 representing fraction for translation vertically and
-            horizontally.  For instance, `translation_factor=0.2` result in a random
-            translation factor within 20% of the width and height.
+            horizontally, or a kerastuner.engine.hyperparameters.Choice range
+            of positive floats. For instance, `translation_factor=0.2` result
+            in a random translation factor within 20% of the width and height.
             If left unspecified, it will be tuned automatically.
         vertical_flip: Boolean. Whether to flip the image vertically.
             If left unspecified, it will be tuned automatically.
@@ -170,7 +171,9 @@ class ImageAugmentation(block_module.Block):
 
     def __init__(
         self,
-        translation_factor: Optional[Union[float, Tuple[float, float]]] = None,
+        translation_factor: Optional[
+            Union[float, Tuple[float, float], hyperparameters.Choice]
+        ] = None,
         vertical_flip: Optional[bool] = None,
         horizontal_flip: Optional[bool] = None,
         rotation_factor: Optional[Union[float, hyperparameters.Choice]] = None,
@@ -181,7 +184,11 @@ class ImageAugmentation(block_module.Block):
         **kwargs
     ):
         super().__init__(**kwargs)
-        self.translation_factor = translation_factor
+        self.translation_factor = utils.get_hyperparameter(
+            translation_factor,
+            hyperparameters.Choice("translation_factor", [0.0, 0.1]),
+            Union[float, Tuple[float, float]],
+        )
         self.horizontal_flip = horizontal_flip
         self.vertical_flip = vertical_flip
         self.rotation_factor = utils.get_hyperparameter(
@@ -207,9 +214,7 @@ class ImageAugmentation(block_module.Block):
         output_node = input_node
 
         # Translate
-        translation_factor = self.translation_factor
-        if translation_factor is None:
-            translation_factor = hp.Choice("translation_factor", [0.0, 0.1])
+        translation_factor = utils.add_to_hp(self.translation_factor, hp)
         if translation_factor not in [0, (0, 0)]:
             height_factor, width_factor = self._get_fraction_value(
                 translation_factor
@@ -262,7 +267,9 @@ class ImageAugmentation(block_module.Block):
         config = super().get_config()
         config.update(
             {
-                "translation_factor": self.translation_factor,
+                "translation_factor": hyperparameters.serialize(
+                    self.translation_factor
+                ),
                 "horizontal_flip": self.horizontal_flip,
                 "vertical_flip": self.vertical_flip,
                 "rotation_factor": hyperparameters.serialize(self.rotation_factor),
