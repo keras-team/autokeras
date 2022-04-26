@@ -160,10 +160,12 @@ class ImageAugmentation(block_module.Block):
             instance, `zoom_factor=0.2` result in a random zoom factor from 80% to
             120%. If left unspecified, it will be tuned automatically.
         contrast_factor: A positive float represented as fraction of value, or a
-            tuple of size 2 representing lower and upper bound. When represented as a
-            single float, lower = upper. The contrast factor will be randomly picked
-            between [1.0 - lower, 1.0 + upper]. If left unspecified, it will be tuned
-            automatically.
+            tuple of size 2 representing lower and upper bound, or a
+            kerastuner.engine.hyperparameters.Choice range of floats to find the
+            optimal value. When represented as a single float, lower = upper.
+            The contrast factor will be randomly picked
+            between [1.0 - lower, 1.0 + upper]. If left unspecified, it will be
+            tuned automatically.
     """
 
     def __init__(
@@ -173,7 +175,9 @@ class ImageAugmentation(block_module.Block):
         horizontal_flip: Optional[bool] = None,
         rotation_factor: Optional[Union[float, hyperparameters.Choice]] = None,
         zoom_factor: Optional[Union[float, Tuple[float, float]]] = None,
-        contrast_factor: Optional[Union[float, Tuple[float, float]]] = None,
+        contrast_factor: Optional[
+            Union[float, Tuple[float, float], hyperparameters.Choice]
+        ] = None,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -186,7 +190,11 @@ class ImageAugmentation(block_module.Block):
             float,
         )
         self.zoom_factor = zoom_factor
-        self.contrast_factor = contrast_factor
+        self.contrast_factor = utils.get_hyperparameter(
+            contrast_factor,
+            hyperparameters.Choice("contrast_factor", [0.0, 0.1]),
+            Union[float, Tuple[float, float]],
+        )
 
     @staticmethod
     def _get_fraction_value(value):
@@ -244,9 +252,7 @@ class ImageAugmentation(block_module.Block):
             # height_factor, width_factor)(output_node)
 
         # Contrast
-        contrast_factor = self.contrast_factor
-        if contrast_factor is None:
-            contrast_factor = hp.Choice("contrast_factor", [0.0, 0.1])
+        contrast_factor = utils.add_to_hp(self.contrast_factor, hp)
         if contrast_factor not in [0, (0, 0)]:
             output_node = layers.RandomContrast(contrast_factor)(output_node)
 
@@ -261,7 +267,7 @@ class ImageAugmentation(block_module.Block):
                 "vertical_flip": self.vertical_flip,
                 "rotation_factor": hyperparameters.serialize(self.rotation_factor),
                 "zoom_factor": self.zoom_factor,
-                "contrast_factor": self.contrast_factor,
+                "contrast_factor": hyperparameters.serialize(self.contrast_factor),
             }
         )
         return config
