@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import re
+import warnings
 
 import keras_tuner
 import tensorflow as tf
@@ -37,27 +38,25 @@ def to_snake_case(name):
 
 def check_tf_version() -> None:
     if parse(tf.__version__) < parse("2.7.0"):
-        raise ImportError(
+        warnings.warn(
             "The Tensorflow package version needs to be at least 2.7.0 \n"
             "for AutoKeras to run. Currently, your TensorFlow version is \n"
-            "{version}. Please upgrade with \n"
+            f"{tf.__version__}. Please upgrade with \n"
             "`$ pip install --upgrade tensorflow`. \n"
-            "You can use `pip freeze` to check afterwards that everything is "
-            "ok.".format(version=tf.__version__)
+            "You can use `pip freeze` to check afterwards that everything is ok.",
+            ImportWarning,
         )
 
 
 def check_kt_version() -> None:
-    if keras_tuner.__version__ == "master":
-        return
     if parse(keras_tuner.__version__) < parse("1.1.0"):
-        raise ImportError(
+        warnings.warn(
             "The Keras Tuner package version needs to be at least 1.1.0 \n"
             "for AutoKeras to run. Currently, your Keras Tuner version is \n"
-            "{version}. Please upgrade with \n"
+            f"{keras_tuner.__version__}. Please upgrade with \n"
             "`$ pip install --upgrade keras-tuner`. \n"
-            "You can use `pip freeze` to check afterwards that everything is "
-            "ok.".format(version=keras_tuner.__version__)
+            "You can use `pip freeze` to check afterwards that everything is ok.",
+            ImportWarning,
         )
 
 
@@ -71,7 +70,7 @@ def evaluate_with_adaptive_batch_size(model, batch_size, verbose=1, **fit_kwargs
         lambda x, validation_data, **kwargs: model.evaluate(
             x, verbose=verbose, **kwargs
         ),
-        **fit_kwargs
+        **fit_kwargs,
     )
 
 
@@ -81,7 +80,7 @@ def predict_with_adaptive_batch_size(model, batch_size, verbose=1, **fit_kwargs)
         lambda x, validation_data, **kwargs: model.predict(
             x, verbose=verbose, **kwargs
         ),
-        **fit_kwargs
+        **fit_kwargs,
     )
 
 
