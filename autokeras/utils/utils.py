@@ -94,15 +94,20 @@ def fit_with_adaptive_batch_size(model, batch_size, **fit_kwargs):
 def run_with_adaptive_batch_size(batch_size, func, **fit_kwargs):
     x = fit_kwargs.pop("x")
     validation_data = None
+    history = None
     if "validation_data" in fit_kwargs:
         validation_data = fit_kwargs.pop("validation_data")
     while batch_size > 0:
         try:
             history = func(x=x, validation_data=validation_data, **fit_kwargs)
             break
-        except tf.errors.ResourceExhaustedError as e:
+        except tf.errors.ResourceExhaustedError:
             if batch_size == 1:
-                raise e
+                print(
+                    "Not enough memory, reduced batch size is already set to 1. "
+                    "Current model will be skipped."
+                )
+                break
             batch_size //= 2
             print(
                 "Not enough memory, reduce batch size to {batch_size}.".format(
