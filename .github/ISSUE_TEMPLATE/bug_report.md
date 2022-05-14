@@ -1,6 +1,8 @@
 ---
 name: Bug report
 about: Create a report to help us improve
+labels: ["bug report"]
+title: "Bug: "
 
 ---
 
@@ -23,7 +25,7 @@ please briefly describe the expected behavior.
 ### Setup Details
 Include the details about the versions of:
  - OS type and version:
- - Python: 
+ - Python:
  - autokeras: <!--- e.g. 0.4.0, 1.0.2, master-->
  - keras-tuner:
  - scikit-learn:
