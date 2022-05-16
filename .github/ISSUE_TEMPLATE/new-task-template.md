@@ -1,6 +1,8 @@
 ---
 name: New Task Template
 about: Add a new machine learning task
+labels: ["algorithm"]
+title: "New Task: "
 
 ---
 
