@@ -279,20 +279,33 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
 
     def _compile_keras_model(self, hp, model):
         # Specify hyperparameters from compile(...)
-        optimizer_name = hp.Choice(
-            "optimizer",
-            ["adam", "sgd", "adam_weight_decay"],
-            default="adam",
-        )
+        # check if optimizer is set before applying default optimizer settings.
+        if "optimizer" in hp.values.keys():
+            optimizer_name = hp.get("optimizer")
+        else:
+            optimizer_name = hp.Choice(
+                "optimizer",
+                ["adam", "sgd", "adam_weight_decay"],
+                default="adam",
+            )
+            
         # TODO: add adadelta optimizer when it can optimize embedding layer on GPU.
-        learning_rate = hp.Choice(
-            "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 2e-5, 1e-5], default=1e-3
-        )
+        # check if learning rate is set before applying default learning rate settings.
+        if "learning_rate" in hp.values.keys():
+            learning_rate = hp.get("learning_rate")
+        else:
+            learning_rate = hp.Choice(
+                "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 2e-5, 1e-5], default=1e-3
+            )
 
         if optimizer_name == "adam":
             optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
         elif optimizer_name == "sgd":
             optimizer = keras.optimizers.SGD(learning_rate=learning_rate)
+        elif optimizer_name == "rmsprop":
+            optimizer = keras.optimizers.RMSprop(learning_rate=learning_rate)
+        elif optimizer_name == "adadelta":
+            optimizer = keras.optimizers.Adadelta(learning_rate=learning_rate)
         elif optimizer_name == "adam_weight_decay":
             steps_per_epoch = int(self.num_samples / self.batch_size)
             num_train_steps = steps_per_epoch * self.epochs
