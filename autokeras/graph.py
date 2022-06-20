@@ -295,7 +295,8 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
             learning_rate = hp.get("learning_rate")
         else:
             learning_rate = hp.Choice(
-                "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 2e-5, 1e-5], default=1e-3
+                "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 2e-5, 1e-5], 
+                default=1e-3,
             )
 
         if optimizer_name == "adam":
