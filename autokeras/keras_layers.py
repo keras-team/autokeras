@@ -209,7 +209,7 @@ class BertEncoder(layers.Layer):
         super().__init__(**kwargs)
         embedding_width = 768
         dropout_rate = 0.1
-        initializer = keras.initializers.TruncatedNormal(stddev=0.02)
+        initializer = keras.initializers.TruncatedNormal(stddev=0.02, seed=42)
 
         self._embedding_layer = OnDeviceEmbedding(
             vocab_size=30522,
