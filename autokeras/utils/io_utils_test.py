@@ -40,8 +40,7 @@ def test_load_imdb_dataset():
         os.path.dirname(
             keras.utils.get_file(
                 fname="text_data",
-                origin="http://ai.stanford.edu/"
-                + "~amaas/data/sentiment/aclImdb_v1.tar.gz",
+                origin="https://github.com/keras-team/autokeras/releases/download/1.0.19/aclImdb_v1.tar.gz",  # noqa: E501
                 extract=True,
             )
         ),
