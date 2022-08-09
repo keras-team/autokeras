@@ -1,0 +1,59 @@
+cff-version: "1.2.0"
+message: "If you use this software, please cite it as below."
+url: https://github.com/keras-team/autokeras
+license: "Apache-2.0"
+preferred-citation:
+  type: conference-paper
+  authors:
+    - given-names: Haifeng
+      family-names: Jin
+      affiliation: Texas A&M University
+    - given-names: Qingquan
+      family-names: Song
+      affiliation: Texas A&M University
+    - given-names: Xia
+      family-names: Xu
+      affiliation: Texas A&M University
+  title: >-
+    Auto-Keras: An Efficient Neural Architecture Search
+    System
+  year: 2019
+  month: 8
+  isbn: 9781450362016
+  publisher:
+    name: Association for Computing Machinery
+    location: New York, NY, USA
+  url: https://doi.org/10.1145/3292500.3330648
+  doi: 10.1145/3292500.3330648
+  abstract: >-
+      Neural architecture search (NAS) has been proposed
+      to automatically tune deep neural networks, but
+      existing search algorithms, e.g., NASNet, PNAS,
+      usually suffer from expensive computational cost.
+      Network morphism, which keeps the functionality of
+      a neural network while changing its neural architecture,
+      could be helpful for NAS by enabling more efficient
+      training during the search. In this paper, we propose
+      a novel framework enabling Bayesian optimization to
+      guide the network morphism for efficient neural
+      architecture search. The framework develops a neural
+      network kernel and a tree-structured acquisition function
+      optimization algorithm to efficiently explores the search
+      space. Extensive experiments on real-world benchmark
+      datasets have been done to demonstrate the superior
+      performance of the developed framework over the
+      state-of-the-art methods. Moreover, we build an
+      open-source AutoML system based on our method, namely
+      Auto-Keras. The code and documentation are
+      available at https://autokeras.com. The system runs in
+      parallel on CPU and GPU, with an adaptive search strategy
+      for different GPU memory limits.
+  collection-title:  >-
+      Proceedings of the 25th ACM SIGKDD International
+      Conference on Knowledge Discovery & Data Mining
+  start: 1946
+  end: 1956
+  conference:
+    name: KDD '19
+    address: Anchorage, AK, USA
+  location: Anchorage, AK, USA
