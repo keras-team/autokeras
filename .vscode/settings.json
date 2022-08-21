@@ -1,3 +1,11 @@
 {
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.languageServer": "None",
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
+    "editor.rulers": [
+        85
+    ],
+    "editor.formatOnSave": true,
+    "python.formatting.provider": "black",
 }
