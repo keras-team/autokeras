@@ -1,6 +1,5 @@
 {
     "python.testing.pytestEnabled": true,
-    "python.languageServer": "None",
     "python.linting.flake8Enabled": true,
     "python.linting.enabled": true,
     "editor.rulers": [
