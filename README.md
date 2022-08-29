@@ -53,22 +53,7 @@ Please follow the [installation guide](https://autokeras.com/install) for more d
 
 ## Community
 
-### Stay Up-to-Date
-
-Subscribe to our [email list](https://groups.google.com/forum/#!forum/autokeras-announce/join) to receive announcements.
-
-### Questions and Discussions
-
-**GitHub Discussions**:
 Ask your questions on our [GitHub Discussions](https://github.com/keras-team/autokeras/discussions).
-It is a forum hosted on GitHub. We will monitor and answer the questions there.
-
-**Slack**:
-[Request an invitation](https://keras-slack-autojoin.herokuapp.com/).
-Use the [#autokeras](https://app.slack.com/client/T0QKJHQRE/CSZ5MKZFU) channel for communication.
-
-**QQ Group**:
-Join our QQ group 1150366085. Password: akqqgroup
 
 ## Contributing Code
 
