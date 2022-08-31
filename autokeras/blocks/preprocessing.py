@@ -23,6 +23,7 @@ from tensorflow.keras import layers
 from autokeras import analysers
 from autokeras import keras_layers
 from autokeras.engine import block as block_module
+from autokeras.utils import io_utils
 from autokeras.utils import utils
 
 
@@ -272,22 +273,33 @@ class ImageAugmentation(block_module.Block):
         config = super().get_config()
         config.update(
             {
-                "translation_factor": hyperparameters.serialize(
+                "translation_factor": io_utils.serialize_block_arg(
                     self.translation_factor
                 ),
                 "horizontal_flip": self.horizontal_flip,
                 "vertical_flip": self.vertical_flip,
-                "rotation_factor": hyperparameters.serialize(self.rotation_factor),
-                "zoom_factor": hyperparameters.serialize(self.zoom_factor),
-                "contrast_factor": hyperparameters.serialize(self.contrast_factor),
+                "rotation_factor": io_utils.serialize_block_arg(
+                    self.rotation_factor
+                ),
+                "zoom_factor": io_utils.serialize_block_arg(self.zoom_factor),
+                "contrast_factor": io_utils.serialize_block_arg(
+                    self.contrast_factor
+                ),
             }
         )
         return config
 
     @classmethod
     def from_config(cls, config):
-        config["rotation_factor"] = hyperparameters.deserialize(
+        config["translation_factor"] = io_utils.deserialize_block_arg(
+            config["translation_factor"]
+        )
+        config["rotation_factor"] = io_utils.deserialize_block_arg(
             config["rotation_factor"]
+        )
+        config["zoom_factor"] = io_utils.deserialize_block_arg(config["zoom_factor"])
+        config["contrast_factor"] = io_utils.deserialize_block_arg(
+            config["contrast_factor"]
         )
         return cls(**config)
 

@@ -20,5 +20,8 @@
         "editor.codeActionsOnSave": {
             "source.organizeImports": true
         }
+    },
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingImports": "none"
     }
 }

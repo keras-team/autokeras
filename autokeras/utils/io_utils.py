@@ -20,6 +20,7 @@ from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
+from keras_tuner.engine import hyperparameters
 
 WHITELIST_FORMATS = (".bmp", ".gif", ".jpeg", ".jpg", ".png")
 
@@ -380,3 +381,15 @@ def path_to_image(image, num_channels, image_size, interpolation):
     image = tf.image.resize(image, image_size, method=interpolation)
     image.set_shape((image_size[0], image_size[1], num_channels))
     return image
+
+
+def deserialize_block_arg(arg):
+    if isinstance(arg, dict):
+        return hyperparameters.deserialize(arg)
+    return arg
+
+
+def serialize_block_arg(arg):
+    if isinstance(arg, hyperparameters.HyperParameter):
+        return hyperparameters.serialize(arg)
+    return arg
