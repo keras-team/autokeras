@@ -87,20 +87,3 @@ jobs:
       run: |
         python setup.py sdist bdist_wheel
         twine upload dist/*
-  docker-release:
-    needs: [build, format, build-docs]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'created'
-    steps:
-    - uses: actions/checkout@master
-    - name: Get release version
-      id: get_version
-      run: echo ::save-state name=RELEASE_VERSION::$(echo ${GITHUB_REF:10})
-    - name: Publish to Registry
-      uses: elgohr/Publish-Docker-Github-Action@master
-      with:
-        name: haifengjin/autokeras
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-        tags: "latest,${{ env.STATE_RELEASE_VERSION }}"
-        dockerfile: docker/Dockerfile
