@@ -25,6 +25,7 @@ from tensorflow.keras import layers
 from autokeras import keras_layers
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
+from autokeras.utils import io_utils
 from autokeras.utils import layer_utils
 from autokeras.utils import utils
 
@@ -103,19 +104,19 @@ class DenseBlock(block_module.Block):
         config = super().get_config()
         config.update(
             {
-                "num_layers": hyperparameters.serialize(self.num_layers),
-                "num_units": hyperparameters.serialize(self.num_units),
+                "num_layers": io_utils.serialize_block_arg(self.num_layers),
+                "num_units": io_utils.serialize_block_arg(self.num_units),
                 "use_batchnorm": self.use_batchnorm,
-                "dropout": hyperparameters.serialize(self.dropout),
+                "dropout": io_utils.serialize_block_arg(self.dropout),
             }
         )
         return config
 
     @classmethod
     def from_config(cls, config):
-        config["num_layers"] = hyperparameters.deserialize(config["num_layers"])
-        config["num_units"] = hyperparameters.deserialize(config["num_units"])
-        config["dropout"] = hyperparameters.deserialize(config["dropout"])
+        config["num_layers"] = io_utils.deserialize_block_arg(config["num_layers"])
+        config["num_units"] = io_utils.deserialize_block_arg(config["num_units"])
+        config["dropout"] = io_utils.deserialize_block_arg(config["dropout"])
         return cls(**config)
 
     def build(self, hp, inputs=None):
@@ -190,20 +191,20 @@ class RNNBlock(block_module.Block):
         config.update(
             {
                 "return_sequences": self.return_sequences,
-                "bidirectional": hyperparameters.serialize(self.bidirectional),
-                "num_layers": hyperparameters.serialize(self.num_layers),
-                "layer_type": hyperparameters.serialize(self.layer_type),
+                "bidirectional": io_utils.serialize_block_arg(self.bidirectional),
+                "num_layers": io_utils.serialize_block_arg(self.num_layers),
+                "layer_type": io_utils.serialize_block_arg(self.layer_type),
             }
         )
         return config
 
     @classmethod
     def from_config(cls, config):
-        config["bidirectional"] = hyperparameters.deserialize(
+        config["bidirectional"] = io_utils.deserialize_block_arg(
             config["bidirectional"]
         )
-        config["num_layers"] = hyperparameters.deserialize(config["num_layers"])
-        config["layer_type"] = hyperparameters.deserialize(config["layer_type"])
+        config["num_layers"] = io_utils.deserialize_block_arg(config["num_layers"])
+        config["layer_type"] = io_utils.deserialize_block_arg(config["layer_type"])
         return cls(**config)
 
     def build(self, hp, inputs=None):
@@ -314,24 +315,24 @@ class ConvBlock(block_module.Block):
         config = super().get_config()
         config.update(
             {
-                "kernel_size": hyperparameters.serialize(self.kernel_size),
-                "num_blocks": hyperparameters.serialize(self.num_blocks),
-                "num_layers": hyperparameters.serialize(self.num_layers),
-                "filters": hyperparameters.serialize(self.filters),
+                "kernel_size": io_utils.serialize_block_arg(self.kernel_size),
+                "num_blocks": io_utils.serialize_block_arg(self.num_blocks),
+                "num_layers": io_utils.serialize_block_arg(self.num_layers),
+                "filters": io_utils.serialize_block_arg(self.filters),
                 "max_pooling": self.max_pooling,
                 "separable": self.separable,
-                "dropout": hyperparameters.serialize(self.dropout),
+                "dropout": io_utils.serialize_block_arg(self.dropout),
             }
         )
         return config
 
     @classmethod
     def from_config(cls, config):
-        config["kernel_size"] = hyperparameters.deserialize(config["kernel_size"])
-        config["num_blocks"] = hyperparameters.deserialize(config["num_blocks"])
-        config["num_layers"] = hyperparameters.deserialize(config["num_layers"])
-        config["filters"] = hyperparameters.deserialize(config["filters"])
-        config["dropout"] = hyperparameters.deserialize(config["dropout"])
+        config["kernel_size"] = io_utils.deserialize_block_arg(config["kernel_size"])
+        config["num_blocks"] = io_utils.deserialize_block_arg(config["num_blocks"])
+        config["num_layers"] = io_utils.deserialize_block_arg(config["num_layers"])
+        config["filters"] = io_utils.deserialize_block_arg(config["filters"])
+        config["dropout"] = io_utils.deserialize_block_arg(config["dropout"])
         return cls(**config)
 
     def build(self, hp, inputs=None):
@@ -560,24 +561,24 @@ class Transformer(block_module.Block):
         config.update(
             {
                 "max_features": self.max_features,
-                "pretraining": hyperparameters.serialize(self.pretraining),
-                "embedding_dim": hyperparameters.serialize(self.embedding_dim),
-                "num_heads": hyperparameters.serialize(self.num_heads),
-                "dense_dim": hyperparameters.serialize(self.dense_dim),
-                "dropout": hyperparameters.serialize(self.dropout),
+                "pretraining": io_utils.serialize_block_arg(self.pretraining),
+                "embedding_dim": io_utils.serialize_block_arg(self.embedding_dim),
+                "num_heads": io_utils.serialize_block_arg(self.num_heads),
+                "dense_dim": io_utils.serialize_block_arg(self.dense_dim),
+                "dropout": io_utils.serialize_block_arg(self.dropout),
             }
         )
         return config
 
     @classmethod
     def from_config(cls, config):
-        config["pretraining"] = hyperparameters.deserialize(config["pretraining"])
-        config["embedding_dim"] = hyperparameters.deserialize(
+        config["pretraining"] = io_utils.deserialize_block_arg(config["pretraining"])
+        config["embedding_dim"] = io_utils.deserialize_block_arg(
             config["embedding_dim"]
         )
-        config["num_heads"] = hyperparameters.deserialize(config["num_heads"])
-        config["dense_dim"] = hyperparameters.deserialize(config["dense_dim"])
-        config["dropout"] = hyperparameters.deserialize(config["dropout"])
+        config["num_heads"] = io_utils.deserialize_block_arg(config["num_heads"])
+        config["dense_dim"] = io_utils.deserialize_block_arg(config["dense_dim"])
+        config["dropout"] = io_utils.deserialize_block_arg(config["dropout"])
         return cls(**config)
 
     def build(self, hp, inputs=None):
@@ -872,18 +873,18 @@ class Embedding(block_module.Block):
         config.update(
             {
                 "max_features": self.max_features,
-                "pretraining": hyperparameters.serialize(self.pretraining),
-                "embedding_dim": hyperparameters.serialize(self.embedding_dim),
-                "dropout": hyperparameters.serialize(self.dropout),
+                "pretraining": io_utils.serialize_block_arg(self.pretraining),
+                "embedding_dim": io_utils.serialize_block_arg(self.embedding_dim),
+                "dropout": io_utils.serialize_block_arg(self.dropout),
             }
         )
         return config
 
     @classmethod
     def from_config(cls, config):
-        config["pretraining"] = hyperparameters.deserialize(config["pretraining"])
-        config["dropout"] = hyperparameters.deserialize(config["dropout"])
-        config["embedding_dim"] = hyperparameters.deserialize(
+        config["pretraining"] = io_utils.deserialize_block_arg(config["pretraining"])
+        config["dropout"] = io_utils.deserialize_block_arg(config["dropout"])
+        config["embedding_dim"] = io_utils.deserialize_block_arg(
             config["embedding_dim"]
         )
         return cls(**config)
@@ -956,7 +957,7 @@ class BertBlock(block_module.Block):
         config = super().get_config()
         config.update(
             {
-                "max_sequence_length": hyperparameters.serialize(
+                "max_sequence_length": io_utils.serialize_block_arg(
                     self.max_sequence_length
                 )
             }
@@ -965,7 +966,7 @@ class BertBlock(block_module.Block):
 
     @classmethod
     def from_config(cls, config):
-        config["max_sequence_length"] = hyperparameters.deserialize(
+        config["max_sequence_length"] = io_utils.deserialize_block_arg(
             config["max_sequence_length"]
         )
         return cls(**config)
