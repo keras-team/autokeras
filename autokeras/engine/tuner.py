@@ -216,6 +216,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
                 copied_fit_kwargs.pop("validation_data")
 
             self.hypermodel.set_fit_args(0, epochs=copied_fit_kwargs["epochs"])
+            copied_fit_kwargs["verbose"] = verbose
             pipeline, model, history = self.final_fit(**copied_fit_kwargs)
         else:
             # TODO: Add return history functionality in Keras Tuner
