@@ -300,7 +300,7 @@ class BertEncoder(layers.Layer):
 
 
 @keras.utils.register_keras_serializable()
-class AdamWeightDecay(keras.optimizers.Adam):
+class AdamWeightDecay(keras.optimizers.legacy.Adam):
     """official.nlp.optimization.AdamWeightDecay"""
 
     def __init__(
