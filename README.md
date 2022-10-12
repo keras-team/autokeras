@@ -73,8 +73,7 @@ Thank all the contributors!
 
 ## Donation
 
-We accept financial support on [Open Collective](https://opencollective.com/autokeras).
-Thank every backer for supporting us!
+Thank all the donors for supporting us!
 
 <a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/sponsor.svg?avatarHeight=36&width=890&button=false"></a>
 <a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=36&width=890&button=false"></a>
