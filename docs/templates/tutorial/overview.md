@@ -2,10 +2,10 @@
 
 ## Supported Tasks
 
-AutoKeras supports several tasks with extremely simple interface.
+AutoKeras supports several tasks with an extremely simple interface.
 You can click the links below to see the detailed tutorial for each task.
 
-**Suported Tasks**:
+**Supported Tasks**:
 
 [Image Classification](/tutorial/image_classification)
 
@@ -19,7 +19,7 @@ You can click the links below to see the detailed tutorial for each task.
 
 [Structured Data Regression](/tutorial/structured_data_regression)
 
-**Coming Soon**: Time Series Forcasting, Object Detection, Image Segmentation.
+**Coming Soon**: Time Series Forecasting, Object Detection, Image Segmentation.
 
 
 ## Multi-Task and Multi-Modal Data
