@@ -30,10 +30,8 @@ If you are dealing with multi-task or multi-modal dataset, you can refer to this
 
 ## Customized Model
 
-Follow this [tutorial](/tutorial/customized), to use AutoKeras building blocks to quickly construct your own
-model.
-With these blocks, you only need to specify the high-level architecture of your
-model.
+Follow this [tutorial](/tutorial/customized), to use AutoKeras building blocks to quickly construct your own model.
+With these blocks, you only need to specify the high-level architecture of your model.
 AutoKeras would search for the best detailed configuration for you.
 Moreover, you can override the base classes to create your own block.
 The following are the links to the documentation of the predefined input nodes and blocks in AutoKeras.
