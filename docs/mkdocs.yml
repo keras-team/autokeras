@@ -24,7 +24,7 @@ markdown_extensions:
 extra:
   analytics:
     provider: google
-    property: UA-44322747-3
+    property: G-GTF9QP8DFD
 
 extra_css:
   - stylesheets/extra.css
