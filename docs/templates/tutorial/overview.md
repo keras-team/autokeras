@@ -2,10 +2,10 @@
 
 ## Supported Tasks
 
-AutoKeras supports several tasks with extremely simple interface.
+AutoKeras supports several tasks with an extremely simple interface.
 You can click the links below to see the detailed tutorial for each task.
 
-**Suported Tasks**:
+**Supported Tasks**:
 
 [Image Classification](/tutorial/image_classification)
 
@@ -19,7 +19,7 @@ You can click the links below to see the detailed tutorial for each task.
 
 [Structured Data Regression](/tutorial/structured_data_regression)
 
-**Coming Soon**: Time Series Forcasting, Object Detection, Image Segmentation.
+**Coming Soon**: Time Series Forecasting, Object Detection, Image Segmentation.
 
 
 ## Multi-Task and Multi-Modal Data
@@ -30,10 +30,8 @@ If you are dealing with multi-task or multi-modal dataset, you can refer to this
 
 ## Customized Model
 
-Follow this [tutorial](/tutorial/customized), to use AutoKeras building blocks to quickly construct your own
-model.
-With these blocks, you only need to specify the high-level architecture of your
-model.
+Follow this [tutorial](/tutorial/customized), to use AutoKeras building blocks to quickly construct your own model.
+With these blocks, you only need to specify the high-level architecture of your model.
 AutoKeras would search for the best detailed configuration for you.
 Moreover, you can override the base classes to create your own block.
 The following are the links to the documentation of the predefined input nodes and blocks in AutoKeras.
