@@ -70,14 +70,6 @@ Thank all the contributors!
 
 <a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://autokeras.com/img/contributors.svg" /></a>
 
-
-## Donation
-
-Thank all the donors for supporting us!
-
-<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/sponsor.svg?avatarHeight=36&width=890&button=false"></a>
-<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=36&width=890&button=false"></a>
-
 ## Cite this work
 
 Haifeng Jin, Qingquan Song, and Xia Hu. "Auto-keras: An efficient neural architecture search system." Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining. ACM, 2019. ([Download](https://dl.acm.org/doi/pdf/10.1145/3292500.3330648))

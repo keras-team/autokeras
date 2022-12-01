@@ -66,4 +66,5 @@ nav:
     - Node: node.md
     - Block: block.md
     - Utils: utils.md
+  - Benchmarks: benchmarks.md
   - About: about.md
