@@ -11,7 +11,7 @@
         "--line-length",
         "85"
     ],
-    "python.sortImports.args": [
+    "isort.args": [
         "--profile",
         "black",
         "--sl"
