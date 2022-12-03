@@ -209,7 +209,6 @@ def test_build_block_in_blocks_with_same_name(tmp_path):
 
     trials = [trial for trial_id, trial in auto_model.tuner.oracle.trials.items()]
     for trial in trials:
-        print(trial.hyperparameters.values)
         assert len(trial.hyperparameters.values) == len(
             trials[0].hyperparameters.values
         )
