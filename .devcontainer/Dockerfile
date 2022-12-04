@@ -1,4 +1,2 @@
-FROM tensorflow/tensorflow:latest
-RUN apt-get -y update
-RUN apt-get -y install git vim
+FROM mcr.microsoft.com/vscode/devcontainers/python:3.8
 COPY setup.sh /setup.sh
