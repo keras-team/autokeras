@@ -15,6 +15,7 @@
 from typing import Optional
 from typing import Union
 
+import keras_nlp
 import tensorflow as tf
 from keras_tuner.engine import hyperparameters
 from tensorflow import keras
@@ -22,7 +23,6 @@ from tensorflow import nest
 from tensorflow.keras import applications
 from tensorflow.keras import layers
 
-from autokeras import keras_layers
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
 from autokeras.utils import io_utils
@@ -919,8 +919,9 @@ class Embedding(block_module.Block):
 
 class BertBlock(block_module.Block):
     """Block for Pre-trained BERT.
-    The input should be sequence of sentences. The implementation is derived from
-    this [example](https://www.tensorflow.org/official_models/fine_tuning_bert)
+
+    The input should be sequence of sentences without the padded tokens, like
+    [CLS] [SEP] [PAD].
 
     # Example
     ```python
@@ -930,10 +931,11 @@ class BertBlock(block_module.Block):
         from tensorflow.keras import losses
 
         input_node = ak.TextInput()
-        output_node = BertBlock(max_sequence_length=128)(input_node)
+        output_node = BertBlock()(input_node)
         output_node = ak.ClassificationHead()(output_node)
         clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
     ```
+
     # Arguments
         max_sequence_length: Int or keras_tuner.engine.hyperparameters.Choice.
             The maximum length of a sequence that is used to train the model.
@@ -974,14 +976,14 @@ class BertBlock(block_module.Block):
     def build(self, hp, inputs=None):
         input_tensor = nest.flatten(inputs)[0]
 
-        tokenizer_layer = keras_layers.BertTokenizer(
-            max_sequence_length=utils.add_to_hp(self.max_sequence_length, hp)
+        preset_name = "bert_base_en_uncased"
+        tokenizer_layer = keras_nlp.models.BertPreprocessor.from_preset(
+            preset_name,
+            sequence_length=utils.add_to_hp(self.max_sequence_length, hp),
         )
-        output_node = tokenizer_layer(input_tensor)
+        bert_encoder = keras_nlp.models.BertBackbone.from_preset(preset_name)
 
-        bert_encoder = keras_layers.BertEncoder()
-
-        output_node = bert_encoder(output_node)
-        bert_encoder.load_pretrained_weights()
+        output_node = tokenizer_layer(tf.reshape(input_tensor, [-1]))
+        output_node = bert_encoder(output_node)["pooled_output"]
 
         return output_node

@@ -93,42 +93,6 @@ def get_text_data():
     return train, test, y
 
 
-def test_bert_tokenizer_output_correct_shape(tmp_path):
-    x_train, x_test, y_train = get_text_data()
-    max_sequence_length = 8
-    token_layer = layer_module.BertTokenizer(max_sequence_length=max_sequence_length)
-    output = token_layer(x_train)
-    assert output[0].shape == (x_train.shape[0], max_sequence_length)
-    assert output[1].shape == (x_train.shape[0], max_sequence_length)
-    assert output[2].shape == (x_train.shape[0], max_sequence_length)
-
-
-def test_bert_tokenizer_save_and_load(tmp_path):
-    x_train, x_test, y_train = get_text_data()
-    max_sequence_length = 8
-    layer = layer_module.BertTokenizer(max_sequence_length=max_sequence_length)
-
-    input_node = keras.Input(shape=(1,), dtype=tf.string)
-    output_node = layer(input_node)
-    model = keras.Model(input_node, output_node)
-    model.save(os.path.join(tmp_path, "model"))
-    model2 = keras.models.load_model(os.path.join(tmp_path, "model"))
-
-    assert np.array_equal(model.predict(x_train), model2.predict(x_train))
-
-
-def test_transformer_encoder_save_and_load(tmp_path):
-    layer = layer_module.BertEncoder()
-    inputs = [
-        keras.Input(shape=(500,), dtype=tf.int64),
-        keras.Input(shape=(500,), dtype=tf.int64),
-        keras.Input(shape=(500,), dtype=tf.int64),
-    ]
-    model = keras.Model(inputs, layer(inputs))
-    model.save(os.path.join(tmp_path, "model"))
-    keras.models.load_model(os.path.join(tmp_path, "model"))
-
-
 def test_cast_to_float32_return_float32_tensor(tmp_path):
     layer = layer_module.CastToFloat32()
 
