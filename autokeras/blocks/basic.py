@@ -55,6 +55,190 @@ EFFICIENT_VERSIONS = {
 PRETRAINED = "pretrained"
 
 
+RS_VERSIONS= {
+#    "bigearthnet": "https://tfhub.dev/google/remote_sensing/bigearthnet-resnet50/1",
+    "resisc45": "https://tfhub.dev/google/remote_sensing/resisc45-resnet50/1",
+    "eurosat": "https://tfhub.dev/google/remote_sensing/eurosat-resnet50/1",
+    "so2sat": "https://tfhub.dev/google/remote_sensing/so2sat-resnet50/1",
+    "ucmerced": "https://tfhub.dev/google/remote_sensing/uc_merced-resnet50/1",
+}
+
+RSResNet_WEIGHTS = {
+    "resnet50": '/data/s2105713/repos/model_weights/eurosat_rgb/resnet50.h5',
+    "resnet101": '/data/s2105713/repos/model_weights/eurosat_rgb/resnet101.h5',
+    "resnet152": '/data/s2105713/repos/model_weights/eurosat_rgb/resnet152.h5',
+    "resnet50_v2": '/data/s2105713/repos/model_weights/eurosat_rgb/resnet50v2.h5',
+    "resnet101_v2": '/data/s2105713/repos/model_weights/eurosat_rgb/resnet101v2.h5',
+    "resnet152_v2": '/data/s2105713/repos/model_weights/eurosat_rgb/resnet152v2.h5',
+}
+
+PRETRAINED = "pretrained"
+
+class RSKerasApplicationBlock(block_module.Block):
+    """Blocks extending Keras applications."""
+
+    def __init__(self, pretrained, models, min_size, **kwargs):
+        super().__init__(**kwargs)
+        self.pretrained = pretrained
+        self.models = models
+        self.min_size = min_size
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"pretrained": self.pretrained})
+        return config
+
+    def build(self, hp, inputs=None):
+        input_node = nest.flatten(inputs)[0]
+
+        pretrained = self.pretrained
+        if input_node.shape[3] not in [1, 3]:
+            if self.pretrained:
+                raise ValueError(
+                    "When pretrained is set to True, expect input to "
+                    "have 1 or 3 channels, bug got "
+                    "{channels}.".format(channels=input_node.shape[3])
+                )
+            pretrained = False
+        if pretrained is None:
+            pretrained = hp.Boolean(PRETRAINED, default=False)
+            if pretrained:
+                with hp.conditional_scope(PRETRAINED, [True]):
+                    trainable = hp.Boolean("trainable", default=False)
+        elif pretrained:
+            trainable = hp.Boolean("trainable", default=False)
+
+        if len(self.models) > 1:
+            version = hp.Choice("version", list(self.models.keys()))
+        else:
+            version = list(self.models.keys())[0]
+
+        min_size = self.min_size
+        if hp.Boolean("imagenet_size", default=False):
+            min_size = 224
+        if input_node.shape[1] < min_size or input_node.shape[2] < min_size:
+            input_node = layers.experimental.preprocessing.Resizing(
+                max(min_size, input_node.shape[1]),
+                max(min_size, input_node.shape[2]),
+            )(input_node)
+        if input_node.shape[3] == 1:
+            input_node = layers.Concatenate()([input_node] * 3)
+        if input_node.shape[3] != 3:
+            input_node = layers.Conv2D(filters=3, kernel_size=1, padding="same")(
+                input_node
+            )
+
+        if pretrained:
+            model = self.models[version](weights=RSResNet_WEIGHTS[version], include_top=False)
+            model.trainable = trainable
+        else:
+            model = self.models[version](
+                weights=None, include_top=False, input_shape=input_node.shape[1:]
+            )
+
+        return model(input_node)
+
+
+class RSResNetBlock(RSKerasApplicationBlock):
+    """Block for ResNet.
+    # Arguments
+        version: String. 'v1', 'v2'. The type of ResNet to use.
+            If left unspecified, it will be tuned automatically.
+        pretrained: Boolean. Whether to use ImageNet pretrained weights.
+            If left unspecified, it will be tuned automatically.
+    """
+
+    def __init__(
+        self,
+        version: Optional[str] = None,
+        pretrained: Optional[bool] = None,
+        **kwargs,
+    ):
+        if version is None:
+            models = {**RESNET_V1, **RESNET_V2}
+        elif version == "v1":
+            models = RESNET_V1
+        elif version == "v2":
+            models = RESNET_V2
+        else:
+            raise ValueError(
+                'Expect version to be "v1", or "v2", but got '
+                "{version}.".format(version=version)
+            )
+        super().__init__(pretrained=pretrained, models=models, min_size=32, **kwargs)
+        self.version = version
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"version": self.version})
+        return config
+
+
+class RSBlock(block_module.Block):
+    #Remote sensing pretrained modules """
+    def __init__(
+         self, 
+         version: Optional[str] = None,
+         tags: str = 'train',
+         trainable: bool= False, 
+         **kwargs,
+         ):
+            if version is None:
+                models = RS_VERSIONS
+            elif version in RS_VERSIONS.keys():
+                models = {version: RS_VERSIONS[version]}
+            else:
+                raise ValueError(
+                    "Expect version to be in {expect}, but got "
+                    "{version}.".format(
+                     expect=list(RS_VERSIONS.keys()), version=version)
+                    )
+            super().__init__(**kwargs)
+            self.version=models
+            self.tags = 'train'
+            self.trainable = False
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"version": self.version})
+        return config
+
+
+    def build(self, hp, inputs=None):
+        # Get the input_node from inputs.
+        input_node = nest.flatten(inputs)[0]
+        if len(self.version) > 1:
+            model = hp.Choice("version", list(self.version.keys()))
+        else:
+            model = list(self.version.keys())[0]
+        module = hub.KerasLayer(RS_VERSIONS[model],tags='train',trainable=False)
+        min_size = 224
+        if input_node.shape[3] not in [1, 3]:
+            if self.pretrained:
+                raise ValueError(
+                    "When pretrained is set to True, expect input to "
+                    "have 1 or 3 channels, bug got "
+                    "{channels}.".format(channels=input_node.shape[3])
+                )
+
+        if input_node.shape[1] < min_size or input_node.shape[2] < min_size:
+            input_node = layers.experimental.preprocessing.Resizing(
+                max(min_size, input_node.shape[1]),
+                max(min_size, input_node.shape[2]),
+            )(input_node)
+        if input_node.shape[3] == 1:
+            input_node = layers.Concatenate()([input_node] * 3)
+        if input_node.shape[3] != 3:
+            input_node = layers.Conv2D(filters=3, kernel_size=1, padding="same")(
+                input_node
+            )	
+	#final_module=tf.keras.Sequential([input_node, module])
+        #model_layers=module.build((None,)+input_node.shape[1:])
+        output_node = module(input_node)
+        return output_node
+
+
+
 class DenseBlock(block_module.Block):
     """Block for Dense layers.
 
