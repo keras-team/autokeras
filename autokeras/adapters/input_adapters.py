@@ -70,7 +70,7 @@ class StructuredDataAdapter(adapter_module.Adapter):
     def convert_to_dataset(self, dataset, batch_size):
         if isinstance(dataset, pd.DataFrame):
             dataset = dataset.values
-        if isinstance(dataset, np.ndarray) and dataset.dtype == np.object:
+        if isinstance(dataset, np.ndarray) and dataset.dtype == object:
             dataset = dataset.astype(np.unicode)
         return super().convert_to_dataset(dataset, batch_size)
 

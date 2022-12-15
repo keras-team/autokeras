@@ -79,7 +79,7 @@ def get_text_data():
             [""],
             ["Is this a long long long long long long example?"],
         ],
-        dtype=np.str,
+        dtype=str,
     )
     test = np.array(
         [
@@ -87,7 +87,7 @@ def get_text_data():
             ["This is another text example"],
             ["Is this another example?"],
         ],
-        dtype=np.str,
+        dtype=str,
     )
     y = np.random.rand(3, 1)
     return train, test, y
