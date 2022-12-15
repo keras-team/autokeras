@@ -335,7 +335,7 @@ class WarmUp(keras.optimizers.schedules.LearningRateSchedule):
             )
 
     def get_config(self):
-        return {
+        return {  # pragma: no cover
             "initial_learning_rate": self.initial_learning_rate,
             "decay_schedule_fn": self.decay_schedule_fn,
             "warmup_steps": self.warmup_steps,
