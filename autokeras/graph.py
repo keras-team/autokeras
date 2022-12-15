@@ -312,13 +312,12 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
                     warmup_steps=warmup_steps,
                 )
 
-            optimizer = keras_layers.AdamWeightDecay(
+            optimizer = keras.optimizers.experimental.AdamW(
                 learning_rate=lr_schedule,
-                weight_decay_rate=0.01,
+                weight_decay=0.01,
                 beta_1=0.9,
                 beta_2=0.999,
                 epsilon=1e-6,
-                exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"],
             )
 
         model.compile(
