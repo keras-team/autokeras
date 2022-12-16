@@ -26,7 +26,7 @@ Some of the problems are supported by AutoKeras today, but some are not.
 
 ## The current design
 
-stack the preprocessors based on input type.
+It stacks the preprocessors based on input type.
 Do not select preprocessors based on the hyperparameter value for model selection.
 
 
@@ -46,12 +46,6 @@ without running the code of actual `tf.data` operations and `tf.keras.Model`
 building.
 
 ## The new design
-
-### Decouple the graph into stateful and stateless
-
-The `Graph` should be stateless, which is just the search space specified by the
-user. `Graph` can be built into `ConcreteGraph`, which contains the
-preprocessor, the model, and the post-processor.
 
 ### Mixing the preprocessors and model
 
@@ -119,3 +113,8 @@ dataset. If doesn't meet the requirements, raise a clear error.
 
 Seems no accomendations needed. Should continue to override
 `Tuner._build_and_fit_model()`.
+
+## TODOs
+
+* Remove prototype directory.
+* Remove prototype from coverage exclusion in setup.cfg.
