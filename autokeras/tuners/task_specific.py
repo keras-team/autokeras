@@ -169,6 +169,10 @@ class ImageClassifierTuner(greedy.Greedy):
     def __init__(self, **kwargs):
         super().__init__(initial_hps=IMAGE_CLASSIFIER, **kwargs)
 
+class SatelliteImageClassifierTuner(greedy.Greedy):
+    def __init__(self, **kwargs):
+        super().__init__(initial_hps=IMAGE_CLASSIFIER, **kwargs)
+
 
 class TextClassifierTuner(greedy.Greedy):
     def __init__(self, **kwargs):
