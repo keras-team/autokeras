@@ -1,6 +1,7 @@
 {
     "python.testing.pytestEnabled": true,
     "python.linting.flake8Enabled": true,
+    "python.linting.pylintEnabled": false,
     "python.linting.enabled": true,
     "editor.rulers": [
         85
@@ -11,7 +12,7 @@
         "--line-length",
         "85"
     ],
-    "python.sortImports.args": [
+    "isort.args": [
         "--profile",
         "black",
         "--sl"

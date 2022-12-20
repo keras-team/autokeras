@@ -77,6 +77,24 @@ def test_graph_basics():
     assert model.output_shape == (None, 1)
 
 
+def test_adamw_optimizer():
+    input_node = ak.Input(shape=(30,))
+    output_node = input_node
+    output_node = ak.DenseBlock()(output_node)
+    output_node = ak.RegressionHead(shape=(1,))(output_node)
+
+    hp = keras_tuner.HyperParameters()
+    hp.Choice("optimizer", ["adam", "sgd", "adam_weight_decay"], default="adam")
+    hp.values["optimizer"] = "adam_weight_decay"
+    graph = graph_module.Graph(inputs=input_node, outputs=output_node)
+    graph.num_samples = 10000
+    graph.inputs[0].batch_size = 32
+    graph.epochs = 10
+    model = graph.build(hp)
+    assert model.input_shape == (None, 30)
+    assert model.output_shape == (None, 1)
+
+
 def test_graph_save_load(tmp_path):
     input1 = ak.Input()
     input2 = ak.Input()

@@ -68,15 +68,7 @@ Refer to our [Contributing Guide](https://autokeras.com/contributing/) to learn 
 
 Thank all the contributors!
 
-<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://autokeras.com/img/contributors.svg" /></a>
-
-
-## Donation
-
-Thank all the donors for supporting us!
-
-<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/sponsor.svg?avatarHeight=36&width=890&button=false"></a>
-<a href="https://opencollective.com/autokeras#backers" target="_blank"><img src="https://opencollective.com/autokeras/backer.svg?avatarHeight=36&width=890&button=false"></a>
+[![The contributors](https://autokeras.com/img/contributors.svg)](https://github.com/keras-team/autokeras/graphs/contributor)
 
 ## Cite this work
 
