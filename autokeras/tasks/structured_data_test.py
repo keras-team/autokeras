@@ -103,7 +103,7 @@ def test_structured_clf_fit_call_auto_model_fit(fit, tmp_path):
     )
 
     auto_model.fit(
-        x=pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)[:100],
+        x=pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype("U")[:100],
         y=test_utils.generate_one_hot_labels(num_instances=100, num_classes=3),
     )
 
@@ -115,7 +115,7 @@ def test_structured_reg_fit_call_auto_model_fit(fit, tmp_path):
     auto_model = ak.StructuredDataRegressor(directory=tmp_path, seed=test_utils.SEED)
 
     auto_model.fit(
-        x=pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(np.unicode)[:100],
+        x=pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype("U")[:100],
         y=test_utils.generate_data(num_instances=100, shape=(1,)),
     )
 
