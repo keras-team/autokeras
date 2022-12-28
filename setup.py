@@ -20,6 +20,7 @@ setup(
         "packaging",
         "tensorflow>=2.8.0",
         "keras-tuner>=1.1.0",
+        "keras-nlp>=0.4.0",
         "pandas",
     ],
     extras_require={

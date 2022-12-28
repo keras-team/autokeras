@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras_nlp
+
 from autokeras.auto_model import AutoModel
 from autokeras.blocks import BertBlock
 from autokeras.blocks import CategoricalToNumerical
@@ -39,8 +41,6 @@ from autokeras.blocks import XceptionBlock
 from autokeras.engine.block import Block
 from autokeras.engine.head import Head
 from autokeras.engine.node import Node
-from autokeras.keras_layers import BertEncoder
-from autokeras.keras_layers import BertTokenizer
 from autokeras.keras_layers import CastToFloat32
 from autokeras.keras_layers import ExpandLastDim
 from autokeras.keras_layers import MultiCategoryEncoding
@@ -65,14 +65,14 @@ from autokeras.utils.io_utils import text_dataset_from_directory
 from autokeras.utils.utils import check_kt_version
 from autokeras.utils.utils import check_tf_version
 
-__version__ = "1.0.21dev"
+__version__ = "1.1.0dev"
 
 check_tf_version()
 check_kt_version()
 
 CUSTOM_OBJECTS = {
-    "BertEncoder": BertEncoder,
-    "BertTokenizer": BertTokenizer,
+    "BertPreprocessor": keras_nlp.models.BertPreprocessor,
+    "BertBackbone": keras_nlp.models.BertBackbone,
     "CastToFloat32": CastToFloat32,
     "ExpandLastDim": ExpandLastDim,
     "MultiCategoryEncoding": MultiCategoryEncoding,
