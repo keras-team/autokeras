@@ -146,8 +146,8 @@ def test_tuner_does_not_crash_with_distribution_strategy(tmp_path):
 
 
 def test_preprocessing_adapt_with_cat_to_int_and_norm():
-    x = np.array([["a", 5], ["b", 6]]).astype(np.unicode)
-    y = np.array([[1, 2], [3, 4]]).astype(np.unicode)
+    x = np.array([["a", 5], ["b", 6]]).astype("U")
+    y = np.array([[1, 2], [3, 4]]).astype("U")
     dataset = tf.data.Dataset.from_tensor_slices((x, y)).batch(32)
     model = keras.models.Sequential()
     model.add(keras.Input(shape=(2,), dtype=tf.string))
