@@ -46,7 +46,7 @@ def test_structured_data_infer_col_types():
     )
     x = pd.read_csv(test_utils.TRAIN_CSV_PATH)
     x.pop("survived")
-    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype("U")).batch(32)
+    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype(str)).batch(32)
 
     for data in dataset:
         analyser.update(data)
@@ -66,7 +66,7 @@ def test_dont_infer_specified_column_types():
     )
     x = pd.read_csv(test_utils.TRAIN_CSV_PATH)
     x.pop("survived")
-    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype("U")).batch(32)
+    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype(str)).batch(32)
 
     for data in dataset:
         analyser.update(data)
