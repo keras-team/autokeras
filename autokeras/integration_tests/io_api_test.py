@@ -25,7 +25,7 @@ def test_io_api(tmp_path):
 
     image_x = image_x[:num_instances]
     structured_data_x = (
-        pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype("U")[:num_instances]
+        pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)[:num_instances]
     )
     classification_y = test_utils.generate_one_hot_labels(
         num_instances=num_instances, num_classes=3

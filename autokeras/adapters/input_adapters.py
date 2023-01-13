@@ -71,7 +71,7 @@ class StructuredDataAdapter(adapter_module.Adapter):
         if isinstance(dataset, pd.DataFrame):
             dataset = dataset.values
         if isinstance(dataset, np.ndarray) and dataset.dtype == object:
-            dataset = dataset.astype("U")
+            dataset = dataset.astype(str)
         return super().convert_to_dataset(dataset, batch_size)
 
 

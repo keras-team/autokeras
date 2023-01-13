@@ -96,9 +96,9 @@ print(clf.evaluate(x_test, y_test))
 The following code shows how to convert numpy.ndarray to tf.data.Dataset.
 """
 
-train_set = tf.data.Dataset.from_tensor_slices((x_train.astype("U"), y_train))
+train_set = tf.data.Dataset.from_tensor_slices((x_train.astype(str), y_train))
 test_set = tf.data.Dataset.from_tensor_slices(
-    (x_test.to_numpy().astype("U"), y_test)
+    (x_test.to_numpy().astype(str), y_test)
 )
 
 clf = ak.StructuredDataClassifier(overwrite=True, max_trials=3)
@@ -221,7 +221,7 @@ model.summary()
 print(x_train.dtype)
 # numpy array in object (mixed type) is not supported.
 # convert it to unicode.
-model.predict(x_train.astype("U"))
+model.predict(x_train.astype(str))
 
 """
 ## Reference
