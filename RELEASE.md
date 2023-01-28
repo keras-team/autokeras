@@ -10,3 +10,4 @@
 ## New features
 
 ## Bug fixes
+* Now also support `numpy>=1.24`.
