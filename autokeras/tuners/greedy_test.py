@@ -85,7 +85,6 @@ def test_greedy_oracle_populate_doesnt_crash_with_init_hps(get_best_trials):
 def test_greedy_oracle_stop_reach_max_collision(
     get_best_trials, compute_values_hash
 ):
-
     hp = keras_tuner.HyperParameters()
     test_utils.build_graph().build(hp)
 
