@@ -17,7 +17,6 @@ Search for a good model for the
 
 # Prepare the dataset.
 def reuters_raw(max_features=20000):
-
     index_offset = 3  # word index offset
 
     (x_train, y_train), (x_test, y_test) = reuters.load_data(
