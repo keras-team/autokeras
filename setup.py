@@ -27,7 +27,7 @@ setup(
         "tests": [
             "pytest>=4.4.0",
             "flake8",
-            "black[jupyter]==22.8.0",
+            "black[jupyter]",
             "isort",
             "pytest-xdist",
             "pytest-cov",
