@@ -28,14 +28,15 @@ from autokeras import keras_layers
 from autokeras import preprocessors
 from autokeras.engine import io_hypermodel
 from autokeras.engine import node as node_module
+from autokeras.utils import utils
 
 
 def serialize(obj):
-    return keras.utils.serialize_keras_object(obj)
+    return utils.serialize_keras_object(obj)
 
 
 def deserialize(config, custom_objects=None):
-    return keras.utils.deserialize_keras_object(
+    return utils.deserialize_keras_object(
         config,
         module_objects=globals(),
         custom_objects=custom_objects,
