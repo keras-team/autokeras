@@ -53,19 +53,20 @@ def test_check_kt_version_error():
     )
 
 
-def test_run_with_adaptive_batch_size_raise_error():
+def test_run_with_adaptive_batch_size_raise_error(capfd):
     def func(**kwargs):
         raise tf.errors.ResourceExhaustedError(0, "", None)
 
-    with pytest.raises(tf.errors.ResourceExhaustedError):
-        utils.run_with_adaptive_batch_size(
-            batch_size=64,
-            func=func,
-            x=tf.data.Dataset.from_tensor_slices(np.random.rand(100, 1)).batch(64),
-            validation_data=tf.data.Dataset.from_tensor_slices(
-                np.random.rand(100, 1)
-            ).batch(64),
-        )
+    utils.run_with_adaptive_batch_size(
+        batch_size=64,
+        func=func,
+        x=tf.data.Dataset.from_tensor_slices(np.random.rand(100, 1)).batch(64),
+        validation_data=tf.data.Dataset.from_tensor_slices(
+            np.random.rand(100, 1)
+        ).batch(64),
+    )
+    std, _ = capfd.readouterr()
+    assert "Not enough memory" in std
 
 
 def test_get_hyperparameter_with_none_return_hp():
