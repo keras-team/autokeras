@@ -80,7 +80,7 @@ def test_text_regressor(tmp_path):
 def test_structured_data_regressor(tmp_path):
     num_data = 500
     num_train = 400
-    data = pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype("U")[:num_data]
+    data = pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)[:num_data]
     x_train, x_test = data[:num_train], data[num_train:]
     y = test_utils.generate_data(num_instances=num_data, shape=tuple())
     y_train, y_test = y[:num_train], y[num_train:]
@@ -95,7 +95,7 @@ def test_structured_data_regressor(tmp_path):
 def test_structured_data_classifier(tmp_path):
     num_data = 500
     num_train = 400
-    data = pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype("U")[:num_data]
+    data = pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)[:num_data]
     x_train, x_test = data[:num_train], data[num_train:]
     y = test_utils.generate_one_hot_labels(num_instances=num_data, num_classes=3)
     y_train, y_test = y[:num_train], y[num_train:]

@@ -23,7 +23,7 @@ from autokeras import test_utils
 
 
 def test_augment_build_return_tensor():
-    block = blocks.ImageAugmentation()
+    block = blocks.ImageAugmentation(rotation_factor=0.2)
 
     outputs = block.build(
         keras_tuner.HyperParameters(),

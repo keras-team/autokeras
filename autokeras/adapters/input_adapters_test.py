@@ -33,7 +33,7 @@ def test_structured_data_input_unsupported_type_error():
 
 def test_structured_data_input_transform_to_dataset():
     x = tf.data.Dataset.from_tensor_slices(
-        pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype("U")
+        pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)
     )
     adapter = input_adapters.StructuredDataAdapter()
 

@@ -1,7 +1,8 @@
-keras-autodoc
 mkdocs
 mkdocs-material
 pygments
 jupyter
 pymdown-extensions
 Sphinx
+markdown
+black
