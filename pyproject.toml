@@ -1,0 +1,9 @@
+[tool.black]
+line-length = 85
+
+[tool.isort]
+profile = "black"
+known_first_party = ["autokeras", "tests"]
+default_section = "THIRDPARTY"
+line_length = 85
+force_single_line = "True"
