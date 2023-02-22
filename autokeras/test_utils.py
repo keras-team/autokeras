@@ -82,7 +82,13 @@ def generate_text_data(num_instances=100):
             ["adorable", "clueless", "dirty", "odd", "stupid"],
             ["puppy", "car", "rabbit", "girl", "monkey"],
             ["runs", "hits", "jumps", "drives", "barfs"],
-            ["crazily.", "dutifully.", "foolishly.", "merrily.", "occasionally."],
+            [
+                "crazily.",
+                "dutifully.",
+                "foolishly.",
+                "merrily.",
+                "occasionally.",
+            ],
         ]
     )
     return np.array(
@@ -94,7 +100,11 @@ def generate_text_data(num_instances=100):
 
 
 def generate_data_with_categorical(
-    num_instances=100, num_numerical=10, num_categorical=3, num_classes=5, dtype="np"
+    num_instances=100,
+    num_numerical=10,
+    num_categorical=3,
+    num_classes=5,
+    dtype="np",
 ):
     categorical_data = np.random.randint(
         num_classes, size=(num_instances, num_categorical)
@@ -138,6 +148,8 @@ def get_object_detection_data():
         5,
     )
 
-    labels = np.array([(bbox_0, class_id_0), (bbox_1, class_id_1)], dtype=object)
+    labels = np.array(
+        [(bbox_0, class_id_0), (bbox_1, class_id_1)], dtype=object
+    )
 
     return images, labels

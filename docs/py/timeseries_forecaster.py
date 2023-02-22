@@ -8,9 +8,9 @@ import tensorflow as tf
 import autokeras as ak
 
 """
-To make this tutorial easy to follow, we use the UCI Airquality dataset, and try to
-forecast the AH value at the different timesteps. Some basic preprocessing has also
-been performed on the dataset as it required cleanup.
+To make this tutorial easy to follow, we use the UCI Airquality dataset, and try
+to forecast the AH value at the different timesteps. Some basic preprocessing
+has also been performed on the dataset as it required cleanup.
 
 ## A Simple Example
 The first step is to prepare your data. Here we use the [UCI Airquality

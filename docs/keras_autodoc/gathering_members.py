@@ -12,8 +12,8 @@ def get_classes(module, exclude: List[str] = None, return_strings: bool = True):
 
     # Arguments
 
-        module: The module to fetch the classes from. If it's a
-            string, it should be in the dotted format. `'keras.layers'` for example.
+        module: The module to fetch the classes from. If it's a string, it
+            should be in the dotted format. `'keras.layers'` for example.
         exclude: The names which will be excluded from the returned list. For
             example, `get_classes('keras.layers', exclude=['Dense', 'Conv2D'])`.
         return_strings: If False, the actual classes will be returned. Note that
@@ -28,19 +28,21 @@ def get_classes(module, exclude: List[str] = None, return_strings: bool = True):
     return _get_all_module_element(module, exclude, return_strings, True)
 
 
-def get_functions(module, exclude: List[str] = None, return_strings: bool = True):
+def get_functions(
+    module, exclude: List[str] = None, return_strings: bool = True
+):
     """Get all the functions of a module.
 
     # Arguments
 
-        module: The module to fetch the functions from. If it's a
-            string, it should be in the dotted format. `'keras.backend'` for example.
+        module: The module to fetch the functions from. If it's a string, it
+            should be in the dotted format. `'keras.backend'` for example.
         exclude: The names which will be excluded from the returned list. For
             example, `get_functions('keras.backend', exclude=['max'])`.
-        return_strings: If False, the actual functions will be returned. Note that
-            if you use aliases when building your docs, you should use strings.
-            This is because the computed signature uses
-            `__name__` and `__module__` if you don't provide a string as input.
+        return_strings: If False, the actual functions will be returned. Note
+            that if you use aliases when building your docs, you should use
+            strings.  This is because the computed signature uses `__name__` and
+            `__module__` if you don't provide a string as input.
 
     # Returns
 

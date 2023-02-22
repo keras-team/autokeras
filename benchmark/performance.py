@@ -78,8 +78,12 @@ def test_imdb_accuracy_over_92(tmp_path):
 
 
 def test_titaninc_accuracy_over_77(tmp_path):
-    TRAIN_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
-    TEST_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
+    TRAIN_DATA_URL = (
+        "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
+    )
+    TEST_DATA_URL = (
+        "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
+    )
 
     train_file_path = tf.keras.utils.get_file("train.csv", TRAIN_DATA_URL)
     test_file_path = tf.keras.utils.get_file("eval.csv", TEST_DATA_URL)

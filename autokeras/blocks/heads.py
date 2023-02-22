@@ -34,20 +34,21 @@ from autokeras.utils import utils
 class ClassificationHead(head_module.Head):
     """Classification Dense layers.
 
-    Use sigmoid and binary crossentropy for binary classification and multi-label
-    classification. Use softmax and categorical crossentropy for multi-class
-    (more than 2) classification. Use Accuracy as metrics by default.
+    Use sigmoid and binary crossentropy for binary classification and
+    multi-label classification. Use softmax and categorical crossentropy for
+    multi-class (more than 2) classification. Use Accuracy as metrics by
+    default.
 
-    The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
-    pd.DataFrame or pd.Series. It can be raw labels, one-hot encoded if more than two
-    classes, or binary encoded for binary classification.
+    The targets passing to the head would have to be tf.data.Dataset,
+    np.ndarray, pd.DataFrame or pd.Series. It can be raw labels, one-hot encoded
+    if more than two classes, or binary encoded for binary classification.
 
     The raw labels will be encoded to one column if two classes were found,
     or one-hot encoded if more than two classes were found.
 
     # Arguments
-        num_classes: Int. Defaults to None. If None, it will be inferred from the
-            data.
+        num_classes: Int. Defaults to None. If None, it will be inferred from
+            the data.
         multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use `binary_crossentropy` or
             `categorical_crossentropy` based on the number of classes.
@@ -117,9 +118,9 @@ class ClassificationHead(head_module.Head):
             output_node = layers.Dropout(dropout)(output_node)
         output_node = layers.Dense(self.shape[-1])(output_node)
         if isinstance(self.loss, keras.losses.BinaryCrossentropy):
-            output_node = layers.Activation(activations.sigmoid, name=self.name)(
-                output_node
-            )
+            output_node = layers.Activation(
+                activations.sigmoid, name=self.name
+            )(output_node)
         else:
             output_node = layers.Softmax(name=self.name)(output_node)
         return output_node
@@ -147,17 +148,23 @@ class ClassificationHead(head_module.Head):
 
         if self._add_one_dimension:
             hyper_preprocessors.append(
-                hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
+                hpps_module.DefaultHyperPreprocessor(
+                    preprocessors.AddOneDimension()
+                )
             )
 
         if self.dtype in [tf.uint8, tf.uint16, tf.uint32, tf.uint64]:
             hyper_preprocessors.append(
-                hpps_module.DefaultHyperPreprocessor(preprocessors.CastToInt32())
+                hpps_module.DefaultHyperPreprocessor(
+                    preprocessors.CastToInt32()
+                )
             )
 
         if not self._encoded and self.dtype != tf.string:
             hyper_preprocessors.append(
-                hpps_module.DefaultHyperPreprocessor(preprocessors.CastToString())
+                hpps_module.DefaultHyperPreprocessor(
+                    preprocessors.CastToString()
+                )
             )
 
         if self._encoded_for_sigmoid:
@@ -190,9 +197,9 @@ class ClassificationHead(head_module.Head):
 class RegressionHead(head_module.Head):
     """Regression Dense layers.
 
-    The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
-    pd.DataFrame or pd.Series. It can be single-column or multi-column. The
-    values should all be numerical.
+    The targets passing to the head would have to be tf.data.Dataset,
+    np.ndarray, pd.DataFrame or pd.Series. It can be single-column or
+    multi-column. The values should all be numerical.
 
     # Arguments
         output_dim: Int. The number of output dimensions. Defaults to None.
@@ -256,7 +263,9 @@ class RegressionHead(head_module.Head):
         hyper_preprocessors = []
         if self._add_one_dimension:
             hyper_preprocessors.append(
-                hpps_module.DefaultHyperPreprocessor(preprocessors.AddOneDimension())
+                hpps_module.DefaultHyperPreprocessor(
+                    preprocessors.AddOneDimension()
+                )
             )
         return hyper_preprocessors
 
@@ -268,17 +277,17 @@ class SegmentationHead(ClassificationHead):
     Use softmax and categorical crossentropy for multi-class
     (more than 2) segmentation. Use Accuracy as metrics by default.
 
-    The targets passing to the head would have to be tf.data.Dataset, np.ndarray,
-    pd.DataFrame or pd.Series. It can be raw labels, one-hot encoded if more than two
-    classes, or binary encoded for binary element segmentation.
+    The targets passing to the head would have to be tf.data.Dataset,
+    np.ndarray, pd.DataFrame or pd.Series. It can be raw labels, one-hot encoded
+    if more than two classes, or binary encoded for binary element segmentation.
 
     The raw labels will be encoded to 0s and 1s if two classes were found, or
     one-hot encoded if more than two classes were found.
     One pixel only corresponds to one label.
 
     # Arguments
-        num_classes: Int. Defaults to None. If None, it will be inferred from the
-            data.
+        num_classes: Int. Defaults to None. If None, it will be inferred from
+            the data.
         loss: A Keras loss function. Defaults to use `binary_crossentropy` or
             `categorical_crossentropy` based on the number of classes.
         metrics: A list of Keras metrics. Defaults to use 'accuracy'.

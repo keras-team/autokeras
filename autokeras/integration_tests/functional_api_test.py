@@ -29,7 +29,9 @@ def test_text_and_structured_data(tmp_path):
     y_classification = test_utils.generate_one_hot_labels(
         num_instances=num_instances, num_classes=3
     )
-    y_regression = test_utils.generate_data(num_instances=num_instances, shape=(1,))
+    y_regression = test_utils.generate_data(
+        num_instances=num_instances, shape=(1,)
+    )
 
     # Build model and train.
     structured_data_input = ak.StructuredDataInput()
@@ -68,7 +70,9 @@ def test_text_and_structured_data(tmp_path):
 
 def test_image_blocks(tmp_path):
     num_instances = 10
-    x_train = test_utils.generate_data(num_instances=num_instances, shape=(28, 28))
+    x_train = test_utils.generate_data(
+        num_instances=num_instances, shape=(28, 28)
+    )
     y_train = np.random.randint(0, 10, num_instances)
 
     input_node = ak.ImageInput()
@@ -87,4 +91,6 @@ def test_image_blocks(tmp_path):
         seed=test_utils.SEED,
     )
 
-    automodel.fit(x_train, y_train, validation_data=(x_train, y_train), epochs=1)
+    automodel.fit(
+        x_train, y_train, validation_data=(x_train, y_train), epochs=1
+    )

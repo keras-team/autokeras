@@ -59,11 +59,12 @@ class AutoModel(object):
     The user can use it in a similar way to a Keras model since it
     also has `fit()` and  `predict()` methods.
 
-    The AutoModel has two use cases. In the first case, the user only specifies the
-    input nodes and output heads of the AutoModel. The AutoModel infers the rest part
-    of the model. In the second case, user can specify the high-level architecture of
-    the AutoModel by connecting the Blocks with the functional API, which is the same
-    as the Keras [functional API](https://www.tensorflow.org/guide/keras/functional).
+    The AutoModel has two use cases. In the first case, the user only specifies
+    the input nodes and output heads of the AutoModel. The AutoModel infers the
+    rest part of the model. In the second case, user can specify the high-level
+    architecture of the AutoModel by connecting the Blocks with the functional
+    API, which is the same as the Keras
+    [functional API](https://www.tensorflow.org/guide/keras/functional).
 
     # Example
     ```python
@@ -95,17 +96,19 @@ class AutoModel(object):
             The input node(s) of the AutoModel.
         outputs: A list of Node or Head instances.
             The output node(s) or head(s) of the AutoModel.
-        project_name: String. The name of the AutoModel. Defaults to 'auto_model'.
+        project_name: String. The name of the AutoModel. Defaults to
+            'auto_model'.
         max_trials: Int. The maximum number of different Keras Models to try.
-            The search may finish before reaching the max_trials. Defaults to 100.
-        directory: String. The path to a directory for storing the search outputs.
-            Defaults to None, which would create a folder with the name of the
-            AutoModel in the current directory.
+            The search may finish before reaching the max_trials. Defaults to
+            100.
+        directory: String. The path to a directory for storing the search
+            outputs. Defaults to None, which would create a folder with the
+            name of the AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         tuner: String or subclass of AutoTuner. If string, it should be one of
-            'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a subclass
-            of AutoTuner. Defaults to 'greedy'.
+            'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a
+            subclass of AutoTuner. Defaults to 'greedy'.
         overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
@@ -175,7 +178,9 @@ class AutoModel(object):
         inputs = nest.flatten(self.inputs)
         outputs = nest.flatten(self.outputs)
 
-        middle_nodes = [input_node.get_block()(input_node) for input_node in inputs]
+        middle_nodes = [
+            input_node.get_block()(input_node) for input_node in inputs
+        ]
 
         # Merge the middle nodes.
         if len(middle_nodes) > 1:
@@ -190,15 +195,19 @@ class AutoModel(object):
 
     def _build_graph(self):
         # Using functional API.
-        if all([isinstance(output, node_module.Node) for output in self.outputs]):
+        if all(
+            [isinstance(output, node_module.Node) for output in self.outputs]
+        ):
             graph = graph_module.Graph(inputs=self.inputs, outputs=self.outputs)
         # Using input/output API.
-        elif all([isinstance(output, head_module.Head) for output in self.outputs]):
+        elif all(
+            [isinstance(output, head_module.Head) for output in self.outputs]
+        ):
             # Clear session to reset get_uid(). The names of the blocks will
-            # start to count from 1 for new blocks in a new AutoModel afterwards.
-            # When initializing multiple AutoModel with Task API, if not
-            # counting from 1 for each of the AutoModel, the predefined hp
-            # values in task specifiec tuners would not match the names.
+            # start to count from 1 for new blocks in a new AutoModel
+            # afterwards.  When initializing multiple AutoModel with Task API,
+            # if not counting from 1 for each of the AutoModel, the predefined
+            # hp values in task specifiec tuners would not match the names.
             keras.backend.clear_session()
             graph = self._assemble()
             self.outputs = graph.outputs
@@ -226,37 +235,38 @@ class AutoModel(object):
         # Arguments
             x: numpy.ndarray or tensorflow.Dataset. Training data x.
             y: numpy.ndarray or tensorflow.Dataset. Training data y.
-            batch_size: Int. Number of samples per gradient update. Defaults to 32.
-            epochs: Int. The number of epochs to train each model during the search.
-                If unspecified, by default we train for a maximum of 1000 epochs,
-                but we stop training if the validation loss stops improving for 10
-                epochs (unless you specified an EarlyStopping callback as part of
-                the callbacks argument, in which case the EarlyStopping callback you
-                specified will determine early stopping).
+            batch_size: Int. Number of samples per gradient update. Defaults to
+                32.
+            epochs: Int. The number of epochs to train each model during the
+                search. If unspecified, by default we train for a maximum of
+                1000 epochs, but we stop training if the validation loss stops
+                improving for 10 epochs (unless you specified an EarlyStopping
+                callback as part of the callbacks argument, in which case the
+                EarlyStopping callback you specified will determine early
+                stopping).
             callbacks: List of Keras callbacks to apply during training and
                 validation.
             validation_split: Float between 0 and 1. Defaults to 0.2.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
-                will not train on it, and will evaluate
-                the loss and any model metrics
-                on this data at the end of each epoch.
-                The validation data is selected from the last samples
-                in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a dataset.
-                The best model found would be fit on the entire dataset including the
-                validation data.
-            validation_data: Data on which to evaluate the loss and any model metrics
-                at the end of each epoch. The model will not be trained on this data.
-                `validation_data` will override `validation_split`. The type of the
-                validation data should be the same as the training data.
-                The best model found would be fit on the training dataset without the
-                validation data.
+                will not train on it, and will evaluate the loss and any model
+                metrics on this data at the end of each epoch.  The validation
+                data is selected from the last samples in the `x` and `y` data
+                provided, before shuffling. This argument is not supported when
+                `x` is a dataset. The best model found would be fit on the
+                entire dataset including the validation data.
+            validation_data: Data on which to evaluate the loss and any model
+                metrics at the end of each epoch. The model will not be trained
+                on this data. `validation_data` will override
+                `validation_split`. The type of the validation data should be
+                the same as the training data. The best model found would be
+                fit on the training dataset without the validation data.
             verbose: 0, 1, or 2. Verbosity mode. 0 = silent, 1 = progress bar,
                 2 = one line per epoch. Note that the progress bar is not
                 particularly useful when logged to a file, so verbose=2 is
                 recommended when not running interactively (eg, in a production
-                environment). Controls the verbosity of both KerasTuner search and
+                environment). Controls the verbosity of both KerasTuner search
+                and
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit)
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
@@ -265,7 +275,8 @@ class AutoModel(object):
             history: A Keras History object corresponding to the best model.
                 Its History.history attribute is a record of training
                 loss values and metrics values at successive epochs, as well as
-                validation loss values and validation metrics values (if applicable).
+                validation loss values and validation metrics values (if
+                applicable).
         """
         # Check validation information.
         if not validation_data and not validation_split:
@@ -349,7 +360,9 @@ class AutoModel(object):
             raise ValueError(
                 "Expected x{in_val} to have {input_num} arrays, "
                 "but got {data_num}".format(
-                    in_val=in_val, input_num=len(self.inputs), data_num=len(x_shapes)
+                    in_val=in_val,
+                    input_num=len(self.inputs),
+                    data_num=len(x_shapes),
                 )
             )
         if not predict and len(y_shapes) != len(self.outputs):
@@ -426,7 +439,11 @@ class AutoModel(object):
                 return True
         # The nest has one level.
         # It matches the single IO case.
-        return len(shapes) == 2 and len(self.inputs) == 1 and len(self.outputs) == 1
+        return (
+            len(shapes) == 2
+            and len(self.inputs) == 1
+            and len(self.outputs) == 1
+        )
 
     def predict(self, x, batch_size=32, verbose=1, **kwargs):
         """Predict the output for a given testing data.
@@ -454,7 +471,11 @@ class AutoModel(object):
         dataset = tf.data.Dataset.zip((dataset, dataset))
         y = model.predict(dataset, **kwargs)
         y = utils.predict_with_adaptive_batch_size(
-            model=model, batch_size=batch_size, x=dataset, verbose=verbose, **kwargs
+            model=model,
+            batch_size=batch_size,
+            x=dataset,
+            verbose=verbose,
+            **kwargs
         )
         return pipeline.postprocess(y)
 
@@ -473,10 +494,10 @@ class AutoModel(object):
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
         # Returns
-            Scalar test loss (if the model has a single output and no metrics) or
-            list of scalars (if the model has multiple outputs and/or metrics).
-            The attribute model.metrics_names will give you the display labels for
-            the scalar outputs.
+            Scalar test loss (if the model has a single output and no metrics)
+            or list of scalars (if the model has multiple outputs and/or
+            metrics). The attribute model.metrics_names will give you the
+            display labels for the scalar outputs.
         """
         self._check_data_format((x, y))
         if isinstance(x, tf.data.Dataset):
@@ -490,7 +511,11 @@ class AutoModel(object):
         dataset = pipeline.transform(dataset)
         model = self.tuner.get_best_model()
         return utils.evaluate_with_adaptive_batch_size(
-            model=model, batch_size=batch_size, x=dataset, verbose=verbose, **kwargs
+            model=model,
+            batch_size=batch_size,
+            x=dataset,
+            verbose=verbose,
+            **kwargs
         )
 
     def export_model(self):

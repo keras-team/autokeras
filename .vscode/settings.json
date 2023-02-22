@@ -4,13 +4,13 @@
     "python.linting.pylintEnabled": false,
     "python.linting.enabled": true,
     "editor.rulers": [
-        85
+        80
     ],
     "editor.formatOnSave": true,
     "python.formatting.provider": "black",
     "python.formatting.blackArgs": [
         "--line-length",
-        "85"
+        "80"
     ],
     "isort.args": [
         "--profile",

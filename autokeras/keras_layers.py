@@ -55,9 +55,9 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
     """Encode the categorical features to numerical features.
 
     # Arguments
-        encoding: A list of strings, which has the same number of elements as the
-            columns in the structured data. Each of the strings specifies the
-            encoding method used for the corresponding column. Use 'int' for
+        encoding: A list of strings, which has the same number of elements as
+            the columns in the structured data. Each of the strings specifies
+            the encoding method used for the corresponding column. Use 'int' for
             categorical columns and 'none' for numerical columns.
     """
 
@@ -88,7 +88,9 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
         input_nodes = nest.flatten(inputs)[0]
         split_inputs = tf.split(input_nodes, [1] * len(self.encoding), axis=-1)
         output_nodes = []
-        for input_node, encoding_layer in zip(split_inputs, self.encoding_layers):
+        for input_node, encoding_layer in zip(
+            split_inputs, self.encoding_layers
+        ):
             if encoding_layer is None:
                 number = data_utils.cast_to_float32(input_node)
                 # Replace NaN with 0.
@@ -142,8 +144,9 @@ class WarmUp(keras.optimizers.schedules.LearningRateSchedule):
 
     def __call__(self, step):
         with tf.name_scope(self.name or "WarmUp") as name:
-            # Implements polynomial warmup. i.e., if global_step < warmup_steps, the
-            # learning rate will be `global_step/num_warmup_steps * init_lr`.
+            # Implements polynomial warmup. i.e., if global_step < warmup_steps,
+            # the learning rate will be
+            # `global_step/num_warmup_steps * init_lr`.
             global_step_float = tf.cast(step, tf.float32)
             warmup_steps_float = tf.cast(self.warmup_steps, tf.float32)
             warmup_percent_done = global_step_float / warmup_steps_float
