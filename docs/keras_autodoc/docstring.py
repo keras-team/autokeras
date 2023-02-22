@@ -62,11 +62,15 @@ def get_google_style_sections(docstring):
 
     docstring = reinject_strings(docstring, code_blocks)
     for section_token, section in google_style_sections.items():
-        google_style_sections[section_token] = reinject_strings(section, code_blocks)
+        google_style_sections[section_token] = reinject_strings(
+            section, code_blocks
+        )
     return google_style_sections, docstring
 
 
-def to_markdown(google_style_section: str, types: dict = None, aliases=None) -> str:
+def to_markdown(
+    google_style_section: str, types: dict = None, aliases=None
+) -> str:
     end_first_line = google_style_section.find("\n")
     section_title = google_style_section[2:end_first_line]
     section_body = google_style_section[end_first_line + 1 :]
@@ -84,7 +88,9 @@ def to_markdown(google_style_section: str, types: dict = None, aliases=None) -> 
         return f"__{section_title}__\n"
 
 
-def format_as_markdown_list(section_body, types: dict = None, aliases: dict = None):
+def format_as_markdown_list(
+    section_body, types: dict = None, aliases: dict = None
+):
     section_body = re.sub(r"\n([^ ].*?):", r"\n- __\1__:", section_body)
     section_body = re.sub(r"^([^ ].*?):", r"- __\1__:", section_body)
 

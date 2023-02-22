@@ -82,8 +82,8 @@ class GreedyOracle(keras_tuner.Oracle):
     It groups the HyperParameters into several categories, namely, HyperGraph,
     Preprocessor, Architecture, and Optimization. The oracle tunes each group
     separately using random search. In each trial, it use a greedy strategy to
-    generate new values for one of the categories of HyperParameters and use the best
-    trial so far for the rest of the HyperParameters values.
+    generate new values for one of the categories of HyperParameters and use the
+    best trial so far for the rest of the HyperParameters values.
 
     # Arguments
         initial_hps: A list of dictionaries in the form of

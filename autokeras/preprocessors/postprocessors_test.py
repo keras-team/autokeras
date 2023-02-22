@@ -38,7 +38,9 @@ def test_sigmoid_deserialize_without_error():
     postprocessor = postprocessors.SigmoidPostprocessor()
     dataset = tf.data.Dataset.from_tensor_slices([1, 2]).batch(32)
 
-    postprocessor = preprocessors.deserialize(preprocessors.serialize(postprocessor))
+    postprocessor = preprocessors.deserialize(
+        preprocessors.serialize(postprocessor)
+    )
 
     assert postprocessor.transform(dataset) is dataset
 
@@ -62,6 +64,8 @@ def test_softmax_deserialize_without_error():
     postprocessor = postprocessors.SoftmaxPostprocessor()
     dataset = tf.data.Dataset.from_tensor_slices([1, 2]).batch(32)
 
-    postprocessor = preprocessors.deserialize(preprocessors.serialize(postprocessor))
+    postprocessor = preprocessors.deserialize(
+        preprocessors.serialize(postprocessor)
+    )
 
     assert postprocessor.transform(dataset) is dataset

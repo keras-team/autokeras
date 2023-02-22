@@ -43,7 +43,8 @@ def check_tf_version() -> None:
             "for AutoKeras to run. Currently, your TensorFlow version is \n"
             f"{tf.__version__}. Please upgrade with \n"
             "`$ pip install --upgrade tensorflow`. \n"
-            "You can use `pip freeze` to check afterwards that everything is ok.",
+            "You can use `pip freeze` to check afterwards "
+            "that everything is ok.",
             ImportWarning,
         )
 
@@ -55,16 +56,21 @@ def check_kt_version() -> None:
             "for AutoKeras to run. Currently, your Keras Tuner version is \n"
             f"{keras_tuner.__version__}. Please upgrade with \n"
             "`$ pip install --upgrade keras-tuner`. \n"
-            "You can use `pip freeze` to check afterwards that everything is ok.",
+            "You can use `pip freeze` to check afterwards "
+            "that everything is ok.",
             ImportWarning,
         )
 
 
 def contain_instance(instance_list, instance_type):
-    return any([isinstance(instance, instance_type) for instance in instance_list])
+    return any(
+        [isinstance(instance, instance_type) for instance in instance_list]
+    )
 
 
-def evaluate_with_adaptive_batch_size(model, batch_size, verbose=1, **fit_kwargs):
+def evaluate_with_adaptive_batch_size(
+    model, batch_size, verbose=1, **fit_kwargs
+):
     return run_with_adaptive_batch_size(
         batch_size,
         lambda x, validation_data, **kwargs: model.evaluate(
@@ -74,7 +80,9 @@ def evaluate_with_adaptive_batch_size(model, batch_size, verbose=1, **fit_kwargs
     )
 
 
-def predict_with_adaptive_batch_size(model, batch_size, verbose=1, **fit_kwargs):
+def predict_with_adaptive_batch_size(
+    model, batch_size, verbose=1, **fit_kwargs
+):
     return run_with_adaptive_batch_size(
         batch_size,
         lambda x, validation_data, **kwargs: model.predict(
@@ -142,7 +150,9 @@ def add_to_hp(hp, hps, name=None):
 
 def serialize_keras_object(obj):
     if hasattr(tf.keras.utils, "legacy"):
-        return tf.keras.utils.legacy.serialize_keras_object(obj)  # pragma: no cover
+        return tf.keras.utils.legacy.serialize_keras_object(
+            obj
+        )  # pragma: no cover
     else:
         return tf.keras.utils.serialize_keras_object(obj)
 
@@ -151,8 +161,10 @@ def deserialize_keras_object(
     config, module_objects=None, custom_objects=None, printable_module_name=None
 ):
     if hasattr(tf.keras.utils, "legacy"):
-        return tf.keras.utils.legacy.deserialize_keras_object(  # pragma: no cover
-            config, custom_objects, module_objects, printable_module_name
+        return (
+            tf.keras.utils.legacy.deserialize_keras_object(  # pragma: no cover
+                config, custom_objects, module_objects, printable_module_name
+            )
         )
     else:
         return tf.keras.utils.deserialize_keras_object(

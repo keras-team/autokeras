@@ -35,7 +35,9 @@ def test_clf_head_transform_df_to_dataset():
     adapter = output_adapters.ClassificationAdapter(name="a")
 
     y = adapter.adapt(
-        pd.DataFrame(test_utils.generate_one_hot_labels(dtype="np", num_classes=10)),
+        pd.DataFrame(
+            test_utils.generate_one_hot_labels(dtype="np", num_classes=10)
+        ),
         batch_size=32,
     )
 

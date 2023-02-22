@@ -73,7 +73,9 @@ def test_merge_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert test_utils.get_func_args(blocks.Merge.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.Merge.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_temporal_build_return_tensor():

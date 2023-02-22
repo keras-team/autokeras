@@ -156,7 +156,9 @@ https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable)
 format for the training data.
 """
 
-train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,))).batch(32)
+train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,))).batch(
+    32
+)
 test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,))).batch(32)
 
 clf = ak.TextClassifier(overwrite=True, max_trials=2)

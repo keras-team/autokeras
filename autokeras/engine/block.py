@@ -21,9 +21,9 @@ from autokeras.engine import node as node_module
 class Block(named_hypermodel.NamedHyperModel):
     """The base class for different Block.
 
-    The Block can be connected together to build the search space
-    for an AutoModel. Notably, many args in the __init__ function are defaults to
-    be a tunable variable when not specified by the user.
+    The Block can be connected together to build the search space for an
+    AutoModel. Notably, many args in the __init__ function are defaults to be a
+    tunable variable when not specified by the user.
 
     """
 
@@ -41,7 +41,8 @@ class Block(named_hypermodel.NamedHyperModel):
         """Functional API.
 
         # Arguments
-            inputs: A list of input node(s) or a single input node for the block.
+            inputs: A list of input node(s) or a single input node for the
+                block.
 
         # Returns
             list: A list of output node(s) of the Block.

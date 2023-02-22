@@ -8,7 +8,8 @@ from tensorflow.keras.models import load_model
 import autokeras as ak
 
 """
-You can easily export your model the best model found by AutoKeras as a Keras Model.
+You can easily export your model the best model found by AutoKeras as a Keras
+Model.
 
 The following example uses [ImageClassifier](/image_classifier) as an example.
 All the tasks and the [AutoModel](/auto_model/#automodel-class) has this

@@ -49,10 +49,14 @@ class DefaultHyperPreprocessor(hyper_preprocessor.HyperPreprocessor):
 
     def get_config(self):
         config = super().get_config()
-        config.update({"preprocessor": preprocessors.serialize(self.preprocessor)})
+        config.update(
+            {"preprocessor": preprocessors.serialize(self.preprocessor)}
+        )
         return config
 
     @classmethod
     def from_config(cls, config):
-        config["preprocessor"] = preprocessors.deserialize(config["preprocessor"])
+        config["preprocessor"] = preprocessors.deserialize(
+            config["preprocessor"]
+        )
         return super().from_config(config)

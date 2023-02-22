@@ -40,8 +40,8 @@ class Merge(block_module.Block):
     """Merge block to merge multiple nodes into one.
 
     # Arguments
-        merge_type: String. 'add' or 'concatenate'. If left unspecified, it will be
-            tuned automatically.
+        merge_type: String. 'add' or 'concatenate'. If left unspecified, it will
+            be tuned automatically.
     """
 
     def __init__(self, merge_type: Optional[str] = None, **kwargs):
@@ -126,7 +126,9 @@ class Reduction(block_module.Block):
         if self.reduction_type is not None:
             return self._build_block(hp, output_node, self.reduction_type)
 
-        reduction_type = hp.Choice(REDUCTION_TYPE, [FLATTEN, GLOBAL_MAX, GLOBAL_AVG])
+        reduction_type = hp.Choice(
+            REDUCTION_TYPE, [FLATTEN, GLOBAL_MAX, GLOBAL_AVG]
+        )
         with hp.conditional_scope(REDUCTION_TYPE, [reduction_type]):
             return self._build_block(hp, output_node, reduction_type)
 
@@ -152,14 +154,18 @@ class SpatialReduction(Reduction):
         super().__init__(reduction_type, **kwargs)
 
     def global_max(self, input_node):
-        return layer_utils.get_global_max_pooling(input_node.shape)()(input_node)
+        return layer_utils.get_global_max_pooling(input_node.shape)()(
+            input_node
+        )
 
     def global_avg(self, input_node):
-        return layer_utils.get_global_average_pooling(input_node.shape)()(input_node)
+        return layer_utils.get_global_average_pooling(input_node.shape)()(
+            input_node
+        )
 
 
 class TemporalReduction(Reduction):
-    """Reduce the dimension of a temporal tensor, e.g. output of RNN, to a vector.
+    """Reduce the dim of a temporal tensor, e.g. output of RNN, to a vector.
 
     # Arguments
         reduction_type: String. 'flatten', 'global_max' or 'global_avg'. If left

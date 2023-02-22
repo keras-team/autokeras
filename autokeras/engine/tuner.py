@@ -32,13 +32,15 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
     Different from KerasTuner's Tuner class. AutoTuner's not only tunes the
     Hypermodel which can be directly built into a Keras model, but also the
-    preprocessors. Therefore, a HyperGraph stores the overall search space containing
-    both the Preprocessors and Hypermodel. For every trial, the HyperGraph builds the
-    PreprocessGraph and KerasGraph with the provided HyperParameters.
+    preprocessors. Therefore, a HyperGraph stores the overall search space
+    containing both the Preprocessors and Hypermodel. For every trial, the
+    HyperGraph builds the PreprocessGraph and KerasGraph with the provided
+    HyperParameters.
 
-    The AutoTuner uses EarlyStopping for acceleration during the search and fully
-    trains the model with full epochs and with both training and validation data.
-    The fully trained model is the best model to be used by AutoModel.
+    The AutoTuner uses EarlyStopping for acceleration during the search and
+    fully trains the model with full epochs and with both training and
+    validation data.  The fully trained model is the best model to be used by
+    AutoModel.
 
     # Arguments
         oracle: keras_tuner Oracle.
@@ -55,11 +57,14 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         self.hyper_pipeline = None
 
     def _populate_initial_space(self):
-        # Override the function to prevent building the model during initialization.
+        # Override the function to prevent building the model during
+        # initialization.
         return
 
     def get_best_model(self):
-        with keras_tuner.engine.tuner.maybe_distribute(self.distribution_strategy):
+        with keras_tuner.engine.tuner.maybe_distribute(
+            self.distribution_strategy
+        ):
             model = keras.models.load_model(self.best_model_path)
         return model
 
@@ -150,9 +155,10 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
     ):
         """Search for the best HyperParameters.
 
-        If there is not early-stopping in the callbacks, the early-stopping callback
-        is injected to accelerate the search process. At the end of the search, the
-        best model will be fully trained with the specified number of epochs.
+        If there is not early-stopping in the callbacks, the early-stopping
+        callback is injected to accelerate the search process. At the end of the
+        search, the best model will be fully trained with the specified number
+        of epochs.
 
         # Arguments
             callbacks: A list of callback functions. Defaults to None.
@@ -171,7 +177,9 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         if epochs is None:
             epochs_provided = False
             epochs = 1000
-            if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
+            if not utils.contain_instance(
+                callbacks, tf_callbacks.EarlyStopping
+            ):
                 callbacks.append(
                     tf_callbacks.EarlyStopping(patience=10, min_delta=1e-4)
                 )
@@ -191,7 +199,10 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         self._try_build(hp)
         self.oracle.update_space(hp)
         super().search(
-            epochs=epochs, callbacks=new_callbacks, verbose=verbose, **fit_kwargs
+            epochs=epochs,
+            callbacks=new_callbacks,
+            verbose=verbose,
+            **fit_kwargs
         )
 
         # Train the best model use validation data.
@@ -201,7 +212,9 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
             # Remove early-stopping since no validation data.
             # Remove early-stopping since it is inserted.
-            copied_fit_kwargs["callbacks"] = self._remove_early_stopping(callbacks)
+            copied_fit_kwargs["callbacks"] = self._remove_early_stopping(
+                callbacks
+            )
 
             # Decide the number of epochs.
             copied_fit_kwargs["epochs"] = epochs
@@ -261,9 +274,11 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
     def final_fit(self, **kwargs):
         best_trial = self.oracle.get_best_trials(1)[0]
         best_hp = best_trial.hyperparameters
-        pipeline, kwargs["x"], kwargs["validation_data"] = self._prepare_model_build(
-            best_hp, **kwargs
-        )
+        (
+            pipeline,
+            kwargs["x"],
+            kwargs["validation_data"],
+        ) = self._prepare_model_build(best_hp, **kwargs)
 
         model = self._build_best_model()
         self.adapt(model, kwargs["x"])

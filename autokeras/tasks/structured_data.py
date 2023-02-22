@@ -49,7 +49,9 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
                 if column_type not in ["categorical", "numerical"]:
                     raise ValueError(
                         'column_types should be either "categorical" '
-                        'or "numerical", but got {name}'.format(name=column_type)
+                        'or "numerical", but got {name}'.format(
+                            name=column_type
+                        )
                     )
 
     def check_in_fit(self, x):
@@ -91,38 +93,38 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
                 Training data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the training data.
             y: String, numpy.ndarray, or tensorflow.Dataset. Training data y.
-                If the data is from a csv file, it should be a string, which is the
-                name of the target column. Otherwise, it can be single-column or
-                multi-column. The values should all be numerical.
-            epochs: Int. The number of epochs to train each model during the search.
-                If unspecified, we would use epochs equal to 1000 and early stopping
-                with patience equal to 30.
+                If the data is from a csv file, it should be a string, which is
+                the name of the target column. Otherwise, it can be
+                single-column or multi-column. The values should all be
+                numerical.
+            epochs: Int. The number of epochs to train each model during the
+                search. If unspecified, we would use epochs equal to 1000 and
+                early stopping with patience equal to 30.
             callbacks: List of Keras callbacks to apply during training and
                 validation.
-            validation_split: Float between 0 and 1. Defaults to 0.2.
-                Fraction of the training data to be used as validation data.
-                The model will set apart this fraction of the training data,
-                will not train on it, and will evaluate
-                the loss and any model metrics
-                on this data at the end of each epoch.
-                The validation data is selected from the last samples
-                in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a dataset.
-                The best model found would be fit on the entire dataset including the
-                validation data.
-            validation_data: Data on which to evaluate the loss and any model metrics
-                at the end of each epoch. The model will not be trained on this data.
-                `validation_data` will override `validation_split`. The type of the
-                validation data should be the same as the training data.
-                The best model found would be fit on the training dataset without the
-                validation data.
+            validation_split: Float between 0 and 1. Defaults to 0.2. Fraction
+                of the training data to be used as validation data. The model
+                will set apart this fraction of the training data, will not
+                train on it, and will evaluate the loss and any model metrics on
+                this data at the end of each epoch. The validation data is
+                selected from the last samples in the `x` and `y` data provided,
+                before shuffling. This argument is not supported when `x` is a
+                dataset. The best model found would be fit on the entire
+                dataset including the validation data.
+            validation_data: Data on which to evaluate the loss and any model
+                metrics at the end of each epoch. The model will not be trained
+                on this data. `validation_data` will override
+                `validation_split`. The type of the validation data should be
+                the same as the training data. The best model found would be
+                fit on the training dataset without the validation data.
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         # Returns
             history: A Keras History object corresponding to the best model.
                 Its History.history attribute is a record of training
                 loss values and metrics values at successive epochs, as well as
-                validation loss values and validation metrics values (if applicable).
+                validation loss values and validation metrics values (if
+                applicable).
         """
         # x is file path of training data
         if isinstance(x, str):
@@ -172,15 +174,15 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
                 Testing data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the testing data.
             y: String, numpy.ndarray, or tensorflow.Dataset. Testing data y.
-                If the data is from a csv file, it should be a string corresponding
-                to the label column.
+                If the data is from a csv file, it should be a string
+                corresponding to the label column.
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
         # Returns
-            Scalar test loss (if the model has a single output and no metrics) or
-            list of scalars (if the model has multiple outputs and/or metrics).
-            The attribute model.metrics_names will give you the display labels for
-            the scalar outputs.
+            Scalar test loss (if the model has a single output and no metrics)
+            or list of scalars (if the model has multiple outputs and/or
+            metrics). The attribute model.metrics_names will give you the
+            display labels for the scalar outputs.
         """
         if isinstance(x, str):
             x, y = self._read_from_csv(x, y)
@@ -200,15 +202,15 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
-            length of the list should be equal to the number of columns of the data
-            excluding the target column. Defaults to None. If None, it will obtained
-            from the header of the csv file or the pandas.DataFrame.
-        column_types: Dict. The keys are the column names. The values should either
-            be 'numerical' or 'categorical', indicating the type of that column.
-            Defaults to None. If not None, the column_names need to be specified.
-            If None, it will be inferred from the data.
-        num_classes: Int. Defaults to None. If None, it will be inferred from the
-            data.
+            length of the list should be equal to the number of columns of the
+            data excluding the target column. Defaults to None. If None, it will
+            obtained from the header of the csv file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should
+            either be 'numerical' or 'categorical', indicating the type of that
+            column.  Defaults to None. If not None, the column_names need to be
+            specified.  If None, it will be inferred from the data.
+        num_classes: Int. Defaults to None. If None, it will be inferred from
+            the data.
         multi_label: Boolean. Defaults to False.
         loss: A Keras loss function. Defaults to use 'binary_crossentropy' or
             'categorical_crossentropy' based on the number of classes.
@@ -216,17 +218,18 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
         project_name: String. The name of the AutoModel. Defaults to
             'structured_data_classifier'.
         max_trials: Int. The maximum number of different Keras Models to try.
-            The search may finish before reaching the max_trials. Defaults to 100.
-        directory: String. The path to a directory for storing the search outputs.
-            Defaults to None, which would create a folder with the name of the
-            AutoModel in the current directory.
+            The search may finish before reaching the max_trials. Defaults to
+            100.
+        directory: String. The path to a directory for storing the search
+            outputs. Defaults to None, which would create a folder with the
+            name of the AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize. Defaults to 'val_accuracy'.
         tuner: String or subclass of AutoTuner. If string, it should be one of
-            'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a subclass
-            of AutoTuner. If left unspecified, it uses a task specific tuner, which
-            first evaluates the most commonly used models for the task before
-            exploring other models.
+            'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a
+            subclass of AutoTuner. If left unspecified, it uses a task specific
+            tuner, which first evaluates the most commonly used models for the
+            task before exploring other models.
         overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
@@ -293,35 +296,36 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                 Training data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the training data.
             y: String, numpy.ndarray, or tensorflow.Dataset. Training data y.
-                If the data is from a csv file, it should be a string, which is the
-                name of the target column. Otherwise, It can be raw labels, one-hot
-                encoded if more than two classes, or binary encoded for binary
-                classification.
-            epochs: Int. The number of epochs to train each model during the search.
-                If unspecified, we would use epochs equal to 1000 and early stopping
-                with patience equal to 30.
+                If the data is from a csv file, it should be a string, which is
+                the name of the target column. Otherwise, It can be raw labels,
+                one-hot encoded if more than two classes, or binary encoded for
+                binary classification.
+            epochs: Int. The number of epochs to train each model during the
+                search. If unspecified, we would use epochs equal to 1000 and
+                early stopping with patience equal to 30.
             callbacks: List of Keras callbacks to apply during training and
                 validation.
-            validation_split: Float between 0 and 1. Defaults to 0.2.
-                Fraction of the training data to be used as validation data.
-                The model will set apart this fraction of the training data,
-                will not train on it, and will evaluate
-                the loss and any model metrics
-                on this data at the end of each epoch.
-                The validation data is selected from the last samples
-                in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a dataset.
-            validation_data: Data on which to evaluate the loss and any model metrics
-                at the end of each epoch. The model will not be trained on this data.
-                `validation_data` will override `validation_split`. The type of the
-                validation data should be the same as the training data.
+            validation_split: Float between 0 and 1. Defaults to 0.2. Fraction
+                of the training data to be used as validation data.  The model
+                will set apart this fraction of the training data, will not
+                train on it, and will evaluate the loss and any model metrics on
+                this data at the end of each epoch.  The validation data is
+                selected from the last samples in the `x` and `y` data provided,
+                before shuffling. This argument is not supported when `x` is a
+                dataset.
+            validation_data: Data on which to evaluate the loss and any model
+                metrics at the end of each epoch. The model will not be trained
+                on this data.  `validation_data` will override
+                `validation_split`. The type of the validation data should be
+                the same as the training data.
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         # Returns
             history: A Keras History object corresponding to the best model.
                 Its History.history attribute is a record of training
                 loss values and metrics values at successive epochs, as well as
-                validation loss values and validation metrics values (if applicable).
+                validation loss values and validation metrics values (if
+                applicable).
         """
         history = super().fit(
             x=x,
@@ -340,13 +344,13 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
-            length of the list should be equal to the number of columns of the data
-            excluding the target column. Defaults to None. If None, it will obtained
-            from the header of the csv file or the pandas.DataFrame.
-        column_types: Dict. The keys are the column names. The values should either
-            be 'numerical' or 'categorical', indicating the type of that column.
-            Defaults to None. If not None, the column_names need to be specified.
-            If None, it will be inferred from the data.
+            length of the list should be equal to the number of columns of the
+            data excluding the target column. Defaults to None. If None, it will
+            obtained from the header of the csv file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should
+            either be 'numerical' or 'categorical', indicating the type of that
+            column. Defaults to None. If not None, the column_names need to be
+            specified. If None, it will be inferred from the data.
         output_dim: Int. The number of output dimensions. Defaults to None.
             If None, it will be inferred from the data.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
@@ -354,17 +358,18 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
         project_name: String. The name of the AutoModel. Defaults to
             'structured_data_regressor'.
         max_trials: Int. The maximum number of different Keras Models to try.
-            The search may finish before reaching the max_trials. Defaults to 100.
-        directory: String. The path to a directory for storing the search outputs.
-            Defaults to None, which would create a folder with the name of the
-            AutoModel in the current directory.
+            The search may finish before reaching the max_trials. Defaults to
+            100.
+        directory: String. The path to a directory for storing the search
+            outputs. Defaults to None, which would create a folder with the
+            name of the AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         tuner: String or subclass of AutoTuner. If string, it should be one of
-            'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a subclass
-            of AutoTuner. If left unspecified, it uses a task specific tuner, which
-            first evaluates the most commonly used models for the task before
-            exploring other models.
+            'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a
+            subclass of AutoTuner. If left unspecified, it uses a task specific
+            tuner, which first evaluates the most commonly used models for the
+            task before exploring other models.
         overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
