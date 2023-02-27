@@ -1,4 +1,4 @@
-isort --sl --profile=black -c .
+isort -c .
 if ! [ $? -eq 0 ]
 then
   echo "Please run \"sh shell/format.sh\" to format the code."
@@ -10,7 +10,7 @@ then
   echo "Please fix the code style issue."
   exit 1
 fi
-black --check --line-length 85 .
+black --check .
 if ! [ $? -eq 0 ]
 then
   echo "Please run \"sh shell/format.sh\" to format the code."

@@ -72,7 +72,9 @@ def test_structured_data_get_col_names_from_df(fit, tmp_path):
 
 @mock.patch("autokeras.AutoModel.fit")
 @mock.patch("autokeras.AutoModel.evaluate")
-def test_structured_clf_evaluate_call_automodel_evaluate(evaluate, fit, tmp_path):
+def test_structured_clf_evaluate_call_automodel_evaluate(
+    evaluate, fit, tmp_path
+):
     auto_model = ak.StructuredDataClassifier(
         directory=tmp_path, seed=test_utils.SEED
     )
@@ -85,7 +87,9 @@ def test_structured_clf_evaluate_call_automodel_evaluate(evaluate, fit, tmp_path
 
 @mock.patch("autokeras.AutoModel.fit")
 @mock.patch("autokeras.AutoModel.predict")
-def test_structured_clf_predict_csv_call_automodel_predict(predict, fit, tmp_path):
+def test_structured_clf_predict_csv_call_automodel_predict(
+    predict, fit, tmp_path
+):
     auto_model = ak.StructuredDataClassifier(
         directory=tmp_path, seed=test_utils.SEED
     )
@@ -112,7 +116,9 @@ def test_structured_clf_fit_call_auto_model_fit(fit, tmp_path):
 
 @mock.patch("autokeras.AutoModel.fit")
 def test_structured_reg_fit_call_auto_model_fit(fit, tmp_path):
-    auto_model = ak.StructuredDataRegressor(directory=tmp_path, seed=test_utils.SEED)
+    auto_model = ak.StructuredDataRegressor(
+        directory=tmp_path, seed=test_utils.SEED
+    )
 
     auto_model.fit(
         x=pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)[:100],

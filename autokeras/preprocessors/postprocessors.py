@@ -29,7 +29,8 @@ class SigmoidPostprocessor(PostProcessor):
         """Transform probabilities to zeros and ones.
 
         # Arguments
-            data: numpy.ndarray. The output probabilities of the classification head.
+            data: numpy.ndarray. The output probabilities of the classification
+                head.
 
         # Returns
             numpy.ndarray. The zeros and ones predictions.
@@ -46,7 +47,8 @@ class SoftmaxPostprocessor(PostProcessor):
         """Transform probabilities to zeros and ones.
 
         # Arguments
-            data: numpy.ndarray. The output probabilities of the classification head.
+            data: numpy.ndarray. The output probabilities of the classification
+                head.
 
         # Returns
             numpy.ndarray. The zeros and ones predictions.

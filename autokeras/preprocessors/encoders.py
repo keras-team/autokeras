@@ -75,7 +75,8 @@ class OneHotEncoder(Encoder):
         """Transform probabilities back to labels.
 
         # Arguments
-            data: numpy.ndarray. The output probabilities of the classification head.
+            data: numpy.ndarray. The output probabilities of the classification
+                head.
 
         # Returns
             numpy.ndarray. The original labels.
@@ -110,7 +111,8 @@ class LabelEncoder(Encoder):
         """Transform probabilities back to labels.
 
         # Arguments
-            data: numpy.ndarray. The output probabilities of the classification head.
+            data: numpy.ndarray. The output probabilities of the classification
+                head.
 
         # Returns
             numpy.ndarray. The original labels.

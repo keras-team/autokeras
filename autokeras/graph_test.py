@@ -47,7 +47,9 @@ def test_hyper_graph_cycle():
     head.outputs = output_node1
 
     with pytest.raises(ValueError) as info:
-        graph_module.Graph(inputs=[input_node1, input_node2], outputs=output_node)
+        graph_module.Graph(
+            inputs=[input_node1, input_node2], outputs=output_node
+        )
     assert "The network has a cycle." in str(info.value)
 
 
@@ -150,7 +152,10 @@ def test_save_custom_metrics_loss(tmp_path):
     graph.save(path)
     new_graph = graph_module.load_graph(
         path,
-        custom_objects={"custom_metric": custom_metric, "custom_loss": custom_loss},
+        custom_objects={
+            "custom_metric": custom_metric,
+            "custom_loss": custom_loss,
+        },
     )
     assert new_graph.blocks[0].metrics[1](0, 0) == 1
     assert new_graph.blocks[0].loss(3, 2) == 1

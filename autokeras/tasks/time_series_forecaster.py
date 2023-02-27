@@ -29,7 +29,9 @@ from autokeras.tuners import greedy
 from autokeras.utils import types
 
 
-class SupervisedTimeseriesDataPipeline(structured_data.BaseStructuredDataPipeline):
+class SupervisedTimeseriesDataPipeline(
+    structured_data.BaseStructuredDataPipeline
+):
     def __init__(
         self,
         outputs,
@@ -41,7 +43,9 @@ class SupervisedTimeseriesDataPipeline(structured_data.BaseStructuredDataPipelin
         **kwargs
     ):
         inputs = input_module.TimeseriesInput(
-            lookback=lookback, column_names=column_names, column_types=column_types
+            lookback=lookback,
+            column_names=column_names,
+            column_types=column_types,
         )
         super().__init__(inputs=inputs, outputs=outputs, **kwargs)
         self.predict_from = predict_from
@@ -118,19 +122,21 @@ class SupervisedTimeseriesDataPipeline(structured_data.BaseStructuredDataPipelin
                 Testing data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the testing data.
             y: String, numpy.ndarray, or tensorflow.Dataset. Testing data y.
-                If the data is from a csv file, it should be a string corresponding
-                to the label column.
+                If the data is from a csv file, it should be a string
+                corresponding to the label column.
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
         # Returns
-            Scalar test loss (if the model has a single output and no metrics) or
-            list of scalars (if the model has multiple outputs and/or metrics).
-            The attribute model.metrics_names will give you the display labels for
-            the scalar outputs.
+            Scalar test loss (if the model has a single output and no metrics)
+            or list of scalars (if the model has multiple outputs and/or
+            metrics).  The attribute model.metrics_names will give you the
+            display labels for the scalar outputs.
         """
         if isinstance(x, str):
             x, y = self._read_from_csv(x, y)
-        return super().evaluate(x=x[: len(y)], y=y[self.lookback - 1 :], **kwargs)
+        return super().evaluate(
+            x=x[: len(y)], y=y[self.lookback - 1 :], **kwargs
+        )
 
 
 class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
@@ -138,43 +144,44 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
-            length of the list should be equal to the number of columns of the data.
-            Defaults to None. If None, it will be obtained from the header of the csv
-            file or the pandas.DataFrame.
-        column_types: Dict. The keys are the column names. The values should either
-            be 'numerical' or 'categorical', indicating the type of that column.
-            Defaults to None. If not None, the column_names need to be specified.
-            If None, it will be inferred from the data.
-        lookback: Int. The range of history steps to consider for each prediction.
-            For example, if lookback=n, the data in the range of [i - n, i - 1]
-            is used to predict the value of step i. If unspecified, it will be tuned
-            automatically.
-        predict_from: Int. The starting point of the forecast for each sample (in
-            number of steps) after the last time step in the input. If N is the last
-            step in the input, then the first step of the predicted output will be
-            N + predict_from. Defaults to 1 (which corresponds to starting the
-            forecast immediately after the last step in the input).
-        predict_until: Int. The end point of the forecast for each sample (in number
-            of steps) after the last time step in the input. If N is the last step in
-            the input, then the last step of the predicted output will be
-            N + predict_until. If unspecified, it will predict till end of dataset.
-            Defaults to None.
+            length of the list should be equal to the number of columns of the
+            data.  Defaults to None. If None, it will be obtained from the
+            header of the csv file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should
+            either be 'numerical' or 'categorical', indicating the type of that
+            column. Defaults to None. If not None, the column_names need to be
+            specified.  If None, it will be inferred from the data.
+        lookback: Int. The range of history steps to consider for each
+            prediction. For example, if lookback=n, the data in the range of [i
+            - n, i - 1] is used to predict the value of step i. If unspecified,
+            it will be tuned automatically.
+        predict_from: Int. The starting point of the forecast for each sample
+            (in number of steps) after the last time step in the input. If N is
+            the last step in the input, then the first step of the predicted
+            output will be N + predict_from. Defaults to 1 (which corresponds to
+            starting the forecast immediately after the last step in the input).
+        predict_until: Int. The end point of the forecast for each sample (in
+            number of steps) after the last time step in the input. If N is the
+            last step in the input, then the last step of the predicted output
+            will be N + predict_until. If unspecified, it will predict till end
+            of dataset. Defaults to None.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         project_name: String. The name of the AutoModel. Defaults to
             'time_series_forecaster'.
         max_trials: Int. The maximum number of different Keras Models to try.
-            The search may finish before reaching the max_trials. Defaults to 100.
-        directory: String. The path to a directory for storing the search outputs.
-            Defaults to None, which would create a folder with the name of the
-            AutoModel in the current directory.
+            The search may finish before reaching the max_trials. Defaults to
+            100.
+        directory: String. The path to a directory for storing the search
+            outputs. Defaults to None, which would create a folder with the
+            name of the AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         tuner: String or subclass of AutoTuner. If string, it should be one of
-            'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a subclass
-            of AutoTuner. If left unspecified, it uses a task specific tuner, which
-            first evaluates the most commonly used models for the task before
-            exploring other models.
+            'greedy', 'bayesian', 'hyperband' or 'random'. It can also be a
+            subclass of AutoTuner. If left unspecified, it uses a task specific
+            tuner, which first evaluates the most commonly used models for the
+            task before exploring other models.
         overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
             project of the same name if one is found. Otherwise, overwrites the
             project.
@@ -230,7 +237,12 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
         self.predict_until = predict_until
 
     def fit(
-        self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
+        self,
+        x=None,
+        y=None,
+        validation_split=0.2,
+        validation_data=None,
+        **kwargs
     ):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -242,26 +254,24 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
                 tensorflow.Dataset. Training data y.
                 If the data is from a csv file, it should be a list of string(s)
                 specifying the name(s) of the column(s) need to be forecasted.
-                If it is multivariate forecasting, y should be a list of more than
-                one column names. If it is univariate forecasting, y should be a
-                string or a list of one string.
-            validation_split: Float between 0 and 1. Defaults to 0.2.
-                Fraction of the training data to be used as validation data.
-                The model will set apart this fraction of the training data,
-                will not train on it, and will evaluate
-                the loss and any model metrics
-                on this data at the end of each epoch.
-                The validation data is selected from the last samples
-                in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a dataset.
-                The best model found would be fit on the entire dataset including the
-                validation data.
-            validation_data: Data on which to evaluate the loss and any model metrics
-                at the end of each epoch. The model will not be trained on this data.
-                `validation_data` will override `validation_split`. The type of the
-                validation data should be the same as the training data.
-                The best model found would be fit on the training dataset without the
-                validation data.
+                If it is multivariate forecasting, y should be a list of more
+                than one column names. If it is univariate forecasting, y should
+                be a string or a list of one string.
+            validation_split: Float between 0 and 1. Defaults to 0.2. Fraction
+                of the training data to be used as validation data. The model
+                will set apart this fraction of the training data, will not
+                train on it, and will evaluate the loss and any model metrics on
+                this data at the end of each epoch.  The validation data is
+                selected from the last samples in the `x` and `y` data provided,
+                before shuffling. This argument is not supported when `x` is a
+                dataset.  The best model found would be fit on the entire
+                dataset including the validation data.
+            validation_data: Data on which to evaluate the loss and any model
+                metrics at the end of each epoch. The model will not be trained
+                on this data. `validation_data` will override
+                `validation_split`. The type of the validation data should be
+                the same as the training data. The best model found would be
+                fit on the training dataset without the validation data.
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         """
@@ -289,7 +299,12 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
         return super().predict(x=x, **kwargs)
 
     def fit_and_predict(
-        self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
+        self,
+        x=None,
+        y=None,
+        validation_split=0.2,
+        validation_data=None,
+        **kwargs
     ):
         """Search for the best model and then predict for remaining data points.
 
@@ -298,29 +313,27 @@ class TimeseriesForecaster(SupervisedTimeseriesDataPipeline):
                 Training data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the training data.
             y: String, a list of string(s), numpy.ndarray, pandas.DataFrame or
-                tensorflow.Dataset. Training data y.
-                If the data is from a csv file, it should be a list of string(s)
-                specifying the name(s) of the column(s) need to be forecasted.
-                If it is multivariate forecasting, y should be a list of more than
-                one column names. If it is univariate forecasting, y should be a
-                string or a list of one string.
-            validation_split: Float between 0 and 1. Defaults to 0.2.
-                Fraction of the training data to be used as validation data.
-                The model will set apart this fraction of the training data,
-                will not train on it, and will evaluate
-                the loss and any model metrics
-                on this data at the end of each epoch.
-                The validation data is selected from the last samples
-                in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a dataset.
-                The best model found would be fit on the entire dataset including the
-                validation data.
-            validation_data: Data on which to evaluate the loss and any model metrics
-                at the end of each epoch. The model will not be trained on this data.
-                `validation_data` will override `validation_split`. The type of the
-                validation data should be the same as the training data.
-                The best model found would be fit on the training dataset without the
-                validation data.
+                tensorflow.Dataset. Training data y. If the data is from a csv
+                file, it should be a list of string(s) specifying the name(s) of
+                the column(s) need to be forecasted. If it is multivariate
+                forecasting, y should be a list of more than one column names.
+                If it is univariate forecasting, y should be a string or a list
+                of one string.
+            validation_split: Float between 0 and 1. Defaults to 0.2. Fraction
+                of the training data to be used as validation data. The model
+                will set apart this fraction of the training data, will not
+                train on it, and will evaluate the loss and any model metrics on
+                this data at the end of each epoch. The validation data is
+                selected from the last samples in the `x` and `y` data provided,
+                before shuffling. This argument is not supported when `x` is a
+                dataset. The best model found would be fit on the entire
+                dataset including the validation data.
+            validation_data: Data on which to evaluate the loss and any model
+                metrics at the end of each epoch. The model will not be trained
+                on this data. `validation_data` will override
+                `validation_split`. The type of the validation data should be
+                the same as the training data. The best model found would be
+                fit on the training dataset without the validation data.
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         """
@@ -340,36 +353,37 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
-            length of the list should be equal to the number of columns of the data.
-            Defaults to None. If None, it will be obtained from the header of the csv
-            file or the pandas.DataFrame.
-        column_types: Dict. The keys are the column names. The values should either
-            be 'numerical' or 'categorical', indicating the type of that column.
-            Defaults to None. If not None, the column_names need to be specified.
-            If None, it will be inferred from the data.
-        lookback: Int. The range of history steps to consider for each prediction.
-            For example, if lookback=n, the data in the range of [i - n, i - 1]
-            is used to predict the value of step i. If unspecified, it will be tuned
-            automatically.
-        predict_from: Int. The starting point of the forecast for each sample (in
-            number of steps) after the last time step in the input. If N is the last
-            step in the input, then the first step of the predicted output will be
-            N + predict_from. Defaults to 1 (which corresponds to starting the
-            forecast immediately after the last step in the input).
-        predict_until: Int. The end point of the forecast for each sample (in number
-            of steps) after the last time step in the input. If N is the last step in
-            the input, then the last step of the predicted output will be
-            N + predict_until. If unspecified, it will predict till end of dataset.
-            Defaults to None.
+            length of the list should be equal to the number of columns of the
+            data. Defaults to None. If None, it will be obtained from the
+            header of the csv file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should
+            either be 'numerical' or 'categorical', indicating the type of that
+            column. Defaults to None. If not None, the column_names need to be
+            specified.  If None, it will be inferred from the data.
+        lookback: Int. The range of history steps to consider for each
+            prediction. For example, if lookback=n, the data in the range of [i
+            - n, i - 1] is used to predict the value of step i. If unspecified,
+            it will be tuned automatically.
+        predict_from: Int. The starting point of the forecast for each sample
+            (in number of steps) after the last time step in the input. If N is
+            the last step in the input, then the first step of the predicted
+            output will be N + predict_from. Defaults to 1 (which corresponds to
+            starting the forecast immediately after the last step in the input).
+        predict_until: Int. The end point of the forecast for each sample (in
+            number of steps) after the last time step in the input. If N is the
+            last step in the input, then the last step of the predicted output
+            will be N + predict_until. If unspecified, it will predict till end
+            of dataset.  Defaults to None.
         loss: A Keras loss function. Defaults to use 'mean_squared_error'.
         metrics: A list of Keras metrics. Defaults to use 'mean_squared_error'.
         project_name: String. The name of the AutoModel. Defaults to
             'time_series_forecaster'.
         max_trials: Int. The maximum number of different Keras Models to try.
-            The search may finish before reaching the max_trials. Defaults to 100.
-        directory: String. The path to a directory for storing the search outputs.
-            Defaults to None, which would create a folder with the name of the
-            AutoModel in the current directory.
+            The search may finish before reaching the max_trials. Defaults to
+            100.
+        directory: String. The path to a directory for storing the search
+            outputs. Defaults to None, which would create a folder with the
+            name of the AutoModel in the current directory.
         objective: String. Name of model metric to minimize
             or maximize, e.g. 'val_accuracy'. Defaults to 'val_loss'.
         overwrite: Boolean. Defaults to `False`. If `False`, reloads an existing
@@ -403,7 +417,12 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
         raise NotImplementedError
 
     def fit(
-        self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
+        self,
+        x=None,
+        y=None,
+        validation_split=0.2,
+        validation_data=None,
+        **kwargs
     ):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -412,29 +431,27 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
                 Training data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the training data.
             y: String, a list of string(s), numpy.ndarray, pandas.DataFrame or
-                tensorflow.Dataset. Training data y.
-                If the data is from a csv file, it should be a list of string(s)
-                specifying the name(s) of the column(s) need to be forecasted.
-                If it is multivariate forecasting, y should be a list of more than
-                one column names. If it is univariate forecasting, y should be a
-                string or a list of one string.
-            validation_split: Float between 0 and 1. Defaults to 0.2.
-                Fraction of the training data to be used as validation data.
-                The model will set apart this fraction of the training data,
-                will not train on it, and will evaluate
-                the loss and any model metrics
-                on this data at the end of each epoch.
-                The validation data is selected from the last samples
-                in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a dataset.
-                The best model found would be fit on the entire dataset including the
-                validation data.
-            validation_data: Data on which to evaluate the loss and any model metrics
-                at the end of each epoch. The model will not be trained on this data.
-                `validation_data` will override `validation_split`. The type of the
-                validation data should be the same as the training data.
-                The best model found would be fit on the training dataset without the
-                validation data.
+                tensorflow.Dataset. Training data y. If the data is from a csv
+                file, it should be a list of string(s) specifying the name(s) of
+                the column(s) need to be forecasted. If it is multivariate
+                forecasting, y should be a list of more than one column names.
+                If it is univariate forecasting, y should be a string or a list
+                of one string.
+            validation_split: Float between 0 and 1. Defaults to 0.2. Fraction
+                of the training data to be used as validation data. The model
+                will set apart this fraction of the training data, will not
+                train on it, and will evaluate the loss and any model metrics on
+                this data at the end of each epoch. The validation data is
+                selected from the last samples in the `x` and `y` data provided,
+                before shuffling. This argument is not supported when `x` is a
+                dataset. The best model found would be fit on the entire
+                dataset including the validation data.
+            validation_data: Data on which to evaluate the loss and any model
+                metrics at the end of each epoch. The model will not be trained
+                on this data. `validation_data` will override
+                `validation_split`. The type of the validation data should be
+                the same as the training data. The best model found would be
+                fit on the training dataset without the validation data.
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         """
@@ -445,10 +462,10 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
 
         # Arguments
             x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
-                Testing data x, it should also contain the training data used as,
-                subsequent predictions depend on them. If the data is from a csv
-                file, it should be a string specifying the path of the csv file
-                of the testing data.
+                Testing data x, it should also contain the training data used
+                as, subsequent predictions depend on them. If the data is from a
+                csv file, it should be a string specifying the path of the csv
+                file of the testing data.
             **kwargs: Any arguments supported by keras.Model.predict.
 
         # Returns
@@ -458,7 +475,12 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
         raise NotImplementedError
 
     def fit_and_predict(
-        self, x=None, y=None, validation_split=0.2, validation_data=None, **kwargs
+        self,
+        x=None,
+        y=None,
+        validation_split=0.2,
+        validation_data=None,
+        **kwargs
     ):
         """Search for the best model and then predict for remaining data points.
 
@@ -468,29 +490,27 @@ class TimeseriesClassifier(SupervisedTimeseriesDataPipeline):
                 should be a string specifying the path of the csv file of the
                 training data.
             y: String, a list of string(s), numpy.ndarray, pandas.DataFrame or
-                tensorflow.Dataset. Training data y.
-                If the data is from a csv file, it should be a list of string(s)
-                specifying the name(s) of the column(s) need to be forecasted.
-                If it is multivariate forecasting, y should be a list of more than
-                one column names. If it is univariate forecasting, y should be a
-                string or a list of one string.
-            validation_split: Float between 0 and 1. Defaults to 0.2.
-                Fraction of the training data to be used as validation data.
-                The model will set apart this fraction of the training data,
-                will not train on it, and will evaluate
-                the loss and any model metrics
-                on this data at the end of each epoch.
-                The validation data is selected from the last samples
-                in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a dataset.
-                The best model found would be fit on the entire dataset including the
-                validation data.
-            validation_data: Data on which to evaluate the loss and any model metrics
-                at the end of each epoch. The model will not be trained on this data.
-                `validation_data` will override `validation_split`. The type of the
-                validation data should be the same as the training data.
-                The best model found would be fit on the training dataset without the
-                validation data.
+                tensorflow.Dataset. Training data y. If the data is from a csv
+                file, it should be a list of string(s) specifying the name(s) of
+                the column(s) need to be forecasted.  If it is multivariate
+                forecasting, y should be a list of more than one column names.
+                If it is univariate forecasting, y should be a string or a list
+                of one string.
+            validation_split: Float between 0 and 1. Defaults to 0.2. Fraction
+                of the training data to be used as validation data. The model
+                will set apart this fraction of the training data, will not
+                train on it, and will evaluate the loss and any model metrics on
+                this data at the end of each epoch. The validation data is
+                selected from the last samples in the `x` and `y` data provided,
+                before shuffling. This argument is not supported when `x` is a
+                dataset. The best model found would be fit on the entire
+                dataset including the validation data.
+            validation_data: Data on which to evaluate the loss and any model
+                metrics at the end of each epoch. The model will not be trained
+                on this data. `validation_data` will override
+                `validation_split`. The type of the validation data should be
+                the same as the training data. The best model found would be
+                fit on the training dataset without the validation data.
             **kwargs: Any arguments supported by
                 [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
         """

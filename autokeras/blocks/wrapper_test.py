@@ -181,9 +181,9 @@ def test_structured_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert test_utils.get_func_args(blocks.StructuredDataBlock.__init__).issubset(
-        config.keys()
-    )
+    assert test_utils.get_func_args(
+        blocks.StructuredDataBlock.__init__
+    ).issubset(config.keys())
 
 
 def test_timeseries_build_return_tensor():

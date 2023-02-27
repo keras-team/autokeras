@@ -9,7 +9,8 @@ import autokeras as ak
 
 """
 ## A Simple Example
-The first step is to prepare your data. Here we use the MNIST dataset as an example
+The first step is to prepare your data. Here we use the MNIST dataset as an
+example
 """
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -99,13 +100,13 @@ clf = ak.AutoModel(
 clf.fit(x_train, y_train, epochs=10)
 
 """
-The usage of AutoModel is similar to the functional API of Keras. Basically, you are
-building a graph, whose edges are blocks and the nodes are intermediate outputs of
-blocks. To add an edge from input_node to output_node with output_node =
-ak.[some_block]([block_args])(input_node).
+The usage of AutoModel is similar to the functional API of Keras. Basically, you
+are building a graph, whose edges are blocks and the nodes are intermediate
+outputs of blocks. To add an edge from input_node to output_node with
+output_node = ak.[some_block]([block_args])(input_node).
 
-You can even also use more fine grained blocks to customize the search space even
-further. See the following example.
+You can even also use more fine grained blocks to customize the search space
+even further. See the following example.
 """
 
 input_node = ak.ImageInput()

@@ -81,7 +81,9 @@ def get_class_from_method(meth):
         )
         if isinstance(cls, type):
             return cls
-    return getattr(meth, "__objclass__", None)  # handle special descriptor objects
+    return getattr(
+        meth, "__objclass__", None
+    )  # handle special descriptor objects
 
 
 def ismethod(function):
@@ -114,7 +116,8 @@ def get_type(object_) -> str:
         return "function"
     else:
         raise TypeError(
-            f"{object_} is detected as neither a class, a method nor" f"a function."
+            f"{object_} is detected as neither a class, a method nor"
+            f"a function."
         )
 
 

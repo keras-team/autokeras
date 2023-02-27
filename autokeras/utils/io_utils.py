@@ -71,7 +71,8 @@ def index_directory(
       tuple (file_paths, labels, class_names).
         file_paths: list of file paths (strings).
         labels: list of matching integer labels (same length as file_paths)
-        class_names: names of the classes corresponding to these labels, in order.
+        class_names: names of the classes corresponding to these labels, in
+            order.
     """
     subdirs = []
     for subdir in sorted(os.listdir(directory)):
@@ -97,7 +98,8 @@ def index_directory(
     for dirpath in (os.path.join(directory, subdir) for subdir in subdirs):
         results.append(
             pool.apply_async(
-                index_subdirectory, (dirpath, class_indices, follow_links, formats)
+                index_subdirectory,
+                (dirpath, class_indices, follow_links, formats),
             )
         )
     labels_list = []
@@ -186,7 +188,9 @@ def get_training_or_validation_split(samples, labels, validation_split, subset):
 
     num_val_samples = int(validation_split * len(samples))
     if subset == "training":
-        print("Using %d files for training." % (len(samples) - num_val_samples,))
+        print(
+            "Using %d files for training." % (len(samples) - num_val_samples,)
+        )
         samples = samples[:-num_val_samples]
         labels = labels[:-num_val_samples]
     elif subset == "validation":
@@ -319,9 +323,10 @@ def image_dataset_from_directory(
             Defaults to `(256, 256)`.
             Since the pipeline processes batches of images that must all have
             the same size, this must be provided.
-        interpolation: String, the interpolation method used when resizing images.
-          Defaults to `bilinear`. Supports `bilinear`, `nearest`, `bicubic`,
-          `area`, `lanczos3`, `lanczos5`, `gaussian`, `mitchellcubic`.
+        interpolation: String, the interpolation method used when resizing
+            images. Defaults to `bilinear`. Supports `bilinear`, `nearest`,
+            `bicubic`, `area`, `lanczos3`, `lanczos5`, `gaussian`,
+            `mitchellcubic`.
         shuffle: Whether to shuffle the data. Default: True.
             If set to False, sorts the data in alphanumeric order.
         seed: Optional random seed for shuffling and transformations.
@@ -355,7 +360,11 @@ def image_dataset_from_directory(
     if seed is None:
         seed = np.random.randint(1e6)
     image_paths, labels, class_names = index_directory(
-        directory, "inferred", formats=WHITELIST_FORMATS, shuffle=shuffle, seed=seed
+        directory,
+        "inferred",
+        formats=WHITELIST_FORMATS,
+        shuffle=shuffle,
+        seed=seed,
     )
 
     image_paths, labels = get_training_or_validation_split(
@@ -377,7 +386,9 @@ def image_dataset_from_directory(
 
 def path_to_image(image, num_channels, image_size, interpolation):
     image = tf.io.read_file(image)
-    image = tf.io.decode_image(image, channels=num_channels, expand_animations=False)
+    image = tf.io.decode_image(
+        image, channels=num_channels, expand_animations=False
+    )
     image = tf.image.resize(image, image_size, method=interpolation)
     image.set_shape((image_size[0], image_size[1], num_channels))
     return image

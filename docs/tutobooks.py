@@ -86,7 +86,11 @@ def nb_to_py(nb_path, py_path):
     for cell in nb["cells"]:
         if cell["cell_type"] == "code":
             # Is it a shell cell?
-            if cell["source"] and cell["source"][0] and cell["source"][0][0] == "!":
+            if (
+                cell["source"]
+                and cell["source"][0]
+                and cell["source"][0][0] == "!"
+            ):
                 # It's a shell cell
                 py += '"""shell\n'
                 py += "".join(cell["source"]) + "\n"
@@ -130,7 +134,7 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
     # "source": [
     # "# " + attributes["title"] + "\n",
     # "\n",
-    # "**" + attributes["auth_field"] + ":** " + attributes["author"] + "<br>\n",
+    # "**" + attributes["auth_field"] + ":** " + attributes["author"] +"<br>\n",
     # "**Date created:** " + attributes["date_created"] + "<br>\n",
     # "**Last modified:** " + attributes["last_modified"] + "<br>\n",
     # "**Description:** " + attributes["description"],
@@ -171,7 +175,8 @@ def py_to_nb(py_path, nb_path, fill_outputs=True):
     notebook["cells"] = cells
     if loc > MAX_LOC:
         raise ValueError(
-            "Found %d lines of code, but expected fewer than %d" % (loc, MAX_LOC)
+            "Found %d lines of code, but expected fewer than %d"
+            % (loc, MAX_LOC)
         )
 
     f = open(nb_path, "w")
@@ -278,7 +283,9 @@ def validate(py):
         raise ValueError('Missing `"""`-fenced header at top of script.')
     if not lines[1].startswith("Title: "):
         raise ValueError("Missing `Title:` field.")
-    if not lines[2].startswith("Author: ") and not lines[2].startswith("Authors: "):
+    if not lines[2].startswith("Author: ") and not lines[2].startswith(
+        "Authors: "
+    ):
         raise ValueError("Missing `Author:` field.")
     if not lines[3].startswith("Date created: "):
         raise ValueError("Missing `Date created:` field.")
@@ -294,7 +301,9 @@ def validate(py):
     if not description[-1] == ".":
         raise ValueError("Description field content must end with a period.")
     if len(description) > 100:
-        raise ValueError("Description field content must be less than 100 chars.")
+        raise ValueError(
+            "Description field content must be less than 100 chars."
+        )
     for i, line in enumerate(lines):
         if line.startswith('"""') and line.endswith('"""') and len(line) > 3:
             raise ValueError(

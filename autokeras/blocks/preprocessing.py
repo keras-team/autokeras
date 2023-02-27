@@ -30,13 +30,14 @@ from autokeras.utils import utils
 class Normalization(block_module.Block):
     """Perform feature-wise normalization on data.
 
-    Refer to Normalization layer in keras preprocessing layers for more information.
+    Refer to Normalization layer in keras preprocessing layers for more
+    information.
 
     # Arguments
         axis: Integer or tuple of integers, the axis or axes that should be
-            normalized (typically the features axis). We will normalize each element
-            in the specified axis. The default is '-1' (the innermost axis); 0 (the
-            batch axis) is not allowed.
+            normalized (typically the features axis). We will normalize each
+            element in the specified axis. The default is '-1' (the innermost
+            axis); 0 (the batch axis) is not allowed.
     """
 
     def __init__(self, axis: int = -1, **kwargs):
@@ -103,10 +104,10 @@ class TextToNgramVector(block_module.Block):
 
     # Arguments
         max_tokens: Int. The maximum size of the vocabulary. Defaults to 20000.
-        ngrams: Int or tuple of ints. Passing an integer will create ngrams up to
-            that integer, and passing a tuple of integers will create ngrams for the
-            specified values in the tuple. If left unspecified, it will be tuned
-            automatically.
+        ngrams: Int or tuple of ints. Passing an integer will create ngrams up
+            to that integer, and passing a tuple of integers will create ngrams
+            for the specified values in the tuple. If left unspecified, it will
+            be tuned automatically.
     """
 
     def __init__(
@@ -157,11 +158,12 @@ class ImageAugmentation(block_module.Block):
             upper bound for rotating clockwise and counter-clockwise. When
             represented as a single float, lower = upper.
             If left unspecified, it will be tuned automatically.
-        zoom_factor: A positive float represented as fraction value, or a tuple of 2
-            representing fraction for zooming vertically and horizontally,
-            or a kerastuner.engine.hyperparameters.Choice range of positive floats.
-            For instance, `zoom_factor=0.2` result in a random zoom factor from 80%
-            to 120%. If left unspecified, it will be tuned automatically.
+        zoom_factor: A positive float represented as fraction value, or a tuple
+            of 2 representing fraction for zooming vertically and horizontally,
+            or a kerastuner.engine.hyperparameters.Choice range of positive
+            floats.  For instance, `zoom_factor=0.2` result in a random zoom
+            factor from 80% to 120%. If left unspecified, it will be tuned
+            automatically.
         contrast_factor: A positive float represented as fraction of value, or a
             tuple of size 2 representing lower and upper bound, or a
             kerastuner.engine.hyperparameters.Choice range of floats to find the
@@ -297,7 +299,9 @@ class ImageAugmentation(block_module.Block):
         config["rotation_factor"] = io_utils.deserialize_block_arg(
             config["rotation_factor"]
         )
-        config["zoom_factor"] = io_utils.deserialize_block_arg(config["zoom_factor"])
+        config["zoom_factor"] = io_utils.deserialize_block_arg(
+            config["zoom_factor"]
+        )
         config["contrast_factor"] = io_utils.deserialize_block_arg(
             config["contrast_factor"]
         )
@@ -336,6 +340,9 @@ class CategoricalToNumerical(block_module.Block):
     def get_config(self):
         config = super().get_config()
         config.update(
-            {"column_types": self.column_types, "column_names": self.column_names}
+            {
+                "column_types": self.column_types,
+                "column_names": self.column_names,
+            }
         )
         return config

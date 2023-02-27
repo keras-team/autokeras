@@ -114,8 +114,12 @@ class DenseBlock(block_module.Block):
 
     @classmethod
     def from_config(cls, config):
-        config["num_layers"] = io_utils.deserialize_block_arg(config["num_layers"])
-        config["num_units"] = io_utils.deserialize_block_arg(config["num_units"])
+        config["num_layers"] = io_utils.deserialize_block_arg(
+            config["num_layers"]
+        )
+        config["num_units"] = io_utils.deserialize_block_arg(
+            config["num_units"]
+        )
         config["dropout"] = io_utils.deserialize_block_arg(config["dropout"])
         return cls(**config)
 
@@ -182,7 +186,9 @@ class RNNBlock(block_module.Block):
         )
         self.layer_type = utils.get_hyperparameter(
             layer_type,
-            hyperparameters.Choice("layer_type", ["gru", "lstm"], default="lstm"),
+            hyperparameters.Choice(
+                "layer_type", ["gru", "lstm"], default="lstm"
+            ),
             str,
         )
 
@@ -191,7 +197,9 @@ class RNNBlock(block_module.Block):
         config.update(
             {
                 "return_sequences": self.return_sequences,
-                "bidirectional": io_utils.serialize_block_arg(self.bidirectional),
+                "bidirectional": io_utils.serialize_block_arg(
+                    self.bidirectional
+                ),
                 "num_layers": io_utils.serialize_block_arg(self.num_layers),
                 "layer_type": io_utils.serialize_block_arg(self.layer_type),
             }
@@ -203,8 +211,12 @@ class RNNBlock(block_module.Block):
         config["bidirectional"] = io_utils.deserialize_block_arg(
             config["bidirectional"]
         )
-        config["num_layers"] = io_utils.deserialize_block_arg(config["num_layers"])
-        config["layer_type"] = io_utils.deserialize_block_arg(config["layer_type"])
+        config["num_layers"] = io_utils.deserialize_block_arg(
+            config["num_layers"]
+        )
+        config["layer_type"] = io_utils.deserialize_block_arg(
+            config["layer_type"]
+        )
         return cls(**config)
 
     def build(self, hp, inputs=None):
@@ -251,16 +263,16 @@ class ConvBlock(block_module.Block):
             If left unspecified, it will be tuned automatically.
         num_blocks: Int or keras_tuner.engine.hyperparameters.Choice.
             The number of conv blocks, each of which may contain
-            convolutional, max pooling, dropout, and activation. If left unspecified,
-            it will be tuned automatically.
+            convolutional, max pooling, dropout, and activation. If left
+            unspecified, it will be tuned automatically.
         num_layers: Int or hyperparameters.Choice.
             The number of convolutional layers in each block. If left
             unspecified, it will be tuned automatically.
         filters: Int or keras_tuner.engine.hyperparameters.Choice. The number of
             filters in the convolutional layers. If left unspecified, it will
             be tuned automatically.
-        max_pooling: Boolean. Whether to use max pooling layer in each block. If left
-            unspecified, it will be tuned automatically.
+        max_pooling: Boolean. Whether to use max pooling layer in each block. If
+            left unspecified, it will be tuned automatically.
         separable: Boolean. Whether to use separable conv layers.
             If left unspecified, it will be tuned automatically.
         dropout: Float or kerastuner.engine.hyperparameters.
@@ -328,9 +340,15 @@ class ConvBlock(block_module.Block):
 
     @classmethod
     def from_config(cls, config):
-        config["kernel_size"] = io_utils.deserialize_block_arg(config["kernel_size"])
-        config["num_blocks"] = io_utils.deserialize_block_arg(config["num_blocks"])
-        config["num_layers"] = io_utils.deserialize_block_arg(config["num_layers"])
+        config["kernel_size"] = io_utils.deserialize_block_arg(
+            config["kernel_size"]
+        )
+        config["num_blocks"] = io_utils.deserialize_block_arg(
+            config["num_blocks"]
+        )
+        config["num_layers"] = io_utils.deserialize_block_arg(
+            config["num_layers"]
+        )
         config["filters"] = io_utils.deserialize_block_arg(config["filters"])
         config["dropout"] = io_utils.deserialize_block_arg(config["dropout"])
         return cls(**config)
@@ -404,7 +422,9 @@ class MultiHeadSelfAttention(block_module.Block):
 
     def get_config(self):
         config = super().get_config()
-        config.update({"head_size": self.head_size, "num_heads": self.num_heads})
+        config.update(
+            {"head_size": self.head_size, "num_heads": self.num_heads}
+        )
         return config
 
     def build(self, hp, inputs=None):
@@ -414,7 +434,8 @@ class MultiHeadSelfAttention(block_module.Block):
              inputs: Tensor of Shape [batch_size, seq_len, embedding_dim]
 
         # Returns
-            Self-Attention outputs of shape `[batch_size, seq_len, embedding_dim]`.
+            Self-Attention outputs of shape
+            `[batch_size, seq_len, embedding_dim]`.
         """
         inputs = nest.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
@@ -446,7 +467,9 @@ class MultiHeadSelfAttention(block_module.Block):
         concat_attention = tf.reshape(
             attention, (batch_size, tf.shape(attention)[1], self.head_size)
         )  # (batch_size, seq_len, head_size)
-        return combine_heads(concat_attention)  # (batch_size, seq_len, head_size)
+        return combine_heads(
+            concat_attention
+        )  # (batch_size, seq_len, head_size)
 
     @staticmethod
     def attention(query, key, value):
@@ -465,9 +488,9 @@ class MultiHeadSelfAttention(block_module.Block):
 
 class Transformer(block_module.Block):
     """Block for Transformer.
-    The input should be tokenized sequences with the same length, where each element
-    of a sequence should be the index of the word. The implementation is derived from
-    the this
+    The input should be tokenized sequences with the same length, where each
+    element of a sequence should be the index of the word. The implementation is
+    derived from the this
     [example](https://keras.io/examples/nlp/text_classification_with_transformer/).
 
     # Example
@@ -476,14 +499,17 @@ class Transformer(block_module.Block):
         import autokeras as ak
         from tensorflow.keras import losses
         text_input = ak.TextInput()
-        output_node = ak.TextToIntSequence(output_sequence_length=200)(text_input)
+        output_node = ak.TextToIntSequence(output_sequence_length=200)(
+            text_input)
         output_node = ak.Transformer(embedding_dim=32,
                              pretraining='none',
                              num_heads=2,
                              dense_dim=32,
                              dropout = 0.25)(output_node)
-        output_node = ak.SpatialReduction(reduction_type='global_avg')(output_node)
-        output_node = ak.DenseBlock(num_layers=1, use_batchnorm = False)(output_node)
+        output_node = ak.SpatialReduction(reduction_type='global_avg')(
+            output_node)
+        output_node = ak.DenseBlock(num_layers=1, use_batchnorm = False)(
+            output_node)
         output_node = ak.ClassificationHead(
             loss=losses.SparseCategoricalCrossentropy(),
             dropout = 0.25)(output_node)
@@ -493,9 +519,9 @@ class Transformer(block_module.Block):
         max_features: Int. Size of the vocabulary. Must be set if not using
             TextToIntSequence before this block. Defaults to 20001.
         pretraining: String or keras_tuner.engine.hyperparameters.Choice.
-            'random' (use random weights instead any pretrained
-            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
-            If left unspecified, it will be tuned automatically.
+            'random' (use random weights instead any pretrained model), 'glove',
+            'fasttext' or 'word2vec'. Use pretrained word embedding.  If left
+            unspecified, it will be tuned automatically.
         embedding_dim: Int or keras_tuner.engine.hyperparameters.Choice.
             Output dimension of the Attention block.
             If left unspecified, it will be tuned automatically.
@@ -562,7 +588,9 @@ class Transformer(block_module.Block):
             {
                 "max_features": self.max_features,
                 "pretraining": io_utils.serialize_block_arg(self.pretraining),
-                "embedding_dim": io_utils.serialize_block_arg(self.embedding_dim),
+                "embedding_dim": io_utils.serialize_block_arg(
+                    self.embedding_dim
+                ),
                 "num_heads": io_utils.serialize_block_arg(self.num_heads),
                 "dense_dim": io_utils.serialize_block_arg(self.dense_dim),
                 "dropout": io_utils.serialize_block_arg(self.dropout),
@@ -572,12 +600,18 @@ class Transformer(block_module.Block):
 
     @classmethod
     def from_config(cls, config):
-        config["pretraining"] = io_utils.deserialize_block_arg(config["pretraining"])
+        config["pretraining"] = io_utils.deserialize_block_arg(
+            config["pretraining"]
+        )
         config["embedding_dim"] = io_utils.deserialize_block_arg(
             config["embedding_dim"]
         )
-        config["num_heads"] = io_utils.deserialize_block_arg(config["num_heads"])
-        config["dense_dim"] = io_utils.deserialize_block_arg(config["dense_dim"])
+        config["num_heads"] = io_utils.deserialize_block_arg(
+            config["num_heads"]
+        )
+        config["dense_dim"] = io_utils.deserialize_block_arg(
+            config["dense_dim"]
+        )
         config["dropout"] = io_utils.deserialize_block_arg(config["dropout"])
         return cls(**config)
 
@@ -698,16 +732,18 @@ class KerasApplicationBlock(block_module.Block):
         if input_node.shape[3] == 1:
             input_node = layers.Concatenate()([input_node] * 3)
         if input_node.shape[3] != 3:
-            input_node = layers.Conv2D(filters=3, kernel_size=1, padding="same")(
-                input_node
-            )
+            input_node = layers.Conv2D(
+                filters=3, kernel_size=1, padding="same"
+            )(input_node)
 
         if pretrained:
             model = self.models[version](weights="imagenet", include_top=False)
             model.trainable = trainable
         else:
             model = self.models[version](
-                weights=None, include_top=False, input_shape=input_node.shape[1:]
+                weights=None,
+                include_top=False,
+                input_shape=input_node.shape[1:],
             )
 
         return model(input_node)
@@ -740,7 +776,9 @@ class ResNetBlock(KerasApplicationBlock):
                 'Expect version to be "v1", or "v2", but got '
                 "{version}.".format(version=version)
             )
-        super().__init__(pretrained=pretrained, models=models, min_size=32, **kwargs)
+        super().__init__(
+            pretrained=pretrained, models=models, min_size=32, **kwargs
+        )
         self.version = version
 
     def get_config(self):
@@ -752,17 +790,19 @@ class ResNetBlock(KerasApplicationBlock):
 class XceptionBlock(KerasApplicationBlock):
     """Block for XceptionNet.
 
-    An Xception structure, used for specifying your model with specific datasets.
+    An Xception structure, used for specifying your model with specific
+    datasets.
 
     The original Xception architecture is from
     [https://arxiv.org/abs/1610.02357](https://arxiv.org/abs/1610.02357).
-    The data first goes through the entry flow, then through the middle flow which
-    is repeated eight times, and finally through the exit flow.
+    The data first goes through the entry flow, then through the middle flow
+    which is repeated eight times, and finally through the exit flow.
 
     This XceptionBlock returns a similar architecture as Xception except without
     the last (optional) fully connected layer(s) and logistic regression.
-    The size of this architecture could be decided by `HyperParameters`, to get an
-    architecture with a half, an identical, or a double size of the original one.
+    The size of this architecture could be decided by `HyperParameters`, to get
+    an architecture with a half, an identical, or a double size of the original
+    one.
 
     # Arguments
         pretrained: Boolean. Whether to use ImageNet pretrained weights.
@@ -782,8 +822,8 @@ class EfficientNetBlock(KerasApplicationBlock):
     """Block for EfficientNet.
 
     # Arguments
-        version: String. The value should be one of 'b0', 'b1', ..., 'b7'.
-            The type of EfficientNet to use. If left unspecified, it will be tuned
+        version: String. The value should be one of 'b0', 'b1', ..., 'b7'. The
+            type of EfficientNet to use. If left unspecified, it will be tuned
             automatically.
         pretrained: Boolean. Whether to use ImageNet pretrained weights.
             If left unspecified, it will be tuned automatically.
@@ -818,16 +858,16 @@ class EfficientNetBlock(KerasApplicationBlock):
 class Embedding(block_module.Block):
     """Word embedding block for sequences.
 
-    The input should be tokenized sequences with the same length, where each element
-    of a sequence should be the index of the word.
+    The input should be tokenized sequences with the same length, where each
+    element of a sequence should be the index of the word.
 
     # Arguments
         max_features: Int. Size of the vocabulary. Must be set if not using
             TextToIntSequence before this block. Defaults to 20001.
         pretraining: String or keras_tuner.engine.hyperparameters.Choice.
             'random' (use random weights instead any pretrained
-            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
-            If left unspecified, it will be tuned automatically.
+            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word
+            embedding. If left unspecified, it will be tuned automatically.
         embedding_dim: Int or keras_tuner.engine.hyperparameters.Choice.
             Output dimension of the Attention block.
             If left unspecified, it will be tuned automatically.
@@ -874,7 +914,9 @@ class Embedding(block_module.Block):
             {
                 "max_features": self.max_features,
                 "pretraining": io_utils.serialize_block_arg(self.pretraining),
-                "embedding_dim": io_utils.serialize_block_arg(self.embedding_dim),
+                "embedding_dim": io_utils.serialize_block_arg(
+                    self.embedding_dim
+                ),
                 "dropout": io_utils.serialize_block_arg(self.dropout),
             }
         )
@@ -882,7 +924,9 @@ class Embedding(block_module.Block):
 
     @classmethod
     def from_config(cls, config):
-        config["pretraining"] = io_utils.deserialize_block_arg(config["pretraining"])
+        config["pretraining"] = io_utils.deserialize_block_arg(
+            config["pretraining"]
+        )
         config["dropout"] = io_utils.deserialize_block_arg(config["dropout"])
         config["embedding_dim"] = io_utils.deserialize_block_arg(
             config["embedding_dim"]
@@ -933,7 +977,8 @@ class BertBlock(block_module.Block):
         input_node = ak.TextInput()
         output_node = BertBlock()(input_node)
         output_node = ak.ClassificationHead()(output_node)
-        clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
+        clf = ak.AutoModel(
+            inputs=input_node, outputs=output_node, max_trials=10)
     ```
 
     # Arguments
@@ -943,7 +988,9 @@ class BertBlock(block_module.Block):
 
     def __init__(
         self,
-        max_sequence_length: Optional[Union[int, hyperparameters.Choice]] = None,
+        max_sequence_length: Optional[
+            Union[int, hyperparameters.Choice]
+        ] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)

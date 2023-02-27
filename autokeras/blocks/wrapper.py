@@ -37,8 +37,8 @@ BERT = "bert"
 class ImageBlock(block_module.Block):
     """Block for image data.
 
-    The image blocks is a block choosing from ResNetBlock, XceptionBlock, ConvBlock,
-    which is controlled by a hyperparameter, 'block_type'.
+    The image blocks is a block choosing from ResNetBlock, XceptionBlock,
+    ConvBlock, which is controlled by a hyperparameter, 'block_type'.
 
     # Arguments
         block_type: String. 'resnet', 'xception', 'vanilla'. The type of Block
@@ -88,7 +88,9 @@ class ImageBlock(block_module.Block):
 
         if self.normalize is None and hp.Boolean(NORMALIZE):
             with hp.conditional_scope(NORMALIZE, [True]):
-                output_node = preprocessing.Normalization().build(hp, output_node)
+                output_node = preprocessing.Normalization().build(
+                    hp, output_node
+                )
         elif self.normalize:
             output_node = preprocessing.Normalization().build(hp, output_node)
 
@@ -98,7 +100,9 @@ class ImageBlock(block_module.Block):
                     hp, output_node
                 )
         elif self.augment:
-            output_node = preprocessing.ImageAugmentation().build(hp, output_node)
+            output_node = preprocessing.ImageAugmentation().build(
+                hp, output_node
+            )
 
         if self.block_type is None:
             block_type = hp.Choice(
@@ -116,15 +120,15 @@ class TextBlock(block_module.Block):
     """Block for text data.
 
     # Arguments
-        block_type: String. 'vanilla', 'transformer', and 'ngram'. The type of Block
-            to use. 'vanilla' and 'transformer' use a TextToIntSequence vectorizer,
-            whereas 'ngram' uses TextToNgramVector. If unspecified, it will be tuned
-            automatically.
+        block_type: String. 'vanilla', 'transformer', and 'ngram'. The type of
+            Block to use. 'vanilla' and 'transformer' use a TextToIntSequence
+            vectorizer, whereas 'ngram' uses TextToNgramVector. If unspecified,
+            it will be tuned automatically.
         max_tokens: Int. The maximum size of the vocabulary.
             If left unspecified, it will be tuned automatically.
         pretraining: String. 'random' (use random weights instead any pretrained
-            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word embedding.
-            If left unspecified, it will be tuned automatically.
+            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word
+            embedding.  If left unspecified, it will be tuned automatically.
     """
 
     def __init__(
@@ -154,7 +158,9 @@ class TextBlock(block_module.Block):
         input_node = nest.flatten(inputs)[0]
         output_node = input_node
         if self.block_type is None:
-            block_type = hp.Choice(BLOCK_TYPE, [VANILLA, TRANSFORMER, NGRAM, BERT])
+            block_type = hp.Choice(
+                BLOCK_TYPE, [VANILLA, TRANSFORMER, NGRAM, BERT]
+            )
             with hp.conditional_scope(BLOCK_TYPE, [block_type]):
                 output_node = self._build_block(hp, output_node, block_type)
         else:
@@ -196,8 +202,9 @@ class StructuredDataBlock(block_module.Block):
     """Block for structured data.
 
     # Arguments
-        categorical_encoding: Boolean. Whether to use the CategoricalToNumerical to
-            encode the categorical features to numerical features. Defaults to True.
+        categorical_encoding: Boolean. Whether to use the CategoricalToNumerical
+            to encode the categorical features to numerical features. Defaults
+            to True.
         normalize: Boolean. Whether to normalize the features.
             If unspecified, it will be tuned automatically.
         seed: Int. Random seed.
@@ -250,7 +257,9 @@ class StructuredDataBlock(block_module.Block):
 
         if self.normalize is None and hp.Boolean(NORMALIZE):
             with hp.conditional_scope(NORMALIZE, [True]):
-                output_node = preprocessing.Normalization().build(hp, output_node)
+                output_node = preprocessing.Normalization().build(
+                    hp, output_node
+                )
         elif self.normalize:
             output_node = preprocessing.Normalization().build(hp, output_node)
 
@@ -275,8 +284,8 @@ class TimeseriesBlock(block_module.Block):
 class GeneralBlock(block_module.Block):
     """A general neural network block when the input type is unknown.
 
-    When the input type is unknown. The GeneralBlock would search in a large space
-    for a good model.
+    When the input type is unknown. The GeneralBlock would search in a large
+    space for a good model.
 
     # Arguments
         name: String.
