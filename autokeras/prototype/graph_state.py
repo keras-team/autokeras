@@ -14,13 +14,17 @@
 
 import threading
 
+from tensorflow import keras
+
 STATE = {}
 
 
 class State:
+    # It is a global accessible object to record all the useful information of a
+    # specific build of the Graph.
     def __init__(self):
-        self.registered_inputs = []
-        self.registered_outputs = []
+        self.inputs = []
+        self.outputs = []
 
         # Passing y class info from preprocessor to postprocessor.
         self.y_info
@@ -32,10 +36,16 @@ class State:
         # Remember to check duplication
         raise NotImplementedError
 
+    def build_model(self):
+        self.model = keras.Model(inputs=self.inputs, outputs=self.outputs)
+        return self.model
+
 
 def get_state():
     return STATE[threading.get_ident()]
 
 
 def init_state():
-    STATE[threading.get_ident()] = State()
+    state = State()
+    STATE[threading.get_ident()] = state
+    return state
