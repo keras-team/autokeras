@@ -20,5 +20,23 @@ class Preprocessor(base_block.BaseBlock):
         # Accept only Dataset.
         # Return a Dataset.
         # Register ConcretePreprocessor.
+
         # How to register it to the right input node?
+
+        # How do we register the ConcretePreprocessor?
+        # Just get the return value of .build(). Register it to graph state
+        # together with the input and output dataset.
+
+        # What do we do when there are Preprocessors within Preprocessors?
+        # We don't register all of them. Only register the outter most one.
+        # It is more convenient to just have this one preprocessor to do all the
+        # inside steps.
+        # To judge if the current one is the outter most one, we need to use the
+        # "with" statement to create a scope when a HyperModel.build() is
+        # called. Record a stack of HyperModel, whose .build() is running. The
+        # lower in the stack, the outter the HyperModel is.
         return super()._build_wrapper(hp, inputs, *args, **kwargs)
+
+    def build(self, hp, dataset):
+        # Should return a ConcretePreprocessor.
+        pass
