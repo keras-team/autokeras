@@ -25,6 +25,9 @@ class State:
     def __init__(self):
         self.inputs = []
         self.outputs = []
+        # This is a stack of blocks that current running their build()
+        # functions.
+        self.blocks = []
 
         # Passing y class info from preprocessor to postprocessor.
         self.y_info
@@ -36,9 +39,19 @@ class State:
         # Remember to check duplication
         raise NotImplementedError
 
+    def register_preprocessor(self, inputs, outputs, preprocessor):
+        raise NotImplementedError
+
     def build_model(self):
         self.model = keras.Model(inputs=self.inputs, outputs=self.outputs)
         return self.model
+
+    def build_scope(self, block):
+        self.blocks.append(block)
+        try:
+            yield
+        finally:
+            self.blocks.pop()
 
 
 def get_state():

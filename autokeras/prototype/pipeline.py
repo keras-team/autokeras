@@ -16,6 +16,8 @@
 class Pipeline:
     # It should include the ConcretePreprocessors, the keras.Model, and the
     # ConcretePostprocessors.
+
+    # This class should also be exportable. It is the default export format.
     @classmethod
     def from_state(cls, state):
         raise NotImplementedError
