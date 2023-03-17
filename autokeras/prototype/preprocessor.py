@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from autokeras.prototype import base_block
+from autokeras.prototype import graph_state
 
 
 class Preprocessor(base_block.BaseBlock):
@@ -35,7 +36,16 @@ class Preprocessor(base_block.BaseBlock):
         # "with" statement to create a scope when a HyperModel.build() is
         # called. Record a stack of HyperModel, whose .build() is running. The
         # lower in the stack, the outter the HyperModel is.
-        return super()._build_wrapper(hp, inputs, *args, **kwargs)
+        concrete_preprocessor = super()._build_wrapper(
+            hp, inputs, *args, **kwargs
+        )
+        outputs = concrete_preprocessor.fit_transform(inputs)
+
+        state = graph_state.get_state()
+        if not any([isinstance(block, Preprocessor) for block in state.blocks]):
+            state.register_preprocessor(inputs, outputs, concrete_preprocessor)
+
+        return concrete_preprocessor
 
     def build(self, hp, dataset):
         # Should return a ConcretePreprocessor.
