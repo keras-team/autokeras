@@ -11,17 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This file is some stub blocks for testing the prototype."""
+from autokeras import nodes
+from autokeras.prototype import block
+from autokeras.prototype import preprocessor
 
-from autokeras.engine import block
-from autokeras.prototype import graph_state
 
-
-class BaseBlock(block.Block):
-    # Renaming the autokeras.engine.block to BaseBlock.
-    # Not open for extension.
+class StructuredDataInput(nodes.StructuredDataInput):
     pass
 
-    def _build_wrapper(self, hp, *args, **kwargs):
-        with graph_state.get_state().build_scope(self):
-            with hp.name_scope(self.name):
-                return super()._build_wrapper(hp, *args, **kwargs)
+
+class FeatureSelection(preprocessor.Preprocessor):
+    pass
+
+
+class DenseBlock(block.Block):
+    pass

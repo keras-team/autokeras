@@ -1,9 +1,32 @@
 {
     "dockerFile": "Dockerfile",
     "postCreateCommand": "sh /setup.sh",
-    "extensions": [
-        "ms-python.python"
-    ],
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"python.linting.enabled": true,
+				"python.linting.flake8Enabled": true,
+				"python.linting.pylintEnabled": false,
+				"python.testing.pytestEnabled": true,
+				"editor.formatOnSave": true,
+				"editor.codeActionsOnSave": {
+					"source.organizeImports": true
+				},
+				"[python]": {
+					"editor.defaultFormatter": "ms-python.black-formatter"
+				},
+				"editor.rulers": [
+					80
+				]
+			},
+			"extensions": [
+				"ms-python.python",
+				"ms-python.isort",
+				"ms-python.flake8",
+				"ms-python.black-formatter"
+			]
+		}
+	},
     "features": {
         "ghcr.io/devcontainers/features/github-cli:1": {}
     }

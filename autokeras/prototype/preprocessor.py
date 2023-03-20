@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from autokeras.prototype import base_block
+from autokeras.prototype import graph_state
 
 
 class Preprocessor(base_block.BaseBlock):
@@ -20,5 +21,32 @@ class Preprocessor(base_block.BaseBlock):
         # Accept only Dataset.
         # Return a Dataset.
         # Register ConcretePreprocessor.
+
         # How to register it to the right input node?
-        return super()._build_wrapper(hp, inputs, *args, **kwargs)
+
+        # How do we register the ConcretePreprocessor?
+        # Just get the return value of .build(). Register it to graph state
+        # together with the input and output dataset.
+
+        # What do we do when there are Preprocessors within Preprocessors?
+        # We don't register all of them. Only register the outter most one.
+        # It is more convenient to just have this one preprocessor to do all the
+        # inside steps.
+        # To judge if the current one is the outter most one, we need to use the
+        # "with" statement to create a scope when a HyperModel.build() is
+        # called. Record a stack of HyperModel, whose .build() is running. The
+        # lower in the stack, the outter the HyperModel is.
+        concrete_preprocessor = super()._build_wrapper(
+            hp, inputs, *args, **kwargs
+        )
+        outputs = concrete_preprocessor.fit_transform(inputs)
+
+        state = graph_state.get_state()
+        if not any([isinstance(block, Preprocessor) for block in state.blocks]):
+            state.register_preprocessor(inputs, outputs, concrete_preprocessor)
+
+        return concrete_preprocessor
+
+    def build(self, hp, dataset):
+        # Should return a ConcretePreprocessor.
+        pass

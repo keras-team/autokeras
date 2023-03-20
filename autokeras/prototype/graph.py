@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tensorflow import keras
 from tensorflow import nest
 
 from autokeras import graph
 from autokeras.prototype import graph_state
+from autokeras.prototype import pipeline as pipeline_module
 
 
 class Graph(graph.Graph):
@@ -25,18 +25,18 @@ class Graph(graph.Graph):
 
     def build(self, hp):
         """Build the HyperModel into a Keras Model."""
-        graph_state.init_state()
+        state = graph_state.init_state()
         self.compile()
         keras_nodes = {}
-        keras_input_nodes = []
+        # keras_input_nodes = []
 
         # Preparing the inputs of the pipeline.
-        for node in self.inputs:
-            node_id = self._node_to_id[node]
-            input_node = node.build_node(hp)
-            output_node = node.build(hp, input_node)
-            keras_input_nodes.append(input_node)
-            keras_nodes[node_id] = output_node
+        # for node in self.inputs:
+        #     node_id = self._node_to_id[node]
+        #     input_node = node.build_node(hp)
+        #     output_node = node.build(hp, input_node)
+        #     keras_input_nodes.append(input_node)
+        #     keras_nodes[node_id] = output_node
 
         # Connecting through the blocks.
         # Don't check the block type to deal with the output since the block has
@@ -54,16 +54,10 @@ class Graph(graph.Graph):
 
         for output_node in self.outputs:
             node = keras_nodes[self._node_to_id[output_node]]
-            graph_state.get_state().register_outputs(node)
+            state.register_outputs(node)
 
-        model = keras.Model(
-            keras_input_nodes,
-            [
-                keras_nodes[self._node_to_id[output_node]]
-                for output_node in self.outputs
-            ],
-        )
+        model = state.build_model()
         self._compile_keras_model(hp, model)
 
-        pipeline = None
+        pipeline = pipeline_module.Pipeline.from_state(graph_state.get_state())
         return pipeline

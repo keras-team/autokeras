@@ -12,16 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autokeras.engine import block
-from autokeras.prototype import graph_state
 
+class Pipeline:
+    # It should include the ConcretePreprocessors, the keras.Model, and the
+    # ConcretePostprocessors.
 
-class BaseBlock(block.Block):
-    # Renaming the autokeras.engine.block to BaseBlock.
-    # Not open for extension.
-    pass
-
-    def _build_wrapper(self, hp, *args, **kwargs):
-        with graph_state.get_state().build_scope(self):
-            with hp.name_scope(self.name):
-                return super()._build_wrapper(hp, *args, **kwargs)
+    # This class should also be exportable. It is the default export format.
+    @classmethod
+    def from_state(cls, state):
+        raise NotImplementedError
