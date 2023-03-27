@@ -22,6 +22,7 @@ setup(
         "keras-tuner>=1.1.0",
         "keras-nlp>=0.4.0",
         "pandas",
+        "protobuf==3.20.*",
     ],
     extras_require={
         "tests": [
@@ -34,7 +35,6 @@ setup(
             "coverage",
             "typedapi>=0.2,<0.3",
             "scikit-learn",
-            "protobuf==3.20.*",
         ],
     },
     python_requires=">=3.8",
