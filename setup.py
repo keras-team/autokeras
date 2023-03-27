@@ -34,6 +34,7 @@ setup(
             "coverage",
             "typedapi>=0.2,<0.3",
             "scikit-learn",
+            "protobuf==3.20.*",
         ],
     },
     python_requires=">=3.8",
