@@ -1,3 +1,8 @@
+# Release v1.1.1
+
+## Bug fix
+* Support TF 2.12.
+
 # Release v1.1.0
 
 ## Breaking changes
