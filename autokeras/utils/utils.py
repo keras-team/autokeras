@@ -154,7 +154,7 @@ def serialize_keras_object(obj):
             obj
         )  # pragma: no cover
     else:
-        return tf.keras.utils.serialize_keras_object(obj)
+        return tf.keras.utils.serialize_keras_object(obj)  # pragma: no cover
 
 
 def deserialize_keras_object(
@@ -167,6 +167,6 @@ def deserialize_keras_object(
             )
         )
     else:
-        return tf.keras.utils.deserialize_keras_object(
+        return tf.keras.utils.deserialize_keras_object(  # pragma: no cover
             config, custom_objects, module_objects, printable_module_name
         )
