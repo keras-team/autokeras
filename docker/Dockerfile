@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:2.11.1
+FROM tensorflow/tensorflow:2.12.0rc0
 WORKDIR /opt/autokeras
 COPY . .
 RUN python -m pip install --no-cache-dir --editable .
