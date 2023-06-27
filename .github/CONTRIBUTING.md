@@ -20,17 +20,17 @@ for the issues for beginner.
 
 
 ## Setup Environment
-We introduce 3 different options: **GitHub Codespaces**, **VS Code & Remote-Containers**, **the general setup**.
+We introduce 3 different options: **GitHub Codespaces**, **VS Code & Dev Containers**, **the general setup**.
 You can choose base on your preference.
 
 ### Option 1: GitHub Codespaces
 You can simply open the repository in GitHub Codespaces.
 The environment is already setup there.
 
-### Option 2: VS Code & Remote-Containers
+### Option 2: VS Code & Dev Containers
 Open VS Code.
-Install the `Remote-Containers` extension.
-Press `F1` key. Enter `Remote-Containers: Open Folder in Container` to open the repository root folder.
+Install the `Dev Containers` extension.
+Press `F1` key. Enter `Dev Containers: Open Folder in Container...` to open the repository root folder.
 The environment is already setup there.
 
 ### Option 3: The General Setup
@@ -54,8 +54,8 @@ add2virtualenv .
 
 ## Run Tests
 
-### GitHub Codespaces or VS Code & Remote-Containers
-If you are using "GitHub Codespaces" or "VS Code & Remote-Containers",
+### GitHub Codespaces or VS Code & Dev Containers
+If you are using "GitHub Codespaces" or "VS Code & Dev Containers",
 you can simply open any `*_test.py` file under the `tests` directory,
 and wait a few seconds, you will see the test tab on the left of the window.
 
