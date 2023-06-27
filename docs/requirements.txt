@@ -4,7 +4,6 @@ pygments
 jupyter
 pymdown-extensions
 Sphinx
-ipython>=8.10.0
 markdown
 black
 ipython>=8.10.0
