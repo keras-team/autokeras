@@ -35,7 +35,7 @@ class IMDB(experiment.Experiment):
     def load_data():
         dataset = tf.keras.utils.get_file(
             fname="aclImdb.tar.gz",
-            origin="http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",
+            origin="http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",  # noqa: E501
             extract=True,
         )
 
@@ -44,10 +44,14 @@ class IMDB(experiment.Experiment):
 
         classes = ["pos", "neg"]
         train_data = load_files(
-            os.path.join(IMDB_DATADIR, "train"), shuffle=True, categories=classes
+            os.path.join(IMDB_DATADIR, "train"),
+            shuffle=True,
+            categories=classes,
         )
         test_data = load_files(
-            os.path.join(IMDB_DATADIR, "test"), shuffle=False, categories=classes
+            os.path.join(IMDB_DATADIR, "test"),
+            shuffle=False,
+            categories=classes,
         )
 
         x_train = np.array(train_data.data)

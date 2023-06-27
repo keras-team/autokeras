@@ -28,9 +28,9 @@ def test_structured_data_input_less_col_name_error():
         analyser = input_analysers.StructuredDataAnalyser(
             column_names=list(range(8))
         )
-        dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(20, 10)).batch(
-            32
-        )
+        dataset = tf.data.Dataset.from_tensor_slices(
+            np.random.rand(20, 10)
+        ).batch(32)
         for x in dataset:
             analyser.update(x)
 
@@ -46,7 +46,7 @@ def test_structured_data_infer_col_types():
     )
     x = pd.read_csv(test_utils.TRAIN_CSV_PATH)
     x.pop("survived")
-    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype("U")).batch(32)
+    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype(str)).batch(32)
 
     for data in dataset:
         analyser.update(data)
@@ -66,7 +66,7 @@ def test_dont_infer_specified_column_types():
     )
     x = pd.read_csv(test_utils.TRAIN_CSV_PATH)
     x.pop("survived")
-    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype("U")).batch(32)
+    dataset = tf.data.Dataset.from_tensor_slices(x.values.astype(str)).batch(32)
 
     for data in dataset:
         analyser.update(data)
@@ -80,16 +80,18 @@ def test_structured_data_input_with_illegal_dim():
         column_names=test_utils.COLUMN_NAMES,
         column_types=None,
     )
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(100, 32, 32)).batch(
-        32
-    )
+    dataset = tf.data.Dataset.from_tensor_slices(
+        np.random.rand(100, 32, 32)
+    ).batch(32)
 
     with pytest.raises(ValueError) as info:
         for data in dataset:
             analyser.update(data)
         analyser.finalize()
 
-    assert "Expect the data to StructuredDataInput to have shape" in str(info.value)
+    assert "Expect the data to StructuredDataInput to have shape" in str(
+        info.value
+    )
 
 
 def test_image_input_analyser_shape_is_list_of_int():
@@ -108,9 +110,9 @@ def test_image_input_analyser_shape_is_list_of_int():
 
 def test_image_input_with_three_dim():
     analyser = input_analysers.ImageAnalyser()
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(100, 32, 32)).batch(
-        32
-    )
+    dataset = tf.data.Dataset.from_tensor_slices(
+        np.random.rand(100, 32, 32)
+    ).batch(32)
 
     for data in dataset:
         analyser.update(data)
@@ -121,7 +123,9 @@ def test_image_input_with_three_dim():
 
 def test_image_input_with_illegal_dim():
     analyser = input_analysers.ImageAnalyser()
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(100, 32)).batch(32)
+    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(100, 32)).batch(
+        32
+    )
 
     with pytest.raises(ValueError) as info:
         for data in dataset:
@@ -133,7 +137,9 @@ def test_image_input_with_illegal_dim():
 
 def test_text_input_with_illegal_dim():
     analyser = input_analysers.TextAnalyser()
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(100, 32)).batch(32)
+    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(100, 32)).batch(
+        32
+    )
 
     with pytest.raises(ValueError) as info:
         for data in dataset:
@@ -154,7 +160,9 @@ def test_text_analyzer_with_one_dim_doesnt_crash():
 
 def test_text_illegal_type_error():
     analyser = input_analysers.TextAnalyser()
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(100, 1)).batch(32)
+    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(100, 1)).batch(
+        32
+    )
 
     with pytest.raises(TypeError) as info:
         for data in dataset:
@@ -169,9 +177,9 @@ def test_time_series_input_with_illegal_dim():
         column_names=test_utils.COLUMN_NAMES,
         column_types=None,
     )
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(100, 32, 32)).batch(
-        32
-    )
+    dataset = tf.data.Dataset.from_tensor_slices(
+        np.random.rand(100, 32, 32)
+    ).batch(32)
 
     with pytest.raises(ValueError) as info:
         for data in dataset:

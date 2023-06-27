@@ -68,22 +68,24 @@ Refer to our [Contributing Guide](https://autokeras.com/contributing/) to learn 
 
 Thank all the contributors!
 
-[![The contributors](https://autokeras.com/img/contributors.svg)](https://github.com/keras-team/autokeras/graphs/contributor)
+[![The contributors](https://autokeras.com/img/contributors.svg)](https://github.com/keras-team/autokeras/graphs/contributors)
 
 ## Cite this work
 
-Haifeng Jin, Qingquan Song, and Xia Hu. "Auto-keras: An efficient neural architecture search system." Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining. ACM, 2019. ([Download](https://dl.acm.org/doi/pdf/10.1145/3292500.3330648))
+Haifeng Jin, François Chollet, Qingquan Song, and Xia Hu. "AutoKeras: An AutoML Library for Deep Learning." *the Journal of machine Learning research* 6 (2023): 1-6. ([Download](http://jmlr.org/papers/v24/20-1355.html))
 
 Biblatex entry:
 
 ```bibtex
-@inproceedings{jin2019auto,
-  title={Auto-Keras: An Efficient Neural Architecture Search System},
-  author={Jin, Haifeng and Song, Qingquan and Hu, Xia},
-  booktitle={Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining},
-  pages={1946--1956},
-  year={2019},
-  organization={ACM}
+@article{JMLR:v24:20-1355,
+  author  = {Haifeng Jin and François Chollet and Qingquan Song and Xia Hu},
+  title   = {AutoKeras: An AutoML Library for Deep Learning},
+  journal = {Journal of Machine Learning Research},
+  year    = {2023},
+  volume  = {24},
+  number  = {6},
+  pages   = {1--6},
+  url     = {http://jmlr.org/papers/v24/20-1355.html}
 }
 ```
 

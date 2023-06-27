@@ -1,8 +1,12 @@
-keras-autodoc
 mkdocs
 mkdocs-material
 pygments
 jupyter
 pymdown-extensions
 Sphinx
-ipython>=8.10.0 # not directly required, pinned by Snyk to avoid a vulnerability
+ipython>=8.10.0
+markdown
+black
+ipython>=8.10.0
+setuptools>=65.5.1
+tornado>=6.3.2

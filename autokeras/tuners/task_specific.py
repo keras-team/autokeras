@@ -45,7 +45,7 @@ IMAGE_CLASSIFIER = [
         "image_block_1/res_net_block_1/pretrained": False,
         "image_block_1/res_net_block_1/version": "resnet50",
         "image_block_1/res_net_block_1/imagenet_size": True,
-        "classification_head_1/spatial_reduction_1/reduction_type": "global_avg",
+        "classification_head_1/spatial_reduction_1/reduction_type": "global_avg",  # noqa: E501
         "classification_head_1/dropout": 0,
         "optimizer": "adam",
         "learning_rate": 1e-3,
@@ -64,7 +64,7 @@ IMAGE_CLASSIFIER = [
         "image_block_1/efficient_net_block_1/version": "b7",
         "image_block_1/efficient_net_block_1/trainable": True,
         "image_block_1/efficient_net_block_1/imagenet_size": True,
-        "classification_head_1/spatial_reduction_1/reduction_type": "global_avg",
+        "classification_head_1/spatial_reduction_1/reduction_type": "global_avg",  # noqa: E501
         "classification_head_1/dropout": 0,
         "optimizer": "adam",
         "learning_rate": 2e-5,

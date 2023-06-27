@@ -53,10 +53,9 @@ it also supports numpy.ndarray, pandas.DataFrame or [tf.data.Dataset](
 https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable). The
 data should be two-dimensional with numerical or categorical values.
 
-For the classification labels,
-AutoKeras accepts both plain labels, i.e. strings or integers, and one-hot encoded
-encoded labels, i.e. vectors of 0s and 1s.
-The labels can be numpy.ndarray, pandas.DataFrame, or pandas.Series.
+For the classification labels, AutoKeras accepts both plain labels, i.e. strings
+or integers, and one-hot encoded encoded labels, i.e. vectors of 0s and 1s. The
+labels can be numpy.ndarray, pandas.DataFrame, or pandas.Series.
 
 The following examples show how the data can be prepared with numpy.ndarray,
 pandas.DataFrame, and tensorflow.data.Dataset.
@@ -96,9 +95,9 @@ print(clf.evaluate(x_test, y_test))
 The following code shows how to convert numpy.ndarray to tf.data.Dataset.
 """
 
-train_set = tf.data.Dataset.from_tensor_slices((x_train.astype("U"), y_train))
+train_set = tf.data.Dataset.from_tensor_slices((x_train.astype(str), y_train))
 test_set = tf.data.Dataset.from_tensor_slices(
-    (x_test.to_numpy().astype("U"), y_test)
+    (x_test.to_numpy().astype(str), y_test)
 )
 
 clf = ak.StructuredDataClassifier(overwrite=True, max_trials=3)
@@ -197,8 +196,8 @@ intermediate outputs of blocks.
 To add an edge from `input_node` to `output_node` with
 `output_node = ak.[some_block]([block_args])(input_node)`.
 
-You can even also use more fine grained blocks to customize the search space even
-further. See the following example.
+You can even also use more fine grained blocks to customize the search space
+even further. See the following example.
 """
 
 
@@ -221,7 +220,7 @@ model.summary()
 print(x_train.dtype)
 # numpy array in object (mixed type) is not supported.
 # convert it to unicode.
-model.predict(x_train.astype("U"))
+model.predict(x_train.astype(str))
 
 """
 ## Reference

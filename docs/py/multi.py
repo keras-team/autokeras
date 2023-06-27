@@ -75,7 +75,9 @@ model = ak.AutoModel(
     inputs=[ak.ImageInput(), ak.StructuredDataInput()],
     outputs=[
         ak.RegressionHead(metrics=["mae"]),
-        ak.ClassificationHead(loss="categorical_crossentropy", metrics=["accuracy"]),
+        ak.ClassificationHead(
+            loss="categorical_crossentropy", metrics=["accuracy"]
+        ),
     ],
     overwrite=True,
     max_trials=2,

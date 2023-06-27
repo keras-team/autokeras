@@ -23,7 +23,7 @@ from autokeras import test_utils
 
 
 def test_augment_build_return_tensor():
-    block = blocks.ImageAugmentation()
+    block = blocks.ImageAugmentation(rotation_factor=0.2)
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
@@ -214,6 +214,6 @@ def test_cat_to_num_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert test_utils.get_func_args(blocks.CategoricalToNumerical.__init__).issubset(
-        config.keys()
-    )
+    assert test_utils.get_func_args(
+        blocks.CategoricalToNumerical.__init__
+    ).issubset(config.keys())

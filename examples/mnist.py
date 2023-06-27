@@ -1,6 +1,7 @@
 """
 Search for a good model for the
-[MNIST](https://keras.io/datasets/#mnist-database-of-handwritten-digits) dataset.
+[MNIST](https://keras.io/datasets/#mnist-database-of-handwritten-digits)
+dataset.
 """
 
 from tensorflow.keras.datasets import mnist

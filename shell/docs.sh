@@ -3,6 +3,7 @@ cd docs
 python autogen.py
 mkdocs build
 cd ..
+sh shell/format.sh
 echo "autokeras.com" > docs/site/CNAME
 git checkout -b gh-pages-temp
 git add -f docs/site

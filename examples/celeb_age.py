@@ -1,17 +1,17 @@
 """
-Regression tasks estimate a numeric variable, such as the price of a house or voter
-turnout.
+Regression tasks estimate a numeric variable, such as the price of a house or
+voter turnout.
 
 This example is adapted from a
-[notebook](https://gist.github.com/mapmeld/98d1e9839f2d1f9c4ee197953661ed07) which
-estimates a person's age from their image, trained on the
+[notebook](https://gist.github.com/mapmeld/98d1e9839f2d1f9c4ee197953661ed07)
+which estimates a person's age from their image, trained on the
 [IMDB-WIKI](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/) photographs
 of famous
 people.
 
-First, prepare your image data in a numpy.ndarray or tensorflow.Dataset format. Each
-image must have the same shape, meaning each has the same width, height, and color
-channels as other images in the set.
+First, prepare your image data in a numpy.ndarray or tensorflow.Dataset format.
+Each image must have the same shape, meaning each has the same width, height,
+and color channels as other images in the set.
 """
 from datetime import datetime
 from datetime import timedelta
@@ -268,12 +268,12 @@ reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
 reg.fit(x_train, y_train, epochs=3)
 
 """
-The usage of AutoModel is similar to the functional API of Keras. Basically, you are
-building a graph, whose edges are blocks and the nodes are intermediate outputs of
-blocks. To add an edge from input_node to output_node with output_node =
-ak.some_block(input_node).
-You can even also use more fine grained blocks to customize the search space even
-further. See the following example.
+The usage of AutoModel is similar to the functional API of Keras. Basically, you
+are building a graph, whose edges are blocks and the nodes are intermediate
+outputs of blocks. To add an edge from input_node to output_node with
+output_node = ak.some_block(input_node).  You can even also use more fine
+grained blocks to customize the search space even further. See the following
+example.
 """
 
 

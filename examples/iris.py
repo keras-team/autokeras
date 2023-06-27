@@ -17,9 +17,7 @@ Search for a good model for the
 
 
 # Prepare the dataset.
-train_dataset_url = (
-    "https://storage.googleapis.com/download.tensorflow.org/data/iris_training.csv"
-)
+train_dataset_url = "https://storage.googleapis.com/download.tensorflow.org/data/iris_training.csv"  # noqa: E501
 train_dataset_fp = tf.keras.utils.get_file(
     fname=os.path.basename(train_dataset_url), origin=train_dataset_url
 )

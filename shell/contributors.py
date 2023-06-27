@@ -25,7 +25,9 @@ def main(directory):
 
     html = '<svg xmlns="http://www.w3.org/2000/svg" '
     html += 'xmlns:xlink="http://www.w3.org/1999/xlink" '
-    html += 'width="{width}" height="{height}">'.format(width=width, height=height)
+    html += 'width="{width}" height="{height}">'.format(
+        width=width, height=height
+    )
 
     defs = "<defs>"
     defs += '<rect id="rect" width="36" height="36" rx="18"/>'

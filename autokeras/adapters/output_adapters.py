@@ -28,10 +28,9 @@ class HeadAdapter(adapter_module.Adapter):
         supported_types = (tf.data.Dataset, np.ndarray, pd.DataFrame, pd.Series)
         if not isinstance(dataset, supported_types):
             raise TypeError(
-                "Expect the target data of {name} to be tf.data.Dataset,"
-                " np.ndarray, pd.DataFrame or pd.Series, but got {type}.".format(
-                    name=self.name, type=type(dataset)
-                )
+                f"Expect the target data of {self.name} to be tf.data.Dataset,"
+                f" np.ndarray, pd.DataFrame or pd.Series, "
+                f"but got {type(dataset)}."
             )
 
     def convert_to_dataset(self, dataset, batch_size):

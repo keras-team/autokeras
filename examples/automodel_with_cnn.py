@@ -26,7 +26,9 @@ input_node = ak.Input()
 output_node = ak.ConvBlock()(input_node)
 # output_node = ak.DenseBlock()(output_node) #optional
 # output_node = ak.SpatialReduction()(output_node) #optional
-output_node = ak.ClassificationHead(num_classes=2, multi_label=True)(output_node)
+output_node = ak.ClassificationHead(num_classes=2, multi_label=True)(
+    output_node
+)
 
 auto_model = ak.AutoModel(
     inputs=input_node, outputs=output_node, overwrite=True, max_trials=1

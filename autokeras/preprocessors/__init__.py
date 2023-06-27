@@ -24,14 +24,15 @@ from autokeras.preprocessors.encoders import LabelEncoder
 from autokeras.preprocessors.encoders import OneHotEncoder
 from autokeras.preprocessors.postprocessors import SigmoidPostprocessor
 from autokeras.preprocessors.postprocessors import SoftmaxPostprocessor
+from autokeras.utils import utils
 
 
 def serialize(preprocessor):
-    return keras.utils.serialize_keras_object(preprocessor)
+    return utils.serialize_keras_object(preprocessor)
 
 
 def deserialize(config, custom_objects=None):
-    return keras.utils.deserialize_keras_object(
+    return utils.deserialize_keras_object(
         config,
         module_objects=globals(),
         custom_objects=custom_objects,

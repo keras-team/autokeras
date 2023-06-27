@@ -28,14 +28,15 @@ from autokeras import keras_layers
 from autokeras import preprocessors
 from autokeras.engine import io_hypermodel
 from autokeras.engine import node as node_module
+from autokeras.utils import utils
 
 
 def serialize(obj):
-    return keras.utils.serialize_keras_object(obj)
+    return utils.serialize_keras_object(obj)
 
 
 def deserialize(config, custom_objects=None):
-    return keras.utils.deserialize_keras_object(
+    return utils.deserialize_keras_object(
         config,
         module_objects=globals(),
         custom_objects=custom_objects,
@@ -79,9 +80,9 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
 class ImageInput(Input):
     """Input node for image data.
 
-    The input data should be numpy.ndarray or tf.data.Dataset. The shape of the data
-    should be should be (samples, width, height) or
-    (samples, width, height, channels).
+    The input data should be numpy.ndarray or tf.data.Dataset. The shape of the
+    data should be should be (samples, width, height) or (samples, width,
+    height, channels).
 
     # Arguments
         name: String. The name of the input node. If unspecified, it will be set
@@ -111,9 +112,9 @@ class ImageInput(Input):
 class TextInput(Input):
     """Input node for text data.
 
-    The input data should be numpy.ndarray or tf.data.Dataset. The data should be
-    one-dimensional. Each element in the data should be a string which is a full
-    sentence.
+    The input data should be numpy.ndarray or tf.data.Dataset. The data should
+    be one-dimensional. Each element in the data should be a string which is a
+    full sentence.
 
     # Arguments
         name: String. The name of the input node. If unspecified, it will be set
@@ -145,20 +146,21 @@ class TextInput(Input):
 class StructuredDataInput(Input):
     """Input node for structured data.
 
-    The input data should be numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
-    The data should be two-dimensional with numerical or categorical values.
+    The input data should be numpy.ndarray, pandas.DataFrame or
+    tensorflow.Dataset.  The data should be two-dimensional with numerical or
+    categorical values.
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
-            length of the list should be equal to the number of columns of the data.
-            Defaults to None. If None, it will be obtained from the header of the csv
-            file or the pandas.DataFrame.
-        column_types: Dict. The keys are the column names. The values should either
-            be 'numerical' or 'categorical', indicating the type of that column.
-            Defaults to None. If not None, the column_names need to be specified.
-            If None, it will be inferred from the data. A column will be judged as
-            categorical if the number of different values is less than 5% of the
-            number of instances.
+            length of the list should be equal to the number of columns of the
+            data. Defaults to None. If None, it will be obtained from the
+            header of the csv file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should
+            either be 'numerical' or 'categorical', indicating the type of that
+            column. Defaults to None. If not None, the column_names need to be
+            specified. If None, it will be inferred from the data. A column will
+            be judged as categorical if the number of different values is less
+            than 5% of the number of instances.
         name: String. The name of the input node. If unspecified, it will be set
             automatically with the class name.
     """
@@ -177,7 +179,10 @@ class StructuredDataInput(Input):
     def get_config(self):
         config = super().get_config()
         config.update(
-            {"column_names": self.column_names, "column_types": self.column_types}
+            {
+                "column_names": self.column_names,
+                "column_types": self.column_types,
+            }
         )
         return config
 
@@ -185,7 +190,9 @@ class StructuredDataInput(Input):
         return adapters.StructuredDataAdapter()
 
     def get_analyser(self):
-        return analysers.StructuredDataAnalyser(self.column_names, self.column_types)
+        return analysers.StructuredDataAnalyser(
+            self.column_names, self.column_types
+        )
 
     def get_block(self):
         return blocks.StructuredDataBlock()
@@ -204,20 +211,20 @@ class TimeseriesInput(StructuredDataInput):
     """Input node for timeseries data.
 
     # Arguments
-        lookback: Int. The range of history steps to consider for each prediction.
-            For example, if lookback=n, the data in the range of [i - n, i - 1]
-            is used to predict the value of step i. If unspecified, it will be tuned
-            automatically.
+        lookback: Int. The range of history steps to consider for each
+            prediction. For example, if lookback=n, the data in the range of [i
+            - n, i - 1] is used to predict the value of step i. If unspecified,
+            it will be tuned automatically.
         column_names: A list of strings specifying the names of the columns. The
-            length of the list should be equal to the number of columns of the data.
-            Defaults to None. If None, it will be obtained from the header of the csv
-            file or the pandas.DataFrame.
-        column_types: Dict. The keys are the column names. The values should either
-            be 'numerical' or 'categorical', indicating the type of that column.
-            Defaults to None. If not None, the column_names need to be specified.
-            If None, it will be inferred from the data. A column will be judged as
-            categorical if the number of different values is less than 5% of the
-            number of instances.
+            length of the list should be equal to the number of columns of the
+            data. Defaults to None. If None, it will be obtained from the
+            header of the csv file or the pandas.DataFrame.
+        column_types: Dict. The keys are the column names. The values should
+            either be 'numerical' or 'categorical', indicating the type of that
+            column.  Defaults to None. If not None, the column_names need to be
+            specified.  If None, it will be inferred from the data. A column
+            will be judged as categorical if the number of different values is
+            less than 5% of the number of instances.
         name: String. The name of the input node. If unspecified, it will be set
             automatically with the class name.
     """
@@ -231,7 +238,10 @@ class TimeseriesInput(StructuredDataInput):
         **kwargs
     ):
         super().__init__(
-            column_names=column_names, column_types=column_types, name=name, **kwargs
+            column_names=column_names,
+            column_types=column_types,
+            name=name,
+            **kwargs
         )
         self.lookback = lookback
 

@@ -11,18 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from tensorflow import keras
 
 from autokeras import preprocessors
 from autokeras.engine import hyper_preprocessor
+from autokeras.utils import utils
 
 
 def serialize(encoder):
-    return keras.utils.serialize_keras_object(encoder)
+    return utils.serialize_keras_object(encoder)
 
 
 def deserialize(config, custom_objects=None):
-    return keras.utils.deserialize_keras_object(
+    return utils.deserialize_keras_object(
         config,
         module_objects=globals(),
         custom_objects=custom_objects,
@@ -49,10 +49,14 @@ class DefaultHyperPreprocessor(hyper_preprocessor.HyperPreprocessor):
 
     def get_config(self):
         config = super().get_config()
-        config.update({"preprocessor": preprocessors.serialize(self.preprocessor)})
+        config.update(
+            {"preprocessor": preprocessors.serialize(self.preprocessor)}
+        )
         return config
 
     @classmethod
     def from_config(cls, config):
-        config["preprocessor"] = preprocessors.deserialize(config["preprocessor"])
+        config["preprocessor"] = preprocessors.deserialize(
+            config["preprocessor"]
+        )
         return super().from_config(config)

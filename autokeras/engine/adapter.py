@@ -30,8 +30,8 @@ class Adapter(object):
         """Check if the dataset is valid for the input node.
 
         # Arguments
-            dataset: Usually numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
-                The dataset to be checked.
+            dataset: Usually numpy.ndarray, pandas.DataFrame or
+                tensorflow.Dataset. The dataset to be checked.
 
         # Returns
             Boolean. Whether the dataset is in compatible format.
@@ -42,8 +42,8 @@ class Adapter(object):
         """Convert supported formats of datasets to batched tf.data.Dataset.
 
         # Arguments
-            dataset: Usually numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
-                The dataset to be converted.
+            dataset: Usually numpy.ndarray, pandas.DataFrame or
+                tensorflow.Dataset. The dataset to be converted.
             batch_size: Int. The batch_size to batch the dataset.
 
         # Returns
@@ -57,8 +57,8 @@ class Adapter(object):
         """Check, convert and batch the dataset.
 
         # Arguments
-            dataset: Usually numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
-                The dataset to be converted.
+            dataset: Usually numpy.ndarray, pandas.DataFrame or
+                tensorflow.Dataset. The dataset to be converted.
             batch_size: Int. The batch_size to batch the dataset.
 
         # Returns

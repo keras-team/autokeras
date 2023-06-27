@@ -18,9 +18,9 @@ from autokeras.engine import block as block_module
 class IOHyperModel(block_module.Block):
     """A mixin class connecting the input nodes and heads with the adapters.
 
-    This class is extended by the input nodes and the heads. The AutoModel calls the
-    functions to get the corresponding adapters and pass the information back to the
-    input nodes and heads.
+    This class is extended by the input nodes and the heads. The AutoModel calls
+    the functions to get the corresponding adapters and pass the information
+    back to the input nodes and heads.
     """
 
     def __init__(self, shape=None, **kwargs):
@@ -59,7 +59,7 @@ class IOHyperModel(block_module.Block):
         self.num_samples = analyser.num_samples
 
     def get_hyper_preprocessors(self):
-        """Construct a list of HyperPreprocessors based on the learned information.
+        """Construct a list of HyperPreprocessors based on learned information.
 
         # Returns
             A list of HyperPreprocessors for the corresponding data.

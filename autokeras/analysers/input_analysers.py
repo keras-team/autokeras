@@ -34,7 +34,9 @@ class ImageAnalyser(InputAnalyser):
             raise ValueError(
                 "Expect the data to ImageInput to have shape (batch_size, "
                 "height, width, channels) or (batch_size, height, width) "
-                "dimensions, but got input shape {shape}".format(shape=self.shape)
+                "dimensions, but got input shape {shape}".format(
+                    shape=self.shape
+                )
             )
 
 
@@ -141,7 +143,8 @@ class StructuredDataAnalyser(InputAnalyser):
             if self.count_categorical[i] > 0:
                 column_types[self.column_names[i]] = CATEGORICAL
             elif (
-                len(self.count_unique_numerical[i]) / self.count_numerical[i] < 0.05
+                len(self.count_unique_numerical[i]) / self.count_numerical[i]
+                < 0.05
             ):
                 column_types[self.column_names[i]] = CATEGORICAL
             else:
