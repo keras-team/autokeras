@@ -68,7 +68,7 @@ Refer to our [Contributing Guide](https://autokeras.com/contributing/) to learn 
 
 Thank all the contributors!
 
-[![The contributors](https://autokeras.com/img/contributors.svg)](https://github.com/keras-team/autokeras/graphs/contributor)
+[![The contributors](https://autokeras.com/img/contributors.svg)](https://github.com/keras-team/autokeras/graphs/contributors)
 
 ## Cite this work
 

@@ -30,11 +30,10 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -e ".[tests]" --progress-bar off
-        pip uninstall keras -y
-        pip uninstall tensorflow -y
-        pip install tf-nightly --progress-bar off --upgrade
         pip uninstall keras-tuner -y
         pip install git+https://github.com/keras-team/keras-tuner.git@master
+        pip uninstall keras tensorflow tensorflow-text tensorflow-datasets -y
+        pip install tf-nightly tensorflow-text-nightly tfds-nightly --progress-bar off --upgrade
     - name: Test with pytest
       run: |
         pytest
