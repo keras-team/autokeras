@@ -20,17 +20,23 @@ from autokeras import test_utils
 
 def test_io_api(tmp_path):
     num_instances = 20
-    image_x = test_utils.generate_data(num_instances=num_instances, shape=(28, 28))
+    image_x = test_utils.generate_data(
+        num_instances=num_instances, shape=(28, 28)
+    )
     text_x = test_utils.generate_text_data(num_instances=num_instances)
 
     image_x = image_x[:num_instances]
     structured_data_x = (
-        pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)[:num_instances]
+        pd.read_csv(test_utils.TRAIN_CSV_PATH)
+        .to_numpy()
+        .astype(str)[:num_instances]
     )
     classification_y = test_utils.generate_one_hot_labels(
         num_instances=num_instances, num_classes=3
     )
-    regression_y = test_utils.generate_data(num_instances=num_instances, shape=(1,))
+    regression_y = test_utils.generate_data(
+        num_instances=num_instances, shape=(1,)
+    )
 
     # Build model and train.
     automodel = ak.AutoModel(

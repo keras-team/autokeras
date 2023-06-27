@@ -271,16 +271,21 @@ def test_rnn_get_config_has_all_attributes():
 
     config = block.get_config()
 
-    assert test_utils.get_func_args(blocks.RNNBlock.__init__).issubset(config.keys())
+    assert test_utils.get_func_args(blocks.RNNBlock.__init__).issubset(
+        config.keys()
+    )
 
 
 def test_dense_build_return_tensor():
     block = blocks.DenseBlock(
-        num_units=keras_tuner.engine.hyperparameters.Choice("num_units", [10, 20])
+        num_units=keras_tuner.engine.hyperparameters.Choice(
+            "num_units", [10, 20]
+        )
     )
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(32,), dtype=tf.float32)
+        keras_tuner.HyperParameters(),
+        keras.Input(shape=(32,), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -290,7 +295,8 @@ def test_dense_build_with_dropout_return_tensor():
     block = blocks.DenseBlock(dropout=0.5)
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(32,), dtype=tf.float32)
+        keras_tuner.HyperParameters(),
+        keras.Input(shape=(32,), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -300,7 +306,8 @@ def test_dense_build_with_bn_return_tensor():
     block = blocks.DenseBlock(use_batchnorm=True)
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(32,), dtype=tf.float32)
+        keras_tuner.HyperParameters(),
+        keras.Input(shape=(32,), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -328,7 +335,8 @@ def test_embed_build_return_tensor():
     block = blocks.Embedding()
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(32,), dtype=tf.float32)
+        keras_tuner.HyperParameters(),
+        keras.Input(shape=(32,), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1
@@ -356,7 +364,8 @@ def test_transformer_build_return_tensor():
     block = blocks.Transformer()
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(64,), dtype=tf.float32)
+        keras_tuner.HyperParameters(),
+        keras.Input(shape=(64,), dtype=tf.float32),
     )
 
     assert len(nest.flatten(outputs)) == 1

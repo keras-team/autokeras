@@ -53,10 +53,9 @@ it also supports numpy.ndarray, pandas.DataFrame or [tf.data.Dataset](
 https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable). The
 data should be two-dimensional with numerical or categorical values.
 
-For the classification labels,
-AutoKeras accepts both plain labels, i.e. strings or integers, and one-hot encoded
-encoded labels, i.e. vectors of 0s and 1s.
-The labels can be numpy.ndarray, pandas.DataFrame, or pandas.Series.
+For the classification labels, AutoKeras accepts both plain labels, i.e. strings
+or integers, and one-hot encoded encoded labels, i.e. vectors of 0s and 1s. The
+labels can be numpy.ndarray, pandas.DataFrame, or pandas.Series.
 
 The following examples show how the data can be prepared with numpy.ndarray,
 pandas.DataFrame, and tensorflow.data.Dataset.
@@ -197,8 +196,8 @@ intermediate outputs of blocks.
 To add an edge from `input_node` to `output_node` with
 `output_node = ak.[some_block]([block_args])(input_node)`.
 
-You can even also use more fine grained blocks to customize the search space even
-further. See the following example.
+You can even also use more fine grained blocks to customize the search space
+even further. See the following example.
 """
 
 

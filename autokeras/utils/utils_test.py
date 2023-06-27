@@ -61,7 +61,9 @@ def test_run_with_adaptive_batch_size_raise_error():
         utils.run_with_adaptive_batch_size(
             batch_size=64,
             func=func,
-            x=tf.data.Dataset.from_tensor_slices(np.random.rand(100, 1)).batch(64),
+            x=tf.data.Dataset.from_tensor_slices(np.random.rand(100, 1)).batch(
+                64
+            ),
             validation_data=tf.data.Dataset.from_tensor_slices(
                 np.random.rand(100, 1)
             ).batch(64),
@@ -69,12 +71,16 @@ def test_run_with_adaptive_batch_size_raise_error():
 
 
 def test_get_hyperparameter_with_none_return_hp():
-    hp = utils.get_hyperparameter(None, hyperparameters.Choice("hp", [10, 20]), int)
+    hp = utils.get_hyperparameter(
+        None, hyperparameters.Choice("hp", [10, 20]), int
+    )
     assert isinstance(hp, hyperparameters.Choice)
 
 
 def test_get_hyperparameter_with_int_return_int():
-    value = utils.get_hyperparameter(10, hyperparameters.Choice("hp", [10, 20]), int)
+    value = utils.get_hyperparameter(
+        10, hyperparameters.Choice("hp", [10, 20]), int
+    )
     assert isinstance(value, int)
     assert value == 10
 

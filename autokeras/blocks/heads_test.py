@@ -38,7 +38,9 @@ def test_two_classes_infer_binary_crossentropy():
     head.config_from_analyser(analyser)
     head.build(
         keras_tuner.HyperParameters(),
-        input_module.Input(shape=(32,)).build_node(keras_tuner.HyperParameters()),
+        input_module.Input(shape=(32,)).build_node(
+            keras_tuner.HyperParameters()
+        ),
     )
     assert head.loss.name == "binary_crossentropy"
 
@@ -55,7 +57,9 @@ def test_three_classes_infer_categorical_crossentropy():
     head.config_from_analyser(analyser)
     head.build(
         keras_tuner.HyperParameters(),
-        input_module.Input(shape=(32,)).build_node(keras_tuner.HyperParameters()),
+        input_module.Input(shape=(32,)).build_node(
+            keras_tuner.HyperParameters()
+        ),
     )
     assert head.loss.name == "categorical_crossentropy"
 
@@ -86,7 +90,8 @@ def test_clf_head_with_2_clases_get_label_encoder():
     head._encoded = False
     head._labels = ["a", "b"]
     assert isinstance(
-        head.get_hyper_preprocessors()[-1].preprocessor, preprocessors.LabelEncoder
+        head.get_hyper_preprocessors()[-1].preprocessor,
+        preprocessors.LabelEncoder,
     )
 
 

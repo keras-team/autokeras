@@ -1,5 +1,6 @@
 """
-Search for a good model for the [Titanic](https://www.kaggle.com/c/titanic) dataset.
+Search for a good model for the [Titanic](https://www.kaggle.com/c/titanic)
+dataset.
 """
 
 import timeit
@@ -21,7 +22,8 @@ def main():
     )
 
     start_time = timeit.default_timer()
-    # x is the path to the csv file. y is the column name of the column to predict.
+    # x is the path to the csv file. y is the column name of the column to
+    # predict.
     clf.fit(train_file_path, "survived")
     stop_time = timeit.default_timer()
 
@@ -29,7 +31,9 @@ def main():
     accuracy = clf.evaluate(test_file_path, "survived")[1]
     print("Accuracy: {accuracy}%".format(accuracy=round(accuracy * 100, 2)))
     print(
-        "Total time: {time} seconds.".format(time=round(stop_time - start_time, 2))
+        "Total time: {time} seconds.".format(
+            time=round(stop_time - start_time, 2)
+        )
     )
 
 

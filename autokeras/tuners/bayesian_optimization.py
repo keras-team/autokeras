@@ -17,7 +17,9 @@ import keras_tuner
 from autokeras.engine import tuner as tuner_module
 
 
-class BayesianOptimization(keras_tuner.BayesianOptimization, tuner_module.AutoTuner):
+class BayesianOptimization(
+    keras_tuner.BayesianOptimization, tuner_module.AutoTuner
+):
     """KerasTuner BayesianOptimization with preprocessing layer tuning."""
 
     pass

@@ -57,8 +57,8 @@ class Head(io_hypermodel.IOHyperModel):
     # Arguments
         loss: A Keras loss function. Defaults to None. If None, the loss will be
             inferred from the AutoModel.
-        metrics: A list of Keras metrics. Defaults to None. If None, the metrics will
-            be inferred from the AutoModel.
+        metrics: A list of Keras metrics. Defaults to None. If None, the metrics
+            will be inferred from the AutoModel.
     """
 
     def __init__(

@@ -133,7 +133,9 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
 
             # Collect blocks with in degree 0.
             for block in blocks:
-                if any([in_degree[self._node_to_id[node]] for node in block.inputs]):
+                if any(
+                    [in_degree[self._node_to_id[node]] for node in block.inputs]
+                ):
                     continue
                 new_added.append(block)
 
@@ -150,7 +152,9 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
                     output_node_id = self._node_to_id[output_node]
                     in_degree[output_node_id] -= 1
 
-    def _search_network(self, input_node, outputs, in_stack_nodes, visited_nodes):
+    def _search_network(
+        self, input_node, outputs, in_stack_nodes, visited_nodes
+    ):
         visited_nodes.add(input_node)
         in_stack_nodes.add(input_node)
 
@@ -211,7 +215,9 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
 
     @classmethod
     def from_config(cls, config):
-        blocks = [blocks_module.deserialize(block) for block in config["blocks"]]
+        blocks = [
+            blocks_module.deserialize(block) for block in config["blocks"]
+        ]
         nodes = {
             int(node_id): nodes_module.deserialize(node)
             for node_id, node in config["nodes"].items()
@@ -220,7 +226,8 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
         inputs = [nodes[node_id] for node_id in nodes]
         for block_id, block in enumerate(blocks):
             input_nodes = [
-                nodes[node_id] for node_id in config["block_inputs"][str(block_id)]
+                nodes[node_id]
+                for node_id in config["block_inputs"][str(block_id)]
             ]
             output_nodes = nest.flatten(block(input_nodes))
             for output_node, node_id in zip(
@@ -284,7 +291,8 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
             ["adam", "sgd", "adam_weight_decay"],
             default="adam",
         )
-        # TODO: add adadelta optimizer when it can optimize embedding layer on GPU.
+        # TODO: add adadelta optimizer when it can optimize embedding layer on
+        # GPU.
         learning_rate = hp.Choice(
             "learning_rate", [1e-1, 1e-2, 1e-3, 1e-4, 2e-5, 1e-5], default=1e-3
         )
@@ -321,7 +329,9 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
             )
 
         model.compile(
-            optimizer=optimizer, metrics=self._get_metrics(), loss=self._get_loss()
+            optimizer=optimizer,
+            metrics=self._get_metrics(),
+            loss=self._get_loss(),
         )
 
         return model

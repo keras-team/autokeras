@@ -81,7 +81,9 @@ def test_evaluate(tuner_fn, tmp_path):
     auto_model = ak.AutoModel(
         input_node, output_node, directory=tmp_path, max_trials=1
     )
-    auto_model.fit(x_train, y_train, epochs=1, validation_data=(x_train, y_train))
+    auto_model.fit(
+        x_train, y_train, epochs=1, validation_data=(x_train, y_train)
+    )
     auto_model.evaluate(tf.data.Dataset.from_tensor_slices((x_train, y_train)))
     assert tuner_fn.called
 
@@ -123,7 +125,9 @@ def test_final_fit_not_concat(tuner_fn, tmp_path):
     y_train = np.random.rand(100, 1)
 
     auto_model = get_single_io_auto_model(tmp_path)
-    auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
+    auto_model.fit(
+        x_train, y_train, epochs=2, validation_data=(x_train, y_train)
+    )
     assert not tuner.search.call_args_list[0][1]["validation_split"]
 
 
@@ -135,7 +139,9 @@ def test_overwrite(tuner_fn, tmp_path):
     y_train = np.random.rand(100, 1)
 
     auto_model = get_single_io_auto_model(tmp_path)
-    auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
+    auto_model.fit(
+        x_train, y_train, epochs=2, validation_data=(x_train, y_train)
+    )
     assert not tuner_class.call_args_list[0][1]["overwrite"]
 
 
@@ -148,7 +154,9 @@ def test_export_model(tuner_fn, tmp_path):
     y_train = np.random.rand(100, 1)
 
     auto_model = get_single_io_auto_model(tmp_path)
-    auto_model.fit(x_train, y_train, epochs=2, validation_data=(x_train, y_train))
+    auto_model.fit(
+        x_train, y_train, epochs=2, validation_data=(x_train, y_train)
+    )
     auto_model.export_model()
     assert tuner.get_best_model.called
 
@@ -217,7 +225,11 @@ def test_data_io_consistency_validation(tuner_fn, tmp_path):
     dataset = tf.data.Dataset.from_tensor_slices(((x1, x1), (y1, y1)))
     val_dataset = tf.data.Dataset.from_tensor_slices(((x1,), (y1, y1)))
     dataset_error(
-        dataset, None, val_dataset, "Expected x in validation_data to have", tmp_path
+        dataset,
+        None,
+        val_dataset,
+        "Expected x in validation_data to have",
+        tmp_path,
     )
 
 
@@ -270,7 +282,10 @@ def test_single_input_predict_doesnt_crash(tuner_fn, tmp_path):
 def test_invalid_tuner_name_error(tmp_path):
     with pytest.raises(ValueError) as info:
         ak.AutoModel(
-            ak.ImageInput(), ak.RegressionHead(), directory=tmp_path, tuner="unknown"
+            ak.ImageInput(),
+            ak.RegressionHead(),
+            directory=tmp_path,
+            tuner="unknown",
         )
 
     assert "Expected the tuner argument to be one of" in str(info.value)

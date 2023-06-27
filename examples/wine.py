@@ -60,6 +60,8 @@ clf = ak.StructuredDataClassifier(max_trials=5)
 clf.fit(x=train_data[feature_names], y=train_data[label_name])
 print(
     "Accuracy: {accuracy}".format(
-        accuracy=clf.evaluate(x=test_data[feature_names], y=test_data[label_name])
+        accuracy=clf.evaluate(
+            x=test_data[feature_names], y=test_data[label_name]
+        )
     )
 )
