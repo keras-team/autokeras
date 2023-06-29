@@ -2,7 +2,7 @@ name: Local tests (not owner repository)
 
 on:
   push:
-    branches: [master]
+    branches: [xsa-dev-patch-2]
   pull_request:
     release:
     types: [created]
