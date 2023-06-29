@@ -16,14 +16,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Set up Python 3.10
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip setuptools
+          python -m pip install --upgrade pip setuptools wheel twine regex
           pip install tensorflow
           pip install -e ".[tests]" --progress-bar off
 
@@ -38,6 +38,18 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel twine regex
+          pip install tensorflow
+          pip install -e .
+          pip install -r docs/requirements.txt
+
       - name: Run pre-commit
         run: bash shell/pre-commit.sh
 
@@ -48,14 +60,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Set up Python 3.10
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip setuptools
+          python -m pip install --upgrade pip setuptools wheel twine regex
           pip install tensorflow
           pip install -e .
           pip install -r docs/requirements.txt
@@ -82,11 +94,5 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel twine regex
+          pip install tensorflow
 
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: |
-          python setup.py sdist bdist_wheel
-          twine upload dist/*
