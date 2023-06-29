@@ -35,6 +35,7 @@ jobs:
         pip install keras-tuner regex
         pip uninstall keras tensorflow tensorflow-text tensorflow-datasets -y
         pip install tf-nightly tensorflow-text-nightly tfds-nightly --progress-bar off --upgrade
+        pip install regex
     - name: Test with pytest
       run: |
         pytest
