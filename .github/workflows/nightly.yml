@@ -29,9 +29,10 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
     - name: Install dependencies
       run: |
+        pip install regex
         pip install -e ".[tests]" --progress-bar off
         pip uninstall keras-tuner -y
-        pip install git+https://github.com/keras-team/keras-tuner.git@master
+        pip install keras-tuner regex
         pip uninstall keras tensorflow tensorflow-text tensorflow-datasets -y
         pip install tf-nightly tensorflow-text-nightly tfds-nightly --progress-bar off --upgrade
         pip install regex
