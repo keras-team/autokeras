@@ -1,4 +1,4 @@
-name: Tests
+name: Local tests (not owner repository)
 
 on:
   push:
