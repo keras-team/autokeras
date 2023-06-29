@@ -30,6 +30,7 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
     - name: Install dependencies
       run: |
+        pip install regex
         pip install -e ".[tests]" --progress-bar off
         pip uninstall keras-tuner -y
         pip install git+https://github.com/keras-team/keras-tuner.git@master
