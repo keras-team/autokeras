@@ -4,7 +4,8 @@ on:
   push:
     branches: [xsa-dev-patch-2]
   pull_request:
-    release:
+    branches: [xsa-dev-patch-2]
+  release:
     types: [created]
 
 jobs:
@@ -12,27 +13,17 @@ jobs:
     name: Run tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v2
 
       - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
           python-version: '3.10'
 
-      - name: Get pip cache dir
-        id: pip-cache
-        run: |
-          python -m pip install --upgrade pip setuptools
-          echo "dir=$(pip cache dir)" >> ${{ github.workspace }}/$GITHUB_ENV
-
-      - name: pip cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
-
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip setuptools
           pip install tensorflow
           pip install -e ".[tests]" --progress-bar off
 
@@ -40,14 +31,12 @@ jobs:
         run: |
           pytest --cov=autokeras --cov-report xml:coverage.xml
 
-      - name: Codecov
-        uses: codecov/codecov-action@v3
-
   format:
     name: Check the code format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v2
 
       - name: Run pre-commit
         run: bash shell/pre-commit.sh
@@ -56,10 +45,11 @@ jobs:
     name: Build the docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v2
 
       - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
           python-version: '3.10'
 
@@ -81,10 +71,11 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'created'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
           python-version: '3.10'
 
