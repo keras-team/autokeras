@@ -1,10 +1,12 @@
 name: Python 3.10 Build & Test 
+
 on:
   push:
     branches: [ master ]
   pull_request:
   release:
     types: [created]
+
 jobs:
   build:
     name: Run tests
@@ -40,6 +42,7 @@ jobs:
 
       - name: Codecov
         uses: codecov/codecov-action@v3
+
   format:
     name: Check the code format
     runs-on: ubuntu-latest
@@ -61,6 +64,7 @@ jobs:
 
       - name: Run pre-commit
         run: bash shell/pre-commit.sh
+
   build-docs:
     name: Build the docs
     runs-on: ubuntu-latest
@@ -79,11 +83,13 @@ jobs:
           pip install tensorflow
           pip install -e .
           pip install -r docs/requirements.txt
+
       - name: Build the docs
         run: |
           cd docs
           python autogen.py
           mkdocs build
+
   deploy:
     needs: [build, format, build-docs]
     if: github.event_name == 'release' && github.event.action == 'created'

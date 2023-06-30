@@ -82,4 +82,3 @@ auto_model = ak.ImageClassifier(
     max_model_size=1000000000,
 )
 ```
-xsa
