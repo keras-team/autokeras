@@ -1,4 +1,6 @@
+
 name: Python 3.10 Build & Test 
+
 
 on:
   push:
@@ -6,12 +8,6 @@ on:
   pull_request:
   release:
     types: [created]
-
-jobs:
-  build:
-    name: Run tests
-    runs-on: ubuntu-latest
-    steps:
       - name: Check out repository
         uses: actions/checkout@v3
 
@@ -47,6 +43,7 @@ jobs:
     name: Check the code format
     runs-on: ubuntu-latest
     steps:
+
       - name: Check out repository
         uses: actions/checkout@v3
 
@@ -83,13 +80,17 @@ jobs:
           pip install tensorflow
           pip install -e .
           pip install -r docs/requirements.txt
-
-      - name: Build the docs
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install dependencies
         run: |
-          cd docs
-          python autogen.py
-          mkdocs build
-
+          python -m pip install --upgrade pip setuptools
+          pip install tensorflow regex
+          pip install -e .
+          pip install -r docs/requirements.txt
   deploy:
     needs: [build, format, build-docs]
     if: github.event_name == 'release' && github.event.action == 'created'
