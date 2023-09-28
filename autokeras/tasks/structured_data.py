@@ -99,7 +99,7 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
                 numerical.
             epochs: Int. The number of epochs to train each model during the
                 search. If unspecified, we would use epochs equal to 1000 and
-                early stopping with patience equal to 30.
+                early stopping with patience equal to 10.
             callbacks: List of Keras callbacks to apply during training and
                 validation.
             validation_split: Float between 0 and 1. Defaults to 0.2. Fraction
@@ -302,7 +302,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                 binary classification.
             epochs: Int. The number of epochs to train each model during the
                 search. If unspecified, we would use epochs equal to 1000 and
-                early stopping with patience equal to 30.
+                early stopping with patience equal to 10.
             callbacks: List of Keras callbacks to apply during training and
                 validation.
             validation_split: Float between 0 and 1. Defaults to 0.2. Fraction
