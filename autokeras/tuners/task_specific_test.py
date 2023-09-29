@@ -61,7 +61,7 @@ def test_img_clf_init_hp2_equals_hp_of_a_model(tmp_path):
     assert set(init_hp.keys()) == set(hp._hps.keys())
 
 
-@pytest.skipif(
+@pytest.mark.skipif(
     "dev" in tf.__version__, reason="test fails on tensorflow-text nightly"
 )
 def test_txt_clf_init_hp2_equals_hp_of_a_model(tmp_path):
