@@ -69,7 +69,7 @@ def generate_data(num_instances=100, shape=(32, 32, 3), dtype="np"):
 def generate_one_hot_labels(num_instances=100, num_classes=10, dtype="np"):
     np.random.seed(SEED)
     labels = np.random.randint(num_classes, size=num_instances)
-    data = keras.utils.to_categorical(labels)
+    data = keras.utils.to_categorical(labels, num_classes=num_classes)
     if dtype == "np":
         return data
     if dtype == "dataset":
