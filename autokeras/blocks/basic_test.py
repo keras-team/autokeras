@@ -397,9 +397,6 @@ def test_multi_head_restore_head_size():
     assert block.head_size == 16
 
 
-@pytest.mark.skipif(
-    "dev" in tf.__version__, reason="test fails on tensorflow-text nightly"
-)
 def test_bert_build_return_tensor():
     block = blocks.BertBlock()
 
