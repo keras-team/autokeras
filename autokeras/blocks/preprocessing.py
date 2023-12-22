@@ -17,8 +17,8 @@ from typing import Tuple
 from typing import Union
 
 import tree
+from keras import layers
 from keras_tuner.engine import hyperparameters
-from tensorflow.keras import layers
 
 from autokeras import analysers
 from autokeras import keras_layers

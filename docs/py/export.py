@@ -2,8 +2,8 @@
 pip install autokeras
 """
 import tensorflow as tf
-from tensorflow.keras.datasets import mnist
-from tensorflow.keras.models import load_model
+from keras.datasets import mnist
+from keras.models import load_model
 
 import autokeras as ak
 

@@ -4,7 +4,7 @@ Search for a good model for the
 dataset.
 """
 
-from tensorflow.keras.datasets import mnist
+from keras.datasets import mnist
 
 import autokeras as ak
 

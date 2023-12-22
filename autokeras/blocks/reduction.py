@@ -16,7 +16,7 @@ from typing import Optional
 
 import tensorflow as tf
 import tree
-from tensorflow.keras import layers
+from keras import layers
 
 from autokeras.engine import block as block_module
 from autokeras.utils import layer_utils

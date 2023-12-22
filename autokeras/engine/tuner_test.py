@@ -17,7 +17,7 @@ from unittest import mock
 import numpy as np
 import tensorflow as tf
 import tree
-from tensorflow.keras.layers.experimental import preprocessing
+from keras.layers.experimental import preprocessing
 
 import autokeras as ak
 from autokeras import keras_layers

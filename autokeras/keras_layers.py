@@ -15,8 +15,8 @@ from typing import List
 
 import tensorflow as tf
 import tree
-from tensorflow.keras import layers
-from tensorflow.keras.layers.experimental import preprocessing
+from keras import layers
+from keras.layers.experimental import preprocessing
 
 from autokeras.backend import keras
 from autokeras.utils import data_utils

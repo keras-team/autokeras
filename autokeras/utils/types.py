@@ -19,8 +19,8 @@ from typing import Union
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.losses import Loss
-from tensorflow.keras.metrics import Metric
+from keras.losses import Loss
+from keras.metrics import Metric
 
 DatasetType = Union[np.ndarray, tf.data.Dataset]
 LossType = Union[str, Callable, Loss]

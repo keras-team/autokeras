@@ -4,7 +4,7 @@ pip install autokeras
 import numpy as np
 import tensorflow as tf
 import tree
-from tensorflow.keras.datasets import mnist
+from keras.datasets import mnist
 
 import autokeras as ak
 

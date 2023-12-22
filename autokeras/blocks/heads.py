@@ -16,9 +16,9 @@ from typing import Optional
 
 import tensorflow as tf
 import tree
-from tensorflow.keras import activations
-from tensorflow.keras import layers
-from tensorflow.keras import losses
+from keras import activations
+from keras import layers
+from keras import losses
 
 from autokeras import adapters
 from autokeras import analysers

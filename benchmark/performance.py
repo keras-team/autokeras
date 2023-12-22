@@ -15,9 +15,9 @@ import os
 
 import numpy as np
 import tensorflow as tf
+from keras.datasets import cifar10
+from keras.datasets import mnist
 from sklearn.datasets import load_files
-from tensorflow.keras.datasets import cifar10
-from tensorflow.keras.datasets import mnist
 
 import autokeras as ak
 

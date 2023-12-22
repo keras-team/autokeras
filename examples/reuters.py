@@ -5,7 +5,7 @@
 """
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.datasets import reuters
+from keras.datasets import reuters
 
 import autokeras as ak
 

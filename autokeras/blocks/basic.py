@@ -18,9 +18,9 @@ from typing import Union
 import keras_nlp
 import tensorflow as tf
 import tree
+from keras import applications
+from keras import layers
 from keras_tuner.engine import hyperparameters
-from tensorflow.keras import applications
-from tensorflow.keras import layers
 
 from autokeras.backend import keras
 from autokeras.blocks import reduction
@@ -497,7 +497,7 @@ class Transformer(block_module.Block):
     ```python
         # Using the Transformer Block with AutoModel.
         import autokeras as ak
-        from tensorflow.keras import losses
+        from keras import losses
         text_input = ak.TextInput()
         output_node = ak.TextToIntSequence(output_sequence_length=200)(
             text_input)
@@ -972,7 +972,7 @@ class BertBlock(block_module.Block):
         # Using the Transformer Block with AutoModel.
         import autokeras as ak
         from autokeras import BertBlock
-        from tensorflow.keras import losses
+        from keras import losses
 
         input_node = ak.TextInput()
         output_node = BertBlock()(input_node)

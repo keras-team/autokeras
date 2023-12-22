@@ -18,8 +18,8 @@ import os
 
 import keras_tuner
 import tree
-from tensorflow.keras import callbacks as tf_callbacks
-from tensorflow.keras.layers.experimental import preprocessing
+from keras import callbacks as tf_callbacks
+from keras.layers.experimental import preprocessing
 
 from autokeras import pipeline as pipeline_module
 from autokeras.backend import keras

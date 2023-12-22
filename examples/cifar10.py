@@ -1,4 +1,4 @@
-from tensorflow.keras.datasets import cifar10
+from keras.datasets import cifar10
 
 import autokeras as ak
 
