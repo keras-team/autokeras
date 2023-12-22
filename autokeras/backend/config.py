@@ -1,10 +1,10 @@
-# Copyright 2020 The AutoKeras Authors.
+# Copyright 2019 The AutoKeras Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,21 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import shutil
-
-import pytest
-
-from autokeras.backend import keras
+import keras
 
 
-@pytest.fixture(autouse=True)
-def clear_session():
-    keras.backend.clear_session()
-    yield
-    keras.backend.clear_session()
+def _multi_backend():
+    version_fn = getattr(keras, "version", None)
+    return version_fn and version_fn().startswith("3.")
 
 
-@pytest.fixture(autouse=True)
-def remove_tmp_path(tmp_path):
-    yield
-    shutil.rmtree(tmp_path)
+_MULTI_BACKEND = _multi_backend()
+
+
+def multi_backend():
+    """Check if multi-backend keras is enabled."""
+    return _MULTI_BACKEND
+
+
+def backend():
+    """Check the backend framework."""
+    return "tensorflow" if not multi_backend() else keras.config.backend()

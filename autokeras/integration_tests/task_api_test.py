@@ -15,10 +15,10 @@
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tensorflow import keras
 
 import autokeras as ak
 from autokeras import test_utils
+from autokeras.backend import keras
 
 NUM_INSTANCES = 3
 BATCH_SIZE = 2

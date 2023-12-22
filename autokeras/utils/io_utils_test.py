@@ -17,9 +17,9 @@ import shutil
 
 import pytest
 import tensorflow as tf
-from tensorflow import keras
 
 from autokeras import test_utils
+from autokeras.backend import keras
 from autokeras.utils import io_utils
 
 IMG_DATA_DIR = os.path.join(

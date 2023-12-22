@@ -15,10 +15,10 @@
 from unittest import mock
 
 import keras_tuner
-from tensorflow import keras
 
 import autokeras as ak
 from autokeras import test_utils
+from autokeras.backend import keras
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
 

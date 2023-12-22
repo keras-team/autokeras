@@ -15,7 +15,6 @@
 import keras_tuner
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow import nest
 
 import autokeras as ak
@@ -23,6 +22,7 @@ from autokeras import hyper_preprocessors
 from autokeras import nodes as input_module
 from autokeras import preprocessors
 from autokeras import test_utils
+from autokeras.backend import keras
 from autokeras.blocks import heads as head_module
 
 

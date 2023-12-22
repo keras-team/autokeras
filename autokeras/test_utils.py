@@ -17,9 +17,9 @@ import os
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 
 import autokeras as ak
+from autokeras.backend import keras
 
 SEED = 5
 COLUMN_NAMES = [

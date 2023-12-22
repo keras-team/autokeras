@@ -14,12 +14,12 @@
 
 import keras_tuner
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow import nest
 
 from autokeras import analysers
 from autokeras import blocks
 from autokeras import test_utils
+from autokeras.backend import keras
 
 
 def test_image_build_return_tensor():

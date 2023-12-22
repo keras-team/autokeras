@@ -14,11 +14,11 @@
 from typing import List
 
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow import nest
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
 
+from autokeras.backend import keras
 from autokeras.utils import data_utils
 
 INT = "int"

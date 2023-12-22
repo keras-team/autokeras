@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import keras_tuner
-from tensorflow import keras
 
+from autokeras.backend import keras
 from autokeras.engine import serializable
 from autokeras.utils import utils
 

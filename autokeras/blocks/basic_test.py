@@ -15,11 +15,11 @@
 import keras_tuner
 import pytest
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow import nest
 
 from autokeras import blocks
 from autokeras import test_utils
+from autokeras.backend import keras
 
 
 def test_resnet_build_return_tensor():

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import tensorflow as tf
-from tensorflow import keras
 
+from autokeras.backend import keras
 from autokeras.blocks.basic import BertBlock
 from autokeras.blocks.basic import ConvBlock
 from autokeras.blocks.basic import DenseBlock

@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import keras_tuner
-from tensorflow import keras
 from tensorflow import nest
 
 from autokeras import blocks as blocks_module
 from autokeras import keras_layers
 from autokeras import nodes as nodes_module
+from autokeras.backend import keras
 from autokeras.engine import head as head_module
 from autokeras.engine import serializable
 from autokeras.utils import io_utils
