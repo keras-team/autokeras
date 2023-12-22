@@ -3,6 +3,7 @@ pip install autokeras
 """
 import numpy as np
 import tensorflow as tf
+import tree
 from tensorflow.keras.datasets import mnist
 
 import autokeras as ak
@@ -120,7 +121,7 @@ number of neurons is tunable.
 class SingleDenseLayerBlock(ak.Block):
     def build(self, hp, inputs=None):
         # Get the input_node from inputs.
-        input_node = tf.nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         layer = tf.keras.layers.Dense(
             hp.Int("num_units", min_value=32, max_value=512, step=32)
         )

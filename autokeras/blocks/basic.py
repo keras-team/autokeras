@@ -17,8 +17,8 @@ from typing import Union
 
 import keras_nlp
 import tensorflow as tf
+import tree
 from keras_tuner.engine import hyperparameters
-from tensorflow import nest
 from tensorflow.keras import applications
 from tensorflow.keras import layers
 
@@ -124,7 +124,7 @@ class DenseBlock(block_module.Block):
         return cls(**config)
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
@@ -220,7 +220,7 @@ class RNNBlock(block_module.Block):
         return cls(**config)
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         shape = input_node.shape.as_list()
@@ -354,7 +354,7 @@ class ConvBlock(block_module.Block):
         return cls(**config)
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
@@ -437,7 +437,7 @@ class MultiHeadSelfAttention(block_module.Block):
             Self-Attention outputs of shape
             `[batch_size, seq_len, embedding_dim]`.
         """
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         num_heads = self.num_heads
@@ -624,7 +624,7 @@ class Transformer(block_module.Block):
         # Returns
             Output Tensor of shape `[batch_size, seq_len, embedding_dim]`.
         """
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         pretraining = utils.add_to_hp(self.pretraining, hp)
         embedding_dim = utils.add_to_hp(self.embedding_dim, hp)
@@ -645,7 +645,7 @@ class Transformer(block_module.Block):
         dropout1 = layers.Dropout(dropout)
         dropout2 = layers.Dropout(dropout)
         # Token and Position Embeddings
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         token_embedding = Embedding(
             max_features=self.max_features,
             pretraining=pretraining,
@@ -697,7 +697,7 @@ class KerasApplicationBlock(block_module.Block):
         return config
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
 
         pretrained = self.pretrained
         if input_node.shape[3] not in [1, 3]:
@@ -934,7 +934,7 @@ class Embedding(block_module.Block):
         return cls(**config)
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         # TODO: support more pretrained embedding layers.
         # glove, fasttext, and word2vec
         pretraining = utils.add_to_hp(self.pretraining, hp)
@@ -1021,7 +1021,7 @@ class BertBlock(block_module.Block):
         return cls(**config)
 
     def build(self, hp, inputs=None):
-        input_tensor = nest.flatten(inputs)[0]
+        input_tensor = tree.flatten(inputs)[0]
 
         preset_name = "bert_base_en_uncased"
         tokenizer_layer = keras_nlp.models.BertPreprocessor.from_preset(

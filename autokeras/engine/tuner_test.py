@@ -16,6 +16,7 @@ from unittest import mock
 
 import numpy as np
 import tensorflow as tf
+import tree
 from tensorflow.keras.layers.experimental import preprocessing
 
 import autokeras as ak
@@ -221,7 +222,7 @@ def test_build_block_in_blocks_with_same_name(tmp_path):
     class Block1(ak.Block):
         def build(self, hp, inputs):
             hp.Boolean("a")
-            return keras.layers.Dense(3)(tf.nest.flatten(inputs)[0])
+            return keras.layers.Dense(3)(tree.flatten(inputs)[0])
 
     class Block2(ak.Block):
         def build(self, hp, inputs):

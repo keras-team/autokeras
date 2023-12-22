@@ -17,7 +17,7 @@ from typing import List
 from typing import Optional
 
 import tensorflow as tf
-from tensorflow import nest
+import tree
 
 from autokeras import adapters
 from autokeras import analysers
@@ -61,7 +61,7 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
         return keras.Input(shape=self.shape, dtype=self.dtype)
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         return keras_layers.CastToFloat32()(input_node)
 
     def get_adapter(self):
@@ -94,7 +94,7 @@ class ImageInput(Input):
 
     def build(self, hp, inputs=None):
         inputs = super().build(hp, inputs)
-        output_node = nest.flatten(inputs)[0]
+        output_node = tree.flatten(inputs)[0]
         if len(output_node.shape) == 3:
             output_node = keras_layers.ExpandLastDim()(output_node)
         return output_node
@@ -128,7 +128,7 @@ class TextInput(Input):
         return keras.Input(shape=self.shape, dtype=tf.string)
 
     def build(self, hp, inputs=None):
-        output_node = nest.flatten(inputs)[0]
+        output_node = tree.flatten(inputs)[0]
         if len(output_node.shape) == 1:
             output_node = keras_layers.ExpandLastDim()(output_node)
         return output_node

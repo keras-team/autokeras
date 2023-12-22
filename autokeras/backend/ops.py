@@ -18,12 +18,13 @@ if multi_backend():
     from keras.src.ops import *  # noqa: F403, F401
 else:
     import tensorflow as tf
+    import tree
     from tensorflow import cast  # noqa: F403, F401
 
     def any_symbolic_tensors(args=None, kwargs=None):
         args = args or ()
         kwargs = kwargs or {}
-        for x in tf.nest.flatten((args, kwargs)):
+        for x in tree.flatten((args, kwargs)):
             if "KerasTensor" in x.__class__.__name__:
                 return True
         return False

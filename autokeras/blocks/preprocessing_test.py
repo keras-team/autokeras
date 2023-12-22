@@ -14,8 +14,8 @@
 
 import keras_tuner
 import tensorflow as tf
+import tree
 from keras_tuner.engine import hyperparameters
-from tensorflow import nest
 
 from autokeras import blocks
 from autokeras import test_utils
@@ -30,7 +30,7 @@ def test_augment_build_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_augment_build_with_translation_factor_range_return_tensor():
@@ -41,7 +41,7 @@ def test_augment_build_with_translation_factor_range_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_augment_build_with_no_flip_return_tensor():
@@ -52,7 +52,7 @@ def test_augment_build_with_no_flip_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_augment_build_with_vflip_only_return_tensor():
@@ -63,7 +63,7 @@ def test_augment_build_with_vflip_only_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_augment_build_with_zoom_factor_return_tensor():
@@ -74,7 +74,7 @@ def test_augment_build_with_zoom_factor_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_augment_build_with_contrast_factor_return_tensor():
@@ -85,7 +85,7 @@ def test_augment_build_with_contrast_factor_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_augment_deserialize_to_augment():
@@ -120,7 +120,7 @@ def test_ngram_build_return_tensor():
         keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_ngram_build_with_ngrams_return_tensor():
@@ -130,7 +130,7 @@ def test_ngram_build_with_ngrams_return_tensor():
         keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_ngram_deserialize_to_ngram():
@@ -158,7 +158,7 @@ def test_int_seq_build_return_tensor():
         keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_int_seq_build_with_seq_len_return_tensor():
@@ -168,7 +168,7 @@ def test_int_seq_build_with_seq_len_return_tensor():
         keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_int_seq_deserialize_to_int_seq():
@@ -198,7 +198,7 @@ def test_cat_to_num_build_return_tensor():
         keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_cat_to_num_deserialize_to_cat_to_num():

@@ -14,7 +14,7 @@
 
 import keras_tuner
 import tensorflow as tf
-from tensorflow import nest
+import tree
 
 from autokeras import blocks
 from autokeras import test_utils
@@ -32,7 +32,7 @@ def test_merge_build_return_tensor():
         ],
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_merge_single_input_return_tensor():
@@ -43,7 +43,7 @@ def test_merge_single_input_return_tensor():
         keras.Input(shape=(32,), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_merge_inputs_with_same_shape_return_tensor():
@@ -57,7 +57,7 @@ def test_merge_inputs_with_same_shape_return_tensor():
         ],
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_merge_deserialize_to_merge():
@@ -86,7 +86,7 @@ def test_temporal_build_return_tensor():
         keras.Input(shape=(32, 10), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_temporal_global_max_return_tensor():
@@ -97,7 +97,7 @@ def test_temporal_global_max_return_tensor():
         keras.Input(shape=(32, 10), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_temporal_global_avg_return_tensor():
@@ -108,7 +108,7 @@ def test_temporal_global_avg_return_tensor():
         keras.Input(shape=(32, 10), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_reduction_2d_tensor_return_input_node():
@@ -120,8 +120,8 @@ def test_reduction_2d_tensor_return_input_node():
         input_node,
     )
 
-    assert len(nest.flatten(outputs)) == 1
-    assert nest.flatten(outputs)[0] is input_node
+    assert len(tree.flatten(outputs)) == 1
+    assert tree.flatten(outputs)[0] is input_node
 
 
 def test_temporal_deserialize_to_temporal():
@@ -150,7 +150,7 @@ def test_spatial_build_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_spatial_deserialize_to_spatial():

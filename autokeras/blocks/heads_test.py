@@ -15,7 +15,7 @@
 import keras_tuner
 import numpy as np
 import tensorflow as tf
-from tensorflow import nest
+import tree
 
 import autokeras as ak
 from autokeras import hyper_preprocessors
@@ -103,7 +103,7 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
         keras.Input(shape=(5,), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_clf_head_hpps_with_uint8_contain_cast_to_int32():
@@ -133,7 +133,7 @@ def test_reg_head_build_with_zero_dropout_return_tensor():
         keras.Input(shape=(5,), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_segmentation():

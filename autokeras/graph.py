@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import keras_tuner
-from tensorflow import nest
+import tree
 
 from autokeras import blocks as blocks_module
 from autokeras import keras_layers
@@ -61,8 +61,8 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
 
     def __init__(self, inputs=None, outputs=None, **kwargs):
         super().__init__(**kwargs)
-        self.inputs = nest.flatten(inputs)
-        self.outputs = nest.flatten(outputs)
+        self.inputs = tree.flatten(inputs)
+        self.outputs = tree.flatten(outputs)
         self._node_to_id = {}
         self._nodes = []
         self.blocks = []
@@ -229,7 +229,7 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
                 nodes[node_id]
                 for node_id in config["block_inputs"][str(block_id)]
             ]
-            output_nodes = nest.flatten(block(input_nodes))
+            output_nodes = tree.flatten(block(input_nodes))
             for output_node, node_id in zip(
                 output_nodes, config["block_outputs"][str(block_id)]
             ):
@@ -255,7 +255,7 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
                 for input_node in block.inputs
             ]
             outputs = block.build(hp, inputs=temp_inputs)
-            outputs = nest.flatten(outputs)
+            outputs = tree.flatten(outputs)
             for output_node, real_output_node in zip(block.outputs, outputs):
                 keras_nodes[self._node_to_id[output_node]] = real_output_node
         model = keras.Model(
@@ -340,9 +340,9 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
         io_utils.save_json(filepath, self.get_config())
 
     def set_io_shapes(self, shapes):
-        for node, shape in zip(self.inputs, nest.flatten(shapes[0])):
+        for node, shape in zip(self.inputs, tree.flatten(shapes[0])):
             node.shape = tuple(shape[1:])
-        for node, shape in zip(self.outputs, nest.flatten(shapes[1])):
+        for node, shape in zip(self.outputs, tree.flatten(shapes[1])):
             node.in_blocks[0].shape = tuple(shape[1:])
 
     def set_fit_args(self, validation_split, epochs=None):

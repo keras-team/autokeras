@@ -21,7 +21,7 @@ from typing import Union
 
 import pandas as pd
 import tensorflow as tf
-from tensorflow import nest
+import tree
 
 from autokeras import auto_model
 from autokeras import blocks
@@ -55,7 +55,7 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
                     )
 
     def check_in_fit(self, x):
-        input_node = nest.flatten(self.inputs)[0]
+        input_node = tree.flatten(self.inputs)[0]
         # Extract column_names from pd.DataFrame.
         if isinstance(x, pd.DataFrame) and input_node.column_names is None:
             input_node.column_names = list(x.columns)

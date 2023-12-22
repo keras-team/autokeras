@@ -17,12 +17,12 @@ import warnings
 
 import keras_tuner
 import tensorflow as tf
+import tree
 from packaging.version import parse
-from tensorflow import nest
 
 
 def validate_num_inputs(inputs, num):
-    inputs = nest.flatten(inputs)
+    inputs = tree.flatten(inputs)
     if not len(inputs) == num:
         raise ValueError(
             "Expected {num} elements in the inputs list "

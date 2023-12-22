@@ -16,8 +16,8 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import tree
 from keras_tuner.engine import hyperparameters
-from tensorflow import nest
 from tensorflow.keras import layers
 
 from autokeras import analysers
@@ -45,7 +45,7 @@ class Normalization(block_module.Block):
         self.axis = axis
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         return layers.Normalization(axis=self.axis)(input_node)
 
     def get_config(self):
@@ -84,7 +84,7 @@ class TextToIntSequence(block_module.Block):
         return config
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         if self.output_sequence_length is not None:
             output_sequence_length = self.output_sequence_length
         else:
@@ -121,7 +121,7 @@ class TextToNgramVector(block_module.Block):
         self.ngrams = ngrams
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         if self.ngrams is not None:
             ngrams = self.ngrams
         else:
@@ -220,7 +220,7 @@ class ImageAugmentation(block_module.Block):
         return value, value
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         output_node = input_node
 
         # Translate
@@ -317,7 +317,7 @@ class CategoricalToNumerical(block_module.Block):
         self.column_names = None
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         encoding = []
         for column_name in self.column_names:
             column_type = self.column_types[column_name]

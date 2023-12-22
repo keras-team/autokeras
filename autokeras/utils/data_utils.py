@@ -14,11 +14,11 @@
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import nest
+import tree
 
 
 def batched(dataset):
-    shape = nest.flatten(dataset_shape(dataset))[0]
+    shape = tree.flatten(dataset_shape(dataset))[0]
     return len(shape) > 0 and shape[0] is None
 
 
@@ -60,10 +60,10 @@ def dataset_shape(dataset):
 
 
 def unzip_dataset(dataset):
-    return nest.flatten(
+    return tree.flatten(
         [
-            dataset.map(lambda *a: nest.flatten(a)[index])
-            for index in range(len(nest.flatten(dataset_shape(dataset))))
+            dataset.map(lambda *a: tree.flatten(a)[index])
+            for index in range(len(tree.flatten(dataset_shape(dataset))))
         ]
     )
 

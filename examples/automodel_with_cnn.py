@@ -46,5 +46,5 @@ print(type(model.summary()))
 
 # print model as image
 tf.keras.utils.plot_model(
-    model, show_shapes=True, expand_nested=True, to_file="name.png"
+    model, show_shapes=True, expand_treeed=True, to_file="name.png"
 )

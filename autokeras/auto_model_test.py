@@ -181,7 +181,7 @@ def test_multi_io_with_tf_dataset_doesnt_crash(tuner_fn, tmp_path):
 
 
 @mock.patch("autokeras.auto_model.get_tuner_class")
-def test_single_nested_dataset_doesnt_crash(tuner_fn, tmp_path):
+def test_single_treeed_dataset_doesnt_crash(tuner_fn, tmp_path):
     auto_model = ak.AutoModel(
         ak.ImageInput(),
         ak.RegressionHead(),

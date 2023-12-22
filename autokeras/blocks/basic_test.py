@@ -15,7 +15,7 @@
 import keras_tuner
 import pytest
 import tensorflow as tf
-from tensorflow import nest
+import tree
 
 from autokeras import blocks
 from autokeras import test_utils
@@ -30,7 +30,7 @@ def test_resnet_build_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_resnet_v1_return_tensor():
@@ -41,7 +41,7 @@ def test_resnet_v1_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_efficientnet_b0_return_tensor():
@@ -52,7 +52,7 @@ def test_efficientnet_b0_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_resnet_pretrained_build_return_tensor():
@@ -63,7 +63,7 @@ def test_resnet_pretrained_build_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_resnet_pretrained_with_one_channel_input():
@@ -74,7 +74,7 @@ def test_resnet_pretrained_with_one_channel_input():
         keras.Input(shape=(28, 28, 1), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_resnet_pretrained_error_with_two_channels():
@@ -129,7 +129,7 @@ def test_xception_build_return_tensor():
         keras.Input(shape=(32, 32, 2), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_xception_pretrained_build_return_tensor():
@@ -140,7 +140,7 @@ def test_xception_pretrained_build_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_xception_pretrained_with_one_channel_input():
@@ -151,7 +151,7 @@ def test_xception_pretrained_with_one_channel_input():
         keras.Input(shape=(224, 224, 1), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_xception_pretrained_error_with_two_channels():
@@ -192,7 +192,7 @@ def test_conv_build_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_conv_with_small_image_size_return_tensor():
@@ -203,7 +203,7 @@ def test_conv_with_small_image_size_return_tensor():
         keras.Input(shape=(10, 10, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_conv_build_with_dropout_return_tensor():
@@ -214,7 +214,7 @@ def test_conv_build_with_dropout_return_tensor():
         keras.Input(shape=(32, 32, 3), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_conv_deserialize_to_conv():
@@ -243,7 +243,7 @@ def test_rnn_build_return_tensor():
         keras.Input(shape=(32, 10), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_rnn_input_shape_one_dim_error():
@@ -288,7 +288,7 @@ def test_dense_build_return_tensor():
         keras.Input(shape=(32,), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_dense_build_with_dropout_return_tensor():
@@ -299,7 +299,7 @@ def test_dense_build_with_dropout_return_tensor():
         keras.Input(shape=(32,), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_dense_build_with_bn_return_tensor():
@@ -310,7 +310,7 @@ def test_dense_build_with_bn_return_tensor():
         keras.Input(shape=(32,), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_dense_deserialize_to_dense():
@@ -339,7 +339,7 @@ def test_embed_build_return_tensor():
         keras.Input(shape=(32,), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_embed_deserialize_to_embed():
@@ -368,7 +368,7 @@ def test_transformer_build_return_tensor():
         keras.Input(shape=(64,), dtype=tf.float32),
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_transformer_deserialize_to_transformer():
@@ -404,7 +404,7 @@ def test_bert_build_return_tensor():
         keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_bert_deserialize_to_transformer():

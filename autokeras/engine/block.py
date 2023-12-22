@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tensorflow import nest
+import tree
 
 from autokeras.engine import named_hypermodel
 from autokeras.engine import node as node_module
@@ -47,7 +47,7 @@ class Block(named_hypermodel.NamedHyperModel):
         # Returns
             list: A list of output node(s) of the Block.
         """
-        self.inputs = nest.flatten(inputs)
+        self.inputs = tree.flatten(inputs)
         for input_node in self.inputs:
             if not isinstance(input_node, node_module.Node):
                 raise TypeError(

@@ -17,7 +17,7 @@ import copy
 import os
 
 import keras_tuner
-from tensorflow import nest
+import tree
 from tensorflow.keras import callbacks as tf_callbacks
 from tensorflow.keras.layers.experimental import preprocessing
 
@@ -119,11 +119,11 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
         def get_output_layers(tensor):
             output_layers = []
-            tensor = nest.flatten(tensor)[0]
+            tensor = tree.flatten(tensor)[0]
             for layer in model.layers:
                 if isinstance(layer, keras.layers.InputLayer):
                     continue
-                input_node = nest.flatten(layer.input)[0]
+                input_node = tree.flatten(layer.input)[0]
                 if input_node is tensor:
                     if isinstance(layer, preprocessing.PreprocessingLayer):
                         output_layers.append(layer)
@@ -131,8 +131,8 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
         dq = collections.deque()
 
-        for index, input_node in enumerate(nest.flatten(model.input)):
-            in_x = x.map(lambda *args: nest.flatten(args)[index])
+        for index, input_node in enumerate(tree.flatten(model.input)):
+            in_x = x.map(lambda *args: tree.flatten(args)[index])
             for layer in get_output_layers(input_node):
                 dq.append((layer, in_x))
 

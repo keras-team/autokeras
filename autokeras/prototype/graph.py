@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tensorflow import nest
+import tree
 
 from autokeras import graph
 from autokeras.prototype import graph_state
@@ -48,7 +48,7 @@ class Graph(graph.Graph):
                 for input_node in block.inputs
             ]
             outputs = block.build(hp, inputs=temp_inputs)
-            outputs = nest.flatten(outputs)
+            outputs = tree.flatten(outputs)
             for output_node, real_output_node in zip(block.outputs, outputs):
                 keras_nodes[self._node_to_id[output_node]] = real_output_node
 

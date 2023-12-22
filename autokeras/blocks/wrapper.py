@@ -14,7 +14,7 @@
 
 from typing import Optional
 
-from tensorflow import nest
+import tree
 
 from autokeras.blocks import basic
 from autokeras.blocks import preprocessing
@@ -83,7 +83,7 @@ class ImageBlock(block_module.Block):
             return basic.EfficientNetBlock().build(hp, output_node)
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         output_node = input_node
 
         if self.normalize is None and hp.Boolean(NORMALIZE):
@@ -155,7 +155,7 @@ class TextBlock(block_module.Block):
         return config
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         output_node = input_node
         if self.block_type is None:
             block_type = hp.Choice(
@@ -247,7 +247,7 @@ class StructuredDataBlock(block_module.Block):
         return config
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         output_node = input_node
         if self.categorical_encoding:
             block = preprocessing.CategoricalToNumerical()
@@ -275,7 +275,7 @@ class TimeseriesBlock(block_module.Block):
         return super().get_config()
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         output_node = input_node
         output_node = basic.RNNBlock().build(hp, output_node)
         return output_node

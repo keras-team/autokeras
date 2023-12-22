@@ -15,7 +15,7 @@
 from typing import Optional
 
 import tensorflow as tf
-from tensorflow import nest
+import tree
 from tensorflow.keras import layers
 
 from autokeras.engine import block as block_module
@@ -54,7 +54,7 @@ class Merge(block_module.Block):
         return config
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         if len(inputs) == 1:
             return inputs
 
@@ -89,7 +89,7 @@ class Flatten(block_module.Block):
     """Flatten the input tensor with Keras Flatten layer."""
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         if len(input_node.shape) > 2:
@@ -114,7 +114,7 @@ class Reduction(block_module.Block):
         raise NotImplementedError
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node

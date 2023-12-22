@@ -15,7 +15,7 @@
 from typing import Optional
 
 import tensorflow as tf
-from tensorflow import nest
+import tree
 from tensorflow.keras import activations
 from tensorflow.keras import layers
 from tensorflow.keras import losses
@@ -100,7 +100,7 @@ class ClassificationHead(head_module.Head):
         return config
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
@@ -231,7 +231,7 @@ class RegressionHead(head_module.Head):
         return config
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node

@@ -22,6 +22,7 @@ setup(
         "keras-tuner>=1.1.0",
         "keras-nlp>=0.4.0",
         "pandas",
+        "dm-tree",
     ],
     extras_require={
         "tests": [
