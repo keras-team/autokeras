@@ -3,8 +3,8 @@ Search for a good model for the
 [IMDB](
 https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification) dataset.
 """
+import keras
 import numpy as np
-import tensorflow as tf
 
 import autokeras as ak
 
@@ -13,7 +13,7 @@ def imdb_raw():
     max_features = 20000
     index_offset = 3  # word index offset
 
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.imdb.load_data(
+    (x_train, y_train), (x_test, y_test) = keras.datasets.imdb.load_data(
         num_words=max_features, index_from=index_offset
     )
     x_train = x_train
@@ -21,7 +21,7 @@ def imdb_raw():
     x_test = x_test
     y_test = y_test.reshape(-1, 1)
 
-    word_to_id = tf.keras.datasets.imdb.get_word_index()
+    word_to_id = keras.datasets.imdb.get_word_index()
     word_to_id = {k: (v + index_offset) for k, v in word_to_id.items()}
     word_to_id["<PAD>"] = 0
     word_to_id["<START>"] = 1

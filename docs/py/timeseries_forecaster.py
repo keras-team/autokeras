@@ -2,8 +2,8 @@
 pip install autokeras
 """
 
+import keras
 import pandas as pd
-import tensorflow as tf
 
 import autokeras as ak
 
@@ -17,7 +17,7 @@ The first step is to prepare your data. Here we use the [UCI Airquality
 dataset](https://archive.ics.uci.edu/ml/datasets/Air+Quality) as an example.
 """
 
-dataset = tf.keras.utils.get_file(
+dataset = keras.utils.get_file(
     fname="AirQualityUCI.csv",
     origin="https://archive.ics.uci.edu/ml/machine-learning-databases/00360/"
     "AirQualityUCI.zip",

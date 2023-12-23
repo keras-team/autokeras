@@ -28,3 +28,10 @@ from autokeras.backend import io
 from autokeras.backend import keras
 from autokeras.backend import ops
 from autokeras.backend import random
+
+if config.multi_backend():
+    standardize_dtype = keras.backend.standardize_dtype
+else:
+
+    def standardize_dtype(dtype):
+        return dtype.name

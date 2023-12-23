@@ -8,8 +8,8 @@ Source and Description of data:
 """
 import os
 
+import keras
 import pandas as pd
-import tensorflow as tf
 
 import autokeras as ak
 
@@ -18,7 +18,7 @@ dataset_url = (
 )
 
 # save data
-data_file_path = tf.keras.utils.get_file(
+data_file_path = keras.utils.get_file(
     fname=os.path.basename(dataset_url), origin=dataset_url
 )
 

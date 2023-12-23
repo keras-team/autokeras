@@ -20,6 +20,15 @@ else:
     import tensorflow as tf
     import tree
     from tensorflow import cast  # noqa: F403, F401
+    from tensorflow import cond  # noqa: F403, F401
+    from tensorflow.experimental.numpy import expand_dims  # noqa: F403, F401
+    from tensorflow.experimental.numpy import isnan  # noqa: F403, F401
+    from tensorflow.experimental.numpy import power  # noqa: F403, F401
+    from tensorflow.experimental.numpy import reshape  # noqa: F403, F401
+    from tensorflow.experimental.numpy import split  # noqa: F403, F401
+    from tensorflow.experimental.numpy import take  # noqa: F403, F401
+    from tensorflow.experimental.numpy import where  # noqa: F403, F401
+    from tensorflow.experimental.numpy import zeros_like  # noqa: F403, F401
 
     def any_symbolic_tensors(args=None, kwargs=None):
         args = args or ()

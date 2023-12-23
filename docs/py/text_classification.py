@@ -4,6 +4,7 @@ pip install autokeras
 
 import os
 
+import keras
 import numpy as np
 import tensorflow as tf
 from sklearn.datasets import load_files
@@ -18,7 +19,7 @@ as an example.
 """
 
 
-dataset = tf.keras.utils.get_file(
+dataset = keras.utils.get_file(
     fname="aclImdb.tar.gz",
     origin="http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",
     extract=True,

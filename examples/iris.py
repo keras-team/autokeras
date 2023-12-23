@@ -5,8 +5,8 @@ pip install -q git+https://github.com/keras-team/keras-tuner.git@1.0.2rc1
 
 import os
 
+import keras
 import pandas as pd
-import tensorflow as tf
 
 import autokeras as ak
 
@@ -18,14 +18,14 @@ Search for a good model for the
 
 # Prepare the dataset.
 train_dataset_url = "https://storage.googleapis.com/download.tensorflow.org/data/iris_training.csv"  # noqa: E501
-train_dataset_fp = tf.keras.utils.get_file(
+train_dataset_fp = keras.utils.get_file(
     fname=os.path.basename(train_dataset_url), origin=train_dataset_url
 )
 
 test_dataset_url = (
     "https://storage.googleapis.com/download.tensorflow.org/data/iris_test.csv"
 )
-test_dataset_fp = tf.keras.utils.get_file(
+test_dataset_fp = keras.utils.get_file(
     fname=os.path.basename(test_dataset_url), origin=test_dataset_url
 )
 
@@ -54,7 +54,7 @@ clf = ak.StructuredDataClassifier(
 )
 # Search for the best model with EarlyStopping.
 cbs = [
-    tf.keras.callbacks.EarlyStopping(patience=3),
+    keras.callbacks.EarlyStopping(patience=3),
 ]
 
 clf.fit(

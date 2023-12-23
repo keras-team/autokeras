@@ -1,8 +1,8 @@
 """shell
 pip install autokeras
 """
+import keras
 import numpy as np
-import tensorflow as tf
 import tree
 from keras.datasets import mnist
 
@@ -122,7 +122,7 @@ class SingleDenseLayerBlock(ak.Block):
     def build(self, hp, inputs=None):
         # Get the input_node from inputs.
         input_node = tree.flatten(inputs)[0]
-        layer = tf.keras.layers.Dense(
+        layer = keras.layers.Dense(
             hp.Int("num_units", min_value=32, max_value=512, step=32)
         )
         output_node = layer(input_node)

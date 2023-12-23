@@ -5,6 +5,7 @@ pip install autokeras
 import os
 import shutil
 
+import keras
 import numpy as np
 import tensorflow as tf
 
@@ -23,7 +24,7 @@ First, we download the data and extract the files.
 """
 
 dataset_url = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"  # noqa: E501
-local_file_path = tf.keras.utils.get_file(
+local_file_path = keras.utils.get_file(
     origin=dataset_url, fname="image_data", extract=True
 )
 # The file is extracted in the same directory as the downloaded file.
@@ -87,7 +88,7 @@ You can also load text datasets in the same way.
 
 dataset_url = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
 
-local_file_path = tf.keras.utils.get_file(
+local_file_path = keras.utils.get_file(
     fname="text_data",
     origin=dataset_url,
     extract=True,

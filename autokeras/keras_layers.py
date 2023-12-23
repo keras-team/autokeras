@@ -13,12 +13,12 @@
 # limitations under the License.
 from typing import List
 
-import tensorflow as tf
 import tree
 from keras import layers
 from keras.layers.experimental import preprocessing
 
 from autokeras.backend import keras
+from autokeras.backend import ops
 from autokeras.utils import data_utils
 
 INT = "int"
@@ -44,7 +44,7 @@ class ExpandLastDim(preprocessing.PreprocessingLayer):
         return super().get_config()
 
     def call(self, inputs):
-        return tf.expand_dims(inputs, axis=-1)
+        return ops.expand_dims(inputs, axis=-1)
 
     def adapt(self, data):
         return
@@ -82,11 +82,11 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
     def build(self, input_shape):
         for encoding_layer in self.encoding_layers:
             if encoding_layer is not None:
-                encoding_layer.build(tf.TensorShape([1]))
+                encoding_layer.build((1,))
 
     def call(self, inputs):
         input_nodes = tree.flatten(inputs)[0]
-        split_inputs = tf.split(input_nodes, [1] * len(self.encoding), axis=-1)
+        split_inputs = ops.split(input_nodes, len(self.encoding), axis=-1)
         output_nodes = []
         for input_node, encoding_layer in zip(
             split_inputs, self.encoding_layers
@@ -94,8 +94,8 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
             if encoding_layer is None:
                 number = data_utils.cast_to_float32(input_node)
                 # Replace NaN with 0.
-                imputed = tf.where(
-                    tf.math.is_nan(number), tf.zeros_like(number), number
+                imputed = ops.where(
+                    ops.isnan(number), ops.zeros_like(number), number
                 )
                 output_nodes.append(imputed)
             else:
@@ -112,7 +112,11 @@ class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
         for index, encoding_layer in enumerate(self.encoding_layers):
             if encoding_layer is None:
                 continue
-            data_column = data.map(lambda x: tf.slice(x, [0, index], [-1, 1]))
+            data_column = data.map(
+                lambda x: ops.reshape(
+                    ops.take(x, indices=index, axis=1), (-1, 1)
+                )
+            )
             encoding_layer.adapt(data_column.map(data_utils.cast_to_string))
 
     def get_config(self):
@@ -143,17 +147,17 @@ class WarmUp(keras.optimizers.schedules.LearningRateSchedule):
         self.name = name
 
     def __call__(self, step):
-        with tf.name_scope(self.name or "WarmUp") as name:
+        with keras.name_scope(self.name or "WarmUp") as name:
             # Implements polynomial warmup. i.e., if global_step < warmup_steps,
             # the learning rate will be
             # `global_step/num_warmup_steps * init_lr`.
-            global_step_float = tf.cast(step, tf.float32)
-            warmup_steps_float = tf.cast(self.warmup_steps, tf.float32)
+            global_step_float = ops.cast(step, "float32")
+            warmup_steps_float = ops.cast(self.warmup_steps, "float32")
             warmup_percent_done = global_step_float / warmup_steps_float
-            warmup_learning_rate = self.initial_learning_rate * tf.math.pow(
+            warmup_learning_rate = self.initial_learning_rate * ops.pow(
                 warmup_percent_done, self.power
             )
-            return tf.cond(
+            return ops.cond(
                 global_step_float < warmup_steps_float,
                 lambda: warmup_learning_rate,
                 lambda: self.decay_schedule_fn(step),

@@ -1,7 +1,7 @@
 """shell
 pip install autokeras
 """
-import tensorflow as tf
+import numpy as np
 from keras.datasets import mnist
 from keras.models import load_model
 
@@ -18,7 +18,6 @@ All the tasks and the [AutoModel](/auto_model/#automodel-class) has this
 """
 
 
-print(tf.__version__)
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
 # Initialize the image classifier.
@@ -40,5 +39,5 @@ except Exception:
 
 loaded_model = load_model("model_autokeras", custom_objects=ak.CUSTOM_OBJECTS)
 
-predicted_y = loaded_model.predict(tf.expand_dims(x_test, -1))
+predicted_y = loaded_model.predict(np.expand_dims(x_test, -1))
 print(predicted_y)

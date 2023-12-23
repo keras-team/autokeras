@@ -16,6 +16,9 @@ import numpy as np
 import tensorflow as tf
 import tree
 
+from autokeras import backend
+from autokeras.backend import ops
+
 
 def batched(dataset):
     shape = tree.flatten(dataset_shape(dataset))[0]
@@ -69,14 +72,14 @@ def unzip_dataset(dataset):
 
 
 def cast_to_string(tensor):
-    if tensor.dtype == tf.string:
+    if backend.standardize_dtype(tensor.dtype) == "string":
         return tensor
     return tf.strings.as_string(tensor)
 
 
 def cast_to_float32(tensor):
-    if tensor.dtype == tf.float32:
+    if backend.standardize_dtype(tensor.dtype) == "float32":
         return tensor
-    if tensor.dtype == tf.string:
+    if backend.standardize_dtype(tensor.dtype) == "string":
         return tf.strings.to_number(tensor, tf.float32)
-    return tf.cast(tensor, tf.float32)
+    return ops.cast(tensor, "float32")

@@ -1,6 +1,6 @@
 # Library import
+import keras
 import numpy as np
-import tensorflow as tf
 
 import autokeras as ak
 
@@ -45,6 +45,6 @@ model = auto_model.export_model()
 print(type(model.summary()))
 
 # print model as image
-tf.keras.utils.plot_model(
+keras.utils.plot_model(
     model, show_shapes=True, expand_treeed=True, to_file="name.png"
 )
