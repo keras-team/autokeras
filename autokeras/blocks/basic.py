@@ -15,6 +15,7 @@
 from typing import Optional
 from typing import Union
 
+import keras
 import keras_nlp
 import tensorflow as tf
 import tree
@@ -22,7 +23,6 @@ from keras import applications
 from keras import layers
 from keras_tuner.engine import hyperparameters
 
-from autokeras.backend import keras
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
 from autokeras.utils import io_utils

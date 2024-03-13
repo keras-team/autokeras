@@ -14,7 +14,7 @@
 
 import threading
 
-from autokeras.backend import keras
+import keras
 
 STATE = {}
 

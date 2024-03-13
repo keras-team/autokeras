@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import keras_tuner
 import numpy as np
 import tensorflow as tf
@@ -22,7 +23,6 @@ from autokeras import hyper_preprocessors
 from autokeras import nodes as input_module
 from autokeras import preprocessors
 from autokeras import test_utils
-from autokeras.backend import keras
 from autokeras.blocks import heads as head_module
 
 

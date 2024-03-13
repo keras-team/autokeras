@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import keras_tuner
 
-from autokeras.backend import keras
 from autokeras.engine import serializable
 from autokeras.utils import utils
 

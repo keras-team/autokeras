@@ -14,11 +14,11 @@
 
 from unittest import mock
 
+import keras
 import keras_tuner
 
 import autokeras as ak
 from autokeras import test_utils
-from autokeras.backend import keras
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific
 

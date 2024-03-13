@@ -14,11 +14,11 @@
 
 import os
 
+import keras
 import numpy as np
 import tensorflow as tf
 
 from autokeras import keras_layers as layer_module
-from autokeras.backend import keras
 
 
 def test_multi_cat_encode_strings_correctly(tmp_path):

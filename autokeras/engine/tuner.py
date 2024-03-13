@@ -16,13 +16,13 @@ import collections
 import copy
 import os
 
+import keras
 import keras_tuner
 import tree
 from keras import callbacks as tf_callbacks
 from keras.layers.experimental import preprocessing
 
 from autokeras import pipeline as pipeline_module
-from autokeras.backend import keras
 from autokeras.utils import data_utils
 from autokeras.utils import utils
 

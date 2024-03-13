@@ -14,6 +14,7 @@
 
 from typing import Optional
 
+import keras
 import tensorflow as tf
 import tree
 from keras import activations
@@ -24,7 +25,6 @@ from autokeras import adapters
 from autokeras import analysers
 from autokeras import hyper_preprocessors as hpps_module
 from autokeras import preprocessors
-from autokeras.backend import keras
 from autokeras.blocks import reduction
 from autokeras.engine import head as head_module
 from autokeras.utils import types

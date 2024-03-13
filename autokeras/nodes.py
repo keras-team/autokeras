@@ -16,6 +16,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+import keras
 import tensorflow as tf
 import tree
 
@@ -25,7 +26,6 @@ from autokeras import blocks
 from autokeras import hyper_preprocessors as hpps_module
 from autokeras import keras_layers
 from autokeras import preprocessors
-from autokeras.backend import keras
 from autokeras.engine import io_hypermodel
 from autokeras.engine import node as node_module
 from autokeras.utils import utils

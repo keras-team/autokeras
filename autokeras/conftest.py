@@ -14,9 +14,8 @@
 
 import shutil
 
+import keras
 import pytest
-
-from autokeras.backend import keras
 
 
 @pytest.fixture(autouse=True)

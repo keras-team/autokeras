@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import tensorflow as tf
 
-from autokeras.backend import keras
 from autokeras.blocks.basic import BertBlock
 from autokeras.blocks.basic import ConvBlock
 from autokeras.blocks.basic import DenseBlock

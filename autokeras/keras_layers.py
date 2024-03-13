@@ -13,11 +13,11 @@
 # limitations under the License.
 from typing import List
 
+import keras
 import tree
 from keras import layers
 from keras.layers.experimental import preprocessing
 
-from autokeras.backend import keras
 from autokeras.backend import ops
 from autokeras.utils import data_utils
 

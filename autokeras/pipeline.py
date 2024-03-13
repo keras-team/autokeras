@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import tensorflow as tf
 import tree
 
 from autokeras import preprocessors as preprocessors_module
-from autokeras.backend import keras
 from autokeras.engine import hyper_preprocessor as hpps_module
 from autokeras.engine import preprocessor as pps_module
 from autokeras.utils import data_utils

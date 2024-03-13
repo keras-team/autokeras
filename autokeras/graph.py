@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import keras_tuner
 import tree
 
 from autokeras import blocks as blocks_module
 from autokeras import keras_layers
 from autokeras import nodes as nodes_module
-from autokeras.backend import keras
 from autokeras.engine import head as head_module
 from autokeras.engine import serializable
 from autokeras.utils import io_utils

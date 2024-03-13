@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import keras_tuner
 import pytest
 import tensorflow as tf
@@ -19,7 +20,6 @@ import tree
 
 from autokeras import blocks
 from autokeras import test_utils
-from autokeras.backend import keras
 
 
 def test_resnet_build_return_tensor():

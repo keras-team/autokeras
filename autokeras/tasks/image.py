@@ -19,12 +19,12 @@ from typing import Tuple
 from typing import Type
 from typing import Union
 
+import keras
 import tensorflow as tf
 
 from autokeras import auto_model
 from autokeras import blocks
 from autokeras import nodes as input_module
-from autokeras.backend import keras
 from autokeras.engine import tuner
 from autokeras.tuners import greedy
 from autokeras.tuners import task_specific

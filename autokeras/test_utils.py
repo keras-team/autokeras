@@ -15,11 +15,11 @@
 import inspect
 import os
 
+import keras
 import numpy as np
 import tensorflow as tf
 
 import autokeras as ak
-from autokeras.backend import keras
 
 SEED = 5
 COLUMN_NAMES = [

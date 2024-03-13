@@ -18,6 +18,7 @@ from typing import Optional
 from typing import Type
 from typing import Union
 
+import keras
 import numpy as np
 import tensorflow as tf
 import tree
@@ -26,7 +27,6 @@ from autokeras import blocks
 from autokeras import graph as graph_module
 from autokeras import pipeline
 from autokeras import tuners
-from autokeras.backend import keras
 from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
 from autokeras.engine import tuner

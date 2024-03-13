@@ -11,9 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import keras
 import tensorflow as tf
 
-from autokeras.backend import keras
 from autokeras.preprocessors.common import AddOneDimension
 from autokeras.preprocessors.common import CastToInt32
 from autokeras.preprocessors.common import CastToString

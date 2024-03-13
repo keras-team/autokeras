@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 import autokeras as ak
 from autokeras import test_utils
-from autokeras.backend import keras
 
 NUM_INSTANCES = 3
 BATCH_SIZE = 2
