@@ -3,6 +3,7 @@ Search for a good model for the
 [IMDB](
 https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification) dataset.
 """
+
 import keras
 import numpy as np
 

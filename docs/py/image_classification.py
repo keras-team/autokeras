@@ -1,6 +1,7 @@
 """shell
 pip install autokeras
 """
+
 import numpy as np
 import tensorflow as tf
 from keras.datasets import mnist
