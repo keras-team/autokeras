@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import numpy as np
 import tensorflow as tf
 import tree
-
-from autokeras import backend
-from autokeras.backend import ops
+from keras import ops
 
 
 def batched(dataset):
@@ -72,14 +71,14 @@ def unzip_dataset(dataset):
 
 
 def cast_to_string(tensor):
-    if backend.standardize_dtype(tensor.dtype) == "string":
+    if keras.backend.standardize_dtype(tensor.dtype) == "string":
         return tensor
     return tf.strings.as_string(tensor)
 
 
 def cast_to_float32(tensor):
-    if backend.standardize_dtype(tensor.dtype) == "float32":
+    if keras.backend.standardize_dtype(tensor.dtype) == "float32":
         return tensor
-    if backend.standardize_dtype(tensor.dtype) == "string":
+    if keras.backend.standardize_dtype(tensor.dtype) == "string":
         return tf.strings.to_number(tensor, tf.float32)
     return ops.cast(tensor, "float32")

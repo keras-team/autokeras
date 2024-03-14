@@ -20,8 +20,8 @@ import keras
 import keras_tuner
 import tree
 from keras import callbacks as tf_callbacks
-from keras.layers.experimental import preprocessing
 
+from autokeras import keras_layers
 from autokeras import pipeline as pipeline_module
 from autokeras.utils import data_utils
 from autokeras.utils import utils
@@ -125,7 +125,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
                     continue
                 input_node = tree.flatten(layer.input)[0]
                 if input_node is tensor:
-                    if isinstance(layer, preprocessing.PreprocessingLayer):
+                    if isinstance(layer, keras_layers.PreprocessingLayer):
                         output_layers.append(layer)
             return output_layers
 

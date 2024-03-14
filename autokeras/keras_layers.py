@@ -16,9 +16,8 @@ from typing import List
 import keras
 import tree
 from keras import layers
-from keras.layers.experimental import preprocessing
+from keras import ops
 
-from autokeras.backend import ops
 from autokeras.utils import data_utils
 
 INT = "int"
@@ -26,8 +25,12 @@ NONE = "none"
 ONE_HOT = "one-hot"
 
 
+class PreprocessingLayer(layers.Layer):
+    pass
+
+
 @keras.utils.register_keras_serializable()
-class CastToFloat32(preprocessing.PreprocessingLayer):
+class CastToFloat32(PreprocessingLayer):
     def get_config(self):
         return super().get_config()
 
@@ -39,7 +42,7 @@ class CastToFloat32(preprocessing.PreprocessingLayer):
 
 
 @keras.utils.register_keras_serializable()
-class ExpandLastDim(preprocessing.PreprocessingLayer):
+class ExpandLastDim(PreprocessingLayer):
     def get_config(self):
         return super().get_config()
 
@@ -51,7 +54,7 @@ class ExpandLastDim(preprocessing.PreprocessingLayer):
 
 
 @keras.utils.register_keras_serializable()
-class MultiCategoryEncoding(preprocessing.PreprocessingLayer):
+class MultiCategoryEncoding(PreprocessingLayer):
     """Encode the categorical features to numerical features.
 
     # Arguments

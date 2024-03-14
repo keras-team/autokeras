@@ -18,7 +18,7 @@ import keras
 import numpy as np
 import tensorflow as tf
 import tree
-from keras.layers.experimental import preprocessing
+from keras import layers
 
 import autokeras as ak
 from autokeras import keras_layers
@@ -176,13 +176,13 @@ def test_preprocessing_adapt_with_cat_to_int_and_norm():
     model = keras.models.Sequential()
     model.add(keras.Input(shape=(2,), dtype=tf.string))
     model.add(keras_layers.MultiCategoryEncoding(["int", "none"]))
-    model.add(preprocessing.Normalization(axis=-1))
+    model.add(layers.Normalization(axis=-1))
 
     tuner_module.AutoTuner.adapt(model, dataset)
 
 
 def test_preprocessing_adapt_with_text_vec():
-    class MockLayer(preprocessing.TextVectorization):
+    class MockLayer(layers.TextVectorization):
         def adapt(self, *args, **kwargs):
             super().adapt(*args, **kwargs)
             self.is_called = True
@@ -206,9 +206,7 @@ def test_preprocessing_adapt_with_text_vec():
 
 def test_adapt_with_model_with_preprocessing_layer_only():
     input_node = keras.Input(shape=(10,))
-    output_node = keras.layers.experimental.preprocessing.Normalization()(
-        input_node
-    )
+    output_node = keras.layers.Normalization()(input_node)
     model = keras.Model(input_node, output_node)
     greedy.Greedy.adapt(
         model,
