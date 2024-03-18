@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import inspect
-import os
 
 import keras
 import numpy as np
@@ -22,37 +21,6 @@ import tensorflow as tf
 import autokeras as ak
 
 SEED = 5
-COLUMN_NAMES = [
-    "sex",
-    "age",
-    "n_siblings_spouses",
-    "parch",
-    "fare",
-    "class",
-    "deck",
-    "embark_town",
-    "alone",
-]
-COLUMN_TYPES = {
-    "sex": "categorical",
-    "age": "numerical",
-    "n_siblings_spouses": "categorical",
-    "parch": "categorical",
-    "fare": "numerical",
-    "class": "categorical",
-    "deck": "categorical",
-    "embark_town": "categorical",
-    "alone": "categorical",
-}
-TRAIN_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
-TEST_DATA_URL = "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
-
-TRAIN_CSV_PATH = keras.utils.get_file(
-    fname=os.path.basename(TRAIN_DATA_URL), origin=TRAIN_DATA_URL
-)
-TEST_CSV_PATH = keras.utils.get_file(
-    fname=os.path.basename(TEST_DATA_URL), origin=TEST_DATA_URL
-)
 
 
 def generate_data(num_instances=100, shape=(32, 32, 3), dtype="np"):
@@ -97,26 +65,6 @@ def generate_text_data(num_instances=100):
             for i in range(num_instances)
         ]
     )
-
-
-def generate_data_with_categorical(
-    num_instances=100,
-    num_numerical=10,
-    num_categorical=3,
-    num_classes=5,
-    dtype="np",
-):
-    categorical_data = np.random.randint(
-        num_classes, size=(num_instances, num_categorical)
-    )
-    numerical_data = np.random.rand(num_instances, num_numerical)
-    data = np.concatenate((numerical_data, categorical_data), axis=1)
-    if data.dtype == np.float64:
-        data = data.astype(np.float32)
-    if dtype == "np":
-        return data
-    if dtype == "dataset":
-        return tf.data.Dataset.from_tensor_slices(data)
 
 
 def build_graph():

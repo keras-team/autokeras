@@ -18,7 +18,6 @@ import numpy as np
 import tensorflow as tf
 import tree
 
-import autokeras as ak
 from autokeras import hyper_preprocessors
 from autokeras import nodes as input_module
 from autokeras import preprocessors
@@ -134,19 +133,3 @@ def test_reg_head_build_with_zero_dropout_return_tensor():
     )
 
     assert len(tree.flatten(outputs)) == 1
-
-
-def test_segmentation():
-    dataset = np.array(["a", "a", "c", "b"])
-    head = head_module.SegmentationHead(name="a", shape=(1,))
-    adapter = head.get_adapter()
-    dataset = adapter.adapt(dataset, batch_size=32)
-    analyser = head.get_analyser()
-    for data in dataset:
-        analyser.update(data)
-    analyser.finalize()
-    head.config_from_analyser(analyser)
-    head.build(
-        keras_tuner.HyperParameters(),
-        ak.Input(shape=(32,)).build_node(keras_tuner.HyperParameters()),
-    )

@@ -16,7 +16,6 @@ import keras_nlp
 
 from autokeras.auto_model import AutoModel
 from autokeras.blocks import BertBlock
-from autokeras.blocks import CategoricalToNumerical
 from autokeras.blocks import ClassificationHead
 from autokeras.blocks import ConvBlock
 from autokeras.blocks import DenseBlock
@@ -31,7 +30,6 @@ from autokeras.blocks import RegressionHead
 from autokeras.blocks import ResNetBlock
 from autokeras.blocks import RNNBlock
 from autokeras.blocks import SpatialReduction
-from autokeras.blocks import StructuredDataBlock
 from autokeras.blocks import TemporalReduction
 from autokeras.blocks import TextBlock
 from autokeras.blocks import TextToIntSequence
@@ -42,19 +40,13 @@ from autokeras.engine.head import Head
 from autokeras.engine.node import Node
 from autokeras.keras_layers import CastToFloat32
 from autokeras.keras_layers import ExpandLastDim
-from autokeras.keras_layers import MultiCategoryEncoding
 from autokeras.nodes import ImageInput
 from autokeras.nodes import Input
-from autokeras.nodes import StructuredDataInput
 from autokeras.nodes import TextInput
-from autokeras.nodes import TimeseriesInput
 from autokeras.tasks import ImageClassifier
 from autokeras.tasks import ImageRegressor
-from autokeras.tasks import StructuredDataClassifier
-from autokeras.tasks import StructuredDataRegressor
 from autokeras.tasks import TextClassifier
 from autokeras.tasks import TextRegressor
-from autokeras.tasks import TimeseriesForecaster
 from autokeras.tuners import BayesianOptimization
 from autokeras.tuners import Greedy
 from autokeras.tuners import Hyperband
@@ -62,11 +54,9 @@ from autokeras.tuners import RandomSearch
 from autokeras.utils.io_utils import image_dataset_from_directory
 from autokeras.utils.io_utils import text_dataset_from_directory
 from autokeras.utils.utils import check_kt_version
-from autokeras.utils.utils import check_tf_version
 
 __version__ = "1.1.1dev"
 
-check_tf_version()
 check_kt_version()
 
 CUSTOM_OBJECTS = {
@@ -74,5 +64,4 @@ CUSTOM_OBJECTS = {
     "BertBackbone": keras_nlp.models.BertBackbone,
     "CastToFloat32": CastToFloat32,
     "ExpandLastDim": ExpandLastDim,
-    "MultiCategoryEncoding": MultiCategoryEncoding,
 }

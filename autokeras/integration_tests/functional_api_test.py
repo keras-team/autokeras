@@ -13,19 +13,16 @@
 # limitations under the License.
 
 import numpy as np
-import pandas as pd
 
 import autokeras as ak
 from autokeras import test_utils
 
 
-def test_text_and_structured_data(tmp_path):
+def test_text_data(tmp_path):
     # Prepare the data.
     num_instances = 80
     x_text = test_utils.generate_text_data(num_instances)
-    x_structured_data = pd.read_csv(test_utils.TRAIN_CSV_PATH)
 
-    x_structured_data = x_structured_data[:num_instances]
     y_classification = test_utils.generate_one_hot_labels(
         num_instances=num_instances, num_classes=3
     )
@@ -34,10 +31,6 @@ def test_text_and_structured_data(tmp_path):
     )
 
     # Build model and train.
-    structured_data_input = ak.StructuredDataInput()
-    structured_data_output = ak.CategoricalToNumerical()(structured_data_input)
-    structured_data_output = ak.DenseBlock()(structured_data_output)
-
     text_input = ak.TextInput()
     outputs1 = ak.TextToIntSequence()(text_input)
     outputs1 = ak.Embedding()(outputs1)
@@ -47,12 +40,12 @@ def test_text_and_structured_data(tmp_path):
     outputs2 = ak.DenseBlock()(outputs2)
     text_output = ak.Merge()((outputs1, outputs2))
 
-    merged_outputs = ak.Merge()((structured_data_output, text_output))
+    merged_outputs = ak.Merge()(text_output)
 
     regression_outputs = ak.RegressionHead()(merged_outputs)
     classification_outputs = ak.ClassificationHead()(merged_outputs)
     automodel = ak.AutoModel(
-        inputs=[text_input, structured_data_input],
+        inputs=text_input,
         directory=tmp_path,
         outputs=[regression_outputs, classification_outputs],
         max_trials=2,
@@ -61,7 +54,7 @@ def test_text_and_structured_data(tmp_path):
     )
 
     automodel.fit(
-        (x_text, x_structured_data),
+        x_text,
         (y_regression, y_classification),
         validation_split=0.2,
         epochs=1,

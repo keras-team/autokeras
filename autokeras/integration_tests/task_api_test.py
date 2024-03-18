@@ -14,7 +14,6 @@
 
 import keras
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 
 import autokeras as ak
@@ -102,75 +101,3 @@ def test_text_regressor(tmp_path):
     )
     clf.export_model()
     assert clf.predict(test_x).shape == (len(test_x), 1)
-
-
-def test_structured_data_regressor(tmp_path):
-    num_data = NUM_INSTANCES * 2
-    num_train = NUM_INSTANCES
-    data = (
-        pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)[:num_data]
-    )
-    x_train, x_test = data[:num_train], data[num_train:]
-    y = test_utils.generate_data(num_instances=num_data, shape=tuple())
-    y_train, y_test = y[:num_train], y[num_train:]
-    clf = ak.StructuredDataRegressor(
-        directory=tmp_path, max_trials=2, seed=test_utils.SEED
-    )
-    clf.fit(
-        x_train,
-        y_train,
-        epochs=11,
-        validation_data=(x_train, y_train),
-        batch_size=BATCH_SIZE,
-    )
-    clf.export_model()
-    assert clf.predict(x_test).shape == (len(y_test), 1)
-
-
-def test_structured_data_classifier(tmp_path):
-    num_data = NUM_INSTANCES * 2
-    num_train = NUM_INSTANCES
-    data = (
-        pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)[:num_data]
-    )
-    x_train, x_test = data[:num_train], data[num_train:]
-    y = test_utils.generate_one_hot_labels(
-        num_instances=num_data, num_classes=3
-    )
-    y_train, y_test = y[:num_train], y[num_train:]
-    clf = ak.StructuredDataClassifier(
-        directory=tmp_path, max_trials=1, seed=test_utils.SEED
-    )
-    clf.fit(
-        x_train,
-        y_train,
-        epochs=2,
-        validation_data=(x_train, y_train),
-        batch_size=BATCH_SIZE,
-    )
-    clf.export_model()
-    assert clf.predict(x_test).shape == (len(y_test), 3)
-
-
-def test_timeseries_forecaster(tmp_path):
-    lookback = 2
-    predict_from = 1
-    predict_until = 10
-    train_x = test_utils.generate_data_with_categorical(num_instances=100)
-    train_y = test_utils.generate_data(num_instances=80, shape=(1,))
-    clf = ak.TimeseriesForecaster(
-        lookback=lookback,
-        directory=tmp_path,
-        predict_from=predict_from,
-        predict_until=predict_until,
-        max_trials=2,
-        seed=test_utils.SEED,
-    )
-    clf.fit(train_x, train_y, epochs=1, validation_data=(train_x, train_y))
-    keras_model = clf.export_model()
-    clf.evaluate(train_x, train_y)
-    assert clf.predict(train_x).shape == (predict_until - predict_from + 1, 1)
-    assert clf.fit_and_predict(
-        train_x, train_y, epochs=1, validation_split=0.2
-    ).shape == (predict_until - predict_from + 1, 1)
-    assert isinstance(keras_model, keras.Model)

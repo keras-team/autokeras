@@ -17,9 +17,11 @@ import copy
 import os
 
 import keras
+import keras_nlp
 import keras_tuner
 import tree
-from keras import callbacks as tf_callbacks
+from keras import callbacks as callbacks_module
+from keras import layers
 
 from autokeras import keras_layers
 from autokeras import pipeline as pipeline_module
@@ -125,7 +127,20 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
                     continue
                 input_node = tree.flatten(layer.input)[0]
                 if input_node is tensor:
-                    if isinstance(layer, keras_layers.PreprocessingLayer):
+                    if isinstance(
+                        layer,
+                        (
+                            keras_layers.PreprocessingLayer,
+                            layers.TextVectorization,
+                            layers.Normalization,
+                            layers.RandomFlip,
+                            layers.RandomRotation,
+                            layers.RandomTranslation,
+                            layers.RandomContrast,
+                            layers.RandomZoom,
+                            keras_nlp.models.BertPreprocessor,
+                        ),
+                    ):
                         output_layers.append(layer)
             return output_layers
 
@@ -178,19 +193,21 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             epochs_provided = False
             epochs = 1000
             if not utils.contain_instance(
-                callbacks, tf_callbacks.EarlyStopping
+                callbacks, callbacks_module.EarlyStopping
             ):
                 callbacks.append(
-                    tf_callbacks.EarlyStopping(patience=10, min_delta=1e-4)
+                    callbacks_module.EarlyStopping(patience=10, min_delta=1e-4)
                 )
 
         # Insert early-stopping for acceleration.
         early_stopping_inserted = False
         new_callbacks = self._deepcopy_callbacks(callbacks)
-        if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
+        if not utils.contain_instance(
+            callbacks, callbacks_module.EarlyStopping
+        ):
             early_stopping_inserted = True
             new_callbacks.append(
-                tf_callbacks.EarlyStopping(patience=10, min_delta=1e-4)
+                callbacks_module.EarlyStopping(patience=10, min_delta=1e-4)
             )
 
         # Populate initial search space.
@@ -258,7 +275,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         return [
             copy.deepcopy(callbacks)
             for callback in callbacks
-            if not isinstance(callback, tf_callbacks.EarlyStopping)
+            if not isinstance(callback, callbacks_module.EarlyStopping)
         ]
 
     def _get_best_trial_epochs(self):

@@ -37,19 +37,6 @@ def to_snake_case(name):
     return insecure
 
 
-def check_tf_version() -> None:
-    if parse(tf.__version__) < parse("2.7.0"):
-        warnings.warn(
-            "The Tensorflow package version needs to be at least 2.7.0 \n"
-            "for AutoKeras to run. Currently, your TensorFlow version is \n"
-            f"{tf.__version__}. Please upgrade with \n"
-            "`$ pip install --upgrade tensorflow`. \n"
-            "You can use `pip freeze` to check afterwards "
-            "that everything is ok.",
-            ImportWarning,
-        )
-
-
 def check_kt_version() -> None:
     if parse(keras_tuner.__version__) < parse("1.1.0"):
         warnings.warn(

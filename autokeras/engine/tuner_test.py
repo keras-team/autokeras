@@ -21,7 +21,6 @@ import tree
 from keras import layers
 
 import autokeras as ak
-from autokeras import keras_layers
 from autokeras import test_utils
 from autokeras.engine import tuner as tuner_module
 from autokeras.tuners import greedy
@@ -169,18 +168,6 @@ def test_tuner_does_not_crash_with_distribution_strategy(tmp_path):
     tuner.hypermodel.build(tuner.oracle.hyperparameters)
 
 
-def test_preprocessing_adapt_with_cat_to_int_and_norm():
-    x = np.array([["a", 5], ["b", 6]]).astype(str)
-    y = np.array([[1, 2], [3, 4]]).astype(str)
-    dataset = tf.data.Dataset.from_tensor_slices((x, y)).batch(32)
-    model = keras.models.Sequential()
-    model.add(keras.Input(shape=(2,), dtype=tf.string))
-    model.add(keras_layers.MultiCategoryEncoding(["int", "none"]))
-    model.add(layers.Normalization(axis=-1))
-
-    tuner_module.AutoTuner.adapt(model, dataset)
-
-
 def test_preprocessing_adapt_with_text_vec():
     class MockLayer(layers.TextVectorization):
         def adapt(self, *args, **kwargs):
@@ -190,14 +177,15 @@ def test_preprocessing_adapt_with_text_vec():
     x_train = test_utils.generate_text_data()
     y_train = np.random.randint(0, 2, (100,))
     dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train)).batch(32)
+
+    inputs = keras.Input(shape=(1,), dtype=tf.string)
     layer1 = MockLayer(
         max_tokens=5000, output_mode="int", output_sequence_length=40
     )
-    model = keras.models.Sequential()
-    model.add(keras.Input(shape=(1,), dtype=tf.string))
-    model.add(layer1)
-    model.add(keras.layers.Embedding(50001, 10))
-    model.add(keras.layers.Dense(1))
+    outputs = layer1(inputs)
+    outputs = keras.layers.Embedding(50001, 10)(outputs)
+    outputs = keras.layers.Dense(1)(outputs)
+    model = keras.models.Model(inputs, outputs)
 
     tuner_module.AutoTuner.adapt(model, dataset)
 

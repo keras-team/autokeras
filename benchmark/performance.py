@@ -75,21 +75,3 @@ def test_imdb_accuracy_over_92(tmp_path):
     clf.fit(x_train, y_train, batch_size=6, epochs=1)
     accuracy = clf.evaluate(x_test, y_test)[1]
     assert accuracy >= 0.92
-
-
-def test_titaninc_accuracy_over_77(tmp_path):
-    TRAIN_DATA_URL = (
-        "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
-    )
-    TEST_DATA_URL = (
-        "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
-    )
-
-    train_file_path = keras.utils.get_file("train.csv", TRAIN_DATA_URL)
-    test_file_path = keras.utils.get_file("eval.csv", TEST_DATA_URL)
-    clf = ak.StructuredDataClassifier(max_trials=10, directory=tmp_path)
-
-    clf.fit(train_file_path, "survived")
-
-    accuracy = clf.evaluate(test_file_path, "survived")[1]
-    assert accuracy >= 0.77

@@ -47,7 +47,3 @@ class ClassificationAdapter(HeadAdapter):
 
 class RegressionAdapter(HeadAdapter):
     pass
-
-
-class SegmentationHeadAdapter(ClassificationAdapter):
-    pass
