@@ -49,8 +49,8 @@ def test_model_save_load_output_same(tmp_path):
     layer.adapt(tf.data.Dataset.from_tensor_slices(x_train).batch(32))
 
     model = keras.Sequential([keras.Input(shape=(3,), dtype=tf.string), layer])
-    model.save(os.path.join(tmp_path, "model"))
-    model2 = keras.models.load_model(os.path.join(tmp_path, "model"))
+    model.save(os.path.join(tmp_path, "model.keras"))
+    model2 = keras.models.load_model(os.path.join(tmp_path, "model.keras"))
 
     assert np.array_equal(model.predict(x_train), model2.predict(x_train))
 
