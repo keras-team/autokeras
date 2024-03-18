@@ -287,7 +287,6 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
         model = self._build_best_model()
         self.adapt(model, kwargs["x"])
-        print(model.layers)
         model, history = utils.fit_with_adaptive_batch_size(
             model, self.hypermodel.batch_size, **kwargs
         )
