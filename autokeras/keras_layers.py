@@ -85,7 +85,7 @@ class MultiCategoryEncoding(PreprocessingLayer):
     def build(self, input_shape):
         for encoding_layer in self.encoding_layers:
             if encoding_layer is not None:
-                encoding_layer.build((1,))
+                encoding_layer.build()
 
     def call(self, inputs):
         input_nodes = tree.flatten(inputs)[0]

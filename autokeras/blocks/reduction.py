@@ -14,9 +14,9 @@
 
 from typing import Optional
 
-import tensorflow as tf
 import tree
 from keras import layers
+from keras import ops
 
 from autokeras.engine import block as block_module
 from autokeras.utils import layer_utils
@@ -79,10 +79,7 @@ class Merge(block_module.Block):
         return layers.Concatenate()(inputs)
 
     def _inputs_same_shape(self, inputs):
-        return all(
-            input_node.shape.as_list() == inputs[0].shape.as_list()
-            for input_node in inputs
-        )
+        return all(input_node.shape == inputs[0].shape for input_node in inputs)
 
 
 class Flatten(block_module.Block):
@@ -176,7 +173,7 @@ class TemporalReduction(Reduction):
         super().__init__(reduction_type, **kwargs)
 
     def global_max(self, input_node):
-        return tf.math.reduce_max(input_node, axis=-2)
+        return ops.max(input_node, axis=-2)
 
     def global_avg(self, input_node):
-        return tf.math.reduce_mean(input_node, axis=-2)
+        return ops.mean(input_node, axis=-2)

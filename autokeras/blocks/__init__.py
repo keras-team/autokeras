@@ -22,7 +22,6 @@ from autokeras.blocks.basic import EfficientNetBlock
 from autokeras.blocks.basic import Embedding
 from autokeras.blocks.basic import ResNetBlock
 from autokeras.blocks.basic import RNNBlock
-from autokeras.blocks.basic import Transformer
 from autokeras.blocks.basic import XceptionBlock
 from autokeras.blocks.heads import ClassificationHead
 from autokeras.blocks.heads import RegressionHead

@@ -282,6 +282,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
         model = self._build_best_model()
         self.adapt(model, kwargs["x"])
+        print(model.layers)
         model, history = utils.fit_with_adaptive_batch_size(
             model, self.hypermodel.batch_size, **kwargs
         )
@@ -289,7 +290,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
     @property
     def best_model_path(self):
-        return os.path.join(self.project_dir, "best_model")
+        return os.path.join(self.project_dir, "best_model.keras")
 
     @property
     def best_pipeline_path(self):

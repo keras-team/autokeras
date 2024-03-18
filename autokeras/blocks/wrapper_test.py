@@ -104,16 +104,6 @@ def test_text_block_ngram_return_tensor():
     assert len(tree.flatten(outputs)) == 1
 
 
-def test_text_block_transformer_return_tensor():
-    block = blocks.TextBlock(block_type="transformer")
-
-    outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
-    )
-
-    assert len(tree.flatten(outputs)) == 1
-
-
 def test_text_deserialize_to_text():
     serialized_block = blocks.serialize(blocks.TextBlock())
 

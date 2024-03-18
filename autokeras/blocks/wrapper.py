@@ -28,7 +28,6 @@ VANILLA = "vanilla"
 EFFICIENT = "efficient"
 NORMALIZE = "normalize"
 AUGMENT = "augment"
-TRANSFORMER = "transformer"
 MAX_TOKENS = "max_tokens"
 NGRAM = "ngram"
 BERT = "bert"
@@ -120,8 +119,8 @@ class TextBlock(block_module.Block):
     """Block for text data.
 
     # Arguments
-        block_type: String. 'vanilla', 'transformer', and 'ngram'. The type of
-            Block to use. 'vanilla' and 'transformer' use a TextToIntSequence
+        block_type: String. 'vanilla', and 'ngram'. The type of
+            Block to use. 'vanilla' uses a TextToIntSequence
             vectorizer, whereas 'ngram' uses TextToNgramVector. If unspecified,
             it will be tuned automatically.
         max_tokens: Int. The maximum size of the vocabulary.
@@ -158,9 +157,7 @@ class TextBlock(block_module.Block):
         input_node = tree.flatten(inputs)[0]
         output_node = input_node
         if self.block_type is None:
-            block_type = hp.Choice(
-                BLOCK_TYPE, [VANILLA, TRANSFORMER, NGRAM, BERT]
-            )
+            block_type = hp.Choice(BLOCK_TYPE, [VANILLA, NGRAM, BERT])
             with hp.conditional_scope(BLOCK_TYPE, [block_type]):
                 output_node = self._build_block(hp, output_node, block_type)
         else:
@@ -182,17 +179,11 @@ class TextBlock(block_module.Block):
             output_node = preprocessing.TextToIntSequence(
                 max_tokens=max_tokens
             ).build(hp, output_node)
-            if block_type == TRANSFORMER:
-                output_node = basic.Transformer(
-                    max_features=max_tokens + 1,
-                    pretraining=self.pretraining,
-                ).build(hp, output_node)
-            else:
-                output_node = basic.Embedding(
-                    max_features=max_tokens + 1,
-                    pretraining=self.pretraining,
-                ).build(hp, output_node)
-                output_node = basic.ConvBlock().build(hp, output_node)
+            output_node = basic.Embedding(
+                max_features=max_tokens + 1,
+                pretraining=self.pretraining,
+            ).build(hp, output_node)
+            output_node = basic.ConvBlock().build(hp, output_node)
             output_node = reduction.SpatialReduction().build(hp, output_node)
             output_node = basic.DenseBlock().build(hp, output_node)
         return output_node
