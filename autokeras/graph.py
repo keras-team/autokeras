@@ -320,7 +320,7 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
                     warmup_steps=warmup_steps,
                 )
 
-            optimizer = keras.optimizers.experimental.AdamW(
+            optimizer = keras.optimizers.AdamW(
                 learning_rate=lr_schedule,
                 weight_decay=0.01,
                 beta_1=0.9,

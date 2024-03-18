@@ -40,7 +40,6 @@ def deserialize(config, custom_objects=None):
         config,
         module_objects=globals(),
         custom_objects=custom_objects,
-        printable_module_name="nodes",
     )
 
 

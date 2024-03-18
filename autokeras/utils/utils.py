@@ -15,6 +15,7 @@
 import re
 import warnings
 
+import keras
 import keras_tuner
 import tensorflow as tf
 import tree
@@ -149,24 +150,10 @@ def add_to_hp(hp, hps, name=None):
 
 
 def serialize_keras_object(obj):
-    if hasattr(tf.keras.utils, "legacy"):
-        return tf.keras.utils.legacy.serialize_keras_object(
-            obj
-        )  # pragma: no cover
-    else:
-        return tf.keras.utils.serialize_keras_object(obj)  # pragma: no cover
+    return keras.utils.serialize_keras_object(obj)  # pragma: no cover
 
 
-def deserialize_keras_object(
-    config, module_objects=None, custom_objects=None, printable_module_name=None
-):
-    if hasattr(tf.keras.utils, "legacy"):
-        return (
-            tf.keras.utils.legacy.deserialize_keras_object(  # pragma: no cover
-                config, custom_objects, module_objects, printable_module_name
-            )
-        )
-    else:
-        return tf.keras.utils.deserialize_keras_object(  # pragma: no cover
-            config, custom_objects, module_objects, printable_module_name
-        )
+def deserialize_keras_object(config, module_objects=None, custom_objects=None):
+    return keras.utils.deserialize_keras_object(
+        config, custom_objects, module_objects
+    )
