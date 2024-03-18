@@ -129,31 +129,27 @@ If you want to use generators, you can refer to the following code.
 
 N_BATCHES = 30
 BATCH_SIZE = 100
-N_FEATURES = 10
 
 
-def get_data_generator(n_batches, batch_size, n_features):
-    """Get a generator returning n_batches random data.
-
-    The shape of the data is (batch_size, n_features).
-    """
+def get_data_generator(n_batches, batch_size):
+    """Get a generator returning n_batches random data."""
 
     def data_generator():
         for _ in range(n_batches * batch_size):
-            x = np.random.randn(n_features)
-            y = x.sum(axis=0) / n_features > 0.5
+            x = np.random.randn(32, 32, 3)
+            y = x.sum() / 32 * 32 * 3 > 0.5
             yield x, y
 
     return data_generator
 
 
 dataset = tf.data.Dataset.from_generator(
-    get_data_generator(N_BATCHES, BATCH_SIZE, N_FEATURES),
+    get_data_generator(N_BATCHES, BATCH_SIZE),
     output_types=(tf.float32, tf.float32),
-    output_shapes=((N_FEATURES,), tuple()),
+    output_shapes=((32, 32, 3), tuple()),
 ).batch(BATCH_SIZE)
 
-clf = ak.StructuredDataClassifier(overwrite=True, max_trials=1, seed=5)
+clf = ak.ImageDataClassifier(overwrite=True, max_trials=1, seed=5)
 clf.fit(x=dataset, validation_data=dataset, batch_size=BATCH_SIZE)
 print(clf.evaluate(dataset))
 

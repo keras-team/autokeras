@@ -34,20 +34,6 @@ PAGES = {
         "autokeras.TextRegressor.evaluate",
         "autokeras.TextRegressor.export_model",
     ],
-    "structured_data_classifier.md": [
-        "autokeras.StructuredDataClassifier",
-        "autokeras.StructuredDataClassifier.fit",
-        "autokeras.StructuredDataClassifier.predict",
-        "autokeras.StructuredDataClassifier.evaluate",
-        "autokeras.StructuredDataClassifier.export_model",
-    ],
-    "structured_data_regressor.md": [
-        "autokeras.StructuredDataRegressor",
-        "autokeras.StructuredDataRegressor.fit",
-        "autokeras.StructuredDataRegressor.predict",
-        "autokeras.StructuredDataRegressor.evaluate",
-        "autokeras.StructuredDataRegressor.export_model",
-    ],
     "auto_model.md": [
         "autokeras.AutoModel",
         "autokeras.AutoModel.fit",
@@ -64,7 +50,6 @@ PAGES = {
     "node.md": [
         "autokeras.ImageInput",
         "autokeras.Input",
-        "autokeras.StructuredDataInput",
         "autokeras.TextInput",
     ],
     "block.md": [
@@ -78,7 +63,6 @@ PAGES = {
         "autokeras.TemporalReduction",
         "autokeras.XceptionBlock",
         "autokeras.ImageBlock",
-        "autokeras.StructuredDataBlock",
         "autokeras.TextBlock",
         "autokeras.ImageAugmentation",
         "autokeras.Normalization",

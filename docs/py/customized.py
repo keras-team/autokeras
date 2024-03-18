@@ -86,24 +86,19 @@ If you would like to provide your own validation data or change the ratio of
 the validation data, please refer to the Validation Data section of the
 tutorials of [Image
 Classification](/tutorial/image_classification/#validation-data), [Text
-Classification](/tutorial/text_classification/#validation-data), [Structured
-Data
-Classification](/tutorial/structured_data_classification/#validation-data),
+Classification](/tutorial/text_classification/#validation-data),
 [Multi-task and Multiple Validation](/tutorial/multi/#validation-data).
 
 ## Data Format
 You can refer to the documentation of
 [ImageInput](/node/#imageinput-class),
-[StructuredDataInput](/node/#structureddatainput-class),
 [TextInput](/node/#textinput-class),
 [RegressionHead](/block/#regressionhead-class),
 [ClassificationHead](/block/#classificationhead-class),
 for the format of different types of data.
 You can also refer to the Data Format section of the tutorials of
 [Image Classification](/tutorial/image_classification/#data-format),
-[Text Classification](/tutorial/text_classification/#data-format),
-[Structured Data
-Classification](/tutorial/structured_data_classification/#data-format).
+[Text Classification](/tutorial/text_classification/#data-format).
 
 ## Implement New Block
 
@@ -158,7 +153,6 @@ print(auto_model.evaluate(x_test, y_test))
 **Nodes**:
 [ImageInput](/node/#imageinput-class),
 [Input](/node/#input-class),
-[StructuredDataInput](/node/#structureddatainput-class),
 [TextInput](/node/#textinput-class).
 
 **Preprocessors**:
@@ -180,6 +174,5 @@ print(auto_model.evaluate(x_test, y_test))
 [TemporalReduction](/block/#temporalreduction-class),
 [XceptionBlock](/block/#xceptionblock-class),
 [ImageBlock](/block/#imageblock-class),
-[StructuredDataBlock](/block/#structureddatablock-class),
 [TextBlock](/block/#textblock-class).
 """

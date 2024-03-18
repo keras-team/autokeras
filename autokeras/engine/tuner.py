@@ -17,11 +17,9 @@ import copy
 import os
 
 import keras
-import keras_nlp
 import keras_tuner
 import tree
 from keras import callbacks as callbacks_module
-from keras import layers
 
 from autokeras import keras_layers
 from autokeras import pipeline as pipeline_module
@@ -129,18 +127,8 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
                 if input_node is tensor:
                     if isinstance(
                         layer,
-                        (
-                            keras_layers.PreprocessingLayer,
-                            layers.TextVectorization,
-                            layers.Normalization,
-                            layers.RandomFlip,
-                            layers.RandomRotation,
-                            layers.RandomTranslation,
-                            layers.RandomContrast,
-                            layers.RandomZoom,
-                            keras_nlp.models.BertPreprocessor,
-                        ),
-                    ):
+                        keras_layers.PreprocessingLayer,
+                    ) or hasattr(layer, "adapt"):
                         output_layers.append(layer)
             return output_layers
 
