@@ -99,5 +99,6 @@ def test_text_regressor(tmp_path):
         validation_data=(test_x, test_y),
         batch_size=BATCH_SIZE,
     )
+    clf.predict(test_x)
     clf.export_model()
     assert clf.predict(test_x).shape == (len(test_x), 1)
