@@ -62,11 +62,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         return
 
     def get_best_model(self):
-        with keras_tuner.engine.tuner.maybe_distribute(
-            self.distribution_strategy
-        ):
-            model = keras.models.load_model(self.best_model_path)
-        return model
+        return self.get_best_models()[0]
 
     def get_best_pipeline(self):
         return pipeline_module.load_pipeline(self.best_pipeline_path)
@@ -238,7 +234,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             pipeline, model, history = self.final_fit(**copied_fit_kwargs)
         else:
             # TODO: Add return history functionality in Keras Tuner
-            model = self.get_best_models()[0]
+            model = self.get_best_model()
             history = None
             pipeline = pipeline_module.load_pipeline(
                 self._pipeline_path(self.oracle.get_best_trials(1)[0].trial_id)
