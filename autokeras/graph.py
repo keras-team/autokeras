@@ -277,21 +277,12 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
         elif optimizer_name == "adam_weight_decay":
             steps_per_epoch = int(self.num_samples / self.batch_size)
             num_train_steps = steps_per_epoch * self.epochs
-            warmup_steps = int(
-                self.epochs * self.num_samples * 0.1 / self.batch_size
-            )
 
             lr_schedule = keras.optimizers.schedules.PolynomialDecay(
                 initial_learning_rate=learning_rate,
                 decay_steps=num_train_steps,
                 end_learning_rate=0.0,
             )
-            if warmup_steps:
-                lr_schedule = keras_layers.WarmUp(
-                    initial_learning_rate=learning_rate,
-                    decay_schedule_fn=lr_schedule,
-                    warmup_steps=warmup_steps,
-                )
 
             optimizer = keras.optimizers.AdamW(
                 learning_rate=lr_schedule,
