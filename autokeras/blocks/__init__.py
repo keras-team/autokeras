@@ -19,7 +19,6 @@ from autokeras.blocks.basic import BertBlock
 from autokeras.blocks.basic import ConvBlock
 from autokeras.blocks.basic import DenseBlock
 from autokeras.blocks.basic import EfficientNetBlock
-from autokeras.blocks.basic import Embedding
 from autokeras.blocks.basic import ResNetBlock
 from autokeras.blocks.basic import RNNBlock
 from autokeras.blocks.basic import XceptionBlock
@@ -27,8 +26,6 @@ from autokeras.blocks.heads import ClassificationHead
 from autokeras.blocks.heads import RegressionHead
 from autokeras.blocks.preprocessing import ImageAugmentation
 from autokeras.blocks.preprocessing import Normalization
-from autokeras.blocks.preprocessing import TextToIntSequence
-from autokeras.blocks.preprocessing import TextToNgramVector
 from autokeras.blocks.reduction import Flatten
 from autokeras.blocks.reduction import Merge
 from autokeras.blocks.reduction import SpatialReduction

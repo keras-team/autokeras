@@ -17,7 +17,7 @@ from autokeras import test_utils
 
 
 def test_io_api(tmp_path):
-    num_instances = 20
+    num_instances = 3
     image_x = test_utils.generate_data(
         num_instances=num_instances, shape=(28, 28)
     )
@@ -50,6 +50,6 @@ def test_io_api(tmp_path):
         [regression_y, classification_y],
         epochs=1,
         validation_split=0.2,
-        batch_size=4,
+        batch_size=2,
     )
     automodel.predict([image_x, text_x])

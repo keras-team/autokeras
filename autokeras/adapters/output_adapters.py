@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 
 from autokeras.engine import adapter as adapter_module
@@ -25,19 +24,14 @@ class HeadAdapter(adapter_module.Adapter):
         self.name = name
 
     def check(self, dataset):
-        supported_types = (tf.data.Dataset, np.ndarray, pd.DataFrame, pd.Series)
+        supported_types = (tf.data.Dataset, np.ndarray)
         if not isinstance(dataset, supported_types):
             raise TypeError(
                 f"Expect the target data of {self.name} to be tf.data.Dataset,"
-                f" np.ndarray, pd.DataFrame or pd.Series, "
-                f"but got {type(dataset)}."
+                f" np.ndarray, but got {type(dataset)}."
             )
 
     def convert_to_dataset(self, dataset, batch_size):
-        if isinstance(dataset, pd.DataFrame):
-            dataset = dataset.values
-        if isinstance(dataset, pd.Series):
-            dataset = dataset.values
         return super().convert_to_dataset(dataset, batch_size)
 
 
