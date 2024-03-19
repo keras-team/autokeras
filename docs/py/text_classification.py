@@ -101,43 +101,14 @@ clf.fit(
 For advanced users, you may customize your search space by using
 [AutoModel](/auto_model/#automodel-class) instead of
 [TextClassifier](/text_classifier). You can configure the
-[TextBlock](/block/#textblock-class) for some high-level configurations, e.g.,
-`vectorizer` for the type of text vectorization method to use.  You can use
-'sequence', which uses [TextToInteSequence](/block/#texttointsequence-class) to
-convert the words to integers and use [Embedding](/block/#embedding-class) for
-embedding the integer sequences, or you can use 'ngram', which uses
-[TextToNgramVector](/block/#texttongramvector-class) to vectorize the
-sentences.  You can also do not specify these arguments, which would leave the
-different choices to be tuned automatically.  See the following example for
-detail.
+[TextBlock](/block/#textblock-class) for some high-level configurations. You can
+also do not specify these arguments, which would leave the different choices to
+be tuned automatically.  See the following example for detail.
 """
 
 
 input_node = ak.TextInput()
-output_node = ak.TextBlock(block_type="ngram")(input_node)
-output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(
-    inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
-)
-clf.fit(x_train, y_train, epochs=2)
-
-"""
-The usage of [AutoModel](/auto_model/#automodel-class) is similar to the
-[functional API](https://www.tensorflow.org/guide/keras/functional) of Keras.
-Basically, you are building a graph, whose edges are blocks and the nodes are
-intermediate outputs of blocks.  To add an edge from `input_node` to
-`output_node` with `output_node = ak.[some_block]([block_args])(input_node)`.
-
-You can even also use more fine grained blocks to customize the search space
-even further. See the following example.
-"""
-
-
-input_node = ak.TextInput()
-output_node = ak.TextToIntSequence()(input_node)
-output_node = ak.Embedding()(output_node)
-# Use separable Conv layers in Keras.
-output_node = ak.ConvBlock(separable=True)(output_node)
+output_node = ak.TextBlock()(input_node)
 output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(
     inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
@@ -174,10 +145,6 @@ print(clf.evaluate(test_set))
 ## Reference
 [TextClassifier](/text_classifier),
 [AutoModel](/auto_model/#automodel-class),
-[TextBlock](/block/#textblock-class),
-[TextToInteSequence](/block/#texttointsequence-class),
-[Embedding](/block/#embedding-class),
-[TextToNgramVector](/block/#texttongramvector-class),
 [ConvBlock](/block/#convblock-class),
 [TextInput](/node/#textinput-class),
 [ClassificationHead](/block/#classificationhead-class).

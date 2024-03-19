@@ -44,15 +44,9 @@ The following are the links to the documentation of the predefined input nodes a
 
 [Normalization](/block/#normalization-class)
 
-[TextToIntSequence](/block/#texttointsequence-class)
-
-[TextToNgramVector](/block/#texttongramvector-class)
-
 [ConvBlock](/block/#convblock-class)
 
 [DenseBlock](/block/#denseblock-class)
-
-[Embedding](/block/#embedding-class)
 
 [Merge](/block/#merge-class)
 

@@ -43,28 +43,3 @@ reg.fit(text_inputs, media_success_outputs)
 
 # Predict with the chosen model:
 predict_y = reg.predict(text_inputs)
-
-"""
-If your text source has a larger vocabulary (number of distinct words), you may
-need to create a custom pipeline in AutoKeras to increase the `max_tokens`
-parameter.
-"""
-
-text_input = (df.Title + " " + df.Headline).to_numpy(dtype="str")
-
-# text input and tokenization
-input_node = ak.TextInput()
-output_node = ak.TextToIntSequence(max_tokens=20000)(input_node)
-
-# regression output
-output_node = ak.RegressionHead()(output_node)
-
-# initialize AutoKeras and find the best model
-reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=15)
-reg.fit(text_input, media_success_outputs)
-
-"""
-Measure the accuracy of the regressor on an independent test set:
-"""
-
-print(reg.evaluate(text_input, media_success_outputs))

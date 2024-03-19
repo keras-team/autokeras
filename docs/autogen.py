@@ -55,7 +55,6 @@ PAGES = {
     "block.md": [
         "autokeras.ConvBlock",
         "autokeras.DenseBlock",
-        "autokeras.Embedding",
         "autokeras.Merge",
         "autokeras.ResNetBlock",
         "autokeras.RNNBlock",
@@ -66,9 +65,6 @@ PAGES = {
         "autokeras.TextBlock",
         "autokeras.ImageAugmentation",
         "autokeras.Normalization",
-        "autokeras.TextToIntSequence",
-        "autokeras.TextToNgramVector",
-        "autokeras.CategoricalToNumerical",
         "autokeras.ClassificationHead",
         "autokeras.RegressionHead",
     ],

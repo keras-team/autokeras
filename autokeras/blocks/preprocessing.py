@@ -52,7 +52,6 @@ class Normalization(block_module.Block):
         return config
 
 
-
 class ImageAugmentation(block_module.Block):
     """Collection of various image augmentation methods.
 

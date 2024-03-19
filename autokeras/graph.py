@@ -305,7 +305,6 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
             optimizer=optimizer,
             metrics=self._get_metrics(),
             loss=self._get_loss(),
-            run_eagerly=True,
         )
 
         return model
