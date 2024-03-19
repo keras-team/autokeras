@@ -61,8 +61,13 @@ def test_image_regressor(tmp_path):
 
 
 def test_text_classifier(tmp_path):
-    train_x = test_utils.generate_text_data(num_instances=NUM_INSTANCES)
-    train_y = np.array([0, 1] * ((NUM_INSTANCES + 1) // 2))[:NUM_INSTANCES]
+    # Trigger the warmup requires epochs*num_instances * 0.1 / batch_size >= 1
+    num_instances = 5
+    batch_size = 1
+    epochs = 2
+
+    train_x = test_utils.generate_text_data(num_instances=num_instances)
+    train_y = np.array([0, 1] * ((num_instances + 1) // 2))[:num_instances]
     test_x = train_x
     test_y = train_y
     clf = ak.TextClassifier(
@@ -75,9 +80,9 @@ def test_text_classifier(tmp_path):
     clf.fit(
         train_x,
         train_y,
-        epochs=2,
+        epochs=epochs,
         validation_data=(test_x, test_y),
-        batch_size=BATCH_SIZE,
+        batch_size=batch_size,
     )
     clf.export_model()
     assert clf.predict(test_x).shape == (len(test_x), 1)
