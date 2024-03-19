@@ -52,7 +52,7 @@ from autokeras.utils.io_utils import image_dataset_from_directory
 from autokeras.utils.io_utils import text_dataset_from_directory
 from autokeras.utils.utils import check_kt_version
 
-__version__ = "1.1.1dev"
+__version__ = "2.0.0dev"
 
 check_kt_version()
 

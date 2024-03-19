@@ -13,13 +13,11 @@
 # limitations under the License.
 
 import re
-import warnings
 
 import keras
 import keras_tuner
 import tensorflow as tf
 import tree
-from packaging.version import parse
 
 
 def validate_num_inputs(inputs, num):
@@ -35,19 +33,6 @@ def to_snake_case(name):
     intermediate = re.sub("(.)([A-Z][a-z0-9]+)", r"\1_\2", name)
     insecure = re.sub("([a-z])([A-Z])", r"\1_\2", intermediate).lower()
     return insecure
-
-
-def check_kt_version() -> None:
-    if parse(keras_tuner.__version__) < parse("1.1.0"):
-        warnings.warn(
-            "The Keras Tuner package version needs to be at least 1.1.0 \n"
-            "for AutoKeras to run. Currently, your Keras Tuner version is \n"
-            f"{keras_tuner.__version__}. Please upgrade with \n"
-            "`$ pip install --upgrade keras-tuner`. \n"
-            "You can use `pip freeze` to check afterwards "
-            "that everything is ok.",
-            ImportWarning,
-        )
 
 
 def contain_instance(instance_list, instance_type):
