@@ -78,7 +78,7 @@ class WarmUp(keras.optimizers.schedules.LearningRateSchedule):
             global_step_float = ops.cast(step, "float32")
             warmup_steps_float = ops.cast(self.warmup_steps, "float32")
             warmup_percent_done = global_step_float / warmup_steps_float
-            warmup_learning_rate = self.initial_learning_rate * ops.pow(
+            warmup_learning_rate = self.initial_learning_rate * ops.power(
                 warmup_percent_done, self.power
             )
             return ops.cond(
