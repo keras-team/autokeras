@@ -21,6 +21,7 @@ setup(
         "keras-tuner>=1.4.0",
         "keras-nlp>=0.8.0",
         "keras>=3.0.0",
+        "tensorflow==2.15.0",
         "dm-tree",
     ],
     extras_require={
@@ -34,6 +35,7 @@ setup(
             "coverage",
             "typedapi>=0.2,<0.3",
             "scikit-learn",
+            
         ],
     },
     python_requires=">=3.8",
