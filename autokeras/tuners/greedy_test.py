@@ -14,8 +14,8 @@
 
 from unittest import mock
 
+import keras
 import keras_tuner
-from tensorflow import keras
 
 import autokeras as ak
 from autokeras import test_utils

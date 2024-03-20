@@ -16,12 +16,11 @@ from typing import Optional
 from typing import Union
 
 import keras_nlp
-import tensorflow as tf
+import tree
+from keras import applications
+from keras import layers
+from keras import ops
 from keras_tuner.engine import hyperparameters
-from tensorflow import keras
-from tensorflow import nest
-from tensorflow.keras import applications
-from tensorflow.keras import layers
 
 from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
@@ -124,7 +123,7 @@ class DenseBlock(block_module.Block):
         return cls(**config)
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
@@ -220,10 +219,10 @@ class RNNBlock(block_module.Block):
         return cls(**config)
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
-        shape = input_node.shape.as_list()
+        shape = list(input_node.shape)
         if len(shape) != 3:
             raise ValueError(
                 "Expect the input tensor of RNNBlock to have dimensions of "
@@ -244,7 +243,7 @@ class RNNBlock(block_module.Block):
             if i == num_layers - 1:
                 return_sequences = self.return_sequences
             if bidirectional:
-                output_node = layers.Bidirectional(
+                output_node = layers.Bidirectional(  # pragma: no cover
                     in_layer(feature_size, return_sequences=return_sequences)
                 )(output_node)
             else:
@@ -354,7 +353,7 @@ class ConvBlock(block_module.Block):
         return cls(**config)
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
@@ -366,7 +365,9 @@ class ConvBlock(block_module.Block):
             separable = hp.Boolean("separable", default=False)
 
         if separable:
-            conv = layer_utils.get_sep_conv(input_node.shape)
+            conv = layer_utils.get_sep_conv(
+                input_node.shape
+            )  # pragma: no cover
         else:
             conv = layer_utils.get_conv(input_node.shape)
 
@@ -403,285 +404,6 @@ class ConvBlock(block_module.Block):
         return "same"
 
 
-class MultiHeadSelfAttention(block_module.Block):
-    """Block for Multi-Head Self-Attention.
-
-    # Arguments
-        head_size: Int. Dimensionality of the `query`, `key` and `value` tensors
-            after the linear transformation. If left unspecified, it will be
-            tuned automatically.
-        num_heads: Int. The number of attention heads. Defaults to 8.
-    """
-
-    def __init__(
-        self, head_size: Optional[int] = None, num_heads: int = 8, **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.head_size = head_size
-        self.num_heads = num_heads
-
-    def get_config(self):
-        config = super().get_config()
-        config.update(
-            {"head_size": self.head_size, "num_heads": self.num_heads}
-        )
-        return config
-
-    def build(self, hp, inputs=None):
-        """
-        # Arguments
-             hp: HyperParameters. The hyperparameters for building the model.
-             inputs: Tensor of Shape [batch_size, seq_len, embedding_dim]
-
-        # Returns
-            Self-Attention outputs of shape
-            `[batch_size, seq_len, embedding_dim]`.
-        """
-        inputs = nest.flatten(inputs)
-        utils.validate_num_inputs(inputs, 1)
-        input_node = inputs[0]
-        num_heads = self.num_heads
-        head_size = (
-            self.head_size
-            or hp.Choice("head_size_factor", [4, 8, 16, 32, 64], default=16)
-            * num_heads
-        )
-
-        projection_dim = head_size // num_heads
-        query_dense = layers.Dense(head_size)
-        key_dense = layers.Dense(head_size)
-        value_dense = layers.Dense(head_size)
-        combine_heads = layers.Dense(head_size)
-        batch_size = tf.shape(input_node)[0]
-        query = query_dense(input_node)  # (batch_size, seq_len, head_size)
-        key = key_dense(input_node)  # (batch_size, seq_len, head_size)
-        value = value_dense(input_node)  # (batch_size, seq_len, head_size)
-        query, key, value = [
-            self.separate_heads(var, batch_size, num_heads, projection_dim)
-            for var in [query, key, value]
-        ]
-        attention, weights = self.attention(query, key, value)
-        attention = tf.transpose(
-            attention, perm=[0, 2, 1, 3]
-        )  # (batch_size, seq_len, num_heads, projection_dim)
-        concat_attention = tf.reshape(
-            attention, (batch_size, tf.shape(attention)[1], self.head_size)
-        )  # (batch_size, seq_len, head_size)
-        return combine_heads(
-            concat_attention
-        )  # (batch_size, seq_len, head_size)
-
-    @staticmethod
-    def attention(query, key, value):
-        score = tf.matmul(query, key, transpose_b=True)
-        dim_key = tf.cast(tf.shape(key)[-1], tf.float32)
-        scaled_score = score / tf.math.sqrt(dim_key)
-        weights = tf.nn.softmax(scaled_score, axis=-1)
-        output = tf.matmul(weights, value)
-        return output, weights
-
-    @staticmethod
-    def separate_heads(x, batch_size, num_heads, projection_dim):
-        x = tf.reshape(x, (batch_size, -1, num_heads, projection_dim))
-        return tf.transpose(x, perm=[0, 2, 1, 3])
-
-
-class Transformer(block_module.Block):
-    """Block for Transformer.
-    The input should be tokenized sequences with the same length, where each
-    element of a sequence should be the index of the word. The implementation is
-    derived from the this
-    [example](https://keras.io/examples/nlp/text_classification_with_transformer/).
-
-    # Example
-    ```python
-        # Using the Transformer Block with AutoModel.
-        import autokeras as ak
-        from tensorflow.keras import losses
-        text_input = ak.TextInput()
-        output_node = ak.TextToIntSequence(output_sequence_length=200)(
-            text_input)
-        output_node = ak.Transformer(embedding_dim=32,
-                             pretraining='none',
-                             num_heads=2,
-                             dense_dim=32,
-                             dropout = 0.25)(output_node)
-        output_node = ak.SpatialReduction(reduction_type='global_avg')(
-            output_node)
-        output_node = ak.DenseBlock(num_layers=1, use_batchnorm = False)(
-            output_node)
-        output_node = ak.ClassificationHead(
-            loss=losses.SparseCategoricalCrossentropy(),
-            dropout = 0.25)(output_node)
-        clf = ak.AutoModel(inputs=text_input, outputs=output_node, max_trials=2)
-    ```
-    # Arguments
-        max_features: Int. Size of the vocabulary. Must be set if not using
-            TextToIntSequence before this block. Defaults to 20001.
-        pretraining: String or keras_tuner.engine.hyperparameters.Choice.
-            'random' (use random weights instead any pretrained model), 'glove',
-            'fasttext' or 'word2vec'. Use pretrained word embedding.  If left
-            unspecified, it will be tuned automatically.
-        embedding_dim: Int or keras_tuner.engine.hyperparameters.Choice.
-            Output dimension of the Attention block.
-            If left unspecified, it will be tuned automatically.
-        num_heads: Int or keras_tuner.engine.hyperparameters.Choice.
-            The number of attention heads. If left unspecified,
-            it will be tuned automatically.
-        dense_dim: Int or keras_tuner.engine.hyperparameters.Choice.
-            The output dimension of the Feed-Forward Network. If left
-            unspecified, it will be tuned automatically.
-        dropout: Float or keras_tuner.engine.hyperparameters.Choice.
-            Between 0 and 1. If left unspecified, it will be
-            tuned automatically.
-    """
-
-    def __init__(
-        self,
-        max_features: int = 20001,
-        pretraining: Optional[Union[str, hyperparameters.Choice]] = None,
-        embedding_dim: Optional[Union[int, hyperparameters.Choice]] = None,
-        num_heads: Optional[Union[int, hyperparameters.Choice]] = None,
-        dense_dim: Optional[Union[int, hyperparameters.Choice]] = None,
-        dropout: Optional[Union[float, hyperparameters.Choice]] = None,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        self.max_features = max_features
-        self.pretraining = utils.get_hyperparameter(
-            pretraining,
-            hyperparameters.Choice(
-                "pretraining",
-                ["random", "glove", "fasttext", "word2vec", "none"],
-                default="none",
-            ),
-            str,
-        )
-        self.embedding_dim = utils.get_hyperparameter(
-            embedding_dim,
-            hyperparameters.Choice(
-                "embedding_dim", [32, 64, 128, 256, 512], default=128
-            ),
-            int,
-        )
-        self.num_heads = utils.get_hyperparameter(
-            num_heads,
-            hyperparameters.Choice("num_heads", [8, 16, 32], default=8),
-            int,
-        )
-        self.dense_dim = utils.get_hyperparameter(
-            dense_dim,
-            hyperparameters.Choice(
-                "dense_dim", [128, 256, 512, 1024, 2048], default=2048
-            ),
-            int,
-        )
-        self.dropout = utils.get_hyperparameter(
-            dropout,
-            hyperparameters.Choice("dropout", [0.0, 0.25, 0.5], default=0.0),
-            float,
-        )
-
-    def get_config(self):
-        config = super().get_config()
-        config.update(
-            {
-                "max_features": self.max_features,
-                "pretraining": io_utils.serialize_block_arg(self.pretraining),
-                "embedding_dim": io_utils.serialize_block_arg(
-                    self.embedding_dim
-                ),
-                "num_heads": io_utils.serialize_block_arg(self.num_heads),
-                "dense_dim": io_utils.serialize_block_arg(self.dense_dim),
-                "dropout": io_utils.serialize_block_arg(self.dropout),
-            }
-        )
-        return config
-
-    @classmethod
-    def from_config(cls, config):
-        config["pretraining"] = io_utils.deserialize_block_arg(
-            config["pretraining"]
-        )
-        config["embedding_dim"] = io_utils.deserialize_block_arg(
-            config["embedding_dim"]
-        )
-        config["num_heads"] = io_utils.deserialize_block_arg(
-            config["num_heads"]
-        )
-        config["dense_dim"] = io_utils.deserialize_block_arg(
-            config["dense_dim"]
-        )
-        config["dropout"] = io_utils.deserialize_block_arg(config["dropout"])
-        return cls(**config)
-
-    def build(self, hp, inputs=None):
-        """
-        # Arguments
-             hp: HyperParameters. The hyperparameters for building the model.
-             inputs: Tensor of Shape [batch_size, seq_len]
-
-        # Returns
-            Output Tensor of shape `[batch_size, seq_len, embedding_dim]`.
-        """
-        inputs = nest.flatten(inputs)
-        utils.validate_num_inputs(inputs, 1)
-        pretraining = utils.add_to_hp(self.pretraining, hp)
-        embedding_dim = utils.add_to_hp(self.embedding_dim, hp)
-        num_heads = utils.add_to_hp(self.num_heads, hp)
-
-        dense_dim = utils.add_to_hp(self.dense_dim, hp)
-        dropout = utils.add_to_hp(self.dropout, hp)
-
-        ffn = keras.Sequential(
-            [
-                layers.Dense(dense_dim, activation="relu"),
-                layers.Dense(embedding_dim),
-            ]
-        )
-
-        layernorm1 = layers.LayerNormalization(epsilon=1e-6)
-        layernorm2 = layers.LayerNormalization(epsilon=1e-6)
-        dropout1 = layers.Dropout(dropout)
-        dropout2 = layers.Dropout(dropout)
-        # Token and Position Embeddings
-        input_node = nest.flatten(inputs)[0]
-        token_embedding = Embedding(
-            max_features=self.max_features,
-            pretraining=pretraining,
-            embedding_dim=embedding_dim,
-            dropout=dropout,
-        ).build(hp, input_node)
-        maxlen = input_node.shape[-1]
-        batch_size = tf.shape(input_node)[0]
-        positions = self.pos_array_funct(maxlen, batch_size)
-        position_embedding = Embedding(
-            max_features=maxlen,
-            pretraining=pretraining,
-            embedding_dim=embedding_dim,
-            dropout=dropout,
-        ).build(hp, positions)
-        output_node = keras.layers.Add()([token_embedding, position_embedding])
-        attn_output = MultiHeadSelfAttention(embedding_dim, num_heads).build(
-            hp, output_node
-        )
-        attn_output = dropout1(attn_output)
-        add_inputs_1 = keras.layers.Add()([output_node, attn_output])
-        out1 = layernorm1(add_inputs_1)
-        ffn_output = ffn(out1)
-        ffn_output = dropout2(ffn_output)
-        add_inputs_2 = keras.layers.Add()([out1, ffn_output])
-        return layernorm2(add_inputs_2)
-
-    @staticmethod
-    def pos_array_funct(maxlen, batch_size):
-        pos_ones = tf.ones((batch_size, 1), dtype=tf.int32)
-        positions = tf.range(start=0, limit=maxlen, delta=1)
-        positions = tf.expand_dims(positions, 0)
-        positions = tf.matmul(pos_ones, positions)
-        return positions
-
-
 class KerasApplicationBlock(block_module.Block):
     """Blocks extending Keras applications."""
 
@@ -697,7 +419,7 @@ class KerasApplicationBlock(block_module.Block):
         return config
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
 
         pretrained = self.pretrained
         if input_node.shape[3] not in [1, 3]:
@@ -855,112 +577,6 @@ class EfficientNetBlock(KerasApplicationBlock):
         self.version = version
 
 
-class Embedding(block_module.Block):
-    """Word embedding block for sequences.
-
-    The input should be tokenized sequences with the same length, where each
-    element of a sequence should be the index of the word.
-
-    # Arguments
-        max_features: Int. Size of the vocabulary. Must be set if not using
-            TextToIntSequence before this block. Defaults to 20001.
-        pretraining: String or keras_tuner.engine.hyperparameters.Choice.
-            'random' (use random weights instead any pretrained
-            model), 'glove', 'fasttext' or 'word2vec'. Use pretrained word
-            embedding. If left unspecified, it will be tuned automatically.
-        embedding_dim: Int or keras_tuner.engine.hyperparameters.Choice.
-            Output dimension of the Attention block.
-            If left unspecified, it will be tuned automatically.
-        dropout: Float or keras_tuner.engine.hyperparameters.Choice.
-            The dropout rate for the layers.
-            If left unspecified, it will be tuned automatically.
-    """
-
-    def __init__(
-        self,
-        max_features: int = 20001,
-        pretraining: Optional[Union[str, hyperparameters.Choice]] = None,
-        embedding_dim: Optional[Union[int, hyperparameters.Choice]] = None,
-        dropout: Optional[Union[float, hyperparameters.Choice]] = None,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        self.max_features = max_features
-        self.pretraining = utils.get_hyperparameter(
-            pretraining,
-            hyperparameters.Choice(
-                "pretraining",
-                ["random", "glove", "fasttext", "word2vec", "none"],
-                default="none",
-            ),
-            str,
-        )
-        self.embedding_dim = utils.get_hyperparameter(
-            embedding_dim,
-            hyperparameters.Choice(
-                "embedding_dim", [32, 64, 128, 256, 512], default=128
-            ),
-            int,
-        )
-        self.dropout = utils.get_hyperparameter(
-            dropout,
-            hyperparameters.Choice("dropout", [0.0, 0.25, 0.5], default=0.25),
-            float,
-        )
-
-    def get_config(self):
-        config = super().get_config()
-        config.update(
-            {
-                "max_features": self.max_features,
-                "pretraining": io_utils.serialize_block_arg(self.pretraining),
-                "embedding_dim": io_utils.serialize_block_arg(
-                    self.embedding_dim
-                ),
-                "dropout": io_utils.serialize_block_arg(self.dropout),
-            }
-        )
-        return config
-
-    @classmethod
-    def from_config(cls, config):
-        config["pretraining"] = io_utils.deserialize_block_arg(
-            config["pretraining"]
-        )
-        config["dropout"] = io_utils.deserialize_block_arg(config["dropout"])
-        config["embedding_dim"] = io_utils.deserialize_block_arg(
-            config["embedding_dim"]
-        )
-        return cls(**config)
-
-    def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
-        # TODO: support more pretrained embedding layers.
-        # glove, fasttext, and word2vec
-        pretraining = utils.add_to_hp(self.pretraining, hp)
-        embedding_dim = utils.add_to_hp(self.embedding_dim, hp)
-        if pretraining != "none":
-            # TODO: load from pretrained weights
-            layer = layers.Embedding(
-                input_dim=self.max_features,
-                output_dim=embedding_dim,
-                input_length=input_node.shape[1],
-            )
-            # trainable=False,
-            # weights=[embedding_matrix])
-        else:
-            layer = layers.Embedding(
-                input_dim=self.max_features, output_dim=embedding_dim
-            )
-            # input_length=input_node.shape[1],
-            # trainable=True)
-        output_node = layer(input_node)
-        dropout = utils.add_to_hp(self.dropout, hp)
-        if dropout > 0:
-            output_node = layers.Dropout(dropout)(output_node)
-        return output_node
-
-
 class BertBlock(block_module.Block):
     """Block for Pre-trained BERT.
 
@@ -972,7 +588,7 @@ class BertBlock(block_module.Block):
         # Using the Transformer Block with AutoModel.
         import autokeras as ak
         from autokeras import BertBlock
-        from tensorflow.keras import losses
+        from keras import losses
 
         input_node = ak.TextInput()
         output_node = BertBlock()(input_node)
@@ -1021,7 +637,7 @@ class BertBlock(block_module.Block):
         return cls(**config)
 
     def build(self, hp, inputs=None):
-        input_tensor = nest.flatten(inputs)[0]
+        input_tensor = tree.flatten(inputs)[0]
 
         preset_name = "bert_base_en_uncased"
         tokenizer_layer = keras_nlp.models.BertPreprocessor.from_preset(
@@ -1030,7 +646,7 @@ class BertBlock(block_module.Block):
         )
         bert_encoder = keras_nlp.models.BertBackbone.from_preset(preset_name)
 
-        output_node = tokenizer_layer(tf.reshape(input_tensor, [-1]))
+        output_node = tokenizer_layer(ops.reshape(input_tensor, [-1]))
         output_node = bert_encoder(output_node)["pooled_output"]
 
         return output_node

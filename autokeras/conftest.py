@@ -14,8 +14,8 @@
 
 import shutil
 
+import keras
 import pytest
-from tensorflow import keras
 
 
 @pytest.fixture(autouse=True)
@@ -29,3 +29,9 @@ def clear_session():
 def remove_tmp_path(tmp_path):
     yield
     shutil.rmtree(tmp_path)
+
+
+@pytest.fixture(autouse=True)
+def disable_traceback_filtering():
+    keras.config.disable_traceback_filtering()
+    yield

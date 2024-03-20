@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow import nest
+import tree
 
 from autokeras import preprocessors as preprocessors_module
 from autokeras.engine import hyper_preprocessor as hpps_module
@@ -98,8 +98,8 @@ class Pipeline(pps_module.Preprocessor):
         sources_x = data_utils.unzip_dataset(x)
         for pps_list, data in zip(self.inputs, sources_x):
             for preprocessor in pps_list:
-                preprocessor.fit(data)
-                data = preprocessor.transform(data)
+                preprocessor.fit(data)  # pragma: no cover
+                data = preprocessor.transform(data)  # pragma: no cover
         y = dataset.map(lambda x, y: y)
         sources_y = data_utils.unzip_dataset(y)
         for pps_list, data in zip(self.outputs, sources_y):
@@ -208,7 +208,7 @@ class Pipeline(pps_module.Preprocessor):
             the heads.
         """
         outputs = []
-        for data, preprocessors in zip(nest.flatten(y), self.outputs):
+        for data, preprocessors in zip(tree.flatten(y), self.outputs):
             for preprocessor in preprocessors[::-1]:
                 if isinstance(preprocessor, pps_module.TargetPreprocessor):
                     data = preprocessor.postprocess(data)

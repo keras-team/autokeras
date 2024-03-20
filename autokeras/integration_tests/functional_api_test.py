@@ -13,19 +13,16 @@
 # limitations under the License.
 
 import numpy as np
-import pandas as pd
 
 import autokeras as ak
 from autokeras import test_utils
 
 
-def test_text_and_structured_data(tmp_path):
+def test_text_data(tmp_path):
     # Prepare the data.
-    num_instances = 80
+    num_instances = 3
     x_text = test_utils.generate_text_data(num_instances)
-    x_structured_data = pd.read_csv(test_utils.TRAIN_CSV_PATH)
 
-    x_structured_data = x_structured_data[:num_instances]
     y_classification = test_utils.generate_one_hot_labels(
         num_instances=num_instances, num_classes=3
     )
@@ -34,25 +31,12 @@ def test_text_and_structured_data(tmp_path):
     )
 
     # Build model and train.
-    structured_data_input = ak.StructuredDataInput()
-    structured_data_output = ak.CategoricalToNumerical()(structured_data_input)
-    structured_data_output = ak.DenseBlock()(structured_data_output)
-
     text_input = ak.TextInput()
-    outputs1 = ak.TextToIntSequence()(text_input)
-    outputs1 = ak.Embedding()(outputs1)
-    outputs1 = ak.ConvBlock(separable=True)(outputs1)
-    outputs1 = ak.SpatialReduction()(outputs1)
-    outputs2 = ak.TextToNgramVector()(text_input)
-    outputs2 = ak.DenseBlock()(outputs2)
-    text_output = ak.Merge()((outputs1, outputs2))
-
-    merged_outputs = ak.Merge()((structured_data_output, text_output))
-
-    regression_outputs = ak.RegressionHead()(merged_outputs)
-    classification_outputs = ak.ClassificationHead()(merged_outputs)
+    outputs = ak.BertBlock()(text_input)
+    regression_outputs = ak.RegressionHead()(outputs)
+    classification_outputs = ak.ClassificationHead()(outputs)
     automodel = ak.AutoModel(
-        inputs=[text_input, structured_data_input],
+        inputs=text_input,
         directory=tmp_path,
         outputs=[regression_outputs, classification_outputs],
         max_trials=2,
@@ -61,15 +45,16 @@ def test_text_and_structured_data(tmp_path):
     )
 
     automodel.fit(
-        (x_text, x_structured_data),
+        x_text,
         (y_regression, y_classification),
         validation_split=0.2,
         epochs=1,
+        batch_size=2,
     )
 
 
 def test_image_blocks(tmp_path):
-    num_instances = 10
+    num_instances = 3
     x_train = test_utils.generate_data(
         num_instances=num_instances, shape=(28, 28)
     )
@@ -92,5 +77,9 @@ def test_image_blocks(tmp_path):
     )
 
     automodel.fit(
-        x_train, y_train, validation_data=(x_train, y_train), epochs=1
+        x_train,
+        y_train,
+        validation_data=(x_train, y_train),
+        epochs=1,
+        batch_size=2,
     )

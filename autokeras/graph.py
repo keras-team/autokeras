@@ -12,36 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import keras_tuner
-from tensorflow import keras
-from tensorflow import nest
+import tree
 
 from autokeras import blocks as blocks_module
-from autokeras import keras_layers
 from autokeras import nodes as nodes_module
 from autokeras.engine import head as head_module
 from autokeras.engine import serializable
 from autokeras.utils import io_utils
-
-
-def feature_encoding_input(block):
-    """Fetch the column_types and column_names.
-
-    The values are fetched for FeatureEncoding from StructuredDataInput.
-    """
-    if not isinstance(block.inputs[0], nodes_module.StructuredDataInput):
-        raise TypeError(
-            "CategoricalToNumerical can only be used with StructuredDataInput."
-        )
-    block.column_types = block.inputs[0].column_types
-    block.column_names = block.inputs[0].column_names
-
-
-# Compile the graph.
-COMPILE_FUNCTIONS = {
-    blocks_module.StructuredDataBlock: [feature_encoding_input],
-    blocks_module.CategoricalToNumerical: [feature_encoding_input],
-}
 
 
 def load_graph(filepath, custom_objects=None):
@@ -61,8 +40,8 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
 
     def __init__(self, inputs=None, outputs=None, **kwargs):
         super().__init__(**kwargs)
-        self.inputs = nest.flatten(inputs)
-        self.outputs = nest.flatten(outputs)
+        self.inputs = tree.flatten(inputs)
+        self.outputs = tree.flatten(outputs)
         self._node_to_id = {}
         self._nodes = []
         self.blocks = []
@@ -73,12 +52,6 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
         # Temporary attributes
         self.epochs = None
         self.num_samples = None
-
-    def compile(self):
-        """Share the information between blocks."""
-        for block in self.blocks:
-            for func in COMPILE_FUNCTIONS.get(block.__class__, []):
-                func(block)
 
     def _build_network(self):
         self._node_to_id = {}
@@ -229,7 +202,7 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
                 nodes[node_id]
                 for node_id in config["block_inputs"][str(block_id)]
             ]
-            output_nodes = nest.flatten(block(input_nodes))
+            output_nodes = tree.flatten(block(input_nodes))
             for output_node, node_id in zip(
                 output_nodes, config["block_outputs"][str(block_id)]
             ):
@@ -240,7 +213,6 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
 
     def build(self, hp):
         """Build the HyperModel into a Keras Model."""
-        self.compile()
         keras_nodes = {}
         keras_input_nodes = []
         for node in self.inputs:
@@ -255,7 +227,7 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
                 for input_node in block.inputs
             ]
             outputs = block.build(hp, inputs=temp_inputs)
-            outputs = nest.flatten(outputs)
+            outputs = tree.flatten(outputs)
             for output_node, real_output_node in zip(block.outputs, outputs):
                 keras_nodes[self._node_to_id[output_node]] = real_output_node
         model = keras.Model(
@@ -304,23 +276,14 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
         elif optimizer_name == "adam_weight_decay":
             steps_per_epoch = int(self.num_samples / self.batch_size)
             num_train_steps = steps_per_epoch * self.epochs
-            warmup_steps = int(
-                self.epochs * self.num_samples * 0.1 / self.batch_size
-            )
 
             lr_schedule = keras.optimizers.schedules.PolynomialDecay(
                 initial_learning_rate=learning_rate,
                 decay_steps=num_train_steps,
                 end_learning_rate=0.0,
             )
-            if warmup_steps:
-                lr_schedule = keras_layers.WarmUp(
-                    initial_learning_rate=learning_rate,
-                    decay_schedule_fn=lr_schedule,
-                    warmup_steps=warmup_steps,
-                )
 
-            optimizer = keras.optimizers.experimental.AdamW(
+            optimizer = keras.optimizers.AdamW(
                 learning_rate=lr_schedule,
                 weight_decay=0.01,
                 beta_1=0.9,
@@ -340,9 +303,9 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
         io_utils.save_json(filepath, self.get_config())
 
     def set_io_shapes(self, shapes):
-        for node, shape in zip(self.inputs, nest.flatten(shapes[0])):
+        for node, shape in zip(self.inputs, tree.flatten(shapes[0])):
             node.shape = tuple(shape[1:])
-        for node, shape in zip(self.outputs, nest.flatten(shapes[1])):
+        for node, shape in zip(self.outputs, tree.flatten(shapes[1])):
             node.in_blocks[0].shape = tuple(shape[1:])
 
     def set_fit_args(self, validation_split, epochs=None):

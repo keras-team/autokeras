@@ -14,32 +14,12 @@
 
 
 import numpy as np
-import pandas as pd
 import pytest
 import tensorflow as tf
 
 from autokeras import test_utils
 from autokeras.adapters import input_adapters
 from autokeras.utils import data_utils
-
-
-def test_structured_data_input_unsupported_type_error():
-    with pytest.raises(TypeError) as info:
-        adapter = input_adapters.StructuredDataAdapter()
-        adapter.adapt("unknown", batch_size=32)
-
-    assert "Unsupported type" in str(info.value)
-
-
-def test_structured_data_input_transform_to_dataset():
-    x = tf.data.Dataset.from_tensor_slices(
-        pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)
-    )
-    adapter = input_adapters.StructuredDataAdapter()
-
-    x = adapter.adapt(x, batch_size=32)
-
-    assert isinstance(x, tf.data.Dataset)
 
 
 def test_image_input_adapter_transform_to_dataset():
@@ -115,19 +95,3 @@ def test_text_input_type_error():
     with pytest.raises(TypeError) as info:
         x = adapter.adapt(x, batch_size=32)
     assert "Expect the data to TextInput to be numpy" in str(info.value)
-
-
-def test_time_series_input_type_error():
-    x = "unknown"
-    adapter = input_adapters.TimeseriesAdapter()
-    with pytest.raises(TypeError) as info:
-        x = adapter.adapt(x, batch_size=32)
-    assert "Expect the data in TimeseriesInput to be numpy" in str(info.value)
-
-
-def test_time_series_input_transform_df_to_dataset():
-    adapter = input_adapters.TimeseriesAdapter()
-
-    x = adapter.adapt(pd.DataFrame(np.random.rand(100, 32)), batch_size=32)
-
-    assert isinstance(x, tf.data.Dataset)

@@ -15,9 +15,9 @@
 import os
 import shutil
 
+import keras
 import pytest
 import tensorflow as tf
-from tensorflow import keras
 
 from autokeras import test_utils
 from autokeras.utils import io_utils

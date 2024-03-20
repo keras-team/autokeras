@@ -3,9 +3,10 @@
 !pip install -q -U autokeras==1.0.8
 !pip install -q git+https://github.com/keras-team/keras-tuner.git@1.0.2rc1
 """
+
+import keras
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.datasets import reuters
+from keras.datasets import reuters
 
 import autokeras as ak
 
@@ -59,7 +60,7 @@ clf = ak.TextClassifier(
 
 # Callback to avoid overfitting with the EarlyStopping.
 cbs = [
-    tf.keras.callbacks.EarlyStopping(patience=3),
+    keras.callbacks.EarlyStopping(patience=3),
 ]
 
 # Search for the best model.

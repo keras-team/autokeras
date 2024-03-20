@@ -13,7 +13,7 @@
 # limitations under the License.
 from typing import Optional
 
-from tensorflow import keras
+import keras
 
 from autokeras.engine import io_hypermodel
 from autokeras.utils import types

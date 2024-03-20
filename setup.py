@@ -18,10 +18,10 @@ setup(
     keywords=["AutoML", "Keras"],
     install_requires=[
         "packaging",
-        "tensorflow>=2.8.0",
-        "keras-tuner>=1.1.0",
-        "keras-nlp>=0.4.0",
-        "pandas",
+        "keras-tuner>=1.4.0",
+        "keras-nlp>=0.8.0",
+        "keras>=3.0.0",
+        "dm-tree",
     ],
     extras_require={
         "tests": [

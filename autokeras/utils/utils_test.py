@@ -27,32 +27,6 @@ def test_validate_num_inputs_error():
     assert "Expected 2 elements in the inputs list" in str(info.value)
 
 
-def test_check_tf_version_error():
-    utils.tf.__version__ = "2.1.0"
-
-    with pytest.warns(ImportWarning) as record:
-        utils.check_tf_version()
-
-    assert len(record) == 1
-    assert (
-        "Tensorflow package version needs to be at least"
-        in record[0].message.args[0]
-    )
-
-
-def test_check_kt_version_error():
-    utils.keras_tuner.__version__ = "1.0.0"
-
-    with pytest.warns(ImportWarning) as record:
-        utils.check_kt_version()
-
-    assert len(record) == 1
-    assert (
-        "Keras Tuner package version needs to be at least"
-        in record[0].message.args[0]
-    )
-
-
 def test_run_with_adaptive_batch_size_raise_error():
     def func(**kwargs):
         raise tf.errors.ResourceExhaustedError(0, "", None)

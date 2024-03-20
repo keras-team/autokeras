@@ -18,10 +18,10 @@ from typing import Optional
 from typing import Type
 from typing import Union
 
+import keras
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow import nest
+import tree
 
 from autokeras import blocks
 from autokeras import graph as graph_module
@@ -132,8 +132,8 @@ class AutoModel(object):
         max_model_size: Optional[int] = None,
         **kwargs
     ):
-        self.inputs = nest.flatten(inputs)
-        self.outputs = nest.flatten(outputs)
+        self.inputs = tree.flatten(inputs)
+        self.outputs = tree.flatten(outputs)
         self.seed = seed
         if seed:
             np.random.seed(seed)
@@ -175,8 +175,8 @@ class AutoModel(object):
 
     def _assemble(self):
         """Assemble the Blocks based on the input output nodes."""
-        inputs = nest.flatten(self.inputs)
-        outputs = nest.flatten(self.outputs)
+        inputs = tree.flatten(self.inputs)
+        outputs = tree.flatten(self.outputs)
 
         middle_nodes = [
             input_node.get_block()(input_node) for input_node in inputs
@@ -188,7 +188,7 @@ class AutoModel(object):
         else:
             output_node = middle_nodes[0]
 
-        outputs = nest.flatten(
+        outputs = tree.flatten(
             [output_blocks(output_node) for output_blocks in outputs]
         )
         return graph_module.Graph(inputs=inputs, outputs=outputs)
@@ -316,7 +316,7 @@ class AutoModel(object):
         if isinstance(dataset, tf.data.Dataset):
             sources = data_utils.unzip_dataset(dataset)
         else:
-            sources = nest.flatten(dataset)
+            sources = tree.flatten(dataset)
         adapted = []
         for source, hm in zip(sources, hms):
             source = hm.get_adapter().adapt(source, batch_size)
@@ -347,14 +347,14 @@ class AutoModel(object):
         if isinstance(x, tf.data.Dataset):
             if not predict:
                 x_shapes, y_shapes = data_utils.dataset_shape(x)
-                x_shapes = nest.flatten(x_shapes)
-                y_shapes = nest.flatten(y_shapes)
+                x_shapes = tree.flatten(x_shapes)
+                y_shapes = tree.flatten(y_shapes)
             else:
-                x_shapes = nest.flatten(data_utils.dataset_shape(x))
+                x_shapes = tree.flatten(data_utils.dataset_shape(x))
         else:
-            x_shapes = [a.shape for a in nest.flatten(x)]
+            x_shapes = [a.shape for a in tree.flatten(x)]
             if not predict:
-                y_shapes = [a.shape for a in nest.flatten(y)]
+                y_shapes = [a.shape for a in tree.flatten(y)]
 
         if len(x_shapes) != len(self.inputs):
             raise ValueError(
@@ -380,8 +380,8 @@ class AutoModel(object):
         output_analysers = [head.get_analyser() for head in self._heads]
         analysers = input_analysers + output_analysers
         for x, y in dataset:
-            x = nest.flatten(x)
-            y = nest.flatten(y)
+            x = tree.flatten(x)
+            y = tree.flatten(y)
             for item, analyser in zip(x + y, analysers):
                 analyser.update(item)
 
@@ -433,11 +433,11 @@ class AutoModel(object):
         if len(shapes) <= 1:
             return False
         # The first level has more than 1 element.
-        # The nest has 2 levels.
+        # The tree has 2 levels.
         for shape in shapes:
             if isinstance(shape, tuple):
                 return True
-        # The nest has one level.
+        # The tree has one level.
         # It matches the single IO case.
         return (
             len(shapes) == 2

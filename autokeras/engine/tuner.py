@@ -16,12 +16,12 @@ import collections
 import copy
 import os
 
+import keras
 import keras_tuner
-from tensorflow import keras
-from tensorflow import nest
-from tensorflow.keras import callbacks as tf_callbacks
-from tensorflow.keras.layers.experimental import preprocessing
+import tree
+from keras import callbacks as callbacks_module
 
+from autokeras import keras_layers
 from autokeras import pipeline as pipeline_module
 from autokeras.utils import data_utils
 from autokeras.utils import utils
@@ -62,11 +62,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         return
 
     def get_best_model(self):
-        with keras_tuner.engine.tuner.maybe_distribute(
-            self.distribution_strategy
-        ):
-            model = keras.models.load_model(self.best_model_path)
-        return model
+        return self.get_best_models()[0]
 
     def get_best_pipeline(self):
         return pipeline_module.load_pipeline(self.best_pipeline_path)
@@ -119,20 +115,23 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
         def get_output_layers(tensor):
             output_layers = []
-            tensor = nest.flatten(tensor)[0]
+            tensor = tree.flatten(tensor)[0]
             for layer in model.layers:
                 if isinstance(layer, keras.layers.InputLayer):
                     continue
-                input_node = nest.flatten(layer.input)[0]
+                input_node = tree.flatten(layer.input)[0]
                 if input_node is tensor:
-                    if isinstance(layer, preprocessing.PreprocessingLayer):
+                    if isinstance(
+                        layer,
+                        keras_layers.PreprocessingLayer,
+                    ) or hasattr(layer, "adapt"):
                         output_layers.append(layer)
             return output_layers
 
         dq = collections.deque()
 
-        for index, input_node in enumerate(nest.flatten(model.input)):
-            in_x = x.map(lambda *args: nest.flatten(args)[index])
+        for index, input_node in enumerate(tree.flatten(model.input)):
+            in_x = x.map(lambda *args: tree.flatten(args)[index])
             for layer in get_output_layers(input_node):
                 dq.append((layer, in_x))
 
@@ -178,19 +177,21 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             epochs_provided = False
             epochs = 1000
             if not utils.contain_instance(
-                callbacks, tf_callbacks.EarlyStopping
+                callbacks, callbacks_module.EarlyStopping
             ):
                 callbacks.append(
-                    tf_callbacks.EarlyStopping(patience=10, min_delta=1e-4)
+                    callbacks_module.EarlyStopping(patience=10, min_delta=1e-4)
                 )
 
         # Insert early-stopping for acceleration.
         early_stopping_inserted = False
         new_callbacks = self._deepcopy_callbacks(callbacks)
-        if not utils.contain_instance(callbacks, tf_callbacks.EarlyStopping):
+        if not utils.contain_instance(
+            callbacks, callbacks_module.EarlyStopping
+        ):
             early_stopping_inserted = True
             new_callbacks.append(
-                tf_callbacks.EarlyStopping(patience=10, min_delta=1e-4)
+                callbacks_module.EarlyStopping(patience=10, min_delta=1e-4)
             )
 
         # Populate initial search space.
@@ -233,7 +234,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             pipeline, model, history = self.final_fit(**copied_fit_kwargs)
         else:
             # TODO: Add return history functionality in Keras Tuner
-            model = self.get_best_models()[0]
+            model = self.get_best_model()
             history = None
             pipeline = pipeline_module.load_pipeline(
                 self._pipeline_path(self.oracle.get_best_trials(1)[0].trial_id)
@@ -258,7 +259,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         return [
             copy.deepcopy(callbacks)
             for callback in callbacks
-            if not isinstance(callback, tf_callbacks.EarlyStopping)
+            if not isinstance(callback, callbacks_module.EarlyStopping)
         ]
 
     def _get_best_trial_epochs(self):
@@ -289,7 +290,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
     @property
     def best_model_path(self):
-        return os.path.join(self.project_dir, "best_model")
+        return os.path.join(self.project_dir, "best_model.keras")
 
     @property
     def best_pipeline_path(self):

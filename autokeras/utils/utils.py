@@ -13,16 +13,15 @@
 # limitations under the License.
 
 import re
-import warnings
 
+import keras
 import keras_tuner
 import tensorflow as tf
-from packaging.version import parse
-from tensorflow import nest
+import tree
 
 
 def validate_num_inputs(inputs, num):
-    inputs = nest.flatten(inputs)
+    inputs = tree.flatten(inputs)
     if not len(inputs) == num:
         raise ValueError(
             "Expected {num} elements in the inputs list "
@@ -34,32 +33,6 @@ def to_snake_case(name):
     intermediate = re.sub("(.)([A-Z][a-z0-9]+)", r"\1_\2", name)
     insecure = re.sub("([a-z])([A-Z])", r"\1_\2", intermediate).lower()
     return insecure
-
-
-def check_tf_version() -> None:
-    if parse(tf.__version__) < parse("2.7.0"):
-        warnings.warn(
-            "The Tensorflow package version needs to be at least 2.7.0 \n"
-            "for AutoKeras to run. Currently, your TensorFlow version is \n"
-            f"{tf.__version__}. Please upgrade with \n"
-            "`$ pip install --upgrade tensorflow`. \n"
-            "You can use `pip freeze` to check afterwards "
-            "that everything is ok.",
-            ImportWarning,
-        )
-
-
-def check_kt_version() -> None:
-    if parse(keras_tuner.__version__) < parse("1.1.0"):
-        warnings.warn(
-            "The Keras Tuner package version needs to be at least 1.1.0 \n"
-            "for AutoKeras to run. Currently, your Keras Tuner version is \n"
-            f"{keras_tuner.__version__}. Please upgrade with \n"
-            "`$ pip install --upgrade keras-tuner`. \n"
-            "You can use `pip freeze` to check afterwards "
-            "that everything is ok.",
-            ImportWarning,
-        )
 
 
 def contain_instance(instance_list, instance_type):
@@ -149,24 +122,10 @@ def add_to_hp(hp, hps, name=None):
 
 
 def serialize_keras_object(obj):
-    if hasattr(tf.keras.utils, "legacy"):
-        return tf.keras.utils.legacy.serialize_keras_object(
-            obj
-        )  # pragma: no cover
-    else:
-        return tf.keras.utils.serialize_keras_object(obj)  # pragma: no cover
+    return keras.utils.serialize_keras_object(obj)  # pragma: no cover
 
 
-def deserialize_keras_object(
-    config, module_objects=None, custom_objects=None, printable_module_name=None
-):
-    if hasattr(tf.keras.utils, "legacy"):
-        return (
-            tf.keras.utils.legacy.deserialize_keras_object(  # pragma: no cover
-                config, custom_objects, module_objects, printable_module_name
-            )
-        )
-    else:
-        return tf.keras.utils.deserialize_keras_object(  # pragma: no cover
-            config, custom_objects, module_objects, printable_module_name
-        )
+def deserialize_keras_object(config, module_objects=None, custom_objects=None):
+    return keras.utils.deserialize_keras_object(
+        config, custom_objects, module_objects
+    )

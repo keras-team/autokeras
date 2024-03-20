@@ -15,12 +15,6 @@ You can click the links below to see the detailed tutorial for each task.
 
 [Text Regression](/tutorial/text_regression)
 
-[Structured Data Classification](/tutorial/structured_data_classification)
-
-[Structured Data Regression](/tutorial/structured_data_regression)
-
-**Coming Soon**: Time Series Forecasting, Object Detection, Image Segmentation.
-
 
 ## Multi-Task and Multi-Modal Data
 
@@ -42,8 +36,6 @@ The following are the links to the documentation of the predefined input nodes a
 
 [Input](/node/#input-class)
 
-[StructuredDataInput](/node/#structureddatainput-class)
-
 [TextInput](/node/#textinput-class)
 
 **Blocks**:
@@ -52,17 +44,9 @@ The following are the links to the documentation of the predefined input nodes a
 
 [Normalization](/block/#normalization-class)
 
-[TextToIntSequence](/block/#texttointsequence-class)
-
-[TextToNgramVector](/block/#texttongramvector-class)
-
-[CategoricalToNumerical](/block/#categoricaltonumerical-class)
-
 [ConvBlock](/block/#convblock-class)
 
 [DenseBlock](/block/#denseblock-class)
-
-[Embedding](/block/#embedding-class)
 
 [Merge](/block/#merge-class)
 
@@ -77,8 +61,6 @@ The following are the links to the documentation of the predefined input nodes a
 [XceptionBlock](/block/#xceptionblock-class)
 
 [ImageBlock](/block/#imageblock-class)
-
-[StructuredDataBlock](/block/#structureddatablock-class)
 
 [TextBlock](/block/#textblock-class)
 

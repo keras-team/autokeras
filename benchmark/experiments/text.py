@@ -14,8 +14,8 @@
 
 import os
 
+import keras
 import numpy as np
-import tensorflow as tf
 from sklearn.datasets import load_files
 
 import autokeras as ak
@@ -33,7 +33,7 @@ class IMDB(experiment.Experiment):
 
     @staticmethod
     def load_data():
-        dataset = tf.keras.utils.get_file(
+        dataset = keras.utils.get_file(
             fname="aclImdb.tar.gz",
             origin="http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",  # noqa: E501
             extract=True,

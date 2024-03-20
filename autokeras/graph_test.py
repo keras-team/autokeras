@@ -161,16 +161,6 @@ def test_save_custom_metrics_loss(tmp_path):
     assert new_graph.blocks[0].loss(3, 2) == 1
 
 
-def test_cat_to_num_with_img_input_error():
-    input_node = ak.ImageInput()
-    output_node = ak.CategoricalToNumerical()(input_node)
-
-    with pytest.raises(TypeError) as info:
-        graph_module.Graph(input_node, outputs=output_node).compile()
-
-    assert "CategoricalToNumerical can only be used" in str(info.value)
-
-
 def test_graph_can_init_with_one_missing_output():
     input_node = ak.ImageInput()
     output_node = ak.ConvBlock()(input_node)

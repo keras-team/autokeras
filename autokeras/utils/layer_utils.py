@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tensorflow.keras import layers
+from keras import layers
 
 
 def get_global_average_pooling(shape):
@@ -44,7 +44,7 @@ def get_conv(shape):
 
 
 def get_sep_conv(shape):
-    return [
+    return [  # pragma: no cover
         layers.SeparableConv1D,
         layers.SeparableConv2D,
         layers.Conv3D,

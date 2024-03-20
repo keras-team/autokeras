@@ -14,9 +14,9 @@
 
 from typing import Optional
 
-import tensorflow as tf
-from tensorflow import nest
-from tensorflow.keras import layers
+import tree
+from keras import layers
+from keras import ops
 
 from autokeras.engine import block as block_module
 from autokeras.utils import layer_utils
@@ -54,7 +54,7 @@ class Merge(block_module.Block):
         return config
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         if len(inputs) == 1:
             return inputs
 
@@ -79,17 +79,14 @@ class Merge(block_module.Block):
         return layers.Concatenate()(inputs)
 
     def _inputs_same_shape(self, inputs):
-        return all(
-            input_node.shape.as_list() == inputs[0].shape.as_list()
-            for input_node in inputs
-        )
+        return all(input_node.shape == inputs[0].shape for input_node in inputs)
 
 
 class Flatten(block_module.Block):
     """Flatten the input tensor with Keras Flatten layer."""
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         if len(input_node.shape) > 2:
@@ -114,7 +111,7 @@ class Reduction(block_module.Block):
         raise NotImplementedError
 
     def build(self, hp, inputs=None):
-        inputs = nest.flatten(inputs)
+        inputs = tree.flatten(inputs)
         utils.validate_num_inputs(inputs, 1)
         input_node = inputs[0]
         output_node = input_node
@@ -176,7 +173,7 @@ class TemporalReduction(Reduction):
         super().__init__(reduction_type, **kwargs)
 
     def global_max(self, input_node):
-        return tf.math.reduce_max(input_node, axis=-2)
+        return ops.max(input_node, axis=-2)
 
     def global_avg(self, input_node):
-        return tf.math.reduce_mean(input_node, axis=-2)
+        return ops.mean(input_node, axis=-2)

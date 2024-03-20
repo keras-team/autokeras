@@ -1,9 +1,10 @@
 """shell
 pip install autokeras
 """
+
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.datasets import mnist
+from keras.datasets import mnist
 
 import autokeras as ak
 
@@ -14,6 +15,10 @@ example
 """
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
+x_train = x_train[:100]
+y_train = y_train[:100]
+x_test = x_test[:100]
+y_test = y_test[:100]
 print(x_train.shape)  # (60000, 28, 28)
 print(y_train.shape)  # (60000,)
 print(y_train[:3])  # array([7, 2, 1], dtype=uint8)
@@ -29,7 +34,7 @@ You can also leave the epochs unspecified for an adaptive number of epochs.
 # Initialize the image classifier.
 clf = ak.ImageClassifier(overwrite=True, max_trials=1)
 # Feed the image classifier with training data.
-clf.fit(x_train, y_train, epochs=10)
+clf.fit(x_train, y_train, epochs=1)
 
 
 # Predict with the best model.
@@ -52,7 +57,7 @@ clf.fit(
     y_train,
     # Split the training data and use the last 15% as validation data.
     validation_split=0.15,
-    epochs=10,
+    epochs=1,
 )
 
 """
@@ -70,7 +75,7 @@ clf.fit(
     y_train,
     # Use your own validation set.
     validation_data=(x_val, y_val),
-    epochs=10,
+    epochs=1,
 )
 
 """
@@ -97,7 +102,7 @@ output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(
     inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
 )
-clf.fit(x_train, y_train, epochs=10)
+clf.fit(x_train, y_train, epochs=1)
 
 """
 The usage of AutoModel is similar to the functional API of Keras. Basically, you
@@ -117,7 +122,7 @@ output_node = ak.ClassificationHead()(output_node)
 clf = ak.AutoModel(
     inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
 )
-clf.fit(x_train, y_train, epochs=10)
+clf.fit(x_train, y_train, epochs=1)
 
 """
 ## Data Format
@@ -164,7 +169,7 @@ test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,)))
 
 clf = ak.ImageClassifier(overwrite=True, max_trials=1)
 # Feed the tensorflow Dataset to the classifier.
-clf.fit(train_set, epochs=10)
+clf.fit(train_set, epochs=1)
 # Predict with the best model.
 predicted_y = clf.predict(test_set)
 # Evaluate the best model with testing data.

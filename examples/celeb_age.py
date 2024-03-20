@@ -13,6 +13,7 @@ First, prepare your image data in a numpy.ndarray or tensorflow.Dataset format.
 Each image must have the same shape, meaning each has the same width, height,
 and color channels as other images in the set.
 """
+
 from datetime import datetime
 from datetime import timedelta
 

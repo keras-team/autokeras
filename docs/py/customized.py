@@ -1,9 +1,11 @@
 """shell
 pip install autokeras
 """
+
+import keras
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.datasets import mnist
+import tree
+from keras.datasets import mnist
 
 import autokeras as ak
 
@@ -84,24 +86,19 @@ If you would like to provide your own validation data or change the ratio of
 the validation data, please refer to the Validation Data section of the
 tutorials of [Image
 Classification](/tutorial/image_classification/#validation-data), [Text
-Classification](/tutorial/text_classification/#validation-data), [Structured
-Data
-Classification](/tutorial/structured_data_classification/#validation-data),
+Classification](/tutorial/text_classification/#validation-data),
 [Multi-task and Multiple Validation](/tutorial/multi/#validation-data).
 
 ## Data Format
 You can refer to the documentation of
 [ImageInput](/node/#imageinput-class),
-[StructuredDataInput](/node/#structureddatainput-class),
 [TextInput](/node/#textinput-class),
 [RegressionHead](/block/#regressionhead-class),
 [ClassificationHead](/block/#classificationhead-class),
 for the format of different types of data.
 You can also refer to the Data Format section of the tutorials of
 [Image Classification](/tutorial/image_classification/#data-format),
-[Text Classification](/tutorial/text_classification/#data-format),
-[Structured Data
-Classification](/tutorial/structured_data_classification/#data-format).
+[Text Classification](/tutorial/text_classification/#data-format).
 
 ## Implement New Block
 
@@ -120,8 +117,8 @@ number of neurons is tunable.
 class SingleDenseLayerBlock(ak.Block):
     def build(self, hp, inputs=None):
         # Get the input_node from inputs.
-        input_node = tf.nest.flatten(inputs)[0]
-        layer = tf.keras.layers.Dense(
+        input_node = tree.flatten(inputs)[0]
+        layer = keras.layers.Dense(
             hp.Int("num_units", min_value=32, max_value=512, step=32)
         )
         output_node = layer(input_node)
@@ -156,7 +153,6 @@ print(auto_model.evaluate(x_test, y_test))
 **Nodes**:
 [ImageInput](/node/#imageinput-class),
 [Input](/node/#input-class),
-[StructuredDataInput](/node/#structureddatainput-class),
 [TextInput](/node/#textinput-class).
 
 **Preprocessors**:
@@ -164,13 +160,10 @@ print(auto_model.evaluate(x_test, y_test))
 [ImageAugmentation](/block/#imageaugmentation-class),
 [LightGBM](/block/#lightgbm-class),
 [Normalization](/block/#normalization-class),
-[TextToIntSequence](/block/#texttointsequence-class),
-[TextToNgramVector](/block/#texttongramvector-class).
 
 **Blocks**:
 [ConvBlock](/block/#convblock-class),
 [DenseBlock](/block/#denseblock-class),
-[Embedding](/block/#embedding-class),
 [Merge](/block/#merge-class),
 [ResNetBlock](/block/#resnetblock-class),
 [RNNBlock](/block/#rnnblock-class),
@@ -178,6 +171,5 @@ print(auto_model.evaluate(x_test, y_test))
 [TemporalReduction](/block/#temporalreduction-class),
 [XceptionBlock](/block/#xceptionblock-class),
 [ImageBlock](/block/#imageblock-class),
-[StructuredDataBlock](/block/#structureddatablock-class),
 [TextBlock](/block/#textblock-class).
 """

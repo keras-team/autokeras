@@ -16,12 +16,10 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import tree
+from keras import layers
 from keras_tuner.engine import hyperparameters
-from tensorflow import nest
-from tensorflow.keras import layers
 
-from autokeras import analysers
-from autokeras import keras_layers
 from autokeras.engine import block as block_module
 from autokeras.utils import io_utils
 from autokeras.utils import utils
@@ -45,97 +43,12 @@ class Normalization(block_module.Block):
         self.axis = axis
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         return layers.Normalization(axis=self.axis)(input_node)
 
     def get_config(self):
         config = super().get_config()
         config.update({"axis": self.axis})
-        return config
-
-
-class TextToIntSequence(block_module.Block):
-    """Convert raw texts to sequences of word indices.
-
-    # Arguments
-        output_sequence_length: Int. The maximum length of a sentence. If
-            unspecified, it would be tuned automatically.
-        max_tokens: Int. The maximum size of the vocabulary. Defaults to 20000.
-    """
-
-    def __init__(
-        self,
-        output_sequence_length: Optional[int] = None,
-        max_tokens: int = 20000,
-        **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.output_sequence_length = output_sequence_length
-        self.max_tokens = max_tokens
-
-    def get_config(self):
-        config = super().get_config()
-        config.update(
-            {
-                "output_sequence_length": self.output_sequence_length,
-                "max_tokens": self.max_tokens,
-            }
-        )
-        return config
-
-    def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
-        if self.output_sequence_length is not None:
-            output_sequence_length = self.output_sequence_length
-        else:
-            output_sequence_length = hp.Choice(
-                "output_sequence_length", [64, 128, 256, 512], default=64
-            )
-        output_node = layers.TextVectorization(
-            max_tokens=self.max_tokens,
-            output_mode="int",
-            output_sequence_length=output_sequence_length,
-        )(input_node)
-        return output_node
-
-
-class TextToNgramVector(block_module.Block):
-    """Convert raw texts to n-gram vectors.
-
-    # Arguments
-        max_tokens: Int. The maximum size of the vocabulary. Defaults to 20000.
-        ngrams: Int or tuple of ints. Passing an integer will create ngrams up
-            to that integer, and passing a tuple of integers will create ngrams
-            for the specified values in the tuple. If left unspecified, it will
-            be tuned automatically.
-    """
-
-    def __init__(
-        self,
-        max_tokens: int = 20000,
-        ngrams: Union[int, Tuple[int], None] = None,
-        **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.max_tokens = max_tokens
-        self.ngrams = ngrams
-
-    def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
-        if self.ngrams is not None:
-            ngrams = self.ngrams
-        else:
-            ngrams = hp.Int("ngrams", min_value=1, max_value=2, default=2)
-        return layers.TextVectorization(
-            max_tokens=self.max_tokens,
-            ngrams=ngrams,
-            output_mode="tf-idf",
-            pad_to_max_tokens=True,
-        )(input_node)
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({"max_tokens": self.max_tokens, "ngrams": self.ngrams})
         return config
 
 
@@ -220,7 +133,7 @@ class ImageAugmentation(block_module.Block):
         return value, value
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         output_node = input_node
 
         # Translate
@@ -306,43 +219,3 @@ class ImageAugmentation(block_module.Block):
             config["contrast_factor"]
         )
         return cls(**config)
-
-
-class CategoricalToNumerical(block_module.Block):
-    """Encode the categorical features to numerical features."""
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.column_types = None
-        self.column_names = None
-
-    def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
-        encoding = []
-        for column_name in self.column_names:
-            column_type = self.column_types[column_name]
-            if column_type == analysers.CATEGORICAL:
-                # TODO: Search to use one-hot or int.
-                encoding.append(keras_layers.INT)
-            else:
-                encoding.append(keras_layers.NONE)
-        return keras_layers.MultiCategoryEncoding(encoding)(input_node)
-
-    @classmethod
-    def from_config(cls, config):
-        column_types = config.pop("column_types")
-        column_names = config.pop("column_names")
-        instance = cls(**config)
-        instance.column_types = column_types
-        instance.column_names = column_names
-        return instance
-
-    def get_config(self):
-        config = super().get_config()
-        config.update(
-            {
-                "column_types": self.column_types,
-                "column_names": self.column_names,
-            }
-        )
-        return config

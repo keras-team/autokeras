@@ -13,17 +13,17 @@
 # limitations under the License.
 import os
 
+import keras
 import numpy as np
-import tensorflow as tf
+from keras.datasets import cifar10
+from keras.datasets import mnist
 from sklearn.datasets import load_files
-from tensorflow.keras.datasets import cifar10
-from tensorflow.keras.datasets import mnist
 
 import autokeras as ak
 
 
 def imdb_raw(num_instances=100):
-    dataset = tf.keras.utils.get_file(
+    dataset = keras.utils.get_file(
         fname="aclImdb.tar.gz",
         origin="http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",
         extract=True,
@@ -75,21 +75,3 @@ def test_imdb_accuracy_over_92(tmp_path):
     clf.fit(x_train, y_train, batch_size=6, epochs=1)
     accuracy = clf.evaluate(x_test, y_test)[1]
     assert accuracy >= 0.92
-
-
-def test_titaninc_accuracy_over_77(tmp_path):
-    TRAIN_DATA_URL = (
-        "https://storage.googleapis.com/tf-datasets/titanic/train.csv"
-    )
-    TEST_DATA_URL = (
-        "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
-    )
-
-    train_file_path = tf.keras.utils.get_file("train.csv", TRAIN_DATA_URL)
-    test_file_path = tf.keras.utils.get_file("eval.csv", TEST_DATA_URL)
-    clf = ak.StructuredDataClassifier(max_trials=10, directory=tmp_path)
-
-    clf.fit(train_file_path, "survived")
-
-    accuracy = clf.evaluate(test_file_path, "survived")[1]
-    assert accuracy >= 0.77

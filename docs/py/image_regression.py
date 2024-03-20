@@ -3,7 +3,7 @@ pip install autokeras
 """
 
 import tensorflow as tf
-from tensorflow.keras.datasets import mnist
+from keras.datasets import mnist
 
 import autokeras as ak
 
@@ -22,6 +22,8 @@ example
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 x_train = x_train[:100]
 y_train = y_train[:100]
+x_test = x_test[:100]
+y_test = y_test[:100]
 print(x_train.shape)  # (60000, 28, 28)
 print(y_train.shape)  # (60000,)
 print(y_train[:3])  # array([7, 2, 1], dtype=uint8)
@@ -29,14 +31,14 @@ print(y_train[:3])  # array([7, 2, 1], dtype=uint8)
 """
 The second step is to run the ImageRegressor.  It is recommended have more
 trials for more complicated datasets.  This is just a quick demo of MNIST, so
-we set max_trials to 1.  For the same reason, we set epochs to 2.  You can also
+we set max_trials to 1.  For the same reason, we set epochs to 1.  You can also
 leave the epochs unspecified for an adaptive number of epochs.
 """
 
 # Initialize the image regressor.
 reg = ak.ImageRegressor(overwrite=True, max_trials=1)
 # Feed the image regressor with training data.
-reg.fit(x_train, y_train, epochs=2)
+reg.fit(x_train, y_train, epochs=1)
 
 
 # Predict with the best model.
@@ -59,7 +61,7 @@ reg.fit(
     y_train,
     # Split the training data and use the last 15% as validation data.
     validation_split=0.15,
-    epochs=2,
+    epochs=1,
 )
 
 """
@@ -104,7 +106,7 @@ output_node = ak.RegressionHead()(output_node)
 reg = ak.AutoModel(
     inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
 )
-reg.fit(x_train, y_train, epochs=2)
+reg.fit(x_train, y_train, epochs=1)
 
 """
 The usage of AutoModel is similar to the functional API of Keras. Basically,
@@ -124,7 +126,7 @@ output_node = ak.RegressionHead()(output_node)
 reg = ak.AutoModel(
     inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
 )
-reg.fit(x_train, y_train, epochs=2)
+reg.fit(x_train, y_train, epochs=1)
 
 """
 ## Data Format
@@ -144,6 +146,10 @@ case, the images would have to be 3-dimentional.
 """
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
+x_train = x_train[:100]
+y_train = y_train[:100]
+x_test = x_test[:100]
+y_test = y_test[:100]
 
 # Reshape the images to have the channel dimension.
 x_train = x_train.reshape(x_train.shape + (1,))
@@ -159,7 +165,7 @@ test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,)))
 
 reg = ak.ImageRegressor(overwrite=True, max_trials=1)
 # Feed the tensorflow Dataset to the regressor.
-reg.fit(train_set, epochs=2)
+reg.fit(train_set, epochs=1)
 # Predict with the best model.
 predicted_y = reg.predict(test_set)
 # Evaluate the best model with testing data.
