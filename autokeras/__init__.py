@@ -51,7 +51,7 @@ from autokeras.tuners import RandomSearch
 from autokeras.utils.io_utils import image_dataset_from_directory
 from autokeras.utils.io_utils import text_dataset_from_directory
 
-__version__ = "2.0.0"
+__version__ = "2.1.0dev"
 
 CUSTOM_OBJECTS = {
     "BertPreprocessor": keras_nlp.models.BertPreprocessor,
