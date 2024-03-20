@@ -18,7 +18,9 @@ import tree
 
 from autokeras.blocks import basic
 from autokeras.blocks import preprocessing
+from autokeras.blocks import reduction
 from autokeras.engine import block as block_module
+from autokeras.utils import utils
 
 BLOCK_TYPE = "block_type"
 RESNET = "resnet"
@@ -139,4 +141,11 @@ class GeneralBlock(block_module.Block):
     """
 
     def build(self, hp, inputs=None):
-        raise NotImplementedError
+        inputs = tree.flatten(inputs)
+        utils.validate_num_inputs(inputs, 1)
+        input_node = inputs[0]
+        output_node = input_node
+
+        output_node = reduction.Flatten().build(hp, output_node)
+        output_node = basic.DenseBlock().build(hp, output_node)
+        return output_node
