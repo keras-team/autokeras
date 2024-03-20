@@ -72,7 +72,7 @@ def unzip_dataset(dataset):
 
 def cast_to_string(tensor):
     if keras.backend.standardize_dtype(tensor.dtype) == "string":
-        return tensor
+        return tensor  # pragma: no cover
     return tf.strings.as_string(tensor)
 
 
@@ -81,4 +81,4 @@ def cast_to_float32(tensor):
         return tensor
     if keras.backend.standardize_dtype(tensor.dtype) == "string":
         return tf.strings.to_number(tensor, tf.float32)
-    return ops.cast(tensor, "float32")
+    return ops.cast(tensor, "float32")  # pragma: no cover

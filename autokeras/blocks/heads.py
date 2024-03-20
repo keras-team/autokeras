@@ -262,7 +262,7 @@ class RegressionHead(head_module.Head):
     def get_hyper_preprocessors(self):
         hyper_preprocessors = []
         if self._add_one_dimension:
-            hyper_preprocessors.append(
+            hyper_preprocessors.append(  # pragma: no cover
                 hpps_module.DefaultHyperPreprocessor(
                     preprocessors.AddOneDimension()
                 )

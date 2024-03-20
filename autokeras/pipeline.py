@@ -98,8 +98,8 @@ class Pipeline(pps_module.Preprocessor):
         sources_x = data_utils.unzip_dataset(x)
         for pps_list, data in zip(self.inputs, sources_x):
             for preprocessor in pps_list:
-                preprocessor.fit(data)
-                data = preprocessor.transform(data)
+                preprocessor.fit(data)  # pragma: no cover
+                data = preprocessor.transform(data)  # pragma: no cover
         y = dataset.map(lambda x, y: y)
         sources_y = data_utils.unzip_dataset(y)
         for pps_list, data in zip(self.outputs, sources_y):

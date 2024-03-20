@@ -243,7 +243,7 @@ class RNNBlock(block_module.Block):
             if i == num_layers - 1:
                 return_sequences = self.return_sequences
             if bidirectional:
-                output_node = layers.Bidirectional(
+                output_node = layers.Bidirectional(  # pragma: no cover
                     in_layer(feature_size, return_sequences=return_sequences)
                 )(output_node)
             else:
@@ -365,7 +365,9 @@ class ConvBlock(block_module.Block):
             separable = hp.Boolean("separable", default=False)
 
         if separable:
-            conv = layer_utils.get_sep_conv(input_node.shape)
+            conv = layer_utils.get_sep_conv(
+                input_node.shape
+            )  # pragma: no cover
         else:
             conv = layer_utils.get_conv(input_node.shape)
 

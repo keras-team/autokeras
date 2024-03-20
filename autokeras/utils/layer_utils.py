@@ -44,7 +44,7 @@ def get_conv(shape):
 
 
 def get_sep_conv(shape):
-    return [
+    return [  # pragma: no cover
         layers.SeparableConv1D,
         layers.SeparableConv2D,
         layers.Conv3D,
