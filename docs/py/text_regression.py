@@ -40,10 +40,10 @@ test_data = load_files(
     os.path.join(IMDB_DATADIR, "test"), shuffle=False, categories=classes
 )
 
-x_train = np.array(train_data.data)
-y_train = np.array(train_data.target)
-x_test = np.array(test_data.data)
-y_test = np.array(test_data.target)
+x_train = np.array(train_data.data)[:100]
+y_train = np.array(train_data.target)[:100]
+x_test = np.array(test_data.data)[:100]
+y_test = np.array(test_data.target)[:100]
 
 print(x_train.shape)  # (25000,)
 print(y_train.shape)  # (25000, 1)
@@ -58,10 +58,10 @@ adaptive number of epochs.
 
 # Initialize the text regressor.
 reg = ak.TextRegressor(
-    overwrite=True, max_trials=10  # It tries 10 different models.
+    overwrite=True, max_trials=1  # It tries 10 different models.
 )
 # Feed the text regressor with training data.
-reg.fit(x_train, y_train, epochs=2)
+reg.fit(x_train, y_train, epochs=1, batch_size=2)
 # Predict with the best model.
 predicted_y = reg.predict(x_test)
 # Evaluate the best model with testing data.
@@ -87,7 +87,7 @@ You can also use your own validation set instead of splitting it from the
 training data with `validation_data`.
 """
 
-split = 5000
+split = 5
 x_val = x_train[split:]
 y_val = y_train[split:]
 x_train = x_train[:split]
@@ -95,9 +95,10 @@ y_train = y_train[:split]
 reg.fit(
     x_train,
     y_train,
-    epochs=2,
+    epochs=1,
     # Use your own validation set.
     validation_data=(x_val, y_val),
+    batch_size=2,
 )
 
 """
@@ -117,7 +118,7 @@ output_node = ak.RegressionHead()(output_node)
 reg = ak.AutoModel(
     inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
 )
-reg.fit(x_train, y_train, epochs=2)
+reg.fit(x_train, y_train, epochs=1, batch_size=2)
 
 """
 ## Data Format
@@ -134,17 +135,17 @@ format for the training data.
 
 
 train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,))).batch(
-    32
+    2
 )
-test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,))).batch(32)
+test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,))).batch(2)
 
 reg = ak.TextRegressor(overwrite=True, max_trials=2)
 # Feed the tensorflow Dataset to the regressor.
-reg.fit(train_set, epochs=2)
+reg.fit(train_set.take(2), epochs=1)
 # Predict with the best model.
-predicted_y = reg.predict(test_set)
+predicted_y = reg.predict(test_set.take(2))
 # Evaluate the best model with testing data.
-print(reg.evaluate(test_set))
+print(reg.evaluate(test_set.take(2)))
 
 """
 ## Reference

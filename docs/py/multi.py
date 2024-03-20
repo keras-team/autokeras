@@ -48,7 +48,7 @@ the multi-modal data.
 """
 
 
-num_instances = 100
+num_instances = 10
 # Generate image data.
 image_data = np.random.rand(num_instances, 32, 32, 3).astype(np.float32)
 # Generate numerical data.
@@ -87,7 +87,8 @@ model = ak.AutoModel(
 model.fit(
     [image_data, numerical_data],
     [regression_target, classification_target],
-    epochs=3,
+    epochs=1,
+    batch_size=3,
 )
 
 """
@@ -102,7 +103,8 @@ model.fit(
     [regression_target, classification_target],
     # Split the training data and use the last 15% as validation data.
     validation_split=0.15,
-    epochs=2,
+    epochs=1,
+    batch_size=3,
 )
 
 """
@@ -110,7 +112,7 @@ You can also use your own validation set
 instead of splitting it from the training data with `validation_data`.
 """
 
-split = 20
+split = 5
 
 image_val = image_data[split:]
 numerical_val = numerical_data[split:]
@@ -130,7 +132,8 @@ model.fit(
         [image_val, numerical_val],
         [regression_val, classification_val],
     ),
-    epochs=2,
+    epochs=1,
+    batch_size=3,
 )
 
 """
@@ -162,7 +165,7 @@ output_node2 = ak.ResNetBlock(version="v2")(output_node)
 output_node1 = ak.Merge()([output_node1, output_node2])
 
 input_node2 = ak.Input()
-output_node2 = ak.DenseBlock()(output_node)
+output_node2 = ak.DenseBlock()(input_node2)
 
 output_node = ak.Merge()([output_node1, output_node2])
 output_node1 = ak.ClassificationHead()(output_node)
@@ -183,8 +186,8 @@ classification_target = np.random.randint(5, size=num_instances)
 auto_model.fit(
     [image_data, numerical_data],
     [classification_target, regression_target],
-    batch_size=32,
-    epochs=3,
+    batch_size=3,
+    epochs=1,
 )
 
 """

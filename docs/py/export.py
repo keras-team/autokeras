@@ -32,13 +32,12 @@ model = clf.export_model()
 
 print(type(model))  # <class 'tensorflow.python.keras.engine.training.Model'>
 
-try:
-    model.save("model_autokeras", save_format="tf")
-except Exception:
-    model.save("model_autokeras.h5")
+model.save("model_autokeras.keras")
 
 
-loaded_model = load_model("model_autokeras", custom_objects=ak.CUSTOM_OBJECTS)
+loaded_model = load_model(
+    "model_autokeras.keras", custom_objects=ak.CUSTOM_OBJECTS
+)
 
 predicted_y = loaded_model.predict(np.expand_dims(x_test, -1))
 print(predicted_y)

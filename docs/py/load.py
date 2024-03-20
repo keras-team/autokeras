@@ -49,7 +49,7 @@ flowers_photos/
 We can split the data into training and testing as we load them.
 """
 
-batch_size = 32
+batch_size = 2
 img_height = 180
 img_width = 180
 
@@ -78,8 +78,8 @@ Then we just do one quick demo of AutoKeras to make sure the dataset works.
 """
 
 clf = ak.ImageClassifier(overwrite=True, max_trials=1)
-clf.fit(train_data, epochs=1)
-print(clf.evaluate(test_data))
+clf.fit(train_data.take(100), epochs=1)
+print(clf.evaluate(test_data.take(2)))
 
 """
 ## Load Texts from Disk
@@ -117,8 +117,8 @@ test_data = ak.text_dataset_from_directory(
 )
 
 clf = ak.TextClassifier(overwrite=True, max_trials=1)
-clf.fit(train_data, epochs=2)
-print(clf.evaluate(test_data))
+clf.fit(train_data.take(2), epochs=1)
+print(clf.evaluate(test_data.take(2)))
 
 
 """
@@ -127,8 +127,8 @@ If you want to use generators, you can refer to the following code.
 """
 
 
-N_BATCHES = 30
-BATCH_SIZE = 100
+N_BATCHES = 2
+BATCH_SIZE = 10
 
 
 def get_data_generator(n_batches, batch_size):
@@ -149,7 +149,7 @@ dataset = tf.data.Dataset.from_generator(
     output_shapes=((32, 32, 3), tuple()),
 ).batch(BATCH_SIZE)
 
-clf = ak.ImageDataClassifier(overwrite=True, max_trials=1, seed=5)
+clf = ak.ImageClassifier(overwrite=True, max_trials=1, seed=5)
 clf.fit(x=dataset, validation_data=dataset, batch_size=BATCH_SIZE)
 print(clf.evaluate(dataset))
 
