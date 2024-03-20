@@ -17,8 +17,8 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_div_format
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - admonition
 
 extra:
@@ -41,9 +41,6 @@ nav:
     - Image Regression: tutorial/image_regression.md
     - Text Classification: tutorial/text_classification.md
     - Text Regression: tutorial/text_regression.md
-    - Structured Data Classification: tutorial/structured_data_classification.md
-    - Structured Data Regression: tutorial/structured_data_regression.md
-    - TimeSeriesForecaster: tutorial/timeseries_forecaster.md
     - Multi-Modal and Multi-Task: tutorial/multi.md
     - Customized Model: tutorial/customized.md
     - Export Model: tutorial/export.md
@@ -59,8 +56,6 @@ nav:
     - ImageRegressor: image_regressor.md
     - TextClassifier: text_classifier.md
     - TextRegressor: text_regressor.md
-    - StructuredDataClassifier: structured_data_classifier.md
-    - StructuredDataRegressor: structured_data_regressor.md
     - AutoModel: auto_model.md
     - Base Class: base.md
     - Node: node.md
