@@ -336,7 +336,7 @@ def image_dataset_from_directory(
             Only used if `validation_split` is set.
 
     # Returns
-        A `tf.data.Dataset` object, which yields a tuple `(texts, labels)`,
+        A `tf.data.Dataset` object, which yields a tuple `(images, labels)`,
         where `images` has shape `(batch_size, image_size[0], image_size[1],
         num_channels)` where `labels` has shape `(batch_size,)` and type of
         tf.string.
