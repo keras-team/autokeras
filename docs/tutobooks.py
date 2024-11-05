@@ -239,10 +239,7 @@ def nb_to_md(nb_path, md_path, img_dir, working_dir=None):
 
     os.system(
         # "jupyter nbconvert --to markdown --execute --debug "
-        "jupyter nbconvert --to markdown "
-        + nb_fname
-        + " --output "
-        + target_md
+        "jupyter nbconvert --to markdown " + nb_fname + " --output " + target_md
         # + " --ExecutePreprocessor.timeout="
         # + str(TIMEOUT)
     )

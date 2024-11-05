@@ -58,7 +58,8 @@ adaptive number of epochs.
 
 # Initialize the text regressor.
 reg = ak.TextRegressor(
-    overwrite=True, max_trials=1  # It tries 10 different models.
+    overwrite=True,
+    max_trials=1,  # It tries 10 different models.
 )
 # Feed the text regressor with training data.
 reg.fit(x_train, y_train, epochs=1, batch_size=2)

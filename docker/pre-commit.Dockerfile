@@ -1,6 +1,6 @@
-FROM python:3.7
+FROM python:3.8
 
-RUN pip install flake8 black isort
+RUN pip install ruff
 
 WORKDIR /autokeras
 CMD ["python", "docker/pre_commit.py"]

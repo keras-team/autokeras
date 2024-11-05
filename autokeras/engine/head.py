@@ -65,7 +65,7 @@ class Head(io_hypermodel.IOHyperModel):
         self,
         loss: Optional[types.LossType] = None,
         metrics: Optional[types.MetricsType] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.loss = loss

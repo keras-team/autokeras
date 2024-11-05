@@ -1,16 +1,14 @@
-isort -c .
+#!/bin/bash
+set -Euo pipefail
+
+ruff check .
 if ! [ $? -eq 0 ]
 then
   echo "Please run \"sh shell/format.sh\" to format the code."
   exit 1
 fi
-flake8 .
-if ! [ $? -eq 0 ]
-then
-  echo "Please fix the code style issue."
-  exit 1
-fi
-black --check .
+
+ruff format --check .
 if ! [ $? -eq 0 ]
 then
   echo "Please run \"sh shell/format.sh\" to format the code."

@@ -150,7 +150,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         callbacks=None,
         validation_split=0,
         verbose=1,
-        **fit_kwargs
+        **fit_kwargs,
     ):
         """Search for the best HyperParameters.
 
@@ -203,7 +203,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             epochs=epochs,
             callbacks=new_callbacks,
             verbose=verbose,
-            **fit_kwargs
+            **fit_kwargs,
         )
 
         # Train the best model use validation data.

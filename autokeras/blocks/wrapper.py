@@ -51,7 +51,7 @@ class ImageBlock(block_module.Block):
         block_type: Optional[str] = None,
         normalize: Optional[bool] = None,
         augment: Optional[bool] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.block_type = block_type

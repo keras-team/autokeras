@@ -100,7 +100,7 @@ class ImageAugmentation(block_module.Block):
         contrast_factor: Optional[
             Union[float, Tuple[float, float], hyperparameters.Choice]
         ] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.translation_factor = utils.get_hyperparameter(
