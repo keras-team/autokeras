@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 rm dist/*
-python setup.py sdist
+python -m build
 twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
