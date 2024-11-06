@@ -56,9 +56,38 @@ version = {attr = "autokeras.__init__.__version__"}
 [tool.setuptools.packages.find]
 include = ["autokeras", "autokeras.*"]
 
-[tool.black]
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "@abstract",
+    "raise NotImplementedError",
+]
+omit = [
+    "*test*",
+    "autokeras/prototype/*",
+]
+
+[tool.pytest.ini_options]
+addopts = "-v -p no:warnings --durations=10"
+log_cli_level = "INFO"
+norecursedirs = "build"  # Do not run tests in the build folder
+
+[tool.ruff]
 line-length = 80
-target-version = []
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle error
+    "F",  # Pyflakes
+    "I",  # isort
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["F401"]  # imported but unused
+
+[tool.ruff.lint.isort]
+force-single-line = true
+known-first-party = ["autokeras"]
 
 [tool.isort]
 profile = "black"

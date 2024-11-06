@@ -86,7 +86,7 @@ class ImageClassifier(SupervisedImagePipeline):
         overwrite: bool = False,
         seed: Optional[int] = None,
         max_model_size: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         if tuner is None:
             tuner = task_specific.ImageClassifierTuner
@@ -105,7 +105,7 @@ class ImageClassifier(SupervisedImagePipeline):
             overwrite=overwrite,
             seed=seed,
             max_model_size=max_model_size,
-            **kwargs
+            **kwargs,
         )
 
     def fit(
@@ -118,7 +118,7 @@ class ImageClassifier(SupervisedImagePipeline):
         validation_data: Union[
             tf.data.Dataset, Tuple[types.DatasetType, types.DatasetType], None
         ] = None,
-        **kwargs
+        **kwargs,
     ):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -172,7 +172,7 @@ class ImageClassifier(SupervisedImagePipeline):
             callbacks=callbacks,
             validation_split=validation_split,
             validation_data=validation_data,
-            **kwargs
+            **kwargs,
         )
         return history
 
@@ -222,7 +222,7 @@ class ImageRegressor(SupervisedImagePipeline):
         overwrite: bool = False,
         seed: Optional[int] = None,
         max_model_size: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         if tuner is None:
             tuner = greedy.Greedy
@@ -238,7 +238,7 @@ class ImageRegressor(SupervisedImagePipeline):
             overwrite=overwrite,
             seed=seed,
             max_model_size=max_model_size,
-            **kwargs
+            **kwargs,
         )
 
     def fit(
@@ -251,7 +251,7 @@ class ImageRegressor(SupervisedImagePipeline):
         validation_data: Union[
             types.DatasetType, Tuple[types.DatasetType], None
         ] = None,
-        **kwargs
+        **kwargs,
     ):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -306,6 +306,6 @@ class ImageRegressor(SupervisedImagePipeline):
             callbacks=callbacks,
             validation_split=validation_split,
             validation_data=validation_data,
-            **kwargs
+            **kwargs,
         )
         return history

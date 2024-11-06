@@ -130,7 +130,7 @@ class AutoModel(object):
         overwrite: bool = False,
         seed: Optional[int] = None,
         max_model_size: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         self.inputs = tree.flatten(inputs)
         self.outputs = tree.flatten(outputs)
@@ -152,7 +152,7 @@ class AutoModel(object):
             seed=self.seed,
             project_name=project_name,
             max_model_size=max_model_size,
-            **kwargs
+            **kwargs,
         )
         self.overwrite = overwrite
         self._heads = [output_node.in_blocks[0] for output_node in self.outputs]
@@ -225,7 +225,7 @@ class AutoModel(object):
         validation_split=0.2,
         validation_data=None,
         verbose=1,
-        **kwargs
+        **kwargs,
     ):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -307,7 +307,7 @@ class AutoModel(object):
             validation_data=validation_data,
             validation_split=validation_split,
             verbose=verbose,
-            **kwargs
+            **kwargs,
         )
 
         return history
@@ -475,7 +475,7 @@ class AutoModel(object):
             batch_size=batch_size,
             x=dataset,
             verbose=verbose,
-            **kwargs
+            **kwargs,
         )
         return pipeline.postprocess(y)
 
@@ -515,7 +515,7 @@ class AutoModel(object):
             batch_size=batch_size,
             x=dataset,
             verbose=verbose,
-            **kwargs
+            **kwargs,
         )
 
     def export_model(self):

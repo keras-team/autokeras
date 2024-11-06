@@ -81,7 +81,7 @@ class TextClassifier(SupervisedTextPipeline):
         overwrite: bool = False,
         seed: Optional[int] = None,
         max_model_size: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         if tuner is None:
             tuner = task_specific.TextClassifierTuner
@@ -100,7 +100,7 @@ class TextClassifier(SupervisedTextPipeline):
             overwrite=overwrite,
             seed=seed,
             max_model_size=max_model_size,
-            **kwargs
+            **kwargs,
         )
 
     def fit(
@@ -111,7 +111,7 @@ class TextClassifier(SupervisedTextPipeline):
         callbacks=None,
         validation_split=0.2,
         validation_data=None,
-        **kwargs
+        **kwargs,
     ):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -167,7 +167,7 @@ class TextClassifier(SupervisedTextPipeline):
             callbacks=callbacks,
             validation_split=validation_split,
             validation_data=validation_data,
-            **kwargs
+            **kwargs,
         )
         return history
 
@@ -217,7 +217,7 @@ class TextRegressor(SupervisedTextPipeline):
         overwrite: bool = False,
         seed: Optional[int] = None,
         max_model_size: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         if tuner is None:
             tuner = greedy.Greedy
@@ -233,7 +233,7 @@ class TextRegressor(SupervisedTextPipeline):
             overwrite=overwrite,
             seed=seed,
             max_model_size=max_model_size,
-            **kwargs
+            **kwargs,
         )
 
     def fit(
@@ -244,7 +244,7 @@ class TextRegressor(SupervisedTextPipeline):
         callbacks=None,
         validation_split=0.2,
         validation_data=None,
-        **kwargs
+        **kwargs,
     ):
         """Search for the best model and hyperparameters for the AutoModel.
 
@@ -300,6 +300,6 @@ class TextRegressor(SupervisedTextPipeline):
             callbacks=callbacks,
             validation_split=validation_split,
             validation_data=validation_data,
-            **kwargs
+            **kwargs,
         )
         return history

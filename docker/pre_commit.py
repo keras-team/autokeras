@@ -6,7 +6,7 @@ def check_bash_call(string):
     check_call(["bash", "-c", string])
 
 
-def _run_format_and_flake8():
+def _run_lint_and_format():
     files_changed = False
 
     try:
@@ -25,13 +25,13 @@ def _run_format_and_flake8():
         exit(1)
 
 
-def run_format_and_flake8():
+def run_lint_and_format():
     try:
-        _run_format_and_flake8()
+        _run_lint_and_format()
     except CalledProcessError as error:
         print("Pre-commit returned exit code", error.returncode)
         exit(error.returncode)
 
 
 if __name__ == "__main__":
-    run_format_and_flake8()
+    run_lint_and_format()

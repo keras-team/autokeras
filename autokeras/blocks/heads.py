@@ -64,7 +64,7 @@ class ClassificationHead(head_module.Head):
         loss: Optional[types.LossType] = None,
         metrics: Optional[types.MetricsType] = None,
         dropout: Optional[float] = None,
-        **kwargs
+        **kwargs,
     ):
         self.num_classes = num_classes
         self.multi_label = multi_label
@@ -217,7 +217,7 @@ class RegressionHead(head_module.Head):
         loss: types.LossType = "mean_squared_error",
         metrics: Optional[types.MetricsType] = None,
         dropout: Optional[float] = None,
-        **kwargs
+        **kwargs,
     ):
         if metrics is None:
             metrics = ["mean_squared_error"]

@@ -216,7 +216,7 @@ class Greedy(tuner_module.AutoTuner):
         hyperparameters: Optional[keras_tuner.HyperParameters] = None,
         tune_new_entries: bool = True,
         allow_new_entries: bool = True,
-        **kwargs
+        **kwargs,
     ):
         self.seed = seed
         oracle = GreedyOracle(
