@@ -38,7 +38,7 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
 
     @staticmethod
     def _build_preprocessors(hp, hpps_lists, dataset):
-        sources = data_utils.unzip_dataset(dataset)
+        sources = tree.flatten(dataset)
         preprocessors_list = []
         for source, hpps_list in zip(sources, hpps_lists):
             data = source
@@ -56,13 +56,12 @@ class HyperPipeline(hpps_module.HyperPreprocessor):
 
         # Arguments
             hp: Hyperparameters.
-            dataset: data.Dataset.
+            dataset: nested numpy arrays. The input dataset for the model.
 
         # Returns
             An instance of Pipeline.
         """
-        x = dataset.map(lambda x, y: x)
-        y = dataset.map(lambda x, y: y)
+        x, y = dataset
         return Pipeline(
             inputs=self._build_preprocessors(hp, self.inputs, x),
             outputs=self._build_preprocessors(hp, self.outputs, y),
@@ -94,14 +93,13 @@ class Pipeline(pps_module.Preprocessor):
 
     def fit(self, dataset):
         """Fit the Preprocessors."""
-        x = dataset.map(lambda x, y: x)
-        sources_x = data_utils.unzip_dataset(x)
+        x, y = dataset
+        sources_x = tree.flatten(x)
         for pps_list, source in zip(self.inputs, sources_x):
             for preprocessor in pps_list:
                 preprocessor.fit(source)  # pragma: no cover
                 source = preprocessor.transform(source)  # pragma: no cover
-        y = dataset.map(lambda x, y: y)
-        sources_y = data_utils.unzip_dataset(y)
+        sources_y = tree.flatten(y)
         for pps_list, source in zip(self.outputs, sources_y):
             for preprocessor in pps_list:
                 preprocessor.fit(source)
@@ -112,25 +110,24 @@ class Pipeline(pps_module.Preprocessor):
         """Transform the dataset to be ready for the model.
 
         # Arguments
-            dataset: data.Dataset.
+            dataset: nested numpy arrays. The input dataset for the model.
 
         # Returns
-            An instance of data.Dataset. The transformed dataset.
+            dataset: nested numpy arrays. The input dataset for the model.
         """
-        x = dataset.map(lambda x, y: x)
-        y = dataset.map(lambda x, y: y)
+        x, y = dataset
         x = self.transform_x(x)
         y = self.transform_y(y)
-        return data.Dataset.zip((x, y))
+        return (x, y)
 
     def transform_x(self, dataset):
         """Transform the input dataset for the model.
 
         # Arguments
-            dataset: data.Dataset. The input dataset for the model.
+            dataset: nested numpy arrays. The input dataset for the model.
 
         # Returns
-            An instance of data.Dataset. The transformed dataset.
+            dataset: nested numpy arrays. The input dataset for the model.
         """
         return self._transform_data(dataset, self.inputs)
 
@@ -138,15 +135,15 @@ class Pipeline(pps_module.Preprocessor):
         """Transform the target dataset for the model.
 
         # Arguments
-            dataset: data.Dataset. The target dataset for the model.
+            dataset: nested numpy arrays. The target dataset for the model.
 
         # Returns
-            An instance of data.Dataset. The transformed dataset.
+            dataset: nested numpy arrays. The input dataset for the model.
         """
         return self._transform_data(dataset, self.outputs)
 
     def _transform_data(self, dataset, pps_lists):
-        sources = data_utils.unzip_dataset(dataset)
+        sources = tree.flatten(dataset)
         transformed = []
         for pps_list, y in zip(pps_lists, sources):
             for preprocessor in pps_list:
@@ -154,7 +151,7 @@ class Pipeline(pps_module.Preprocessor):
             transformed.append(y)
         if len(transformed) == 1:
             return transformed[0]
-        return data.Dataset.zip(tuple(transformed))
+        return tuple(transformed)
 
     def save(self, filepath):
         io_utils.save_json(filepath, self.get_config())

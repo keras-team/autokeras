@@ -288,11 +288,11 @@ class AutoModel(object):
         if validation_data:
             validation_split = 0
 
-        dataset, validation_data = self._convert_to_dataset(
+        dataset, validation_data = self._check_and_adapt(
             x=x, y=y, validation_data=validation_data, batch_size=batch_size
         )
         self._analyze_data(dataset)
-        self._build_hyper_pipeline(dataset)
+        self._build_hyper_pipeline()
 
         # Split the data with validation_split.
         if validation_data is None and validation_split:
@@ -313,77 +313,70 @@ class AutoModel(object):
         return history
 
     def _adapt(self, dataset, hms, batch_size):
-        if isinstance(dataset, data.Dataset):
-            sources = data_utils.unzip_dataset(dataset)
-        else:
-            sources = tree.flatten(dataset)
+        sources = tree.flatten(dataset)
         adapted = []
         for source, hm in zip(sources, hms):
-            source = hm.get_adapter().adapt(source, batch_size)
+            source = hm.get_adapter().adapt(source)
             adapted.append(source)
         if len(adapted) == 1:
             return adapted[0]
-        return data.Dataset.zip(tuple(adapted))
+        return tuple(adapted)
+
+    def _check_numpy_arrays(self, data, name, in_val=""):
+        """Check if all elements in the nested structure are numpy arrays."""
+        if not all([isinstance(a, np.ndarray) for a in tree.flatten(data)]):
+            raise ValueError(
+                "Expected {name}{in_val} to be a numpy array, got {type}".format(
+                    name=name,
+                    in_val=in_val,
+                    type=[type(a) for a in tree.flatten(data)],
+                )
+            )
+
+    def _check_array_count(self, actual, expected, name, in_val):
+        """Check if the number of arrays matches the expected count."""
+        if actual != expected:
+            raise ValueError(
+                "Expected {name}{in_val} to have {expected} arrays, "
+                "but got {actual}".format(
+                    name=name,
+                    in_val=in_val,
+                    expected=expected,
+                    actual=actual,
+                )
+            )
 
     def _check_data_format(self, dataset, validation=False, predict=False):
         """Check if the dataset has the same number of IOs with the model."""
         if validation:
             in_val = " in validation_data"
-            if isinstance(dataset, data.Dataset):
-                x = dataset
-                y = None
-            else:
-                x, y = dataset
         else:
             in_val = ""
-            x, y = dataset
+        x, y = dataset
 
-        if isinstance(x, data.Dataset) and y is not None:
-            raise ValueError(
-                "Expected y to be None when x is "
-                "data.Dataset{in_val}.".format(in_val=in_val)
-            )
+        self._check_numpy_arrays(x, "x", in_val)
+        self._check_numpy_arrays(y, "y", in_val)
 
-        if isinstance(x, data.Dataset):
-            if not predict:
-                x_shapes, y_shapes = data_utils.dataset_shape(x)
-                x_shapes = tree.flatten(x_shapes)
-                y_shapes = tree.flatten(y_shapes)
-            else:
-                x_shapes = tree.flatten(data_utils.dataset_shape(x))
-        else:
-            x_shapes = [a.shape for a in tree.flatten(x)]
-            if not predict:
-                y_shapes = [a.shape for a in tree.flatten(y)]
-
-        if len(x_shapes) != len(self.inputs):
-            raise ValueError(
-                "Expected x{in_val} to have {input_num} arrays, "
-                "but got {data_num}".format(
-                    in_val=in_val,
-                    input_num=len(self.inputs),
-                    data_num=len(x_shapes),
-                )
-            )
-        if not predict and len(y_shapes) != len(self.outputs):
-            raise ValueError(
-                "Expected y{in_val} to have {output_num} arrays, "
-                "but got {data_num}".format(
-                    in_val=in_val,
-                    output_num=len(self.outputs),
-                    data_num=len(y_shapes),
-                )
+        self._check_array_count(
+            len(tree.flatten(x)), len(self.inputs), "x", in_val
+        )
+        # When predicting, y is not required.
+        if not predict:
+            self._check_array_count(
+                len(tree.flatten(y)), len(self.outputs), "y", in_val
             )
 
     def _analyze_data(self, dataset):
         input_analysers = [node.get_analyser() for node in self.inputs]
         output_analysers = [head.get_analyser() for head in self._heads]
         analysers = input_analysers + output_analysers
-        for x, y in dataset:
-            x = tree.flatten(x)
-            y = tree.flatten(y)
-            for item, analyser in zip(x + y, analysers):
-                analyser.update(item)
+        np_arrays = tree.flatten(dataset)
+        for array, analyser in zip(np_arrays, analysers):
+            # TODO: merge .update() and .finalize() to deal with the entire
+            # array together to save time. The current update is still trying to
+            # iterate all the batches, we just put the entire array as one
+            # batch.
+            analyser.update(array)
 
         for analyser in analysers:
             analyser.finalize()
@@ -391,43 +384,33 @@ class AutoModel(object):
         for hm, analyser in zip(self.inputs + self._heads, analysers):
             hm.config_from_analyser(analyser)
 
-    def _build_hyper_pipeline(self, dataset):
+    def _build_hyper_pipeline(self):
         self.tuner.hyper_pipeline = pipeline.HyperPipeline(
             inputs=[node.get_hyper_preprocessors() for node in self.inputs],
             outputs=[head.get_hyper_preprocessors() for head in self._heads],
         )
         self.tuner.hypermodel.hyper_pipeline = self.tuner.hyper_pipeline
 
-    def _convert_to_dataset(self, x, y, validation_data, batch_size):
-        """Convert the data to data.Dataset."""
+    def _check_and_adapt(self, x, y, validation_data, batch_size):
         # TODO: Handle other types of input, zip dataset, tensor, dict.
 
         # Convert training data.
         self._check_data_format((x, y))
-        if isinstance(x, data.Dataset):
-            dataset = x
-            x = dataset.map(lambda x, y: x)
-            y = dataset.map(lambda x, y: y)
         x = self._adapt(x, self.inputs, batch_size)
         y = self._adapt(y, self._heads, batch_size)
-        dataset = data.Dataset.zip((x, y))
 
         # Convert validation data
         if validation_data:
             self._check_data_format(validation_data, validation=True)
-            if isinstance(validation_data, data.Dataset):
-                x = validation_data.map(lambda x, y: x)
-                y = validation_data.map(lambda x, y: y)
-            else:
-                x, y = validation_data
-            x = self._adapt(x, self.inputs, batch_size)
-            y = self._adapt(y, self._heads, batch_size)
-            validation_data = data.Dataset.zip((x, y))
+            x_val, y_val = validation_data
+            x_val = self._adapt(x_val, self.inputs, batch_size)
+            y_val = self._adapt(y_val, self._heads, batch_size)
+            validation_data = (x_val, y_val)
 
-        return dataset, validation_data
+        return (x, y), validation_data
 
     def _has_y(self, dataset):
-        """Remove y from the data.Dataset if exists."""
+        """Remove y from the dataset if exists."""
         shapes = data_utils.dataset_shape(dataset)
         # Only one or less element in the first level.
         if len(shapes) <= 1:
@@ -461,14 +444,11 @@ class AutoModel(object):
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        if isinstance(x, data.Dataset) and self._has_y(x):
-            x = x.map(lambda x, y: x)
         self._check_data_format((x, None), predict=True)
         dataset = self._adapt(x, self.inputs, batch_size)
         pipeline = self.tuner.get_best_pipeline()
         model = self.tuner.get_best_model()
         dataset = pipeline.transform_x(dataset)
-        dataset = data.Dataset.zip((dataset, dataset))
         y = model.predict(dataset, **kwargs)
         y = utils.predict_with_adaptive_batch_size(
             model=model,
@@ -500,20 +480,16 @@ class AutoModel(object):
             display labels for the scalar outputs.
         """
         self._check_data_format((x, y))
-        if isinstance(x, data.Dataset):
-            dataset = x
-            x = dataset.map(lambda x, y: x)
-            y = dataset.map(lambda x, y: y)
         x = self._adapt(x, self.inputs, batch_size)
         y = self._adapt(y, self._heads, batch_size)
-        dataset = data.Dataset.zip((x, y))
         pipeline = self.tuner.get_best_pipeline()
-        dataset = pipeline.transform(dataset)
+        x, y = pipeline.transform((x, y))
         model = self.tuner.get_best_model()
         return utils.evaluate_with_adaptive_batch_size(
             model=model,
             batch_size=batch_size,
-            x=dataset,
+            x=x,
+            y=y,
             verbose=verbose,
             **kwargs
         )

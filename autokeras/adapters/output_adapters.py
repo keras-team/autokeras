@@ -27,7 +27,7 @@ class HeadAdapter(adapter_module.Adapter):
         supported_types = (data.Dataset, np.ndarray)
         if not isinstance(dataset, supported_types):
             raise TypeError(
-                f"Expect the target data of {self.name} to be data.Dataset,"
+                f"Expect the target data of {self.name} to be"
                 f" np.ndarray, but got {type(dataset)}."
             )
 

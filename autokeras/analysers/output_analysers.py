@@ -40,7 +40,7 @@ class ClassificationAnalyser(TargetAnalyser):
             )
         if len(self.shape) > 1 and self.shape[1] > 1:
             return
-        self.labels = self.labels.union(set(np.unique(data.numpy())))
+        self.labels = self.labels.union(set(np.unique(data)))
 
     def finalize(self):
         # TODO: support raw string labels for multi-label.

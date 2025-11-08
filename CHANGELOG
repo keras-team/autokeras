@@ -1,0 +1,6 @@
+# AutoKeras 3.0
+
+Removed TensorFlow Dataset support.
+Only support numpy array data.
+Removed image from data and text from data.
+added back the structured data api.

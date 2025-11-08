@@ -35,10 +35,7 @@ def generate_one_hot_labels(num_instances=100, num_classes=10, dtype="np"):
     np.random.seed(SEED)
     labels = np.random.randint(num_classes, size=num_instances)
     result = keras.utils.to_categorical(labels, num_classes=num_classes)
-    if dtype == "np":
-        return result
-    if dtype == "dataset":
-        return data.Dataset.from_tensor_slices(result).batch(32)
+    return result
 
 
 def generate_text_data(num_instances=100):

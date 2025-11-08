@@ -18,6 +18,7 @@ import os
 
 import keras
 import keras_tuner
+import numpy as np
 import tree
 from keras import callbacks as callbacks_module
 
@@ -111,7 +112,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         # preprocessing layers before the first non-preprocessing layer.
         # TODO: Use PreprocessingStage for preprocessing layers adapt.
         # TODO: Use Keras Tuner for preprocessing layers adapt.
-        x = dataset.map(lambda x, y: x)
+        x = tree.flatten(dataset[0])
 
         def get_output_layers(tensor):
             output_layers = []
@@ -131,14 +132,14 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         dq = collections.deque()
 
         for index, input_node in enumerate(tree.flatten(model.input)):
-            in_x = x.map(lambda *args: tree.flatten(args)[index])
+            in_x = x[index]
             for layer in get_output_layers(input_node):
                 dq.append((layer, in_x))
 
         while len(dq):
             layer, in_x = dq.popleft()
             layer.adapt(in_x)
-            out_x = in_x.map(layer)
+            out_x = layer(in_x)
             for next_layer in get_output_layers(layer.output):
                 dq.append((next_layer, out_x))
 
@@ -224,8 +225,19 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
             # Concatenate training and validation data.
             if validation_split > 0:
-                copied_fit_kwargs["x"] = copied_fit_kwargs["x"].concatenate(
-                    fit_kwargs["validation_data"]
+                x, y = copied_fit_kwargs["x"]
+                x_val, y_val = fit_kwargs["validation_data"]
+                copied_fit_kwargs["x"] = (
+                    tree.map_structure(
+                        lambda train, val: np.concatenate([train, val], axis=0),
+                        x,
+                        x_val,
+                    ),
+                    tree.map_structure(
+                        lambda train, val: np.concatenate([train, val], axis=0),
+                        y,
+                        y_val,
+                    ),
                 )
                 copied_fit_kwargs.pop("validation_data")
 

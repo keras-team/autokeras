@@ -53,17 +53,16 @@ class Adapter(object):
             dataset = data.Dataset.from_tensor_slices(dataset)
         return data_utils.batch_dataset(dataset, batch_size)
 
-    def adapt(self, dataset, batch_size):
+    def adapt(self, dataset):
         """Check, convert and batch the dataset.
 
         # Arguments
             dataset: Usually numpy.ndarray, pandas.DataFrame or
                 tensorflow.Dataset. The dataset to be converted.
-            batch_size: Int. The batch_size to batch the dataset.
 
         # Returns
             data.Dataset. The converted dataset.
         """
         self.check(dataset)
-        dataset = self.convert_to_dataset(dataset, batch_size)
+        # dataset = self.convert_to_dataset(dataset, batch_size)
         return dataset

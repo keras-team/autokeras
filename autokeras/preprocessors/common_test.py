@@ -17,9 +17,7 @@ from autokeras.preprocessors import common
 
 
 def test_cast_to_int32_return_int32():
-    dataset = test_utils.generate_one_hot_labels(100, 10, "dataset")
-    dataset = dataset.map(lambda x: x.astype("uint8"))
-    dataset = common.CastToInt32().transform(dataset)
-    for data in dataset:
-        assert data.dtype == "int32"
-        break
+    x = test_utils.generate_one_hot_labels(100, 10)
+    x = x.astype("uint8")
+    x = common.CastToInt32().transform(x)
+    assert x.dtype == "int32"
