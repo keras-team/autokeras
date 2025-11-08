@@ -55,3 +55,12 @@ class TextAdapter(adapter_module.Adapter):
                 "Expect the data to TextInput to be numpy.ndarray or "
                 "data.Dataset, but got {type}.".format(type=type(x))
             )
+
+
+class StructuredDataAdapter(adapter_module.Adapter):
+    def check(self, x):
+        if not isinstance(x, np.ndarray):
+            raise TypeError(
+                "Unsupported type {type} for "
+                "{name}.".format(type=type(x), name=self.__class__.__name__)
+            )

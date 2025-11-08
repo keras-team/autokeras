@@ -34,6 +34,7 @@ dependencies = [
 
 [project.optional-dependencies]
 tests = [
+    "pandas",
     "pytest>=4.4.0",
     "flake8",
     "black[jupyter]",
