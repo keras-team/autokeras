@@ -14,7 +14,6 @@
 
 import keras
 import numpy as np
-import tensorflow as tf
 import tree
 from keras import ops
 
@@ -57,8 +56,6 @@ def split_dataset(dataset, validation_split):
 def cast_to_float32(tensor):
     if keras.backend.standardize_dtype(tensor.dtype) == "float32":
         return tensor
-    if keras.backend.standardize_dtype(tensor.dtype) == "string":
-        return tf.strings.to_number(tensor, tf.float32)
     return ops.cast(tensor, "float32")  # pragma: no cover
 
 

@@ -14,7 +14,6 @@
 
 import numpy as np
 
-from autokeras import data
 from autokeras import preprocessors
 from autokeras.preprocessors import encoders
 from autokeras.utils import data_utils
@@ -25,12 +24,10 @@ def test_one_hot_encoder_deserialize_transforms_to_np():
     encoder.fit(np.array(["a", "b", "a"]))
 
     encoder = preprocessors.deserialize(preprocessors.serialize(encoder))
-    one_hot = encoder.transform(
-        data.Dataset.from_tensor_slices([["a"], ["c"], ["b"]]).batch(2)
-    )
+    one_hot = encoder.transform(np.array([["a"], ["c"], ["b"]]))
 
     for batch in one_hot:
-        assert batch.shape[1:] == [3]
+        assert batch.shape[1:] == (3,)
 
 
 def test_one_hot_encoder_decode_to_same_string():
@@ -51,8 +48,9 @@ def test_label_encoder_decode_to_same_string():
 
 def test_label_encoder_encode_to_correct_shape():
     encoder = encoders.LabelEncoder(["a", "b"])
-    dataset = data.Dataset.from_tensor_slices([["a"], ["b"]]).batch(32)
+    dataset = np.array([["a"], ["b"]])
 
     result = encoder.transform(dataset)
+    print(data_utils.dataset_shape(result))
 
-    assert data_utils.dataset_shape(result).as_list() == [None, 1]
+    assert np.array_equal(data_utils.dataset_shape(result), [2, 1])

@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import numpy as np
-import tensorflow as tf
 
 from autokeras.engine import preprocessor
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class Encoder(preprocessor.TargetPreprocessor):
     """Transform labels to encodings.
 
@@ -42,34 +43,31 @@ class Encoder(preprocessor.TargetPreprocessor):
         """Transform labels to integer encodings.
 
         # Arguments
-            dataset: data.Dataset. The dataset to be transformed.
+            dataset: numpy.ndarray. The dataset to be transformed.
 
         # Returns
-            data.Dataset. The transformed dataset.
+            numpy.ndarray. The transformed dataset.
         """
-        keys_tensor = tf.constant(self.labels)
-        vals_tensor = tf.constant(list(range(len(self.labels))))
-        table = tf.lookup.StaticHashTable(
-            tf.lookup.KeyValueTensorInitializer(keys_tensor, vals_tensor), -1
-        )
-
-        return dataset.map(lambda x: table.lookup(tf.reshape(x, [-1])))
+        label_to_idx = {label: idx for idx, label in enumerate(self.labels)}
+        return np.array(
+            [label_to_idx[label] for label in dataset.flatten()]
+        ).reshape(dataset.shape)
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class OneHotEncoder(Encoder):
     def transform(self, dataset):
         """Transform labels to one-hot encodings.
 
         # Arguments
-            dataset: data.Dataset. The dataset to be transformed.
+            dataset: numpy.ndarray. The dataset to be transformed.
 
         # Returns
-            data.Dataset. The transformed dataset.
+            numpy.ndarray. The transformed dataset.
         """
         dataset = super().transform(dataset)
-        eye = tf.eye(len(self.labels))
-        dataset = dataset.map(lambda x: tf.nn.embedding_lookup(eye, x))
-        return dataset
+        eye = np.eye(len(self.labels))
+        return eye[dataset]
 
     def postprocess(self, data):
         """Transform probabilities back to labels.
@@ -91,6 +89,7 @@ class OneHotEncoder(Encoder):
         ).reshape(-1, 1)
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class LabelEncoder(Encoder):
     """Transform the labels to integer encodings."""
 
@@ -98,13 +97,12 @@ class LabelEncoder(Encoder):
         """Transform labels to integer encodings.
 
         # Arguments
-            dataset: data.Dataset. The dataset to be transformed.
+            dataset: numpy.ndarray. The dataset to be transformed.
 
         # Returns
-            data.Dataset. The transformed dataset.
+            numpy.ndarray. The transformed dataset.
         """
         dataset = super().transform(dataset)
-        dataset = dataset.map(lambda x: tf.expand_dims(x, axis=-1))
         return dataset
 
     def postprocess(self, data):
