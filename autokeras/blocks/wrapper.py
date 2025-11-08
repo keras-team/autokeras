@@ -135,6 +135,11 @@ class TextBlock(block_module.Block):
         output_node = self._build_block(hp, output_node)
         return output_node
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({"max_tokens": self.max_tokens})
+        return config
+
     def _build_block(self, hp, output_node):
         # Use Embedding and dense layers for tokenized text
         max_tokens = self.max_tokens or hp.Choice(

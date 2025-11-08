@@ -330,29 +330,30 @@ def test_dense_get_config_has_all_attributes():
     )
 
 
-def test_bert_build_return_tensor():
-    block = blocks.BertBlock()
+def test_embed_build_return_tensor():
+    block = blocks.Embedding()
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype="string")
+        keras_tuner.HyperParameters(),
+        keras.Input(shape=(32,), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
 
 
-def test_bert_deserialize_to_bert():
-    serialized_block = blocks.serialize(blocks.BertBlock())
+def test_embed_deserialize_to_embed():
+    serialized_block = blocks.serialize(blocks.Embedding())
 
     block = blocks.deserialize(serialized_block)
 
-    assert isinstance(block, blocks.BertBlock)
+    assert isinstance(block, blocks.Embedding)
 
 
-def test_bert_get_config_has_all_attributes():
-    block = blocks.BertBlock()
+def test_embed_get_config_has_all_attributes():
+    block = blocks.Embedding()
 
     config = block.get_config()
 
-    assert test_utils.get_func_args(blocks.BertBlock.__init__).issubset(
+    assert test_utils.get_func_args(blocks.Embedding.__init__).issubset(
         config.keys()
     )

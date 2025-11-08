@@ -30,6 +30,7 @@ from autokeras.utils import types
 from autokeras.utils import utils
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class ClassificationHead(head_module.Head):
     """Classification Dense layers.
 
@@ -193,6 +194,7 @@ class ClassificationHead(head_module.Head):
         return hyper_preprocessors
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class RegressionHead(head_module.Head):
     """Regression Dense layers.
 

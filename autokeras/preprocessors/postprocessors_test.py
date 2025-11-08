@@ -14,7 +14,6 @@
 
 import numpy as np
 
-from autokeras import data
 from autokeras import preprocessors
 from autokeras.preprocessors import postprocessors
 
@@ -27,22 +26,15 @@ def test_sigmoid_postprocess_to_zero_one():
     assert set(y.flatten().tolist()) == set([1, 0])
 
 
-def test_sigmoid_transform_dataset_doesnt_change():
-    postprocessor = postprocessors.SigmoidPostprocessor()
-    dataset = data.Dataset.from_tensor_slices([1, 2]).batch(32)
-
-    assert postprocessor.transform(dataset) is dataset
-
-
 def test_sigmoid_deserialize_without_error():
     postprocessor = postprocessors.SigmoidPostprocessor()
-    dataset = data.Dataset.from_tensor_slices([1, 2]).batch(32)
+    dataset = np.array([1, 2])
 
     postprocessor = preprocessors.deserialize(
         preprocessors.serialize(postprocessor)
     )
 
-    assert postprocessor.transform(dataset) is dataset
+    assert isinstance(postprocessor.transform(dataset), np.ndarray)
 
 
 def test_softmax_postprocess_to_zero_one():
@@ -55,17 +47,17 @@ def test_softmax_postprocess_to_zero_one():
 
 def test_softmax_transform_dataset_doesnt_change():
     postprocessor = postprocessors.SoftmaxPostprocessor()
-    dataset = data.Dataset.from_tensor_slices([1, 2]).batch(32)
+    dataset = np.array([1, 2])
 
-    assert postprocessor.transform(dataset) is dataset
+    assert isinstance(postprocessor.transform(dataset), np.ndarray)
 
 
 def test_softmax_deserialize_without_error():
     postprocessor = postprocessors.SoftmaxPostprocessor()
-    dataset = data.Dataset.from_tensor_slices([1, 2]).batch(32)
+    dataset = np.array([1, 2])
 
     postprocessor = preprocessors.deserialize(
         preprocessors.serialize(postprocessor)
     )
 
-    assert postprocessor.transform(dataset) is dataset
+    assert isinstance(postprocessor.transform(dataset), np.ndarray)

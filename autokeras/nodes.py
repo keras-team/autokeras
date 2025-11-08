@@ -40,6 +40,7 @@ def deserialize(config, custom_objects=None):
     )
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class Input(node_module.Node, io_hypermodel.IOHyperModel):
     """Input node for tensor data.
 

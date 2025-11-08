@@ -101,7 +101,8 @@ def test_final_fit_best_epochs_if_epoch_unspecified(
     final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(
-        x=(np.random.rand(100, 32, 32, 3), np.random.rand(100, 1)),
+        x=np.random.rand(100, 32, 32, 3),
+        y=np.random.rand(100, 1),
         epochs=None,
         validation_split=0.2,
         validation_data=(np.random.rand(20, 32, 32, 3), np.random.rand(20, 1)),
@@ -126,7 +127,8 @@ def test_super_with_1k_epochs_if_epoch_unspecified(
 
     # TODO: try to use x, and y instead of tuple input across the lib.
     tuner.search(
-        x=(np.random.rand(100, 32, 32, 3), np.random.rand(100, 1)),
+        x=np.random.rand(100, 32, 32, 3),
+        y=np.random.rand(100, 1),
         epochs=None,
         validation_split=0.2,
         validation_data=(np.random.rand(20, 32, 32, 3), np.random.rand(20, 1)),
