@@ -40,6 +40,7 @@ def serialize(obj):
 
 
 def deserialize(config, custom_objects=None):
+    print(globals().keys())
     return utils.deserialize_keras_object(
         config,
         module_objects=globals(),

@@ -13,6 +13,9 @@
 # limitations under the License.
 
 
+import numpy as np
+
+
 class Analyser(object):
     """Analyze the dataset for useful information.
 
@@ -38,7 +41,10 @@ class Analyser(object):
             data: np.ndarray. One batch of data from data.Dataset.
         """
         if self.dtype is None:
-            self.dtype = data.dtype
+            if np.issubdtype(data.dtype, np.str_):
+                self.dtype = "string"
+            else:
+                self.dtype = str(data.dtype)
         if self.shape is None:
             self.shape = list(data.shape)
         if self.batch_size is None:

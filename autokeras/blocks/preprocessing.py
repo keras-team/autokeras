@@ -16,6 +16,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import keras
 import tree
 from keras import layers
 from keras_tuner.engine import hyperparameters
@@ -52,6 +53,7 @@ class Normalization(block_module.Block):
         return config
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class ImageAugmentation(block_module.Block):
     """Collection of various image augmentation methods.
 

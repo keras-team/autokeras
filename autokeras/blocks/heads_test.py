@@ -28,10 +28,9 @@ def test_two_classes_infer_binary_crossentropy():
     dataset = np.array(["a", "a", "a", "b"])
     head = head_module.ClassificationHead(name="a", shape=(1,))
     adapter = head.get_adapter()
-    dataset = adapter.adapt(dataset, batch_size=32)
+    dataset = adapter.adapt(dataset)
     analyser = head.get_analyser()
-    for data in dataset:
-        analyser.update(data)
+    analyser.update(dataset)
     analyser.finalize()
     head.config_from_analyser(analyser)
     head.build(
@@ -47,10 +46,9 @@ def test_three_classes_infer_categorical_crossentropy():
     dataset = np.array(["a", "a", "c", "b"])
     head = head_module.ClassificationHead(name="a", shape=(1,))
     adapter = head.get_adapter()
-    dataset = adapter.adapt(dataset, batch_size=32)
+    dataset = adapter.adapt(dataset)
     analyser = head.get_analyser()
-    for data in dataset:
-        analyser.update(data)
+    analyser.update(dataset)
     analyser.finalize()
     head.config_from_analyser(analyser)
     head.build(
@@ -106,7 +104,7 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
 
 def test_clf_head_hpps_with_uint8_contain_cast_to_int32():
     dataset = test_utils.generate_one_hot_labels(100, 10, "dataset")
-    dataset = dataset.map(lambda x: x.astype("uint8"))
+    dataset = dataset.astype("uint8")
     head = head_module.ClassificationHead(shape=(8,))
     analyser = head.get_analyser()
     for data in dataset:

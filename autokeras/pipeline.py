@@ -15,11 +15,9 @@
 import keras
 import tree
 
-from autokeras import data
 from autokeras import preprocessors as preprocessors_module
 from autokeras.engine import hyper_preprocessor as hpps_module
 from autokeras.engine import preprocessor as pps_module
-from autokeras.utils import data_utils
 from autokeras.utils import io_utils
 
 

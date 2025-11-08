@@ -14,6 +14,7 @@
 
 from typing import Optional
 
+import keras
 import tree
 
 from autokeras.blocks import basic
@@ -31,6 +32,7 @@ NORMALIZE = "normalize"
 AUGMENT = "augment"
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class ImageBlock(block_module.Block):
     """Block for image data.
 
@@ -113,6 +115,7 @@ class ImageBlock(block_module.Block):
         return output_node
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class TextBlock(block_module.Block):
     """Block for text data."""
 
@@ -130,6 +133,7 @@ class TextBlock(block_module.Block):
         return output_node
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class GeneralBlock(block_module.Block):
     """A general neural network block when the input type is unknown.
 

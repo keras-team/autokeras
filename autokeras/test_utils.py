@@ -18,7 +18,6 @@ import keras
 import numpy as np
 
 import autokeras as ak
-from autokeras import data
 
 SEED = 5
 

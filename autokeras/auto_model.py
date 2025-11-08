@@ -23,7 +23,6 @@ import numpy as np
 import tree
 
 from autokeras import blocks
-from autokeras import data
 from autokeras import graph as graph_module
 from autokeras import pipeline
 from autokeras import tuners
@@ -326,7 +325,8 @@ class AutoModel(object):
         """Check if all elements in the nested structure are numpy arrays."""
         if not all([isinstance(a, np.ndarray) for a in tree.flatten(data)]):
             raise ValueError(
-                "Expected {name}{in_val} to be a numpy array, got {type}".format(
+                "Expected "
+                "{name}{in_val} to be a numpy array, got {type}".format(
                     name=name,
                     in_val=in_val,
                     type=[type(a) for a in tree.flatten(data)],

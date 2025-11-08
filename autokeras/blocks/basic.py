@@ -15,6 +15,7 @@
 from typing import Optional
 from typing import Union
 
+import keras
 import keras_nlp
 import tree
 from keras import applications
@@ -54,6 +55,7 @@ EFFICIENT_VERSIONS = {
 PRETRAINED = "pretrained"
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class DenseBlock(block_module.Block):
     """Block for Dense layers.
 
@@ -146,6 +148,7 @@ class DenseBlock(block_module.Block):
         return output_node
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class RNNBlock(block_module.Block):
     """An RNN Block.
 
@@ -253,6 +256,7 @@ class RNNBlock(block_module.Block):
         return output_node
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class ConvBlock(block_module.Block):
     """Block for vanilla ConvNets.
 
@@ -404,6 +408,7 @@ class ConvBlock(block_module.Block):
         return "same"
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class KerasApplicationBlock(block_module.Block):
     """Blocks extending Keras applications."""
 
@@ -471,6 +476,7 @@ class KerasApplicationBlock(block_module.Block):
         return model(input_node)
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class ResNetBlock(KerasApplicationBlock):
     """Block for ResNet.
 
@@ -509,6 +515,7 @@ class ResNetBlock(KerasApplicationBlock):
         return config
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class XceptionBlock(KerasApplicationBlock):
     """Block for XceptionNet.
 
@@ -540,6 +547,7 @@ class XceptionBlock(KerasApplicationBlock):
         )
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class EfficientNetBlock(KerasApplicationBlock):
     """Block for EfficientNet.
 
@@ -577,6 +585,7 @@ class EfficientNetBlock(KerasApplicationBlock):
         self.version = version
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class BertBlock(block_module.Block):
     """Block for Pre-trained BERT.
 
