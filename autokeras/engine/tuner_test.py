@@ -16,11 +16,11 @@ from unittest import mock
 
 import keras
 import numpy as np
-import tensorflow as tf
 import tree
 from keras import layers
 
 import autokeras as ak
+from autokeras import data
 from autokeras import test_utils
 from autokeras.engine import tuner as tuner_module
 from autokeras.tuners import greedy
@@ -163,7 +163,6 @@ def test_tuner_does_not_crash_with_distribution_strategy(tmp_path):
     tuner = greedy.Greedy(
         hypermodel=test_utils.build_graph(),
         directory=tmp_path,
-        distribution_strategy=tf.distribute.MirroredStrategy(),
     )
     tuner.hypermodel.build(tuner.oracle.hyperparameters)
 
@@ -176,9 +175,9 @@ def test_preprocessing_adapt_with_text_vec():
 
     x_train = test_utils.generate_text_data()
     y_train = np.random.randint(0, 2, (100,))
-    dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train)).batch(32)
+    dataset = data.Dataset.from_tensor_slices((x_train, y_train)).batch(32)
 
-    inputs = keras.Input(shape=(1,), dtype=tf.string)
+    inputs = keras.Input(shape=(1,), dtype="string")
     layer1 = MockLayer(
         max_tokens=5000, output_mode="int", output_sequence_length=40
     )
@@ -198,7 +197,7 @@ def test_adapt_with_model_with_preprocessing_layer_only():
     model = keras.Model(input_node, output_node)
     greedy.Greedy.adapt(
         model,
-        tf.data.Dataset.from_tensor_slices(
+        data.Dataset.from_tensor_slices(
             (np.random.rand(100, 10), np.random.rand(100, 10))
         ).batch(32),
     )

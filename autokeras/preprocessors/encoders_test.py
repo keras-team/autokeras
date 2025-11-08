@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import numpy as np
-import tensorflow as tf
 
+from autokeras import data
 from autokeras import preprocessors
 from autokeras.preprocessors import encoders
 from autokeras.utils import data_utils
@@ -26,11 +26,11 @@ def test_one_hot_encoder_deserialize_transforms_to_np():
 
     encoder = preprocessors.deserialize(preprocessors.serialize(encoder))
     one_hot = encoder.transform(
-        tf.data.Dataset.from_tensor_slices([["a"], ["c"], ["b"]]).batch(2)
+        data.Dataset.from_tensor_slices([["a"], ["c"], ["b"]]).batch(2)
     )
 
-    for data in one_hot:
-        assert data.shape[1:] == [3]
+    for batch in one_hot:
+        assert batch.shape[1:] == [3]
 
 
 def test_one_hot_encoder_decode_to_same_string():
@@ -51,7 +51,7 @@ def test_label_encoder_decode_to_same_string():
 
 def test_label_encoder_encode_to_correct_shape():
     encoder = encoders.LabelEncoder(["a", "b"])
-    dataset = tf.data.Dataset.from_tensor_slices([["a"], ["b"]]).batch(32)
+    dataset = data.Dataset.from_tensor_slices([["a"], ["b"]]).batch(32)
 
     result = encoder.transform(dataset)
 

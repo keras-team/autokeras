@@ -22,6 +22,8 @@ import numpy as np
 import tensorflow as tf
 from keras_tuner.engine import hyperparameters
 
+from autokeras import data
+
 WHITELIST_FORMATS = (".bmp", ".gif", ".jpeg", ".jpg", ".png")
 
 
@@ -213,8 +215,8 @@ def text_dataset_from_directory(
     seed: Optional[int] = None,
     validation_split: Optional[float] = None,
     subset: Optional[str] = None,
-) -> tf.data.Dataset:
-    """Generates a `tf.data.Dataset` from text files in a directory.
+) -> data.Dataset:
+    """Generates a `data.Dataset` from text files in a directory.
 
     If your directory structure is:
 
@@ -229,7 +231,7 @@ def text_dataset_from_directory(
     ```
 
     Then calling `text_dataset_from_directory(main_directory)`
-    will return a `tf.data.Dataset` that yields batches of texts from
+    will return a `data.Dataset` that yields batches of texts from
     the subdirectories `class_a` and `class_b`, together with labels
     'class_a' and 'class_b'.
 
@@ -252,7 +254,7 @@ def text_dataset_from_directory(
             Only used if `validation_split` is set.
 
     # Returns
-        A `tf.data.Dataset` object, which yields a tuple `(texts, labels)`,
+        A `data.Dataset` object, which yields a tuple `(texts, labels)`,
             where both has shape `(batch_size,)` and type of tf.string.
     """
     if seed is None:
@@ -265,15 +267,15 @@ def text_dataset_from_directory(
         file_paths, labels, validation_split, subset
     )
 
-    strings = tf.data.Dataset.from_tensor_slices(file_paths)
+    strings = data.Dataset.from_tensor_slices(file_paths)
     strings = strings.map(tf.io.read_file)
     if max_length is not None:
         strings = strings.map(lambda x: tf.strings.substr(x, 0, max_length))
 
     labels = np.array(class_names)[np.array(labels)]
-    labels = tf.data.Dataset.from_tensor_slices(labels)
+    labels = data.Dataset.from_tensor_slices(labels)
 
-    dataset = tf.data.Dataset.zip((strings, labels))
+    dataset = data.Dataset.zip((strings, labels))
     dataset = dataset.batch(batch_size)
     return dataset
 
@@ -288,8 +290,8 @@ def image_dataset_from_directory(
     seed: Optional[int] = None,
     validation_split: Optional[float] = None,
     subset: Optional[str] = None,
-) -> tf.data.Dataset:
-    """Generates a `tf.data.Dataset` from image files in a directory.
+) -> data.Dataset:
+    """Generates a `data.Dataset` from image files in a directory.
     If your directory structure is:
 
     ```
@@ -303,7 +305,7 @@ def image_dataset_from_directory(
     ```
 
     Then calling `image_dataset_from_directory(main_directory)`
-    will return a `tf.data.Dataset` that yields batches of images from
+    will return a `data.Dataset` that yields batches of images from
     the subdirectories `class_a` and `class_b`, together with labels
     'class_a' and 'class_b'.
 
@@ -336,7 +338,7 @@ def image_dataset_from_directory(
             Only used if `validation_split` is set.
 
     # Returns
-        A `tf.data.Dataset` object, which yields a tuple `(images, labels)`,
+        A `data.Dataset` object, which yields a tuple `(images, labels)`,
         where `images` has shape `(batch_size, image_size[0], image_size[1],
         num_channels)` where `labels` has shape `(batch_size,)` and type of
         tf.string.
@@ -371,15 +373,15 @@ def image_dataset_from_directory(
         image_paths, labels, validation_split, subset
     )
 
-    images = tf.data.Dataset.from_tensor_slices(image_paths)
+    images = data.Dataset.from_tensor_slices(image_paths)
     images = images.map(
         lambda img: path_to_image(img, num_channels, image_size, interpolation)
     )
 
     labels = np.array(class_names)[np.array(labels)]
-    labels = tf.data.Dataset.from_tensor_slices(labels)
+    labels = data.Dataset.from_tensor_slices(labels)
 
-    dataset = tf.data.Dataset.zip((images, labels))
+    dataset = data.Dataset.zip((images, labels))
     dataset = dataset.batch(batch_size)
     return dataset
 

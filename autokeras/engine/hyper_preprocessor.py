@@ -27,7 +27,7 @@ class HyperPreprocessor(named_hypermodel.NamedHyperModel):
         # Arguments
             hp: `HyperParameters` instance. The hyperparameters for building the
                 a Preprocessor.
-            dataset: tf.data.Dataset.
+            dataset: data.Dataset.
 
         # Returns
             an instance of Preprocessor.

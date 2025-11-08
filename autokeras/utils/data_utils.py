@@ -34,14 +34,14 @@ def split_dataset(dataset, validation_split):
     """Split dataset into training and validation.
 
     # Arguments
-        dataset: tf.data.Dataset. The entire dataset to be split.
+        dataset: data.Dataset. The entire dataset to be split.
         validation_split: Float. The split ratio for the validation set.
 
     # Raises
         ValueError: If the dataset provided is too small to be split.
 
     # Returns
-        A tuple of two tf.data.Dataset. The training set and the validation set.
+        A tuple of two data.Dataset. The training set and the validation set.
     """
     num_instances = dataset.reduce(np.int64(0), lambda x, _: x + 1).numpy()
     if num_instances < 2:
@@ -55,10 +55,6 @@ def split_dataset(dataset, validation_split):
     train_dataset = dataset.take(train_set_size)
     validation_dataset = dataset.skip(train_set_size)
     return train_dataset, validation_dataset
-
-
-def dataset_shape(dataset):
-    return tf.compat.v1.data.get_output_shapes(dataset)
 
 
 def unzip_dataset(dataset):
@@ -82,3 +78,16 @@ def cast_to_float32(tensor):
     if keras.backend.standardize_dtype(tensor.dtype) == "string":
         return tf.strings.to_number(tensor, tf.float32)
     return ops.cast(tensor, "float32")  # pragma: no cover
+
+
+def dataset_shape(dataset):
+    """Recursively get shapes from a nested structure of numpy arrays.
+
+    # Arguments
+        nested_arrays: A nested structure (dict, list, tuple) containing numpy
+            arrays.
+
+    # Returns
+        The same nested structure with shapes instead of arrays.
+    """
+    return tree.map_structure(lambda x: np.array(x.shape), dataset.data)

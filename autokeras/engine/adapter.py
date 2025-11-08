@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import numpy as np
-import tensorflow as tf
 
+from autokeras import data
 from autokeras.utils import data_utils
 
 
@@ -22,7 +22,7 @@ class Adapter(object):
     """Adpat the input and output format for Keras Model.
 
     Adapter is used by the input nodes and the heads of the hypermodel. It do
-    some type checking for the data and converts it to tf.data.Dataset format.
+    some type checking for the data and converts it to data.Dataset format.
     It also batches the dataset if it is not batched.
     """
 
@@ -39,7 +39,7 @@ class Adapter(object):
         return True
 
     def convert_to_dataset(self, dataset, batch_size):
-        """Convert supported formats of datasets to batched tf.data.Dataset.
+        """Convert supported formats of datasets to batched data.Dataset.
 
         # Arguments
             dataset: Usually numpy.ndarray, pandas.DataFrame or
@@ -47,10 +47,10 @@ class Adapter(object):
             batch_size: Int. The batch_size to batch the dataset.
 
         # Returns
-            tf.data.Dataset. The converted dataset.
+            data.Dataset. The converted dataset.
         """
         if isinstance(dataset, np.ndarray):
-            dataset = tf.data.Dataset.from_tensor_slices(dataset)
+            dataset = data.Dataset.from_tensor_slices(dataset)
         return data_utils.batch_dataset(dataset, batch_size)
 
     def adapt(self, dataset, batch_size):
@@ -62,7 +62,7 @@ class Adapter(object):
             batch_size: Int. The batch_size to batch the dataset.
 
         # Returns
-            tf.data.Dataset. The converted dataset.
+            data.Dataset. The converted dataset.
         """
         self.check(dataset)
         dataset = self.convert_to_dataset(dataset, batch_size)

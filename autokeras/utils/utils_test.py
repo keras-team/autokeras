@@ -17,6 +17,7 @@ import pytest
 import tensorflow as tf
 from keras_tuner.engine import hyperparameters
 
+from autokeras import data
 from autokeras.utils import utils
 
 
@@ -35,10 +36,8 @@ def test_run_with_adaptive_batch_size_raise_error():
         utils.run_with_adaptive_batch_size(
             batch_size=64,
             func=func,
-            x=tf.data.Dataset.from_tensor_slices(np.random.rand(100, 1)).batch(
-                64
-            ),
-            validation_data=tf.data.Dataset.from_tensor_slices(
+            x=data.Dataset.from_tensor_slices(np.random.rand(100, 1)).batch(64),
+            validation_data=data.Dataset.from_tensor_slices(
                 np.random.rand(100, 1)
             ).batch(64),
         )

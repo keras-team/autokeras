@@ -14,7 +14,6 @@
 
 import keras
 import keras_tuner
-import tensorflow as tf
 import tree
 from keras_tuner.engine import hyperparameters
 
@@ -27,7 +26,7 @@ def test_augment_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -38,7 +37,7 @@ def test_augment_build_with_translation_factor_range_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -49,7 +48,7 @@ def test_augment_build_with_no_flip_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -60,7 +59,7 @@ def test_augment_build_with_vflip_only_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -71,7 +70,7 @@ def test_augment_build_with_zoom_factor_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -82,7 +81,7 @@ def test_augment_build_with_contrast_factor_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1

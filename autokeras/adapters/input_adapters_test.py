@@ -15,8 +15,8 @@
 
 import numpy as np
 import pytest
-import tensorflow as tf
 
+from autokeras import data
 from autokeras import test_utils
 from autokeras.adapters import input_adapters
 from autokeras.utils import data_utils
@@ -25,7 +25,7 @@ from autokeras.utils import data_utils
 def test_image_input_adapter_transform_to_dataset():
     x = test_utils.generate_data()
     adapter = input_adapters.ImageAdapter()
-    assert isinstance(adapter.adapt(x, batch_size=32), tf.data.Dataset)
+    assert isinstance(adapter.adapt(x, batch_size=32), data.Dataset)
 
 
 def test_image_input_unsupported_type():
@@ -61,23 +61,21 @@ def test_input_numerical():
 
 
 def test_text_adapt_unbatched_dataset():
-    x = tf.data.Dataset.from_tensor_slices(np.array(["a b c", "b b c"]))
+    x = data.Dataset.from_tensor_slices(np.array(["a b c", "b b c"]))
     adapter = input_adapters.TextAdapter()
     x = adapter.adapt(x, batch_size=32)
 
     assert data_utils.dataset_shape(x).as_list() == [None]
-    assert isinstance(x, tf.data.Dataset)
+    assert isinstance(x, data.Dataset)
 
 
 def test_text_adapt_batched_dataset():
-    x = tf.data.Dataset.from_tensor_slices(np.array(["a b c", "b b c"])).batch(
-        32
-    )
+    x = data.Dataset.from_tensor_slices(np.array(["a b c", "b b c"])).batch(32)
     adapter = input_adapters.TextAdapter()
     x = adapter.adapt(x, batch_size=32)
 
     assert data_utils.dataset_shape(x).as_list() == [None]
-    assert isinstance(x, tf.data.Dataset)
+    assert isinstance(x, data.Dataset)
 
 
 def test_text_adapt_np():
@@ -86,7 +84,7 @@ def test_text_adapt_np():
     x = adapter.adapt(x, batch_size=32)
 
     assert data_utils.dataset_shape(x).as_list() == [None]
-    assert isinstance(x, tf.data.Dataset)
+    assert isinstance(x, data.Dataset)
 
 
 def test_text_input_type_error():

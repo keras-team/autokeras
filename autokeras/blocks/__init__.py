@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import keras
-import tensorflow as tf
 
 from autokeras.blocks.basic import BertBlock
 from autokeras.blocks.basic import ConvBlock

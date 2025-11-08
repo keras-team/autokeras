@@ -34,7 +34,7 @@ class Analyser(object):
         """Update the statistics with a batch of data.
 
         # Arguments
-            data: tf.Tensor. One batch of data from tf.data.Dataset.
+            data: np.ndarray. One batch of data from data.Dataset.
         """
         if self.dtype is None:
             self.dtype = data.dtype

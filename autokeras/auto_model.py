@@ -20,10 +20,10 @@ from typing import Union
 
 import keras
 import numpy as np
-import tensorflow as tf
 import tree
 
 from autokeras import blocks
+from autokeras import data
 from autokeras import graph as graph_module
 from autokeras import pipeline
 from autokeras import tuners
@@ -64,7 +64,8 @@ class AutoModel(object):
     rest part of the model. In the second case, user can specify the high-level
     architecture of the AutoModel by connecting the Blocks with the functional
     API, which is the same as the Keras
-    [functional API](https://www.tensorflow.org/guide/keras/functional).
+    [functional
+    API](https://keras.io/api/models/model/#with-the-functional-api).
 
     # Example
     ```python
@@ -137,7 +138,6 @@ class AutoModel(object):
         self.seed = seed
         if seed:
             np.random.seed(seed)
-            tf.random.set_seed(seed)
         # TODO: Support passing a tuner instance.
         # Initialize the hyper_graph.
         graph = self._build_graph()
@@ -233,8 +233,8 @@ class AutoModel(object):
         validation data.
 
         # Arguments
-            x: numpy.ndarray or tensorflow.Dataset. Training data x.
-            y: numpy.ndarray or tensorflow.Dataset. Training data y.
+            x: numpy.ndarray. Training data x.
+            y: numpy.ndarray. Training data y.
             batch_size: Int. Number of samples per gradient update. Defaults to
                 32.
             epochs: Int. The number of epochs to train each model during the
@@ -267,9 +267,9 @@ class AutoModel(object):
                 recommended when not running interactively (eg, in a production
                 environment). Controls the verbosity of both KerasTuner search
                 and
-                [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit)
+                [keras.Model.fit](https://keras.io/api/models/model_training_apis/#fit-method)
             **kwargs: Any arguments supported by
-                [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+                [keras.Model.fit](https://keras.io/api/models/model_training_apis/#fit-method).
 
         # Returns
             history: A Keras History object corresponding to the best model.
@@ -313,7 +313,7 @@ class AutoModel(object):
         return history
 
     def _adapt(self, dataset, hms, batch_size):
-        if isinstance(dataset, tf.data.Dataset):
+        if isinstance(dataset, data.Dataset):
             sources = data_utils.unzip_dataset(dataset)
         else:
             sources = tree.flatten(dataset)
@@ -323,13 +323,13 @@ class AutoModel(object):
             adapted.append(source)
         if len(adapted) == 1:
             return adapted[0]
-        return tf.data.Dataset.zip(tuple(adapted))
+        return data.Dataset.zip(tuple(adapted))
 
     def _check_data_format(self, dataset, validation=False, predict=False):
         """Check if the dataset has the same number of IOs with the model."""
         if validation:
             in_val = " in validation_data"
-            if isinstance(dataset, tf.data.Dataset):
+            if isinstance(dataset, data.Dataset):
                 x = dataset
                 y = None
             else:
@@ -338,13 +338,13 @@ class AutoModel(object):
             in_val = ""
             x, y = dataset
 
-        if isinstance(x, tf.data.Dataset) and y is not None:
+        if isinstance(x, data.Dataset) and y is not None:
             raise ValueError(
                 "Expected y to be None when x is "
-                "tf.data.Dataset{in_val}.".format(in_val=in_val)
+                "data.Dataset{in_val}.".format(in_val=in_val)
             )
 
-        if isinstance(x, tf.data.Dataset):
+        if isinstance(x, data.Dataset):
             if not predict:
                 x_shapes, y_shapes = data_utils.dataset_shape(x)
                 x_shapes = tree.flatten(x_shapes)
@@ -399,35 +399,35 @@ class AutoModel(object):
         self.tuner.hypermodel.hyper_pipeline = self.tuner.hyper_pipeline
 
     def _convert_to_dataset(self, x, y, validation_data, batch_size):
-        """Convert the data to tf.data.Dataset."""
+        """Convert the data to data.Dataset."""
         # TODO: Handle other types of input, zip dataset, tensor, dict.
 
         # Convert training data.
         self._check_data_format((x, y))
-        if isinstance(x, tf.data.Dataset):
+        if isinstance(x, data.Dataset):
             dataset = x
             x = dataset.map(lambda x, y: x)
             y = dataset.map(lambda x, y: y)
         x = self._adapt(x, self.inputs, batch_size)
         y = self._adapt(y, self._heads, batch_size)
-        dataset = tf.data.Dataset.zip((x, y))
+        dataset = data.Dataset.zip((x, y))
 
         # Convert validation data
         if validation_data:
             self._check_data_format(validation_data, validation=True)
-            if isinstance(validation_data, tf.data.Dataset):
+            if isinstance(validation_data, data.Dataset):
                 x = validation_data.map(lambda x, y: x)
                 y = validation_data.map(lambda x, y: y)
             else:
                 x, y = validation_data
             x = self._adapt(x, self.inputs, batch_size)
             y = self._adapt(y, self._heads, batch_size)
-            validation_data = tf.data.Dataset.zip((x, y))
+            validation_data = data.Dataset.zip((x, y))
 
         return dataset, validation_data
 
     def _has_y(self, dataset):
-        """Remove y from the tf.data.Dataset if exists."""
+        """Remove y from the data.Dataset if exists."""
         shapes = data_utils.dataset_shape(dataset)
         # Only one or less element in the first level.
         if len(shapes) <= 1:
@@ -454,21 +454,21 @@ class AutoModel(object):
                 If unspecified, batch_size will default to 32.
             verbose: Verbosity mode. 0 = silent, 1 = progress bar.
                 Controls the verbosity of
-                [keras.Model.predict](https://tensorflow.org/api_docs/python/tf/keras/Model#predict)
+                [keras.Model.predict](https://keras.io/api/models/model_training_apis/#predict-method)
             **kwargs: Any arguments supported by keras.Model.predict.
 
         # Returns
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        if isinstance(x, tf.data.Dataset) and self._has_y(x):
+        if isinstance(x, data.Dataset) and self._has_y(x):
             x = x.map(lambda x, y: x)
         self._check_data_format((x, None), predict=True)
         dataset = self._adapt(x, self.inputs, batch_size)
         pipeline = self.tuner.get_best_pipeline()
         model = self.tuner.get_best_model()
         dataset = pipeline.transform_x(dataset)
-        dataset = tf.data.Dataset.zip((dataset, dataset))
+        dataset = data.Dataset.zip((dataset, dataset))
         y = model.predict(dataset, **kwargs)
         y = utils.predict_with_adaptive_batch_size(
             model=model,
@@ -490,7 +490,7 @@ class AutoModel(object):
                 If unspecified, batch_size will default to 32.
             verbose: Verbosity mode. 0 = silent, 1 = progress bar.
                 Controls the verbosity of
-                [keras.Model.evaluate](http://tensorflow.org/api_docs/python/tf/keras/Model#evaluate)
+                [keras.Model.evaluate](https://keras.io/api/models/model_training_apis/#evaluate-method)
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
         # Returns
@@ -500,13 +500,13 @@ class AutoModel(object):
             display labels for the scalar outputs.
         """
         self._check_data_format((x, y))
-        if isinstance(x, tf.data.Dataset):
+        if isinstance(x, data.Dataset):
             dataset = x
             x = dataset.map(lambda x, y: x)
             y = dataset.map(lambda x, y: y)
         x = self._adapt(x, self.inputs, batch_size)
         y = self._adapt(y, self._heads, batch_size)
-        dataset = tf.data.Dataset.zip((x, y))
+        dataset = data.Dataset.zip((x, y))
         pipeline = self.tuner.get_best_pipeline()
         dataset = pipeline.transform(dataset)
         model = self.tuner.get_best_model()

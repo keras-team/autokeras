@@ -15,7 +15,6 @@
 from typing import Optional
 
 import keras
-import tensorflow as tf
 import tree
 
 from autokeras import adapters
@@ -42,7 +41,7 @@ def deserialize(config, custom_objects=None):
 class Input(node_module.Node, io_hypermodel.IOHyperModel):
     """Input node for tensor data.
 
-    The data should be numpy.ndarray or tf.data.Dataset.
+    The data should be numpy.ndarray or data.Dataset.
 
     # Arguments
         name: String. The name of the input node. If unspecified, it will be set
@@ -75,7 +74,7 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
 class ImageInput(Input):
     """Input node for image data.
 
-    The input data should be numpy.ndarray or tf.data.Dataset. The shape of the
+    The input data should be numpy.ndarray or data.Dataset. The shape of the
     data should be should be (samples, width, height) or (samples, width,
     height, channels).
 
@@ -107,7 +106,7 @@ class ImageInput(Input):
 class TextInput(Input):
     """Input node for text data.
 
-    The input data should be numpy.ndarray or tf.data.Dataset. The data should
+    The input data should be numpy.ndarray or data.Dataset. The data should
     be one-dimensional. Each element in the data should be a string which is a
     full sentence.
 
@@ -120,7 +119,7 @@ class TextInput(Input):
         super().__init__(name=name, **kwargs)
 
     def build_node(self, hp):
-        return keras.Input(shape=self.shape, dtype=tf.string)
+        return keras.Input(shape=self.shape, dtype="string")
 
     def build(self, hp, inputs=None):
         output_node = tree.flatten(inputs)[0]

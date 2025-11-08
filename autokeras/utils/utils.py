@@ -16,7 +16,6 @@ import re
 
 import keras
 import keras_tuner
-import tensorflow as tf
 import tree
 
 
@@ -81,7 +80,9 @@ def run_with_adaptive_batch_size(batch_size, func, **fit_kwargs):
         try:
             history = func(x=x, validation_data=validation_data, **fit_kwargs)
             break
-        except tf.errors.ResourceExhaustedError as e:
+        # TODO: support tf and torch here.
+        # except tf.errors.ResourceExhaustedError as e:
+        except Exception as e:
             if batch_size == 1:
                 raise e
             batch_size //= 2

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import numpy as np
-import tensorflow as tf
 
+from autokeras import data
 from autokeras.engine import adapter as adapter_module
 
 
@@ -24,10 +24,10 @@ class HeadAdapter(adapter_module.Adapter):
         self.name = name
 
     def check(self, dataset):
-        supported_types = (tf.data.Dataset, np.ndarray)
+        supported_types = (data.Dataset, np.ndarray)
         if not isinstance(dataset, supported_types):
             raise TypeError(
-                f"Expect the target data of {self.name} to be tf.data.Dataset,"
+                f"Expect the target data of {self.name} to be data.Dataset,"
                 f" np.ndarray, but got {type(dataset)}."
             )
 

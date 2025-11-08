@@ -14,7 +14,6 @@
 
 import keras
 import keras_tuner
-import tensorflow as tf
 import tree
 
 from autokeras import blocks
@@ -26,7 +25,7 @@ def test_image_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -37,7 +36,7 @@ def test_general_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -48,7 +47,7 @@ def test_image_block_xception_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -59,7 +58,7 @@ def test_image_block_normalize_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -70,7 +69,7 @@ def test_image_block_augment_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -98,7 +97,7 @@ def test_text_build_return_tensor():
     block = blocks.TextBlock()
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
+        keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype="string")
     )
 
     assert len(tree.flatten(outputs)) == 1

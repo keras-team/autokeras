@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tensorflow as tf
-
 from autokeras import test_utils
 from autokeras.preprocessors import common
 
 
 def test_cast_to_int32_return_int32():
     dataset = test_utils.generate_one_hot_labels(100, 10, "dataset")
-    dataset = dataset.map(lambda x: tf.cast(x, tf.uint8))
+    dataset = dataset.map(lambda x: x.astype("uint8"))
     dataset = common.CastToInt32().transform(dataset)
     for data in dataset:
-        assert data.dtype == tf.int32
+        assert data.dtype == "int32"
         break

@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import tensorflow as tf
-
 from autokeras.engine import analyser
 
 
@@ -49,7 +47,7 @@ class TextAnalyser(InputAnalyser):
                 "(batch_size, 1), but "
                 "got input shape {shape}.".format(shape=self.shape)
             )
-        if self.dtype != tf.string:
+        if not (self.dtype == "string"):
             raise TypeError(
                 "Expect the data to TextInput to be strings, but got "
                 "{type}.".format(type=self.dtype)

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tensorflow as tf
+import numpy as np
 
 from autokeras.engine import preprocessor
 from autokeras.utils import data_utils
@@ -37,18 +37,18 @@ class AddOneDimension(LambdaPreprocessor):
     """Append one dimension of size one to the dataset shape."""
 
     def __init__(self, **kwargs):
-        super().__init__(lambda x: tf.expand_dims(x, axis=-1), **kwargs)
+        super().__init__(lambda x: np.expand_dims(x, axis=-1), **kwargs)
 
 
 class CastToInt32(preprocessor.Preprocessor):
-    """Cast the dataset shape to tf.int32."""
+    """Cast the dataset shape to int32."""
 
     def transform(self, dataset):
-        return dataset.map(lambda x: tf.cast(x, tf.int32))
+        return dataset.map(lambda x: x.astype("int32"))
 
 
 class CastToString(preprocessor.Preprocessor):
-    """Cast the dataset shape to tf.string."""
+    """Cast the dataset shape to string."""
 
     def transform(self, dataset):
         return dataset.map(data_utils.cast_to_string)

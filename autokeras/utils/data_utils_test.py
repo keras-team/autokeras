@@ -16,13 +16,14 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
+from autokeras import data
 from autokeras.utils import data_utils
 
 
 def test_split_data_has_one_batch_error():
     with pytest.raises(ValueError) as info:
         data_utils.split_dataset(
-            tf.data.Dataset.from_tensor_slices(np.array([1, 2, 3])).batch(12),
+            data.Dataset.from_tensor_slices(np.array([1, 2, 3])).batch(12),
             0.2,
         )
 
@@ -30,7 +31,7 @@ def test_split_data_has_one_batch_error():
 
 
 def test_unzip_dataset_doesnt_unzip_single_dataset():
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 32, 2))
+    dataset = data.Dataset.from_tensor_slices(np.random.rand(10, 32, 2))
     dataset = data_utils.unzip_dataset(dataset)[0]
     dataset = data_utils.unzip_dataset(dataset)[0]
     assert data_utils.dataset_shape(dataset).as_list() == [32, 2]

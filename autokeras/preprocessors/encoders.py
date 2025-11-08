@@ -42,10 +42,10 @@ class Encoder(preprocessor.TargetPreprocessor):
         """Transform labels to integer encodings.
 
         # Arguments
-            dataset: tf.data.Dataset. The dataset to be transformed.
+            dataset: data.Dataset. The dataset to be transformed.
 
         # Returns
-            tf.data.Dataset. The transformed dataset.
+            data.Dataset. The transformed dataset.
         """
         keys_tensor = tf.constant(self.labels)
         vals_tensor = tf.constant(list(range(len(self.labels))))
@@ -61,10 +61,10 @@ class OneHotEncoder(Encoder):
         """Transform labels to one-hot encodings.
 
         # Arguments
-            dataset: tf.data.Dataset. The dataset to be transformed.
+            dataset: data.Dataset. The dataset to be transformed.
 
         # Returns
-            tf.data.Dataset. The transformed dataset.
+            data.Dataset. The transformed dataset.
         """
         dataset = super().transform(dataset)
         eye = tf.eye(len(self.labels))
@@ -98,10 +98,10 @@ class LabelEncoder(Encoder):
         """Transform labels to integer encodings.
 
         # Arguments
-            dataset: tf.data.Dataset. The dataset to be transformed.
+            dataset: data.Dataset. The dataset to be transformed.
 
         # Returns
-            tf.data.Dataset. The transformed dataset.
+            data.Dataset. The transformed dataset.
         """
         dataset = super().transform(dataset)
         dataset = dataset.map(lambda x: tf.expand_dims(x, axis=-1))

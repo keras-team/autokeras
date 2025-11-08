@@ -15,7 +15,6 @@
 import keras
 import keras_tuner
 import numpy as np
-import tensorflow as tf
 import tree
 
 from autokeras import hyper_preprocessors
@@ -99,7 +98,7 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(5,), dtype=tf.float32),
+        keras.Input(shape=(5,), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -107,7 +106,7 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
 
 def test_clf_head_hpps_with_uint8_contain_cast_to_int32():
     dataset = test_utils.generate_one_hot_labels(100, 10, "dataset")
-    dataset = dataset.map(lambda x: tf.cast(x, tf.uint8))
+    dataset = dataset.map(lambda x: x.astype("uint8"))
     head = head_module.ClassificationHead(shape=(8,))
     analyser = head.get_analyser()
     for data in dataset:
@@ -129,7 +128,7 @@ def test_reg_head_build_with_zero_dropout_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(5,), dtype=tf.float32),
+        keras.Input(shape=(5,), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1

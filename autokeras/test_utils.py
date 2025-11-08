@@ -16,32 +16,29 @@ import inspect
 
 import keras
 import numpy as np
-import tensorflow as tf
 
 import autokeras as ak
+from autokeras import data
 
 SEED = 5
 
 
-def generate_data(num_instances=100, shape=(32, 32, 3), dtype="np"):
+def generate_data(num_instances=100, shape=(32, 32, 3)):
     np.random.seed(SEED)
-    data = np.random.rand(*((num_instances,) + shape))
-    if data.dtype == np.float64:
-        data = data.astype(np.float32)
-    if dtype == "np":
-        return data
-    if dtype == "dataset":
-        return tf.data.Dataset.from_tensor_slices(data)
+    result = np.random.rand(*((num_instances,) + shape))
+    if result.dtype == np.float64:
+        result = result.astype(np.float32)
+    return result
 
 
 def generate_one_hot_labels(num_instances=100, num_classes=10, dtype="np"):
     np.random.seed(SEED)
     labels = np.random.randint(num_classes, size=num_instances)
-    data = keras.utils.to_categorical(labels, num_classes=num_classes)
+    result = keras.utils.to_categorical(labels, num_classes=num_classes)
     if dtype == "np":
-        return data
+        return result
     if dtype == "dataset":
-        return tf.data.Dataset.from_tensor_slices(data).batch(32)
+        return data.Dataset.from_tensor_slices(result).batch(32)
 
 
 def generate_text_data(num_instances=100):

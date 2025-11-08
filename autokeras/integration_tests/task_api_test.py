@@ -14,7 +14,6 @@
 
 import keras
 import numpy as np
-import tensorflow as tf
 
 import autokeras as ak
 from autokeras import test_utils
@@ -34,7 +33,6 @@ def test_image_classifier(tmp_path):
         directory=tmp_path,
         max_trials=2,
         seed=test_utils.SEED,
-        distribution_strategy=tf.distribute.MirroredStrategy(),
     )
     clf.fit(
         train_x, train_y, epochs=1, validation_split=0.2, batch_size=BATCH_SIZE
