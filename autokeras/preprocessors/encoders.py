@@ -65,10 +65,8 @@ class OneHotEncoder(Encoder):
         # Returns
             numpy.ndarray. The transformed dataset.
         """
-        print("in one hot: ", dataset)
         dataset = super().transform(dataset)
         eye = np.eye(len(self.labels))
-        print("after one hot: ", eye[dataset])
         return eye[np.squeeze(dataset, axis=-1)]
 
     def postprocess(self, data):

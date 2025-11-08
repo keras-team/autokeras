@@ -26,8 +26,7 @@ def test_one_hot_encoder_deserialize_transforms_to_np():
     encoder = preprocessors.deserialize(preprocessors.serialize(encoder))
     one_hot = encoder.transform(np.array([["a"], ["c"], ["b"]]))
 
-    for batch in one_hot:
-        assert batch.shape[1:] == (3,)
+    assert one_hot.shape[1:] == (3,)
 
 
 def test_one_hot_encoder_decode_to_same_string():

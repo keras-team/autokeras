@@ -73,10 +73,28 @@ IMAGE_CLASSIFIER = [
 
 TEXT_CLASSIFIER = [
     {
+        "text_block_1/max_tokens": 500,
+        "text_block_1/embedding_1/embedding_dim": 32,
+        "text_block_1/embedding_1/dropout": 0.25,
+        "text_block_1/conv_block_1/kernel_size": 3,
+        "text_block_1/conv_block_1/separable": False,
+        "text_block_1/conv_block_1/max_pooling": True,
+        "text_block_1/conv_block_1/num_blocks": 2,
+        "text_block_1/conv_block_1/num_layers": 2,
+        "text_block_1/conv_block_1/filters_0_0": 32,
+        "text_block_1/conv_block_1/filters_0_1": 32,
+        "text_block_1/conv_block_1/dropout": 0.0,
+        "text_block_1/conv_block_1/filters_1_0": 32,
+        "text_block_1/conv_block_1/filters_1_1": 32,
+        "text_block_1/spatial_reduction_1/reduction_type": "flatten",
+        "text_block_1/dense_block_1/use_batchnorm": False,
+        "text_block_1/dense_block_1/num_layers": 2,
+        "text_block_1/dense_block_1/units_0": 32,
+        "text_block_1/dense_block_1/dropout": 0.0,
+        "text_block_1/dense_block_1/units_1": 32,
         "classification_head_1/dropout": 0,
         "optimizer": "adam_weight_decay",
         "learning_rate": 2e-5,
-        "text_block_1/bert_block_1/max_sequence_length": 512,
     },
 ]
 
