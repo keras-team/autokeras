@@ -30,6 +30,7 @@ VANILLA = "vanilla"
 EFFICIENT = "efficient"
 NORMALIZE = "normalize"
 AUGMENT = "augment"
+MAX_TOKENS = "max_tokens"
 
 
 @keras.utils.register_keras_serializable(package="autokeras")
@@ -117,10 +118,16 @@ class ImageBlock(block_module.Block):
 
 @keras.utils.register_keras_serializable(package="autokeras")
 class TextBlock(block_module.Block):
-    """Block for text data."""
+    """Block for text data.
 
-    def __init__(self, **kwargs):
+    # Arguments
+        max_tokens: Int. The maximum size of the vocabulary.
+            If left unspecified, it will be tuned automatically.
+    """
+
+    def __init__(self, max_tokens=None, **kwargs):
         super().__init__(**kwargs)
+        self.max_tokens = max_tokens
 
     def build(self, hp, inputs=None):
         input_node = tree.flatten(inputs)[0]
@@ -130,11 +137,13 @@ class TextBlock(block_module.Block):
 
     def _build_block(self, hp, output_node):
         # Use Embedding and dense layers for tokenized text
-        vocab_size = 10000  # Assume large vocab for words
-        embedding_dim = hp.Choice("embedding_dim", [32, 64, 128], default=64)
-        output_node = keras.layers.Embedding(
-            input_dim=vocab_size, output_dim=embedding_dim
-        )(output_node)
+        max_tokens = self.max_tokens or hp.Choice(
+            MAX_TOKENS, [500, 5000, 20000], default=5000
+        )
+        output_node = basic.Embedding(
+            max_features=max_tokens + 1,
+        ).build(hp, output_node)
+        output_node = basic.ConvBlock().build(hp, output_node)
         output_node = reduction.SpatialReduction().build(hp, output_node)
         output_node = basic.DenseBlock().build(hp, output_node)
         return output_node

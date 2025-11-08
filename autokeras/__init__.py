@@ -15,7 +15,6 @@
 import keras_nlp
 
 from autokeras.auto_model import AutoModel
-from autokeras.blocks import BertBlock
 from autokeras.blocks import ClassificationHead
 from autokeras.blocks import ConvBlock
 from autokeras.blocks import DenseBlock

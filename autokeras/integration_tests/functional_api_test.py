@@ -32,7 +32,7 @@ def test_text_data(tmp_path):
 
     # Build model and train.
     text_input = ak.TextInput()
-    outputs = ak.BertBlock()(text_input)
+    outputs = ak.TextBlock()(text_input)
     regression_outputs = ak.RegressionHead()(outputs)
     classification_outputs = ak.ClassificationHead()(outputs)
     automodel = ak.AutoModel(
