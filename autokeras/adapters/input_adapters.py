@@ -14,14 +14,13 @@
 
 import numpy as np
 
-from autokeras import data
 from autokeras.engine import adapter as adapter_module
 
 
 class InputAdapter(adapter_module.Adapter):
     def check(self, x):
         """Record any information needed by transform."""
-        if not isinstance(x, (np.ndarray, data.Dataset)):
+        if not isinstance(x, np.ndarray):
             raise TypeError(
                 "Expect the data to Input to be numpy.ndarray or "
                 "data.Dataset, but got {type}.".format(type=type(x))
@@ -36,7 +35,7 @@ class InputAdapter(adapter_module.Adapter):
 class ImageAdapter(adapter_module.Adapter):
     def check(self, x):
         """Record any information needed by transform."""
-        if not isinstance(x, (np.ndarray, data.Dataset)):
+        if not isinstance(x, np.ndarray):
             raise TypeError(
                 "Expect the data to ImageInput to be numpy.ndarray or "
                 "data.Dataset, but got {type}.".format(type=type(x))
@@ -51,7 +50,7 @@ class ImageAdapter(adapter_module.Adapter):
 class TextAdapter(adapter_module.Adapter):
     def check(self, x):
         """Record any information needed by transform."""
-        if not isinstance(x, (np.ndarray, data.Dataset)):
+        if not isinstance(x, np.ndarray):
             raise TypeError(
                 "Expect the data to TextInput to be numpy.ndarray or "
                 "data.Dataset, but got {type}.".format(type=type(x))

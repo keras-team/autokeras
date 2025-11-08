@@ -59,6 +59,7 @@ def test_image_regressor(tmp_path):
 
 
 def test_text_classifier(tmp_path):
+    keras.config.disable_traceback_filtering()
     train_x = test_utils.generate_text_data(num_instances=NUM_INSTANCES)
     train_y = np.array([0, 1] * ((NUM_INSTANCES + 1) // 2))[:NUM_INSTANCES]
     test_x = train_x

@@ -14,7 +14,6 @@
 
 import numpy as np
 
-from autokeras import data
 from autokeras.engine import adapter as adapter_module
 
 
@@ -24,8 +23,7 @@ class HeadAdapter(adapter_module.Adapter):
         self.name = name
 
     def check(self, dataset):
-        supported_types = (data.Dataset, np.ndarray)
-        if not isinstance(dataset, supported_types):
+        if not isinstance(dataset, np.ndarray):
             raise TypeError(
                 f"Expect the target data of {self.name} to be"
                 f" np.ndarray, but got {type(dataset)}."

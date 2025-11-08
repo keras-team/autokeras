@@ -17,26 +17,11 @@ import numpy as np
 from autokeras.engine import preprocessor
 
 
-class LambdaPreprocessor(preprocessor.Preprocessor):
-    """Build Preprocessor with a map function.
-
-    # Arguments
-        func: a callable function for the dataset to map.
-    """
-
-    def __init__(self, func, **kwargs):
-        super().__init__(**kwargs)
-        self.func = func
-
-    def transform(self, dataset):
-        return dataset.map(self.func)
-
-
-class AddOneDimension(LambdaPreprocessor):
+class AddOneDimension(preprocessor.Preprocessor):
     """Append one dimension of size one to the dataset shape."""
 
-    def __init__(self, **kwargs):
-        super().__init__(lambda x: np.expand_dims(x, axis=-1), **kwargs)
+    def transform(self, dataset):
+        return np.expand_dims(dataset, axis=-1)
 
 
 class CastToInt32(preprocessor.Preprocessor):

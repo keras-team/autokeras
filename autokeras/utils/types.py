@@ -21,9 +21,7 @@ import numpy as np
 from keras.losses import Loss
 from keras.metrics import Metric
 
-from autokeras import data
-
-DatasetType = Union[np.ndarray, data.Dataset]
+DatasetType = Union[np.ndarray]
 LossType = Union[str, Callable, Loss]
 AcceptableMetric = Union[str, Callable, Metric]
 MetricsType = Union[

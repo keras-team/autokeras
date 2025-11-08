@@ -23,7 +23,6 @@ import keras
 
 from autokeras import auto_model
 from autokeras import blocks
-from autokeras import data
 from autokeras import nodes as input_module
 from autokeras.engine import tuner
 from autokeras.tuners import greedy
@@ -116,7 +115,7 @@ class ImageClassifier(SupervisedImagePipeline):
         callbacks: Optional[List[keras.callbacks.Callback]] = None,
         validation_split: Optional[float] = 0.2,
         validation_data: Union[
-            data.Dataset, Tuple[types.DatasetType, types.DatasetType], None
+            Tuple[types.DatasetType, types.DatasetType], None
         ] = None,
         **kwargs
     ):
