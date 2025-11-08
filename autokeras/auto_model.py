@@ -299,13 +299,16 @@ class AutoModel(object):
                 dataset, validation_split
             )
 
+        x, y = dataset
         history = self.tuner.search(
-            x=dataset,
+            x=x,
+            y=y,
             epochs=epochs,
             callbacks=callbacks,
             validation_data=validation_data,
             validation_split=validation_split,
             verbose=verbose,
+            batch_size=batch_size,
             **kwargs
         )
 
@@ -355,13 +358,14 @@ class AutoModel(object):
         x, y = dataset
 
         self._check_numpy_arrays(x, "x", in_val)
-        self._check_numpy_arrays(y, "y", in_val)
+        if y is not None:
+            self._check_numpy_arrays(y, "y", in_val)
 
         self._check_array_count(
             len(tree.flatten(x)), len(self.inputs), "x", in_val
         )
         # When predicting, y is not required.
-        if not predict:
+        if not predict and y is not None:
             self._check_array_count(
                 len(tree.flatten(y)), len(self.outputs), "y", in_val
             )

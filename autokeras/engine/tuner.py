@@ -77,7 +77,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         It builds the Pipeline from HyperPipeline, transforms the dataset to set
         the input shapes and output shapes of the HyperModel.
         """
-        dataset = kwargs["x"]
+        dataset = (kwargs["x"], kwargs["y"])
         pipeline = self.hyper_pipeline.build(hp, dataset)
         pipeline.fit(dataset)
         dataset = pipeline.transform(dataset)
@@ -93,16 +93,17 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         model = self._try_build(trial.hyperparameters)
         (
             pipeline,
-            kwargs["x"],
+            (
+                kwargs["x"],
+                kwargs["y"],
+            ),
             kwargs["validation_data"],
         ) = self._prepare_model_build(trial.hyperparameters, **kwargs)
         pipeline.save(self._pipeline_path(trial.trial_id))
 
         self.adapt(model, kwargs["x"])
 
-        _, history = utils.fit_with_adaptive_batch_size(
-            model, self.hypermodel.batch_size, **kwargs
-        )
+        _, history = utils.fit_with_adaptive_batch_size(model, **kwargs)
         return history
 
     @staticmethod
@@ -112,7 +113,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         # preprocessing layers before the first non-preprocessing layer.
         # TODO: Use PreprocessingStage for preprocessing layers adapt.
         # TODO: Use Keras Tuner for preprocessing layers adapt.
-        x = tree.flatten(dataset[0])
+        x = tree.flatten(dataset)
 
         def get_output_layers(tensor):
             output_layers = []
@@ -225,19 +226,17 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
             # Concatenate training and validation data.
             if validation_split > 0:
-                x, y = copied_fit_kwargs["x"]
+                x, y = copied_fit_kwargs["x"], copied_fit_kwargs["y"]
                 x_val, y_val = fit_kwargs["validation_data"]
-                copied_fit_kwargs["x"] = (
-                    tree.map_structure(
-                        lambda train, val: np.concatenate([train, val], axis=0),
-                        x,
-                        x_val,
-                    ),
-                    tree.map_structure(
-                        lambda train, val: np.concatenate([train, val], axis=0),
-                        y,
-                        y_val,
-                    ),
+                copied_fit_kwargs["x"] = tree.map_structure(
+                    lambda train, val: np.concatenate([train, val], axis=0),
+                    x,
+                    x_val,
+                )
+                copied_fit_kwargs["y"] = tree.map_structure(
+                    lambda train, val: np.concatenate([train, val], axis=0),
+                    y,
+                    y_val,
                 )
                 copied_fit_kwargs.pop("validation_data")
 
@@ -289,15 +288,13 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         best_hp = best_trial.hyperparameters
         (
             pipeline,
-            kwargs["x"],
+            (kwargs["x"], kwargs["y"]),
             kwargs["validation_data"],
         ) = self._prepare_model_build(best_hp, **kwargs)
 
         model = self._build_best_model()
         self.adapt(model, kwargs["x"])
-        model, history = utils.fit_with_adaptive_batch_size(
-            model, self.hypermodel.batch_size, **kwargs
-        )
+        model, history = utils.fit_with_adaptive_batch_size(model, **kwargs)
         return pipeline, model, history
 
     @property
