@@ -100,6 +100,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             kwargs["validation_data"],
         ) = self._prepare_model_build(trial.hyperparameters, **kwargs)
         pipeline.save(self._pipeline_path(trial.trial_id))
+        keras.src.backend.compute_output_spec(model, kwargs["x"])
 
         self.adapt(model, kwargs["x"])
 

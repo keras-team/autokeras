@@ -129,7 +129,14 @@ class TextBlock(block_module.Block):
         return output_node
 
     def _build_block(self, hp, output_node):
-        output_node = basic.BertBlock().build(hp, output_node)
+        # Use Embedding and dense layers for tokenized text
+        vocab_size = 10000  # Assume large vocab for words
+        embedding_dim = hp.Choice("embedding_dim", [32, 64, 128], default=64)
+        output_node = keras.layers.Embedding(
+            input_dim=vocab_size, output_dim=embedding_dim
+        )(output_node)
+        output_node = reduction.SpatialReduction().build(hp, output_node)
+        output_node = basic.DenseBlock().build(hp, output_node)
         return output_node
 
 

@@ -20,7 +20,9 @@ import tree
 from autokeras import adapters
 from autokeras import analysers
 from autokeras import blocks
+from autokeras import hyper_preprocessors
 from autokeras import keras_layers
+from autokeras import preprocessors
 from autokeras.engine import io_hypermodel
 from autokeras.engine import node as node_module
 from autokeras.utils import utils
@@ -119,7 +121,7 @@ class TextInput(Input):
         super().__init__(name=name, **kwargs)
 
     def build_node(self, hp):
-        return keras.Input(shape=self.shape, dtype="string")
+        return keras.Input(shape=self.shape, dtype="int32")
 
     def build(self, hp, inputs=None):
         output_node = tree.flatten(inputs)[0]
@@ -135,3 +137,10 @@ class TextInput(Input):
 
     def get_block(self):
         return blocks.TextBlock()
+
+    def get_hyper_preprocessors(self):
+        return [
+            hyper_preprocessors.DefaultHyperPreprocessor(
+                preprocessors.TextTokenizer()
+            )
+        ]
