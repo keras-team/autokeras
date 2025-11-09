@@ -91,4 +91,4 @@ def test_structured_data_input_transform_to_dataset():
 
     x = adapter.adapt(x, batch_size=32)
 
-    assert isinstance(x, tf.data.Dataset)
+    assert isinstance(x, np.ndarray)

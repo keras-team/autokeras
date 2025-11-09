@@ -74,10 +74,7 @@ class StructuredDataAnalyser(InputAnalyser):
         super().update(data)
         if len(self.shape) != 2:
             return
-        if data.dtype != tf.string:
-            data = tf.strings.as_string(data)
-        data = data.numpy()
-        # Calculate the statistics.
+        # data is a numpy array
         for instance in data:
             self._update_instance(instance)
 
@@ -89,9 +86,11 @@ class StructuredDataAnalyser(InputAnalyser):
             for _ in range(len(x)):
                 self.count_unique_numerical.append({})
         for i in range(self.num_col):
-            x[i] = x[i].decode("utf-8")
+            x_i = x[i]
+            if isinstance(x_i, bytes):
+                x_i = x_i.decode("utf-8")
             try:
-                tmp_num = float(x[i])
+                tmp_num = float(x_i)
                 self.count_numerical[i] += 1
                 if tmp_num not in self.count_unique_numerical[i]:
                     self.count_unique_numerical[i][tmp_num] = 1

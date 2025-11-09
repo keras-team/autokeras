@@ -128,7 +128,7 @@ def test_structured_build_return_tensor():
     block.column_types = {"0": analysers.NUMERICAL, "1": analysers.NUMERICAL}
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(2,), dtype=tf.string)
+        keras_tuner.HyperParameters(), keras.Input(shape=(2,), dtype="string")
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -140,7 +140,7 @@ def test_structured_block_normalize_return_tensor():
     block.column_types = {"0": analysers.NUMERICAL, "1": analysers.NUMERICAL}
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(2,), dtype=tf.string)
+        keras_tuner.HyperParameters(), keras.Input(shape=(2,), dtype="string")
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -153,7 +153,7 @@ def test_structured_block_search_normalize_return_tensor():
     hp = keras_tuner.HyperParameters()
     hp.values["a/" + blocks.wrapper.NORMALIZE] = True
 
-    outputs = block.build(hp, keras.Input(shape=(2,), dtype=tf.string))
+    outputs = block.build(hp, keras.Input(shape=(2,), dtype="string"))
 
     assert len(tree.flatten(outputs)) == 1
 

@@ -45,10 +45,7 @@ def test_serialize_and_deserialize_default_hpps_categorical():
     hyper_preprocessor = hyper_preprocessors.DefaultHyperPreprocessor(
         preprocessor
     )
-    dataset = tf.data.Dataset.from_tensor_slices(x_train).batch(32)
-    hyper_preprocessor.preprocessor.fit(
-        tf.data.Dataset.from_tensor_slices(x_train).batch(32)
-    )
+    hyper_preprocessor.preprocessor.fit(x_train)
     hyper_preprocessor = hyper_preprocessors.deserialize(
         hyper_preprocessors.serialize(hyper_preprocessor)
     )
@@ -57,7 +54,7 @@ def test_serialize_and_deserialize_default_hpps_categorical():
         preprocessors.CategoricalToNumericalPreprocessor,
     )
 
-    results = hyper_preprocessor.preprocessor.transform(dataset)
+    results = hyper_preprocessor.preprocessor.transform(x_train)
 
     for result in results:
         assert result[0][0] == result[2][0]
@@ -65,4 +62,4 @@ def test_serialize_and_deserialize_default_hpps_categorical():
         assert result[0][1] != result[1][1]
         assert result[0][1] != result[2][1]
         assert result[2][2] == 0
-        assert result.dtype == tf.float32
+        assert result.dtype == "float32"

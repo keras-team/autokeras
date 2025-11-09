@@ -64,7 +64,7 @@ def generate_data(num_instances=100, shape=(32, 32, 3)):
     return result
 
 
-def generate_one_hot_labels(num_instances=100, num_classes=10, dtype="np"):
+def generate_one_hot_labels(num_instances=100, num_classes=10):
     np.random.seed(SEED)
     labels = np.random.randint(num_classes, size=num_instances)
     result = keras.utils.to_categorical(labels, num_classes=num_classes)
@@ -135,7 +135,6 @@ def generate_data_with_categorical(
     num_numerical=10,
     num_categorical=3,
     num_classes=5,
-    dtype="np",
 ):
     categorical_data = np.random.randint(
         num_classes, size=(num_instances, num_categorical)
@@ -144,7 +143,4 @@ def generate_data_with_categorical(
     data = np.concatenate((numerical_data, categorical_data), axis=1)
     if data.dtype == np.float64:
         data = data.astype(np.float32)
-    if dtype == "np":
-        return data
-    if dtype == "dataset":
-        return tf.data.Dataset.from_tensor_slices(data)
+    return data

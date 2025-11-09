@@ -118,7 +118,7 @@ def test_cat_to_num_build_return_tensor():
     block.column_types = {"a": "num"}
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
+        keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype="string")
     )
 
     assert len(tree.flatten(outputs)) == 1

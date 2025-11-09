@@ -30,13 +30,12 @@ from autokeras.tuners import greedy
 def test_preprocessing_adapt_with_cat_to_int_and_norm():
     x = np.array([["a", 5], ["b", 6]]).astype(str)
     y = np.array([[1, 2], [3, 4]]).astype(str)
-    dataset = tf.data.Dataset.from_tensor_slices((x, y)).batch(32)
     model = keras.models.Sequential()
-    model.add(keras.Input(shape=(2,), dtype=tf.string))
+    model.add(keras.Input(shape=(2,), dtype="string"))
     model.add(keras_layers.MultiCategoryEncoding(["int", "none"]))
     model.add(blocks.Normalization(axis=-1))
 
-    tuner_module.AutoTuner.adapt(model, dataset)
+    tuner_module.AutoTuner.adapt(model, (x, y))
 
 
 def called_with_early_stopping(func):
