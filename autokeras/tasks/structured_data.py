@@ -20,8 +20,7 @@ from typing import Type
 from typing import Union
 
 import pandas as pd
-import tensorflow as tf
-from tensorflow import nest
+import tree
 
 from autokeras import auto_model
 from autokeras import blocks
@@ -55,7 +54,7 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
                     )
 
     def check_in_fit(self, x):
-        input_node = nest.flatten(self.inputs)[0]
+        input_node = tree.flatten(self.inputs)[0]
         # Extract column_names from pd.DataFrame.
         if isinstance(x, pd.DataFrame) and input_node.column_names is None:
             input_node.column_names = list(x.columns)
@@ -89,10 +88,10 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
         """Search for the best model and hyperparameters for the AutoModel.
 
         # Arguments
-            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+            x: String, numpy.ndarray.
                 Training data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the training data.
-            y: String, numpy.ndarray, or tensorflow.Dataset. Training data y.
+            y: String, numpy.ndarray. Training data y.
                 If the data is from a csv file, it should be a string, which is
                 the name of the target column. Otherwise, it can be
                 single-column or multi-column. The values should all be
@@ -118,7 +117,7 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
                 the same as the training data. The best model found would be
                 fit on the training dataset without the validation data.
             **kwargs: Any arguments supported by
-                [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+                [keras.Model.fit](https://keras.io/api/models/model_training_apis/#fit-method).
         # Returns
             history: A Keras History object corresponding to the best model.
                 Its History.history attribute is a record of training
@@ -126,16 +125,6 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
                 validation loss values and validation metrics values (if
                 applicable).
         """
-        # x is file path of training data
-        if isinstance(x, str):
-            self._target_col_name = y
-            x, y = self._read_from_csv(x, y)
-
-        if validation_data and not isinstance(validation_data, tf.data.Dataset):
-            x_val, y_val = validation_data
-            if isinstance(x_val, str):
-                validation_data = self._read_from_csv(x_val, y_val)
-
         self.check_in_fit(x)
 
         history = super().fit(
@@ -153,7 +142,7 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
         """Predict the output for a given testing data.
 
         # Arguments
-            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+            x: String, numpy.ndarray.
                 Testing data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the testing data.
             **kwargs: Any arguments supported by keras.Model.predict.
@@ -170,10 +159,10 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
         """Evaluate the best model for the given data.
 
         # Arguments
-            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+            x: String, numpy.ndarray.
                 Testing data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the testing data.
-            y: String, numpy.ndarray, or tensorflow.Dataset. Testing data y.
+            y: String, numpy.ndarray. Testing data y.
                 If the data is from a csv file, it should be a string
                 corresponding to the label column.
             **kwargs: Any arguments supported by keras.Model.evaluate.
@@ -292,10 +281,10 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
         """Search for the best model and hyperparameters for the AutoModel.
 
         # Arguments
-            x: String, numpy.ndarray, pandas.DataFrame or tensorflow.Dataset.
+            x: String, numpy.ndarray.
                 Training data x. If the data is from a csv file, it should be a
                 string specifying the path of the csv file of the training data.
-            y: String, numpy.ndarray, or tensorflow.Dataset. Training data y.
+            y: String, numpy.ndarray. Training data y.
                 If the data is from a csv file, it should be a string, which is
                 the name of the target column. Otherwise, It can be raw labels,
                 one-hot encoded if more than two classes, or binary encoded for
@@ -319,7 +308,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
                 `validation_split`. The type of the validation data should be
                 the same as the training data.
             **kwargs: Any arguments supported by
-                [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+                [keras.Model.fit](https://keras.io/api/models/model_training_apis/#fit-method).
         # Returns
             history: A Keras History object corresponding to the best model.
                 Its History.history attribute is a record of training

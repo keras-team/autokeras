@@ -71,7 +71,14 @@ class StructuredDataAnalyser(InputAnalyser):
         self.num_col = None
 
     def update(self, data):
+        # TODO: update this to treat data as a np.ndarray containing all the
+        # data. Currently, it is a numpy array containing one batch of data.
         super().update(data)
+        # The super class set self.dtype to "string" based on the input numpy
+        # array.  However, the preprocessor will encode it to float32.  So, set
+        # self.dtype to "float32", which would be propagated to the Keras Input
+        # node.
+        self.dtype = "float32"
         if len(self.shape) != 2:
             return
         # data is a numpy array

@@ -17,7 +17,7 @@ from unittest import mock
 import numpy as np
 import pandas as pd
 import pytest
-from tensorflow import nest
+import tree
 
 import autokeras as ak
 from autokeras import test_utils
@@ -67,7 +67,7 @@ def test_structured_data_get_col_names_from_df(fit, tmp_path):
     )
     clf.fit(x=test_utils.TRAIN_CSV_PATH, y="survived")
 
-    assert nest.flatten(clf.inputs)[0].column_names[0] == "sex"
+    assert tree.flatten(clf.inputs)[0].column_names[0] == "sex"
 
 
 @mock.patch("autokeras.AutoModel.fit")

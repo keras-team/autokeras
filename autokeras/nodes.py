@@ -152,9 +152,8 @@ class TextInput(Input):
 class StructuredDataInput(Input):
     """Input node for structured data.
 
-    The input data should be numpy.ndarray, pandas.DataFrame or
-    tensorflow.Dataset.  The data should be two-dimensional with numerical or
-    categorical values.
+    The input data should be numpy.ndarray. The data should be two-dimensional
+    with numerical or categorical values.
 
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
@@ -211,3 +210,13 @@ class StructuredDataInput(Input):
 
     def build(self, hp, inputs=None):
         return inputs
+
+    def get_hyper_preprocessors(self):
+        return [
+            hyper_preprocessors.DefaultHyperPreprocessor(
+                preprocessors.CategoricalToNumerical(
+                    column_names=self.column_names,
+                    column_types=self.column_types,
+                )
+            )
+        ]

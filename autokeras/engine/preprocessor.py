@@ -18,7 +18,7 @@ from autokeras.engine import serializable
 class Preprocessor(serializable.Serializable):
     """A preprocessor for data.Dataset.
 
-    A preprocessor transforms the dataset using `tf.data` operations.
+    A preprocessor transforms the dataset (numpy.ndarray).
     """
 
     def fit(self, dataset):

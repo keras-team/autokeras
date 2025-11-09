@@ -39,7 +39,6 @@ from autokeras.engine.head import Head
 from autokeras.engine.node import Node
 from autokeras.keras_layers import CastToFloat32
 from autokeras.keras_layers import ExpandLastDim
-from autokeras.keras_layers import MultiCategoryEncoding
 from autokeras.nodes import ImageInput
 from autokeras.nodes import Input
 from autokeras.nodes import StructuredDataInput
@@ -60,5 +59,4 @@ __version__ = "2.1.0dev"
 CUSTOM_OBJECTS = {
     "CastToFloat32": CastToFloat32,
     "ExpandLastDim": ExpandLastDim,
-    "MultiCategoryEncoding": MultiCategoryEncoding,
 }
