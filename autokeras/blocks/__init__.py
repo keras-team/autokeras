@@ -23,7 +23,6 @@ from autokeras.blocks.basic import RNNBlock
 from autokeras.blocks.basic import XceptionBlock
 from autokeras.blocks.heads import ClassificationHead
 from autokeras.blocks.heads import RegressionHead
-from autokeras.blocks.preprocessing import CategoricalToNumerical
 from autokeras.blocks.preprocessing import ImageAugmentation
 from autokeras.blocks.preprocessing import Normalization
 from autokeras.blocks.reduction import Flatten

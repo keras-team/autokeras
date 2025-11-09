@@ -176,6 +176,7 @@ class GeneralBlock(block_module.Block):
         return output_node
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class StructuredDataBlock(block_module.Block):
     """Block for structured data.
 

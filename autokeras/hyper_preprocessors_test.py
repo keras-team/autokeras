@@ -33,7 +33,7 @@ def test_serialize_and_deserialize_default_hpps():
 
 def test_serialize_and_deserialize_default_hpps_categorical():
     x_train = np.array([["a", "ab", 2.1], ["b", "bc", 1.0], ["a", "bc", "nan"]])
-    preprocessor = preprocessors.CategoricalToNumericalPreprocessor(
+    preprocessor = preprocessors.CategoricalToNumerical(
         column_names=["column_a", "column_b", "column_c"],
         column_types={
             "column_a": "categorical",
@@ -51,15 +51,14 @@ def test_serialize_and_deserialize_default_hpps_categorical():
     )
     assert isinstance(
         hyper_preprocessor.preprocessor,
-        preprocessors.CategoricalToNumericalPreprocessor,
+        preprocessors.CategoricalToNumerical,
     )
 
     results = hyper_preprocessor.preprocessor.transform(x_train)
 
-    for result in results:
-        assert result[0][0] == result[2][0]
-        assert result[0][0] != result[1][0]
-        assert result[0][1] != result[1][1]
-        assert result[0][1] != result[2][1]
-        assert result[2][2] == 0
-        assert result.dtype == "float32"
+    assert results[0][0] == results[2][0]
+    assert results[0][0] != results[1][0]
+    assert results[0][1] != results[1][1]
+    assert results[0][1] != results[2][1]
+    assert results[2][2] == 0
+    assert results.dtype == "float32"

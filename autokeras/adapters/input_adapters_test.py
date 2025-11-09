@@ -80,7 +80,7 @@ def test_text_input_type_error():
 def test_structured_data_input_unsupported_type_error():
     with pytest.raises(TypeError) as info:
         adapter = input_adapters.StructuredDataAdapter()
-        adapter.adapt("unknown", batch_size=32)
+        adapter.adapt("unknown")
 
     assert "Unsupported type" in str(info.value)
 
@@ -89,6 +89,6 @@ def test_structured_data_input_transform_to_dataset():
     x = pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)
     adapter = input_adapters.StructuredDataAdapter()
 
-    x = adapter.adapt(x, batch_size=32)
+    x = adapter.adapt(x)
 
     assert isinstance(x, np.ndarray)

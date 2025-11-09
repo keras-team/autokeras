@@ -39,7 +39,6 @@ def feature_encoding_input(block):
 # Compile the graph.
 COMPILE_FUNCTIONS = {
     blocks_module.StructuredDataBlock: [feature_encoding_input],
-    blocks_module.CategoricalToNumerical: [feature_encoding_input],
 }
 
 

@@ -191,14 +191,14 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
         for i, enc_type in enumerate(self.encoding):
             column_data = dataset[:, i : i + 1]
             if enc_type == "none":
-                column_data = column_data.astype(np.float32)
+                column_data = column_data.astype("float32")
                 # Replace NaN with 0.
                 imputed = np.where(np.isnan(column_data), 0, column_data)
                 outputs.append(imputed)
             else:
                 encoded = self.encoders[i].transform(column_data)
                 outputs.append(encoded)
-        return np.concatenate(outputs, axis=1)
+        return np.concatenate(outputs, axis=1).astype("float32")
 
     def get_config(self):
         encoders_config = []

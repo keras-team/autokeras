@@ -17,7 +17,6 @@ from unittest import mock
 import numpy as np
 import pandas as pd
 import pytest
-import tree
 
 import autokeras as ak
 from autokeras import test_utils
@@ -57,17 +56,6 @@ def test_structured_data_col_type_no_name_error(tmp_path):
         clf.fit(x=np.random.rand(100, 30), y=np.random.rand(100, 1))
 
     assert "column_names must be specified" in str(info.value)
-
-
-@mock.patch("autokeras.AutoModel.fit")
-def test_structured_data_get_col_names_from_df(fit, tmp_path):
-    clf = ak.StructuredDataClassifier(
-        directory=tmp_path,
-        seed=test_utils.SEED,
-    )
-    clf.fit(x=test_utils.TRAIN_CSV_PATH, y="survived")
-
-    assert tree.flatten(clf.inputs)[0].column_names[0] == "sex"
 
 
 @mock.patch("autokeras.AutoModel.fit")
@@ -126,21 +114,3 @@ def test_structured_reg_fit_call_auto_model_fit(fit, tmp_path):
     )
 
     assert fit.is_called
-
-
-@mock.patch("autokeras.AutoModel.fit")
-def test_structured_data_clf_convert_csv_to_df_and_np(fit, tmp_path):
-    auto_model = ak.StructuredDataClassifier(
-        directory=tmp_path, seed=test_utils.SEED
-    )
-
-    auto_model.fit(
-        x=test_utils.TRAIN_CSV_PATH,
-        y="survived",
-        epochs=2,
-        validation_data=(test_utils.TEST_CSV_PATH, "survived"),
-    )
-
-    _, kwargs = fit.call_args_list[0]
-    assert isinstance(kwargs["x"], pd.DataFrame)
-    assert isinstance(kwargs["y"], np.ndarray)

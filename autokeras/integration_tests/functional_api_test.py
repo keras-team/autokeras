@@ -26,6 +26,8 @@ def test_text_and_structured_data(tmp_path):
 
     x_structured_data = pd.read_csv(test_utils.TRAIN_CSV_PATH)
 
+    x_structured_data = x_structured_data.values
+
     x_structured_data = x_structured_data[:num_instances]
     y_classification = test_utils.generate_one_hot_labels(
         num_instances=num_instances, num_classes=3
@@ -36,8 +38,7 @@ def test_text_and_structured_data(tmp_path):
 
     # Build model and train.
     structured_data_input = ak.StructuredDataInput()
-    structured_data_output = ak.CategoricalToNumerical()(structured_data_input)
-    structured_data_output = ak.DenseBlock()(structured_data_output)
+    structured_data_output = ak.DenseBlock()(structured_data_input)
 
     text_input = ak.TextInput()
     text_output = ak.TextBlock()(text_input)

@@ -21,7 +21,7 @@ from autokeras.analysers import output_analysers
 
 def test_clf_head_one_hot_shape_error():
     analyser = output_analysers.ClassificationAnalyser(name="a", num_classes=9)
-    dataset = test_utils.generate_one_hot_labels(dtype="np", num_classes=10)
+    dataset = test_utils.generate_one_hot_labels(num_classes=10)
 
     with pytest.raises(ValueError) as info:
         analyser.update(dataset)
@@ -67,9 +67,7 @@ def test_one_class_error():
 
 def test_infer_ten_classes():
     analyser = output_analysers.ClassificationAnalyser(name="a")
-    dataset = test_utils.generate_one_hot_labels(
-        dtype="dataset", num_classes=10
-    )
+    dataset = test_utils.generate_one_hot_labels(num_classes=10)
 
     analyser.update(dataset)
     analyser.finalize()

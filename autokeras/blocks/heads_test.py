@@ -103,7 +103,7 @@ def test_clf_head_build_with_zero_dropout_return_tensor():
 
 
 def test_clf_head_hpps_with_uint8_contain_cast_to_int32():
-    dataset = test_utils.generate_one_hot_labels(100, 10, "dataset")
+    dataset = test_utils.generate_one_hot_labels(100, 10)
     dataset = dataset.astype("uint8")
     head = head_module.ClassificationHead(shape=(8,))
     analyser = head.get_analyser()
