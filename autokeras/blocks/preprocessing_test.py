@@ -110,3 +110,33 @@ def test_augment_get_config_has_all_attributes():
     assert test_utils.get_func_args(blocks.ImageAugmentation.__init__).issubset(
         config.keys()
     )
+
+
+def test_cat_to_num_build_return_tensor():
+    block = blocks.CategoricalToNumerical()
+    block.column_names = ["a"]
+    block.column_types = {"a": "num"}
+
+    outputs = block.build(
+        keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
+    )
+
+    assert len(tree.flatten(outputs)) == 1
+
+
+def test_cat_to_num_deserialize_to_cat_to_num():
+    serialized_block = blocks.serialize(blocks.CategoricalToNumerical())
+
+    block = blocks.deserialize(serialized_block)
+
+    assert isinstance(block, blocks.CategoricalToNumerical)
+
+
+def test_cat_to_num_get_config_has_all_attributes():
+    block = blocks.CategoricalToNumerical()
+
+    config = block.get_config()
+
+    assert test_utils.get_func_args(
+        blocks.CategoricalToNumerical.__init__
+    ).issubset(config.keys())
