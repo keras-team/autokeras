@@ -168,3 +168,13 @@ def test_graph_can_init_with_one_missing_output():
     ak.ClassificationHead()(output_node)
 
     graph_module.Graph(input_node, output_node)
+
+
+def test_cat_to_num_with_img_input_error():
+    input_node = ak.ImageInput()
+    output_node = ak.CategoricalToNumerical()(input_node)
+
+    with pytest.raises(TypeError) as info:
+        graph_module.Graph(input_node, outputs=output_node).compile()
+
+    assert "CategoricalToNumerical can only be used" in str(info.value)
