@@ -15,6 +15,7 @@
 from typing import List
 
 import keras
+import tree
 from keras import layers
 from keras import ops
 
@@ -89,7 +90,7 @@ class MultiCategoryEncoding(PreprocessingLayer):
                 encoding_layer.build(tf.TensorShape([1]))
 
     def call(self, inputs):
-        input_nodes = nest.flatten(inputs)[0]
+        input_nodes = tree.flatten(inputs)[0]
         split_inputs = tf.split(input_nodes, [1] * len(self.encoding), axis=-1)
         output_nodes = []
         for input_node, encoding_layer in zip(

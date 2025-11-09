@@ -54,14 +54,11 @@ from autokeras.tuners import BayesianOptimization
 from autokeras.tuners import Greedy
 from autokeras.tuners import Hyperband
 from autokeras.tuners import RandomSearch
-from autokeras.utils.utils import check_kt_version
-
-check_kt_version()
 
 __version__ = "2.1.0dev"
 
 CUSTOM_OBJECTS = {
     "CastToFloat32": CastToFloat32,
     "ExpandLastDim": ExpandLastDim,
-    +"MultiCategoryEncoding": MultiCategoryEncoding,
+    "MultiCategoryEncoding": MultiCategoryEncoding,
 }

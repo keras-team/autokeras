@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+import keras
 import numpy as np
 
 from autokeras import keras_layers as layer_module

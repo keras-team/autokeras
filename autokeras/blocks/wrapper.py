@@ -225,7 +225,7 @@ class StructuredDataBlock(block_module.Block):
         return config
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         output_node = input_node
         if self.categorical_encoding:
             block = preprocessing.CategoricalToNumerical()

@@ -16,6 +16,7 @@ import keras
 import keras_tuner
 import tree
 
+from autokeras import analysers
 from autokeras import blocks
 from autokeras import test_utils
 
@@ -130,7 +131,7 @@ def test_structured_build_return_tensor():
         keras_tuner.HyperParameters(), keras.Input(shape=(2,), dtype=tf.string)
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_structured_block_normalize_return_tensor():
@@ -142,7 +143,7 @@ def test_structured_block_normalize_return_tensor():
         keras_tuner.HyperParameters(), keras.Input(shape=(2,), dtype=tf.string)
     )
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_structured_block_search_normalize_return_tensor():
@@ -154,7 +155,7 @@ def test_structured_block_search_normalize_return_tensor():
 
     outputs = block.build(hp, keras.Input(shape=(2,), dtype=tf.string))
 
-    assert len(nest.flatten(outputs)) == 1
+    assert len(tree.flatten(outputs)) == 1
 
 
 def test_structured_deserialize_to_structured():

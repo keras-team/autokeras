@@ -27,6 +27,8 @@ import tree
 from keras import layers
 from keras_tuner.engine import hyperparameters
 
+from autokeras import analysers
+from autokeras import keras_layers
 from autokeras.engine import block as block_module
 from autokeras.utils import io_utils
 from autokeras.utils import utils
@@ -238,7 +240,7 @@ class CategoricalToNumerical(block_module.Block):
         self.column_names = None
 
     def build(self, hp, inputs=None):
-        input_node = nest.flatten(inputs)[0]
+        input_node = tree.flatten(inputs)[0]
         encoding = []
         for column_name in self.column_names:
             column_type = self.column_types[column_name]
