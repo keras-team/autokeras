@@ -23,6 +23,25 @@ from autokeras.engine import serializable
 from autokeras.utils import io_utils
 
 
+def feature_encoding_input(block):
+    """Fetch the column_types and column_names.
+
+    The values are fetched for FeatureEncoding from StructuredDataInput.
+    """
+    if not isinstance(block.inputs[0], nodes_module.StructuredDataInput):
+        raise TypeError(
+            "CategoricalToNumerical can only be used with StructuredDataInput."
+        )
+    block.column_types = block.inputs[0].column_types
+    block.column_names = block.inputs[0].column_names
+
+
+# Compile the graph.
+COMPILE_FUNCTIONS = {
+    blocks_module.StructuredDataBlock: [feature_encoding_input],
+}
+
+
 def load_graph(filepath, custom_objects=None):
     if custom_objects is None:
         custom_objects = {}
@@ -211,8 +230,15 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
         outputs = [nodes[node_id] for node_id in config["outputs"]]
         return cls(inputs=inputs, outputs=outputs)
 
+    def compile(self):
+        """Share the information between blocks."""
+        for block in self.blocks:
+            for func in COMPILE_FUNCTIONS.get(block.__class__, []):
+                func(block)
+
     def build(self, hp):
         """Build the HyperModel into a Keras Model."""
+        self.compile()
         keras_nodes = {}
         keras_input_nodes = []
         for node in self.inputs:

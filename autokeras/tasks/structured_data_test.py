@@ -1,0 +1,116 @@
+# Copyright 2020 The AutoKeras Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from unittest import mock
+
+import numpy as np
+import pandas as pd
+import pytest
+
+import autokeras as ak
+from autokeras import test_utils
+
+
+def test_raise_error_unknown_str_in_col_type(tmp_path):
+    with pytest.raises(ValueError) as info:
+        ak.StructuredDataClassifier(
+            column_types={"age": "num", "parch": "categorical"},
+            directory=tmp_path,
+            seed=test_utils.SEED,
+        )
+
+    assert 'column_types should be either "categorical"' in str(info.value)
+
+
+def test_structured_data_input_name_type_mismatch_error(tmp_path):
+    with pytest.raises(ValueError) as info:
+        clf = ak.StructuredDataClassifier(
+            column_types={"_age": "numerical", "parch": "categorical"},
+            column_names=["age", "fare"],
+            directory=tmp_path,
+            seed=test_utils.SEED,
+        )
+        clf.fit(x=test_utils.TRAIN_CSV_PATH, y="survived")
+
+    assert "column_names and column_types are mismatched." in str(info.value)
+
+
+def test_structured_data_col_type_no_name_error(tmp_path):
+    with pytest.raises(ValueError) as info:
+        clf = ak.StructuredDataClassifier(
+            column_types={"age": "numerical", "parch": "categorical"},
+            directory=tmp_path,
+            seed=test_utils.SEED,
+        )
+        clf.fit(x=np.random.rand(100, 30), y=np.random.rand(100, 1))
+
+    assert "column_names must be specified" in str(info.value)
+
+
+@mock.patch("autokeras.AutoModel.fit")
+@mock.patch("autokeras.AutoModel.evaluate")
+def test_structured_clf_evaluate_call_automodel_evaluate(
+    evaluate, fit, tmp_path
+):
+    auto_model = ak.StructuredDataClassifier(
+        directory=tmp_path, seed=test_utils.SEED
+    )
+
+    auto_model.fit(x=test_utils.TRAIN_CSV_PATH, y="survived")
+    auto_model.evaluate(x=test_utils.TRAIN_CSV_PATH, y="survived")
+
+    assert evaluate.is_called
+
+
+@mock.patch("autokeras.AutoModel.fit")
+@mock.patch("autokeras.AutoModel.predict")
+def test_structured_clf_predict_csv_call_automodel_predict(
+    predict, fit, tmp_path
+):
+    auto_model = ak.StructuredDataClassifier(
+        directory=tmp_path, seed=test_utils.SEED
+    )
+
+    auto_model.fit(x=test_utils.TRAIN_CSV_PATH, y="survived")
+    auto_model.predict(x=test_utils.TEST_CSV_PATH)
+
+    assert predict.is_called
+
+
+@mock.patch("autokeras.AutoModel.fit")
+def test_structured_clf_fit_call_auto_model_fit(fit, tmp_path):
+    auto_model = ak.StructuredDataClassifier(
+        directory=tmp_path, seed=test_utils.SEED
+    )
+
+    auto_model.fit(
+        x=pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)[:100],
+        y=test_utils.generate_one_hot_labels(num_instances=100, num_classes=3),
+    )
+
+    assert fit.is_called
+
+
+@mock.patch("autokeras.AutoModel.fit")
+def test_structured_reg_fit_call_auto_model_fit(fit, tmp_path):
+    auto_model = ak.StructuredDataRegressor(
+        directory=tmp_path, seed=test_utils.SEED
+    )
+
+    auto_model.fit(
+        x=pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)[:100],
+        y=test_utils.generate_data(num_instances=100, shape=(1,)),
+    )
+
+    assert fit.is_called

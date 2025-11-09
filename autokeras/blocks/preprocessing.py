@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Blocks for data preprocessing.
+
+They are built into keras preprocessing layers and will be part of the Keras
+model.
+
+"""
 from typing import Optional
 from typing import Tuple
 from typing import Union

@@ -174,3 +174,52 @@ class GeneralBlock(block_module.Block):
         output_node = reduction.Flatten().build(hp, output_node)
         output_node = basic.DenseBlock().build(hp, output_node)
         return output_node
+
+
+@keras.utils.register_keras_serializable(package="autokeras")
+class StructuredDataBlock(block_module.Block):
+    """Block for structured data.
+
+    # Arguments
+        categorical_encoding: Boolean. Whether to use the CategoricalToNumerical
+            to encode the categorical features to numerical features. Defaults
+            to True.
+        normalize: Boolean. Whether to normalize the features.
+            If unspecified, it will be tuned automatically.
+        seed: Int. Random seed.
+    """
+
+    def __init__(
+        self,
+        normalize: Optional[bool] = None,
+        seed: Optional[int] = None,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.normalize = normalize
+        self.seed = seed
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "normalize": self.normalize,
+                "seed": self.seed,
+            }
+        )
+        return config
+
+    def build(self, hp, inputs=None):
+        input_node = tree.flatten(inputs)[0]
+        output_node = input_node
+
+        if self.normalize is None and hp.Boolean(NORMALIZE):
+            with hp.conditional_scope(NORMALIZE, [True]):
+                output_node = preprocessing.Normalization().build(
+                    hp, output_node
+                )
+        elif self.normalize:
+            output_node = preprocessing.Normalization().build(hp, output_node)
+
+        output_node = basic.DenseBlock().build(hp, output_node)
+        return output_node

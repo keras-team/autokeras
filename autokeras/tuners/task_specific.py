@@ -98,6 +98,34 @@ TEXT_CLASSIFIER = [
     },
 ]
 
+STRUCTURED_DATA_CLASSIFIER = [
+    {
+        "structured_data_block_1/normalize": True,
+        "structured_data_block_1/dense_block_1/num_layers": 2,
+        "structured_data_block_1/dense_block_1/use_batchnorm": False,
+        "structured_data_block_1/dense_block_1/dropout": 0,
+        "structured_data_block_1/dense_block_1/units_0": 32,
+        "structured_data_block_1/dense_block_1/units_1": 32,
+        "classification_head_1/dropout": 0.0,
+        "optimizer": "adam",
+        "learning_rate": 0.001,
+    }
+]
+
+STRUCTURED_DATA_REGRESSOR = [
+    {
+        "structured_data_block_1/normalize": True,
+        "structured_data_block_1/dense_block_1/num_layers": 2,
+        "structured_data_block_1/dense_block_1/use_batchnorm": False,
+        "structured_data_block_1/dense_block_1/dropout": 0,
+        "structured_data_block_1/dense_block_1/units_0": 32,
+        "structured_data_block_1/dense_block_1/units_1": 32,
+        "regression_head_1/dropout": 0.0,
+        "optimizer": "adam",
+        "learning_rate": 0.001,
+    }
+]
+
 
 class ImageClassifierTuner(greedy.Greedy):
     def __init__(self, **kwargs):
@@ -107,3 +135,13 @@ class ImageClassifierTuner(greedy.Greedy):
 class TextClassifierTuner(greedy.Greedy):
     def __init__(self, **kwargs):
         super().__init__(initial_hps=TEXT_CLASSIFIER, **kwargs)
+
+
+class StructuredDataClassifierTuner(greedy.Greedy):
+    def __init__(self, **kwargs):
+        super().__init__(initial_hps=STRUCTURED_DATA_CLASSIFIER, **kwargs)
+
+
+class StructuredDataRegressorTuner(greedy.Greedy):
+    def __init__(self, **kwargs):
+        super().__init__(initial_hps=STRUCTURED_DATA_REGRESSOR, **kwargs)
