@@ -77,15 +77,12 @@ def run_with_adaptive_batch_size(batch_size, func, **fit_kwargs):
         validation_data = fit_kwargs.pop("validation_data")
     while batch_size > 0:
         try:
-            # TODO: handle batch_size.
             history = func(
                 validation_data=validation_data,
                 batch_size=batch_size,
                 **fit_kwargs,
             )
             break
-        # TODO: support torch here.
-        # except tf.errors.ResourceExhaustedError as e:
         except Exception as e:
             if batch_size == 1:
                 raise e

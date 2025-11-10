@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import keras_nlp
-
 from autokeras.auto_model import AutoModel
 from autokeras.blocks import ClassificationHead
 from autokeras.blocks import ConvBlock
@@ -53,7 +51,7 @@ from autokeras.tuners import Greedy
 from autokeras.tuners import Hyperband
 from autokeras.tuners import RandomSearch
 
-__version__ = "2.1.0dev"
+__version__ = "3.0.0dev"
 
 CUSTOM_OBJECTS = {
     "CastToFloat32": CastToFloat32,

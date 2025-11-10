@@ -4,13 +4,10 @@
 
 **Pip**: Follow the TensorFlow install steps to install Pip.
 
-**Tensorflow >= 2.3.0**: AutoKeras is based on TensorFlow.
-Please follow
-[this tutorial](https://www.tensorflow.org/install/pip) to install TensorFlow for python3.
-
-**GPU Setup (Optional)**:
-If you have GPUs on your machine and want to use them to accelerate the training,
-you can follow [this tutorial](https://www.tensorflow.org/install/gpu) to setup.
+**PyTorch >= 2.3.0**: AutoKeras is based on Keras. We recommend using the
+*PyTorch backend
+Please follow [this page](https://pytorch.org/get-started/locally/) to install
+PyTorch.
 
 ## Install AutoKeras
 AutoKeras only support **Python 3**.

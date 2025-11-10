@@ -349,13 +349,12 @@ class AutoModel(object):
                 )
             )
 
-    def _check_data_format(self, dataset, validation=False, predict=False):
+    def _check_data_format(self, x, y, validation=False, predict=False):
         """Check if the dataset has the same number of IOs with the model."""
         if validation:
             in_val = " in validation_data"
         else:
             in_val = ""
-        x, y = dataset
 
         self._check_numpy_arrays(x, "x", in_val)
         if y is not None:
@@ -376,10 +375,6 @@ class AutoModel(object):
         analysers = input_analysers + output_analysers
         np_arrays = tree.flatten(dataset)
         for array, analyser in zip(np_arrays, analysers):
-            # TODO: merge .update() and .finalize() to deal with the entire
-            # array together to save time. The current update is still trying to
-            # iterate all the batches, we just put the entire array as one
-            # batch.
             analyser.update(array)
 
         for analyser in analysers:
@@ -396,41 +391,20 @@ class AutoModel(object):
         self.tuner.hypermodel.hyper_pipeline = self.tuner.hyper_pipeline
 
     def _check_and_adapt(self, x, y, validation_data, batch_size):
-        # TODO: Handle other types of input, zip dataset, tensor, dict.
-
         # Convert training data.
-        self._check_data_format((x, y))
+        self._check_data_format(x, y)
         x = self._adapt(x, self.inputs, batch_size)
         y = self._adapt(y, self._heads, batch_size)
 
         # Convert validation data
         if validation_data:
-            self._check_data_format(validation_data, validation=True)
+            self._check_data_format(*validation_data, validation=True)
             x_val, y_val = validation_data
             x_val = self._adapt(x_val, self.inputs, batch_size)
             y_val = self._adapt(y_val, self._heads, batch_size)
             validation_data = (x_val, y_val)
 
         return (x, y), validation_data
-
-    def _has_y(self, dataset):
-        """Remove y from the dataset if exists."""
-        shapes = data_utils.dataset_shape(dataset)
-        # Only one or less element in the first level.
-        if len(shapes) <= 1:
-            return False
-        # The first level has more than 1 element.
-        # The tree has 2 levels.
-        for shape in shapes:
-            if isinstance(shape, tuple):
-                return True
-        # The tree has one level.
-        # It matches the single IO case.
-        return (
-            len(shapes) == 2
-            and len(self.inputs) == 1
-            and len(self.outputs) == 1
-        )
 
     def predict(self, x, batch_size=32, verbose=1, **kwargs):
         """Predict the output for a given testing data.
@@ -448,7 +422,7 @@ class AutoModel(object):
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        self._check_data_format((x, None), predict=True)
+        self._check_data_format(x, None, predict=True)
         dataset = self._adapt(x, self.inputs, batch_size)
         pipeline = self.tuner.get_best_pipeline()
         model = self.tuner.get_best_model()
@@ -483,7 +457,7 @@ class AutoModel(object):
             metrics). The attribute model.metrics_names will give you the
             display labels for the scalar outputs.
         """
-        self._check_data_format((x, y))
+        self._check_data_format(x, y)
         x = self._adapt(x, self.inputs, batch_size)
         y = self._adapt(y, self._heads, batch_size)
         pipeline = self.tuner.get_best_pipeline()

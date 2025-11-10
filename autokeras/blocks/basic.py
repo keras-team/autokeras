@@ -646,8 +646,6 @@ class Embedding(block_module.Block):
 
     def build(self, hp, inputs=None):
         input_node = tree.flatten(inputs)[0]
-        # TODO: support more pretrained embedding layers.
-        # glove, fasttext, and word2vec
         embedding_dim = utils.add_to_hp(self.embedding_dim, hp)
         layer = layers.Embedding(
             input_dim=self.max_features, output_dim=embedding_dim

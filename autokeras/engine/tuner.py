@@ -77,17 +77,18 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         It builds the Pipeline from HyperPipeline, transforms the dataset to set
         the input shapes and output shapes of the HyperModel.
         """
-        dataset = (kwargs["x"], kwargs["y"])
-        pipeline = self.hyper_pipeline.build(hp, dataset)
-        pipeline.fit(dataset)
-        dataset = pipeline.transform(dataset)
-        self.hypermodel.set_io_shapes(data_utils.dataset_shape(dataset))
+        x = kwargs["x"]
+        y = kwargs["y"]
+        pipeline = self.hyper_pipeline.build(hp, (x, y))
+        pipeline.fit((x, y))
+        (x, y) = pipeline.transform((x, y))
+        self.hypermodel.set_io_shapes(data_utils.dataset_shape((x, y)))
 
         if "validation_data" in kwargs:
             validation_data = pipeline.transform(kwargs["validation_data"])
         else:
             validation_data = None
-        return pipeline, dataset, validation_data
+        return pipeline, (x, y), validation_data
 
     def _build_and_fit_model(self, trial, *args, **kwargs):
         model = self._try_build(trial.hyperparameters)

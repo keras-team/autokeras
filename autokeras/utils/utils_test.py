@@ -25,20 +25,6 @@ def test_validate_num_inputs_error():
     assert "Expected 2 elements in the inputs list" in str(info.value)
 
 
-# TODO: support this feature with PyTorch
-# def test_run_with_adaptive_batch_size_raise_error():
-#     def func(**kwargs):
-#         raise tf.errors.ResourceExhaustedError(0, "", None)
-
-#     with pytest.raises(tf.errors.ResourceExhaustedError):
-#         utils.run_with_adaptive_batch_size(
-#             batch_size=64,
-#             func=func,
-#             x=np.random.rand(100, 1),
-#             validation_data=np.random.rand(100, 1),
-#         )
-
-
 def test_get_hyperparameter_with_none_return_hp():
     hp = utils.get_hyperparameter(
         None, hyperparameters.Choice("hp", [10, 20]), int

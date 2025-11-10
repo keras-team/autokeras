@@ -71,8 +71,6 @@ class StructuredDataAnalyser(InputAnalyser):
         self.num_col = None
 
     def update(self, data):
-        # TODO: update this to treat data as a np.ndarray containing all the
-        # data. Currently, it is a numpy array containing one batch of data.
         super().update(data)
         # The super class set self.dtype to "string" based on the input numpy
         # array.  However, the preprocessor will encode it to float32.  So, set
@@ -81,30 +79,42 @@ class StructuredDataAnalyser(InputAnalyser):
         self.dtype = "float32"
         if len(self.shape) != 2:
             return
-        # data is a numpy array
-        for instance in data:
-            self._update_instance(instance)
-
-    def _update_instance(self, x):
-        if self.num_col is None:
-            self.num_col = len(x)
-            self.count_numerical = np.zeros(self.num_col)
-            self.count_categorical = np.zeros(self.num_col)
-            for _ in range(len(x)):
-                self.count_unique_numerical.append({})
+        # data is a numpy array containing all the data.
+        self.num_col = data.shape[1]
+        self.count_numerical = np.zeros(self.num_col)
+        self.count_categorical = np.zeros(self.num_col)
+        self.count_unique_numerical = [{} for _ in range(self.num_col)]
         for i in range(self.num_col):
-            x_i = x[i]
-            if isinstance(x_i, bytes):
-                x_i = x_i.decode("utf-8")
+            self._update_column(data[:, i], i)
+
+    def _update_column(self, column_data, i):
+        # Vectorized check for numerical values
+        def is_numerical(x):
             try:
-                tmp_num = float(x_i)
-                self.count_numerical[i] += 1
-                if tmp_num not in self.count_unique_numerical[i]:
-                    self.count_unique_numerical[i][tmp_num] = 1
-                else:
-                    self.count_unique_numerical[i][tmp_num] += 1
-            except ValueError:
-                self.count_categorical[i] += 1
+                float(x)
+                return True
+            except (ValueError, TypeError):
+                return False
+
+        numerical_mask = np.vectorize(is_numerical)(column_data)
+        self.count_numerical[i] = np.sum(numerical_mask)
+        self.count_categorical[i] = len(column_data) - np.sum(numerical_mask)
+
+        if np.any(numerical_mask):
+            # Get numerical values
+            numerical_values = column_data[numerical_mask]
+            # Handle bytes
+            numerical_values = np.array(
+                [
+                    x.decode("utf-8") if isinstance(x, bytes) else x
+                    for x in numerical_values
+                ]
+            )
+            numerical_floats = numerical_values.astype(float)
+            unique_vals, counts = np.unique(
+                numerical_floats, return_counts=True
+            )
+            self.count_unique_numerical[i] = dict(zip(unique_vals, counts))
 
     def finalize(self):
         self.check()
