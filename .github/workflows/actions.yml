@@ -32,7 +32,7 @@ jobs:
       run: |
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install grpcio protobuf 
-        pip install -e ".[tests]" --progress-bar off
+          pip install -e ".[tests]" --progress-bar off
     - name: Test with pytest
       run: |
         pytest --cov=autokeras --cov-report xml:coverage.xml
