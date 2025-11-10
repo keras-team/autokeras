@@ -235,3 +235,28 @@ def test_predict_tuple_x_and_tuple_y_predict_doesnt_crash(tuner_fn, tmp_path):
     x, y = (np.random.rand(100, 32, 32, 3),), (np.random.rand(100, 1),)
     auto_model.fit(x, y)
     auto_model.predict(x)
+
+
+def test_fit_with_non_numpy_data_raises_error(tmp_path):
+    auto_model = ak.AutoModel(
+        ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
+    )
+    x = [[[1, 2, 3]] * 32] * 32  # list, not np.ndarray
+    y = [1]
+    match_str = "Expected x to be a numpy array"
+    with pytest.raises(ValueError, match=match_str):
+        auto_model.fit(x, y)
+
+
+def test_fit_with_wrong_array_count_raises_error(tmp_path):
+    auto_model = ak.AutoModel(
+        ak.ImageInput(), ak.RegressionHead(), directory=tmp_path
+    )
+    x = (
+        np.random.rand(10, 32, 32, 3),
+        np.random.rand(10, 32, 32, 3),
+    )  # 2 arrays
+    y = np.random.rand(10, 1)
+    match_str = "Expected x to have 1 arrays, but got 2"
+    with pytest.raises(ValueError, match=match_str):
+        auto_model.fit(x, y)

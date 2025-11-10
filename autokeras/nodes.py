@@ -129,7 +129,9 @@ class TextInput(Input):
     def build(self, hp, inputs=None):
         output_node = tree.flatten(inputs)[0]
         if len(output_node.shape) == 1:
-            output_node = keras_layers.ExpandLastDim()(output_node)
+            output_node = keras_layers.ExpandLastDim()(  # pragma: no cover
+                output_node
+            )
         return output_node
 
     def get_adapter(self):

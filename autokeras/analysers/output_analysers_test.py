@@ -134,3 +134,15 @@ def test_reg_with_specified_output_dim_and_single_column_doesnt_crash():
 
     analyser.update(dataset)
     analyser.finalize()
+
+
+def test_regression_analyser_expected_dim_1d():
+    analyser = output_analysers.RegressionAnalyser()
+    analyser.shape = [10]  # 1D shape
+    assert analyser.expected_dim() == 1
+
+
+def test_regression_analyser_expected_dim_2d():
+    analyser = output_analysers.RegressionAnalyser()
+    analyser.shape = [10, 3]  # 2D shape
+    assert analyser.expected_dim() == 3

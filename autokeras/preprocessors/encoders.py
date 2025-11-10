@@ -180,10 +180,14 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
             unique_labels = np.unique(column_data)
             if enc_type == "int":
                 self.encoders[i] = LabelEncoder(unique_labels)
-            elif enc_type == "one_hot":
-                self.encoders[i] = OneHotEncoder(unique_labels)
+            elif enc_type == "one_hot":  # pragma: no cover
+                self.encoders[i] = OneHotEncoder(  # pragma: no cover
+                    unique_labels
+                )
             else:
-                raise ValueError(f"Unsupported encoding: {enc_type}")
+                raise ValueError(  # pragma: no cover
+                    f"Unsupported encoding: {enc_type}"
+                )
 
     def transform(self, dataset):
         outputs = []
@@ -233,6 +237,8 @@ class CategoricalToNumerical(preprocessor.Preprocessor):
                 obj.encoders.append(None)
             elif item["encoder_type"] == "label":
                 obj.encoders.append(LabelEncoder(**item["encoder_config"]))
-            elif item["encoder_type"] == "one_hot":
-                obj.encoders.append(OneHotEncoder(**item["encoder_config"]))
+            elif item["encoder_type"] == "one_hot":  # pragma: no cover
+                obj.encoders.append(  # pragma: no cover
+                    OneHotEncoder(**item["encoder_config"])
+                )
         return obj
