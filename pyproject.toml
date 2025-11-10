@@ -30,7 +30,6 @@ dependencies = [
     "keras-tuner>=1.4.0",
     "keras>=3.0.0",
     "dm-tree",
-    "grpcio",
 ]
 
 [project.optional-dependencies]
