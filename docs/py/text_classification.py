@@ -118,24 +118,6 @@ clf = ak.AutoModel(
 clf.fit(x_train, y_train, epochs=1, batch_size=2)
 
 """
-## Data Format
-The AutoKeras TextClassifier is quite flexible for the data format.
-
-For the text, the input data should be one-dimensional For the classification
-labels, AutoKeras accepts both plain labels, i.e. strings or integers, and
-one-hot encoded encoded labels, i.e. vectors of 0s and 1s.
-"""
-
-
-clf = ak.TextClassifier(overwrite=True, max_trials=1)
-# Feed the Dataset to the classifier.
-clf.fit(x_train[:2], y_train[:2], epochs=1)
-# Predict with the best model.
-predicted_y = clf.predict(x_test[:2])
-# Evaluate the best model with testing data.
-print(clf.evaluate(x_test[:2], y_test[:2]))
-
-"""
 ## Reference
 [TextClassifier](/text_classifier),
 [AutoModel](/auto_model/#automodel-class),

@@ -15,6 +15,9 @@ You can click the links below to see the detailed tutorial for each task.
 
 [Text Regression](/tutorial/text_regression)
 
+[Structured Data Classification](/tutorial/structured_data_classification)
+
+[Structured Data Regression](/tutorial/structured_data_regression)
 
 ## Multi-Task and Multi-Modal Data
 
@@ -38,6 +41,8 @@ The following are the links to the documentation of the predefined input nodes a
 
 [TextInput](/node/#textinput-class)
 
+[StructuredDataInput](/node/#structureddatainput-class)
+
 **Blocks**:
 
 [ImageAugmentation](/block/#imageaugmentation-class)
@@ -47,6 +52,8 @@ The following are the links to the documentation of the predefined input nodes a
 [ConvBlock](/block/#convblock-class)
 
 [DenseBlock](/block/#denseblock-class)
+
+[Embedding](/block/#embedding-class)
 
 [Merge](/block/#merge-class)
 
@@ -63,6 +70,8 @@ The following are the links to the documentation of the predefined input nodes a
 [ImageBlock](/block/#imageblock-class)
 
 [TextBlock](/block/#textblock-class)
+
+[StructuredDataBlock](/block/#structureddatablock-class)
 
 [ClassificationHead](/block/#classificationhead-class)
 

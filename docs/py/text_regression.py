@@ -121,24 +121,6 @@ reg = ak.AutoModel(
 reg.fit(x_train, y_train, epochs=1, batch_size=2)
 
 """
-## Data Format
-The AutoKeras TextRegressor is quite flexible for the data format.
-
-For the text, the input data should be one-dimensional For the regression
-targets, it should be a vector of numerical values.  AutoKeras accepts
-numpy.ndarray.
-"""
-
-
-reg = ak.TextRegressor(overwrite=True, max_trials=2)
-# Feed the Dataset to the regressor.
-reg.fit(x_train[:2], y_train[:2], epochs=1)
-# Predict with the best model.
-predicted_y = reg.predict(x_test[:2])
-# Evaluate the best model with testing data.
-print(reg.evaluate(x_test[:2], y_test[:2]))
-
-"""
 ## Reference
 [TextRegressor](/text_regressor),
 [AutoModel](/auto_model/#automodel-class),

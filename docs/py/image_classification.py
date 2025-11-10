@@ -2,7 +2,6 @@
 pip install autokeras
 """
 
-import numpy as np
 from keras.datasets import mnist
 
 import autokeras as ak
@@ -122,50 +121,6 @@ clf = ak.AutoModel(
     inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
 )
 clf.fit(x_train, y_train, epochs=1)
-
-"""
-## Data Format
-The AutoKeras ImageClassifier is quite flexible for the data format.
-
-For the image, it accepts data formats both with and without the channel
-dimension. The images in the MNIST dataset do not have the channel dimension.
-Each image is a matrix with shape (28, 28). AutoKeras also accepts images of
-three dimensions with the channel dimension at last, e.g., (32, 32, 3), (28,
-28, 1).
-
-For the classification labels, AutoKeras accepts both plain labels, i.e.
-strings or integers, and one-hot encoded encoded labels, i.e. vectors of 0s and
-1s.
-
-So if you prepare your data in the following way, the ImageClassifier should
-still work.
-"""
-
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
-
-# Reshape the images to have the channel dimension.
-x_train = x_train.reshape(x_train.shape + (1,))
-x_test = x_test.reshape(x_test.shape + (1,))
-
-# One-hot encode the labels.
-eye = np.eye(10)
-y_train = eye[y_train]
-y_test = eye[y_test]
-
-print(x_train.shape)  # (60000, 28, 28, 1)
-print(y_train.shape)  # (60000, 10)
-print(y_train[:3])
-# array([[0., 0., 0., 0., 0., 1., 0., 0., 0., 0.],
-#        [1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-#        [0., 0., 0., 0., 1., 0., 0., 0., 0., 0.]])
-
-clf = ak.ImageClassifier(overwrite=True, max_trials=1)
-# Feed the Dataset to the classifier.
-clf.fit(x=x_train, y=y_train, epochs=1)
-# Predict with the best model.
-predicted_y = clf.predict(x=x_test)
-# Evaluate the best model with testing data.
-print(clf.evaluate(x=x_test, y=y_test))
 
 """
 ## Reference
