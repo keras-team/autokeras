@@ -288,7 +288,7 @@ class AutoModel(object):
             validation_split = 0
 
         dataset, validation_data = self._check_and_adapt(
-            x=x, y=y, validation_data=validation_data, batch_size=batch_size
+            x=x, y=y, validation_data=validation_data
         )
         self._analyze_data(dataset)
         self._build_hyper_pipeline()

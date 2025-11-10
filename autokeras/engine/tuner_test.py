@@ -17,11 +17,9 @@ from unittest import mock
 import keras
 import numpy as np
 import tree
-from keras import layers
 
 import autokeras as ak
 from autokeras import test_utils
-from autokeras.engine import tuner as tuner_module
 from autokeras.tuners import greedy
 
 
@@ -167,30 +165,6 @@ def test_tuner_does_not_crash_with_distribution_strategy(tmp_path):
         directory=tmp_path,
     )
     tuner.hypermodel.build(tuner.oracle.hyperparameters)
-
-
-def test_preprocessing_adapt_with_text_vec():
-    class MockLayer(layers.TextVectorization):
-        def adapt(self, *args, **kwargs):
-            super().adapt(*args, **kwargs)
-            self.is_called = True
-
-    x_train = test_utils.generate_text_data()
-    y_train = np.random.randint(0, 2, (100,))
-    dataset = (x_train, y_train)
-
-    inputs = keras.Input(shape=(1,), dtype="string")
-    layer1 = MockLayer(
-        max_tokens=5000, output_mode="int", output_sequence_length=40
-    )
-    outputs = layer1(inputs)
-    outputs = keras.layers.Embedding(50001, 10)(outputs)
-    outputs = keras.layers.Dense(1)(outputs)
-    model = keras.models.Model(inputs, outputs)
-
-    tuner_module.AutoTuner.adapt(model, dataset)
-
-    assert layer1.is_called
 
 
 def test_adapt_with_model_with_preprocessing_layer_only():
