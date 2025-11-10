@@ -29,9 +29,6 @@ class HeadAdapter(adapter_module.Adapter):
                 f" np.ndarray, but got {type(dataset)}."
             )
 
-    def convert_to_dataset(self, dataset, batch_size):
-        return super().convert_to_dataset(dataset, batch_size)
-
 
 class ClassificationAdapter(HeadAdapter):
     pass

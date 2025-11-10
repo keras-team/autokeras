@@ -23,23 +23,23 @@ oom_exceptions = []
 try:
     import tensorflow as tf
 
-    oom_exceptions.append(tf.errors.ResourceExhaustedError)
-except ImportError:
-    pass
+    oom_exceptions.append(tf.errors.ResourceExhaustedError)  # pragma: no cover
+except ImportError:  # pragma: no cover
+    pass  # pragma: no cover
 
 try:
     import torch
 
-    oom_exceptions.append(torch.cuda.OutOfMemoryError)
-except ImportError:
-    pass
+    oom_exceptions.append(torch.cuda.OutOfMemoryError)  # pragma: no cover
+except ImportError:  # pragma: no cover
+    pass  # pragma: no cover
 
 try:
     import jax
 
-    oom_exceptions.append(jax.errors.ResourceExhaustedError)
-except (ImportError, AttributeError):
-    pass
+    oom_exceptions.append(jax.errors.ResourceExhaustedError)  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    pass  # pragma: no cover
 
 oom_exceptions = tuple(oom_exceptions)
 
@@ -108,11 +108,11 @@ def run_with_adaptive_batch_size(batch_size, func, **fit_kwargs):
                 **fit_kwargs,
             )
             break
-        except oom_exceptions as e:
-            if batch_size == 1:
-                raise e
-            batch_size //= 2
-            print(
+        except oom_exceptions as e:  # pragma: no cover
+            if batch_size == 1:  # pragma: no cover
+                raise e  # pragma: no cover
+            batch_size //= 2  # pragma: no cover
+            print(  # pragma: no cover
                 "Not enough memory, reduce batch size to {batch_size}.".format(
                     batch_size=batch_size
                 )

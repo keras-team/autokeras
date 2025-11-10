@@ -38,6 +38,11 @@ jobs:
         pytest --cov=autokeras --cov-report xml:coverage.xml
     - name: Codecov
       uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        flags: unittests
+        fail_ci_if_error: true
   format:
     name: Check the code format
     runs-on: ubuntu-latest

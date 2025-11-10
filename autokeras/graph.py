@@ -28,10 +28,6 @@ def feature_encoding_input(block):
 
     The values are fetched for FeatureEncoding from StructuredDataInput.
     """
-    if not isinstance(block.inputs[0], nodes_module.StructuredDataInput):
-        raise TypeError(
-            "CategoricalToNumerical can only be used with StructuredDataInput."
-        )
     block.column_types = block.inputs[0].column_types
     block.column_names = block.inputs[0].column_names
 
