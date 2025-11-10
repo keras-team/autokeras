@@ -20,7 +20,6 @@ from typing import Type
 from typing import Union
 
 import keras
-import tensorflow as tf
 
 from autokeras import auto_model
 from autokeras import blocks
@@ -116,7 +115,7 @@ class ImageClassifier(SupervisedImagePipeline):
         callbacks: Optional[List[keras.callbacks.Callback]] = None,
         validation_split: Optional[float] = 0.2,
         validation_data: Union[
-            tf.data.Dataset, Tuple[types.DatasetType, types.DatasetType], None
+            Tuple[types.DatasetType, types.DatasetType], None
         ] = None,
         **kwargs
     ):
@@ -126,10 +125,10 @@ class ImageClassifier(SupervisedImagePipeline):
         validation data.
 
         # Arguments
-            x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape
+            x: numpy.ndarray. Training data x. The shape
                 of the data should be (samples, width, height) or (samples,
                 width, height, channels).
-            y: numpy.ndarray or tensorflow.Dataset. Training data y. It can be
+            y: numpy.ndarray. Training data y. It can be
                 raw labels, one-hot encoded if more than two classes, or binary
                 encoded for binary classification.
             epochs: Int. The number of epochs to train each model during the
@@ -157,7 +156,7 @@ class ImageClassifier(SupervisedImagePipeline):
                 the same as the training data. The best model found would be
                 fit on the training dataset without the validation data.
             **kwargs: Any arguments supported by
-                [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+                [keras.Model.fit](https://keras.io/api/models/model_training_apis/#fit-method).
         # Returns
             history: A Keras History object corresponding to the best model.
                 Its History.history attribute is a record of training loss
@@ -259,13 +258,13 @@ class ImageRegressor(SupervisedImagePipeline):
         validation data.
 
         # Arguments
-            x: numpy.ndarray or tensorflow.Dataset. Training data x. The shape
+            x: numpy.ndarray. Training data x. The shape
                 of the data should be (samples, width, height) or (samples,
                 width, height, channels).
-            y: numpy.ndarray or tensorflow.Dataset. Training data y. The targets
-                passing to the head would have to be tf.data.Dataset,
-                np.ndarray, pd.DataFrame or pd.Series. It can be single-column
-                or multi-column.  The values should all be numerical.
+            y: numpy.ndarray. Training data y. The targets
+                passing to the head would have to be np.ndarray. It can be
+                single-column or multi-column.  The values should all be
+                numerical.
             epochs: Int. The number of epochs to train each model during the
                 search. If unspecified, by default we train for a maximum of
                 1000 epochs, but we stop training if the validation loss stops
@@ -291,7 +290,7 @@ class ImageRegressor(SupervisedImagePipeline):
                 the same as the training data. The best model found would be
                 fit on the training dataset without the validation data.
             **kwargs: Any arguments supported by
-                [keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+                [keras.Model.fit](https://keras.io/api/models/model_training_apis/#fit-method).
         # Returns
             history: A Keras History object corresponding to the best model.
                 Its History.history attribute is a record of training

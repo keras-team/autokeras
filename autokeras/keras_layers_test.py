@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import numpy as np
-import tensorflow as tf
 
 from autokeras import keras_layers as layer_module
 
@@ -44,14 +44,14 @@ def get_text_data():
 def test_cast_to_float32_return_float32_tensor(tmp_path):
     layer = layer_module.CastToFloat32()
 
-    tensor = layer(tf.constant(["0.3"], dtype=tf.string))
+    tensor = layer(np.array([3], dtype="uint8"))
 
-    assert tf.float32 == tensor.dtype
+    assert "float32" == tensor.numpy().dtype
 
 
 def test_expand_last_dim_return_tensor_with_more_dims(tmp_path):
     layer = layer_module.ExpandLastDim()
 
-    tensor = layer(tf.constant([0.1, 0.2], dtype=tf.float32))
+    tensor = layer(np.array([0.1, 0.2], dtype="float32"))
 
-    assert 2 == len(tensor.shape.as_list())
+    assert 2 == len(tensor.shape)

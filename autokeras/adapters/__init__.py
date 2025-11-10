@@ -14,6 +14,7 @@
 
 from autokeras.adapters.input_adapters import ImageAdapter
 from autokeras.adapters.input_adapters import InputAdapter
+from autokeras.adapters.input_adapters import StructuredDataAdapter
 from autokeras.adapters.input_adapters import TextAdapter
 from autokeras.adapters.output_adapters import ClassificationAdapter
 from autokeras.adapters.output_adapters import RegressionAdapter

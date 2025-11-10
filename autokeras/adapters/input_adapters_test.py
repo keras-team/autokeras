@@ -14,8 +14,8 @@
 
 
 import numpy as np
+import pandas as pd
 import pytest
-import tensorflow as tf
 
 from autokeras import test_utils
 from autokeras.adapters import input_adapters
@@ -25,14 +25,14 @@ from autokeras.utils import data_utils
 def test_image_input_adapter_transform_to_dataset():
     x = test_utils.generate_data()
     adapter = input_adapters.ImageAdapter()
-    assert isinstance(adapter.adapt(x, batch_size=32), tf.data.Dataset)
+    assert isinstance(adapter.adapt(x), np.ndarray)
 
 
 def test_image_input_unsupported_type():
     x = "unknown"
     adapter = input_adapters.ImageAdapter()
     with pytest.raises(TypeError) as info:
-        x = adapter.adapt(x, batch_size=32)
+        x = adapter.adapt(x)
     assert "Expect the data to ImageInput to be numpy" in str(info.value)
 
 
@@ -40,7 +40,7 @@ def test_image_input_numerical():
     x = np.array([[["unknown"]]])
     adapter = input_adapters.ImageAdapter()
     with pytest.raises(TypeError) as info:
-        x = adapter.adapt(x, batch_size=32)
+        x = adapter.adapt(x)
     assert "Expect the data to ImageInput to be numerical" in str(info.value)
 
 
@@ -48,7 +48,7 @@ def test_input_type_error():
     x = "unknown"
     adapter = input_adapters.InputAdapter()
     with pytest.raises(TypeError) as info:
-        x = adapter.adapt(x, batch_size=32)
+        x = adapter.adapt(x)
     assert "Expect the data to Input to be numpy" in str(info.value)
 
 
@@ -56,42 +56,39 @@ def test_input_numerical():
     x = np.array([[["unknown"]]])
     adapter = input_adapters.InputAdapter()
     with pytest.raises(TypeError) as info:
-        x = adapter.adapt(x, batch_size=32)
+        x = adapter.adapt(x)
     assert "Expect the data to Input to be numerical" in str(info.value)
-
-
-def test_text_adapt_unbatched_dataset():
-    x = tf.data.Dataset.from_tensor_slices(np.array(["a b c", "b b c"]))
-    adapter = input_adapters.TextAdapter()
-    x = adapter.adapt(x, batch_size=32)
-
-    assert data_utils.dataset_shape(x).as_list() == [None]
-    assert isinstance(x, tf.data.Dataset)
-
-
-def test_text_adapt_batched_dataset():
-    x = tf.data.Dataset.from_tensor_slices(np.array(["a b c", "b b c"])).batch(
-        32
-    )
-    adapter = input_adapters.TextAdapter()
-    x = adapter.adapt(x, batch_size=32)
-
-    assert data_utils.dataset_shape(x).as_list() == [None]
-    assert isinstance(x, tf.data.Dataset)
 
 
 def test_text_adapt_np():
     x = np.array(["a b c", "b b c"])
     adapter = input_adapters.TextAdapter()
-    x = adapter.adapt(x, batch_size=32)
+    x = adapter.adapt(x)
 
-    assert data_utils.dataset_shape(x).as_list() == [None]
-    assert isinstance(x, tf.data.Dataset)
+    assert data_utils.dataset_shape(x) == [2]
+    assert isinstance(x, np.ndarray)
 
 
 def test_text_input_type_error():
     x = "unknown"
     adapter = input_adapters.TextAdapter()
     with pytest.raises(TypeError) as info:
-        x = adapter.adapt(x, batch_size=32)
+        x = adapter.adapt(x)
     assert "Expect the data to TextInput to be numpy" in str(info.value)
+
+
+def test_structured_data_input_unsupported_type_error():
+    with pytest.raises(TypeError) as info:
+        adapter = input_adapters.StructuredDataAdapter()
+        adapter.adapt("unknown")
+
+    assert "Unsupported type" in str(info.value)
+
+
+def test_structured_data_input_transform_to_dataset():
+    x = pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)
+    adapter = input_adapters.StructuredDataAdapter()
+
+    x = adapter.adapt(x)
+
+    assert isinstance(x, np.ndarray)

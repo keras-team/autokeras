@@ -14,6 +14,7 @@
 
 from typing import Optional
 
+import keras
 import tree
 
 from autokeras.blocks import basic
@@ -29,8 +30,10 @@ VANILLA = "vanilla"
 EFFICIENT = "efficient"
 NORMALIZE = "normalize"
 AUGMENT = "augment"
+MAX_TOKENS = "max_tokens"
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class ImageBlock(block_module.Block):
     """Block for image data.
 
@@ -113,11 +116,18 @@ class ImageBlock(block_module.Block):
         return output_node
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class TextBlock(block_module.Block):
-    """Block for text data."""
+    """Block for text data.
 
-    def __init__(self, **kwargs):
+    # Arguments
+        max_tokens: Int. The maximum size of the vocabulary.
+            If left unspecified, it will be tuned automatically.
+    """
+
+    def __init__(self, max_tokens=None, **kwargs):
         super().__init__(**kwargs)
+        self.max_tokens = max_tokens
 
     def build(self, hp, inputs=None):
         input_node = tree.flatten(inputs)[0]
@@ -125,11 +135,26 @@ class TextBlock(block_module.Block):
         output_node = self._build_block(hp, output_node)
         return output_node
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({"max_tokens": self.max_tokens})
+        return config
+
     def _build_block(self, hp, output_node):
-        output_node = basic.BertBlock().build(hp, output_node)
+        # Use Embedding and dense layers for tokenized text
+        max_tokens = self.max_tokens or hp.Choice(
+            MAX_TOKENS, [500, 5000, 20000], default=5000
+        )
+        output_node = basic.Embedding(
+            max_features=max_tokens + 1,
+        ).build(hp, output_node)
+        output_node = basic.ConvBlock().build(hp, output_node)
+        output_node = reduction.SpatialReduction().build(hp, output_node)
+        output_node = basic.DenseBlock().build(hp, output_node)
         return output_node
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class GeneralBlock(block_module.Block):
     """A general neural network block when the input type is unknown.
 
@@ -147,5 +172,46 @@ class GeneralBlock(block_module.Block):
         output_node = input_node
 
         output_node = reduction.Flatten().build(hp, output_node)
+        output_node = basic.DenseBlock().build(hp, output_node)
+        return output_node
+
+
+@keras.utils.register_keras_serializable(package="autokeras")
+class StructuredDataBlock(block_module.Block):
+    """Block for structured data.
+
+    # Arguments
+        categorical_encoding: Boolean. Whether to use the CategoricalToNumerical
+            to encode the categorical features to numerical features. Defaults
+            to True.
+        normalize: Boolean. Whether to normalize the features.
+            If unspecified, it will be tuned automatically.
+    """
+
+    def __init__(self, normalize: Optional[bool] = None, **kwargs):
+        super().__init__(**kwargs)
+        self.normalize = normalize
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "normalize": self.normalize,
+            }
+        )
+        return config
+
+    def build(self, hp, inputs=None):
+        input_node = tree.flatten(inputs)[0]
+        output_node = input_node
+
+        if self.normalize is None and hp.Boolean(NORMALIZE):
+            with hp.conditional_scope(NORMALIZE, [True]):
+                output_node = preprocessing.Normalization().build(
+                    hp, output_node
+                )
+        elif self.normalize:
+            output_node = preprocessing.Normalization().build(hp, output_node)
+
         output_node = basic.DenseBlock().build(hp, output_node)
         return output_node

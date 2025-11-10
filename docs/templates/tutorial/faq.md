@@ -52,33 +52,3 @@ clf = ak.ImageClassifier(
     metrics=[f1_score],
 )
 ```
-
-## How to use multiple GPUs?
-You can use the `distribution_strategy` argument when initializing any model you created with AutoKeras,
-like AutoModel, ImageClassifier and so on. This argument is supported by Keras Tuner.
-AutoKeras supports the arguments supported by Keras Tuner.
-Please see the discription of the argument [here](https://keras-team.github.io/keras-tuner/documentation/tuners/#tuner-class).
-
-```python
-import tensorflow as tf
-import autokeras as ak
-
-
-auto_model = ak.ImageClassifier(
-    max_trials=3,
-    distribution_strategy=tf.distribute.MirroredStrategy(),
-)
-```
-
-## How to constrain the model size?
-You can use the `max_model_size` argument for any model in AutoKeras.
-
-```python
-import autokeras as ak
-
-
-auto_model = ak.ImageClassifier(
-    max_trials=3,
-    max_model_size=1000000000,
-)
-```

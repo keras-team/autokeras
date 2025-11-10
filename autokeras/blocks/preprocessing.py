@@ -12,10 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Blocks for data preprocessing.
+
+They are built into keras preprocessing layers and will be part of the Keras
+model.
+
+"""
 from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import keras
 import tree
 from keras import layers
 from keras_tuner.engine import hyperparameters
@@ -52,6 +59,7 @@ class Normalization(block_module.Block):
         return config
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class ImageAugmentation(block_module.Block):
     """Collection of various image augmentation methods.
 

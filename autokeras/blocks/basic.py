@@ -15,11 +15,10 @@
 from typing import Optional
 from typing import Union
 
-import keras_nlp
+import keras
 import tree
 from keras import applications
 from keras import layers
-from keras import ops
 from keras_tuner.engine import hyperparameters
 
 from autokeras.blocks import reduction
@@ -54,6 +53,7 @@ EFFICIENT_VERSIONS = {
 PRETRAINED = "pretrained"
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class DenseBlock(block_module.Block):
     """Block for Dense layers.
 
@@ -146,6 +146,7 @@ class DenseBlock(block_module.Block):
         return output_node
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class RNNBlock(block_module.Block):
     """An RNN Block.
 
@@ -253,6 +254,7 @@ class RNNBlock(block_module.Block):
         return output_node
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class ConvBlock(block_module.Block):
     """Block for vanilla ConvNets.
 
@@ -404,6 +406,7 @@ class ConvBlock(block_module.Block):
         return "same"
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class KerasApplicationBlock(block_module.Block):
     """Blocks extending Keras applications."""
 
@@ -471,6 +474,7 @@ class KerasApplicationBlock(block_module.Block):
         return model(input_node)
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class ResNetBlock(KerasApplicationBlock):
     """Block for ResNet.
 
@@ -509,6 +513,7 @@ class ResNetBlock(KerasApplicationBlock):
         return config
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class XceptionBlock(KerasApplicationBlock):
     """Block for XceptionNet.
 
@@ -540,6 +545,7 @@ class XceptionBlock(KerasApplicationBlock):
         )
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class EfficientNetBlock(KerasApplicationBlock):
     """Block for EfficientNet.
 
@@ -577,76 +583,75 @@ class EfficientNetBlock(KerasApplicationBlock):
         self.version = version
 
 
-class BertBlock(block_module.Block):
-    """Block for Pre-trained BERT.
+@keras.utils.register_keras_serializable(package="autokeras")
+class Embedding(block_module.Block):
+    """Word embedding block for sequences.
 
-    The input should be sequence of sentences without the padded tokens, like
-    [CLS] [SEP] [PAD].
-
-    # Example
-    ```python
-        # Using the Transformer Block with AutoModel.
-        import autokeras as ak
-        from autokeras import BertBlock
-        from keras import losses
-
-        input_node = ak.TextInput()
-        output_node = BertBlock()(input_node)
-        output_node = ak.ClassificationHead()(output_node)
-        clf = ak.AutoModel(
-            inputs=input_node, outputs=output_node, max_trials=10)
-    ```
+    The input should be tokenized sequences with the same length, where each
+    element of a sequence should be the index of the word.
 
     # Arguments
-        max_sequence_length: Int or keras_tuner.engine.hyperparameters.Choice.
-            The maximum length of a sequence that is used to train the model.
+        max_features: Int. Size of the vocabulary. Must be set if not using
+            TextToIntSequence before this block. Defaults to 20001.
+        embedding_dim: Int or keras_tuner.engine.hyperparameters.Choice.
+            Output dimension of the Attention block.
+            If left unspecified, it will be tuned automatically.
+        dropout: Float or keras_tuner.engine.hyperparameters.Choice.
+            The dropout rate for the layers.
+            If left unspecified, it will be tuned automatically.
     """
 
     def __init__(
         self,
-        max_sequence_length: Optional[
-            Union[int, hyperparameters.Choice]
-        ] = None,
+        max_features: int = 20001,
+        embedding_dim: Optional[Union[int, hyperparameters.Choice]] = None,
+        dropout: Optional[Union[float, hyperparameters.Choice]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.max_sequence_length = utils.get_hyperparameter(
-            max_sequence_length,
+        self.max_features = max_features
+        self.embedding_dim = utils.get_hyperparameter(
+            embedding_dim,
             hyperparameters.Choice(
-                "max_sequence_length", [128, 256, 512], default=128
+                "embedding_dim", [32, 64, 128, 256, 512], default=128
             ),
             int,
+        )
+        self.dropout = utils.get_hyperparameter(
+            dropout,
+            hyperparameters.Choice("dropout", [0.0, 0.25, 0.5], default=0.25),
+            float,
         )
 
     def get_config(self):
         config = super().get_config()
         config.update(
             {
-                "max_sequence_length": io_utils.serialize_block_arg(
-                    self.max_sequence_length
-                )
+                "max_features": self.max_features,
+                "embedding_dim": io_utils.serialize_block_arg(
+                    self.embedding_dim
+                ),
+                "dropout": io_utils.serialize_block_arg(self.dropout),
             }
         )
         return config
 
     @classmethod
     def from_config(cls, config):
-        config["max_sequence_length"] = io_utils.deserialize_block_arg(
-            config["max_sequence_length"]
+        config["dropout"] = io_utils.deserialize_block_arg(config["dropout"])
+        config["embedding_dim"] = io_utils.deserialize_block_arg(
+            config["embedding_dim"]
         )
         return cls(**config)
 
     def build(self, hp, inputs=None):
-        input_tensor = tree.flatten(inputs)[0]
-
-        preset_name = "bert_base_en_uncased"
-        tokenizer_layer = keras_nlp.models.BertPreprocessor.from_preset(
-            preset_name,
-            sequence_length=utils.add_to_hp(self.max_sequence_length, hp),
+        input_node = tree.flatten(inputs)[0]
+        embedding_dim = utils.add_to_hp(self.embedding_dim, hp)
+        layer = layers.Embedding(
+            input_dim=self.max_features, output_dim=embedding_dim
         )
-        bert_encoder = keras_nlp.models.BertBackbone.from_preset(preset_name)
-
-        output_node = tokenizer_layer(ops.reshape(input_tensor, [-1]))
-        output_node = bert_encoder(output_node)["pooled_output"]
-
+        output_node = layer(input_node)
+        dropout = utils.add_to_hp(self.dropout, hp)
+        if dropout > 0:
+            output_node = layers.Dropout(dropout)(output_node)
         return output_node

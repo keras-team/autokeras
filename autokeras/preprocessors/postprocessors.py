@@ -12,16 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import numpy as np
 
 from autokeras.engine import preprocessor
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class PostProcessor(preprocessor.TargetPreprocessor):
     def transform(self, dataset):
         return dataset
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class SigmoidPostprocessor(PostProcessor):
     """Postprocessor for sigmoid outputs."""
 
@@ -40,6 +43,7 @@ class SigmoidPostprocessor(PostProcessor):
         return data
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class SoftmaxPostprocessor(PostProcessor):
     """Postprocessor for softmax outputs."""
 

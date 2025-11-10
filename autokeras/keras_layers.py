@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import keras
 from keras import layers
 from keras import ops
@@ -33,6 +34,7 @@ class CastToFloat32(PreprocessingLayer):
         return super().get_config()
 
     def call(self, inputs):
+        # Does not and needs not handle strings.
         return data_utils.cast_to_float32(inputs)
 
     def adapt(self, data):

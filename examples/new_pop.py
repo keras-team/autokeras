@@ -19,8 +19,7 @@ https://archive.ics.uci.edu/ml/datasets/
 News+Popularity+in+Multiple+Social+Media+Platforms)
 dataset collected from 2015-2016.
 
-First, prepare your text data in a `numpy.ndarray` or `tensorflow.Dataset`
-format.
+First, prepare your text data in a `numpy.ndarray` format.
 """
 
 

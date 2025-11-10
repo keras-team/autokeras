@@ -13,6 +13,9 @@
 # limitations under the License.
 
 
+import numpy as np
+
+
 class Analyser(object):
     """Analyze the dataset for useful information.
 
@@ -25,6 +28,7 @@ class Analyser(object):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        # Shape is a list of integers
         self.shape = None
         self.dtype = None
         self.num_samples = 0
@@ -34,15 +38,18 @@ class Analyser(object):
         """Update the statistics with a batch of data.
 
         # Arguments
-            data: tf.Tensor. One batch of data from tf.data.Dataset.
+            data: np.ndarray. The entire dataset.
         """
         if self.dtype is None:
-            self.dtype = data.dtype
+            if np.issubdtype(data.dtype, np.str_):
+                self.dtype = "string"
+            else:
+                self.dtype = str(data.dtype)
         if self.shape is None:
-            self.shape = data.shape.as_list()
+            self.shape = list(data.shape)
         if self.batch_size is None:
-            self.batch_size = data.shape.as_list()[0]
-        self.num_samples += data.shape.as_list()[0]
+            self.batch_size = data.shape[0]
+        self.num_samples += data.shape[0]
 
     def finalize(self):
         """Process recorded information after all updates."""

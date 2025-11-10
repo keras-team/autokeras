@@ -14,71 +14,59 @@
 
 import keras
 import numpy as np
-import tensorflow as tf
 import tree
 from keras import ops
 
 
-def batched(dataset):
-    shape = tree.flatten(dataset_shape(dataset))[0]
-    return len(shape) > 0 and shape[0] is None
-
-
-def batch_dataset(dataset, batch_size):
-    if batched(dataset):
-        return dataset
-    return dataset.batch(batch_size)
-
-
 def split_dataset(dataset, validation_split):
-    """Split dataset into training and validation.
+    """Split nested numpy arrays into training and validation.
 
     # Arguments
-        dataset: tf.data.Dataset. The entire dataset to be split.
+        dataset: A nested structure of numpy arrays.
         validation_split: Float. The split ratio for the validation set.
 
     # Raises
         ValueError: If the dataset provided is too small to be split.
 
     # Returns
-        A tuple of two tf.data.Dataset. The training set and the validation set.
+        A tuple of two nested structures.
+        The training set and the validation set.
     """
-    num_instances = dataset.reduce(np.int64(0), lambda x, _: x + 1).numpy()
+    # Get the number of instances from the first array's shape
+    first_shape = tree.flatten(
+        tree.map_structure(lambda x: np.array(x.shape), dataset)
+    )[0]
+    num_instances = first_shape[0]
     if num_instances < 2:
         raise ValueError(
-            "The dataset should at least contain 2 batches to be split."
+            "The dataset should at least contain 2 instances to be split."
         )
     validation_set_size = min(
         max(int(num_instances * validation_split), 1), num_instances - 1
     )
     train_set_size = num_instances - validation_set_size
-    train_dataset = dataset.take(train_set_size)
-    validation_dataset = dataset.skip(train_set_size)
-    return train_dataset, validation_dataset
-
-
-def dataset_shape(dataset):
-    return tf.compat.v1.data.get_output_shapes(dataset)
-
-
-def unzip_dataset(dataset):
-    return tree.flatten(
-        [
-            dataset.map(lambda *a: tree.flatten(a)[index])
-            for index in range(len(tree.flatten(dataset_shape(dataset))))
-        ]
+    # Split each array in the nested structure
+    train_dataset = tree.map_structure(lambda x: x[:train_set_size], dataset)
+    validation_dataset = tree.map_structure(
+        lambda x: x[train_set_size:], dataset
     )
-
-
-def cast_to_string(tensor):
-    if keras.backend.standardize_dtype(tensor.dtype) == "string":
-        return tensor  # pragma: no cover
-    return tf.strings.as_string(tensor)
+    return train_dataset, validation_dataset
 
 
 def cast_to_float32(tensor):
     if keras.backend.standardize_dtype(tensor.dtype) == "float32":
         return tensor
-    if keras.backend.standardize_dtype(tensor.dtype) == "string":
-        return tf.strings.to_number(tensor, tf.float32)
     return ops.cast(tensor, "float32")  # pragma: no cover
+
+
+def dataset_shape(dataset):
+    """Recursively get shapes from a nested structure of numpy arrays.
+
+    # Arguments
+        nested_arrays: A nested structure (dict, list, tuple) containing numpy
+            arrays.
+
+    # Returns
+        The same nested structure with shapes instead of arrays.
+    """
+    return tree.map_structure(lambda x: np.array(x.shape), dataset)

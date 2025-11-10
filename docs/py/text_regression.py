@@ -4,8 +4,8 @@ pip install autokeras
 
 import os
 
+import keras
 import numpy as np
-import tensorflow as tf
 from sklearn.datasets import load_files
 
 import autokeras as ak
@@ -23,7 +23,7 @@ as an example.
 """
 
 
-dataset = tf.keras.utils.get_file(
+dataset = keras.utils.get_file(
     fname="aclImdb.tar.gz",
     origin="http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",
     extract=True,
@@ -119,33 +119,6 @@ reg = ak.AutoModel(
     inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
 )
 reg.fit(x_train, y_train, epochs=1, batch_size=2)
-
-"""
-## Data Format
-The AutoKeras TextRegressor is quite flexible for the data format.
-
-For the text, the input data should be one-dimensional For the regression
-targets, it should be a vector of numerical values.  AutoKeras accepts
-numpy.ndarray.
-
-We also support using [tf.data.Dataset](
-https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable)
-format for the training data.
-"""
-
-
-train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,))).batch(
-    2
-)
-test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,))).batch(2)
-
-reg = ak.TextRegressor(overwrite=True, max_trials=2)
-# Feed the tensorflow Dataset to the regressor.
-reg.fit(train_set.take(2), epochs=1)
-# Predict with the best model.
-predicted_y = reg.predict(test_set.take(2))
-# Evaluate the best model with testing data.
-print(reg.evaluate(test_set.take(2)))
 
 """
 ## Reference

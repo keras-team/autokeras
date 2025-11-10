@@ -22,12 +22,12 @@ class HyperPreprocessor(named_hypermodel.NamedHyperModel):
     """
 
     def build(self, hp, dataset):
-        """Build the `tf.data` input preprocessor.
+        """Build the input preprocessor.
 
         # Arguments
             hp: `HyperParameters` instance. The hyperparameters for building the
                 a Preprocessor.
-            dataset: tf.data.Dataset.
+            dataset: np.ndarray. The dataset to be preprocessed.
 
         # Returns
             an instance of Preprocessor.

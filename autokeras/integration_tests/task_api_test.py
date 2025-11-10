@@ -14,7 +14,7 @@
 
 import keras
 import numpy as np
-import tensorflow as tf
+import pandas as pd
 
 import autokeras as ak
 from autokeras import test_utils
@@ -34,7 +34,6 @@ def test_image_classifier(tmp_path):
         directory=tmp_path,
         max_trials=2,
         seed=test_utils.SEED,
-        distribution_strategy=tf.distribute.MirroredStrategy(),
     )
     clf.fit(
         train_x, train_y, epochs=1, validation_split=0.2, batch_size=BATCH_SIZE
@@ -102,3 +101,51 @@ def test_text_regressor(tmp_path):
     clf.predict(test_x)
     clf.export_model()
     assert clf.predict(test_x).shape == (len(test_x), 1)
+
+
+def test_structured_data_regressor(tmp_path):
+    num_data = NUM_INSTANCES * 2
+    num_train = NUM_INSTANCES
+    data = (
+        pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)[:num_data]
+    )
+    x_train, x_test = data[:num_train], data[num_train:]
+    y = test_utils.generate_data(num_instances=num_data, shape=tuple())
+    y_train, y_test = y[:num_train], y[num_train:]
+    clf = ak.StructuredDataRegressor(
+        directory=tmp_path, max_trials=2, seed=test_utils.SEED
+    )
+    clf.fit(
+        x_train,
+        y_train,
+        epochs=11,
+        validation_data=(x_train, y_train),
+        batch_size=BATCH_SIZE,
+    )
+    clf.export_model()
+    assert clf.predict(x_test).shape == (len(y_test), 1)
+
+
+def test_structured_data_classifier(tmp_path):
+    num_data = NUM_INSTANCES * 2
+    num_train = NUM_INSTANCES
+    data = (
+        pd.read_csv(test_utils.TRAIN_CSV_PATH).to_numpy().astype(str)[:num_data]
+    )
+    x_train, x_test = data[:num_train], data[num_train:]
+    y = test_utils.generate_one_hot_labels(
+        num_instances=num_data, num_classes=3
+    )
+    y_train, y_test = y[:num_train], y[num_train:]
+    clf = ak.StructuredDataClassifier(
+        directory=tmp_path, max_trials=1, seed=test_utils.SEED
+    )
+    clf.fit(
+        x_train,
+        y_train,
+        epochs=2,
+        validation_data=(x_train, y_train),
+        batch_size=BATCH_SIZE,
+    )
+    clf.export_model()
+    assert clf.predict(x_test).shape == (len(y_test), 3)

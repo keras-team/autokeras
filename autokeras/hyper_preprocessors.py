@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import keras
 
 from autokeras import preprocessors
 from autokeras.engine import hyper_preprocessor
@@ -29,6 +30,7 @@ def deserialize(config, custom_objects=None):
     )
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class DefaultHyperPreprocessor(hyper_preprocessor.HyperPreprocessor):
     """HyperPreprocessor without Hyperparameters to tune.
 

@@ -2,7 +2,6 @@
 pip install autokeras
 """
 
-import tensorflow as tf
 from keras.datasets import mnist
 
 import autokeras as ak
@@ -127,49 +126,6 @@ reg = ak.AutoModel(
     inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
 )
 reg.fit(x_train, y_train, epochs=1)
-
-"""
-## Data Format
-The AutoKeras ImageRegressor is quite flexible for the data format.
-
-For the image, it accepts data formats both with and without the channel
-dimension. The images in the MNIST dataset do not have the channel dimension.
-Each image is a matrix with shape (28, 28). AutoKeras also accepts images of
-three dimensions with the channel dimension at last, e.g., (32, 32, 3), (28,
-28, 1).
-
-For the regression targets, it should be a vector of numerical values.
-AutoKeras accepts numpy.ndarray.
-
-We also support using tf.data.Dataset format for the training data. In this
-case, the images would have to be 3-dimentional.
-"""
-
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
-x_train = x_train[:100]
-y_train = y_train[:100]
-x_test = x_test[:100]
-y_test = y_test[:100]
-
-# Reshape the images to have the channel dimension.
-x_train = x_train.reshape(x_train.shape + (1,))
-x_test = x_test.reshape(x_test.shape + (1,))
-y_train = y_train.reshape(y_train.shape + (1,))
-y_test = y_test.reshape(y_test.shape + (1,))
-
-print(x_train.shape)  # (60000, 28, 28, 1)
-print(y_train.shape)  # (60000, 10)
-
-train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,)))
-test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,)))
-
-reg = ak.ImageRegressor(overwrite=True, max_trials=1)
-# Feed the tensorflow Dataset to the regressor.
-reg.fit(train_set, epochs=1)
-# Predict with the best model.
-predicted_y = reg.predict(test_set)
-# Evaluate the best model with testing data.
-print(reg.evaluate(test_set))
 
 """
 ## Reference

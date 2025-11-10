@@ -34,6 +34,20 @@ PAGES = {
         "autokeras.TextRegressor.evaluate",
         "autokeras.TextRegressor.export_model",
     ],
+    "structured_data_classifier.md": [
+        "autokeras.StructuredDataClassifier",
+        "autokeras.StructuredDataClassifier.fit",
+        "autokeras.StructuredDataClassifier.predict",
+        "autokeras.StructuredDataClassifier.evaluate",
+        "autokeras.StructuredDataClassifier.export_model",
+    ],
+    "structured_data_regressor.md": [
+        "autokeras.StructuredDataRegressor",
+        "autokeras.StructuredDataRegressor.fit",
+        "autokeras.StructuredDataRegressor.predict",
+        "autokeras.StructuredDataRegressor.evaluate",
+        "autokeras.StructuredDataRegressor.export_model",
+    ],
     "auto_model.md": [
         "autokeras.AutoModel",
         "autokeras.AutoModel.fit",
@@ -51,16 +65,19 @@ PAGES = {
         "autokeras.ImageInput",
         "autokeras.Input",
         "autokeras.TextInput",
+        "autokeras.StructuredDataInput",
     ],
     "block.md": [
         "autokeras.ConvBlock",
         "autokeras.DenseBlock",
+        "autokeras.Embedding",
         "autokeras.Merge",
         "autokeras.ResNetBlock",
         "autokeras.RNNBlock",
         "autokeras.SpatialReduction",
         "autokeras.TemporalReduction",
         "autokeras.XceptionBlock",
+        "autokeras.StructuredDataBlock",
         "autokeras.ImageBlock",
         "autokeras.TextBlock",
         "autokeras.ImageAugmentation",
@@ -68,18 +85,13 @@ PAGES = {
         "autokeras.ClassificationHead",
         "autokeras.RegressionHead",
     ],
-    "utils.md": [
-        "autokeras.image_dataset_from_directory",
-        "autokeras.text_dataset_from_directory",
-    ],
 }
 
 
 aliases_needed = [
-    "tensorflow.keras.callbacks.Callback",
-    "tensorflow.keras.losses.Loss",
-    "tensorflow.keras.metrics.Metric",
-    "tensorflow.data.Dataset",
+    "keras.callbacks.Callback",
+    "keras.losses.Loss",
+    "keras.metrics.Metric",
 ]
 
 

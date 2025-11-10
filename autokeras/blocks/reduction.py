@@ -14,6 +14,7 @@
 
 from typing import Optional
 
+import keras
 import tree
 from keras import layers
 from keras import ops
@@ -36,6 +37,7 @@ def shape_compatible(shape1, shape2):
     return shape1[:-1] == shape2[:-1]
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class Merge(block_module.Block):
     """Merge block to merge multiple nodes into one.
 
@@ -82,6 +84,7 @@ class Merge(block_module.Block):
         return all(input_node.shape == inputs[0].shape for input_node in inputs)
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class Flatten(block_module.Block):
     """Flatten the input tensor with Keras Flatten layer."""
 
@@ -94,6 +97,7 @@ class Flatten(block_module.Block):
         return input_node
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class Reduction(block_module.Block):
     def __init__(self, reduction_type: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
@@ -139,6 +143,7 @@ class Reduction(block_module.Block):
         return output_node
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class SpatialReduction(Reduction):
     """Reduce the dimension of a spatial tensor, e.g. image, to a vector.
 
@@ -161,6 +166,7 @@ class SpatialReduction(Reduction):
         )
 
 
+@keras.utils.register_keras_serializable(package="autokeras")
 class TemporalReduction(Reduction):
     """Reduce the dim of a temporal tensor, e.g. output of RNN, to a vector.
 

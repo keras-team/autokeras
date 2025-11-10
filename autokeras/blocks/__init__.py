@@ -13,12 +13,11 @@
 # limitations under the License.
 
 import keras
-import tensorflow as tf
 
-from autokeras.blocks.basic import BertBlock
 from autokeras.blocks.basic import ConvBlock
 from autokeras.blocks.basic import DenseBlock
 from autokeras.blocks.basic import EfficientNetBlock
+from autokeras.blocks.basic import Embedding
 from autokeras.blocks.basic import ResNetBlock
 from autokeras.blocks.basic import RNNBlock
 from autokeras.blocks.basic import XceptionBlock
@@ -32,6 +31,7 @@ from autokeras.blocks.reduction import SpatialReduction
 from autokeras.blocks.reduction import TemporalReduction
 from autokeras.blocks.wrapper import GeneralBlock
 from autokeras.blocks.wrapper import ImageBlock
+from autokeras.blocks.wrapper import StructuredDataBlock
 from autokeras.blocks.wrapper import TextBlock
 from autokeras.utils import utils
 

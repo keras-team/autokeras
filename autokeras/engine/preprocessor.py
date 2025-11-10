@@ -16,16 +16,16 @@ from autokeras.engine import serializable
 
 
 class Preprocessor(serializable.Serializable):
-    """A preprocessor for tf.data.Dataset.
+    """A preprocessor for np.ndarray.
 
-    A preprocessor transforms the dataset using `tf.data` operations.
+    A preprocessor transforms the dataset (numpy.ndarray).
     """
 
     def fit(self, dataset):
         """Fit the preprocessor with the dataset.
 
         # Arguments
-            dataset: an instance of `tf.data.Dataset`.
+            dataset: an instance of `np.ndarray`.
         """
         # TODO: may need to change to a streaming way of fit to reduce the
         # number of iterations through the dataset for speed. Need to be
@@ -36,7 +36,7 @@ class Preprocessor(serializable.Serializable):
         """Transform the dataset wth the preprocessor.
 
         # Arguments
-            dataset: an instance of `tf.data.Dataset`.
+            dataset: an instance of `np.ndarray`.
 
         # Returns
             The transformed dataset.

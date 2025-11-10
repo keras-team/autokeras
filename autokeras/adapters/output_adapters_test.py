@@ -14,7 +14,6 @@
 
 import numpy as np
 import pytest
-import tensorflow as tf
 
 from autokeras.adapters import output_adapters
 
@@ -23,14 +22,14 @@ def test_unsupported_types_error():
     adapter = output_adapters.ClassificationAdapter(name="a")
 
     with pytest.raises(TypeError) as info:
-        adapter.adapt(1, batch_size=32)
+        adapter.adapt(1)
 
-    assert "Expect the target data of a to be tf" in str(info.value)
+    assert "Expect the target data of a to be" in str(info.value)
 
 
 def test_reg_head_transform_1d_np():
     adapter = output_adapters.RegressionAdapter(name="a")
 
-    y = adapter.adapt(np.random.rand(10), batch_size=32)
+    y = adapter.adapt(np.random.rand(10))
 
-    assert isinstance(y, tf.data.Dataset)
+    assert isinstance(y, np.ndarray)

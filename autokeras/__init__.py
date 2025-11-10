@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import keras_nlp
-
 from autokeras.auto_model import AutoModel
-from autokeras.blocks import BertBlock
 from autokeras.blocks import ClassificationHead
 from autokeras.blocks import ConvBlock
 from autokeras.blocks import DenseBlock
 from autokeras.blocks import EfficientNetBlock
+from autokeras.blocks import Embedding
 from autokeras.blocks import Flatten
 from autokeras.blocks import ImageAugmentation
 from autokeras.blocks import ImageBlock
@@ -29,6 +27,7 @@ from autokeras.blocks import RegressionHead
 from autokeras.blocks import ResNetBlock
 from autokeras.blocks import RNNBlock
 from autokeras.blocks import SpatialReduction
+from autokeras.blocks import StructuredDataBlock
 from autokeras.blocks import TemporalReduction
 from autokeras.blocks import TextBlock
 from autokeras.blocks import XceptionBlock
@@ -39,23 +38,22 @@ from autokeras.keras_layers import CastToFloat32
 from autokeras.keras_layers import ExpandLastDim
 from autokeras.nodes import ImageInput
 from autokeras.nodes import Input
+from autokeras.nodes import StructuredDataInput
 from autokeras.nodes import TextInput
 from autokeras.tasks import ImageClassifier
 from autokeras.tasks import ImageRegressor
+from autokeras.tasks import StructuredDataClassifier
+from autokeras.tasks import StructuredDataRegressor
 from autokeras.tasks import TextClassifier
 from autokeras.tasks import TextRegressor
 from autokeras.tuners import BayesianOptimization
 from autokeras.tuners import Greedy
 from autokeras.tuners import Hyperband
 from autokeras.tuners import RandomSearch
-from autokeras.utils.io_utils import image_dataset_from_directory
-from autokeras.utils.io_utils import text_dataset_from_directory
 
-__version__ = "2.1.0dev"
+__version__ = "3.0.0dev"
 
 CUSTOM_OBJECTS = {
-    "BertPreprocessor": keras_nlp.models.BertPreprocessor,
-    "BertBackbone": keras_nlp.models.BertBackbone,
     "CastToFloat32": CastToFloat32,
     "ExpandLastDim": ExpandLastDim,
 }

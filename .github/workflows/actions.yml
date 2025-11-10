@@ -10,6 +10,8 @@ jobs:
   build:
     name: Run tests
     runs-on: ubuntu-latest
+    env:
+      KERAS_BACKEND: torch
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.10
@@ -28,7 +30,8 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
     - name: Install dependencies
       run: |
-        pip install tensorflow
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install grpcio protobuf 
         pip install -e ".[tests]" --progress-bar off
     - name: Test with pytest
       run: |
@@ -38,6 +41,8 @@ jobs:
   format:
     name: Check the code format
     runs-on: ubuntu-latest
+    env:
+      KERAS_BACKEND: torch
     steps:
       - uses: actions/checkout@v3
       - name: Run pre-commit
@@ -45,6 +50,8 @@ jobs:
   build-docs:
     name: Build the docs
     runs-on: ubuntu-latest
+    env:
+      KERAS_BACKEND: torch
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
@@ -54,7 +61,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
-          pip install tensorflow
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install grpcio protobuf 
           pip install -e .
           pip install -r docs/requirements.txt
       - name: Build the docs
@@ -66,6 +74,8 @@ jobs:
     needs: [build, format, build-docs]
     if: github.event_name == 'release' && github.event.action == 'created'
     runs-on: ubuntu-latest
+    env:
+      KERAS_BACKEND: torch
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python

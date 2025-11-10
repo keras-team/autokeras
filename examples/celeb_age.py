@@ -9,7 +9,7 @@ which estimates a person's age from their image, trained on the
 of famous
 people.
 
-First, prepare your image data in a numpy.ndarray or tensorflow.Dataset format.
+First, prepare your image data in a numpy.ndarray.
 Each image must have the same shape, meaning each has the same width, height,
 and color channels as other images in the set.
 """
@@ -19,7 +19,6 @@ from datetime import timedelta
 
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from google.colab import drive
 from PIL import Image
 from scipy.io import loadmat
@@ -34,7 +33,7 @@ import autokeras as ak
 drive.mount("/content/drive")
 
 """
-### Install AutoKeras and TensorFlow
+### Install AutoKeras
 
 Download the master branch to your Google Drive for this tutorial. In general,
 you can use *pip install autokeras* .
@@ -48,7 +47,7 @@ git+git://github.com/keras-team/keras-tuner.git@d2d69cba21a0b482a85ce2a38893e232
 """
 
 """shell
-!pip install tensorflow==2.2.0
+!pip install torch
 """
 
 """
@@ -285,51 +284,6 @@ output_node = ak.ResNetBlock(version="v2")(output_node)
 output_node = ak.RegressionHead()(output_node)
 clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
 clf.fit(x_train, y_train, epochs=3)
-
-"""
-### **Data Format**
-"""
-
-"""
-The AutoKeras ImageClassifier is quite flexible for the data format.
-
-For the image, it accepts data formats both with and without the channel
-dimension. The images in the IMDB-Wiki dataset do not have a channel dimension.
-Each image is a matrix with shape (128, 128). AutoKeras also accepts images
-with a channel dimension at last, e.g., (32, 32, 3), (28, 28, 1).
-
-For the classification labels, AutoKeras accepts both plain labels, i.e.
-strings or integers, and one-hot encoded labels, i.e. vectors of 0s and 1s.
-
-So if you prepare your data in the following way, the ImageClassifier should
-still work.
-"""
-
-# Reshape the images to have the channel dimension.
-train_imgs = train_imgs.reshape(train_imgs.shape + (1,))
-test_imgs = test_imgs.reshape(test_imgs.shape + (1,))
-
-print(train_imgs.shape)  # (200, 128, 128, 1)
-print(test_imgs.shape)  # (100, 128, 128, 1)
-print(train_ages[:3])
-
-"""
-We also support using tf.data.Dataset format for the training data. In this
-case, the images would have to be 3-dimentional. The labels have to be one-hot
-encoded for multi-class classification to be wrapped into tensorflow Dataset.
-"""
-
-
-train_set = tf.data.Dataset.from_tensor_slices(((train_imgs,), (train_ages,)))
-test_set = tf.data.Dataset.from_tensor_slices(((test_imgs,), (test_ages,)))
-
-reg = ak.ImageRegressor(max_trials=15)
-# Feed the tensorflow Dataset to the classifier.
-reg.fit(train_set)
-# Predict with the best model.
-predicted_y = clf.predict(test_set)
-# Evaluate the best model with testing data.
-print(clf.evaluate(test_set))
 
 """
 ## References

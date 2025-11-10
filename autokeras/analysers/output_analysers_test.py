@@ -14,7 +14,6 @@
 
 import numpy as np
 import pytest
-import tensorflow as tf
 
 from autokeras import test_utils
 from autokeras.analysers import output_analysers
@@ -22,13 +21,10 @@ from autokeras.analysers import output_analysers
 
 def test_clf_head_one_hot_shape_error():
     analyser = output_analysers.ClassificationAnalyser(name="a", num_classes=9)
-    dataset = tf.data.Dataset.from_tensor_slices(
-        test_utils.generate_one_hot_labels(dtype="np", num_classes=10)
-    ).batch(32)
+    dataset = test_utils.generate_one_hot_labels(num_classes=10)
 
     with pytest.raises(ValueError) as info:
-        for data in dataset:
-            analyser.update(data)
+        analyser.update(dataset)
         analyser.finalize()
 
     assert "Expect the target data for a to have shape" in str(info.value)
@@ -36,13 +32,10 @@ def test_clf_head_one_hot_shape_error():
 
 def test_clf_head_more_dim_error():
     analyser = output_analysers.ClassificationAnalyser(name="a", num_classes=9)
-    dataset = tf.data.Dataset.from_tensor_slices(
-        np.random.rand(100, 32, 32, 3)
-    ).batch(32)
+    dataset = np.random.rand(100, 32, 32, 3)
 
     with pytest.raises(ValueError) as info:
-        for data in dataset:
-            analyser.update(data)
+        analyser.update(dataset)
         analyser.finalize()
 
     assert "Expect the target data for a to have shape" in str(info.value)
@@ -50,13 +43,10 @@ def test_clf_head_more_dim_error():
 
 def test_wrong_num_classes_error():
     analyser = output_analysers.ClassificationAnalyser(name="a", num_classes=5)
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 3)).batch(
-        32
-    )
+    dataset = np.random.rand(10, 3)
 
     with pytest.raises(ValueError) as info:
-        for data in dataset:
-            analyser.update(data)
+        analyser.update(dataset)
         analyser.finalize()
 
     assert "Expect the target data for a to have shape" in str(info.value)
@@ -64,13 +54,10 @@ def test_wrong_num_classes_error():
 
 def test_one_class_error():
     analyser = output_analysers.ClassificationAnalyser(name="a")
-    dataset = tf.data.Dataset.from_tensor_slices(
-        np.array(["a", "a", "a"])
-    ).batch(32)
+    dataset = np.array(["a", "a", "a"])
 
     with pytest.raises(ValueError) as info:
-        for data in dataset:
-            analyser.update(data)
+        analyser.update(dataset)
         analyser.finalize()
 
     assert "Expect the target data for a to have at least 2 classes" in str(
@@ -80,12 +67,9 @@ def test_one_class_error():
 
 def test_infer_ten_classes():
     analyser = output_analysers.ClassificationAnalyser(name="a")
-    dataset = test_utils.generate_one_hot_labels(
-        dtype="dataset", num_classes=10
-    )
+    dataset = test_utils.generate_one_hot_labels(num_classes=10)
 
-    for data in dataset:
-        analyser.update(data)
+    analyser.update(dataset)
     analyser.finalize()
 
     assert analyser.num_classes == 10
@@ -93,12 +77,9 @@ def test_infer_ten_classes():
 
 def test_infer_single_column_two_classes():
     analyser = output_analysers.ClassificationAnalyser(name="a")
-    dataset = tf.data.Dataset.from_tensor_slices(
-        np.random.randint(0, 2, 10)
-    ).batch(32)
+    dataset = np.random.randint(0, 2, 10)
 
-    for data in dataset:
-        analyser.update(data)
+    analyser.update(dataset)
     analyser.finalize()
 
     assert analyser.num_classes == 2
@@ -106,12 +87,9 @@ def test_infer_single_column_two_classes():
 
 def test_specify_five_classes():
     analyser = output_analysers.ClassificationAnalyser(name="a", num_classes=5)
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 5)).batch(
-        32
-    )
+    dataset = np.random.rand(10, 5)
 
-    for data in dataset:
-        analyser.update(data)
+    analyser.update(dataset)
     analyser.finalize()
 
     assert analyser.num_classes == 5
@@ -119,12 +97,9 @@ def test_specify_five_classes():
 
 def test_specify_two_classes_fit_single_column():
     analyser = output_analysers.ClassificationAnalyser(name="a", num_classes=2)
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 1)).batch(
-        32
-    )
+    dataset = np.random.rand(10, 1)
 
-    for data in dataset:
-        analyser.update(data)
+    analyser.update(dataset)
     analyser.finalize()
 
     assert analyser.num_classes == 2
@@ -134,12 +109,9 @@ def test_multi_label_two_classes_has_two_columns():
     analyser = output_analysers.ClassificationAnalyser(
         name="a", multi_label=True
     )
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 2)).batch(
-        32
-    )
+    dataset = np.random.rand(10, 2)
 
-    for data in dataset:
-        analyser.update(data)
+    analyser.update(dataset)
     analyser.finalize()
 
     assert analyser.encoded
@@ -147,13 +119,10 @@ def test_multi_label_two_classes_has_two_columns():
 
 def test_reg_with_specified_output_dim_error():
     analyser = output_analysers.RegressionAnalyser(name="a", output_dim=3)
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(10, 2)).batch(
-        32
-    )
+    dataset = np.random.rand(10, 2)
 
     with pytest.raises(ValueError) as info:
-        for data in dataset:
-            analyser.update(data)
+        analyser.update(dataset)
         analyser.finalize()
 
     assert "Expect the target data for a to have shape" in str(info.value)
@@ -161,8 +130,7 @@ def test_reg_with_specified_output_dim_error():
 
 def test_reg_with_specified_output_dim_and_single_column_doesnt_crash():
     analyser = output_analysers.RegressionAnalyser(name="a", output_dim=1)
-    dataset = tf.data.Dataset.from_tensor_slices(np.random.rand(10)).batch(32)
+    dataset = np.random.rand(10, 1)
 
-    for data in dataset:
-        analyser.update(data)
+    analyser.update(dataset)
     analyser.finalize()

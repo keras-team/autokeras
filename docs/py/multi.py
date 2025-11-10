@@ -191,18 +191,6 @@ auto_model.fit(
 )
 
 """
-## Data Format
-You can refer to the documentation of
-[ImageInput](/node/#imageinput-class),
-[Input](/node/#input-class),
-[TextInput](/node/#textinput-class),
-[RegressionHead](/block/#regressionhead-class),
-[ClassificationHead](/block/#classificationhead-class),
-for the format of different types of data.
-You can also refer to the Data Format section of the tutorials of
-[Image Classification](/tutorial/image_classification/#data-format),
-[Text Classification](/tutorial/text_classification/#data-format),
-
 ## Reference
 [AutoModel](/auto_model/#automodel-class),
 [ImageInput](/node/#imageinput-class),

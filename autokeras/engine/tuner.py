@@ -18,6 +18,7 @@ import os
 
 import keras
 import keras_tuner
+import numpy as np
 import tree
 from keras import callbacks as callbacks_module
 
@@ -76,32 +77,35 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         It builds the Pipeline from HyperPipeline, transforms the dataset to set
         the input shapes and output shapes of the HyperModel.
         """
-        dataset = kwargs["x"]
-        pipeline = self.hyper_pipeline.build(hp, dataset)
-        pipeline.fit(dataset)
-        dataset = pipeline.transform(dataset)
-        self.hypermodel.set_io_shapes(data_utils.dataset_shape(dataset))
+        x = kwargs["x"]
+        y = kwargs["y"]
+        pipeline = self.hyper_pipeline.build(hp, (x, y))
+        pipeline.fit((x, y))
+        (x, y) = pipeline.transform((x, y))
+        self.hypermodel.set_io_shapes(data_utils.dataset_shape((x, y)))
 
         if "validation_data" in kwargs:
             validation_data = pipeline.transform(kwargs["validation_data"])
         else:
             validation_data = None
-        return pipeline, dataset, validation_data
+        return pipeline, (x, y), validation_data
 
     def _build_and_fit_model(self, trial, *args, **kwargs):
         model = self._try_build(trial.hyperparameters)
         (
             pipeline,
-            kwargs["x"],
+            (
+                kwargs["x"],
+                kwargs["y"],
+            ),
             kwargs["validation_data"],
         ) = self._prepare_model_build(trial.hyperparameters, **kwargs)
         pipeline.save(self._pipeline_path(trial.trial_id))
+        keras.src.backend.compute_output_spec(model, kwargs["x"])
 
         self.adapt(model, kwargs["x"])
 
-        _, history = utils.fit_with_adaptive_batch_size(
-            model, self.hypermodel.batch_size, **kwargs
-        )
+        _, history = utils.fit_with_adaptive_batch_size(model, **kwargs)
         return history
 
     @staticmethod
@@ -111,7 +115,7 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         # preprocessing layers before the first non-preprocessing layer.
         # TODO: Use PreprocessingStage for preprocessing layers adapt.
         # TODO: Use Keras Tuner for preprocessing layers adapt.
-        x = dataset.map(lambda x, y: x)
+        x = tree.flatten(dataset)
 
         def get_output_layers(tensor):
             output_layers = []
@@ -131,14 +135,14 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         dq = collections.deque()
 
         for index, input_node in enumerate(tree.flatten(model.input)):
-            in_x = x.map(lambda *args: tree.flatten(args)[index])
+            in_x = x[index]
             for layer in get_output_layers(input_node):
                 dq.append((layer, in_x))
 
         while len(dq):
             layer, in_x = dq.popleft()
             layer.adapt(in_x)
-            out_x = in_x.map(layer)
+            out_x = layer(in_x)
             for next_layer in get_output_layers(layer.output):
                 dq.append((next_layer, out_x))
 
@@ -224,8 +228,17 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
 
             # Concatenate training and validation data.
             if validation_split > 0:
-                copied_fit_kwargs["x"] = copied_fit_kwargs["x"].concatenate(
-                    fit_kwargs["validation_data"]
+                x, y = copied_fit_kwargs["x"], copied_fit_kwargs["y"]
+                x_val, y_val = fit_kwargs["validation_data"]
+                copied_fit_kwargs["x"] = tree.map_structure(
+                    lambda train, val: np.concatenate([train, val], axis=0),
+                    x,
+                    x_val,
+                )
+                copied_fit_kwargs["y"] = tree.map_structure(
+                    lambda train, val: np.concatenate([train, val], axis=0),
+                    y,
+                    y_val,
                 )
                 copied_fit_kwargs.pop("validation_data")
 
@@ -277,15 +290,13 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         best_hp = best_trial.hyperparameters
         (
             pipeline,
-            kwargs["x"],
+            (kwargs["x"], kwargs["y"]),
             kwargs["validation_data"],
         ) = self._prepare_model_build(best_hp, **kwargs)
 
         model = self._build_best_model()
         self.adapt(model, kwargs["x"])
-        model, history = utils.fit_with_adaptive_batch_size(
-            model, self.hypermodel.batch_size, **kwargs
-        )
+        model, history = utils.fit_with_adaptive_batch_size(model, **kwargs)
         return pipeline, model, history
 
     @property

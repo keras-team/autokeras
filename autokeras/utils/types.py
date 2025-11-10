@@ -18,11 +18,10 @@ from typing import List
 from typing import Union
 
 import numpy as np
-import tensorflow as tf
 from keras.losses import Loss
 from keras.metrics import Metric
 
-DatasetType = Union[np.ndarray, tf.data.Dataset]
+DatasetType = Union[np.ndarray]
 LossType = Union[str, Callable, Loss]
 AcceptableMetric = Union[str, Callable, Metric]
 MetricsType = Union[

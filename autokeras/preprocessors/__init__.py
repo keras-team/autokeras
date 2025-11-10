@@ -16,7 +16,8 @@ import keras
 from autokeras.preprocessors.common import AddOneDimension
 from autokeras.preprocessors.common import CastToInt32
 from autokeras.preprocessors.common import CastToString
-from autokeras.preprocessors.common import LambdaPreprocessor
+from autokeras.preprocessors.common import TextTokenizer
+from autokeras.preprocessors.encoders import CategoricalToNumerical
 from autokeras.preprocessors.encoders import LabelEncoder
 from autokeras.preprocessors.encoders import OneHotEncoder
 from autokeras.preprocessors.postprocessors import SigmoidPostprocessor

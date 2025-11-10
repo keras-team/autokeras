@@ -33,7 +33,7 @@ graph LR
 We can make use of the [AutoModel](/auto_model/#automodel-class) API in
 AutoKeras to implemented as follows.
 The usage is the same as the [Keras functional
-API](https://www.tensorflow.org/guide/keras/functional).
+API](https://keras.io/api/models/model/#with-the-functional-api).
 Since this is just a demo, we use small amount of `max_trials` and `epochs`.
 """
 
@@ -86,19 +86,10 @@ If you would like to provide your own validation data or change the ratio of
 the validation data, please refer to the Validation Data section of the
 tutorials of [Image
 Classification](/tutorial/image_classification/#validation-data), [Text
-Classification](/tutorial/text_classification/#validation-data),
+Classification](/tutorial/text_classification/#validation-data), [Structured
+Data
+Classification](/tutorial/structured_data_classification/#validation-data),
 [Multi-task and Multiple Validation](/tutorial/multi/#validation-data).
-
-## Data Format
-You can refer to the documentation of
-[ImageInput](/node/#imageinput-class),
-[TextInput](/node/#textinput-class),
-[RegressionHead](/block/#regressionhead-class),
-[ClassificationHead](/block/#classificationhead-class),
-for the format of different types of data.
-You can also refer to the Data Format section of the tutorials of
-[Image Classification](/tutorial/image_classification/#data-format),
-[Text Classification](/tutorial/text_classification/#data-format).
 
 ## Implement New Block
 
@@ -154,6 +145,7 @@ print(auto_model.evaluate(x_test, y_test))
 [ImageInput](/node/#imageinput-class),
 [Input](/node/#input-class),
 [TextInput](/node/#textinput-class).
+[StructuredDataInput](/node/#structureddatainput-class),
 
 **Preprocessors**:
 [FeatureEngineering](/block/#featureengineering-class),
@@ -164,6 +156,7 @@ print(auto_model.evaluate(x_test, y_test))
 **Blocks**:
 [ConvBlock](/block/#convblock-class),
 [DenseBlock](/block/#denseblock-class),
+[Embedding](/block/#embedding-class),
 [Merge](/block/#merge-class),
 [ResNetBlock](/block/#resnetblock-class),
 [RNNBlock](/block/#rnnblock-class),
@@ -172,4 +165,5 @@ print(auto_model.evaluate(x_test, y_test))
 [XceptionBlock](/block/#xceptionblock-class),
 [ImageBlock](/block/#imageblock-class),
 [TextBlock](/block/#textblock-class).
+[StructuredDataBlock](/block/#structureddatablock-class),
 """

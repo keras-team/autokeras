@@ -15,7 +15,6 @@
 import keras
 import keras_tuner
 import pytest
-import tensorflow as tf
 import tree
 
 from autokeras import blocks
@@ -27,7 +26,7 @@ def test_resnet_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -38,7 +37,7 @@ def test_resnet_v1_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -49,7 +48,7 @@ def test_efficientnet_b0_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -60,7 +59,7 @@ def test_resnet_pretrained_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -71,7 +70,7 @@ def test_resnet_pretrained_with_one_channel_input():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(28, 28, 1), dtype=tf.float32),
+        keras.Input(shape=(28, 28, 1), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -83,7 +82,7 @@ def test_resnet_pretrained_error_with_two_channels():
     with pytest.raises(ValueError) as info:
         block.build(
             keras_tuner.HyperParameters(),
-            keras.Input(shape=(224, 224, 2), dtype=tf.float32),
+            keras.Input(shape=(224, 224, 2), dtype="float32"),
         )
 
     assert "When pretrained is set to True" in str(info.value)
@@ -126,7 +125,7 @@ def test_xception_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 2), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 2), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -137,7 +136,7 @@ def test_xception_pretrained_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -148,7 +147,7 @@ def test_xception_pretrained_with_one_channel_input():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(224, 224, 1), dtype=tf.float32),
+        keras.Input(shape=(224, 224, 1), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -160,7 +159,7 @@ def test_xception_pretrained_error_with_two_channels():
     with pytest.raises(ValueError) as info:
         block.build(
             keras_tuner.HyperParameters(),
-            keras.Input(shape=(224, 224, 2), dtype=tf.float32),
+            keras.Input(shape=(224, 224, 2), dtype="float32"),
         )
 
     assert "When pretrained is set to True" in str(info.value)
@@ -189,7 +188,7 @@ def test_conv_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -200,7 +199,7 @@ def test_conv_with_small_image_size_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(10, 10, 3), dtype=tf.float32),
+        keras.Input(shape=(10, 10, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -211,7 +210,7 @@ def test_conv_build_with_dropout_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 32, 3), dtype=tf.float32),
+        keras.Input(shape=(32, 32, 3), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -240,7 +239,7 @@ def test_rnn_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32, 10), dtype=tf.float32),
+        keras.Input(shape=(32, 10), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -252,7 +251,7 @@ def test_rnn_input_shape_one_dim_error():
     with pytest.raises(ValueError) as info:
         block.build(
             keras_tuner.HyperParameters(),
-            keras.Input(shape=(32,), dtype=tf.float32),
+            keras.Input(shape=(32,), dtype="float32"),
         )
 
     assert "Expect the input tensor of RNNBlock" in str(info.value)
@@ -285,7 +284,7 @@ def test_dense_build_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32,), dtype=tf.float32),
+        keras.Input(shape=(32,), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -296,7 +295,7 @@ def test_dense_build_with_dropout_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32,), dtype=tf.float32),
+        keras.Input(shape=(32,), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -307,7 +306,7 @@ def test_dense_build_with_bn_return_tensor():
 
     outputs = block.build(
         keras_tuner.HyperParameters(),
-        keras.Input(shape=(32,), dtype=tf.float32),
+        keras.Input(shape=(32,), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
@@ -331,29 +330,30 @@ def test_dense_get_config_has_all_attributes():
     )
 
 
-def test_bert_build_return_tensor():
-    block = blocks.BertBlock()
+def test_embed_build_return_tensor():
+    block = blocks.Embedding()
 
     outputs = block.build(
-        keras_tuner.HyperParameters(), keras.Input(shape=(1,), dtype=tf.string)
+        keras_tuner.HyperParameters(),
+        keras.Input(shape=(32,), dtype="float32"),
     )
 
     assert len(tree.flatten(outputs)) == 1
 
 
-def test_bert_deserialize_to_bert():
-    serialized_block = blocks.serialize(blocks.BertBlock())
+def test_embed_deserialize_to_embed():
+    serialized_block = blocks.serialize(blocks.Embedding())
 
     block = blocks.deserialize(serialized_block)
 
-    assert isinstance(block, blocks.BertBlock)
+    assert isinstance(block, blocks.Embedding)
 
 
-def test_bert_get_config_has_all_attributes():
-    block = blocks.BertBlock()
+def test_embed_get_config_has_all_attributes():
+    block = blocks.Embedding()
 
     config = block.get_config()
 
-    assert test_utils.get_func_args(blocks.BertBlock.__init__).issubset(
+    assert test_utils.get_func_args(blocks.Embedding.__init__).issubset(
         config.keys()
     )

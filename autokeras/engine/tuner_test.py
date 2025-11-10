@@ -16,7 +16,6 @@ from unittest import mock
 
 import keras
 import numpy as np
-import tensorflow as tf
 import tree
 from keras import layers
 
@@ -102,10 +101,11 @@ def test_final_fit_best_epochs_if_epoch_unspecified(
     final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
     tuner.search(
-        x=mock.Mock(),
+        x=np.random.rand(100, 32, 32, 3),
+        y=np.random.rand(100, 1),
         epochs=None,
         validation_split=0.2,
-        validation_data=mock.Mock(),
+        validation_data=(np.random.rand(20, 32, 32, 3), np.random.rand(20, 1)),
     )
 
     assert final_fit.call_args_list[0][1]["epochs"] == 2
@@ -125,11 +125,13 @@ def test_super_with_1k_epochs_if_epoch_unspecified(
     )
     final_fit.return_value = mock.Mock(), mock.Mock(), mock.Mock()
 
+    # TODO: try to use x, and y instead of tuple input across the lib.
     tuner.search(
-        x=mock.Mock(),
+        x=np.random.rand(100, 32, 32, 3),
+        y=np.random.rand(100, 1),
         epochs=None,
         validation_split=0.2,
-        validation_data=mock.Mock(),
+        validation_data=(np.random.rand(20, 32, 32, 3), np.random.rand(20, 1)),
     )
 
     assert super_search.call_args_list[0][1]["epochs"] == 1000
@@ -163,7 +165,6 @@ def test_tuner_does_not_crash_with_distribution_strategy(tmp_path):
     tuner = greedy.Greedy(
         hypermodel=test_utils.build_graph(),
         directory=tmp_path,
-        distribution_strategy=tf.distribute.MirroredStrategy(),
     )
     tuner.hypermodel.build(tuner.oracle.hyperparameters)
 
@@ -176,9 +177,9 @@ def test_preprocessing_adapt_with_text_vec():
 
     x_train = test_utils.generate_text_data()
     y_train = np.random.randint(0, 2, (100,))
-    dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train)).batch(32)
+    dataset = (x_train, y_train)
 
-    inputs = keras.Input(shape=(1,), dtype=tf.string)
+    inputs = keras.Input(shape=(1,), dtype="string")
     layer1 = MockLayer(
         max_tokens=5000, output_mode="int", output_sequence_length=40
     )
@@ -198,9 +199,7 @@ def test_adapt_with_model_with_preprocessing_layer_only():
     model = keras.Model(input_node, output_node)
     greedy.Greedy.adapt(
         model,
-        tf.data.Dataset.from_tensor_slices(
-            (np.random.rand(100, 10), np.random.rand(100, 10))
-        ).batch(32),
+        (np.random.rand(100, 10), np.random.rand(100, 10)),
     )
 
 
