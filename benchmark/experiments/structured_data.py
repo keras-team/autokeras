@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import numpy as np
 import pandas as pd
 import sklearn
-import tensorflow as tf
 
 import autokeras as ak
 from benchmark.experiments import experiment
@@ -40,8 +40,8 @@ class Titanic(StructuredDataClassifierExperiment):
         TEST_DATA_URL = (
             "https://storage.googleapis.com/tf-datasets/titanic/eval.csv"
         )
-        x_train = tf.keras.utils.get_file("titanic_train.csv", TRAIN_DATA_URL)
-        x_test = tf.keras.utils.get_file("titanic_eval.csv", TEST_DATA_URL)
+        x_train = keras.utils.get_file("titanic_train.csv", TRAIN_DATA_URL)
+        x_test = keras.utils.get_file("titanic_eval.csv", TEST_DATA_URL)
 
         return (x_train, "survived"), (x_test, "survived")
 
@@ -57,13 +57,13 @@ class Iris(StructuredDataClassifierExperiment):
             "https://storage.googleapis.com/"
             "download.tensorflow.org/data/iris_training.csv"
         )
-        x_train = tf.keras.utils.get_file("iris_train.csv", TRAIN_DATA_URL)
+        x_train = keras.utils.get_file("iris_train.csv", TRAIN_DATA_URL)
 
         TEST_DATA_URL = (
             "https://storage.googleapis.com/"
             "download.tensorflow.org/data/iris_test.csv"
         )
-        x_test = tf.keras.utils.get_file("iris_test.csv", TEST_DATA_URL)
+        x_test = keras.utils.get_file("iris_test.csv", TEST_DATA_URL)
 
         return (x_train, "virginica"), (x_test, "virginica")
 
@@ -80,7 +80,7 @@ class Wine(StructuredDataClassifierExperiment):
         )
 
         # save data
-        dataset = tf.keras.utils.get_file("wine.csv", DATASET_URL)
+        dataset = keras.utils.get_file("wine.csv", DATASET_URL)
 
         data = pd.read_csv(dataset, header=None).sample(frac=1, random_state=5)
         split_length = int(data.shape[0] * 0.8)  # 141

@@ -6,7 +6,6 @@ import os
 
 import keras
 import numpy as np
-import tensorflow as tf
 from sklearn.datasets import load_files
 
 import autokeras as ak
@@ -125,24 +124,16 @@ The AutoKeras TextClassifier is quite flexible for the data format.
 For the text, the input data should be one-dimensional For the classification
 labels, AutoKeras accepts both plain labels, i.e. strings or integers, and
 one-hot encoded encoded labels, i.e. vectors of 0s and 1s.
-
-We also support using [tf.data.Dataset](
-https://www.tensorflow.org/api_docs/python/tf/data/Dataset?version=stable)
-format for the training data.
 """
 
-train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,))).batch(
-    2
-)
-test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,))).batch(2)
 
 clf = ak.TextClassifier(overwrite=True, max_trials=1)
-# Feed the tensorflow Dataset to the classifier.
-clf.fit(train_set.take(2), epochs=1)
+# Feed the Dataset to the classifier.
+clf.fit(x_train[:2], y_train[:2], epochs=1)
 # Predict with the best model.
-predicted_y = clf.predict(test_set.take(2))
+predicted_y = clf.predict(x_test[:2])
 # Evaluate the best model with testing data.
-print(clf.evaluate(test_set.take(2)))
+print(clf.evaluate(x_test[:2], y_test[:2]))
 
 """
 ## Reference

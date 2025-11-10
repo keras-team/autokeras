@@ -30,7 +30,7 @@ clf.fit(x_train, y_train, epochs=1)  # Change no of epochs to improve the model
 # Export as a Keras Model.
 model = clf.export_model()
 
-print(type(model))  # <class 'tensorflow.python.keras.engine.training.Model'>
+print(type(model))  # <class 'keras.engine.training.Model'>
 
 model.save("model_autokeras.keras")
 

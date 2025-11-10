@@ -1,7 +1,7 @@
 import itertools
 import re
 
-from sphinx.util.typing import stringify
+from sphinx.util.typing import stringify_annotation
 
 from . import utils
 
@@ -97,7 +97,9 @@ def format_as_markdown_list(
     # Optionally add type annotations to docstring
     if types:
         for arg, arg_type in types.items():
-            type_hint_str = apply_aliases(stringify(arg_type), aliases)
+            type_hint_str = apply_aliases(
+                stringify_annotation(arg_type), aliases
+            )
             section_body = re.sub(
                 rf"(- __{arg}__)", rf"\1 `{type_hint_str}`", section_body
             )

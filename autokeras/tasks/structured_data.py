@@ -19,7 +19,6 @@ from typing import Optional
 from typing import Type
 from typing import Union
 
-import pandas as pd
 import tree
 
 from autokeras import auto_model
@@ -36,12 +35,6 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
         super().__init__(inputs=inputs, outputs=outputs, **kwargs)
         self._target_col_name = None
 
-    @staticmethod
-    def _read_from_csv(x, y):
-        df = pd.read_csv(x)
-        target = df.pop(y).to_numpy()
-        return df, target
-
     def check(self, column_names, column_types):
         if column_types:
             for column_type in column_types.values():
@@ -55,10 +48,6 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
 
     def check_in_fit(self, x):
         input_node = tree.flatten(self.inputs)[0]
-        # Extract column_names from pd.DataFrame.
-        if isinstance(x, pd.DataFrame) and input_node.column_names is None:
-            input_node.column_names = list(x.columns)
-
         if input_node.column_names and input_node.column_types:
             for column_name in input_node.column_types:
                 if column_name not in input_node.column_names:
@@ -67,13 +56,6 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
                         "mismatched. Cannot find column name "
                         "{name} in the data.".format(name=column_name)
                     )
-
-    def read_for_predict(self, x):
-        if isinstance(x, str):
-            x = pd.read_csv(x)
-            if self._target_col_name in x:
-                x.pop(self._target_col_name)
-        return x
 
     def fit(
         self,
@@ -151,8 +133,6 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
             A list of numpy.ndarray objects or a single numpy.ndarray.
             The predicted results.
         """
-        x = self.read_for_predict(x)
-
         return super().predict(x=x, **kwargs)
 
     def evaluate(self, x, y=None, **kwargs):
@@ -173,8 +153,6 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
             metrics). The attribute model.metrics_names will give you the
             display labels for the scalar outputs.
         """
-        if isinstance(x, str):
-            x, y = self._read_from_csv(x, y)
         return super().evaluate(x=x, y=y, **kwargs)
 
 
@@ -192,8 +170,7 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
             length of the list should be equal to the number of columns of the
-            data excluding the target column. Defaults to None. If None, it will
-            obtained from the header of the csv file or the pandas.DataFrame.
+            data excluding the target column. Defaults to None.
         column_types: Dict. The keys are the column names. The values should
             either be 'numerical' or 'categorical', indicating the type of that
             column.  Defaults to None. If not None, the column_names need to be
@@ -334,8 +311,7 @@ class StructuredDataRegressor(SupervisedStructuredDataPipeline):
     # Arguments
         column_names: A list of strings specifying the names of the columns. The
             length of the list should be equal to the number of columns of the
-            data excluding the target column. Defaults to None. If None, it will
-            obtained from the header of the csv file or the pandas.DataFrame.
+            data excluding the target column. Defaults to None.
         column_types: Dict. The keys are the column names. The values should
             either be 'numerical' or 'categorical', indicating the type of that
             column. Defaults to None. If not None, the column_names need to be

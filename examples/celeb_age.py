@@ -9,7 +9,7 @@ which estimates a person's age from their image, trained on the
 of famous
 people.
 
-First, prepare your image data in a numpy.ndarray or tensorflow.Dataset format.
+First, prepare your image data in a numpy.ndarray.
 Each image must have the same shape, meaning each has the same width, height,
 and color channels as other images in the set.
 """
@@ -19,7 +19,6 @@ from datetime import timedelta
 
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from google.colab import drive
 from PIL import Image
 from scipy.io import loadmat
@@ -34,7 +33,7 @@ import autokeras as ak
 drive.mount("/content/drive")
 
 """
-### Install AutoKeras and TensorFlow
+### Install AutoKeras
 
 Download the master branch to your Google Drive for this tutorial. In general,
 you can use *pip install autokeras* .
@@ -48,7 +47,7 @@ git+git://github.com/keras-team/keras-tuner.git@d2d69cba21a0b482a85ce2a38893e232
 """
 
 """shell
-!pip install tensorflow==2.2.0
+!pip install torch
 """
 
 """
@@ -314,22 +313,17 @@ print(test_imgs.shape)  # (100, 128, 128, 1)
 print(train_ages[:3])
 
 """
-We also support using tf.data.Dataset format for the training data. In this
-case, the images would have to be 3-dimentional. The labels have to be one-hot
-encoded for multi-class classification to be wrapped into tensorflow Dataset.
+In this case, the images would have to be 3-dimentional. The labels have to be
+one-hot encoded for multi-class classification.
 """
 
-
-train_set = tf.data.Dataset.from_tensor_slices(((train_imgs,), (train_ages,)))
-test_set = tf.data.Dataset.from_tensor_slices(((test_imgs,), (test_ages,)))
-
 reg = ak.ImageRegressor(max_trials=15)
-# Feed the tensorflow Dataset to the classifier.
-reg.fit(train_set)
+# Feed the Dataset to the classifier.
+reg.fit(x=train_imgs, y=train_ages)
 # Predict with the best model.
-predicted_y = clf.predict(test_set)
+predicted_y = reg.predict(test_imgs)
 # Evaluate the best model with testing data.
-print(clf.evaluate(test_set))
+print(reg.evaluate(test_imgs, test_ages))
 
 """
 ## References

@@ -33,7 +33,7 @@ graph LR
 We can make use of the [AutoModel](/auto_model/#automodel-class) API in
 AutoKeras to implemented as follows.
 The usage is the same as the [Keras functional
-API](https://www.tensorflow.org/guide/keras/functional).
+API](https://keras.io/api/models/model/#with-the-functional-api).
 Since this is just a demo, we use small amount of `max_trials` and `epochs`.
 """
 

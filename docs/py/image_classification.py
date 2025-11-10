@@ -3,7 +3,6 @@ pip install autokeras
 """
 
 import numpy as np
-import tensorflow as tf
 from keras.datasets import mnist
 
 import autokeras as ak
@@ -160,20 +159,13 @@ print(y_train[:3])
 #        [1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
 #        [0., 0., 0., 0., 1., 0., 0., 0., 0., 0.]])
 
-"""
-We also support using tf.data.Dataset format for the training data.
-"""
-
-train_set = tf.data.Dataset.from_tensor_slices(((x_train,), (y_train,)))
-test_set = tf.data.Dataset.from_tensor_slices(((x_test,), (y_test,)))
-
 clf = ak.ImageClassifier(overwrite=True, max_trials=1)
-# Feed the tensorflow Dataset to the classifier.
-clf.fit(train_set, epochs=1)
+# Feed the Dataset to the classifier.
+clf.fit(x=x_train, y=y_train, epochs=1)
 # Predict with the best model.
-predicted_y = clf.predict(test_set)
+predicted_y = clf.predict(x=x_test)
 # Evaluate the best model with testing data.
-print(clf.evaluate(test_set))
+print(clf.evaluate(x=x_test, y=y_test))
 
 """
 ## Reference

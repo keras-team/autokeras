@@ -78,7 +78,6 @@ PAGES = {
         "autokeras.TemporalReduction",
         "autokeras.XceptionBlock",
         "autokeras.StructuredDataBlock",
-        "autokeras.CategoricalToNumerical",
         "autokeras.ImageBlock",
         "autokeras.TextBlock",
         "autokeras.ImageAugmentation",
@@ -86,18 +85,13 @@ PAGES = {
         "autokeras.ClassificationHead",
         "autokeras.RegressionHead",
     ],
-    "utils.md": [
-        "autokeras.image_dataset_from_directory",
-        "autokeras.text_dataset_from_directory",
-    ],
 }
 
 
 aliases_needed = [
-    "tensorflow.keras.callbacks.Callback",
-    "tensorflow.keras.losses.Loss",
-    "tensorflow.keras.metrics.Metric",
-    "tensorflow.data.Dataset",
+    "keras.callbacks.Callback",
+    "keras.losses.Loss",
+    "keras.metrics.Metric",
 ]
 
 
