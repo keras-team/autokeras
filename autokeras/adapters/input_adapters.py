@@ -22,8 +22,8 @@ class InputAdapter(adapter_module.Adapter):
         """Record any information needed by transform."""
         if not isinstance(x, np.ndarray):
             raise TypeError(
-                "Expect the data to Input to be numpy.ndarray or "
-                "data.Dataset, but got {type}.".format(type=type(x))
+                "Expect the data to Input to be numpy.ndarray, "
+                "but got {type}.".format(type=type(x))
             )
         if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.number):
             raise TypeError(
@@ -37,8 +37,8 @@ class ImageAdapter(adapter_module.Adapter):
         """Record any information needed by transform."""
         if not isinstance(x, np.ndarray):
             raise TypeError(
-                "Expect the data to ImageInput to be numpy.ndarray or "
-                "data.Dataset, but got {type}.".format(type=type(x))
+                "Expect the data to ImageInput to be numpy.ndarray, "
+                "but got {type}.".format(type=type(x))
             )
         if isinstance(x, np.ndarray) and not np.issubdtype(x.dtype, np.number):
             raise TypeError(
@@ -52,8 +52,8 @@ class TextAdapter(adapter_module.Adapter):
         """Record any information needed by transform."""
         if not isinstance(x, np.ndarray):
             raise TypeError(
-                "Expect the data to TextInput to be numpy.ndarray or "
-                "data.Dataset, but got {type}.".format(type=type(x))
+                "Expect the data to TextInput to be numpy.ndarray, "
+                "but got {type}.".format(type=type(x))
             )
 
 

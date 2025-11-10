@@ -27,7 +27,7 @@ class HyperPreprocessor(named_hypermodel.NamedHyperModel):
         # Arguments
             hp: `HyperParameters` instance. The hyperparameters for building the
                 a Preprocessor.
-            dataset: data.Dataset.
+            dataset: np.ndarray. The dataset to be preprocessed.
 
         # Returns
             an instance of Preprocessor.

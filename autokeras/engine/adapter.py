@@ -38,7 +38,7 @@ class Adapter(object):
             dataset: Usually numpy.ndarray. The dataset to be converted.
 
         # Returns
-            data.Dataset. The converted dataset.
+            numpy.ndarray. The converted dataset.
         """
         self.check(dataset)
         return dataset

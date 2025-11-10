@@ -18,6 +18,31 @@ import keras
 import keras_tuner
 import tree
 
+# Collect OOM exceptions from available libraries
+oom_exceptions = []
+try:
+    import tensorflow as tf
+
+    oom_exceptions.append(tf.errors.ResourceExhaustedError)
+except ImportError:
+    pass
+
+try:
+    import torch
+
+    oom_exceptions.append(torch.cuda.OutOfMemoryError)
+except ImportError:
+    pass
+
+try:
+    import jax
+
+    oom_exceptions.append(jax.errors.ResourceExhaustedError)
+except (ImportError, AttributeError):
+    pass
+
+oom_exceptions = tuple(oom_exceptions)
+
 
 def validate_num_inputs(inputs, num):
     inputs = tree.flatten(inputs)
@@ -83,7 +108,7 @@ def run_with_adaptive_batch_size(batch_size, func, **fit_kwargs):
                 **fit_kwargs,
             )
             break
-        except Exception as e:
+        except oom_exceptions as e:
             if batch_size == 1:
                 raise e
             batch_size //= 2

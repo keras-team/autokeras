@@ -46,7 +46,7 @@ def deserialize(config, custom_objects=None):
 class Input(node_module.Node, io_hypermodel.IOHyperModel):
     """Input node for tensor data.
 
-    The data should be numpy.ndarray or data.Dataset.
+    The data should be numpy.ndarray.
 
     # Arguments
         name: String. The name of the input node. If unspecified, it will be set
@@ -79,7 +79,7 @@ class Input(node_module.Node, io_hypermodel.IOHyperModel):
 class ImageInput(Input):
     """Input node for image data.
 
-    The input data should be numpy.ndarray or data.Dataset. The shape of the
+    The input data should be numpy.ndarray. The shape of the
     data should be should be (samples, width, height) or (samples, width,
     height, channels).
 
@@ -111,8 +111,8 @@ class ImageInput(Input):
 class TextInput(Input):
     """Input node for text data.
 
-    The input data should be numpy.ndarray or data.Dataset. The data should
-    be one-dimensional. Each element in the data should be a string which is a
+    The input data should be numpy.ndarray. The data should be
+    one-dimensional. Each element in the data should be a string which is a
     full sentence.
 
     # Arguments

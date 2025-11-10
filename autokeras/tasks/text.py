@@ -120,7 +120,7 @@ class TextClassifier(SupervisedTextPipeline):
 
         # Arguments
             x: numpy.ndarray. Training data x. The input
-                data should be numpy.ndarray or data.Dataset. The data should
+                data should be numpy.ndarray. The data should
                 be one dimensional. Each element in the data should be a string
                 which is a full sentence.
             y: numpy.ndarray. Training data y. It can be
@@ -253,13 +253,13 @@ class TextRegressor(SupervisedTextPipeline):
 
         # Arguments
             x: numpy.ndarray. Training data x. The input
-                data should be numpy.ndarray or data.Dataset. The data should
+                data should be numpy.ndarray. The data should
                 be one dimensional. Each element in the data should be a string
                 which is a full sentence.
             y: numpy.ndarray. Training data y. The targets
-                passing to the head would have to be data.Dataset,
-                np.ndarray, pd.DataFrame or pd.Series. It can be single-column
-                or multi-column.  The values should all be numerical.
+                passing to the head would have to be np.ndarray,. It can be
+                single-column or multi-column.  The values should all be
+                numerical.
             epochs: Int. The number of epochs to train each model during the
                 search. If unspecified, by default we train for a maximum of
                 1000 epochs, but we stop training if the validation loss stops

@@ -38,7 +38,7 @@ class Analyser(object):
         """Update the statistics with a batch of data.
 
         # Arguments
-            data: np.ndarray. One batch of data from data.Dataset.
+            data: np.ndarray. The entire dataset.
         """
         if self.dtype is None:
             if np.issubdtype(data.dtype, np.str_):

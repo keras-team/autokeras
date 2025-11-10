@@ -314,7 +314,7 @@ class AutoModel(object):
 
         return history
 
-    def _adapt(self, dataset, hms, batch_size):
+    def _adapt(self, dataset, hms):
         sources = tree.flatten(dataset)
         adapted = []
         for source, hm in zip(sources, hms):
@@ -390,18 +390,18 @@ class AutoModel(object):
         )
         self.tuner.hypermodel.hyper_pipeline = self.tuner.hyper_pipeline
 
-    def _check_and_adapt(self, x, y, validation_data, batch_size):
+    def _check_and_adapt(self, x, y, validation_data):
         # Convert training data.
         self._check_data_format(x, y)
-        x = self._adapt(x, self.inputs, batch_size)
-        y = self._adapt(y, self._heads, batch_size)
+        x = self._adapt(x, self.inputs)
+        y = self._adapt(y, self._heads)
 
         # Convert validation data
         if validation_data:
             self._check_data_format(*validation_data, validation=True)
             x_val, y_val = validation_data
-            x_val = self._adapt(x_val, self.inputs, batch_size)
-            y_val = self._adapt(y_val, self._heads, batch_size)
+            x_val = self._adapt(x_val, self.inputs)
+            y_val = self._adapt(y_val, self._heads)
             validation_data = (x_val, y_val)
 
         return (x, y), validation_data
@@ -423,11 +423,10 @@ class AutoModel(object):
             The predicted results.
         """
         self._check_data_format(x, None, predict=True)
-        dataset = self._adapt(x, self.inputs, batch_size)
+        dataset = self._adapt(x, self.inputs)
         pipeline = self.tuner.get_best_pipeline()
         model = self.tuner.get_best_model()
         dataset = pipeline.transform_x(dataset)
-        y = model.predict(dataset, **kwargs)
         y = utils.predict_with_adaptive_batch_size(
             model=model,
             batch_size=batch_size,
@@ -458,8 +457,8 @@ class AutoModel(object):
             display labels for the scalar outputs.
         """
         self._check_data_format(x, y)
-        x = self._adapt(x, self.inputs, batch_size)
-        y = self._adapt(y, self._heads, batch_size)
+        x = self._adapt(x, self.inputs)
+        y = self._adapt(y, self._heads)
         pipeline = self.tuner.get_best_pipeline()
         x, y = pipeline.transform((x, y))
         model = self.tuner.get_best_model()

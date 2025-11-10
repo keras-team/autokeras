@@ -70,28 +70,24 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
         """Search for the best model and hyperparameters for the AutoModel.
 
         # Arguments
-            x: String, numpy.ndarray.
-                Training data x. If the data is from a csv file, it should be a
-                string specifying the path of the csv file of the training data.
-            y: String, numpy.ndarray. Training data y.
-                If the data is from a csv file, it should be a string, which is
-                the name of the target column. Otherwise, it can be
-                single-column or multi-column. The values should all be
-                numerical.
+            x: numpy.ndarray.
+                Training data x. It can be string or numerical data.
+            y: numpy.ndarray. Training data y.
+                It can be raw labels, one-hot encoded if more than two classes,
+                or binary encoded for binary classification.
             epochs: Int. The number of epochs to train each model during the
                 search. If unspecified, we would use epochs equal to 1000 and
                 early stopping with patience equal to 10.
             callbacks: List of Keras callbacks to apply during training and
                 validation.
             validation_split: Float between 0 and 1. Defaults to 0.2. Fraction
-                of the training data to be used as validation data. The model
+                of the training data to be used as validation data.  The model
                 will set apart this fraction of the training data, will not
                 train on it, and will evaluate the loss and any model metrics on
-                this data at the end of each epoch. The validation data is
+                this data at the end of each epoch.  The validation data is
                 selected from the last samples in the `x` and `y` data provided,
                 before shuffling. This argument is not supported when `x` is a
-                dataset. The best model found would be fit on the entire
-                dataset including the validation data.
+                dataset.
             validation_data: Data on which to evaluate the loss and any model
                 metrics at the end of each epoch. The model will not be trained
                 on this data. `validation_data` will override
@@ -124,9 +120,8 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
         """Predict the output for a given testing data.
 
         # Arguments
-            x: String, numpy.ndarray.
-                Testing data x. If the data is from a csv file, it should be a
-                string specifying the path of the csv file of the testing data.
+            x: numpy.ndarray.
+                Testing data x. It can be string or numerical data.
             **kwargs: Any arguments supported by keras.Model.predict.
 
         # Returns
@@ -139,12 +134,10 @@ class BaseStructuredDataPipeline(auto_model.AutoModel):
         """Evaluate the best model for the given data.
 
         # Arguments
-            x: String, numpy.ndarray.
-                Testing data x. If the data is from a csv file, it should be a
-                string specifying the path of the csv file of the testing data.
-            y: String, numpy.ndarray. Testing data y.
-                If the data is from a csv file, it should be a string
-                corresponding to the label column.
+            x: numpy.ndarray.
+                Testing data x. It can be string or numerical data.
+            y: numpy.ndarray. Testing data y.
+                It can be string labels or numerical values.
             **kwargs: Any arguments supported by keras.Model.evaluate.
 
         # Returns
@@ -258,14 +251,8 @@ class StructuredDataClassifier(SupervisedStructuredDataPipeline):
         """Search for the best model and hyperparameters for the AutoModel.
 
         # Arguments
-            x: String, numpy.ndarray.
-                Training data x. If the data is from a csv file, it should be a
-                string specifying the path of the csv file of the training data.
-            y: String, numpy.ndarray. Training data y.
-                If the data is from a csv file, it should be a string, which is
-                the name of the target column. Otherwise, It can be raw labels,
-                one-hot encoded if more than two classes, or binary encoded for
-                binary classification.
+            x: numpy.ndarray. Training data x.
+            y: numpy.ndarray. Training data y.
             epochs: Int. The number of epochs to train each model during the
                 search. If unspecified, we would use epochs equal to 1000 and
                 early stopping with patience equal to 10.

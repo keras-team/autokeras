@@ -5,7 +5,7 @@
 **Pip**: Follow the TensorFlow install steps to install Pip.
 
 **PyTorch >= 2.3.0**: AutoKeras is based on Keras. We recommend using the
-*PyTorch backend
+PyTorch backend.
 Please follow [this page](https://pytorch.org/get-started/locally/) to install
 PyTorch.
 

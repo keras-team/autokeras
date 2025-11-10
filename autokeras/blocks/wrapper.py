@@ -186,25 +186,17 @@ class StructuredDataBlock(block_module.Block):
             to True.
         normalize: Boolean. Whether to normalize the features.
             If unspecified, it will be tuned automatically.
-        seed: Int. Random seed.
     """
 
-    def __init__(
-        self,
-        normalize: Optional[bool] = None,
-        seed: Optional[int] = None,
-        **kwargs
-    ):
+    def __init__(self, normalize: Optional[bool] = None, **kwargs):
         super().__init__(**kwargs)
         self.normalize = normalize
-        self.seed = seed
 
     def get_config(self):
         config = super().get_config()
         config.update(
             {
                 "normalize": self.normalize,
-                "seed": self.seed,
             }
         )
         return config

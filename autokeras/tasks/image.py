@@ -262,9 +262,9 @@ class ImageRegressor(SupervisedImagePipeline):
                 of the data should be (samples, width, height) or (samples,
                 width, height, channels).
             y: numpy.ndarray. Training data y. The targets
-                passing to the head would have to be data.Dataset,
-                np.ndarray, pd.DataFrame or pd.Series. It can be single-column
-                or multi-column.  The values should all be numerical.
+                passing to the head would have to be np.ndarray. It can be
+                single-column or multi-column.  The values should all be
+                numerical.
             epochs: Int. The number of epochs to train each model during the
                 search. If unspecified, by default we train for a maximum of
                 1000 epochs, but we stop training if the validation loss stops
