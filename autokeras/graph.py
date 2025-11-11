@@ -296,7 +296,9 @@ class Graph(keras_tuner.HyperModel, serializable.Serializable):
         elif optimizer_name == "sgd":
             optimizer = keras.optimizers.SGD(learning_rate=learning_rate)
         elif optimizer_name == "adam_weight_decay":
-            steps_per_epoch = max(1, int(self.num_samples / 32))
+            steps_per_epoch = max(
+                1, int(self.num_samples / (self.batch_size or 32))
+            )
             num_train_steps = steps_per_epoch * self.epochs
 
             lr_schedule = keras.optimizers.schedules.PolynomialDecay(
