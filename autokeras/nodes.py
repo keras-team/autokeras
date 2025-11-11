@@ -146,8 +146,11 @@ class TextInput(Input):
     def get_hyper_preprocessors(self):
         return [
             hyper_preprocessors.DefaultHyperPreprocessor(
+                preprocessors.CastToString()
+            ),
+            hyper_preprocessors.DefaultHyperPreprocessor(
                 preprocessors.TextTokenizer()
-            )
+            ),
         ]
 
 

@@ -113,59 +113,6 @@ clf.fit(
     epochs=10,
 )
 
-"""
-## Customized Search Space
-For advanced users, you may customize your search space by using
-[AutoModel](/auto_model/#automodel-class) instead of
-[StructuredDataClassifier](/structured_data_classifier). You can configure the
-[StructuredDataBlock](/block/#structureddatablock-class) for some high-level
-configurations, e.g., `categorical_encoding` for whether to use the
-[CategoricalToNumerical](/block/#categoricaltonumerical-class). You can also do
-not specify these arguments, which would leave the different choices to be
-tuned automatically. See the following example for detail.
-"""
-
-input_node = ak.StructuredDataInput()
-output_node = ak.StructuredDataBlock(categorical_encoding=True)(input_node)
-output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(
-    inputs=input_node, outputs=output_node, overwrite=True, max_trials=3
-)
-clf.fit(x_train, y_train, epochs=10)
-
-"""
-The usage of [AutoModel](/auto_model/#automodel-class) is similar to the
-[functional API](https://keras.io/api/models/model/#with-the-functional-api) of
-Keras. Basically, you are building a graph, whose edges are blocks and the
-nodes are
-intermediate outputs of blocks.
-To add an edge from `input_node` to `output_node` with
-`output_node = ak.[some_block]([block_args])(input_node)`.
-
-You can even also use more fine grained blocks to customize the search space
-even further. See the following example.
-"""
-
-
-input_node = ak.StructuredDataInput()
-output_node = ak.DenseBlock()(input_node)
-output_node = ak.ClassificationHead()(output_node)
-clf = ak.AutoModel(
-    inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
-)
-clf.fit(x_train, y_train, epochs=1)
-clf.predict(x_train)
-
-"""
-You can also export the best model found by AutoKeras as a Keras Model.
-"""
-
-model = clf.export_model()
-model.summary()
-print(x_train.dtype)
-# numpy array in object (mixed type) is not supported.
-# convert it to unicode.
-model.predict(x_train.astype(str))
 
 """
 ## Reference
@@ -175,5 +122,4 @@ model.predict(x_train.astype(str))
 [DenseBlock](/block/#denseblock-class),
 [StructuredDataInput](/node/#structureddatainput-class),
 [ClassificationHead](/block/#classificationhead-class),
-[CategoricalToNumerical](/block/#categoricaltonumerical-class).
 """

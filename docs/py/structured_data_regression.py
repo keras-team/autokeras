@@ -103,59 +103,6 @@ reg.fit(
     epochs=10,
 )
 
-"""
-## Customized Search Space
-For advanced users, you may customize your search space by using
-[AutoModel](/auto_model/#automodel-class) instead of
-[StructuredDataRegressor](/structured_data_regressor). You can configure the
-[StructuredDataBlock](/block/#structureddatablock-class) for some high-level
-configurations, e.g., `categorical_encoding` for whether to use the
-[CategoricalToNumerical](/block/#categoricaltonumerical-class). You can also do
-not specify these arguments, which would leave the different choices to be
-tuned automatically. See the following example for detail.
-"""
-
-
-input_node = ak.StructuredDataInput()
-output_node = ak.StructuredDataBlock(categorical_encoding=True)(input_node)
-output_node = ak.RegressionHead()(output_node)
-reg = ak.AutoModel(
-    inputs=input_node, outputs=output_node, overwrite=True, max_trials=3
-)
-reg.fit(x_train, y_train, epochs=10)
-
-"""
-The usage of [AutoModel](/auto_model/#automodel-class) is similar to the
-[functional API](https://keras.io/api/models/model/#with-the-functional-api) of
-Keras.
-Basically, you are building a graph, whose edges are blocks and the nodes are
-intermediate outputs of blocks.  To add an edge from `input_node` to
-`output_node` with `output_node = ak.[some_block]([block_args])(input_node)`.
-
-You can even also use more fine grained blocks to customize the search space
-even further. See the following example.
-"""
-
-
-input_node = ak.StructuredDataInput()
-output_node = ak.CategoricalToNumerical()(input_node)
-output_node = ak.DenseBlock()(output_node)
-output_node = ak.RegressionHead()(output_node)
-reg = ak.AutoModel(
-    inputs=input_node, outputs=output_node, max_trials=3, overwrite=True
-)
-reg.fit(x_train, y_train, epochs=10)
-
-"""
-You can also export the best model found by AutoKeras as a Keras Model.
-"""
-
-model = reg.export_model()
-model.summary()
-# numpy array in object (mixed type) is not supported.
-# you need convert it to unicode or float first.
-model.predict(x_train)
-
 
 """
 ## Reference
@@ -165,5 +112,4 @@ model.predict(x_train)
 [DenseBlock](/block/#denseblock-class),
 [StructuredDataInput](/node/#structureddatainput-class),
 [RegressionHead](/block/#regressionhead-class),
-[CategoricalToNumerical](/block/#categoricaltonumerical-class).
 """
