@@ -1,4 +1,5 @@
 """shell
+export KERAS_BACKEND="torch"
 pip install autokeras
 """
 
