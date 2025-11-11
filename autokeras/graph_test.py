@@ -89,9 +89,10 @@ def test_adamw_optimizer():
     hp.Choice("optimizer", ["adam", "sgd", "adam_weight_decay"], default="adam")
     hp.values["optimizer"] = "adam_weight_decay"
     graph = graph_module.Graph(inputs=input_node, outputs=output_node)
-    graph.num_samples = 10000
+    graph.inputs[0].num_samples = 100
     graph.inputs[0].batch_size = 32
     graph.epochs = 10
+    graph.set_fit_args(0, epochs=10)
     model = graph.build(hp)
     assert model.input_shape == (None, 30)
     assert model.output_shape == (None, 1)
@@ -168,3 +169,16 @@ def test_graph_can_init_with_one_missing_output():
     ak.ClassificationHead()(output_node)
 
     graph_module.Graph(input_node, output_node)
+
+
+def test_set_fit_args_with_none_validation_split():
+    input_node = ak.Input(shape=(30,))
+    output_node = input_node
+    output_node = ak.DenseBlock()(output_node)
+    output_node = ak.RegressionHead(shape=(1,))(output_node)
+
+    graph = graph_module.Graph(inputs=input_node, outputs=output_node)
+    graph.inputs[0].num_samples = 100
+    graph.inputs[0].batch_size = 32
+    graph.set_fit_args(None, epochs=1)
+    assert graph.num_samples == 100  # Should handle None as 0

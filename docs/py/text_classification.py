@@ -1,4 +1,5 @@
 """shell
+export KERAS_BACKEND="torch"
 pip install autokeras
 """
 
@@ -25,7 +26,9 @@ dataset = keras.utils.get_file(
 )
 
 # set path to dataset
-IMDB_DATADIR = os.path.join(os.path.dirname(dataset), "aclImdb")
+IMDB_DATADIR = os.path.join(
+    os.path.dirname(dataset), "aclImdb_extracted", "aclImdb"
+)
 
 classes = ["pos", "neg"]
 train_data = load_files(

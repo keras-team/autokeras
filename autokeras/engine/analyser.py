@@ -41,7 +41,9 @@ class Analyser(object):
             data: np.ndarray. The entire dataset.
         """
         if self.dtype is None:
-            if np.issubdtype(data.dtype, np.str_):
+            if np.issubdtype(data.dtype, np.str_) or np.issubdtype(
+                data.dtype, np.bytes_
+            ):
                 self.dtype = "string"
             else:
                 self.dtype = str(data.dtype)
