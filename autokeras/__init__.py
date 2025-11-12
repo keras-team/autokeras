@@ -51,7 +51,7 @@ from autokeras.tuners import Greedy
 from autokeras.tuners import Hyperband
 from autokeras.tuners import RandomSearch
 
-__version__ = "3.0.0dev"
+__version__ = "3.0.0"
 
 CUSTOM_OBJECTS = {
     "CastToFloat32": CastToFloat32,
