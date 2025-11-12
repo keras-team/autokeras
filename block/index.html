@@ -1,0 +1,1682 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for AutoKeras.">
+      
+      
+      
+        <link rel="canonical" href="http://autokeras.com/block/">
+      
+      
+        <link rel="prev" href="../node/">
+      
+      
+        <link rel="next" href="../about/">
+      
+      
+      <link rel="icon" href="/img/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
+    
+    
+      
+        <title>Block - AutoKeras</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-GTF9QP8DFD"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-GTF9QP8DFD",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-GTF9QP8DFD",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#convblock" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="AutoKeras" class="md-header__button md-logo" aria-label="AutoKeras" data-md-component="logo">
+      
+  <img src="/img/logo_white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AutoKeras
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Block
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/keras-team/autokeras" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AutoKeras" class="md-nav__button md-logo" aria-label="AutoKeras" data-md-component="logo">
+      
+  <img src="/img/logo_white.svg" alt="logo">
+
+    </a>
+    AutoKeras
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/keras-team/autokeras" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Tutorials
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/image_classification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Image Classification
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/image_regression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Image Regression
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/text_classification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Text Classification
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/text_regression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Text Regression
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/structured_data_classification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Structured Data Classification
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/structured_data_regression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Structured Data Regression
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/multi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Multi-Modal and Multi-Task
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/customized/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Customized Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Export Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/load.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Load Data from Disk
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Documentation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../image_classifier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ImageClassifier
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../image_regressor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ImageRegressor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../text_classifier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TextClassifier
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../text_regressor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TextRegressor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../structured_data_classifier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    StructuredDataClassifier
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../structured_data_regressor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    StructuredDataRegressor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../auto_model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AutoModel
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Base Class
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../node/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Node
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Block
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Block
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#convblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      ConvBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#denseblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      DenseBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Embedding
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      Merge
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resnetblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      ResNetBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rnnblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      RNNBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spatialreduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      SpatialReduction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporalreduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      TemporalReduction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#xceptionblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      XceptionBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structureddatablock" class="md-nav__link">
+    <span class="md-ellipsis">
+      StructuredDataBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imageblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      ImageBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#textblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      TextBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imageaugmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      ImageAugmentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Normalization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classificationhead" class="md-nav__link">
+    <span class="md-ellipsis">
+      ClassificationHead
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regressionhead" class="md-nav__link">
+    <span class="md-ellipsis">
+      RegressionHead
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Utils
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    About
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#convblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      ConvBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#denseblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      DenseBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Embedding
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      Merge
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resnetblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      ResNetBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rnnblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      RNNBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spatialreduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      SpatialReduction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporalreduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      TemporalReduction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#xceptionblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      XceptionBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structureddatablock" class="md-nav__link">
+    <span class="md-ellipsis">
+      StructuredDataBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imageblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      ImageBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#textblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      TextBlock
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imageaugmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      ImageAugmentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Normalization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classificationhead" class="md-nav__link">
+    <span class="md-ellipsis">
+      ClassificationHead
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regressionhead" class="md-nav__link">
+    <span class="md-ellipsis">
+      RegressionHead
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>Block</h1>
+
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/basic.py#L257">[source]</a></span></p>
+<h3 id="convblock">ConvBlock</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">ConvBlock</span><span class="p">(</span>
+    <span class="n">kernel_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">num_blocks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">num_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">filters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">separable</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">dropout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Block for vanilla ConvNets.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>kernel_size</strong> <code>int | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Int or keras_tuner.engine.hyperparameters.Choice.
+    The size of the kernel.
+    If left unspecified, it will be tuned automatically.</li>
+<li><strong>num_blocks</strong> <code>int | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Int or keras_tuner.engine.hyperparameters.Choice.
+    The number of conv blocks, each of which may contain
+    convolutional, max pooling, dropout, and activation. If left
+    unspecified, it will be tuned automatically.</li>
+<li><strong>num_layers</strong> <code>int | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Int or hyperparameters.Choice.
+    The number of convolutional layers in each block. If left
+    unspecified, it will be tuned automatically.</li>
+<li><strong>filters</strong> <code>int | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Int or keras_tuner.engine.hyperparameters.Choice. The number of
+    filters in the convolutional layers. If left unspecified, it will
+    be tuned automatically.</li>
+<li><strong>max_pooling</strong> <code>bool | None</code>: Boolean. Whether to use max pooling layer in each block. If
+    left unspecified, it will be tuned automatically.</li>
+<li><strong>separable</strong> <code>bool | None</code>: Boolean. Whether to use separable conv layers.
+    If left unspecified, it will be tuned automatically.</li>
+<li><strong>dropout</strong> <code>float | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Float or kerastuner.engine.hyperparameters.
+    Choice range Between 0 and 1.
+    The dropout rate after convolutional layers.
+    If left unspecified, it will be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/basic.py#L56">[source]</a></span></p>
+<h3 id="denseblock">DenseBlock</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">DenseBlock</span><span class="p">(</span><span class="n">num_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_batchnorm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<p>Block for Dense layers.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>num_layers</strong> <code>int | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Int or keras_tuner.engine.hyperparameters.Choice.
+    The number of Dense layers in the block.
+    If left unspecified, it will be tuned automatically.</li>
+<li><strong>num_units</strong> <code>int | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Int or keras_tuner.engine.hyperparameters.Choice.
+    The number of units in each dense layer.
+    If left unspecified, it will be tuned automatically.</li>
+<li><strong>use_bn</strong>: Boolean. Whether to use BatchNormalization layers.
+    If left unspecified, it will be tuned automatically.</li>
+<li><strong>dropout</strong> <code>float | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Float or keras_tuner.engine.hyperparameters.Choice.
+    The dropout rate for the layers.
+    If left unspecified, it will be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/basic.py#L586">[source]</a></span></p>
+<h3 id="embedding">Embedding</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">max_features</span><span class="o">=</span><span class="mi">20001</span><span class="p">,</span> <span class="n">embedding_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<p>Word embedding block for sequences.</p>
+<p>The input should be tokenized sequences with the same length, where each
+element of a sequence should be the index of the word.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>max_features</strong> <code>int</code>: Int. Size of the vocabulary. Must be set if not using
+    TextToIntSequence before this block. Defaults to 20001.</li>
+<li><strong>embedding_dim</strong> <code>int | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Int or keras_tuner.engine.hyperparameters.Choice.
+    Output dimension of the Attention block.
+    If left unspecified, it will be tuned automatically.</li>
+<li><strong>dropout</strong> <code>float | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Float or keras_tuner.engine.hyperparameters.Choice.
+    The dropout rate for the layers.
+    If left unspecified, it will be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/reduction.py#L40">[source]</a></span></p>
+<h3 id="merge">Merge</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="n">merge_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<p>Merge block to merge multiple nodes into one.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>merge_type</strong> <code>str | None</code>: String. 'add' or 'concatenate'. If left unspecified, it will
+    be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/basic.py#L477">[source]</a></span></p>
+<h3 id="resnetblock">ResNetBlock</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">ResNetBlock</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<p>Block for ResNet.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>version</strong> <code>str | None</code>: String. 'v1', 'v2'. The type of ResNet to use.
+    If left unspecified, it will be tuned automatically.</li>
+<li><strong>pretrained</strong> <code>bool | None</code>: Boolean. Whether to use ImageNet pretrained weights.
+    If left unspecified, it will be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/basic.py#L149">[source]</a></span></p>
+<h3 id="rnnblock">RNNBlock</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">RNNBlock</span><span class="p">(</span>
+    <span class="n">return_sequences</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bidirectional</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layer_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>An RNN Block.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>return_sequences</strong> <code>bool</code>: Boolean. Whether to return the last output in the
+    output sequence, or the full sequence. Defaults to False.</li>
+<li><strong>bidirectional</strong> <code>bool | keras_tuner.src.engine.hyperparameters.hp_types.boolean_hp.Boolean | None</code>: Boolean or keras_tuner.engine.hyperparameters.Boolean.
+    Bidirectional RNN. If left unspecified, it will be
+    tuned automatically.</li>
+<li><strong>num_layers</strong> <code>int | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Int or keras_tuner.engine.hyperparameters.Choice.
+    The number of layers in RNN. If left unspecified, it will
+    be tuned automatically.</li>
+<li><strong>layer_type</strong> <code>str | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: String or or keras_tuner.engine.hyperparameters.Choice.
+    'gru' or 'lstm'. If left unspecified, it will be tuned
+    automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/reduction.py#L146">[source]</a></span></p>
+<h3 id="spatialreduction">SpatialReduction</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">SpatialReduction</span><span class="p">(</span><span class="n">reduction_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<p>Reduce the dimension of a spatial tensor, e.g. image, to a vector.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>reduction_type</strong> <code>str | None</code>: String. 'flatten', 'global_max' or 'global_avg'.
+    If left unspecified, it will be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/reduction.py#L169">[source]</a></span></p>
+<h3 id="temporalreduction">TemporalReduction</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">TemporalReduction</span><span class="p">(</span><span class="n">reduction_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<p>Reduce the dim of a temporal tensor, e.g. output of RNN, to a vector.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>reduction_type</strong> <code>str | None</code>: String. 'flatten', 'global_max' or 'global_avg'. If left
+    unspecified, it will be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/basic.py#L516">[source]</a></span></p>
+<h3 id="xceptionblock">XceptionBlock</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">XceptionBlock</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<p>Block for XceptionNet.</p>
+<p>An Xception structure, used for specifying your model with specific
+datasets.</p>
+<p>The original Xception architecture is from
+<a href="https://arxiv.org/abs/1610.02357">https://arxiv.org/abs/1610.02357</a>.
+The data first goes through the entry flow, then through the middle flow
+which is repeated eight times, and finally through the exit flow.</p>
+<p>This XceptionBlock returns a similar architecture as Xception except without
+the last (optional) fully connected layer(s) and logistic regression.
+The size of this architecture could be decided by <code>HyperParameters</code>, to get
+an architecture with a half, an identical, or a double size of the original
+one.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>pretrained</strong> <code>bool | None</code>: Boolean. Whether to use ImageNet pretrained weights.
+    If left unspecified, it will be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/wrapper.py#L179">[source]</a></span></p>
+<h3 id="structureddatablock">StructuredDataBlock</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">StructuredDataBlock</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<p>Block for structured data.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>categorical_encoding</strong>: Boolean. Whether to use the CategoricalToNumerical
+    to encode the categorical features to numerical features. Defaults
+    to True.</li>
+<li><strong>normalize</strong> <code>bool | None</code>: Boolean. Whether to normalize the features.
+    If unspecified, it will be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/wrapper.py#L36">[source]</a></span></p>
+<h3 id="imageblock">ImageBlock</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">ImageBlock</span><span class="p">(</span><span class="n">block_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">augment</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<p>Block for image data.</p>
+<p>The image blocks is a block choosing from ResNetBlock, XceptionBlock,
+ConvBlock, which is controlled by a hyperparameter, 'block_type'.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>block_type</strong> <code>str | None</code>: String. 'resnet', 'xception', 'vanilla'. The type of Block
+    to use. If unspecified, it will be tuned automatically.</li>
+<li><strong>normalize</strong> <code>bool | None</code>: Boolean. Whether to channel-wise normalize the images.
+    If unspecified, it will be tuned automatically.</li>
+<li><strong>augment</strong> <code>bool | None</code>: Boolean. Whether to do image augmentation. If unspecified,
+    it will be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/wrapper.py#L119">[source]</a></span></p>
+<h3 id="textblock">TextBlock</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">TextBlock</span><span class="p">(</span><span class="n">max_tokens</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<p>Block for text data.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>max_tokens</strong>: Int. The maximum size of the vocabulary.
+    If left unspecified, it will be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/preprocessing.py#L62">[source]</a></span></p>
+<h3 id="imageaugmentation">ImageAugmentation</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">ImageAugmentation</span><span class="p">(</span>
+    <span class="n">translation_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">vertical_flip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">horizontal_flip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">rotation_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">zoom_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">contrast_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Collection of various image augmentation methods.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>translation_factor</strong> <code>float | Tuple[float, float] | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: A positive float represented as fraction value, or a
+    tuple of 2 representing fraction for translation vertically and
+    horizontally, or a kerastuner.engine.hyperparameters.Choice range
+    of positive floats. For instance, <code>translation_factor=0.2</code> result
+    in a random translation factor within 20% of the width and height.
+    If left unspecified, it will be tuned automatically.</li>
+<li><strong>vertical_flip</strong> <code>bool | None</code>: Boolean. Whether to flip the image vertically.
+    If left unspecified, it will be tuned automatically.</li>
+<li><strong>horizontal_flip</strong> <code>bool | None</code>: Boolean. Whether to flip the image horizontally.
+    If left unspecified, it will be tuned automatically.</li>
+<li><strong>rotation_factor</strong> <code>float | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: Float or kerastuner.engine.hyperparameters.Choice range
+    between [0, 1]. A positive float represented as fraction of 2pi
+    upper bound for rotating clockwise and counter-clockwise. When
+    represented as a single float, lower = upper.
+    If left unspecified, it will be tuned automatically.</li>
+<li><strong>zoom_factor</strong> <code>float | Tuple[float, float] | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: A positive float represented as fraction value, or a tuple
+    of 2 representing fraction for zooming vertically and horizontally,
+    or a kerastuner.engine.hyperparameters.Choice range of positive
+    floats.  For instance, <code>zoom_factor=0.2</code> result in a random zoom
+    factor from 80% to 120%. If left unspecified, it will be tuned
+    automatically.</li>
+<li><strong>contrast_factor</strong> <code>float | Tuple[float, float] | keras_tuner.src.engine.hyperparameters.hp_types.choice_hp.Choice | None</code>: A positive float represented as fraction of value, or a
+    tuple of size 2 representing lower and upper bound, or a
+    kerastuner.engine.hyperparameters.Choice range of floats to find the
+    optimal value. When represented as a single float, lower = upper.
+    The contrast factor will be randomly picked
+    between [1.0 - lower, 1.0 + upper]. If left unspecified, it will be
+    tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/preprocessing.py#L35">[source]</a></span></p>
+<h3 id="normalization">Normalization</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">Normalization</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<p>Perform feature-wise normalization on data.</p>
+<p>Refer to Normalization layer in keras preprocessing layers for more
+information.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>axis</strong> <code>int</code>: Integer or tuple of integers, the axis or axes that should be
+    normalized (typically the features axis). We will normalize each
+    element in the specified axis. The default is '-1' (the innermost
+    axis); 0 (the batch axis) is not allowed.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/heads.py#L33">[source]</a></span></p>
+<h3 id="classificationhead">ClassificationHead</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">ClassificationHead</span><span class="p">(</span>
+    <span class="n">num_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">multi_label</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Classification Dense layers.</p>
+<p>Use sigmoid and binary crossentropy for binary classification and
+multi-label classification. Use softmax and categorical crossentropy for
+multi-class (more than 2) classification. Use Accuracy as metrics by
+default.</p>
+<p>The targets passing to the head would have to be np.ndarray. It can be raw
+labels, one-hot encoded if more than two classes, or binary encoded for
+binary classification.</p>
+<p>The raw labels will be encoded to one column if two classes were found,
+or one-hot encoded if more than two classes were found.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>num_classes</strong> <code>int | None</code>: Int. Defaults to None. If None, it will be inferred from
+    the data.</li>
+<li><strong>multi_label</strong> <code>bool</code>: Boolean. Defaults to False.</li>
+<li><strong>loss</strong> <code>str | Callable | keras.losses.Loss | None</code>: A Keras loss function. Defaults to use <code>binary_crossentropy</code> or
+    <code>categorical_crossentropy</code> based on the number of classes.</li>
+<li><strong>metrics</strong> <code>List[str | Callable | keras.metrics.Metric] | List[List[str | Callable | keras.metrics.Metric]] | Dict[str, str | Callable | keras.metrics.Metric] | None</code>: A list of Keras metrics. Defaults to use 'accuracy'.</li>
+<li><strong>dropout</strong> <code>float | None</code>: Float. The dropout rate for the layers.
+    If left unspecified, it will be tuned automatically.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/keras-team/autokeras/blob/master/autokeras/blocks/heads.py#L197">[source]</a></span></p>
+<h3 id="regressionhead">RegressionHead</h3>
+<div class="highlight"><pre><span></span><code><span class="n">autokeras</span><span class="o">.</span><span class="n">RegressionHead</span><span class="p">(</span>
+    <span class="n">output_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;mean_squared_error&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Regression Dense layers.</p>
+<p>The targets passing to the head would have to be np.ndarray. It can be
+single-column or multi-column. The values should all be numerical.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>output_dim</strong> <code>int | None</code>: Int. The number of output dimensions. Defaults to None.
+    If None, it will be inferred from the data.</li>
+<li><strong>multi_label</strong>: Boolean. Defaults to False.</li>
+<li><strong>loss</strong> <code>str | Callable | keras.losses.Loss</code>: A Keras loss function. Defaults to use <code>mean_squared_error</code>.</li>
+<li><strong>metrics</strong> <code>List[str | Callable | keras.metrics.Metric] | List[List[str | Callable | keras.metrics.Metric]] | Dict[str, str | Callable | keras.metrics.Metric] | None</code>: A list of Keras metrics. Defaults to use <code>mean_squared_error</code>.</li>
+<li><strong>dropout</strong> <code>float | None</code>: Float. The dropout rate for the layers.
+    If left unspecified, it will be tuned automatically.</li>
+</ul>
+<hr />
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@8.4.4/dist/mermaid.min.js"></script>
+      
+    
+  </body>
+</html>
