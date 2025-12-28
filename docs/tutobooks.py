@@ -511,7 +511,7 @@ NB_BASE = {
             "name": "python",
             "nbconvert_exporter": "python",
             "pygments_lexer": "ipython3",
-            "version": "3.7.0",
+            "version": "3.11.0",
         },
     },
     "nbformat": 4,
