@@ -10,13 +10,14 @@
 Official Website: [autokeras.com](https://autokeras.com)
 
 ##
+
 AutoKeras: An AutoML system based on Keras.
 It is developed by <a href="http://faculty.cs.tamu.edu/xiahu/index.html" target="_blank" rel="nofollow">DATA Lab</a> at Texas A&M University.
 The goal of AutoKeras is to make machine learning accessible to everyone.
 
 ## Learning resources
 
-* A short example.
+- A short example.
 
 ```python
 import autokeras as ak
@@ -26,16 +27,15 @@ clf.fit(x_train, y_train)
 results = clf.predict(x_test)
 ```
 
-* [Official website tutorials](https://autokeras.com/tutorial/overview/).
-* The book of [*Automated Machine Learning in Action*](https://www.manning.com/books/automated-machine-learning-in-action?query=automated&utm_source=jin&utm_medium=affiliate&utm_campaign=affiliate&a_aid=jin).
-* The LiveProjects of [*Image Classification with AutoKeras*](https://www.manning.com/liveprojectseries/autokeras-ser).
+- [Official website tutorials](https://autokeras.com/tutorial/overview/).
+- The book of [_Automated Machine Learning in Action_](https://www.manning.com/books/automated-machine-learning-in-action?query=automated&utm_source=jin&utm_medium=affiliate&utm_campaign=affiliate&a_aid=jin).
+- The LiveProjects of [_Image Classification with AutoKeras_](https://www.manning.com/liveprojectseries/autokeras-ser).
 <p align="center">
 <a href="https://www.manning.com/books/automated-machine-learning-in-action?query=automated&utm_source=jin&utm_medium=affiliate&utm_campaign=affiliate&a_aid=jin"><img src="https://images.manning.com/360/480/resize/book/0/fc56aaf-b2ba-4ef4-85b3-4a31edbe8ecc/Song-AML-HI.png" alt="drawing" width="266"/></a>
 &nbsp
 &nbsp
 <a href="https://www.manning.com/liveprojectseries/autokeras-ser"><img src="https://images.manning.com/360/480/resize/liveProjectSeries/9/38c715a-0c8c-4f66-b440-83d29993877a/ImageClassificationwithAutoKeras.jpg" alt="drawing" width="250"/></a>
 </p>
-
 
 ## Installation
 
@@ -47,7 +47,7 @@ pip3 install autokeras
 
 Please follow the [installation guide](https://autokeras.com/install) for more details.
 
-**Note:** Currently, AutoKeras is only compatible with **Python >= 3.7** and **TensorFlow >= 2.8.0**.
+**Note:** AutoKeras requires **Python >= 3.11** and **Keras >= 3.0.0**.
 
 ## Community
 
@@ -70,7 +70,7 @@ Thank all the contributors!
 
 ## Cite this work
 
-Haifeng Jin, François Chollet, Qingquan Song, and Xia Hu. "AutoKeras: An AutoML Library for Deep Learning." *the Journal of machine Learning research* 6 (2023): 1-6. ([Download](http://jmlr.org/papers/v24/20-1355.html))
+Haifeng Jin, François Chollet, Qingquan Song, and Xia Hu. "AutoKeras: An AutoML Library for Deep Learning." _the Journal of machine Learning research_ 6 (2023): 1-6. ([Download](http://jmlr.org/papers/v24/20-1355.html))
 
 Biblatex entry:
 

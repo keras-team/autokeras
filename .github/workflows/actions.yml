@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
   release:
     types: [created]
@@ -13,35 +13,35 @@ jobs:
     env:
       KERAS_BACKEND: torch
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    - name: Get pip cache dir
-      id: pip-cache
-      run: |
-        python -m pip install --upgrade pip setuptools
-        echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
-    - name: pip cache
-      uses: actions/cache@v3
-      with:
-        path: ${{ steps.pip-cache.outputs.dir }}
-        key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
-    - name: Install dependencies
-      run: |
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Get pip cache dir
+        id: pip-cache
+        run: |
+          python -m pip install --upgrade pip setuptools
+          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+      - name: pip cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+      - name: Install dependencies
+        run: |
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -e ".[tests]" --progress-bar off
-    - name: Test with pytest
-      run: |
-        pytest --cov=autokeras --cov-report xml:coverage.xml
-    - name: Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage.xml
-        flags: unittests
-        fail_ci_if_error: true
+      - name: Test with pytest
+        run: |
+          pytest --cov=autokeras --cov-report xml:coverage.xml
+      - name: Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: true
   format:
     name: Check the code format
     runs-on: ubuntu-latest
@@ -58,10 +58,10 @@ jobs:
       KERAS_BACKEND: torch
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.10
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.11"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
@@ -80,18 +80,18 @@ jobs:
     env:
       KERAS_BACKEND: torch
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip build twine
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        python -m build
-        twine upload dist/*
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip build twine
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          python -m build
+          twine upload dist/*
