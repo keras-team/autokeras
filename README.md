@@ -90,3 +90,7 @@ Biblatex entry:
 ## Acknowledgements
 
 The authors gratefully acknowledge the D3M program of the Defense Advanced Research Projects Agency (DARPA) administered through AFRL contract FA8750-17-2-0116; the Texas A&M College of Engineering, and Texas A&M University.
+
+---
+
+*[Mukller](https://github.com/Mukller)*
