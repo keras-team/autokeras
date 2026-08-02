@@ -35,6 +35,7 @@ from autokeras.engine.block import Block
 from autokeras.engine.head import Head
 from autokeras.engine.node import Node
 from autokeras.keras_layers import CastToFloat32
+from autokeras.keras_layers import CategoricalToNumericalLayer
 from autokeras.keras_layers import ExpandLastDim
 from autokeras.nodes import ImageInput
 from autokeras.nodes import Input
@@ -56,4 +57,5 @@ __version__ = "3.0.0"
 CUSTOM_OBJECTS = {
     "CastToFloat32": CastToFloat32,
     "ExpandLastDim": ExpandLastDim,
+    "CategoricalToNumericalLayer": CategoricalToNumericalLayer,
 }

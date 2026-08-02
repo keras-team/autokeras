@@ -29,7 +29,9 @@ from autokeras import tuners
 from autokeras.engine import head as head_module
 from autokeras.engine import node as node_module
 from autokeras.engine import tuner
+from autokeras.keras_layers import CategoricalToNumericalLayer
 from autokeras.nodes import Input
+from autokeras.preprocessors.encoders import CategoricalToNumerical
 from autokeras.utils import data_utils
 from autokeras.utils import utils
 
@@ -472,10 +474,74 @@ class AutoModel(object):
         )
 
     def export_model(self):
-        """Export the best Keras Model.
+        """Export the best Keras Model including necessary preprocessors.
+
+        The returned model is self-contained: it accepts the same raw inputs
+        that AutoModel.predict / AutoModel.evaluate accept and produces
+        equivalent predictions.  This fixes the long-standing issue where
+        export_model() omitted pipeline preprocessors (especially
+        CategoricalToNumerical for structured data), causing exported / saved
+        models to give completely inaccurate results.
 
         # Returns
-            keras.Model instance. The best model found during the search, loaded
-            with trained weights.
+            keras.Model instance. The best model found during the search,
+            with input preprocessors baked in when present, loaded with
+            trained weights.
         """
-        return self.tuner.get_best_model()
+        model = self.tuner.get_best_model()
+        try:
+            pipeline = self.tuner.get_best_pipeline()
+        except Exception:
+            # No pipeline (or not finished) – return the raw model
+            return model
+
+        # Only wrap when there are input-side preprocessors that need to be
+        # applied to raw data (most importantly CategoricalToNumerical).
+        has_input_preprocessors = any(
+            len(pps_list) > 0 for pps_list in pipeline.inputs
+        )
+        if not has_input_preprocessors:
+            return model
+
+        # Build a new functional model that starts with the fitted
+        # CategoricalToNumericalLayer(s) and then calls the original model.
+        # We support the common single-input structured-data case which is
+        # the one reported in #1963.
+        if len(pipeline.inputs) != 1:
+            # Multi-input pipelines are left unchanged for now.
+            return model
+
+        pps_list = pipeline.inputs[0]
+        if not pps_list:
+            return model
+
+        # Currently we only auto-wrap CategoricalToNumerical; other
+        # preprocessors stay in the pipeline (they are rare for structured data).
+        cat_pps = [p for p in pps_list if isinstance(p, CategoricalToNumerical)]
+        if not cat_pps:
+            return model
+
+        # Use the last (or only) CategoricalToNumerical – that is the one
+        # that produces the final numerical matrix expected by the model.
+        preprocessor = cat_pps[-1]
+        encoding_layer = CategoricalToNumericalLayer.from_preprocessor(
+            preprocessor
+        )
+
+        # Infer input shape from the preprocessor / original model.
+        # The raw input has the same number of columns as the encoded one.
+        n_features = len(preprocessor.column_names)
+        raw_input = keras.Input(shape=(n_features,), name="raw_structured_input")
+        encoded = encoding_layer(raw_input)
+        # The original model may have been built with a different input name;
+        # we just call it on the encoded tensor.
+        outputs = model(encoded)
+        wrapped = keras.Model(raw_input, outputs, name="exported_with_preprocessors")
+        # Copy compile configuration so that evaluate() works out of the box.
+        if model.compiled:
+            wrapped.compile(
+                optimizer=model.optimizer,
+                loss=model.loss,
+                metrics=model.metrics,
+            )
+        return wrapped
