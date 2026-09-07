@@ -205,7 +205,10 @@ class StructuredDataBlock(block_module.Block):
         input_node = tree.flatten(inputs)[0]
         output_node = input_node
 
-        if self.normalize is None and hp.Boolean(NORMALIZE):
+        # Default True: unnormalized tabular features (kg, %, counts) make
+        # Dense regression heads emit predictions far outside the target
+        # scale, which is the failure mode in issue #1964.
+        if self.normalize is None and hp.Boolean(NORMALIZE, default=True):
             with hp.conditional_scope(NORMALIZE, [True]):
                 output_node = preprocessing.Normalization().build(
                     hp, output_node

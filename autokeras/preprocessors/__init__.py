@@ -22,6 +22,7 @@ from autokeras.preprocessors.encoders import LabelEncoder
 from autokeras.preprocessors.encoders import OneHotEncoder
 from autokeras.preprocessors.postprocessors import SigmoidPostprocessor
 from autokeras.preprocessors.postprocessors import SoftmaxPostprocessor
+from autokeras.preprocessors.postprocessors import TargetNormalizer
 from autokeras.utils import utils
 
 

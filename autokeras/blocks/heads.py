@@ -224,6 +224,7 @@ class RegressionHead(head_module.Head):
         super().__init__(loss=loss, metrics=metrics, **kwargs)
         self.output_dim = output_dim
         self.dropout = dropout
+        self._add_one_dimension = False
 
     def get_config(self):
         config = super().get_config()
@@ -267,4 +268,10 @@ class RegressionHead(head_module.Head):
                     preprocessors.AddOneDimension()
                 )
             )
+        # Keep predictions on the observed target scale (issue #1964).
+        hyper_preprocessors.append(
+            hpps_module.DefaultHyperPreprocessor(
+                preprocessors.TargetNormalizer()
+            )
+        )
         return hyper_preprocessors

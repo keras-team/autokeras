@@ -61,3 +61,56 @@ class SoftmaxPostprocessor(PostProcessor):
         data = np.zeros(data.shape)
         data[np.arange(data.shape[0]), idx] = 1
         return data
+
+
+@keras.utils.register_keras_serializable(package="autokeras")
+class TargetNormalizer(preprocessor.TargetPreprocessor):
+    """Standardize regression targets and invert them at predict time.
+
+    AutoKeras regression heads use an unbounded Dense output. On small
+    tabular datasets with mixed-scale features this can produce predictions
+    far outside the observed target range. Training on z-scored targets and
+    inverting in ``postprocess`` keeps predictions numerically plausible
+    even when the model is weak (issue #1964).
+    """
+
+    def __init__(self, mean=None, std=None, **kwargs):
+        super().__init__(**kwargs)
+        self.mean = self._to_array(mean)
+        self.std = self._to_array(std)
+
+    @staticmethod
+    def _to_array(value):
+        if value is None:
+            return None
+        return np.asarray(value, dtype=np.float32)
+
+    def fit(self, dataset):
+        data = np.asarray(dataset, dtype=np.float32)
+        self.mean = np.mean(data, axis=0)
+        std = np.std(data, axis=0)
+        # Constant targets would otherwise divide by zero.
+        self.std = np.where(std < 1e-7, 1.0, std).astype(np.float32)
+
+    def transform(self, dataset):
+        data = np.asarray(dataset, dtype=np.float32)
+        if self.mean is None or self.std is None:
+            return data
+        return (data - self.mean) / self.std
+
+    def postprocess(self, data):
+        """Map model outputs from z-score space back to the target scale."""
+        data = np.asarray(data, dtype=np.float32)
+        if self.mean is None or self.std is None:
+            return data
+        return data * self.std + self.mean
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "mean": None if self.mean is None else self.mean.tolist(),
+                "std": None if self.std is None else self.std.tolist(),
+            }
+        )
+        return config

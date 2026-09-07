@@ -61,3 +61,53 @@ def test_softmax_deserialize_without_error():
     )
 
     assert isinstance(postprocessor.transform(dataset), np.ndarray)
+
+
+def test_target_normalizer_roundtrip_restores_scale():
+    y = np.array([[2.0], [4.0], [6.0], [8.0]], dtype="float32")
+    postprocessor = postprocessors.TargetNormalizer()
+    postprocessor.fit(y)
+
+    z = postprocessor.transform(y)
+    restored = postprocessor.postprocess(z)
+
+    np.testing.assert_allclose(z.mean(), 0.0, atol=1e-6)
+    np.testing.assert_allclose(z.std(), 1.0, atol=1e-5)
+    np.testing.assert_allclose(restored, y, atol=1e-5)
+
+
+def test_target_normalizer_zero_output_decodes_to_mean():
+    # A collapsed Dense head that predicts zeros in z-score space must
+    # decode to the training mean, not an out-of-scale value (issue #1964).
+    y = np.array([[2.0], [4.0], [6.0], [8.0]], dtype="float32")
+    postprocessor = postprocessors.TargetNormalizer()
+    postprocessor.fit(y)
+
+    decoded = postprocessor.postprocess(np.zeros((4, 1), dtype="float32"))
+
+    np.testing.assert_allclose(decoded, y.mean(), atol=1e-5)
+
+
+def test_target_normalizer_constant_target_does_not_nan():
+    y = np.ones((8, 1), dtype="float32") * 5.2
+    postprocessor = postprocessors.TargetNormalizer()
+    postprocessor.fit(y)
+
+    z = postprocessor.transform(y)
+    restored = postprocessor.postprocess(z)
+
+    assert np.isfinite(z).all()
+    np.testing.assert_allclose(restored, y, atol=1e-5)
+
+
+def test_target_normalizer_deserialize_preserves_stats():
+    y = np.array([[1.0], [3.0], [5.0]], dtype="float32")
+    postprocessor = postprocessors.TargetNormalizer()
+    postprocessor.fit(y)
+
+    restored = preprocessors.deserialize(
+        preprocessors.serialize(postprocessor)
+    )
+    decoded = restored.postprocess(np.zeros((3, 1), dtype="float32"))
+
+    np.testing.assert_allclose(decoded, y.mean(), atol=1e-5)

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections
 import copy
 import os
 
@@ -26,6 +25,24 @@ from autokeras import keras_layers
 from autokeras import pipeline as pipeline_module
 from autokeras.utils import data_utils
 from autokeras.utils import utils
+
+
+def _is_adaptable_preprocessing_layer(layer):
+    """Return True if this layer must be adapted before training.
+
+    Keras 3 does not preserve tensor object identity between ``layer.input``
+    and a previous layer's output, so an identity-based walk often skipped
+    ``Normalization.adapt()``. Identify preprocessing layers by type instead.
+    """
+    if isinstance(layer, keras.layers.InputLayer):
+        return False
+    if isinstance(layer, keras.layers.BatchNormalization):
+        return False
+    if isinstance(layer, keras_layers.PreprocessingLayer):
+        return True
+    if isinstance(layer, keras.layers.Normalization):
+        return True
+    return hasattr(layer, "adapt") and callable(getattr(layer, "adapt"))
 
 
 class AutoTuner(keras_tuner.engine.tuner.Tuner):
@@ -91,7 +108,6 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
         return pipeline, (x, y), validation_data
 
     def _build_and_fit_model(self, trial, *args, **kwargs):
-        model = self._try_build(trial.hyperparameters)
         (
             pipeline,
             (
@@ -101,9 +117,11 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
             kwargs["validation_data"],
         ) = self._prepare_model_build(trial.hyperparameters, **kwargs)
         pipeline.save(self._pipeline_path(trial.trial_id))
-        keras.src.backend.compute_output_spec(model, kwargs["x"])
-
+        # Build after shapes are set, then adapt preprocessing layers before
+        # the first symbolic call so Keras 3 Normalization stats are used.
+        model = self._try_build(trial.hyperparameters)
         self.adapt(model, kwargs["x"])
+        keras.src.backend.compute_output_spec(model, kwargs["x"])
 
         _, history = utils.fit_with_adaptive_batch_size(model, **kwargs)
         return history
@@ -111,40 +129,20 @@ class AutoTuner(keras_tuner.engine.tuner.Tuner):
     @staticmethod
     def adapt(model, dataset):
         """Adapt the preprocessing layers in the model."""
-        # Currently, only support using the original dataset to adapt all the
-        # preprocessing layers before the first non-preprocessing layer.
-        # TODO: Use PreprocessingStage for preprocessing layers adapt.
-        # TODO: Use Keras Tuner for preprocessing layers adapt.
-        x = tree.flatten(dataset)
+        # Adapt every prefix of preprocessing layers in topological order
+        # before the first non-preprocessing layer. Do not use tensor
+        # identity (``layer.input is tensor``); it is unreliable in Keras 3.
+        sources = tree.flatten(dataset)
+        current = sources[0]
 
-        def get_output_layers(tensor):
-            output_layers = []
-            tensor = tree.flatten(tensor)[0]
-            for layer in model.layers:
-                if isinstance(layer, keras.layers.InputLayer):
-                    continue
-                input_node = tree.flatten(layer.input)[0]
-                if input_node is tensor:
-                    if isinstance(
-                        layer,
-                        keras_layers.PreprocessingLayer,
-                    ) or hasattr(layer, "adapt"):
-                        output_layers.append(layer)
-            return output_layers
-
-        dq = collections.deque()
-
-        for index, input_node in enumerate(tree.flatten(model.input)):
-            in_x = x[index]
-            for layer in get_output_layers(input_node):
-                dq.append((layer, in_x))
-
-        while len(dq):
-            layer, in_x = dq.popleft()
-            layer.adapt(in_x)
-            out_x = layer(in_x)
-            for next_layer in get_output_layers(layer.output):
-                dq.append((next_layer, out_x))
+        for layer in model.layers:
+            if isinstance(layer, keras.layers.InputLayer):
+                continue
+            if not _is_adaptable_preprocessing_layer(layer):
+                break
+            layer.adapt(current)
+            output = layer(current)
+            current = np.asarray(keras.ops.convert_to_numpy(output))
 
         return model
 

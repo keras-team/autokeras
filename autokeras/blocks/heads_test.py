@@ -130,3 +130,15 @@ def test_reg_head_build_with_zero_dropout_return_tensor():
     )
 
     assert len(tree.flatten(outputs)) == 1
+
+
+def test_reg_head_includes_target_normalizer():
+    head = head_module.RegressionHead(name="a", shape=(1,))
+    head._add_one_dimension = True
+
+    types = [
+        type(hpp.preprocessor) for hpp in head.get_hyper_preprocessors()
+    ]
+
+    assert preprocessors.AddOneDimension in types
+    assert preprocessors.TargetNormalizer in types

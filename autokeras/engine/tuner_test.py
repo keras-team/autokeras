@@ -177,6 +177,25 @@ def test_adapt_with_model_with_preprocessing_layer_only():
     )
 
 
+def test_adapt_sets_normalization_statistics():
+    rng = np.random.RandomState(0)
+    x = rng.rand(100, 10).astype("float32") * 50.0 + 10.0
+    input_node = keras.Input(shape=(10,))
+    output_node = keras.layers.Normalization()(input_node)
+    output_node = keras.layers.Dense(1)(output_node)
+    model = keras.Model(input_node, output_node)
+
+    greedy.Greedy.adapt(model, x)
+
+    norm = [
+        layer
+        for layer in model.layers
+        if isinstance(layer, keras.layers.Normalization)
+    ][0]
+    mean = np.asarray(keras.ops.convert_to_numpy(norm.mean))
+    np.testing.assert_allclose(mean.reshape(-1), x.mean(axis=0), rtol=1e-4)
+
+
 def test_build_block_in_blocks_with_same_name(tmp_path):
     class Block1(ak.Block):
         def build(self, hp, inputs):
